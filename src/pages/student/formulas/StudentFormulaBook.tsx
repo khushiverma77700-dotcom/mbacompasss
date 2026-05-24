@@ -423,78 +423,98 @@ export default function StudentFormulaBook() {
             return (
               <Card key={f.id} className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl", isDone && "opacity-90")}>
                 <div aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1", isDone ? "bg-emerald-400" : isRevise ? "bg-amber-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500")} />
-                <CardContent className="relative flex flex-1 flex-col p-5">
+                <CardContent className="relative flex flex-1 flex-col gap-5 p-6">
+                  {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <Link to={`/formula/${f.slug}`} className="block">
-                        <h3 className="font-heading text-xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
+                        <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
                       </Link>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <Badge variant="outline" className="border-sky-200 text-[10px] uppercase tracking-wide text-sky-700">{f.difficulty}</Badge>
-                        {f.is_high_weightage && <Badge className="border-0 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
-                        {f.is_shortcut && <Badge className="border-0 bg-violet-100 text-[10px] text-violet-700">⚡ Shortcut</Badge>}
+                        {f.is_high_weightage && <Badge className="border-1 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
+                        {f.is_shortcut && <Badge className="border-1 bg-violet-100 text-[10px] text-violet-700">⚡ Shortcut</Badge>}
                         <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">{f.topic_slug?.replace(/-/g, " ")}</Badge>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 rounded-xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 shadow-inner">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-300">Formula</span>
+                  {/* Formula expression */}
+                  <div className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-5 shadow-lg">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/20">
+                          <Sigma className="h-4 w-4 text-sky-300" />
+                        </div>
+                        <span className="text-sm font-bold uppercase tracking-wider text-slate-200">Formula</span>
+                      </div>
                       <button
                         onClick={() => setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] }))}
-                        className="inline-flex items-center gap-1 rounded-md bg-slate-700/60 px-2 py-0.5 text-[10px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-[11px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white"
                         title={plainMode[f.id] ? "Show rendered math" : "Show plain text"}
                       >
-                        {plainMode[f.id] ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                        {plainMode[f.id] ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                         {plainMode[f.id] ? "Rendered" : "Plain"}
                       </button>
                     </div>
                     {plainMode[f.id] ? (
-                      <code className="block overflow-x-auto rounded-lg bg-slate-900/80 px-4 py-3 font-mono text-base text-sky-100">
+                      <code className="block overflow-x-auto rounded-xl bg-black/30 px-5 py-4 font-mono text-[15px] leading-relaxed text-sky-100">
                         {f.expression || f.expression_latex || ""}
                       </code>
                     ) : (
-                      <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-lg text-sky-50" />
+                      <div className="px-1">
+                        <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-xl text-sky-50" />
+                      </div>
                     )}
                   </div>
 
-                  <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
-                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Explanation</div>
-                    <p className="line-clamp-3 text-sm leading-relaxed text-slate-700">{f.explanation}</p>
+                  {/* Explanation */}
+                  <div className="border-l-2 border-slate-200 pl-4">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      <BookOpen className="h-3 w-3" /> Explanation
+                    </div>
+                    <p className="text-[0.92rem] leading-7 text-slate-700">{f.explanation}</p>
                   </div>
 
+                  {/* When to Use */}
                   {f.notes && (
-                    <div className="mt-2 rounded-lg border border-sky-100 bg-sky-50/60 p-3">
-                      <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">When to Use</div>
-                      <p className="line-clamp-2 text-xs leading-relaxed text-slate-700">{f.notes}</p>
+                    <div className="border-l-2 border-sky-200 pl-4">
+                      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-600">
+                        <Zap className="h-3 w-3" /> When to Use
+                      </div>
+                      <p className="text-[0.85rem] leading-6 text-slate-700">{f.notes}</p>
                     </div>
                   )}
 
+                  {/* Sample Usage */}
                   {Array.isArray(f.examples) && f.examples[0]?.problem && (
-                    <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Sample Usage</span>
+                    <div className="border-l-2 border-emerald-200 pl-4">
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+                          <Target className="h-3 w-3" /> Sample Usage
+                        </span>
                         {Array.isArray(f.examples) && f.examples.length > 1 && (
-                          <span className="text-[10px] text-emerald-700/70">+{f.examples.length - 1} more</span>
+                          <span className="text-[10px] text-emerald-600/80">+{f.examples.length - 1} more</span>
                         )}
                       </div>
-                      <p className="line-clamp-2 text-xs leading-relaxed text-slate-700">{f.examples[0].problem}</p>
+                      <p className="text-[0.85rem] leading-6 text-slate-700">{f.examples[0].problem}</p>
                       {f.examples[0].answer && (
-                        <p className="mt-1 text-[11px] font-semibold text-emerald-800">Answer: {f.examples[0].answer}</p>
+                        <p className="mt-2 text-[12px] font-semibold text-emerald-800">Answer: {f.examples[0].answer}</p>
                       )}
                     </div>
                   )}
 
+                  {/* Exam tags */}
                   {Array.isArray(f.exam_tags) && f.exam_tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap items-center gap-1">
-                      <GraduationCap className="h-3 w-3 text-sky-600" />
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <GraduationCap className="h-3.5 w-3.5 text-sky-600" />
                       {f.exam_tags.slice(0, 5).map((e: string) => (
                         <Badge key={e} className="border-0 bg-sky-100 text-[10px] text-sky-700 hover:bg-sky-100">{e}</Badge>
                       ))}
                     </div>
                   )}
 
+                  {/* Actions */}
                   <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
                     <div className="flex gap-1.5">
                       <Button variant={saved ? "default" : "outline"} size="sm" className="h-8 gap-1 px-2 text-xs" disabled={busyId === f.id} onClick={() => toggleBookmark(f.id)}>
