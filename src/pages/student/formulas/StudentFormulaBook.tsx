@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   Search, Sigma, BookmarkCheck, CheckCircle2, RotateCcw, Bookmark, Flame,
   Target, Zap, Sparkles, Filter, GraduationCap, Star, TrendingUp, Calculator,
-  ChevronRight, ArrowRight,
+  ChevronRight, ArrowRight, Eye, EyeOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ export default function StudentFormulaBook() {
   const [streak, setStreak] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [plainMode, setPlainMode] = useState<Record<string, boolean>>({});
 
   const q = params.get("q") || "";
   const section = params.get("section") || "all";
@@ -440,8 +441,22 @@ export default function StudentFormulaBook() {
                   <div className="mt-3 rounded-xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 shadow-inner">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-300">Formula</span>
+                      <button
+                        onClick={() => setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] }))}
+                        className="inline-flex items-center gap-1 rounded-md bg-slate-700/60 px-2 py-0.5 text-[10px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white"
+                        title={plainMode[f.id] ? "Show rendered math" : "Show plain text"}
+                      >
+                        {plainMode[f.id] ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                        {plainMode[f.id] ? "Rendered" : "Plain"}
+                      </button>
                     </div>
-                    <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-lg text-sky-50" />
+                    {plainMode[f.id] ? (
+                      <code className="block overflow-x-auto rounded-lg bg-slate-900/80 px-4 py-3 font-mono text-base text-sky-100">
+                        {f.expression || f.expression_latex || ""}
+                      </code>
+                    ) : (
+                      <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-lg text-sky-50" />
+                    )}
                   </div>
 
                   <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
