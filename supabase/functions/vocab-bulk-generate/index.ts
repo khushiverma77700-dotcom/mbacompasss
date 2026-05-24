@@ -483,20 +483,26 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Auth check
+    const body = req.method === "GET" ? {} : await req.json().catch(() => ({}));
+
+    // Auth check. Internal auto-resume calls use the backend service token and can only resume existing jobs.
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabase.auth.getUser(token);
-    const user = userData?.user;
-    if (!user) return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    // Direct lookup with service role — has_role() RPC is restricted to auth.uid() context.
-    const { data: roleRow } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const internalWorker = req.method !== "GET" && body.internal_worker === true && token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") && !!body.resume_job_id;
+    let user: any = null;
+    if (!internalWorker) {
+      const { data: userData } = await supabase.auth.getUser(token);
+      user = userData?.user;
+      if (!user) return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Direct lookup with service role — has_role() RPC is restricted to auth.uid() context.
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (req.method === "GET") {
       const url = new URL(req.url);
@@ -506,8 +512,6 @@ Deno.serve(async (req) => {
       if (error) throw error;
       return new Response(JSON.stringify({ job: data }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    const body = await req.json().catch(() => ({}));
 
     // ---- RESUME path ----
     if (body.resume_job_id) {
