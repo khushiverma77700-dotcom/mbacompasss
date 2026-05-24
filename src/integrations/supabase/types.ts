@@ -4849,6 +4849,7 @@ export type Database = {
           explanation: string | null
           id: string
           options: Json
+          question_hash: string | null
           question_text: string
           section: string
           source: string | null
@@ -4864,6 +4865,7 @@ export type Database = {
           explanation?: string | null
           id?: string
           options: Json
+          question_hash?: string | null
           question_text: string
           section: string
           source?: string | null
@@ -4879,6 +4881,7 @@ export type Database = {
           explanation?: string | null
           id?: string
           options?: Json
+          question_hash?: string | null
           question_text?: string
           section?: string
           source?: string | null
@@ -7672,6 +7675,7 @@ export type Database = {
           explanation: string | null
           id: string
           options: Json
+          question_hash: string | null
           question_text: string
           section: string
           source: string | null
