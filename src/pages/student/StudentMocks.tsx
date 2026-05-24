@@ -244,7 +244,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
     const list = Object.values(tests)
       .filter((t) => getKind(t) === typeKey)
-      .filter(matchesExam)
+      .filter((t) => typeKey === "topic_wise" || matchesExam(t))
       .filter(matchesQuery)
       .filter((t) => {
         if (typeKey !== "topic_wise" || topicFilter === "All") return true;
