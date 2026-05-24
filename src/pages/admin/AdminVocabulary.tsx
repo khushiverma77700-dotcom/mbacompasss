@@ -38,6 +38,10 @@ export default function AdminVocabulary() {
   const [bulkJob, setBulkJob] = useState<any>(null);
   const [bulkStarting, setBulkStarting] = useState(false);
 
+  // Backfill state
+  const [backfillRunning, setBackfillRunning] = useState(false);
+  const [backfillStatus, setBackfillStatus] = useState<{ processed: number; remaining: number } | null>(null);
+
   document.title = "Vocabulary Admin | MBA Compass";
 
   const load = async () => {
@@ -114,10 +118,32 @@ export default function AdminVocabulary() {
 
   const aiEnrich = async (w: any) => {
     toast({ title: "Calling AI…" });
-    const { data, error } = await supabase.functions.invoke("vocab-explain", { body: { word: w.word, save: true } });
+    const { data, error } = await supabase.functions.invoke("vocab-explain", { body: { word: w.word, save: true, force: true } });
     if (error || data?.error) { toast({ title: "Failed", description: error?.message || data?.error, variant: "destructive" }); return; }
     toast({ title: "Enriched" });
     load();
+  };
+
+  const backfillMissing = async () => {
+    setBackfillRunning(true);
+    setBackfillStatus({ processed: 0, remaining: 0 });
+    let totalProcessed = 0;
+    try {
+      // Loop in batches until done
+      // Cap at 30 iterations to avoid runaway
+      for (let i = 0; i < 30; i++) {
+        const { data, error } = await supabase.functions.invoke("vocab-backfill", { body: { batch: 8 } });
+        if (error) { toast({ title: "Backfill error", description: error.message, variant: "destructive" }); break; }
+        if (data?.error) { toast({ title: "Backfill error", description: data.error, variant: "destructive" }); break; }
+        totalProcessed += data?.processed || 0;
+        setBackfillStatus({ processed: totalProcessed, remaining: data?.remaining || 0 });
+        if (data?.done || (data?.processed || 0) === 0) break;
+      }
+      toast({ title: "Backfill complete", description: `Enriched ${totalProcessed} word(s)` });
+      load();
+    } finally {
+      setBackfillRunning(false);
+    }
   };
 
   const importCSV = async () => {
@@ -233,11 +259,20 @@ export default function AdminVocabulary() {
         </TabsContent>
 
         <TabsContent value="words" className="space-y-4">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             <Input placeholder="Search words…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
             <Button onClick={() => { setEditing({ category: "general", difficulty: "intermediate", synonyms: [], antonyms: [] }); setOpenForm(true); }} className="gap-1">
               <Plus className="w-4 h-4" /> Add Word
             </Button>
+            <Button onClick={backfillMissing} disabled={backfillRunning} variant="outline" className="gap-1">
+              {backfillRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              Enrich Missing Fields (Hindi · Pronunciation · Examples)
+            </Button>
+            {backfillStatus && (
+              <span className="text-xs text-muted-foreground">
+                Enriched {backfillStatus.processed} · {backfillStatus.remaining} remaining
+              </span>
+            )}
           </div>
 
           {loading ? <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto my-10" /> : (
