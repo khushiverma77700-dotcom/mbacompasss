@@ -108,25 +108,53 @@ export default function StudentVocabularyWord() {
               </div>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {word.part_of_speech && <span className="text-xs italic text-muted-foreground">{word.part_of_speech}</span>}
+                {word.pronunciation_syllables && (
+                  <button onClick={() => speak(word.word)} className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium">
+                    <Volume2 className="w-3 h-3" />{word.pronunciation_syllables}
+                  </button>
+                )}
                 {word.pronunciation && <span className="text-xs text-muted-foreground">{word.pronunciation}</span>}
                 <Badge variant="outline" className="text-[10px] capitalize">{word.difficulty}</Badge>
                 <Badge variant="secondary" className="text-[10px] capitalize">{word.category?.replace("_", " ")}</Badge>
               </div>
+              {Array.isArray(word.exam_appearances) && word.exam_appearances.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                  <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Appeared in:</span>
+                  {word.exam_appearances.map((e: string) => (
+                    <Badge key={e} className="text-[10px] bg-primary/10 text-primary hover:bg-primary/15 border-0">{e}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               <Button variant={bookmarked ? "default" : "outline"} size="sm" onClick={toggleBookmark} className="gap-1">
-                <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />{bookmarked ? "Saved" : "Save"}
+                <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />{bookmarked ? "Saved" : "Save as Important"}
               </Button>
-              <Button size="sm" onClick={markLearned} disabled={marking} className="gap-1">
-                {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Mark Learned
+              <Button size="sm" onClick={markLearned} disabled={marking || isRead} variant={isRead ? "secondary" : "default"} className="gap-1">
+                {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} {isRead ? "Read" : "Mark as Read"}
               </Button>
             </div>
           </div>
 
-          <p className="text-foreground mt-4 text-base">{word.meaning}</p>
-          {word.hinglish_meaning && (
-            <p className="text-sm text-muted-foreground mt-2"><span className="font-medium text-foreground">Hinglish: </span>{word.hinglish_meaning}</p>
-          )}
+          <div className="mt-4 space-y-2">
+            <div>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">English</span>
+              <p className="text-foreground text-base">{word.meaning}</p>
+            </div>
+            {word.meaning_hindi && (
+              <div>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Hindi</span>
+                <p className="text-foreground text-base">{word.meaning_hindi}</p>
+              </div>
+            )}
+            {word.hinglish_meaning && (
+              <div>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Hinglish</span>
+                <p className="text-sm text-foreground/80 italic">{word.hinglish_meaning}</p>
+              </div>
+            )}
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mt-5">
             <div>
@@ -149,11 +177,9 @@ export default function StudentVocabularyWord() {
         <CardContent className="pt-5">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h3 className="font-semibold text-foreground">Example Sentences</h3>
-            {(!word.example_interview || !word.example_email) && (
-              <Button variant="outline" size="sm" onClick={enrichAI} disabled={marking} className="gap-1">
-                {marking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Enrich with AI
-              </Button>
-            )}
+            <Button variant="outline" size="sm" onClick={enrichAI} disabled={marking} className="gap-1">
+              {marking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Enrich with AI
+            </Button>
           </div>
           <Tabs defaultValue="business">
             <TabsList>
