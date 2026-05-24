@@ -2,6 +2,7 @@
 // Strict pedagogical schema: Formula (LaTeX), Explanation, Usage (when/how to apply), Sample Usage (worked examples).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
