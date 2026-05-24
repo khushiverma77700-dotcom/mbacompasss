@@ -54,17 +54,26 @@ export default function PersonalizedBulkQueue() {
   const [items, setItems] = useState<ItemRow[]>([]);
   const [resuming, setResuming] = useState(false);
 
-  // Build the matrix + load existing counts
+  // Build the matrix + load existing counts (paginated — PostgREST caps at 1000/row)
   const loadMatrix = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("personalized_questions")
-      .select("exam_code, section, difficulty");
+    const PAGE = 1000;
     const map: Record<string, number> = {};
-    (data ?? []).forEach((r) => {
-      const k = `${r.exam_code}|${r.section}|${r.difficulty}`;
-      map[k] = (map[k] ?? 0) + 1;
-    });
+    let from = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data, error } = await supabase
+        .from("personalized_questions")
+        .select("exam_code, section, difficulty")
+        .range(from, from + PAGE - 1);
+      if (error || !data || data.length === 0) break;
+      for (const r of data) {
+        const k = `${r.exam_code}|${r.section}|${r.difficulty}`;
+        map[k] = (map[k] ?? 0) + 1;
+      }
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
     const built: Row[] = [];
     for (const e of EXAMS) {
       for (const s of e.sections) {
@@ -79,7 +88,11 @@ export default function PersonalizedBulkQueue() {
         }
       }
     }
-    setRows(built);
+    // preserve any qty the admin already typed
+    setRows((prev) => {
+      const qmap = new Map(prev.map((r) => [`${r.exam_code}|${r.section}|${r.difficulty}`, r.qty]));
+      return built.map((r) => ({ ...r, qty: qmap.get(`${r.exam_code}|${r.section}|${r.difficulty}`) ?? 0 }));
+    });
     setLoading(false);
   };
 
