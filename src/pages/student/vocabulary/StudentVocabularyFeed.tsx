@@ -132,7 +132,7 @@ export default function StudentVocabularyFeed() {
       setTargetDraft(streakRow?.daily_target_words || 5);
     }
     setLoading(false);
-  }, [category, difficulty, user]);
+  }, [exam, difficulty, user]);
 
   useEffect(() => { load(); }, [load]);
 
