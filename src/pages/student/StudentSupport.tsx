@@ -700,3 +700,42 @@ function TicketThread({
     </Card>
   );
 }
+
+// ====== Stat tile ======
+const TONE_MAP: Record<string, { bg: string; ring: string; icon: string; value: string }> = {
+  sky: { bg: "from-sky-50 to-white", ring: "border-sky-100", icon: "bg-sky-100 text-sky-700", value: "text-sky-900" },
+  rose: { bg: "from-rose-50 to-white", ring: "border-rose-100", icon: "bg-rose-100 text-rose-700", value: "text-rose-900" },
+  amber: { bg: "from-amber-50 to-white", ring: "border-amber-100", icon: "bg-amber-100 text-amber-700", value: "text-amber-900" },
+  emerald: { bg: "from-emerald-50 to-white", ring: "border-emerald-100", icon: "bg-emerald-100 text-emerald-700", value: "text-emerald-900" },
+  blue: { bg: "from-blue-50 to-white", ring: "border-blue-100", icon: "bg-blue-100 text-blue-700", value: "text-blue-900" },
+  indigo: { bg: "from-indigo-50 to-white", ring: "border-indigo-100", icon: "bg-indigo-100 text-indigo-700", value: "text-indigo-900" },
+};
+
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  tone = "sky",
+  hint,
+}: {
+  icon: any;
+  label: string;
+  value: number | string;
+  tone?: keyof typeof TONE_MAP;
+  hint?: string;
+}) {
+  const t = TONE_MAP[tone] ?? TONE_MAP.sky;
+  return (
+    <div className={cn("relative rounded-xl border bg-gradient-to-br p-3 transition-all hover:shadow-md hover:-translate-y-0.5", t.bg, t.ring)}>
+      <div className="flex items-center justify-between">
+        <div className={cn("h-7 w-7 rounded-md grid place-items-center", t.icon)}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+      </div>
+      <div className={cn("mt-2 text-xl font-bold leading-none tabular-nums", t.value)}>{value}</div>
+      <div className="mt-1 text-[11px] font-medium text-muted-foreground">{label}</div>
+      {hint && <div className="text-[10px] text-muted-foreground/80 mt-0.5">{hint}</div>}
+    </div>
+  );
+}
+
