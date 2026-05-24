@@ -10,6 +10,7 @@ const corsHeaders = {
 
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
 const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
+const EXAMS = ["CAT","XAT","NMAT","SNAP","IIFT","CMAT","MAT"];
 
 function slugify(w: string): string {
   return String(w).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
