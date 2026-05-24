@@ -172,7 +172,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
 
     let batch: any[] = [];
     try {
-      batch = await generateBatch(LOVABLE_API_KEY, need, category, difficulty, Array.from(seenSlugs), recentDupes);
+      batch = await generateBatch(LOVABLE_API_KEY, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("Batch error", msg);
