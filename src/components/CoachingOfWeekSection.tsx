@@ -110,7 +110,7 @@ const CoachingOfWeekSection = () => {
                       {/* Logo overlay */}
                       {inst?.logo_url && (
                         <div className="absolute bottom-3 left-3 w-12 h-12 rounded-xl bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center p-1.5">
-                          <img src={(await import("@/lib/imageTransform")).cdnImage ? require("@/lib/imageTransform").cdnImage(inst.logo_url, { width: 180, quality: 75 }) : inst.logo_url} alt="" className="w-full h-full object-contain" loading="lazy" decoding="async" />
+                          <img src={cdnImage(inst.logo_url, { width: 180, quality: 75 })} alt="" className="w-full h-full object-contain" loading="lazy" decoding="async" />
                         </div>
                       )}
                     </div>
