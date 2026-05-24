@@ -6579,6 +6579,8 @@ export type Database = {
       }
       vocab_generation_jobs: {
         Row: {
+          attempts: number
+          batch_size: number | null
           category: string | null
           created_at: string
           created_by: string | null
@@ -6586,14 +6588,25 @@ export type Database = {
           difficulty: string | null
           duplicates: number
           error: string | null
+          estimated_cost_usd: number
+          estimated_input_tokens: number
+          estimated_output_tokens: number
+          exam: string | null
           failed: number
+          finished_at: string | null
           generated: number
           id: string
+          progress_details: Json
+          provider: string | null
+          rejected: number
           requested: number
+          started_at: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          attempts?: number
+          batch_size?: number | null
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -6601,14 +6614,25 @@ export type Database = {
           difficulty?: string | null
           duplicates?: number
           error?: string | null
+          estimated_cost_usd?: number
+          estimated_input_tokens?: number
+          estimated_output_tokens?: number
+          exam?: string | null
           failed?: number
+          finished_at?: string | null
           generated?: number
           id?: string
+          progress_details?: Json
+          provider?: string | null
+          rejected?: number
           requested: number
+          started_at?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          attempts?: number
+          batch_size?: number | null
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -6616,10 +6640,19 @@ export type Database = {
           difficulty?: string | null
           duplicates?: number
           error?: string | null
+          estimated_cost_usd?: number
+          estimated_input_tokens?: number
+          estimated_output_tokens?: number
+          exam?: string | null
           failed?: number
+          finished_at?: string | null
           generated?: number
           id?: string
+          progress_details?: Json
+          provider?: string | null
+          rejected?: number
           requested?: number
+          started_at?: string | null
           status?: string
           updated_at?: string
         }
