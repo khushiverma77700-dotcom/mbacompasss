@@ -213,10 +213,23 @@ export default function AdminFormulas() {
                   </Select>
                 </div>
               </div>
-              <Button onClick={runAiBulk} disabled={genBusy} className="bg-gradient-to-r from-sky-600 to-blue-600">
+              <Button onClick={() => runAiBulk()} disabled={genBusy} className="bg-gradient-to-r from-sky-600 to-blue-600">
                 {genBusy ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Generating…</> : <><ListPlus className="mr-1 h-4 w-4" /> Generate {genCount} formulas</>}
               </Button>
-              <p className="text-xs text-slate-500">AI deduplicates against existing names within the chosen topic. Inserted formulas are published by default.</p>
+              <p className="text-xs text-slate-500">Every formula is verified for proper LaTeX (\frac, \sqrt, ^), at least 2 worked examples and a complete Usage section. Invalid entries are rejected automatically.</p>
+
+              {lastRun && (
+                <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs">
+                  <div className="font-semibold text-slate-800">Last run: +{lastRun.inserted} inserted · {lastRun.returned} returned · {lastRun.rejected.length} rejected</div>
+                  {lastRun.rejected.length > 0 && (
+                    <ul className="mt-1.5 space-y-0.5 text-slate-600">
+                      {lastRun.rejected.slice(0, 8).map((r, i) => (
+                        <li key={i}>• <span className="font-medium">{r.name}</span> — {r.reason}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
