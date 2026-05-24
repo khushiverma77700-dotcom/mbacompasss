@@ -255,6 +255,12 @@ async function runJob(jobId: string, total: number, category: string | null, dif
 
     const rows: any[] = [];
     let rejectedIncomplete = 0;
+    // Server-side hardness gate — reject basic words the model leaks through.
+    const BANNED_BASIC = new Set([
+      "market","markets","marketing","profit","profits","revenue","revenues","budget","budgets","growth","leader","leaders","leadership","manager","managers","management","customer","customers","client","clients","brand","brands","branding","sales","sale","price","prices","pricing","cost","costs","value","values","team","teams","teamwork","goal","goals","vision","mission","target","targets","strategy","strategies","plan","plans","planning","product","products","project","projects","finance","money","bank","banks","banking","loan","loans","invest","investor","investors","investment","investments","asset","assets","equity","debit","credit","credits","debt","debts","share","shares","stock","stocks","trade","trader","trading","deal","deals","offer","offers","demand","supply","buyer","seller","retail","wholesale","loss","losses","income","expense","expenses","tax","taxes","salary","salaries","wage","wages","job","jobs","work","office","offices","company","companies","business","businesses","firm","firms","industry","industries","economy","economic","idea","ideas","success","failure","risk","risks","reward","rewards","partner","partners","partnership","merge","merger","mergers","owner","owners","agent","agents","agency","agencies","service","services","quality","hire","fire","boss","employee","employees","staff","meeting","meetings","report","reports","email","emails","chart","charts","graph","graphs","data","trend","trends","save","spend","buy","sell","scale","scaling","launch","launches","pitch","deck","startup","startups","founder","founders","network","networking","support","help","share","work","skill","skills","task","tasks","role","roles","duty","duties","need","needs","want","wants","goal","plan","help",
+    ]);
+    const allowEasyServer = difficulty === "beginner" || difficulty === "intermediate";
+
     for (const w of batch) {
       if (!w?.word || !w?.meaning) { rejectedIncomplete++; continue; }
       const slug = slugify(w.word);
@@ -264,6 +270,15 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         if (recentDupes.length > 300) recentDupes.splice(0, recentDupes.length - 300);
         continue;
       }
+
+      // Hardness gate
+      if (!allowEasyServer) {
+        const lw = String(w.word).trim().toLowerCase();
+        if (BANNED_BASIC.has(lw) || lw.length < 7) { rejectedIncomplete++; continue; }
+        // Reject if AI returned beginner/intermediate against our intent
+        if (w.difficulty === "beginner" || w.difficulty === "intermediate") { rejectedIncomplete++; continue; }
+      }
+
 
       // STRICT: every required field must be a non-empty string / non-empty array.
       const hasText = (v: any) => typeof v === "string" && v.trim().length > 1;
