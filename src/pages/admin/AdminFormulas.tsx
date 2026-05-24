@@ -91,20 +91,28 @@ export default function AdminFormulas() {
     load();
   };
 
-  const runAiBulk = async () => {
-    const topic = topics.find((t) => t.slug === genTopic);
+  const runAiBulk = async (overrideSlug?: string, overrideCount?: number) => {
+    const slug = overrideSlug || genTopic;
+    const topic = topics.find((t) => t.slug === slug);
     if (!topic) { toast({ title: "Pick a topic" }); return; }
-    setGenBusy(true);
+    const isPerTopic = !!overrideSlug;
+    if (isPerTopic) setTopicBusy(slug); else setGenBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("formula-topic-generate", {
-        body: { topic_slug: topic.slug, topic_name: topic.name, count: genCount, difficulty: genDifficulty },
+        body: { topic_slug: topic.slug, topic_name: topic.name, count: overrideCount ?? genCount, difficulty: genDifficulty },
       });
       if (error) throw error;
-      toast({ title: `Inserted ${data?.inserted ?? 0} new formulas`, description: `Requested ${genCount}, AI returned ${data?.returned ?? 0}.` });
+      setLastRun({ inserted: data?.inserted ?? 0, returned: data?.returned ?? 0, rejected: data?.rejected || [] });
+      toast({
+        title: `${topic.name}: +${data?.inserted ?? 0} formulas`,
+        description: `AI returned ${data?.returned ?? 0}, ${data?.rejected?.length ?? 0} rejected for quality.`,
+      });
       load();
     } catch (e: any) {
       toast({ title: "AI generation failed", description: e.message, variant: "destructive" });
-    } finally { setGenBusy(false); }
+    } finally {
+      if (isPerTopic) setTopicBusy(null); else setGenBusy(false);
+    }
   };
 
   return (
