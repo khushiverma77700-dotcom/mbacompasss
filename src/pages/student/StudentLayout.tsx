@@ -175,7 +175,7 @@ export default function StudentLayout() {
           <div className="text-sm font-semibold">MBA Compass</div>
         </div>
         <div className="flex pt-14">
-          <aside className="hidden lg:block w-80 shrink-0 border-r border-border bg-card/80 h-[calc(100vh-3.5rem)]">
+          <aside className="hidden lg:block w-72 shrink-0 border-r border-border bg-card/80 h-[calc(100vh-3.5rem)]">
             <div className="p-4 space-y-2">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="h-9 rounded-md bg-muted/40 animate-pulse" />
@@ -290,7 +290,7 @@ export default function StudentLayout() {
         >
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
           <aside
-            className="hidden lg:flex flex-col w-80 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20"
+            className="hidden lg:flex flex-col w-72 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20"
             style={{ top: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
           >
             <SidebarContent />
@@ -311,7 +311,7 @@ export default function StudentLayout() {
 
           {/* Main — offset by sidebar width on desktop; padded for bottom nav on mobile */}
           <main
-            className="flex-1 min-w-0 px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:ml-80 pb-[calc(env(safe-area-inset-bottom,0px)+88px)] lg:pb-8"
+            className="flex-1 min-w-0 px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:ml-72 pb-[calc(env(safe-area-inset-bottom,0px)+88px)] lg:pb-8"
           >
             <Outlet />
           </main>
@@ -609,14 +609,12 @@ function SidebarContent() {
             iconBg: "bg-gradient-to-br from-emerald-400 to-teal-600",
             gradient: "from-emerald-50/80 to-teal-50/60",
             activeBorder: "border-emerald-300/80 ring-1 ring-emerald-300/40 text-emerald-700 dark:text-emerald-300",
-            badge: "bg-gradient-to-r from-emerald-500 to-teal-500",
           })}
         {formulaItem &&
           renderKnowledgeDuo(formulaItem, {
             iconBg: "bg-gradient-to-br from-violet-500 to-fuchsia-600",
             gradient: "from-violet-50/80 to-fuchsia-50/60",
             activeBorder: "border-violet-300/80 ring-1 ring-violet-300/40 text-violet-700 dark:text-violet-300",
-            badge: "bg-gradient-to-r from-violet-500 to-fuchsia-500",
           })}
       </div>
 
