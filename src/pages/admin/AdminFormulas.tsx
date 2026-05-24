@@ -236,13 +236,59 @@ export default function AdminFormulas() {
 
         <TabsContent value="topics">
           <Card>
-            <CardContent className="grid grid-cols-2 gap-2 p-4 md:grid-cols-3">
-              {topics.map((t) => (
-                <div key={t.slug} className="rounded-lg border bg-slate-50 p-2 text-sm">
-                  <div className="font-semibold text-slate-900">{t.name}</div>
-                  <div className="text-[11px] text-slate-500">{t.slug}</div>
-                </div>
-              ))}
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Sparkles className="h-4 w-4 text-sky-600" /> One-click topic generators
+              </CardTitle>
+              <p className="text-xs text-slate-500">
+                Each button generates 10 textbook-grade formulas for that topic with proper LaTeX (\frac, \sqrt, ^),
+                full Usage notes and 2+ worked CAT-level examples. Duplicates and low-quality entries are auto-rejected.
+              </p>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {topics.map((t) => {
+                const topicCount = formulas.filter((f) => f.topic_slug === t.slug).length;
+                const isBusy = topicBusy === t.slug;
+                return (
+                  <div key={t.slug} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-gradient-to-br from-white to-sky-50/40 p-3 transition-shadow hover:shadow-md">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold text-slate-900">{t.name}</div>
+                        <div className="truncate text-[11px] text-slate-500">{t.slug}</div>
+                      </div>
+                      <Badge variant="outline" className="shrink-0 border-sky-200 text-[10px] text-sky-700">{topicCount} formulas</Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Button
+                        size="sm"
+                        className="h-8 flex-1 gap-1 bg-gradient-to-r from-sky-600 to-blue-600 text-xs"
+                        disabled={isBusy || genBusy}
+                        onClick={() => runAiBulk(t.slug, 10)}
+                      >
+                        {isBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                        {isBusy ? "Generating…" : "Generate 10"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1 text-xs"
+                        disabled={isBusy || genBusy}
+                        onClick={() => runAiBulk(t.slug, 5)}
+                      >
+                        +5
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => setFilter({ topic: t.slug, q: "" })}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </TabsContent>
