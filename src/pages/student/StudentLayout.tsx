@@ -422,16 +422,56 @@ function SidebarContent() {
     );
   };
 
-  // Order: Overview → Updates → My Mocks group → rest.
+  // Order: Overview → Updates → My Mocks group → My Insights → PerformX → Knowledge Duo → rest.
   const overview = visibleItems.find((i) => i.to === "/student");
   const updates = visibleItems.find((i) => i.to === "/student/notifications");
   const vocabItem = visibleItems.find((i) => i.to === "/student/vocabulary");
+  const formulaItem = visibleItems.find((i) => i.to === "/student/formulas");
   const restItems = visibleItems.filter(
     (i) =>
       i.to !== "/student" &&
       i.to !== "/student/notifications" &&
-      i.to !== "/student/vocabulary"
+      i.to !== "/student/vocabulary" &&
+      i.to !== "/student/formulas"
   );
+
+  // Knowledge Duo block renderer — 3D premium card look for Vocab + Formula Book
+  const renderKnowledgeDuo = (item: NavItem, opts: { iconBg: string; gradient: string; activeBorder: string; badge?: string }) => {
+    const Icon = item.icon;
+    return (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        end={item.end}
+        className={({ isActive }) =>
+          cn(
+            "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold overflow-hidden border transition-all duration-300 group",
+            isActive
+              ? cn(opts.activeBorder, "bg-white shadow-lg scale-[1.02] translate-x-0.5")
+              : cn("border-slate-200/60 bg-gradient-to-br", opts.gradient, "text-foreground hover:shadow-xl hover:-translate-y-0.5 hover:border-slate-300/80 dark:border-slate-500/20")
+          )
+        }
+      >
+        {/* shimmer sweep on hover */}
+        <span className="absolute inset-1 rounded-[10px] bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 -translate-x-full group-hover:translate-x-full pointer-events-none" />
+        {/* soft top highlight line for 3D depth */}
+        <span className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-60" />
+        {/* bottom inner shadow for depth */}
+        <span className="absolute inset-x-0 bottom-1 h-2 rounded-b-xl bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+        <span className={cn("relative h-8 w-8 rounded-xl grid place-items-center text-white shadow-lg ring-2 ring-white/50", opts.iconBg)}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <span className="relative flex-1 text-left truncate">
+          {item.label}
+          {opts.badge && (
+            <span className={cn("ml-1.5 text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded text-white font-black", opts.badge)}>
+              Hot
+            </span>
+          )}
+        </span>
+      </NavLink>
+    );
+  };
 
   return (
     <nav className="w-full p-3 space-y-0.5">
@@ -554,7 +594,31 @@ function SidebarContent() {
         </span>
       </NavLink>
 
-      {vocabItem && renderRow(vocabItem)}
+      {/* Knowledge Duo — B-School Vocabulary + Quant Formula Book side by side / stacked premium cards */}
+      <div className="my-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/90 via-white to-sky-50/80 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-sky-900/10 dark:border-slate-700/40 shadow-sm backdrop-blur p-2 space-y-1.5">
+        <div className="flex items-center gap-2 px-1 pb-1">
+          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-[10px] shadow-sm">
+            <Sparkles className="h-3 w-3" />
+          </span>
+          <span className="text-[11px] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">
+            Knowledge Hub
+          </span>
+        </div>
+        {vocabItem &&
+          renderKnowledgeDuo(vocabItem, {
+            iconBg: "bg-gradient-to-br from-emerald-400 to-teal-600",
+            gradient: "from-emerald-50/80 to-teal-50/60",
+            activeBorder: "border-emerald-300/80 ring-1 ring-emerald-300/40 text-emerald-700 dark:text-emerald-300",
+            badge: "bg-gradient-to-r from-emerald-500 to-teal-500",
+          })}
+        {formulaItem &&
+          renderKnowledgeDuo(formulaItem, {
+            iconBg: "bg-gradient-to-br from-violet-500 to-fuchsia-600",
+            gradient: "from-violet-50/80 to-fuchsia-50/60",
+            activeBorder: "border-violet-300/80 ring-1 ring-violet-300/40 text-violet-700 dark:text-violet-300",
+            badge: "bg-gradient-to-r from-violet-500 to-fuchsia-500",
+          })}
+      </div>
 
       {restItems.map((item) => renderRow(item))}
 
