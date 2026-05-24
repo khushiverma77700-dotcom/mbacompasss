@@ -25,6 +25,7 @@ export default function StudentAttempts() {
 
   const [q, setQ] = useState("");
   const [exam, setExam] = useState<string>("all");
+  const [type, setType] = useState<string>("all");
   const [status, setStatus] = useState<string>("submitted");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
@@ -36,7 +37,7 @@ export default function StudentAttempts() {
     if (!user) return;
     (async () => {
       const { data } = await supabase.from("mock_attempts")
-        .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, accuracy, sectional_scores, time_spent_seconds, test:mock_tests(name, slug, exam_code, category)")
+        .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, accuracy, sectional_scores, time_spent_seconds, test:mock_tests(name, slug, exam_code, category, test_type)")
         .eq("user_id", user.id)
         .order("started_at", { ascending: false });
       setAttempts(data ?? []);
@@ -50,6 +51,32 @@ export default function StudentAttempts() {
     return Array.from(set).sort();
   }, [attempts]);
 
+  const TYPE_LABELS: Record<string, string> = {
+    daily: "Daily Test",
+    full_length: "Full Length",
+    sectional: "Sectional",
+    topic: "Topic Wise",
+    topic_wise: "Topic Wise",
+    practice_set: "Practice Set",
+  };
+
+  const typeOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    attempts.forEach((a) => {
+      const cat = (a.test?.category || "").toLowerCase();
+      const tt = (a.test?.test_type || "").toLowerCase();
+      if (cat === "daily") map.set("daily", TYPE_LABELS["daily"]);
+      if (cat === "full_length") map.set("full_length", TYPE_LABELS["full_length"]);
+      if (cat === "sectional") map.set("sectional", TYPE_LABELS["sectional"]);
+      if (cat === "topic") map.set("topic", TYPE_LABELS["topic"]);
+      if (tt === "full_length") map.set("full_length", TYPE_LABELS["full_length"]);
+      if (tt === "sectional") map.set("sectional", TYPE_LABELS["sectional"]);
+      if (tt === "topic_wise") map.set("topic", TYPE_LABELS["topic"]);
+      if (tt === "practice_set") map.set("practice_set", TYPE_LABELS["practice_set"]);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [attempts]);
+
   const filtered = useMemo(() => {
     let list = attempts.slice();
     if (status !== "all") {
@@ -57,6 +84,15 @@ export default function StudentAttempts() {
       else list = list.filter(a => a.status === status);
     }
     if (exam !== "all") list = list.filter(a => a.test?.exam_code === exam);
+    if (type !== "all") {
+      list = list.filter((a) => {
+        const cat = (a.test?.category || "").toLowerCase();
+        const tt = (a.test?.test_type || "").toLowerCase();
+        if (type === "topic") return cat === "topic" || tt === "topic_wise";
+        if (type === "practice_set") return cat === "practice_set" || tt === "practice_set";
+        return cat === type || tt === type;
+      });
+    }
     if (q) {
       const ql = q.toLowerCase();
       list = list.filter(a => (a.test?.name ?? "").toLowerCase().includes(ql));
@@ -77,7 +113,7 @@ export default function StudentAttempts() {
       case "accuracy_desc": list.sort((a,b)=>cmp(a,b,"accuracy",-1)); break;
     }
     return list;
-  }, [attempts, q, exam, status, from, to, minScore, maxScore, sort]);
+  }, [attempts, q, exam, type, status, from, to, minScore, maxScore, sort]);
 
   // Group by exam_code (sectioned wise)
   const grouped = useMemo(() => {
@@ -124,7 +160,7 @@ export default function StudentAttempts() {
   };
 
   const reset = () => {
-    setQ(""); setExam("all"); setStatus("submitted"); setFrom(""); setTo("");
+    setQ(""); setExam("all"); setType("all"); setStatus("submitted"); setFrom(""); setTo("");
     setMinScore(""); setMaxScore(""); setSort("date_desc");
   };
 
@@ -182,6 +218,18 @@ export default function StudentAttempts() {
                 <SelectItem value="submitted">Completed</SelectItem>
                 <SelectItem value="in_progress">In progress</SelectItem>
                 <SelectItem value="abandoned">Abandoned</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">Mock Type</label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {typeOptions.map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
