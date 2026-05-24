@@ -75,6 +75,7 @@ export default function StudentDayPlanner() {
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [skipDialog, setSkipDialog] = useState<Task | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   const load = async () => {
     if (!user) return;
