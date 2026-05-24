@@ -4604,6 +4604,116 @@ export type Database = {
         }
         Relationships: []
       }
+      personalized_bulk_items: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          current_step: string | null
+          difficulty: string
+          exam_code: string
+          existing_count: number
+          failed_count: number
+          generated_count: number
+          id: string
+          job_id: string
+          last_error: string | null
+          requested_count: number
+          section: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          current_step?: string | null
+          difficulty: string
+          exam_code: string
+          existing_count?: number
+          failed_count?: number
+          generated_count?: number
+          id?: string
+          job_id: string
+          last_error?: string | null
+          requested_count: number
+          section: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          current_step?: string | null
+          difficulty?: string
+          exam_code?: string
+          existing_count?: number
+          failed_count?: number
+          generated_count?: number
+          id?: string
+          job_id?: string
+          last_error?: string | null
+          requested_count?: number
+          section?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personalized_bulk_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "personalized_bulk_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personalized_bulk_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          finished_at: string | null
+          id: string
+          note: string | null
+          status: string
+          total_failed: number
+          total_generated: number
+          total_requested: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: string
+          note?: string | null
+          status?: string
+          total_failed?: number
+          total_generated?: number
+          total_requested?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: string
+          note?: string | null
+          status?: string
+          total_failed?: number
+          total_generated?: number
+          total_requested?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       personalized_hub_access: {
         Row: {
           created_at: string
@@ -7403,6 +7513,35 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      claim_personalized_bulk_item: {
+        Args: { _lock_minutes?: number }
+        Returns: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          current_step: string | null
+          difficulty: string
+          exam_code: string
+          existing_count: number
+          failed_count: number
+          generated_count: number
+          id: string
+          job_id: string
+          last_error: string | null
+          requested_count: number
+          section: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "personalized_bulk_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       colleges_listing: {
         Args: never
         Returns: {
@@ -7565,6 +7704,10 @@ export type Database = {
       rollover_planner_tasks: { Args: { _user_id: string }; Returns: number }
       rollup_mock_generation: {
         Args: { _generation_id: string }
+        Returns: undefined
+      }
+      rollup_personalized_bulk_job: {
+        Args: { _job_id: string }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
