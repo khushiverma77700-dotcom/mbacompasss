@@ -42,6 +42,7 @@ export default function StudentFormulaBook() {
   const [streak, setStreak] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [plainMode, setPlainMode] = useState<Record<string, boolean>>({});
 
   const q = params.get("q") || "";
   const section = params.get("section") || "all";
