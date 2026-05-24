@@ -716,15 +716,15 @@ export default function StudentVocabularyFeed() {
                     </div>
                   )}
 
-                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
                     <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">
                       {w.category?.replace("_", " ")}
                     </Badge>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-1 justify-end gap-1.5 sm:flex-none">
                       <Button
                         variant={isSaved ? "default" : "outline"}
                         size="sm"
-                        className="h-8 gap-1 px-3 text-xs"
+                        className="h-8 gap-1 px-2.5 text-xs sm:px-3"
                         disabled={busy === w.id}
                         onClick={() => toggleBookmark(w.id)}
                       >
@@ -735,7 +735,7 @@ export default function StudentVocabularyFeed() {
                         variant={isRead ? "secondary" : "default"}
                         size="sm"
                         className={cn(
-                          "h-8 gap-1 px-3 text-xs",
+                          "h-8 gap-1 px-2.5 text-xs sm:px-3",
                           !isRead && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95",
                         )}
                         disabled={busy === w.id || isRead}
