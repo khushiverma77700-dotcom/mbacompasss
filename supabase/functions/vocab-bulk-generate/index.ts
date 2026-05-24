@@ -56,6 +56,7 @@ async function generateBatch(
   exam: string | null,
   exclude: string[],
   recentDupes: string[],
+  targetWords: string[],
 ) {
   const catLine = category ? `Restrict every word to the category: ${category}.` : `Cover finance, marketing, consulting, HR, economics, corp_comm, general.`;
   // HARD MODE: force CAT/GDPI-tier difficulty by default. Easy tiers only when admin explicitly asks.
@@ -68,6 +69,9 @@ async function generateBatch(
     : "";
   const sampled = sampleArray(exclude, 400);
   const dupeLine = recentDupes.length ? ` Avoid recent duplicates: ${recentDupes.slice(-100).join(", ")}.` : "";
+  const targetLine = targetWords.length
+    ? `TARGET WORDS: Prefer these exact unused hard words first, and fully enrich them: ${targetWords.join(", ")}. If any target is unsuitable, replace it with another word of the same advanced difficulty.`
+    : "";
   const excludeBlock = exclude.length
     ? `UNIQUENESS: Library has ${exclude.length} words. DO NOT return any (case-insensitive) from: ${sampled.join(", ")}.${dupeLine}`
     : "";
@@ -107,7 +111,8 @@ ${examAppearanceRule}
 ${hardnessBlock}
 If you cannot fully complete ALL fields with high quality, OMIT the word. Unique within batch, not in exclude list.`;
 
-  const user = `Generate exactly ${batchSize} unique fully-complete ${allowEasy ? "" : "HARD CAT/GDPI-tier "}words. ${catLine} ${diffLine} ${examLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool.`;
+  const user = `Generate exactly ${batchSize} unique fully-complete ${allowEasy ? "" : "HARD CAT/GDPI-tier "}words. ${catLine} ${diffLine} ${examLine} ${targetLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool.`;
+  const promptTokenEstimate = estimateTokens(system + user);
 
   const toolSchema = {
     type: "function",
@@ -181,7 +186,11 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   const args = j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
   if (!args) throw new Error("No tool call returned");
   const parsed = JSON.parse(args);
-  return Array.isArray(parsed.words) ? parsed.words : [];
+  return {
+    words: Array.isArray(parsed.words) ? parsed.words : [],
+    inputTokens: j.usage?.prompt_tokens || promptTokenEstimate,
+    outputTokens: j.usage?.completion_tokens || estimateTokens(args),
+  };
 }
 
 async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number }) {
