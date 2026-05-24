@@ -16,7 +16,9 @@ import {
   CalendarDays, CheckCircle2, Clock, Plus, Flame, Trophy, Target,
   Trash2, Play, Pause, BookOpen, Brain, FileText, Repeat, Sparkles,
   TrendingUp, Activity, Edit3, ArrowRight, ArrowRightCircle, SkipForward,
+  BarChart3, HelpCircle, X, Lightbulb, ListChecks, Zap, Award,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PlannerTaskDialog, { TaskFormValue } from "@/components/student/PlannerTaskDialog";
 import PlannerSuggestions from "@/components/student/PlannerSuggestions";
 import { Recurrence, addDays, fmtDate, fmtFullDate, todayStr, describeRecurrence } from "@/lib/plannerRecurrence";
