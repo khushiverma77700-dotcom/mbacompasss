@@ -24,6 +24,7 @@ export default function StudentDailyTest() {
   const dailyEnabled = isEnabled("daily_tests");
   const [today, setToday] = useState<Today | null>(null);
   const [todayMeta, setTodayMeta] = useState<{ qCount: number; difficulty: string | null }>({ qCount: 0, difficulty: null });
+  const [todayAttempt, setTodayAttempt] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [recentAttempts, setRecentAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
