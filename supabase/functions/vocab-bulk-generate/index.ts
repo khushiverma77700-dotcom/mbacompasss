@@ -151,9 +151,12 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   return Array.isArray(parsed.words) ? parsed.words : [];
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+  const keys = {
+    lovable: Deno.env.get("LOVABLE_API_KEY") || "",
+    openai: Deno.env.get("OPENAI_API_KEY") || "",
+  };
 
   let generated = 0, duplicates = 0, failed = 0;
   const seenSlugs = new Set<string>();
@@ -172,9 +175,10 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
   }
 
-  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: "Warming up…" }).eq("id", jobId);
+  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: `Warming up (${provider})…` }).eq("id", jobId);
 
-  const BATCH = 25;
+  // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
+  const BATCH = provider === "openai" ? 40 : 25;
   let consecutiveEmpty = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
   let attempts = 0;
@@ -183,12 +187,12 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     attempts++;
     const need = Math.min(BATCH, total - generated);
     await supabase.from("vocab_generation_jobs").update({
-      current_activity: `Generating batch ${attempts} (${generated}/${total})…`,
+      current_activity: `Generating batch ${attempts} via ${provider} (${generated}/${total})…`,
     }).eq("id", jobId);
 
     let batch: any[] = [];
     try {
-      batch = await generateBatch(LOVABLE_API_KEY, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
+      batch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("Batch error", msg);
