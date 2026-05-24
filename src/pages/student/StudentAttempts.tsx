@@ -222,6 +222,18 @@ export default function StudentAttempts() {
             </Select>
           </div>
           <div>
+            <label className="text-xs text-muted-foreground">Mock Type</label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {typeOptions.map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <label className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" /> From</label>
             <Input type="date" value={from} onChange={e => setFrom(e.target.value)} />
           </div>
