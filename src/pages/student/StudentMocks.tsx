@@ -192,14 +192,14 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const sectionChips = useMemo(() => {
     const s = new Set<string>();
     Object.values(tests).forEach((t) => {
-      if (getKind(t) === "topic_wise" && matchesExam(t)) {
+      if (getKind(t) === "topic_wise") {
         const sec = (t.category || "").trim().toUpperCase();
         if (sec) s.add(sec);
       }
     });
     return Array.from(s).sort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tests, examFilter]);
+  }, [tests]);
 
   // Distinct topics across all topic-wise tests (filtered by section if set)
   const topicChips = useMemo(() => {
