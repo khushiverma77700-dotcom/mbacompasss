@@ -4777,6 +4777,27 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_lookup_audit: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string
+          phone_hash_prefix: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip: string
+          phone_hash_prefix?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string
+          phone_hash_prefix?: string | null
+        }
+        Relationships: []
+      }
       phone_otps: {
         Row: {
           attempts: number

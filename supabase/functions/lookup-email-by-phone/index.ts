@@ -5,6 +5,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// NOTE: This endpoint must remain callable unauthenticated because it powers
+// login-by-mobile and forgot-password flows where the user has no session yet.
+// Enumeration risk is mitigated by:
+//   1. IP-based rate limiting (10 lookups / minute / IP) recorded in `phone_lookup_audit`.
+//   2. Generic "no account" responses with the same shape whether or not a phone exists.
+//   3. Never disclosing the email to a caller whose IP exceeded the cap.
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -23,6 +29,32 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Lightweight rate limit: count lookups from this IP in the last 60s.
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      "unknown";
+
+    const sinceIso = new Date(Date.now() - 60_000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("phone_lookup_audit")
+      .select("id", { count: "exact", head: true })
+      .eq("ip", ip)
+      .gte("created_at", sinceIso);
+
+    if ((recentCount ?? 0) >= 10) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again in a minute." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Record this attempt (best-effort — don't fail the request if logging fails).
+    await supabase
+      .from("phone_lookup_audit")
+      .insert({ ip, phone_hash_prefix: phone.slice(0, 3) })
+      .then(() => undefined, () => undefined);
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -47,7 +79,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("lookup-email-by-phone error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Internal error" }),
+      JSON.stringify({ error: "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

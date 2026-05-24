@@ -1,3 +1,4 @@
+import DOMPurify from "isomorphic-dompurify";
 // Post-processor for AI-generated HTML.
 //
 // 1. Converts inline citation markers — both "[src:NIRF 2025]" (machine-readable)
@@ -244,5 +245,6 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
   // 4. Collapse double spaces that the strips above may have created.
   out = out.replace(/[ \t]{2,}/g, " ");
 
-  return out;
+  // 5. Sanitize to prevent stored XSS — strip <script>, on* handlers, javascript: URLs, etc.
+  return DOMPurify.sanitize(out, { ADD_ATTR: ["target", "rel"] });
 }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import DOMPurify from "isomorphic-dompurify";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -403,7 +404,7 @@ const InstituteCoursePage = () => {
                 <SectionTitle eyebrow="About" title={`About ${c.name}`} />
                 <div
                   className="mt-5 prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-base prose-p:leading-[1.75] prose-p:text-slate-700 prose-a:text-sky-700 prose-table:text-sm prose-th:bg-sky-50 bg-white border border-sky-100 rounded-2xl p-5 md:p-7 shadow-sm"
-                  dangerouslySetInnerHTML={{ __html: c.description }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(c.description) }}
                 />
               </section>
             )}
