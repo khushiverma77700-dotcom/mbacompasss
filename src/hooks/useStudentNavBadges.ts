@@ -108,8 +108,10 @@ export function useStudentNavBadges(): StudentNavBadges {
         "/student/mocks": mocksNew,
         "/student/announcements": annNew,
         "/student/notifications": notifRes.count ?? 0,
+        "/student/support": (supportRes.data ?? []).length,
       });
     };
+
 
     const start = () => {
       compute();
