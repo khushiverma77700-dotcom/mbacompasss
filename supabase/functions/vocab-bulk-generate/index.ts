@@ -317,15 +317,17 @@ Deno.serve(async (req) => {
     count = Math.min(count, 5000);
     const category = body.category && CATEGORIES.includes(body.category) ? body.category : null;
     const difficulty = body.difficulty && DIFFICULTIES.includes(body.difficulty) ? body.difficulty : null;
+    const exam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
 
     const { data: job, error } = await supabase.from("vocab_generation_jobs").insert({
       requested: count, category, difficulty, status: "pending",
-      created_by: user.id, current_activity: "Queued",
+      created_by: user.id,
+      current_activity: exam ? `Queued (${exam}-only)` : "Queued",
     }).select().single();
     if (error) throw error;
 
     // @ts-ignore Edge runtime background tasks
-    EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty));
+    EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty, exam));
 
     return new Response(JSON.stringify({ job_id: job.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
