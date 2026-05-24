@@ -299,7 +299,7 @@ export default function StudentFormulaBook() {
                   <div className="text-[10px] uppercase tracking-wider text-slate-500">Pick a section, then drill into topics</div>
                 </div>
               </div>
-              {(section !== "all" || topic !== "all" || exam !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
+              {(section !== "all" || topic !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
                 <button
                   onClick={() => setParams(new URLSearchParams(q ? { q } : {}))}
                   className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600"
