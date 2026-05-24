@@ -14,6 +14,7 @@ export type FeatureKey =
   | "ai_insights"
   | "day_planner"
   | "ai_tools"
+  | "vocabulary_hub"
   | "buy_mocks"
   | "support";
 
