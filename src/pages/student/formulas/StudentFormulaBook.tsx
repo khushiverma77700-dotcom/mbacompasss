@@ -102,6 +102,10 @@ export default function StudentFormulaBook() {
   const visible = useMemo(() => {
     const qLower = q.trim().toLowerCase();
     return formulas.filter((f) => {
+      if (section !== "all") {
+        // formula belongs to section if topic_slug == section or its topic has parent_slug == section
+        if (f.topic_slug !== section && !topicSlugsInSection.has(f.topic_slug)) return false;
+      }
       if (topic !== "all" && f.topic_slug !== topic) return false;
       if (exam !== "all" && !(f.exam_tags || []).includes(exam)) return false;
       if (difficulty !== "all" && f.difficulty !== difficulty) return false;
@@ -120,7 +124,7 @@ export default function StudentFormulaBook() {
       }
       return true;
     });
-  }, [formulas, q, topic, exam, difficulty, status, shortcutOnly, importantOnly, progress]);
+  }, [formulas, q, section, topic, exam, difficulty, status, shortcutOnly, importantOnly, progress, topicSlugsInSection]);
 
   // Suggestions while typing
   const suggestions = useMemo(() => {
