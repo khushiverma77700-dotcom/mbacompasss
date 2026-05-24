@@ -6580,9 +6580,11 @@ export type Database = {
       vocab_progress: {
         Row: {
           id: string
+          is_read: boolean
           last_seen_at: string | null
           mastery: number
           next_review_at: string
+          read_at: string | null
           times_correct: number
           times_seen: number
           updated_at: string
@@ -6591,9 +6593,11 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_read?: boolean
           last_seen_at?: string | null
           mastery?: number
           next_review_at?: string
+          read_at?: string | null
           times_correct?: number
           times_seen?: number
           updated_at?: string
@@ -6602,9 +6606,11 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_read?: boolean
           last_seen_at?: string | null
           mastery?: number
           next_review_at?: string
+          read_at?: string | null
           times_correct?: number
           times_seen?: number
           updated_at?: string
@@ -6724,14 +6730,17 @@ export type Database = {
           category: Database["public"]["Enums"]["vocab_category"]
           created_at: string
           difficulty: Database["public"]["Enums"]["vocab_difficulty"]
+          exam_appearances: string[]
           example_business: string | null
           example_email: string | null
           example_interview: string | null
           hinglish_meaning: string | null
           id: string
           meaning: string
+          meaning_hindi: string | null
           part_of_speech: string | null
           pronunciation: string | null
+          pronunciation_syllables: string | null
           slug: string
           source: string
           synonyms: string[]
@@ -6743,14 +6752,17 @@ export type Database = {
           category?: Database["public"]["Enums"]["vocab_category"]
           created_at?: string
           difficulty?: Database["public"]["Enums"]["vocab_difficulty"]
+          exam_appearances?: string[]
           example_business?: string | null
           example_email?: string | null
           example_interview?: string | null
           hinglish_meaning?: string | null
           id?: string
           meaning: string
+          meaning_hindi?: string | null
           part_of_speech?: string | null
           pronunciation?: string | null
+          pronunciation_syllables?: string | null
           slug: string
           source?: string
           synonyms?: string[]
@@ -6762,14 +6774,17 @@ export type Database = {
           category?: Database["public"]["Enums"]["vocab_category"]
           created_at?: string
           difficulty?: Database["public"]["Enums"]["vocab_difficulty"]
+          exam_appearances?: string[]
           example_business?: string | null
           example_email?: string | null
           example_interview?: string | null
           hinglish_meaning?: string | null
           id?: string
           meaning?: string
+          meaning_hindi?: string | null
           part_of_speech?: string | null
           pronunciation?: string | null
+          pronunciation_syllables?: string | null
           slug?: string
           source?: string
           synonyms?: string[]
@@ -7169,14 +7184,17 @@ export type Database = {
           category: Database["public"]["Enums"]["vocab_category"]
           created_at: string
           difficulty: Database["public"]["Enums"]["vocab_difficulty"]
+          exam_appearances: string[]
           example_business: string | null
           example_email: string | null
           example_interview: string | null
           hinglish_meaning: string | null
           id: string
           meaning: string
+          meaning_hindi: string | null
           part_of_speech: string | null
           pronunciation: string | null
+          pronunciation_syllables: string | null
           slug: string
           source: string
           synonyms: string[]
@@ -7190,13 +7208,19 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      vocab_mark_read: {
+        Args: { _read?: boolean; _word_id: string }
+        Returns: undefined
+      }
       vocab_update_progress: {
         Args: { _correct: boolean; _word_id: string }
         Returns: {
           id: string
+          is_read: boolean
           last_seen_at: string | null
           mastery: number
           next_review_at: string
+          read_at: string | null
           times_correct: number
           times_seen: number
           updated_at: string
