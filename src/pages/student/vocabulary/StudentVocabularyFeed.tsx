@@ -570,32 +570,8 @@ export default function StudentVocabularyFeed() {
             </div>
           )}
 
-          <div>
-            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              <GraduationCap className="h-3 w-3" /> Exam Focus
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {EXAMS.map((c) => (
-                <Chip key={c.k} active={exam === c.k} onClick={() => setFilter("exam", c.k)}>{c.l}</Chip>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              <Filter className="h-3 w-3" /> Level
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {LEVELS.map((c) => (
-                <Chip key={c.k} active={difficulty === c.k} onClick={() => setFilter("difficulty", c.k)}>{c.l}</Chip>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center justify-between border-t pt-3">
-            <div className="flex items-center gap-2">
-              <Switch id="show-read" checked={showRead} onCheckedChange={setShowRead} />
-              <Label htmlFor="show-read" className="cursor-pointer text-xs text-slate-600">Show words I've marked as read</Label>
-            </div>
-            <span className="text-[11px] text-slate-500">{visible.length} of {words.length}</span>
+          <div className="flex items-center justify-end border-t pt-3">
+            <span className="text-[11px] text-slate-500">{visible.length} new words to learn</span>
           </div>
         </CardContent>
 
