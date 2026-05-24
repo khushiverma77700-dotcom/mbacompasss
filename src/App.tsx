@@ -865,6 +865,7 @@ const App = () => (
               <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
               <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
               <Route path="vocabulary/word/:slug" element={<InnerLazyPage><StudentVocabularyWord /></InnerLazyPage>} />
+              <Route path="formulas" element={<InnerLazyPage><StudentFormulaBook /></InnerLazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
