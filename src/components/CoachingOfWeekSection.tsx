@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cdnImage } from "@/lib/imageTransform";
 import { Link } from "react-router-dom";
 import {
   Star, Gift, CheckCircle, BookOpen,
@@ -109,7 +110,7 @@ const CoachingOfWeekSection = () => {
                       {/* Logo overlay */}
                       {inst?.logo_url && (
                         <div className="absolute bottom-3 left-3 w-12 h-12 rounded-xl bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center p-1.5">
-                          <img src={inst.logo_url} alt="" className="w-full h-full object-contain" loading="lazy" />
+                          <img src={cdnImage(inst.logo_url, { width: 180, quality: 75 })} alt="" className="w-full h-full object-contain" loading="lazy" decoding="async" />
                         </div>
                       )}
                     </div>

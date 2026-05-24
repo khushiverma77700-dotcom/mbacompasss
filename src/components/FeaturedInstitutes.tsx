@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useFeaturedInstitutes } from "@/hooks/useInstitutes";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cdnImage } from "@/lib/imageTransform";
 
 const FeaturedInstitutes = () => {
   const { data: featured = [], isLoading } = useFeaturedInstitutes();
@@ -71,7 +72,7 @@ const FeaturedInstitutes = () => {
                     />
                   ) : inst.logo_url ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/90 to-primary">
-                      <img src={inst.logo_url} alt={inst.name} className="h-16 w-auto object-contain drop-shadow-lg" loading="lazy" />
+                      <img src={cdnImage(inst.logo_url, { width: 240, quality: 75 })} alt={inst.name} className="h-16 w-auto object-contain drop-shadow-lg" loading="lazy" decoding="async" />
                     </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

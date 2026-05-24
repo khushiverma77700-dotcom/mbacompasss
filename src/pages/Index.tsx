@@ -102,24 +102,24 @@ const Index = () => {
 
       {/* Everything else: mount only when scrolled near. Each section gets its own
           IntersectionObserver so initial JS execution stays tiny. */}
-      <LazyMount minHeight={900}><MocksBannerSection /></LazyMount>
-      <LazyMount minHeight={500}><AIToolsSection /></LazyMount>
-      <LazyMount minHeight={700}><AIStudyPlannerSection /></LazyMount>
-      <LazyMount minHeight={500}><CoachingOfWeekSection /></LazyMount>
-      <LazyMount minHeight={400}><OfferBanners /></LazyMount>
-      <LazyMount minHeight={500}><FeaturedInstitutes /></LazyMount>
-      <LazyMount minHeight={600}><TopRankedCollegesSection /></LazyMount>
-      <LazyMount minHeight={500}><BrowseByCitySection /></LazyMount>
-      <LazyMount minHeight={160}><ExamDeadlinesTicker /></LazyMount>
-      <LazyMount minHeight={500}><PopularExamsSection /></LazyMount>
-      <LazyMount minHeight={500}><HowItWorksSection /></LazyMount>
-      <LazyMount minHeight={500}><LearningResourcesSection /></LazyMount>
-      <LazyMount minHeight={300}><ProfileAnalyzerCTA /></LazyMount>
-      <LazyMount minHeight={400}><LatestArticlesSection /></LazyMount>
-      <LazyMount minHeight={400}><SuccessStoriesSection /></LazyMount>
-      <LazyMount minHeight={400}><WhyChooseUs /></LazyMount>
-      <LazyMount minHeight={400}><FAQSection /></LazyMount>
-      <LazyMount minHeight={300}><CTASection /></LazyMount>
+      <LazyMount minHeight={80}><MocksBannerSection /></LazyMount>
+      <LazyMount minHeight={80}><AIToolsSection /></LazyMount>
+      <LazyMount minHeight={80}><AIStudyPlannerSection /></LazyMount>
+      <LazyMount minHeight={80}><CoachingOfWeekSection /></LazyMount>
+      <LazyMount minHeight={80}><OfferBanners /></LazyMount>
+      <LazyMount minHeight={80}><FeaturedInstitutes /></LazyMount>
+      <LazyMount minHeight={80}><TopRankedCollegesSection /></LazyMount>
+      <LazyMount minHeight={80}><BrowseByCitySection /></LazyMount>
+      <LazyMount minHeight={80}><ExamDeadlinesTicker /></LazyMount>
+      <LazyMount minHeight={80}><PopularExamsSection /></LazyMount>
+      <LazyMount minHeight={80}><HowItWorksSection /></LazyMount>
+      <LazyMount minHeight={80}><LearningResourcesSection /></LazyMount>
+      <LazyMount minHeight={80}><ProfileAnalyzerCTA /></LazyMount>
+      <LazyMount minHeight={80}><LatestArticlesSection /></LazyMount>
+      <LazyMount minHeight={80}><SuccessStoriesSection /></LazyMount>
+      <LazyMount minHeight={80}><WhyChooseUs /></LazyMount>
+      <LazyMount minHeight={80}><FAQSection /></LazyMount>
+      <LazyMount minHeight={80}><CTASection /></LazyMount>
 
       <div className="container mx-auto px-4 pb-8">
         <LazyMount minHeight={80}>

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cdnImage } from "@/lib/imageTransform";
 import { motion } from "framer-motion";
 import { Star, Quote, Award, ChevronRight, User, ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -100,7 +101,7 @@ const SuccessStoriesSection = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-primary/10">
                     {story.image_url ? (
-                      <img src={story.image_url} alt={story.name} className="w-full h-full object-cover" />
+                      <img src={cdnImage(story.image_url, { width: 200, quality: 75 })} alt={story.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <User className="w-7 h-7 text-primary" />
                     )}
