@@ -805,6 +805,8 @@ const App = () => (
             <Route path="/courses/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/bundles" element={<PublicLayout><LazyPage><MockBundlesListPage /></LazyPage></PublicLayout>} />
             <Route path="/bundles/:slug" element={<PublicLayout><LazyPage><MockBundleDetailPage /></LazyPage></PublicLayout>} />
+            <Route path="/formulas" element={<PublicLayout><LazyPage><FormulasListPage /></LazyPage></PublicLayout>} />
+            <Route path="/formula/:slug" element={<PublicLayout><LazyPage><FormulaDetailPage /></LazyPage></PublicLayout>} />
 
             <Route path="/mocks/:slug" element={<PublicLayout><LazyPage><MockTestIntroPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
