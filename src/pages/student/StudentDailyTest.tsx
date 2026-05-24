@@ -344,3 +344,58 @@ function Stat({ label, value, icon }: any) {
     </div>
   );
 }
+
+function HistoryList({ rows, emptyText, dailyEnabled, setUpgradeOpen, isUpcoming }: { rows: any[]; emptyText: string; dailyEnabled: boolean; setUpgradeOpen: (b: boolean) => void; isUpcoming?: boolean }) {
+  if (!rows || rows.length === 0) {
+    return <div className="text-sm text-muted-foreground py-6 text-center">{emptyText}</div>;
+  }
+  return (
+    <div className="divide-y">
+      {rows.map(h => {
+        const completed = !!h.progress?.completed_at;
+        return (
+          <div key={h.assigned_date} className="py-3 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-lg grid place-items-center text-xs font-bold ${completed ? "bg-emerald-100 text-emerald-700" : isUpcoming ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700"}`}>
+                {new Date(h.assigned_date).getDate()}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate">{h.title || h.test?.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(h.assigned_date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                  {h.test?.total_duration_minutes && <> · {h.test.total_duration_minutes} min</>}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {completed ? (
+                <>
+                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-100">Completed</Badge>
+                  {h.progress.attempt_id && (
+                    <Link to={`/student/daily-test/report/${h.progress.attempt_id}`}>
+                      <Button size="sm" variant="outline">View report</Button>
+                    </Link>
+                  )}
+                </>
+              ) : isUpcoming ? (
+                <Badge variant="secondary" className="bg-sky-50 text-sky-700 border-sky-100">Scheduled</Badge>
+              ) : (
+                h.test?.slug && (
+                  dailyEnabled ? (
+                    <Link to={`/mocks/${h.test.slug}`}>
+                      <Button size="sm" variant="outline">Attempt now</Button>
+                    </Link>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => setUpgradeOpen(true)} className="gap-1">
+                      <Lock className="h-3 w-3" /> Locked
+                    </Button>
+                  )
+                )
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
