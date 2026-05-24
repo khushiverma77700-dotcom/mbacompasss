@@ -373,19 +373,21 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
               className="pl-9 h-10 bg-white text-sm"
             />
           </div>
-          <div>
-            <Select value={examFilter} onValueChange={setExamFilter}>
-              <SelectTrigger className="h-10 bg-white text-sm">
-                <SelectValue placeholder="Select exam" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Exams</SelectItem>
-                {EXAM_FILTERS.map((f) => (
-                  <SelectItem key={f} value={f}>{f}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {fixedType !== "topic_wise" && (
+            <div>
+              <Select value={examFilter} onValueChange={setExamFilter}>
+                <SelectTrigger className="h-10 bg-white text-sm">
+                  <SelectValue placeholder="Select exam" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Exams</SelectItem>
+                  {EXAM_FILTERS.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {fixedType === "attempted" && (
             <div>
               <Select value={attemptedTypeFilter} onValueChange={setAttemptedTypeFilter}>
