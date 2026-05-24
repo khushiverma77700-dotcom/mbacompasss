@@ -44,9 +44,12 @@ interface LazyMountProps {
 
 export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fallback = null }: LazyMountProps) => {
   const { ref, inView } = useInView<HTMLDivElement>(rootMargin);
+  // Only reserve minHeight as a placeholder BEFORE mount. Once the real
+  // section is rendered, drop the reservation so we don't leave blank gaps
+  // when the section is shorter than the reserved space.
   return createElement(
     "div",
-    { ref, style: { minHeight } },
+    { ref, style: inView ? undefined : { minHeight } },
     inView ? createElement(Suspense, { fallback }, children) : null
   );
 };
