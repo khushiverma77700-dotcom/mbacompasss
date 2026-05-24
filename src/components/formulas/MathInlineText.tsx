@@ -16,7 +16,7 @@ const BRACE_GROUP = String.raw`\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}`;
 const SCRIPT_GROUP = String.raw`[_^](?:${BRACE_GROUP}|[A-Za-z0-9]+)`;
 const ATOM_RE =
   new RegExp(
-    String.raw`\\[a-zA-Z]+(?:\s*(?:${BRACE_GROUP}|${SCRIPT_GROUP}))*|[∏ΣΠ](?:\s*${SCRIPT_GROUP})*|[A-Za-z]${SCRIPT_GROUP}`,
+    String.raw`\\[a-zA-Z]+(?:\s*(?:${BRACE_GROUP}|${SCRIPT_GROUP}))*|[∏∑ΣΠ](?:\s*${SCRIPT_GROUP})*|[A-Za-z]${SCRIPT_GROUP}`,
     "g",
   );
 
@@ -72,6 +72,10 @@ function normalizeMathExpression(expr: string): string {
     .replace(/ℤ/g, "\\mathbb{Z}")
     .replace(/ℚ/g, "\\mathbb{Q}")
     .replace(/ℝ/g, "\\mathbb{R}")
+    .replace(/Π(?=\s*_)/g, "\\prod")
+    .replace(/Σ(?=\s*_)/g, "\\sum")
+    .replace(/∏/g, "\\prod")
+    .replace(/∑/g, "\\sum")
     .replace(/≤/g, "\\leq")
     .replace(/≥/g, "\\geq")
     .replace(/≠/g, "\\neq")
