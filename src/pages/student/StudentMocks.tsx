@@ -178,6 +178,8 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const matchesQuery = (t: Test) => !q || t.name.toLowerCase().includes(q.toLowerCase());
 
   const getKind = (t: Test): TypeKey | null => {
+    // Daily-test mocks belong to the Daily Test feature only — exclude from generic buckets.
+    if ((t.category || "").toLowerCase() === "daily") return null;
     const k = (t.test_type || "").toLowerCase();
     if (k === "topic" || k === "topic_wise") return "topic_wise";
     if (k === "full_length" || k === "sectional" || k === "practice_set") return k as TypeKey;
