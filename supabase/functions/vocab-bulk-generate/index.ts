@@ -29,105 +29,121 @@ function sampleArray<T>(arr: T[], n: number): T[] {
   return out;
 }
 
-async function generateBatch(LOVABLE_API_KEY: string, batchSize: number, category: string | null, difficulty: string | null, exam: string | null, exclude: string[], recentDupes: string[]) {
-  const catLine = category ? `Restrict every word to the category: ${category}.` : `Cover a wide range of MBA categories: finance, marketing, consulting, HR, economics, corp_comm, general.`;
+type Provider = "lovable" | "openai";
+
+async function generateBatch(
+  provider: Provider,
+  keys: { lovable: string; openai: string },
+  batchSize: number,
+  category: string | null,
+  difficulty: string | null,
+  exam: string | null,
+  exclude: string[],
+  recentDupes: string[],
+) {
+  const catLine = category ? `Restrict every word to the category: ${category}.` : `Cover finance, marketing, consulting, HR, economics, corp_comm, general.`;
   const diffLine = difficulty ? `Difficulty: ${difficulty}.` : `Mix difficulty across beginner, intermediate, cat, gdpi.`;
   const examLine = exam
-    ? `CRITICAL EXAM SCOPE: Only return words that have ACTUALLY appeared in real past ${exam} papers (verbal / RC / vocabulary / sentence-correction / cloze sections). For each word you MUST list at least one real, verifiable past ${exam} appearance with the YEAR and SLOT (e.g. "${exam} 2019 Slot 2", "${exam} 2021 Slot 1"). If you are not sure the word genuinely appeared in a real ${exam} paper, OMIT it.`
+    ? `EXAM SCOPE: Only words actually appeared in real past ${exam} papers (verbal/RC/vocab/SC/cloze). Each MUST list at least one verifiable "${exam} <YEAR> Slot <N>" appearance. If unsure, OMIT.`
     : "";
-  const sampled = sampleArray(exclude, 600);
-  const dupeLine = recentDupes.length
-    ? ` ESPECIALLY AVOID these recently-rejected duplicates: ${recentDupes.slice(-150).join(", ")}.`
-    : "";
+  const sampled = sampleArray(exclude, 400);
+  const dupeLine = recentDupes.length ? ` Avoid recent duplicates: ${recentDupes.slice(-100).join(", ")}.` : "";
   const excludeBlock = exclude.length
-    ? `STRICT UNIQUENESS RULE: The library already contains ${exclude.length} words. DO NOT return any word (case-insensitive, ignoring punctuation/spaces) from this sample of already-used words: ${sampled.join(", ")}.${dupeLine} Pick fresh, less-common MBA words instead.`
+    ? `UNIQUENESS: Library has ${exclude.length} words. DO NOT return any (case-insensitive) from: ${sampled.join(", ")}.${dupeLine}`
     : "";
 
   const examAppearanceRule = exam
-    ? `- exam_appearances: REQUIRED non-empty array. Each entry must be a string in the EXACT format "${exam} <YEAR> Slot <N>" (e.g. "${exam} 2019 Slot 2") OR "${exam} <YEAR>" if the paper had no slots. At least one entry mandatory. Do NOT fabricate — only include genuine past-paper appearances.`
-    : `- exam_appearances: array of real past Indian MBA entrance exam appearances in the format "EXAM YEAR Slot N" (e.g. "CAT 2019 Slot 2", "XAT 2021"). If unsure, return []. Never fabricate.`;
+    ? `- exam_appearances: REQUIRED non-empty. Each entry matches "${exam} <YEAR> Slot <N>" or "${exam} <YEAR>". Never fabricate.`
+    : `- exam_appearances: real past Indian MBA exam appearances ("CAT 2019 Slot 2"). If unsure, return [].`;
 
-  const system = `You are an MBA vocabulary curator for Indian aspirants preparing for CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT, GDPI, WAT, and placements.
+  // Compact system prompt — saves ~500 input tokens per call vs the old verbose one.
+  const system = `You curate MBA vocabulary for Indian aspirants (CAT/XAT/NMAT/SNAP/IIFT/CMAT/MAT, GDPI, placements).
 
-Return high-utility business / academic words useful in RC, verbal sections, interviews, GDs and corporate emails.
-
-ABSOLUTE REQUIREMENTS — every single word MUST include EVERY field below, fully filled, no nulls, no empty strings, no placeholders:
-- word: the English word
-- part_of_speech: noun / verb / adjective / adverb (lowercase)
-- meaning: clear 1-2 sentence English definition (>= 10 words)
-- meaning_hindi: meaning in DEVANAGARI script (must contain Devanagari characters, NOT romanised). Example: "मूल्यह्रास — किसी संपत्ति के मूल्य में समय के साथ क्रमिक कमी।"
-- hinglish_meaning: easy Hinglish (Roman script Hindi) explanation a college student would use. Example: "Matlab koi cheez ya asset ki value time ke saath dheere-dheere kam hona."
-- pronunciation_syllables: hyphen-broken easy syllables with the STRESSED syllable in CAPS. Example: "uh-MOR-tuh-zay-shun". MUST contain at least one hyphen.
-- pronunciation: same as pronunciation_syllables (or an IPA-like simple form).
-- synonyms: 3-5 close English synonyms
-- antonyms: 2-5 antonyms (use closest opposites if exact ones don't exist; never empty)
-- example_business: one full sentence using the word in a business/board-room context
-- example_interview: one full sentence using the word in an MBA interview answer
-- example_email: one full sentence using the word in a professional email
+EVERY word MUST include EVERY field, fully filled — no nulls, no placeholders:
+- word, part_of_speech (noun/verb/adjective/adverb, lowercase)
+- meaning: 1-2 sentence English definition (>=10 words)
+- meaning_hindi: DEVANAGARI script (must contain Devanagari chars). Ex: "मूल्यह्रास — संपत्ति के मूल्य में क्रमिक कमी।"
+- hinglish_meaning: easy Roman-script Hindi. Ex: "Matlab asset ki value time ke saath kam hona."
+- pronunciation_syllables: hyphen-broken, STRESSED syllable in CAPS. Ex: "uh-MOR-tuh-zay-shun" (MUST contain a hyphen)
+- pronunciation: same as syllables
+- synonyms: 3-5 strings | antonyms: 2-5 strings (never empty)
+- example_business, example_interview, example_email: one full sentence each
 ${examAppearanceRule}
-- category: one of finance, marketing, consulting, hr, economics, corp_comm, general
-- difficulty: one of beginner, intermediate, cat, gdpi
+- category: finance|marketing|consulting|hr|economics|corp_comm|general
+- difficulty: beginner|intermediate|cat|gdpi
 
-If you cannot fully complete ALL fields for a word with high quality, OMIT that word entirely — do NOT return partial entries. Words must be unique within the batch and must not appear in the exclude list.`;
+If you cannot fully complete ALL fields with high quality, OMIT the word. Unique within batch, not in exclude list.`;
 
-  const user = `Generate exactly ${batchSize} unique, fully-complete MBA/business vocabulary words. ${catLine} ${diffLine} ${examLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool. Every word must pass all ABSOLUTE REQUIREMENTS above.`;
+  const user = `Generate exactly ${batchSize} unique fully-complete words. ${catLine} ${diffLine} ${examLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool.`;
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const toolSchema = {
+    type: "function",
+    function: {
+      name: "emit_vocab_batch",
+      description: "Return a batch of structured MBA vocabulary words.",
+      parameters: {
+        type: "object",
+        properties: {
+          words: {
+            type: "array",
+            minItems: 1,
+            items: {
+              type: "object",
+              properties: {
+                word: { type: "string" },
+                part_of_speech: { type: "string" },
+                meaning: { type: "string" },
+                meaning_hindi: { type: "string" },
+                hinglish_meaning: { type: "string" },
+                pronunciation: { type: "string" },
+                pronunciation_syllables: { type: "string" },
+                synonyms: { type: "array", items: { type: "string" }, maxItems: 5 },
+                antonyms: { type: "array", items: { type: "string" }, maxItems: 5 },
+                example_business: { type: "string" },
+                example_interview: { type: "string" },
+                example_email: { type: "string" },
+                exam_appearances: { type: "array", items: { type: "string" }, maxItems: 6 },
+                category: { type: "string", enum: CATEGORIES },
+                difficulty: { type: "string", enum: DIFFICULTIES },
+              },
+              required: ["word","part_of_speech","meaning","meaning_hindi","hinglish_meaning","pronunciation_syllables","synonyms","antonyms","example_business","example_interview","example_email","exam_appearances","category","difficulty"],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ["words"],
+        additionalProperties: false,
+      },
+    },
+  } as const;
+
+  const endpoint = provider === "openai"
+    ? "https://api.openai.com/v1/chat/completions"
+    : "https://ai.gateway.lovable.dev/v1/chat/completions";
+  const apiKey = provider === "openai" ? keys.openai : keys.lovable;
+  const model = provider === "openai" ? "gpt-4o-mini" : "google/gemini-3-flash-preview";
+
+  if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "LOVABLE_API_KEY not configured");
+
+  const resp = await fetch(endpoint, {
     method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      tools: [{
-        type: "function",
-        function: {
-          name: "emit_vocab_batch",
-          description: "Return a batch of structured MBA vocabulary words.",
-          parameters: {
-            type: "object",
-            properties: {
-              words: {
-                type: "array",
-                minItems: 1,
-                items: {
-                  type: "object",
-                  properties: {
-                    word: { type: "string" },
-                    part_of_speech: { type: "string" },
-                    meaning: { type: "string" },
-                    meaning_hindi: { type: "string", description: "Hindi meaning in Devanagari" },
-                    hinglish_meaning: { type: "string" },
-                    pronunciation: { type: "string" },
-                    pronunciation_syllables: { type: "string" },
-                    synonyms: { type: "array", items: { type: "string" }, maxItems: 5 },
-                    antonyms: { type: "array", items: { type: "string" }, maxItems: 5 },
-                    example_business: { type: "string" },
-                    example_interview: { type: "string" },
-                    example_email: { type: "string" },
-                    exam_appearances: { type: "array", items: { type: "string" }, maxItems: 6 },
-                    category: { type: "string", enum: CATEGORIES },
-                    difficulty: { type: "string", enum: DIFFICULTIES },
-                  },
-                  required: ["word","part_of_speech","meaning","meaning_hindi","hinglish_meaning","pronunciation_syllables","synonyms","antonyms","example_business","example_interview","example_email","exam_appearances","category","difficulty"],
-                  additionalProperties: false,
-                },
-              },
-            },
-            required: ["words"],
-            additionalProperties: false,
-          },
-        },
-      }],
+      tools: [toolSchema],
       tool_choice: { type: "function", function: { name: "emit_vocab_batch" } },
+      ...(provider === "openai" ? { temperature: 0.7 } : {}),
     }),
   });
 
   if (resp.status === 429) throw new Error("RATE_LIMIT");
   if (resp.status === 402) throw new Error("CREDITS_EXHAUSTED");
-  if (!resp.ok) throw new Error(`AI gateway ${resp.status}: ${await resp.text()}`);
+  if (resp.status === 401) throw new Error(`${provider.toUpperCase()}_AUTH_FAILED`);
+  if (!resp.ok) throw new Error(`${provider} ${resp.status}: ${await resp.text()}`);
   const j = await resp.json();
   const args = j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
   if (!args) throw new Error("No tool call returned");
@@ -135,9 +151,12 @@ If you cannot fully complete ALL fields for a word with high quality, OMIT that 
   return Array.isArray(parsed.words) ? parsed.words : [];
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+  const keys = {
+    lovable: Deno.env.get("LOVABLE_API_KEY") || "",
+    openai: Deno.env.get("OPENAI_API_KEY") || "",
+  };
 
   let generated = 0, duplicates = 0, failed = 0;
   const seenSlugs = new Set<string>();
@@ -156,9 +175,10 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
   }
 
-  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: "Warming up…" }).eq("id", jobId);
+  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: `Warming up (${provider})…` }).eq("id", jobId);
 
-  const BATCH = 25;
+  // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
+  const BATCH = provider === "openai" ? 40 : 25;
   let consecutiveEmpty = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
   let attempts = 0;
@@ -167,12 +187,12 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     attempts++;
     const need = Math.min(BATCH, total - generated);
     await supabase.from("vocab_generation_jobs").update({
-      current_activity: `Generating batch ${attempts} (${generated}/${total})…`,
+      current_activity: `Generating batch ${attempts} via ${provider} (${generated}/${total})…`,
     }).eq("id", jobId);
 
     let batch: any[] = [];
     try {
-      batch = await generateBatch(LOVABLE_API_KEY, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
+      batch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("Batch error", msg);
@@ -318,16 +338,21 @@ Deno.serve(async (req) => {
     const category = body.category && CATEGORIES.includes(body.category) ? body.category : null;
     const difficulty = body.difficulty && DIFFICULTIES.includes(body.difficulty) ? body.difficulty : null;
     const exam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
+    const provider: Provider = body.provider === "openai" ? "openai" : "lovable";
+
+    if (provider === "openai" && !Deno.env.get("OPENAI_API_KEY")) {
+      return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured in backend secrets." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const { data: job, error } = await supabase.from("vocab_generation_jobs").insert({
       requested: count, category, difficulty, status: "pending",
       created_by: user.id,
-      current_activity: exam ? `Queued (${exam}-only)` : "Queued",
+      current_activity: `Queued (${provider}${exam ? `, ${exam}-only` : ""})`,
     }).select().single();
     if (error) throw error;
 
     // @ts-ignore Edge runtime background tasks
-    EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty, exam));
+    EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty, exam, provider));
 
     return new Response(JSON.stringify({ job_id: job.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {

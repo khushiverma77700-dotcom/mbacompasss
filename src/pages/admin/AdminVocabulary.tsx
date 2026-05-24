@@ -35,6 +35,7 @@ export default function AdminVocabulary() {
   const [bulkCategory, setBulkCategory] = useState<string>("any");
   const [bulkDifficulty, setBulkDifficulty] = useState<string>("any");
   const [bulkExam, setBulkExam] = useState<string>("any");
+  const [bulkProvider, setBulkProvider] = useState<"lovable" | "openai">("lovable");
   const [bulkJobId, setBulkJobId] = useState<string | null>(null);
   const [bulkJob, setBulkJob] = useState<any>(null);
   const [bulkStarting, setBulkStarting] = useState(false);
@@ -82,6 +83,7 @@ export default function AdminVocabulary() {
         category: bulkCategory === "any" ? null : bulkCategory,
         difficulty: bulkDifficulty === "any" ? null : bulkDifficulty,
         exam: bulkExam === "any" ? null : bulkExam,
+        provider: bulkProvider,
       },
     });
     setBulkStarting(false);
@@ -258,6 +260,29 @@ export default function AdminVocabulary() {
                   Only words verified to have appeared in past <b>{bulkExam}</b> papers will be saved. Each word will include the exam name, year, and slot (e.g. "{bulkExam} 2019 Slot 2").
                 </p>
               )}
+
+              <div className="rounded-lg border border-border bg-background p-3 space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground">AI Provider (cost control)</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBulkProvider("lovable")}
+                    className={`text-left rounded-md border p-3 transition ${bulkProvider === "lovable" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/40"}`}
+                  >
+                    <div className="text-sm font-semibold">Lovable AI (Gemini Flash)</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">Default. Billed via workspace credits. ~$1–3 / 1,000 words.</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBulkProvider("openai")}
+                    className={`text-left rounded-md border p-3 transition ${bulkProvider === "openai" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/40"}`}
+                  >
+                    <div className="text-sm font-semibold">Your OpenAI API (gpt-4o-mini)</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">Billed to your OpenAI account. ~$0.40–0.80 / 1,000 words (larger batches, compact prompt).</div>
+                  </button>
+                </div>
+              </div>
+
               <Button onClick={startBulk} disabled={bulkStarting || (bulkJob && bulkJob.status === "running")} className="gap-2">
                 {bulkStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                 Start AI Generation
