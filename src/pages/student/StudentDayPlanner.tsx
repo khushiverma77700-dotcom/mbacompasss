@@ -16,7 +16,9 @@ import {
   CalendarDays, CheckCircle2, Clock, Plus, Flame, Trophy, Target,
   Trash2, Play, Pause, BookOpen, Brain, FileText, Repeat, Sparkles,
   TrendingUp, Activity, Edit3, ArrowRight, ArrowRightCircle, SkipForward,
+  BarChart3, HelpCircle, X, Lightbulb, ListChecks, Zap, Award,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PlannerTaskDialog, { TaskFormValue } from "@/components/student/PlannerTaskDialog";
 import PlannerSuggestions from "@/components/student/PlannerSuggestions";
 import { Recurrence, addDays, fmtDate, fmtFullDate, todayStr, describeRecurrence } from "@/lib/plannerRecurrence";
@@ -73,6 +75,7 @@ export default function StudentDayPlanner() {
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [skipDialog, setSkipDialog] = useState<Task | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -110,6 +113,20 @@ export default function StudentDayPlanner() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // First-time user guide
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const key = `planner_guide_seen_${user.id}`;
+      if (!localStorage.getItem(key)) setShowGuide(true);
+    } catch {}
+  }, [user]);
+
+  const dismissGuide = () => {
+    try { if (user) localStorage.setItem(`planner_guide_seen_${user.id}`, "1"); } catch {}
+    setShowGuide(false);
+  };
 
   const today = todayStr();
   const yesterday = addDays(today, -1);
@@ -250,25 +267,70 @@ export default function StudentDayPlanner() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <CalendarDays className="h-6 w-6 text-sky-600" /> My Day Planner
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {fmtFullDate(today)} · plan, track and stay consistent.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link to="/student/day-planner/performance">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <TrendingUp className="h-4 w-4" /> Performance
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-blue-50 shadow-sm">
+        <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(14,165,233,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(14,165,233,0.06)_1px,transparent_1px)] bg-[size:32px_32px]" />
+
+        <div className="relative p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30 ring-4 ring-white">
+              <CalendarDays className="h-7 w-7" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-sky-700 to-blue-600 bg-clip-text text-transparent">
+                  My Day Planner
+                </h1>
+                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
+                  <Zap className="h-3 w-3" /> Smart
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                {fmtFullDate(today)} · plan, track and stay consistent.
+              </p>
+              <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1"><Flame className="h-3.5 w-3.5 text-orange-500" /> {rewards?.streak_days ?? 0}-day streak</span>
+                <span className="text-sky-300">•</span>
+                <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> {completedToday}/{todayTasks.length} done today</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowGuide(true)}
+              className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
+            >
+              <HelpCircle className="h-4 w-4" /> How it works
             </Button>
-          </Link>
-          <Button onClick={() => { setEditing(null); setOpenCreate(true); }} className="bg-sky-600 hover:bg-sky-700">
-            <Plus className="h-4 w-4 mr-1" /> Add Task
-          </Button>
+
+            <Link to="/student/day-planner/performance">
+              <Button
+                size="lg"
+                className="relative gap-2 h-11 px-5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:via-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/30 ring-1 ring-white/40"
+              >
+                <BarChart3 className="h-5 w-5" />
+                Planner Performance
+                <ArrowRight className="h-4 w-4" />
+                <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-400 ring-2 ring-white" />
+                </span>
+              </Button>
+            </Link>
+
+            <Button
+              size="lg"
+              onClick={() => { setEditing(null); setOpenCreate(true); }}
+              className="h-11 gap-1.5 bg-sky-600 hover:bg-sky-700 shadow-md shadow-sky-500/20"
+            >
+              <Plus className="h-5 w-5" /> Add Task
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -469,6 +531,71 @@ export default function StudentDayPlanner() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* First-time / Help Guide */}
+      <Dialog open={showGuide} onOpenChange={(o) => (o ? setShowGuide(true) : dismissGuide())}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
+          <div className="relative p-6 bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-600 text-white">
+            <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center ring-1 ring-white/30">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold text-white">Welcome to your Day Planner</DialogTitle>
+                <DialogDescription className="text-white/85 mt-1">
+                  A quick tour to help you plan smarter, build streaks, and crack your target.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+            <GuideStep
+              n={1}
+              icon={<Plus className="h-5 w-5 text-sky-600" />}
+              title="Add your first task"
+              desc="Tap “Add Task” to schedule a mock, sectional, revision or any study block. Set time, priority and even recurrence."
+            />
+            <GuideStep
+              n={2}
+              icon={<Lightbulb className="h-5 w-5 text-amber-500" />}
+              title="Use Smart Suggestions"
+              desc="Personalised study suggestions appear on top — one click adds them to your plan based on your weak areas and upcoming exams."
+            />
+            <GuideStep
+              n={3}
+              icon={<ListChecks className="h-5 w-5 text-emerald-600" />}
+              title="Tick off as you go"
+              desc="Switch between Yesterday, Today and Tomorrow. Complete tasks to earn XP, fuel your streak, and roll over missed work."
+            />
+            <GuideStep
+              n={4}
+              icon={<Flame className="h-5 w-5 text-orange-500" />}
+              title="Keep your streak alive"
+              desc="Complete at least one task daily. Your streak and longest streak are tracked at the top — consistency beats intensity."
+            />
+            <GuideStep
+              n={5}
+              icon={<BarChart3 className="h-5 w-5 text-rose-500" />}
+              title="Review Planner Performance"
+              desc="Open the highlighted Planner Performance button to see completion %, time spent per subject, and trends over weeks."
+            />
+
+            <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs text-sky-800 flex items-start gap-2">
+              <Award className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>Pro tip: plan tomorrow tonight. 5 minutes of planning saves an hour of confusion.</span>
+            </div>
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t bg-muted/30">
+            <Button variant="ghost" onClick={dismissGuide}>Skip</Button>
+            <Button onClick={dismissGuide} className="bg-sky-600 hover:bg-sky-700 gap-1.5">
+              Got it, let’s plan <ArrowRight className="h-4 w-4" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -621,5 +748,24 @@ function TaskCard({ task, onStatus, onEdit, onDelete, onSkip, extraActions, comp
         </div>
       </div>
     </Card>
+  );
+}
+
+function GuideStep({ n, icon, title, desc }: { n: number; icon: React.ReactNode; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:border-sky-200 hover:shadow-sm transition">
+      <div className="relative shrink-0">
+        <div className="h-10 w-10 rounded-xl bg-sky-50 ring-1 ring-sky-100 flex items-center justify-center">
+          {icon}
+        </div>
+        <span className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-sky-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+          {n}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-foreground">{title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</div>
+      </div>
+    </div>
   );
 }
