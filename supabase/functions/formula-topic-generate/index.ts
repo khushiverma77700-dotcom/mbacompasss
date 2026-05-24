@@ -14,6 +14,24 @@ function slugify(s: string): string {
   return s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 80);
 }
 
+function repairLatexEscapes(value: unknown): string {
+  return String(value || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\u0008/g, "\\b")
+    .replace(/\u0009/g, "\\t")
+    .replace(/\u000c/g, "\\f")
+    .replace(/(^|[\s=({[+\-*/,:;])rac\{/g, "$1\\frac{")
+    .replace(/(^|[\s=({[+\-*/,:;])ext\{/g, "$1\\text{")
+    .replace(/(^|[\s=({[+\-*/,:;])extstyle\b/g, "$1\\textstyle")
+    .replace(/(^|[\s=({[+\-*/,:;])igg\b/g, "$1\\bigg")
+    .replace(/(^|[\s=({[+\-*/,:;])ar\{/g, "$1\\bar{")
+    .trim();
+}
+
+function cleanFormulaText(value: unknown): string {
+  return repairLatexEscapes(value).replace(/[\t\f\v]+/g, " ").replace(/ {2,}/g, " ").trim();
+}
+
 // Detect math constructs we expect to be rendered in LaTeX
 function needsLatexConstruct(plain: string): { needsFrac: boolean; needsSqrt: boolean; needsPow: boolean } {
   const s = String(plain || "");
@@ -30,6 +48,7 @@ function isLatexValid(latex: string, plain: string): boolean {
   // Strip surrounding $ if model added them
   const tex = latex.trim().replace(/^\$+|\$+$/g, "");
   if (!tex) return false;
+  if (/[\u0000-\u001F\u007F]/.test(tex)) return false;
   const need = needsLatexConstruct(plain);
   if (need.needsFrac && !/\\(d?frac|cfrac|tfrac)\{/.test(tex) && !/\//.test(tex)) return false;
   if (need.needsSqrt && !/\\sqrt/.test(tex)) return false;
