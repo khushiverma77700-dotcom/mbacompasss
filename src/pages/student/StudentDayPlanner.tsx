@@ -750,3 +750,22 @@ function TaskCard({ task, onStatus, onEdit, onDelete, onSkip, extraActions, comp
     </Card>
   );
 }
+
+function GuideStep({ n, icon, title, desc }: { n: number; icon: React.ReactNode; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:border-sky-200 hover:shadow-sm transition">
+      <div className="relative shrink-0">
+        <div className="h-10 w-10 rounded-xl bg-sky-50 ring-1 ring-sky-100 flex items-center justify-center">
+          {icon}
+        </div>
+        <span className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-sky-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+          {n}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-foreground">{title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</div>
+      </div>
+    </div>
+  );
+}
