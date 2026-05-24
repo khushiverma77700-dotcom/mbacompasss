@@ -191,6 +191,10 @@ const StudentVocabularyRevision = lazyWithPreload(() => import("./pages/student/
 const StudentVocabularyLeaderboard = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyLeaderboard"));
 const StudentVocabularyAnalytics = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyAnalytics"));
 const AdminVocabulary = lazyWithPreload(() => import("./pages/admin/AdminVocabulary"));
+const AdminFormulas = lazyWithPreload(() => import("./pages/admin/AdminFormulas"));
+const StudentFormulaBook = lazyWithPreload(() => import("./pages/student/formulas/StudentFormulaBook"));
+const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
+const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
