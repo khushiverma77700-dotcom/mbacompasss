@@ -295,10 +295,11 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         if (existingNamesNorm.has(nNorm) || batchNames.has(nNorm)) {
           rejected.push({ name: f.name, reason: "duplicate name (already exists)" }); continue;
         }
-        if (!f.expression_latex || !isLatexValid(f.expression_latex, f.expression || "")) {
+        const cleanExpressionLatex = stripMathDelimiters(f.expression_latex);
+        if (!cleanExpressionLatex || !isLatexValid(cleanExpressionLatex, f.expression || "")) {
           rejected.push({ name: f.name, reason: "invalid LaTeX (missing \\frac/\\sqrt/^ where required)" }); continue;
         }
-        const latexNorm = normalizeLatex(f.expression_latex);
+        const latexNorm = normalizeLatex(cleanExpressionLatex);
         if (latexNorm && (existingLatex.has(latexNorm) || batchLatex.has(latexNorm))) {
           rejected.push({ name: f.name, reason: "duplicate formula (same LaTeX already exists)" }); continue;
         }
@@ -322,7 +323,7 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         allRows.push({
           slug, name: f.name,
           expression: f.expression,
-          expression_latex: String(f.expression_latex).trim().replace(/^\$+|\$+$/g, ""),
+          expression_latex: cleanExpressionLatex,
           explanation: f.explanation || "",
           derivation: f.derivation || null,
           shortcuts: Array.isArray(f.shortcuts) ? f.shortcuts : [],
