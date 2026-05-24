@@ -875,7 +875,7 @@ export type Database = {
           total_questions: number | null
           total_score: number
           unattempted: number | null
-          user_id: string | null
+          user_id: string
           varc_accuracy: number | null
           varc_attempted: number | null
           varc_correct: number | null
@@ -915,7 +915,7 @@ export type Database = {
           total_questions?: number | null
           total_score?: number
           unattempted?: number | null
-          user_id?: string | null
+          user_id: string
           varc_accuracy?: number | null
           varc_attempted?: number | null
           varc_correct?: number | null
@@ -955,7 +955,7 @@ export type Database = {
           total_questions?: number | null
           total_score?: number
           unattempted?: number | null
-          user_id?: string | null
+          user_id?: string
           varc_accuracy?: number | null
           varc_attempted?: number | null
           varc_correct?: number | null
