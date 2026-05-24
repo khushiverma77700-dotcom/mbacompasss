@@ -382,11 +382,40 @@ export default function StudentFormulaBook() {
                     </div>
                   </div>
 
-                  <div className="mt-3">
-                    <MathExpression tex={f.expression_latex} plain={f.expression} className="block rounded-lg bg-slate-900/95 px-4 py-3 text-base text-sky-100" />
+                  <div className="mt-3 rounded-xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 shadow-inner">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-300">Formula</span>
+                      <span className="text-[10px] text-slate-500">LaTeX rendered</span>
+                    </div>
+                    <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-lg text-sky-50" />
                   </div>
 
-                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-700">{f.explanation}</p>
+                  <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
+                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Explanation</div>
+                    <p className="line-clamp-3 text-sm leading-relaxed text-slate-700">{f.explanation}</p>
+                  </div>
+
+                  {f.notes && (
+                    <div className="mt-2 rounded-lg border border-sky-100 bg-sky-50/60 p-3">
+                      <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">When to Use</div>
+                      <p className="line-clamp-2 text-xs leading-relaxed text-slate-700">{f.notes}</p>
+                    </div>
+                  )}
+
+                  {Array.isArray(f.examples) && f.examples[0]?.problem && (
+                    <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Sample Usage</span>
+                        {Array.isArray(f.examples) && f.examples.length > 1 && (
+                          <span className="text-[10px] text-emerald-700/70">+{f.examples.length - 1} more</span>
+                        )}
+                      </div>
+                      <p className="line-clamp-2 text-xs leading-relaxed text-slate-700">{f.examples[0].problem}</p>
+                      {f.examples[0].answer && (
+                        <p className="mt-1 text-[11px] font-semibold text-emerald-800">Answer: {f.examples[0].answer}</p>
+                      )}
+                    </div>
+                  )}
 
                   {Array.isArray(f.exam_tags) && f.exam_tags.length > 0 && (
                     <div className="mt-3 flex flex-wrap items-center gap-1">
