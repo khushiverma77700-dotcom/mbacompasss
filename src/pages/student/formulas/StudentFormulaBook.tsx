@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   Search, Sigma, BookmarkCheck, CheckCircle2, RotateCcw, Bookmark, Flame,
   Target, Zap, Sparkles, Filter, GraduationCap, Star, TrendingUp, Calculator,
-  ChevronRight, ArrowRight,
+  ChevronRight, ArrowRight, Eye, EyeOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
