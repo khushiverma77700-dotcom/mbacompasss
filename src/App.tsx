@@ -181,6 +181,16 @@ const PersonalizedMockRunnerPage = lazyWithPreload(() => import("./pages/student
 const PersonalizedMockResultPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockResultPage"));
 const StudentLogin = lazyWithPreload(() => import("./pages/student/StudentLogin"));
 const StudentSOPReview = lazyWithPreload(() => import("./pages/student/StudentSOPReview"));
+const StudentVocabularyHub = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyHub"));
+const StudentVocabularyFeed = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyFeed"));
+const StudentVocabularyWord = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyWord"));
+const StudentVocabularySearch = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularySearch"));
+const StudentVocabularyBookmarks = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyBookmarks"));
+const StudentVocabularyQuiz = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyQuiz"));
+const StudentVocabularyRevision = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyRevision"));
+const StudentVocabularyLeaderboard = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyLeaderboard"));
+const StudentVocabularyAnalytics = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyAnalytics"));
+const AdminVocabulary = lazyWithPreload(() => import("./pages/admin/AdminVocabulary"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
