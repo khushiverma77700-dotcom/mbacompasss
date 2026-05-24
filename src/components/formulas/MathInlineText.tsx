@@ -9,14 +9,27 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import DOMPurify from "isomorphic-dompurify";
 
-// One math "atom" — a LaTeX command (with up to 2 brace groups, 1 level of
-// nesting) OR a sub/superscript on a letter.
+// One math "atom" — a LaTeX command / unicode operator with brace groups and
+// scripts, OR a sub/superscript on a letter. This keeps larger runs such as
+// \prod_{i=1}^{n}\left(1-\frac{d_i}{100}\right) together for KaTeX.
+const BRACE_GROUP = String.raw`\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}`;
+const SCRIPT_GROUP = String.raw`[_^](?:${BRACE_GROUP}|[A-Za-z0-9]+)`;
 const ATOM_RE =
-  /\\[a-zA-Z]+(?:\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?(?:\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?|[A-Za-z][_^](?:\{[^{}]+\}|[A-Za-z0-9])/g;
+  new RegExp(
+    String.raw`\\[a-zA-Z]+(?:\s*(?:${BRACE_GROUP}|${SCRIPT_GROUP}))*|[∏ΣΠ](?:\s*${SCRIPT_GROUP})*|[A-Za-z]${SCRIPT_GROUP}`,
+    "g",
+  );
 
 // Characters allowed BETWEEN atoms when merging into one math run.
 // Keep it conservative so we don't engulf prose.
-const CONNECTOR_RE = /^[\s+\-*/=<>().,0-9]+$/;
+const CONNECTOR_RE = /^[\s+\-*/=<>().,;:{}_^|%0-9]+$/;
+
+function softenUnbalancedDelimiters(expr: string): string {
+  const left = expr.match(/\\left\b/g)?.length ?? 0;
+  const right = expr.match(/\\right\b/g)?.length ?? 0;
+  if (left === right) return expr;
+  return expr.replace(/\\left\s*/g, "").replace(/\\right\s*/g, "");
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -29,7 +42,7 @@ function escapeHtml(s: string): string {
 
 function renderInline(expr: string): string {
   try {
-    return katex.renderToString(normalizeMathExpression(expr), {
+    return katex.renderToString(softenUnbalancedDelimiters(normalizeMathExpression(expr)), {
       displayMode: false,
       throwOnError: false,
       output: "html",
@@ -93,6 +106,9 @@ function renderBareMathAtoms(text: string): string {
   let out = "";
   let cursor = 0;
   for (const r of merged) {
+    while (r.end < text.length && /[\s+\-*/=<>().,;:{}_^|%0-9]/.test(text[r.end])) {
+      r.end += 1;
+    }
     out += escapeHtml(text.slice(cursor, r.start));
     out += renderInline(text.slice(r.start, r.end));
     cursor = r.end;
