@@ -244,9 +244,10 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…`,
   }).eq("id", jobId);
 
-  // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
-  const BATCH = provider === "openai" ? 30 : 20;
+  // Keep each AI call small enough to finish inside edge runtime limits.
+  const BATCH = provider === "openai" ? 18 : 14;
   let consecutiveEmpty = 0;
+  let consecutiveTimeouts = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
   // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
   // Mark the job as `paused` so the UI can offer a Resume button.
@@ -268,7 +269,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
 
     attempts++;
-    const need = Math.min(BATCH, total - generated);
+    const need = Math.min(Math.max(6, BATCH - consecutiveTimeouts * 4), total - generated);
     const targetWords = pickTargetWords(seenSlugs, need, attempts);
     await supabase.from("vocab_generation_jobs").update({
       current_activity: `Generating advanced CAT-level batch ${attempts} via ${provider} (${generated}/${total})…`,
@@ -281,6 +282,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     const batchStarted = Date.now();
     try {
       const generatedBatch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes, targetWords);
+      consecutiveTimeouts = 0;
       batch = generatedBatch.words;
       batchTokens = { inputTokens: generatedBatch.inputTokens, outputTokens: generatedBatch.outputTokens };
       inputTokens += batchTokens.inputTokens;
@@ -292,6 +294,19 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       if (msg === "RATE_LIMIT") {
         await supabase.from("vocab_generation_jobs").update({ current_activity: "Rate limited, sleeping 15s…" }).eq("id", jobId);
         await new Promise((r) => setTimeout(r, 15000));
+        continue;
+      }
+      if (msg === "AI_TIMEOUT") {
+        consecutiveTimeouts++;
+        await supabase.from("vocab_generation_jobs").update({
+          status: consecutiveTimeouts >= 2 ? "paused" : "running",
+          current_activity: consecutiveTimeouts >= 2
+            ? `Paused safely after AI timeout at ${generated}/${total}. Resume will continue with smaller batches.`
+            : `AI call was slow; retrying with a smaller batch (${generated}/${total})…`,
+          generated, duplicates, failed, attempts, rejected,
+          progress_details: { phase: "ai_timeout", cpu_proxy: 92, timeout_count: consecutiveTimeouts, next_batch_size: Math.max(6, BATCH - consecutiveTimeouts * 4) },
+        }).eq("id", jobId);
+        if (consecutiveTimeouts >= 2) return;
         continue;
       }
       if (msg === "CREDITS_EXHAUSTED") {
