@@ -220,14 +220,15 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         },
       };
 
-      return fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      return fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
           messages: [{ role: "system", content: system }, { role: "user", content: user }],
           tools: [tool],
           tool_choice: { type: "function", function: { name: "emit_formulas" } },
+          temperature: 0.7,
         }),
       }).then(async (resp) => ({ resp, batchIndex }));
     };
