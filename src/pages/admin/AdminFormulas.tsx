@@ -20,9 +20,11 @@ export default function AdminFormulas() {
   const [editing, setEditing] = useState<any | null>(null);
   const [busy, setBusy] = useState(false);
   const [genTopic, setGenTopic] = useState<string>("");
-  const [genCount, setGenCount] = useState<number>(8);
+  const [genCount, setGenCount] = useState<number>(10);
   const [genDifficulty, setGenDifficulty] = useState<string>("intermediate");
   const [genBusy, setGenBusy] = useState(false);
+  const [topicBusy, setTopicBusy] = useState<string | null>(null);
+  const [lastRun, setLastRun] = useState<{ inserted: number; returned: number; rejected: { name: string; reason: string }[] } | null>(null);
   const [stats, setStats] = useState<{ total: number; published: number }>({ total: 0, published: 0 });
 
   const load = useCallback(async () => {
