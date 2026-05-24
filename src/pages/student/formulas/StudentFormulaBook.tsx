@@ -276,7 +276,7 @@ export default function StudentFormulaBook() {
                 {suggestions.map((s, i) => (
                   <Link
                     key={i}
-                    to={s.kind === "formula" ? `/formula/${s.slug}` : `/student/formulas?topic=${s.slug}`}
+                    to={s.kind === "formula" ? `/student/formula/${s.slug}` : `/student/formulas?topic=${s.slug}`}
                     className="flex items-center gap-3 border-b border-slate-50 px-4 py-2.5 text-sm last:border-0 hover:bg-sky-50"
                     onClick={() => { if (s.kind === "topic") setFilter("q", ""); }}
                   >
@@ -383,7 +383,7 @@ export default function StudentFormulaBook() {
               {dailySet.slice(0, 5).map((f) => (
                 <Link
                   key={f.id}
-                  to={`/formula/${f.slug}`}
+                  to={`/student/formula/${f.slug}`}
                   className="group rounded-xl border border-amber-200 bg-white/80 p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-amber-700">{f.name}</div>
@@ -428,7 +428,7 @@ export default function StudentFormulaBook() {
                   {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <Link to={`/formula/${f.slug}`} className="block">
+                      <Link to={`/student/formula/${f.slug}`} className="block">
                         <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
                       </Link>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -531,7 +531,7 @@ export default function StudentFormulaBook() {
                         {isDone ? "Done" : "Complete"}
                       </Button>
                     </div>
-                    <Link to={`/formula/${f.slug}`} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-900">
+                    <Link to={`/student/formula/${f.slug}`} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-900">
                       Open <ArrowRight className="h-3 w-3" />
                     </Link>
                   </div>

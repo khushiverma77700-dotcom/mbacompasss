@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,10 @@ import DOMPurify from "isomorphic-dompurify";
 
 export default function FormulaDetailPage() {
   const { slug } = useParams();
+  const location = useLocation();
+  const inStudent = location.pathname.startsWith("/student");
+  const listPath = inStudent ? "/student/formulas" : "/formulas";
+  const detailBase = inStudent ? "/student/formula" : "/formula";
   const { user } = useAuth();
   const { toast } = useToast();
   const [formula, setFormula] = useState<any>(null);
@@ -119,7 +123,7 @@ export default function FormulaDetailPage() {
   if (!formula) return (
     <div className="mx-auto max-w-3xl p-10 text-center">
       <h1 className="font-heading text-2xl font-bold">Formula not found</h1>
-      <Link to="/student/formulas" className="mt-3 inline-block text-sky-600 underline">Browse formula book</Link>
+      <Link to={listPath} className="mt-3 inline-block text-sky-600 underline">Browse formula book</Link>
     </div>
   );
 
@@ -127,11 +131,11 @@ export default function FormulaDetailPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-20 md:p-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 text-xs text-slate-500">
-        <Link to="/" className="hover:text-sky-600">Home</Link>
+        <Link to={inStudent ? "/student" : "/"} className="hover:text-sky-600">Home</Link>
         <ChevronRight className="h-3 w-3" />
-        <Link to="/formulas" className="hover:text-sky-600">Quant Formulas</Link>
+        <Link to={listPath} className="hover:text-sky-600">Quant Formulas</Link>
         <ChevronRight className="h-3 w-3" />
-        <Link to={`/formulas?topic=${formula.topic_slug}`} className="capitalize hover:text-sky-600">{formula.topic_slug?.replace(/-/g, " ")}</Link>
+        <Link to={`${listPath}?topic=${formula.topic_slug}`} className="capitalize hover:text-sky-600">{formula.topic_slug?.replace(/-/g, " ")}</Link>
         <ChevronRight className="h-3 w-3" />
         <span className="truncate text-slate-800">{formula.name}</span>
       </nav>
@@ -282,7 +286,7 @@ export default function FormulaDetailPage() {
           <h2 className="font-heading mb-3 text-xl font-bold text-slate-900">Related formulas</h2>
           <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
             {related.map((r) => (
-              <Link key={r.slug} to={`/formula/${r.slug}`} className="group rounded-xl border border-slate-200 bg-white p-3 transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md">
+              <Link key={r.slug} to={`${detailBase}/${r.slug}`} className="group rounded-xl border border-slate-200 bg-white p-3 transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md">
                 <div className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-sky-700">{r.name}</div>
                 <div className="mt-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-500">
                   <BookOpen className="h-3 w-3" /> {r.difficulty}
