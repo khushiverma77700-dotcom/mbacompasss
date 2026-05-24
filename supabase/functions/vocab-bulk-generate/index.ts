@@ -151,16 +151,19 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   return Array.isArray(parsed.words) ? parsed.words : [];
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number }) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
     lovable: Deno.env.get("LOVABLE_API_KEY") || "",
     openai: Deno.env.get("OPENAI_API_KEY") || "",
   };
 
-  let generated = 0, duplicates = 0, failed = 0;
+  let generated = seed?.generated || 0;
+  let duplicates = seed?.duplicates || 0;
+  let failed = seed?.failed || 0;
   const seenSlugs = new Set<string>();
   const recentDupes: string[] = [];
+
 
   // Seed exclude list with ALL existing slugs (paginated, so dedupe works for large libraries)
   {
