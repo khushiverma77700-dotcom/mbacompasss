@@ -100,13 +100,40 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const safeCount = Math.min(20, Math.max(1, Number(count) || 8));
+    const safeCount = Math.min(100, Math.max(1, Number(count) || 8));
+    const BATCH_SIZE = 10;
+    const totalBatches = Math.ceil(safeCount / BATCH_SIZE);
 
-    // Randomness nonce nudges the model to explore different formulas on each click
-    const nonce = Math.random().toString(36).slice(2, 10);
+    // Track within-run duplicates across batches
+    const batchNames = new Set<string>();
+    const batchSlugs = new Set<string>();
+    const batchLatex = new Set<string>();
 
-    const system = `You are a senior CAT/MBA quant faculty (15+ years). You produce textbook-grade formula references for "${topic_name}".
-Every formula MUST include four sections: (1) FORMULA in proper LaTeX (2) EXPLANATION in plain English (3) USAGE — when & how to apply it (4) SAMPLE USAGE — at least 2 fully worked CAT-level numerical examples.
+    const allRows: any[] = [];
+    const rejected: { name: string; reason: string }[] = [];
+    let totalReturned = 0;
+    const model = "openai/gpt-5-mini";
+
+    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+      const remaining = safeCount - allRows.length;
+      if (remaining <= 0) break;
+      const thisBatchCount = Math.min(BATCH_SIZE, remaining);
+
+      // Randomness nonce nudges the model to explore different formulas on each batch
+      const nonce = `${Math.random().toString(36).slice(2, 10)}-b${batchIndex + 1}`;
+
+      // Build full block-list = existing DB + already-accepted in this run
+      const blockNames = [
+        ...existingNamesList,
+        ...allRows.map((r) => r.name),
+      ];
+
+      const system = `You are a senior CAT/MBA quant faculty (15+ years). You produce textbook-grade formula references for "${topic_name}".
+Every formula MUST include FOUR deeply-written sections:
+(1) FORMULA — strict LaTeX
+(2) EXPLANATION — a thorough 6-10 sentence walkthrough that (a) defines EVERY symbol/variable with its unit, (b) explains what the formula computes intuitively, (c) describes the geometric/algebraic meaning, (d) notes any edge cases or domain restrictions.
+(3) USAGE (notes) — a 5-8 sentence paragraph on WHEN to apply this formula, the prerequisites/assumptions, how to recognize the trigger in a CAT problem statement, common variations, and related formulas to cross-check.
+(4) SAMPLE USAGE — at least 2 fully worked CAT-level numerical examples with step-by-step arithmetic.
 
 LaTeX rules (strict — non-negotiable):
 - Use \\frac{a}{b} for ALL fractions. Never use plain "/" inside expressions.
@@ -118,196 +145,195 @@ LaTeX rules (strict — non-negotiable):
 
 ANTI-DUPLICATION (CRITICAL):
 - The following formulas ALREADY EXIST in our library — you MUST NOT regenerate ANY of them, any rename, any trivial variant, or any algebraic rearrangement of the same identity:
-${existingNamesList.length ? existingNamesList.map((n: string) => `  • ${n}`).join("\n") : "  (none yet)"}
+${blockNames.length ? blockNames.map((n: string) => `  • ${n}`).join("\n") : "  (none yet)"}
 - Pick fresh, NON-OVERLAPPING formulas from less-covered subtopics of "${topic_name}".
-- If you cannot find ${safeCount} genuinely new canonical formulas, return fewer rather than repeating.
+- If you cannot find ${thisBatchCount} genuinely new canonical formulas, return fewer rather than repeating.
 
 Quality bar:
 - Only canonical, exam-relevant formulas — no fabricated/obscure identities.
+- Explanations must be exhaustive — assume the student has never seen this formula before.
 - Each example's steps[] must show the actual calculation, not vague text.
 - Use Indian rupee context where natural (₹, lakhs, crores) for Percentages/Profit-Loss/SI-CI/TSD.
 
-(diversity-seed:${nonce})`;
+(diversity-seed:${nonce} • batch ${batchIndex + 1}/${totalBatches})`;
 
-    const user = `Generate ${safeCount} distinct, must-know formulas for "${topic_name}".
+      const user = `Generate ${thisBatchCount} distinct, must-know formulas for "${topic_name}" — batch ${batchIndex + 1} of ${totalBatches}.
 Default difficulty: ${difficulty}. Tag relevant exams from [CAT, XAT, NMAT, SNAP, CMAT, IIFT, MAT].
 Importance 4-5 only for high-frequency formulas.
 
-Return strictly via the emit_formulas tool. Reject your own output mentally and retry if any LaTeX uses "/" for fractions, "sqrt(" for roots, or "**" for powers.`;
+DEPTH REQUIREMENT: explanation field MUST be at least 400 characters covering every variable's meaning, units, intuition, geometric/algebraic interpretation, and edge cases. notes field MUST be at least 300 characters covering when/how/prerequisites/related formulas.
 
-    const tool = {
-      type: "function",
-      function: {
-        name: "emit_formulas",
-        description: "Return the generated formula list with strict LaTeX, usage notes and worked examples.",
-        parameters: {
-          type: "object",
-          properties: {
-            formulas: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string", description: "Short canonical name, e.g. 'Compound Interest', 'Heron's Formula'." },
-                  expression: { type: "string", description: "Plain ASCII form for fallback display." },
-                  expression_latex: { type: "string", description: "Strict LaTeX. Use \\frac, \\sqrt, ^{}, _{}. No $ wrappers." },
-                  explanation: { type: "string", description: "3-5 sentence plain-English meaning of every symbol & what the formula computes." },
-                  derivation: { type: "string", description: "Short stepwise derivation OR 'Definition — no derivation' if axiomatic." },
-                  notes: { type: "string", description: "USAGE: clear paragraph on WHEN to apply this formula, the conditions/assumptions, common variations, and links to related formulas. 3-6 sentences." },
-                  shortcuts: { type: "array", items: { type: "string" }, description: "2-4 high-leverage exam tricks/mental-math hacks." },
-                  common_mistakes: { type: "array", items: { type: "string" }, description: "2-3 specific pitfalls students make." },
-                  difficulty: { type: "string", enum: ["beginner","intermediate","cat","advanced"] },
-                  exam_tags: { type: "array", items: { type: "string" }, minItems: 1 },
-                  importance: { type: "integer", minimum: 1, maximum: 5 },
-                  is_shortcut: { type: "boolean" },
-                  is_high_weightage: { type: "boolean" },
-                  examples: {
-                    type: "array",
-                    minItems: 2,
-                    description: "SAMPLE USAGE — at least 2 fully worked CAT-level examples.",
-                    items: {
-                      type: "object",
-                      properties: {
-                        problem: { type: "string", description: "Crisp problem statement with numbers." },
-                        steps: { type: "array", items: { type: "string" }, minItems: 2, description: "Calculation-bearing steps; can include inline LaTeX wrapped in \\( ... \\)." },
-                        answer: { type: "string", description: "Final answer with units if any." },
+Return strictly via the emit_formulas tool. Reject your own output mentally and retry if any LaTeX uses "/" for fractions, "sqrt(" for roots, or "**" for powers, or if explanation/notes are shallow.`;
+
+      const tool = {
+        type: "function",
+        function: {
+          name: "emit_formulas",
+          description: "Return the generated formula list with strict LaTeX, deep explanations, usage notes and worked examples.",
+          parameters: {
+            type: "object",
+            properties: {
+              formulas: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string", description: "Short canonical name, e.g. 'Compound Interest', 'Heron's Formula'." },
+                    expression: { type: "string", description: "Plain ASCII form for fallback display." },
+                    expression_latex: { type: "string", description: "Strict LaTeX. Use \\frac, \\sqrt, ^{}, _{}. No $ wrappers." },
+                    explanation: { type: "string", description: "EXHAUSTIVE 6-10 sentence walkthrough (min 400 chars). Define every symbol with units, explain what is computed, the intuition, the geometric/algebraic meaning, and any domain restrictions. Do NOT be terse." },
+                    derivation: { type: "string", description: "Stepwise derivation with 3-6 logical steps showing how the formula is obtained from first principles. Use 'Definition — no derivation' only if truly axiomatic." },
+                    notes: { type: "string", description: "USAGE: 5-8 sentence paragraph (min 300 chars) on WHEN to apply, prerequisites/assumptions, problem-statement triggers in CAT, common variations, and related formulas." },
+                    shortcuts: { type: "array", items: { type: "string" }, description: "2-4 high-leverage exam tricks/mental-math hacks." },
+                    common_mistakes: { type: "array", items: { type: "string" }, description: "2-3 specific pitfalls students make." },
+                    difficulty: { type: "string", enum: ["beginner","intermediate","cat","advanced"] },
+                    exam_tags: { type: "array", items: { type: "string" }, minItems: 1 },
+                    importance: { type: "integer", minimum: 1, maximum: 5 },
+                    is_shortcut: { type: "boolean" },
+                    is_high_weightage: { type: "boolean" },
+                    examples: {
+                      type: "array",
+                      minItems: 2,
+                      description: "SAMPLE USAGE — at least 2 fully worked CAT-level examples.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          problem: { type: "string", description: "Crisp problem statement with numbers." },
+                          steps: { type: "array", items: { type: "string" }, minItems: 2, description: "Calculation-bearing steps; can include inline LaTeX wrapped in \\( ... \\)." },
+                          answer: { type: "string", description: "Final answer with units if any." },
+                        },
+                        required: ["problem","steps","answer"],
+                        additionalProperties: false,
                       },
-                      required: ["problem","steps","answer"],
-                      additionalProperties: false,
+                    },
+                    seo_title: { type: "string" },
+                    seo_description: { type: "string" },
+                    seo_keywords: { type: "array", items: { type: "string" } },
+                    faqs: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: { q: { type: "string" }, a: { type: "string" } },
+                        required: ["q","a"], additionalProperties: false,
+                      },
                     },
                   },
-                  seo_title: { type: "string" },
-                  seo_description: { type: "string" },
-                  seo_keywords: { type: "array", items: { type: "string" } },
-                  faqs: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: { q: { type: "string" }, a: { type: "string" } },
-                      required: ["q","a"], additionalProperties: false,
-                    },
-                  },
+                  required: ["name","expression","expression_latex","explanation","notes","difficulty","exam_tags","importance","examples"],
+                  additionalProperties: false,
                 },
-                required: ["name","expression","expression_latex","explanation","notes","difficulty","exam_tags","importance","examples"],
-                additionalProperties: false,
               },
             },
+            required: ["formulas"],
+            additionalProperties: false,
           },
-          required: ["formulas"],
-          additionalProperties: false,
         },
-      },
-    };
-
-    const model = "openai/gpt-5-mini";
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "system", content: system }, { role: "user", content: user }],
-        tools: [tool],
-        tool_choice: { type: "function", function: { name: "emit_formulas" } },
-      }),
-    });
-
-    if (resp.status === 429) {
-      return new Response(JSON.stringify({ error: "Rate limit hit. Wait a minute and retry." }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (resp.status === 402) {
-      return new Response(JSON.stringify({ error: "AI credits exhausted. Top up in Settings → Usage." }), {
-        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (!resp.ok) {
-      const t = await resp.text();
-      await logAIUsage({ feature: "formula-topic-generate", model, status: "error", errorMsg: t.slice(0,400), latencyMs: Date.now() - started, userId });
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const data = await resp.json();
-    await logAIUsage({ feature: "formula-topic-generate", model, aiData: data, latencyMs: Date.now() - started, userId });
-    const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments || "{}";
-    let parsed: any = {};
-    try { parsed = JSON.parse(args); } catch { parsed = { formulas: [] }; }
-
-    const rawList: any[] = Array.isArray(parsed.formulas) ? parsed.formulas : [];
-    const rejected: { name: string; reason: string }[] = [];
-
-    // Track within-batch duplicates as well
-    const batchNames = new Set<string>();
-    const batchSlugs = new Set<string>();
-    const batchLatex = new Set<string>();
-
-    const rows = rawList.map((f: any) => {
-      if (!f?.name) { rejected.push({ name: "(no name)", reason: "missing name" }); return null; }
-      const nNorm = normalizeName(f.name);
-      if (!nNorm) { rejected.push({ name: f.name, reason: "empty normalized name" }); return null; }
-      if (existingNamesNorm.has(nNorm) || batchNames.has(nNorm)) {
-        rejected.push({ name: f.name, reason: "duplicate name (already exists)" }); return null;
-      }
-      if (!f.expression_latex || !isLatexValid(f.expression_latex, f.expression || "")) {
-        rejected.push({ name: f.name, reason: "invalid LaTeX (missing \\frac/\\sqrt/^ where required)" }); return null;
-      }
-      const latexNorm = normalizeLatex(f.expression_latex);
-      if (latexNorm && (existingLatex.has(latexNorm) || batchLatex.has(latexNorm))) {
-        rejected.push({ name: f.name, reason: "duplicate formula (same LaTeX already exists)" }); return null;
-      }
-      if (!f.notes || String(f.notes).trim().length < 40) {
-        rejected.push({ name: f.name, reason: "usage notes too short" }); return null;
-      }
-      if (!Array.isArray(f.examples) || f.examples.length < 2) {
-        rejected.push({ name: f.name, reason: "needs at least 2 worked examples" }); return null;
-      }
-      const baseSlug = slugify(f.name);
-      const slug = `${topic_slug}-${baseSlug}`.slice(0, 100);
-      if (existingSlugs.has(slug.toLowerCase()) || batchSlugs.has(slug.toLowerCase())) {
-        rejected.push({ name: f.name, reason: "duplicate slug" }); return null;
-      }
-      batchNames.add(nNorm);
-      batchSlugs.add(slug.toLowerCase());
-      if (latexNorm) batchLatex.add(latexNorm);
-      return {
-        slug, name: f.name,
-        expression: f.expression,
-        expression_latex: String(f.expression_latex).trim().replace(/^\$+|\$+$/g, ""),
-        explanation: f.explanation || "",
-        derivation: f.derivation || null,
-        shortcuts: Array.isArray(f.shortcuts) ? f.shortcuts : [],
-        notes: f.notes,
-        common_mistakes: Array.isArray(f.common_mistakes) ? f.common_mistakes : [],
-        topic_slug,
-        difficulty: f.difficulty || "intermediate",
-        exam_tags: Array.isArray(f.exam_tags) ? f.exam_tags : [],
-        importance: Number(f.importance) || 3,
-        is_shortcut: !!f.is_shortcut,
-        is_high_weightage: !!f.is_high_weightage || (Number(f.importance) >= 4),
-        examples: f.examples,
-        seo_title: (f.seo_title || `${f.name} — Formula, Usage, Examples | MBA Compass`).slice(0, 60),
-        seo_description: (f.seo_description || `Learn ${f.name}: formula, usage, worked CAT examples, shortcuts & common mistakes.`).slice(0, 160),
-        seo_keywords: Array.isArray(f.seo_keywords) ? f.seo_keywords : [f.name, topic_name, "CAT formula", "MBA quant"],
-        faqs: Array.isArray(f.faqs) ? f.faqs : [],
-        published: true,
       };
-    }).filter(Boolean) as any[];
+
+      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "system", content: system }, { role: "user", content: user }],
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: "emit_formulas" } },
+        }),
+      });
+
+      if (resp.status === 429) {
+        return new Response(JSON.stringify({ error: `Rate limit hit after ${allRows.length} formulas. Wait a minute and retry.`, partial_inserted: 0 }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (resp.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Top up in Settings → Usage." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!resp.ok) {
+        const t = await resp.text();
+        await logAIUsage({ feature: "formula-topic-generate", model, status: "error", errorMsg: t.slice(0,400), latencyMs: Date.now() - started, userId });
+        rejected.push({ name: `(batch ${batchIndex + 1})`, reason: `AI gateway error: ${t.slice(0,120)}` });
+        continue;
+      }
+
+      const data = await resp.json();
+      await logAIUsage({ feature: "formula-topic-generate", model, aiData: data, latencyMs: Date.now() - started, userId });
+      const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments || "{}";
+      let parsed: any = {};
+      try { parsed = JSON.parse(args); } catch { parsed = { formulas: [] }; }
+
+      const rawList: any[] = Array.isArray(parsed.formulas) ? parsed.formulas : [];
+      totalReturned += rawList.length;
+
+      for (const f of rawList) {
+        if (!f?.name) { rejected.push({ name: "(no name)", reason: "missing name" }); continue; }
+        const nNorm = normalizeName(f.name);
+        if (!nNorm) { rejected.push({ name: f.name, reason: "empty normalized name" }); continue; }
+        if (existingNamesNorm.has(nNorm) || batchNames.has(nNorm)) {
+          rejected.push({ name: f.name, reason: "duplicate name (already exists)" }); continue;
+        }
+        if (!f.expression_latex || !isLatexValid(f.expression_latex, f.expression || "")) {
+          rejected.push({ name: f.name, reason: "invalid LaTeX (missing \\frac/\\sqrt/^ where required)" }); continue;
+        }
+        const latexNorm = normalizeLatex(f.expression_latex);
+        if (latexNorm && (existingLatex.has(latexNorm) || batchLatex.has(latexNorm))) {
+          rejected.push({ name: f.name, reason: "duplicate formula (same LaTeX already exists)" }); continue;
+        }
+        if (!f.explanation || String(f.explanation).trim().length < 200) {
+          rejected.push({ name: f.name, reason: "explanation too shallow (need 200+ chars)" }); continue;
+        }
+        if (!f.notes || String(f.notes).trim().length < 150) {
+          rejected.push({ name: f.name, reason: "usage notes too short (need 150+ chars)" }); continue;
+        }
+        if (!Array.isArray(f.examples) || f.examples.length < 2) {
+          rejected.push({ name: f.name, reason: "needs at least 2 worked examples" }); continue;
+        }
+        const baseSlug = slugify(f.name);
+        const slug = `${topic_slug}-${baseSlug}`.slice(0, 100);
+        if (existingSlugs.has(slug.toLowerCase()) || batchSlugs.has(slug.toLowerCase())) {
+          rejected.push({ name: f.name, reason: "duplicate slug" }); continue;
+        }
+        batchNames.add(nNorm);
+        batchSlugs.add(slug.toLowerCase());
+        if (latexNorm) batchLatex.add(latexNorm);
+        allRows.push({
+          slug, name: f.name,
+          expression: f.expression,
+          expression_latex: String(f.expression_latex).trim().replace(/^\$+|\$+$/g, ""),
+          explanation: f.explanation || "",
+          derivation: f.derivation || null,
+          shortcuts: Array.isArray(f.shortcuts) ? f.shortcuts : [],
+          notes: f.notes,
+          common_mistakes: Array.isArray(f.common_mistakes) ? f.common_mistakes : [],
+          topic_slug,
+          difficulty: f.difficulty || "intermediate",
+          exam_tags: Array.isArray(f.exam_tags) ? f.exam_tags : [],
+          importance: Number(f.importance) || 3,
+          is_shortcut: !!f.is_shortcut,
+          is_high_weightage: !!f.is_high_weightage || (Number(f.importance) >= 4),
+          examples: f.examples,
+          seo_title: (f.seo_title || `${f.name} — Formula, Usage, Examples | MBA Compass`).slice(0, 60),
+          seo_description: (f.seo_description || `Learn ${f.name}: formula, usage, worked CAT examples, shortcuts & common mistakes.`).slice(0, 160),
+          seo_keywords: Array.isArray(f.seo_keywords) ? f.seo_keywords : [f.name, topic_name, "CAT formula", "MBA quant"],
+          faqs: Array.isArray(f.faqs) ? f.faqs : [],
+          published: true,
+        });
+      }
+    }
 
     let inserted = 0;
-    if (rows.length) {
-      for (const row of rows) {
-        const { error } = await admin.from("quant_formulas").insert(row);
-        if (!error) inserted++;
-        else rejected.push({ name: row.name, reason: `db: ${error.message.slice(0, 80)}` });
-      }
+    for (const row of allRows) {
+      const { error } = await admin.from("quant_formulas").insert(row);
+      if (!error) inserted++;
+      else rejected.push({ name: row.name, reason: `db: ${error.message.slice(0, 80)}` });
     }
 
     return new Response(JSON.stringify({
       inserted,
       requested: safeCount,
-      returned: rawList.length,
+      returned: totalReturned,
+      batches: totalBatches,
       rejected,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
