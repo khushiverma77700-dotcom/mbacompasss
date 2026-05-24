@@ -67,6 +67,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       // Secondary tools
       { label: "Mocks Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
       { label: "Personalized Hub", path: "/admin/personalized-hub", icon: Sparkles },
+      { label: "Vocabulary Hub", path: "/admin/vocabulary", icon: BookOpen },
       { label: "Daily Tests", path: "/admin/daily-tests", icon: ClipboardList },
       { label: "Exam Countdowns", path: "/admin/exam-countdowns", icon: CalendarClock },
       { label: "Student Announcements", path: "/admin/student-announcements", icon: Bell },
