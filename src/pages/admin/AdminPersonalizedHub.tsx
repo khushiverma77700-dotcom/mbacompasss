@@ -78,12 +78,17 @@ export default function AdminPersonalizedHub() {
         <p className="text-sm text-muted-foreground">Manage AI question bank and student access</p>
       </div>
 
-      <Tabs defaultValue="bank">
+      <Tabs defaultValue="bulk">
         <TabsList>
+          <TabsTrigger value="bulk"><Layers className="h-3.5 w-3.5 mr-1" />Bulk Queue</TabsTrigger>
           <TabsTrigger value="bank">Question Bank</TabsTrigger>
-          <TabsTrigger value="generate">Bulk Generate</TabsTrigger>
+          <TabsTrigger value="generate">Single Generate</TabsTrigger>
           <TabsTrigger value="access">Access Grants</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="bulk">
+          <PersonalizedBulkQueue />
+        </TabsContent>
 
         <TabsContent value="bank" className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
