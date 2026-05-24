@@ -44,7 +44,8 @@ Each question:
 - 4 options
 - Single correct answer (index 0–3)
 - Brief explanation (1–3 sentences)
-- 1–2 word topic tag`;
+- 1–2 word topic tag
+Vary topics, numbers, names, and contexts so questions are clearly different from one another and from any standard textbook questions. Do not reuse stems. Seed: ${crypto.randomUUID()}.`;
 
   const tools = [{
     type: "function",
