@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { MathExpression } from "@/components/formulas/MathExpression";
+import { MathInlineText } from "@/components/formulas/MathInlineText";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Layers as LayersIcon, BookOpen, Gauge, ListChecks, X } from "lucide-react";
 const DIFFS = [
