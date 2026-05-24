@@ -654,7 +654,7 @@ export default function MocksListPage() {
           onOpenChange={(o) => !o && setCheckoutTest(null)}
           testId={checkoutTest.id}
           testName={checkoutTest.name}
-          priceInr={Number(checkoutTest.price_inr)}
+          priceInr={Number(settings.price_current ?? checkoutTest.price_inr)}
           onEnrolled={() => navigate(`/mocks/thank-you?test=${checkoutTest.slug}`)}
         />
       )}
