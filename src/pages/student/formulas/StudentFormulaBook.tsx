@@ -14,6 +14,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { MathExpression } from "@/components/formulas/MathExpression";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Layers as LayersIcon, BookOpen, GraduationCap as GradIcon, Gauge, ListChecks, X } from "lucide-react";
 
 const EXAMS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "IIFT", "MAT"];
 const DIFFS = [
