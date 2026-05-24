@@ -38,6 +38,10 @@ export default function AdminVocabulary() {
   const [bulkJob, setBulkJob] = useState<any>(null);
   const [bulkStarting, setBulkStarting] = useState(false);
 
+  // Backfill state
+  const [backfillRunning, setBackfillRunning] = useState(false);
+  const [backfillStatus, setBackfillStatus] = useState<{ processed: number; remaining: number } | null>(null);
+
   document.title = "Vocabulary Admin | MBA Compass";
 
   const load = async () => {
