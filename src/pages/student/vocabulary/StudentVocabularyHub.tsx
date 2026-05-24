@@ -245,16 +245,42 @@ export default function StudentVocabularyHub() {
         </div>
       </section>
 
+      {/* HIGHLIGHTED — Practice Arena */}
+      <section>
+        <SectionTitle eyebrow="Test yourself" title="Practice arena" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <FeatureCard
+            to="/student/vocabulary/quiz"
+            icon={Brain}
+            label="Daily Quiz"
+            sub="MCQ • Match • Fill"
+            cta="Start Today's Quiz"
+            description="Lock today's words into memory with adaptive MCQs. +10 XP per correct answer."
+            tone="amber"
+          />
+          <FeatureCard
+            to="/student/vocabulary/revision"
+            icon={Layers}
+            label="Revision Deck"
+            sub={`${dueCount} flashcards due`}
+            cta="Open Revision Deck"
+            description="Spaced-repetition flashcards bring back forgotten words right before you lose them."
+            tone="sky"
+          />
+        </div>
+      </section>
+
       {/* Quick actions */}
       <section>
-        <SectionTitle eyebrow="Your toolkit" title="Practice & track" />
+        <SectionTitle eyebrow="Your toolkit" title="Track & explore" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <QuickLink to="/student/vocabulary/revision" icon={Layers} label="Revision Deck" sub={`${dueCount} flashcards due`} />
+          <QuickLink to="/student/vocabulary/search" icon={Search} label="Smart Search" sub="Any word, instantly" />
           <QuickLink to="/student/vocabulary/bookmarks" icon={Bookmark} label="Saved Words" sub="Your shortlist" />
           <QuickLink to="/student/vocabulary/leaderboard" icon={Trophy} label="Leaderboard" sub="Climb the ranks" />
           <QuickLink to="/student/vocabulary/analytics" icon={LineChart} label="My Analytics" sub="Progress insights" />
         </div>
       </section>
+
 
       {/* Categories */}
       <section>
