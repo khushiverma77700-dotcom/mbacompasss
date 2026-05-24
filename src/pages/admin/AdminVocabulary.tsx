@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,7 @@ export default function AdminVocabulary() {
   const [bulkJobId, setBulkJobId] = useState<string | null>(null);
   const [bulkJob, setBulkJob] = useState<any>(null);
   const [bulkStarting, setBulkStarting] = useState(false);
+  const autoResumeRef = useRef<Record<string, boolean>>({});
 
   // Backfill state
   const [backfillRunning, setBackfillRunning] = useState(false);
@@ -68,6 +69,18 @@ export default function AdminVocabulary() {
 
   useEffect(() => { load(); }, []);
 
+  const resumeBulkJob = async (job: any, silent = false) => {
+    if (!job?.id) return;
+    const { data, error } = await supabase.functions.invoke("vocab-bulk-generate", {
+      body: { resume_job_id: job.id, provider: job.provider || bulkProvider, exam: bulkExam === "any" ? null : bulkExam },
+    });
+    if (error || (data as any)?.error) {
+      if (!silent) toast({ title: "Resume failed", description: error?.message || (data as any)?.error, variant: "destructive" });
+      return;
+    }
+    if (!silent) toast({ title: "Resumed", description: `Continuing from ${job.generated}/${job.requested}` });
+  };
+
   // Poll active bulk job
   useEffect(() => {
     if (!bulkJobId) return;
@@ -76,6 +89,17 @@ export default function AdminVocabulary() {
       const { data } = await supabase.from("vocab_generation_jobs").select("*").eq("id", bulkJobId).maybeSingle();
       if (!stopped && data) {
         setBulkJob(data);
+        const updatedMs = data.updated_at ? Date.now() - new Date(data.updated_at).getTime() : 0;
+        const incomplete = (data.generated || 0) < (data.requested || 0);
+        const shouldAutoResume = incomplete && !autoResumeRef.current[data.id] && (
+          (data.status === "running" && updatedMs > 90_000) ||
+          (data.status === "paused" && /auto|continue|runtime|stalled|timeout|resume/i.test(data.current_activity || ""))
+        );
+        if (shouldAutoResume) {
+          autoResumeRef.current[data.id] = true;
+          await resumeBulkJob(data, true);
+          setTimeout(() => { autoResumeRef.current[data.id] = false; }, 20_000);
+        }
         if (data.status === "completed" || data.status === "failed") {
           load();
           return;
