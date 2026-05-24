@@ -22,9 +22,30 @@ async function generateBatch(LOVABLE_API_KEY: string, batchSize: number, categor
     ? `STRICT: DO NOT return any of these already-used words (case-insensitive): ${exclude.slice(0, 400).join(", ")}.`
     : "";
 
-  const system = `You are an MBA vocabulary curator for Indian aspirants preparing for CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT, GDPI, WAT, and placements. Return a batch of high-utility business / academic words actually useful in RC, verbal sections, interviews, group discussions and corporate emails. EVERY word must include EVERY field, no nulls. Hindi meaning must be in Devanagari. pronunciation_syllables must be hyphenated easy syllables with the stressed syllable in CAPS (e.g. 'uh-MOR-tuh-zay-shun'). exam_appearances must only list real past Indian MBA entrance exams where this exact word or its variant has been known to appear in RC/Verbal (format like 'CAT 2019'); if not reasonably sure, return []. Never fabricate exam appearances. Words must be unique within the batch and not in the exclude list.`;
+  const system = `You are an MBA vocabulary curator for Indian aspirants preparing for CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT, GDPI, WAT, and placements.
 
-  const user = `Generate exactly ${batchSize} unique MBA/business vocabulary words. ${catLine} ${diffLine} ${excludeBlock}`;
+Return high-utility business / academic words useful in RC, verbal sections, interviews, GDs and corporate emails.
+
+ABSOLUTE REQUIREMENTS — every single word MUST include EVERY field below, fully filled, no nulls, no empty strings, no placeholders:
+- word: the English word
+- part_of_speech: noun / verb / adjective / adverb (lowercase)
+- meaning: clear 1-2 sentence English definition (>= 10 words)
+- meaning_hindi: meaning in DEVANAGARI script (must contain Devanagari characters, NOT romanised). Example: "मूल्यह्रास — किसी संपत्ति के मूल्य में समय के साथ क्रमिक कमी।"
+- hinglish_meaning: easy Hinglish (Roman script Hindi) explanation a college student would use. Example: "Matlab koi cheez ya asset ki value time ke saath dheere-dheere kam hona."
+- pronunciation_syllables: hyphen-broken easy syllables with the STRESSED syllable in CAPS. Example: "uh-MOR-tuh-zay-shun". MUST contain at least one hyphen.
+- pronunciation: same as pronunciation_syllables (or an IPA-like simple form).
+- synonyms: 3-5 close English synonyms
+- antonyms: 2-5 antonyms (use closest opposites if exact ones don't exist; never empty)
+- example_business: one full sentence using the word in a business/board-room context
+- example_interview: one full sentence using the word in an MBA interview answer
+- example_email: one full sentence using the word in a professional email
+- exam_appearances: array of real past Indian MBA entrance exams where this word has actually appeared (e.g. "CAT 2019", "XAT 2021"). If unsure, return []. Never fabricate.
+- category: one of finance, marketing, consulting, hr, economics, corp_comm, general
+- difficulty: one of beginner, intermediate, cat, gdpi
+
+If you cannot fully complete ALL fields for a word with high quality, OMIT that word entirely — do NOT return partial entries. Words must be unique within the batch and must not appear in the exclude list.`;
+
+  const user = `Generate exactly ${batchSize} unique, fully-complete MBA/business vocabulary words. ${catLine} ${diffLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool. Every word must pass all ABSOLUTE REQUIREMENTS above.`;
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
