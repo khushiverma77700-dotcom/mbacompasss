@@ -49,6 +49,44 @@ export default function AdminVocabulary() {
 
   useEffect(() => { load(); }, []);
 
+  // Poll active bulk job
+  useEffect(() => {
+    if (!bulkJobId) return;
+    let stopped = false;
+    const tick = async () => {
+      const { data } = await supabase.from("vocab_generation_jobs").select("*").eq("id", bulkJobId).maybeSingle();
+      if (!stopped && data) {
+        setBulkJob(data);
+        if (data.status === "completed" || data.status === "failed") {
+          load();
+          return;
+        }
+        setTimeout(tick, 2500);
+      }
+    };
+    tick();
+    return () => { stopped = true; };
+  }, [bulkJobId]);
+
+  const startBulk = async () => {
+    setBulkStarting(true);
+    setBulkJob(null);
+    const { data, error } = await supabase.functions.invoke("vocab-bulk-generate", {
+      body: {
+        count: Math.max(1, Math.min(2000, Number(bulkCount) || 100)),
+        category: bulkCategory === "any" ? null : bulkCategory,
+        difficulty: bulkDifficulty === "any" ? null : bulkDifficulty,
+      },
+    });
+    setBulkStarting(false);
+    if (error || (data as any)?.error) {
+      toast({ title: "Failed to start", description: error?.message || (data as any)?.error, variant: "destructive" });
+      return;
+    }
+    setBulkJobId((data as any).job_id);
+    toast({ title: "AI generation started", description: "Running in the background — progress will update live." });
+  };
+
   const save = async () => {
     if (!editing?.word || !editing?.meaning) {
       toast({ title: "Word and meaning are required", variant: "destructive" });
