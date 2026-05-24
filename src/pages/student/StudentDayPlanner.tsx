@@ -114,6 +114,20 @@ export default function StudentDayPlanner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // First-time user guide
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const key = `planner_guide_seen_${user.id}`;
+      if (!localStorage.getItem(key)) setShowGuide(true);
+    } catch {}
+  }, [user]);
+
+  const dismissGuide = () => {
+    try { if (user) localStorage.setItem(`planner_guide_seen_${user.id}`, "1"); } catch {}
+    setShowGuide(false);
+  };
+
   const today = todayStr();
   const yesterday = addDays(today, -1);
   const tomorrow = addDays(today, 1);
