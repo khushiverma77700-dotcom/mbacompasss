@@ -200,12 +200,12 @@ export default function FormulaDetailPage() {
               <Card key={i}>
                 <CardContent className="p-5">
                   <div className="text-xs font-semibold uppercase tracking-wider text-sky-700">Example {i + 1}</div>
-                  <p className="mt-1 font-medium text-slate-900">{ex.problem}</p>
+                  <MathInlineText as="p" text={ex.problem} className="mt-1 font-medium text-slate-900" />
                   <ol className="ml-5 mt-3 list-decimal space-y-1 text-sm text-slate-700">
-                    {(ex.steps || []).map((s: string, j: number) => <li key={j}>{s}</li>)}
+                    {(ex.steps || []).map((s: string, j: number) => <MathInlineText as="li" key={j} text={s} />)}
                   </ol>
                   <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
-                    Answer: {ex.answer}
+                    Answer: <MathInlineText text={String(ex.answer ?? "")} />
                   </div>
                 </CardContent>
               </Card>
