@@ -11,6 +11,16 @@ const corsHeaders = {
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
 const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
 const EXAMS = ["CAT","XAT","NMAT","SNAP","IIFT","CMAT","MAT"];
+const ADVANCED_WORD_POOL = `abnegation abrogate abscond abstruse accretion acerbic acquiesce adumbrate alacrity anachronistic anodyne antipathy apocryphal approbation arduous ascetic assiduous attenuate audacious austere axiomatic bellicose bombastic bowdlerize cacophony calumny capricious castigate chicanery circumspect cogent compunction conciliatory conflate connivance conspicuous contumacious copious deleterious demagogue demur descry desultory diatribe dichotomy diffident dilatory disabuse discordant disingenuous disinterested dogmatic ebullient eclectic effrontery egregious enervate enigmatic ephemeral equanimity equivocate eschew esoteric eulogy exacerbate excoriate exculpate exigent expostulate expunge fastidious fecund felicity fulminate garrulous hegemony iconoclast idiosyncrasy immutable impecunious imperious implacable inchoate incipient indefatigable indolent ineffable ineluctable ingenuous inimical innocuous insidious intransigent inveterate irascible jejune laconic lambaste lassitude limpid loquacious lugubrious magnanimous malapropism malleable maudlin mendacious mercurial meticulous misanthrope mitigant mollify moribund munificent nebulous nefarious obdurate obfuscate obsequious obstreperous officious ostentatious palliate parsimonious paucity pellucid perfidious perfunctory perspicacious pertinacious phlegmatic polemic portentous pragmatic prevaricate prodigious propitiate punctilious pusillanimous quixotic recalcitrant redolent refractory reify reticent sagacious sanguine sardonic scintillating sedulous sententious soporific specious spurious stolid stratagem stringent supercilious surreptitious sycophantic taciturn temerity tenacious torpor trenchant truculent ubiquitous umbrage vacillate vacuous venerable veracity verbose vicissitude vituperate vitriolic vociferous winnow zealous aberration abeyance abstemious accost acrimony acumen adamant admonish adulterate aesthetic affable aggrandize alchemy alienate altruism ambivalent ameliorate amenable amorphous anathema ancillary animus anomaly antediluvian antithesis aplomb apostate arbitrary arcane artifice asperity assuage atavistic august avarice banal bane benign bolster brazen bucolic burgeon burnish cajole candor canny censure chastise circumscribe clairvoyant clamor coalesce coercive complacent complaisant conflagration connoisseur contrite convivial convoluted corroborate credulous cryptic culpable debacle debauchery debunk decorum deference deft denigrate deride derivative didactic digress discerning discomfit disconcert disenfranchise disparate dispel docile duplicity edifying efface effusive elegy elicit embellish empirical emulate endemic ephemeral erudite ethereal euphony evanescent exacting exiguous expedient extirpate extraneous facetious facile fallacious fatuous fervent fetter flippant foible forbearance fortuitous frugal furtive gainsay genial germane grandiloquent gregarious guile hapless harangue heresy heterodox hyperbole ignominious illustrious impassive impecunious impetuous imperturbable impervious impugn inadvertent incisive incongruous indignant indolent inexorable infelicitous ingratiate insouciant intrepid irrefutable jaundiced juxtapose largesse latent lethargy levity lucid machination malfeasance malinger mawkish mendicant modicum mordant myriad nascent nettlesome obviate occlude onerous opprobrium oscillate overt pallid parochial pedantic penury perennial perfidy pernicious perspicuity petulant placate platitude plausible plebeian poignant polemical preclude predilection prescient probity proclivity profligate prolific promulgate prudent puerile pugnacious quandary querulous quiescent rancor rarefied rebuke redoubtable refute relegate remiss reprisal reproach repudiation resilient reverent rhetorical ruminate salubrious sanction scrupulous seminal solicitous somnolent splenetic sporadic stymie subjugate sublime subterfuge succinct supplant surfeit tantamount tedious timorous transitory ubiquitous unctuous untenable upbraid vacillate vainglorious venal venerate vestigial vilify virulent voluble whimsical`.split(/\s+/);
+
+function estimateTokens(text: string): number {
+  return Math.ceil(String(text || "").length / 4);
+}
+
+function estimateCostUsd(provider: Provider, inputTokens: number, outputTokens: number): number {
+  if (provider === "openai") return (inputTokens / 1_000_000) * 0.15 + (outputTokens / 1_000_000) * 0.60;
+  return (inputTokens + outputTokens) * 0.0000015;
+}
 
 function slugify(w: string): string {
   return String(w).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -29,6 +39,12 @@ function sampleArray<T>(arr: T[], n: number): T[] {
   return out;
 }
 
+function pickTargetWords(seen: Set<string>, need: number, attempt: number): string[] {
+  const offset = attempt % Math.max(ADVANCED_WORD_POOL.length, 1);
+  const rotated = ADVANCED_WORD_POOL.slice(offset).concat(ADVANCED_WORD_POOL.slice(0, offset));
+  return rotated.filter((w) => !seen.has(slugify(w))).slice(0, need);
+}
+
 type Provider = "lovable" | "openai";
 
 async function generateBatch(
@@ -40,6 +56,7 @@ async function generateBatch(
   exam: string | null,
   exclude: string[],
   recentDupes: string[],
+  targetWords: string[],
 ) {
   const catLine = category ? `Restrict every word to the category: ${category}.` : `Cover finance, marketing, consulting, HR, economics, corp_comm, general.`;
   // HARD MODE: force CAT/GDPI-tier difficulty by default. Easy tiers only when admin explicitly asks.
@@ -52,6 +69,9 @@ async function generateBatch(
     : "";
   const sampled = sampleArray(exclude, 400);
   const dupeLine = recentDupes.length ? ` Avoid recent duplicates: ${recentDupes.slice(-100).join(", ")}.` : "";
+  const targetLine = targetWords.length
+    ? `TARGET WORDS: Prefer these exact unused hard words first, and fully enrich them: ${targetWords.join(", ")}. If any target is unsuitable, replace it with another word of the same advanced difficulty.`
+    : "";
   const excludeBlock = exclude.length
     ? `UNIQUENESS: Library has ${exclude.length} words. DO NOT return any (case-insensitive) from: ${sampled.join(", ")}.${dupeLine}`
     : "";
@@ -69,7 +89,7 @@ DIFFICULTY BAR — STRICT. Every word MUST satisfy ALL of:
 BANNED — do NOT return these or anything similarly basic (case-insensitive, including plurals/forms):
 market, marketing, profit, revenue, budget, growth, leader, leadership, manager, management, customer, client, brand, branding, sales, price, pricing, cost, value, team, teamwork, goal, vision, mission, target, strategy, plan, planning, product, project, finance, money, bank, banking, loan, invest, investor, investment, asset, equity, debit, credit, debt, share, stock, trade, trader, trading, deal, offer, demand, supply, buyer, seller, retail, wholesale, loss, income, expense, tax, salary, wage, job, work, office, company, business, firm, industry, economy, economic, idea, success, failure, risk, reward, partner, partnership, merge, merger, owner, agent, agency, service, quality, hire, fire, boss, employee, staff, meeting, report, email, chart, graph, data, trend, save, spend, buy, sell, growth, scale, scaling, launch, pitch, deck, startup, founder, network, networking, brand, market, deal, leader, profit.
 
-GOOD EXAMPLES (this difficulty tier): perspicacious, obfuscate, sycophantic, anachronistic, ostentatious, mellifluous, hegemony, ubiquitous, ephemeral, capricious, expostulate, recalcitrant, sanguine, equivocate, vicissitude, perfunctory, ineluctable, propitiate, lugubrious, abrogate, contumacious, pellucid, jejune, supercilious, taciturn, fastidious, surreptitious, magnanimous, perfidious, sagacious, vituperate, quixotic, mendacious, pernicious, fulminate, palliate, mollify, prevaricate, salient, redolent, truculent, vacillate, winnow, abnegation, bowdlerize, calumny, descry, eschew, fecund.
+DIFFICULTY EXAMPLES (style only, not a reusable list): perspicacious, obfuscate, sycophantic, anachronistic, ostentatious, recalcitrant, ineluctable, propitiate, lugubrious, contumacious. If any example is already in the exclude list, never return it. Prefer fresh rare words from lexicon families like rhetoric, logic, literary criticism, psychology, economics, governance, ethics, and RC prose.
 
 If a word does not clearly meet this bar, OMIT it and return another in its place.`;
 
@@ -91,7 +111,8 @@ ${examAppearanceRule}
 ${hardnessBlock}
 If you cannot fully complete ALL fields with high quality, OMIT the word. Unique within batch, not in exclude list.`;
 
-  const user = `Generate exactly ${batchSize} unique fully-complete ${allowEasy ? "" : "HARD CAT/GDPI-tier "}words. ${catLine} ${diffLine} ${examLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool.`;
+  const user = `Generate exactly ${batchSize} unique fully-complete ${allowEasy ? "" : "HARD CAT/GDPI-tier "}words. ${catLine} ${diffLine} ${examLine} ${targetLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool.`;
+  const promptTokenEstimate = estimateTokens(system + user);
 
   const toolSchema = {
     type: "function",
@@ -165,10 +186,14 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   const args = j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
   if (!args) throw new Error("No tool call returned");
   const parsed = JSON.parse(args);
-  return Array.isArray(parsed.words) ? parsed.words : [];
+  return {
+    words: Array.isArray(parsed.words) ? parsed.words : [],
+    inputTokens: j.usage?.prompt_tokens || promptTokenEstimate,
+    outputTokens: j.usage?.completion_tokens || estimateTokens(args),
+  };
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number }) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
     lovable: Deno.env.get("LOVABLE_API_KEY") || "",
@@ -178,6 +203,11 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   let generated = seed?.generated || 0;
   let duplicates = seed?.duplicates || 0;
   let failed = seed?.failed || 0;
+  let attempts = seed?.attempts || 0;
+  let rejected = seed?.rejected || 0;
+  let inputTokens = seed?.estimated_input_tokens || 0;
+  let outputTokens = seed?.estimated_output_tokens || 0;
+  let costUsd = Number(seed?.estimated_cost_usd || 0);
   const seenSlugs = new Set<string>();
   const recentDupes: string[] = [];
 
@@ -195,13 +225,20 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
   }
 
-  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…` }).eq("id", jobId);
+  const originalStartedAt = new Date().toISOString();
+  await supabase.from("vocab_generation_jobs").update({
+    status: "running",
+    provider,
+    exam,
+    batch_size: provider === "openai" ? 30 : 20,
+    started_at: seed ? undefined : originalStartedAt,
+    current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…`,
+  }).eq("id", jobId);
 
   // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
-  const BATCH = provider === "openai" ? 40 : 25;
+  const BATCH = provider === "openai" ? 30 : 20;
   let consecutiveEmpty = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
-  let attempts = 0;
   // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
   // Mark the job as `paused` so the UI can offer a Resume button.
   const startMs = Date.now();
@@ -212,20 +249,34 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       await supabase.from("vocab_generation_jobs").update({
         status: "paused",
         current_activity: `Paused at ${generated}/${total}. Click Resume to continue.`,
-        generated, duplicates, failed,
+        generated, duplicates, failed, attempts, rejected,
+        estimated_input_tokens: inputTokens,
+        estimated_output_tokens: outputTokens,
+        estimated_cost_usd: costUsd,
+        progress_details: { cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Paused before runtime limit; resume continues safely." },
       }).eq("id", jobId);
       return;
     }
 
     attempts++;
     const need = Math.min(BATCH, total - generated);
+    const targetWords = pickTargetWords(seenSlugs, need, attempts);
     await supabase.from("vocab_generation_jobs").update({
-      current_activity: `Generating batch ${attempts} via ${provider} (${generated}/${total})…`,
+      current_activity: `Generating advanced CAT-level batch ${attempts} via ${provider} (${generated}/${total})…`,
+      attempts,
+      progress_details: { cpu_proxy: 68, target_words: targetWords.slice(0, 8), phase: "ai_generation" },
     }).eq("id", jobId);
 
     let batch: any[] = [];
+    let batchTokens = { inputTokens: 0, outputTokens: 0 };
+    const batchStarted = Date.now();
     try {
-      batch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
+      const generatedBatch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes, targetWords);
+      batch = generatedBatch.words;
+      batchTokens = { inputTokens: generatedBatch.inputTokens, outputTokens: generatedBatch.outputTokens };
+      inputTokens += batchTokens.inputTokens;
+      outputTokens += batchTokens.outputTokens;
+      costUsd += estimateCostUsd(provider, batchTokens.inputTokens, batchTokens.outputTokens);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("Batch error", msg);
@@ -327,6 +378,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       console.log(`Rejected ${rejectedIncomplete} incomplete words in batch ${attempts}`);
     }
 
+    let addedNow = 0;
     if (rows.length) {
       const { data: inserted, error } = await supabase
         .from("vocab_words")
@@ -336,22 +388,52 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         console.error("Upsert error", error);
         failed++;
       } else {
-        const addedNow = inserted?.length || 0;
+        addedNow = inserted?.length || 0;
         generated += addedNow;
         // any rows that didn't insert were duplicates from a race
         duplicates += rows.length - addedNow;
       }
     }
+    rejected += rejectedIncomplete;
+    const elapsedMinutes = Math.max(0.05, (Date.now() - startMs) / 60000);
+    const batchSeconds = Math.max(1, Math.round((Date.now() - batchStarted) / 1000));
+    const throughput = Math.round(generated / elapsedMinutes);
+    const cpuProxy = Math.min(96, Math.max(18, Math.round(35 + (batchSeconds / 45) * 35 + (batch.length / Math.max(need, 1)) * 18)));
 
     await supabase.from("vocab_generation_jobs").update({
-      generated, duplicates, failed,
+      generated, duplicates, failed, attempts, rejected,
+      estimated_input_tokens: inputTokens,
+      estimated_output_tokens: outputTokens,
+      estimated_cost_usd: costUsd,
+      progress_details: {
+        phase: "dedupe_and_save",
+        cpu_proxy: cpuProxy,
+        throughput_per_min: throughput,
+        last_batch_seconds: batchSeconds,
+        last_batch_returned: batch.length,
+        last_batch_candidates: rows.length,
+        last_batch_added: addedNow,
+        last_batch_duplicates: Math.max(0, rows.length - addedNow),
+        last_batch_rejected: rejectedIncomplete,
+        input_tokens_last_batch: batchTokens.inputTokens,
+        output_tokens_last_batch: batchTokens.outputTokens,
+        target_words: targetWords.slice(0, 8),
+      },
     }).eq("id", jobId);
   }
 
+  const finalStatus = generated >= total ? "completed" : "paused";
   await supabase.from("vocab_generation_jobs").update({
-    status: generated >= total ? "completed" : "completed",
-    current_activity: `Done. Added ${generated}, skipped ${duplicates} duplicates, ${failed} failed batches.`,
-    generated, duplicates, failed,
+    status: finalStatus,
+    current_activity: generated >= total
+      ? `Done. Added ${generated}, skipped ${duplicates} duplicates, ${failed} failed batches.`
+      : `Paused at ${generated}/${total}. Need more unique advanced words; click Resume to continue with a fresh target list.`,
+    generated, duplicates, failed, attempts, rejected,
+    estimated_input_tokens: inputTokens,
+    estimated_output_tokens: outputTokens,
+    estimated_cost_usd: costUsd,
+    finished_at: finalStatus === "completed" ? new Date().toISOString() : null,
+    progress_details: { phase: finalStatus, cpu_proxy: finalStatus === "completed" ? 0 : 10, throughput_per_min: 0 },
   }).eq("id", jobId);
 }
 
@@ -397,7 +479,16 @@ Deno.serve(async (req) => {
       const resumeExam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
       await supabase.from("vocab_generation_jobs").update({ status: "running", error: null, current_activity: "Resuming…" }).eq("id", existing.id);
       // @ts-ignore Edge runtime background tasks
-      EdgeRuntime.waitUntil(runJob(existing.id, existing.requested, existing.category, existing.difficulty, resumeExam, resumeProvider, { generated: existing.generated || 0, duplicates: existing.duplicates || 0, failed: existing.failed || 0 }));
+      EdgeRuntime.waitUntil(runJob(existing.id, existing.requested, existing.category, existing.difficulty, resumeExam || existing.exam || null, resumeProvider, {
+        generated: existing.generated || 0,
+        duplicates: existing.duplicates || 0,
+        failed: existing.failed || 0,
+        attempts: existing.attempts || 0,
+        rejected: existing.rejected || 0,
+        estimated_input_tokens: existing.estimated_input_tokens || 0,
+        estimated_output_tokens: existing.estimated_output_tokens || 0,
+        estimated_cost_usd: existing.estimated_cost_usd || 0,
+      }));
       return new Response(JSON.stringify({ job_id: existing.id, resumed: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -414,7 +505,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: job, error } = await supabase.from("vocab_generation_jobs").insert({
-      requested: count, category, difficulty, status: "pending",
+      requested: count, category, difficulty, provider, exam, status: "pending",
       created_by: user.id,
       current_activity: `Queued (${provider}${exam ? `, ${exam}-only` : ""})`,
     }).select().single();

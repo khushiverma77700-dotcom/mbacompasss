@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Pencil, Sparkles, Upload, BookOpen, Calendar, Wand2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, Sparkles, Upload, BookOpen, Calendar, Wand2, Cpu, DollarSign, Clock3, Gauge, Database, Zap, ShieldCheck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,19 @@ const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
 
 function slugify(w: string): string {
   return w.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function formatDuration(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
+}
+
+function metricTone(value: number, dangerAt = 85) {
+  if (value >= dangerAt) return "text-destructive";
+  if (value >= 65) return "text-foreground";
+  return "text-primary";
 }
 
 export default function AdminVocabulary() {
@@ -322,50 +335,82 @@ export default function AdminVocabulary() {
                 const done = Math.min(bulkJob.generated || 0, req);
                 const pct = Math.min(100, Math.round((done / req) * 100));
                 const remaining = Math.max(0, (bulkJob.requested || 0) - (bulkJob.generated || 0));
+                const details = bulkJob.progress_details || {};
+                const startedAt = bulkJob.started_at || bulkJob.created_at;
+                const finishedAt = bulkJob.finished_at || bulkJob.updated_at || new Date().toISOString();
+                const runtimeMs = startedAt ? new Date(finishedAt).getTime() - new Date(startedAt).getTime() : 0;
+                const activeRuntimeMs = startedAt ? Date.now() - new Date(startedAt).getTime() : runtimeMs;
+                const runtime = bulkJob.status === "running" || bulkJob.status === "pending" ? formatDuration(activeRuntimeMs) : formatDuration(runtimeMs);
+                const cpuProxy = Math.max(0, Math.min(100, Number(details.cpu_proxy || (bulkJob.status === "running" ? 55 : 0))));
+                const throughput = Number(details.throughput_per_min || 0);
+                const duplicateRate = Math.round(((bulkJob.duplicates || 0) / Math.max(1, (bulkJob.generated || 0) + (bulkJob.duplicates || 0))) * 100);
+                const qualityRate = Math.max(0, 100 - Math.round(((bulkJob.rejected || 0) / Math.max(1, (bulkJob.generated || 0) + (bulkJob.rejected || 0))) * 100));
+                const cost = Number(bulkJob.estimated_cost_usd || 0);
+                const tokenTotal = Number(bulkJob.estimated_input_tokens || 0) + Number(bulkJob.estimated_output_tokens || 0);
                 const statusColor =
-                  bulkJob.status === "completed" ? "text-emerald-600" :
+                  bulkJob.status === "completed" ? "text-primary" :
                   bulkJob.status === "failed" ? "text-destructive" :
-                  "text-sky-600";
+                  "text-primary";
                 return (
-                  <div className="rounded-xl border border-border bg-gradient-to-br from-sky-50/60 to-white p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-5 shadow-sm">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
                         <span className={`inline-flex items-center gap-1.5 text-sm font-semibold capitalize ${statusColor}`}>
-                          <span className={`w-2 h-2 rounded-full ${bulkJob.status === "running" || bulkJob.status === "pending" ? "bg-sky-500 animate-pulse" : bulkJob.status === "completed" ? "bg-emerald-500" : "bg-destructive"}`} />
-                          {bulkJob.status}
+                          <span className={`w-2 h-2 rounded-full ${bulkJob.status === "running" || bulkJob.status === "pending" ? "bg-primary animate-pulse" : bulkJob.status === "completed" ? "bg-primary" : "bg-destructive"}`} />
+                          {bulkJob.status} · batch {bulkJob.attempts || 0}
                         </span>
+                        <p className="text-xs text-muted-foreground mt-1 truncate max-w-2xl">{bulkJob.current_activity || "Working…"}</p>
                       </div>
-                      <div className="text-2xl font-bold tabular-nums text-foreground">{pct}%</div>
-                    </div>
-
-                    <Progress value={pct} className="h-3" />
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                      <div className="rounded-lg bg-white border border-border p-2.5">
-                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Requested</div>
-                        <div className="text-lg font-bold tabular-nums">{bulkJob.requested || 0}</div>
-                      </div>
-                      <div className="rounded-lg bg-white border border-border p-2.5">
-                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Added</div>
-                        <div className="text-lg font-bold tabular-nums text-emerald-600">{bulkJob.generated || 0}</div>
-                      </div>
-                      <div className="rounded-lg bg-white border border-border p-2.5">
-                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Remaining</div>
-                        <div className="text-lg font-bold tabular-nums text-sky-600">{remaining}</div>
-                      </div>
-                      <div className="rounded-lg bg-white border border-border p-2.5">
-                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Duplicates</div>
-                        <div className="text-lg font-bold tabular-nums text-amber-600">{bulkJob.duplicates || 0}</div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold tabular-nums text-foreground">{pct}%</div>
+                        <div className="text-[11px] text-muted-foreground">{done.toLocaleString()} / {req.toLocaleString()} saved</div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs">
-                      <p className="text-muted-foreground italic truncate pr-3">
-                        {bulkJob.current_activity || "Working…"}
-                      </p>
-                      {(bulkJob.failed || 0) > 0 && (
-                        <span className="shrink-0 text-destructive">Failed batches: <b>{bulkJob.failed}</b></span>
-                      )}
+                    <div className="space-y-2">
+                      <Progress value={pct} className="h-4" />
+                      <div className="grid grid-cols-4 gap-1 text-[10px] text-muted-foreground">
+                        <span>Queued</span><span>Generate</span><span>Deduplicate</span><span className="text-right">Save</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      {[
+                        ["Requested", (bulkJob.requested || 0).toLocaleString(), Database],
+                        ["Added", (bulkJob.generated || 0).toLocaleString(), ShieldCheck],
+                        ["Pending", remaining.toLocaleString(), Clock3],
+                        ["Duplicates", (bulkJob.duplicates || 0).toLocaleString(), Zap],
+                      ].map(([label, value, Icon]: any) => (
+                        <div key={label} className="rounded-lg border border-border bg-background p-3">
+                          <div className="flex items-center gap-2 text-[11px] uppercase text-muted-foreground"><Icon className="w-3.5 h-3.5" /> {label}</div>
+                          <div className="text-xl font-bold tabular-nums text-foreground mt-1">{value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="rounded-lg border border-border bg-background p-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1.5 text-muted-foreground"><Cpu className="w-4 h-4" /> Compute load</span><b className={`tabular-nums ${metricTone(cpuProxy)}`}>{cpuProxy}%</b></div>
+                        <Progress value={cpuProxy} className="h-2" />
+                        <p className="text-[11px] text-muted-foreground">Estimated from AI call time and batch processing load.</p>
+                      </div>
+                      <div className="rounded-lg border border-border bg-background p-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1.5 text-muted-foreground"><DollarSign className="w-4 h-4" /> Estimated cost</span><b className="tabular-nums text-foreground">${cost.toFixed(4)}</b></div>
+                        <div className="text-[11px] text-muted-foreground">Tokens: {tokenTotal.toLocaleString()} · Provider: {bulkJob.provider || bulkProvider}</div>
+                        <div className="text-[11px] text-muted-foreground">Input {(bulkJob.estimated_input_tokens || 0).toLocaleString()} · Output {(bulkJob.estimated_output_tokens || 0).toLocaleString()}</div>
+                      </div>
+                      <div className="rounded-lg border border-border bg-background p-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1.5 text-muted-foreground"><Gauge className="w-4 h-4" /> Throughput</span><b className="tabular-nums text-foreground">{throughput}/min</b></div>
+                        <div className="text-[11px] text-muted-foreground">Runtime: {runtime} · Batch time: {details.last_batch_seconds || 0}s</div>
+                        <div className="text-[11px] text-muted-foreground">Quality pass: {qualityRate}% · Duplicate rate: {duplicateRate}%</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div className="rounded-md bg-muted/40 p-2"><span className="text-muted-foreground">Rejected low-quality</span><b className="block tabular-nums">{bulkJob.rejected || 0}</b></div>
+                      <div className="rounded-md bg-muted/40 p-2"><span className="text-muted-foreground">Last added</span><b className="block tabular-nums">{details.last_batch_added || 0}</b></div>
+                      <div className="rounded-md bg-muted/40 p-2"><span className="text-muted-foreground">Last duplicates</span><b className="block tabular-nums">{details.last_batch_duplicates || 0}</b></div>
+                      <div className="rounded-md bg-muted/40 p-2"><span className="text-muted-foreground">Failed batches</span><b className="block tabular-nums text-destructive">{bulkJob.failed || 0}</b></div>
                     </div>
 
                     {bulkJob.error && (
