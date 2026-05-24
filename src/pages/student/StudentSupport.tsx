@@ -295,6 +295,41 @@ export default function StudentSupport() {
 
   const filteredFaqs = useMemo(() => faqs, [faqs]);
 
+  // ============ Dashboard stats ============
+  const stats = useMemo(() => {
+    const total = tickets.length;
+    const open = tickets.filter((t) => t.status === "open").length;
+    const inProgress = tickets.filter((t) => t.status === "in_progress").length;
+    const resolved = tickets.filter((t) => t.status === "resolved" || t.status === "closed").length;
+    const awaiting = tickets.filter(
+      (t) => t.last_student_reply_at && (!t.last_admin_reply_at || new Date(t.last_admin_reply_at) < new Date(t.last_student_reply_at))
+    ).length;
+
+    // Average admin response time (first reply) in hours
+    const replied = tickets.filter((t) => t.last_admin_reply_at && t.created_at);
+    let avgMs = 0;
+    if (replied.length) {
+      const sum = replied.reduce(
+        (acc, t) => acc + (new Date(t.last_admin_reply_at).getTime() - new Date(t.created_at).getTime()),
+        0
+      );
+      avgMs = sum / replied.length;
+    }
+    const fmtDuration = (ms: number) => {
+      if (!ms) return "—";
+      const mins = Math.round(ms / 60000);
+      if (mins < 60) return `${mins}m`;
+      const hrs = Math.floor(mins / 60);
+      const rem = mins % 60;
+      if (hrs < 24) return rem ? `${hrs}h ${rem}m` : `${hrs}h`;
+      const days = Math.floor(hrs / 24);
+      const remH = hrs % 24;
+      return remH ? `${days}d ${remH}h` : `${days}d`;
+    };
+    const resolutionRate = total ? Math.round((resolved / total) * 100) : 0;
+    return { total, open, inProgress, resolved, awaiting, avgResponse: fmtDuration(avgMs), resolutionRate };
+  }, [tickets]);
+
   // ============ UI ============
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -308,6 +343,45 @@ export default function StudentSupport() {
             Raise a ticket and our team will get back to you. Browse FAQs for instant answers.
           </p>
         </div>
+      </div>
+
+      {/* Advanced stats dashboard */}
+      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/40 to-blue-50/60 p-5 shadow-sm">
+        <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-sky-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-blue-200/30 blur-3xl" />
+
+        <div className="relative flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-md bg-white/80 border border-sky-100 grid place-items-center">
+              <Activity className="h-4 w-4 text-sky-600" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold">Your Support Overview</div>
+              <div className="text-[11px] text-muted-foreground">Live snapshot of your ticket activity</div>
+            </div>
+          </div>
+          <Badge variant="outline" className="bg-white/70 border-sky-200 text-sky-700 gap-1 text-[10px]">
+            <Sparkles className="h-3 w-3" /> Live
+          </Badge>
+        </div>
+
+        <div className="relative grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <StatTile icon={Inbox} label="Total Tickets" value={stats.total} tone="sky" />
+          <StatTile icon={AlertCircle} label="Pending" value={stats.open} tone="rose" />
+          <StatTile icon={Clock} label="In Progress" value={stats.inProgress} tone="amber" />
+          <StatTile icon={CheckCircle2} label="Resolved" value={stats.resolved} tone="emerald" />
+          <StatTile icon={Timer} label="Avg Response" value={stats.avgResponse} tone="blue" hint="Team first reply" />
+          <StatTile icon={TrendingUp} label="Resolution Rate" value={`${stats.resolutionRate}%`} tone="indigo" />
+        </div>
+
+        {stats.awaiting > 0 && (
+          <div className="relative mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-800">
+            <MessageSquare className="h-3.5 w-3.5" />
+            <span>
+              <strong>{stats.awaiting}</strong> ticket{stats.awaiting > 1 ? "s" : ""} awaiting a reply from our team.
+            </span>
+          </div>
+        )}
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
