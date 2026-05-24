@@ -656,11 +656,11 @@ export default function StudentVocabularyFeed() {
                     isRead ? "bg-emerald-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500",
                   )}
                 />
-                <CardContent className="relative flex flex-1 flex-col p-6">
+                <CardContent className="relative flex flex-1 flex-col p-4 sm:p-6">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <Link to={`/student/vocabulary/word/${w.slug}`} className="block">
-                        <h3 className="font-heading text-3xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 md:text-4xl">
+                        <h3 className="font-heading text-2xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 sm:text-3xl md:text-4xl break-words">
                           {w.word}
                         </h3>
                       </Link>
