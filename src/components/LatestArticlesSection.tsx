@@ -68,7 +68,7 @@ const LatestArticlesSection = () => {
             <Link to={`/article/${featured.slug}`} className="group block bg-card rounded-2xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-all duration-300 h-full">
               <div className="h-56 overflow-hidden relative">
                 {getImage(featured) ? (
-                  <img src={getImage(featured)!} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                  <img src={cdnImage(getImage(featured), { width: 720, quality: 72 })} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full h-full hero-gradient flex items-center justify-center">
                     <BookOpen className="w-16 h-16 text-primary-foreground/20" />
