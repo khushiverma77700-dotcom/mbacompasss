@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock, ListChecks, Gauge, TrendingUp, Trophy, Target } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock, ListChecks, Gauge, TrendingUp, Trophy, Target, AlertCircle, CalendarClock } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import UpgradeDialog from "@/components/student/UpgradeDialog";
 
