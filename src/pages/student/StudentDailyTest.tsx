@@ -142,6 +142,11 @@ export default function StudentDailyTest() {
     };
   }, [recentAttempts]);
 
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const upcoming = useMemo(() => history.filter(h => h.assigned_date > todayKey).sort((a, b) => a.assigned_date.localeCompare(b.assigned_date)), [history, todayKey]);
+  const missed = useMemo(() => history.filter(h => h.assigned_date < todayKey && !h.progress?.completed_at), [history, todayKey]);
+  const completed = useMemo(() => history.filter(h => h.progress?.completed_at), [history]);
+
   if (loading) return <div className="text-muted-foreground">Loading…</div>;
 
   return (
