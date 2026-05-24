@@ -760,7 +760,9 @@ export default function StudentVocabularyFeed() {
             );
           })}
         </div>
-      )}
+        );
+      })()}
+
     </div>
   );
 }
