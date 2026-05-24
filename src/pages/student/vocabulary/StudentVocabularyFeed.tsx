@@ -203,10 +203,49 @@ export default function StudentVocabularyFeed() {
     toast({ title: "Daily target updated", description: `Aim for ${clean} words/day` });
   };
 
+  const runSearch = async () => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearching(true);
+    setSearchResults([]);
+    const { data } = await supabase
+      .from("vocab_words")
+      .select("*")
+      .ilike("word", `%${q}%`)
+      .limit(20);
+    setSearching(false);
+
+    if (data && data.length > 0) {
+      setSearchResults(data);
+      return;
+    }
+    // No library hit → ask AI to explain & save in same format
+    setAiSearching(true);
+    try {
+      const { data: ai, error } = await supabase.functions.invoke("vocab-explain", { body: { word: q, save: true } });
+      if (error) throw error;
+      if (ai?.error) throw new Error(ai.error);
+      if (ai?.word) {
+        setSearchResults([ai.word]);
+        toast({ title: "AI explained & added", description: `"${ai.word.word}" is now in your library.` });
+      }
+    } catch (e: any) {
+      toast({ title: "Search failed", description: e?.message || "Try again", variant: "destructive" });
+    }
+    setAiSearching(false);
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
   const visible = useMemo(
     () => (showRead ? words : words.filter((w) => !readIds.has(w.id))),
     [words, showRead, readIds],
   );
+
   const totalRead = readIds.size;
   const totalSaved = bookmarkIds.size;
   const xp = streak?.total_xp || 0;
