@@ -666,17 +666,44 @@ function CloudUsageTab({ registerRefresh, registerLoading }: CloudUsageTabProps)
       // generated Supabase types). Removes legacy/never-created tables that
       // silently failed and adds tables that were missing — so totals match
       // the real database.
+      // Full live list of public tables (kept in sync with Supabase types).
+      // Counts run in parallel with head:true so each is cheap.
       const tables = [
-        "admin_permissions", "ai_usage_logs", "analysis_results", "articles",
-        "audit_runs", "audit_step_logs", "banners", "business_inquiries",
-        "cat_score_submissions", "categories", "city_pages", "coaching_of_week",
-        "coaching_results", "college_sections", "colleges", "comparisons",
-        "content_refreshes", "coupon_claims", "coupons", "course_categories",
-        "courses", "exams", "faculty", "indexing_logs", "indexing_urls",
-        "inquiries", "institute_results", "institutes", "listing_change_requests",
-        "mega_menu_items", "newsletter_subscribers", "page_summary_cache",
-        "phone_otps", "profile_analyses", "profiles", "user_roles",
+        "admin_permissions","ai_mock_generations","ai_usage_logs","analysis_results",
+        "api_credential_audit","api_credentials","articles","audit_runs","audit_step_logs",
+        "banners","bulk_college_jobs","bulk_mock_request_items","bulk_mock_requests",
+        "bulk_section_jobs","business_inquiries","cat_score_submissions","categories",
+        "city_pages","coaching_of_week","coaching_results","college_sections","colleges",
+        "comparisons","content_refreshes","coupon_claims","coupons","course_bundles",
+        "course_categories","course_enrollments","course_orders","courses","cta_events",
+        "cta_settings","ctr_optimizations","daily_test_assignments","exams","faculty",
+        "iim_waitlist_applications","iim_waitlist_leads","iim_waitlist_movement",
+        "iim_waitlist_results","iim_waitlist_rti","imported_students","indexing_logs",
+        "indexing_urls","inquiries","institute_courses","institute_results","institutes",
+        "listing_change_requests","mba_compass_courses","mega_menu_items",
+        "mock_ai_deep_analyses","mock_attempts","mock_bookmarks","mock_bundle_enrollments",
+        "mock_bundle_items","mock_bundle_orders","mock_bundles","mock_coupons",
+        "mock_enrollments","mock_order_items","mock_orders","mock_passages","mock_payments",
+        "mock_projected_ranks","mock_purchase_orders","mock_question_options",
+        "mock_questions","mock_responses","mock_section_jobs","mock_sections","mock_tests",
+        "mocks_landing_settings","newsletter_subscribers","page_summary_cache",
+        "personalized_hub_access","personalized_mock_attempts","personalized_question_seen",
+        "personalized_questions","phone_lookup_audit","phone_otps","profile_analyses",
+        "profiles","programme_courses","quant_formula_progress","quant_formulas",
+        "quant_practice_attempts","quant_revision_sessions","quant_streaks","quant_topics",
+        "reviews","roi_analyses","safe_browsing_flagged_urls","saved_institutes",
+        "seo_audit_findings","seo_audit_runs","seo_keyword_research","seo_validation_reports",
+        "site_settings","sop_reviews","specializations","student_announcements",
+        "student_badges","student_daily_tasks","student_daily_test_progress","student_goals",
+        "student_leaderboard_settings","student_notifications","student_planner_skips",
+        "student_planner_tasks","student_rewards","student_study_profile",
+        "student_weak_topics","support_faqs","support_ticket_messages","support_tickets",
+        "testimonials","topic_clusters","user_listing_pocs","user_listings","user_roles",
+        "vocab_bookmarks","vocab_daily_goals","vocab_generation_jobs","vocab_progress",
+        "vocab_quiz_attempts","vocab_streaks","vocab_word_of_day","vocab_words",
+        "welcome_email_logs","welcome_email_template",
       ];
+
 
       let totalRows = 0;
       const tableCounts: { name: string; count: number }[] = [];
