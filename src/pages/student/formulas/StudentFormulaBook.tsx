@@ -104,7 +104,6 @@ export default function StudentFormulaBook() {
         if (f.topic_slug !== section && !topicSlugsInSection.has(f.topic_slug)) return false;
       }
       if (topic !== "all" && f.topic_slug !== topic) return false;
-      if (exam !== "all" && !(f.exam_tags || []).includes(exam)) return false;
       if (difficulty !== "all" && f.difficulty !== difficulty) return false;
       if (shortcutOnly && !f.is_shortcut) return false;
       if (importantOnly && !f.is_high_weightage && f.importance < 4) return false;
@@ -121,7 +120,7 @@ export default function StudentFormulaBook() {
       }
       return true;
     });
-  }, [formulas, q, section, topic, exam, difficulty, status, shortcutOnly, importantOnly, progress, topicSlugsInSection]);
+  }, [formulas, q, section, topic, difficulty, status, shortcutOnly, importantOnly, progress, topicSlugsInSection]);
 
   // Suggestions while typing
   const suggestions = useMemo(() => {
