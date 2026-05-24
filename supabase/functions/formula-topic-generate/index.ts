@@ -14,6 +14,24 @@ function slugify(s: string): string {
   return s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 80);
 }
 
+function repairLatexEscapes(value: unknown): string {
+  return String(value || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\u0008/g, "\\b")
+    .replace(/\u0009/g, "\\t")
+    .replace(/\u000c/g, "\\f")
+    .replace(/(^|[\s=({[+\-*/,:;])rac\{/g, "$1\\frac{")
+    .replace(/(^|[\s=({[+\-*/,:;])ext\{/g, "$1\\text{")
+    .replace(/(^|[\s=({[+\-*/,:;])extstyle\b/g, "$1\\textstyle")
+    .replace(/(^|[\s=({[+\-*/,:;])igg\b/g, "$1\\bigg")
+    .replace(/(^|[\s=({[+\-*/,:;])ar\{/g, "$1\\bar{")
+    .trim();
+}
+
+function cleanFormulaText(value: unknown): string {
+  return repairLatexEscapes(value).replace(/[\t\f\v]+/g, " ").replace(/ {2,}/g, " ").trim();
+}
+
 // Detect math constructs we expect to be rendered in LaTeX
 function needsLatexConstruct(plain: string): { needsFrac: boolean; needsSqrt: boolean; needsPow: boolean } {
   const s = String(plain || "");
@@ -30,6 +48,7 @@ function isLatexValid(latex: string, plain: string): boolean {
   // Strip surrounding $ if model added them
   const tex = latex.trim().replace(/^\$+|\$+$/g, "");
   if (!tex) return false;
+  if (/[\u0000-\u001F\u007F]/.test(tex)) return false;
   const need = needsLatexConstruct(plain);
   if (need.needsFrac && !/\\(d?frac|cfrac|tfrac)\{/.test(tex) && !/\//.test(tex)) return false;
   if (need.needsSqrt && !/\\sqrt/.test(tex)) return false;
@@ -88,7 +107,7 @@ Deno.serve(async (req) => {
         .replace(/\s+/g, " ");
 
     const normalizeLatex = (s: string) =>
-      String(s || "")
+      repairLatexEscapes(s)
         .toLowerCase()
         .replace(/\s+/g, "")
         .replace(/\\left|\\right|\\,|\\;|\\!|\\:/g, "")
@@ -96,7 +115,7 @@ Deno.serve(async (req) => {
         .replace(/\^(2|3|4|5|6|7|8|9)/g, "^$1");
 
     const stripMathDelimiters = (s: string) =>
-      String(s || "")
+      repairLatexEscapes(s)
         .trim()
         .replace(/^\s*(?:\\\(|\\\[|\$\$?|`)+/, "")
         .replace(/(?:\\\)|\\\]|\$\$?|`)+\s*$/, "")
@@ -296,9 +315,10 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         if (existingNamesNorm.has(nNorm) || batchNames.has(nNorm)) {
           rejected.push({ name: f.name, reason: "duplicate name (already exists)" }); continue;
         }
-        const cleanExpressionLatex = stripMathDelimiters(f.expression_latex);
-        if (!cleanExpressionLatex || !isLatexValid(cleanExpressionLatex, f.expression || "")) {
-          rejected.push({ name: f.name, reason: "invalid LaTeX (missing \\frac/\\sqrt/^ where required)" }); continue;
+        const cleanExpression = cleanFormulaText(f.expression || f.expression_latex);
+        const cleanExpressionLatex = stripMathDelimiters(f.expression_latex || f.expression);
+        if (!cleanExpressionLatex || !isLatexValid(cleanExpressionLatex, cleanExpression)) {
+          rejected.push({ name: f.name, reason: "invalid LaTeX/control characters (missing \\frac/\\sqrt/^ where required)" }); continue;
         }
         const latexNorm = normalizeLatex(cleanExpressionLatex);
         if (latexNorm && (existingLatex.has(latexNorm) || batchLatex.has(latexNorm))) {
@@ -323,13 +343,13 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         if (latexNorm) batchLatex.add(latexNorm);
         allRows.push({
           slug, name: f.name,
-          expression: f.expression,
+          expression: cleanExpression,
           expression_latex: cleanExpressionLatex,
-          explanation: f.explanation || "",
-          derivation: f.derivation || null,
-          shortcuts: Array.isArray(f.shortcuts) ? f.shortcuts : [],
-          notes: f.notes,
-          common_mistakes: Array.isArray(f.common_mistakes) ? f.common_mistakes : [],
+          explanation: cleanFormulaText(f.explanation || ""),
+          derivation: f.derivation ? cleanFormulaText(f.derivation) : null,
+          shortcuts: Array.isArray(f.shortcuts) ? f.shortcuts.map(cleanFormulaText).filter(Boolean) : [],
+          notes: cleanFormulaText(f.notes),
+          common_mistakes: Array.isArray(f.common_mistakes) ? f.common_mistakes.map(cleanFormulaText).filter(Boolean) : [],
           topic_slug,
           difficulty: f.difficulty || "intermediate",
           exam_tags: Array.isArray(f.exam_tags) ? f.exam_tags : [],
