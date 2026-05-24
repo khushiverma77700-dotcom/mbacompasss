@@ -35,6 +35,7 @@ export default function AdminVocabulary() {
   const [bulkCategory, setBulkCategory] = useState<string>("any");
   const [bulkDifficulty, setBulkDifficulty] = useState<string>("any");
   const [bulkExam, setBulkExam] = useState<string>("any");
+  const [bulkProvider, setBulkProvider] = useState<"lovable" | "openai">("lovable");
   const [bulkJobId, setBulkJobId] = useState<string | null>(null);
   const [bulkJob, setBulkJob] = useState<any>(null);
   const [bulkStarting, setBulkStarting] = useState(false);
