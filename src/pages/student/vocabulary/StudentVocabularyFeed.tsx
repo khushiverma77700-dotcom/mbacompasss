@@ -545,21 +545,23 @@ export default function StudentVocabularyFeed() {
             </button>
           ) : (
             <div className="space-y-2 rounded-xl border-2 border-sky-300 bg-sky-50/40 p-2 dark:bg-sky-500/5">
-              <div className="flex items-center gap-2">
-                <Search className="ml-1 h-4 w-4 text-sky-600" />
-                <Input
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && runSearch()}
-                  placeholder="Type a word, e.g. arbitrage, ubiquitous, prevaricate"
-                  className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
-                />
-                <Button size="sm" onClick={runSearch} disabled={searching || !searchQuery.trim()} className="h-9 gap-1 bg-gradient-to-r from-sky-600 to-blue-600">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Search className="ml-1 h-4 w-4 shrink-0 text-sky-600" />
+                  <Input
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && runSearch()}
+                    placeholder="Type a word…"
+                    className="h-9 min-w-0 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
+                  />
+                  <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={closeSearch} aria-label="Close">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button size="sm" onClick={runSearch} disabled={searching || !searchQuery.trim()} className="h-9 w-full gap-1 bg-gradient-to-r from-sky-600 to-blue-600 sm:w-auto">
                   {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} Search
-                </Button>
-                <Button size="icon" variant="ghost" className="h-9 w-9" onClick={closeSearch} aria-label="Close">
-                  <X className="h-4 w-4" />
                 </Button>
               </div>
               <div className="px-1 text-[11px] text-slate-500">
