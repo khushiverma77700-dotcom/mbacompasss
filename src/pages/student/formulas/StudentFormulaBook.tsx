@@ -46,7 +46,6 @@ export default function StudentFormulaBook() {
   const q = params.get("q") || "";
   const section = params.get("section") || "all";
   const topic = params.get("topic") || "all";
-  const exam = params.get("exam") || "all";
   const difficulty = params.get("difficulty") || "all";
   const status = params.get("status") || "all";
   const shortcutOnly = params.get("shortcut") === "1";
