@@ -198,7 +198,12 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     for (const w of batch) {
       if (!w?.word || !w?.meaning) { rejectedIncomplete++; continue; }
       const slug = slugify(w.word);
-      if (!slug || seenSlugs.has(slug)) { duplicates++; continue; }
+      if (!slug || seenSlugs.has(slug)) {
+        duplicates++;
+        recentDupes.push(w.word);
+        if (recentDupes.length > 300) recentDupes.splice(0, recentDupes.length - 300);
+        continue;
+      }
 
       // STRICT: every required field must be a non-empty string / non-empty array.
       const hasText = (v: any) => typeof v === "string" && v.trim().length > 1;
