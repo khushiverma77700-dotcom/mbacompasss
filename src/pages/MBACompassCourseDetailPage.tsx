@@ -441,13 +441,12 @@ function DetailInner() {
 
       {/* STATS STRIP */}
       <section className="container mx-auto px-4 -mt-6 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatCard icon={Layers} value={mockAgg.total || c.full_mocks_count || 0} label="Total Mocks" />
           <StatCard icon={Target} value={mockAgg.byType.full_length || c.full_mocks_count || 0} label="Full Length" />
           <StatCard icon={ListChecks} value={(mockAgg.byType.sectional || 0) + (mockAgg.byType.topic_wise || 0) || c.sectional_mocks_count || 0} label="Sectional / Topic" />
           <StatCard icon={FileText} value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} label="Total Questions" />
           <StatCard icon={Clock} value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} label="Practice Hours" />
-          <StatCard icon={Zap} value={c.live_classes_count ?? 0} label="Live Classes" />
         </div>
       </section>
 
