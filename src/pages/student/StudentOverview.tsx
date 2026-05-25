@@ -1075,12 +1075,14 @@ export default function StudentOverview() {
             </Card>
           )}
         </div>
+        </LazyMount>
       )}
 
 
 
 
       {/* Distribution + Today's plan + Heatmap */}
+      <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={3} height={240} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-3">
