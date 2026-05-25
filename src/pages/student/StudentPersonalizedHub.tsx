@@ -13,6 +13,8 @@ import { EXAMS, DIFFICULTIES, getExam } from "@/data/personalizedExams";
 import { Sparkles, Timer, ListChecks, TrendingUp, Lock, RefreshCcw, PlayCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import PersonalizedHubGuide from "@/components/student/PersonalizedHubGuide";
+import PersonalizedMockGeneratingOverlay from "@/components/student/PersonalizedMockGeneratingOverlay";
+
 
 const QUESTION_OPTIONS = [5, 10, 15, 20, 25, 30, 40, 50];
 
