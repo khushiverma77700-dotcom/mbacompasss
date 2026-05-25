@@ -107,11 +107,13 @@ export default function StudentNotifications() {
       .from("student_notifications")
       .select("*")
       .eq("user_id", user.id)
+      .neq("type", "daily_test")
       .order("created_at", { ascending: false })
       .limit(300);
     setItems((data ?? []) as any);
     setLoading(false);
   };
+
 
   useEffect(() => { load(); }, [user]);
 
