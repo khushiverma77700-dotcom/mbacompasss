@@ -102,15 +102,28 @@ export default function StudentInstallPage() {
                 <div className="text-xs opacity-80">Look for the MBA Compass icon on your home screen.</div>
               </div>
             </div>
-          ) : deferred ? (
-            <button
-              onClick={install}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-3 text-white font-semibold shadow-lg shadow-sky-500/30 hover:shadow-xl transition"
-            >
-              <Download className="h-4 w-4" />
-              Install Now
-            </button>
-          ) : null}
+          ) : (
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                onClick={install}
+                disabled={busy}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-3 text-white font-semibold shadow-lg shadow-sky-500/30 hover:shadow-xl transition disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" />
+                {busy ? "Opening…" : deferred ? "Install Now" : "Show me how"}
+              </button>
+              {!deferred && (
+                <span className="text-xs text-muted-foreground max-w-xs">
+                  Your browser didn't offer a one-tap install. Use the quick guide below.
+                </span>
+              )}
+            </div>
+          )}
+          {hint && (
+            <div className="mt-3 text-xs rounded-lg border border-sky-200 bg-sky-50 dark:bg-sky-500/10 dark:border-sky-500/30 text-sky-800 dark:text-sky-200 px-3 py-2">
+              {hint}
+            </div>
+          )}
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
