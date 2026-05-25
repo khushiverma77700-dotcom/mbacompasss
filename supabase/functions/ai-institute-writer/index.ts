@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
 - Phone/email/website: if not 100% memorized, return a realistic public-facing pattern (e.g. info@${brief.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.in, +91-XXX-XXXXXXX placeholder is FORBIDDEN — instead use a real central helpline format like "1800-XXX-XXXX (toll-free)" only if you actually know it; otherwise leave as empty string and the admin will fill it).
 
 # SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHING ONLY (NON-NEGOTIABLE)
-- Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, TISSNET, MICAT, KMAT.
+- Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, MICAT, KMAT.
 - DO NOT mention or recommend coaching for JEE, NEET, GATE, UPSC, SSC, banking, CA/CS, coding bootcamps, or school-level tuition. If the institute also runs non-MBA verticals, IGNORE them — write only about its MBA-entrance coaching.
 - Programs[], specializations[], courses[], features[] and all prose must be MBA-entrance-coaching specific (CAT classroom, CAT online, XAT crash, GMAT bootcamp, GD-PI-WAT prep, mock test series, IIM interview prep, etc.).
 

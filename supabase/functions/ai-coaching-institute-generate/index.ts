@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
 - When the EXACT current-year figure isn't in your training data, give a tight realistic ${year - 1}-${year} range (e.g. "INR 35,000 - 55,000"). Never write "varies", "depends".
 
 # SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHING ONLY
-- Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, TISSNET, MICAT, KMAT.
+- Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, MICAT, KMAT.
 - DO NOT mention coaching for JEE, NEET, GATE, UPSC, SSC, banking, CA/CS, coding bootcamps, school tuition.
 
 # MODE-AWARENESS

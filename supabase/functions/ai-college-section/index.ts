@@ -185,11 +185,11 @@ const SECTION_TOOLS: Record<string, any> = {
         type: "array",
         minItems: 8,
         description:
-          "AT LEAST 8 rows — ideally 12-20. Cover EVERY accepted exam (CAT is mandatory for IIMs/most B-schools; add XAT for XLRI/XAT-accepting schools; GMAT/GRE for ISB/IIM PGPX/1-year programmes; CMAT/MAT/NMAT/SNAP/IIFT/TISSNET where applicable) × EVERY category (General, EWS, OBC-NCL, SC, ST, PwD) × at least the last 2-3 admission cycles (2023, 2024, 2025) so frontend can plot the trend. NEVER return an empty array — if exact figures are not publicly confirmed, return realistic researched bands with a 'Indicative' note.",
+          "AT LEAST 8 rows — ideally 12-20. Cover EVERY accepted exam (CAT is mandatory for IIMs/most B-schools; add XAT for XLRI/XAT-accepting schools; GMAT/GRE for ISB/IIM PGPX/1-year programmes; CMAT/MAT/NMAT/SNAP/IIFT where applicable) × EVERY category (General, EWS, OBC-NCL, SC, ST, PwD) × at least the last 2-3 admission cycles (2023, 2024, 2025) so frontend can plot the trend. NEVER return an empty array — if exact figures are not publicly confirmed, return realistic researched bands with a 'Indicative' note.",
         items: {
           type: "object",
           properties: {
-            exam: { type: "string", description: "Exam name — CAT, XAT, GMAT, GRE, CMAT, MAT, NMAT, SNAP, IIFT, TISSNET, etc." },
+            exam: { type: "string", description: "Exam name — CAT, XAT, GMAT, GRE, CMAT, MAT, NMAT, SNAP, IIFT, etc." },
             category: { type: "string", description: "General | EWS | OBC-NCL | SC | ST | PwD | NC-OBC." },
             year: { type: "string", description: "Admission cycle year, e.g. '2025', '2024', '2023'." },
             percentile: { type: "string", description: "Overall cutoff (percentile for CAT/XAT/CMAT/NMAT, score for GMAT/GRE), e.g. '99.5%ile', '95+ %ile', 'GMAT 720+'." },

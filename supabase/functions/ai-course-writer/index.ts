@@ -77,7 +77,7 @@ function freshness() {
 }
 
 const SCOPE_LOCK = `# SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHING ONLY (NON-NEGOTIABLE)
-- Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, TISSNET, MICAT, KMAT, and downstream GD-PI-WAT / IIM interview prep, profile-building & SOP for MiM.
+- Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, MICAT, KMAT, and downstream GD-PI-WAT / IIM interview prep, profile-building & SOP for MiM.
 - DO NOT include JEE, NEET, GATE, UPSC, SSC, banking, CA/CS, coding bootcamps, or school-level tuition. If the institute also runs non-MBA verticals, IGNORE them entirely.
 - Every course you return must be MBA-entrance / Masters-in-Management coaching.`;
 
