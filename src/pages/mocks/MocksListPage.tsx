@@ -129,23 +129,16 @@ function useCountdown(endsAt: string | null) {
 export default function MocksListPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [tests, setTests] = useState<MockTest[]>([]);
-  const [checkoutTest, setCheckoutTest] = useState<MockTest | null>(null);
   const pricingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    (async () => {
-      const [{ data: s }, { data: t }] = await Promise.all([
-        supabase.from("mocks_landing_settings").select("*").maybeSingle(),
-        supabase
-          .from("mock_tests")
-          .select("id, slug, name, price_inr, pricing_type")
-          .eq("is_published", true)
-          .order("created_at", { ascending: false }),
-      ]);
-      if (s) setSettings(s as any);
-      setTests((t ?? []) as MockTest[]);
-    })();
+    // Single lightweight fetch — no longer pulls the full mock_tests catalog,
+    // since every Buy CTA now routes to /courses.
+    supabase
+      .from("mocks_landing_settings")
+      .select("*")
+      .maybeSingle()
+      .then(({ data }) => { if (data) setSettings(data as any); });
   }, []);
 
   useEffect(() => {
@@ -156,14 +149,25 @@ export default function MocksListPage() {
     }
   }, [settings?.meta_pixel_id]);
 
+  // Prefetch the /courses chunk while user reads the hero, so the redirect feels instant.
+  useEffect(() => {
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 400));
+    schedule(() => { import("@/pages/MBACompassCoursesPage").catch(() => {}); });
+  }, []);
+
   const countdown = useCountdown(settings?.offer_ends_at ?? null);
 
-  const targetTest = useMemo(() => {
-    if (!settings) return null;
-    if (settings.cta_target_test_id) return tests.find((x) => x.id === settings.cta_target_test_id) ?? null;
-    return tests[0] ?? null;
-  }, [settings, tests]);
+  const goToCourses = () => {
+    pixelTrack("InitiateCheckout", {
+      content_name: settings?.bundle_title ?? "MBA Compass Courses",
+      value: settings?.price_current,
+      currency: "INR",
+    });
+    navigate("/courses");
+  };
 
+  // Hero primary CTA scrolls to the pricing block; pricing block CTA routes to /courses.
   const scrollToPricing = () => {
     pixelTrack("AddToCart", {
       content_name: settings?.bundle_title,
@@ -173,31 +177,33 @@ export default function MocksListPage() {
     pricingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const startCheckout = async () => {
-    if (!targetTest) {
-      toast.error("No mock test configured. Please contact support.");
-      return;
-    }
-    pixelTrack("InitiateCheckout", {
-      content_name: targetTest.name,
-      value: settings?.price_current,
-      currency: "INR",
-    });
-    // Free underlying test OR free bundle price → no payment needed.
-    // Route to the mock intro page where the user can read rules and
-    // manually start the attempt (no auto-start).
-    const isFree =
-      targetTest.pricing_type === "free" || Number(settings?.price_current ?? 0) <= 0;
-    if (isFree) {
-      navigate(`/mocks/${targetTest.slug}`);
-      return;
-    }
-    // Paid bundle → open Razorpay/Stripe checkout dialog.
-    setCheckoutTest(targetTest);
-  };
+  const startCheckout = goToCourses;
 
   if (!settings) {
-    return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Loading…</div>;
+    // Skeleton hero — paints instantly so users never see a blank screen.
+    return (
+      <div className="bg-background">
+        <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
+          <div className="container mx-auto px-4 py-14 md:py-24">
+            <div className="grid lg:grid-cols-2 gap-10 items-center">
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-3/4" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-2/3" />
+                <div className="flex gap-3 pt-4">
+                  <Skeleton className="h-12 w-44" />
+                  <Skeleton className="h-12 w-32" />
+                </div>
+              </div>
+              <Skeleton className="h-80 w-full rounded-2xl" />
+            </div>
+          </div>
+        </section>
+        <SectionSkeleton />
+      </div>
+    );
   }
 
   const discountPct = settings.price_original > 0
