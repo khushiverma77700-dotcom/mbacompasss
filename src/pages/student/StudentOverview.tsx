@@ -871,7 +871,6 @@ function PredictorGauge({ value }: { value: number }) {
 
 function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; barKey: string; lineKey?: string; max?: number; target?: number }) {
   const rows = data.slice(-12);
-
   if (rows.length === 0) {
     return (
       <div className="h-[260px] w-full rounded-lg border border-border bg-card/60 grid place-items-center text-xs text-muted-foreground">
@@ -879,166 +878,215 @@ function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; b
       </div>
     );
   }
-
-  const width = 640;
-  const height = 240;
-  const padL = 44;   // room for Y-axis labels
-  const padR = 16;
-  const padT = 24;
-  const padB = 36;   // room for X-axis labels
-  const innerW = width - padL - padR;
-  const innerH = height - padT - padB;
-
-  // Compute min/max across bars + line + target. Always include 0 so a zero
-  // baseline is visible and negative values render below it.
-  const allVals = rows.flatMap((r) => [
-    Number(r[barKey] || 0),
-    lineKey ? Number(r[lineKey] || 0) : 0,
-  ]);
-  if (target) allVals.push(target);
-  allVals.push(0);
-
-  const rawMin = Math.min(...allVals);
-  const rawMax = Math.max(...allVals);
-  // Pad the range so labels don't kiss the edges. Use max prop as upper cap if given.
-  const span = Math.max(1, rawMax - rawMin);
-  let yMin = rawMin < 0 ? rawMin - span * 0.1 : 0;
-  let yMax = max ?? Math.max(rawMax + span * 0.15, rawMin + 10);
-  if (max && rawMin >= 0) yMin = 0;
-  if (yMax === yMin) yMax = yMin + 10;
-
-  const slot = innerW / rows.length;
-  const xCenter = (i: number) => padL + slot * i + slot / 2;
-  const y = (v: number) => padT + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
-  const yZero = y(0);
-  const barW = Math.max(20, Math.min(56, slot * 0.5));
-
-  // 4 evenly-spaced gridlines with numeric labels
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
-  const fmtTick = (v: number) => {
-    if (Math.abs(v) >= 100) return Math.round(v).toString();
-    if (Math.abs(v) >= 10) return v.toFixed(0);
-    return v.toFixed(1);
-  };
-
-  const linePoints = lineKey
-    ? rows.map((r, i) => `${xCenter(i)},${y(Number(r[lineKey] || 0))}`).join(" ")
-    : "";
-
+  const isPct = max === 100;
+  const fmt = (v: any) => `${typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(1)) : v}${isPct ? "%" : ""}`;
+  const gradId = `g-${barKey}-${lineKey ?? "n"}`;
   return (
-    <div className="h-[260px] w-full rounded-lg border border-border bg-card/60 p-2">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full" role="img" aria-label="Performance trend">
-        {/* Y-axis gridlines + labels */}
-        {ticks.map((t, i) => (
-          <g key={`tick-${i}`}>
-            <line x1={padL} x2={width - padR} y1={y(t)} y2={y(t)} stroke="hsl(var(--border))" strokeDasharray="3 4" opacity="0.5" />
-            <text x={padL - 6} y={y(t) + 4} textAnchor="end" className="fill-muted-foreground" style={{ fontSize: 11 }}>
-              {fmtTick(t)}
-            </text>
-          </g>
-        ))}
-
-        {/* Axes */}
-        <line x1={padL} x2={padL} y1={padT} y2={padT + innerH} stroke="hsl(var(--border))" />
-        {/* Zero baseline (highlighted if negatives exist) */}
-        <line x1={padL} x2={width - padR} y1={yZero} y2={yZero} stroke="hsl(var(--border))" strokeWidth={yMin < 0 ? 1.5 : 1} />
-
-        {/* Optional target */}
-        {target && target > 0 && (
-          <line x1={padL} x2={width - padR} y1={y(target)} y2={y(target)} stroke="hsl(var(--primary))" strokeDasharray="6 6" opacity="0.7" />
-        )}
-
-        {/* Bars (above or below zero) */}
-        {rows.map((r, i) => {
-          const v = Number(r[barKey] || 0);
-          const cx = xCenter(i);
-          const x = cx - barW / 2;
-          const top = Math.min(y(v), yZero);
-          const barH = Math.max(2, Math.abs(y(v) - yZero));
-          const isNeg = v < 0;
-          return (
-            <g key={`${r.name}-${i}`}>
-              <rect
-                x={x}
-                y={top}
-                width={barW}
-                height={barH}
-                rx="6"
-                fill={isNeg ? "hsl(0 70% 60% / 0.18)" : "hsl(var(--primary) / 0.2)"}
-                stroke={isNeg ? "hsl(0 70% 55% / 0.6)" : "hsl(var(--primary) / 0.5)"}
-              />
-              <text
-                x={cx}
-                y={isNeg ? y(v) + 16 : y(v) - 6}
-                textAnchor="middle"
-                className="fill-foreground"
-                style={{ fontSize: 13, fontWeight: 600 }}
-              >
-                {Number.isInteger(v) ? v : v.toFixed(1)}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Cumulative line */}
-        {lineKey && rows.length > 1 && (
-          <>
-            <polyline points={linePoints} fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            {rows.map((r, i) => (
-              <circle key={`p-${i}`} cx={xCenter(i)} cy={y(Number(r[lineKey] || 0))} r="3.5" fill="hsl(var(--primary))" />
-            ))}
-          </>
-        )}
-
-        {/* X-axis labels */}
-        {rows.map((r, i) => (
-          <text key={`label-${i}`} x={xCenter(i)} y={height - 12} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12 }}>
-            {r.name}
-          </text>
-        ))}
-      </svg>
+    <div className="h-[260px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={rows} margin={{ top: 16, right: 12, left: 0, bottom: 4 }}>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.85} />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 4" stroke="hsl(var(--border))" vertical={false} opacity={0.5} />
+          <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+          <YAxis domain={max ? [0, max] : ["auto", "auto"]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => `${v}${isPct ? "%" : ""}`} />
+          <RTooltip
+            contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12, boxShadow: "0 8px 24px -8px rgba(2,132,199,0.25)" }}
+            formatter={(v: any, n: any) => [fmt(v), n === barKey ? "This mock" : "Running average"]}
+            labelFormatter={(l) => `Mock ${l}`}
+          />
+          {target && target > 0 && (
+            <ReferenceLine y={target} stroke="hsl(var(--primary))" strokeDasharray="6 6" label={{ value: `Target ${target}${isPct ? "%" : ""}`, position: "insideTopRight", fontSize: 10, fill: "hsl(var(--primary))" }} />
+          )}
+          <Bar dataKey={barKey} fill={`url(#${gradId})`} radius={[6, 6, 0, 0]} maxBarSize={42} />
+          {lineKey && (
+            <Line type="monotone" dataKey={lineKey} stroke="hsl(190 90% 35%)" strokeWidth={2.5} dot={{ r: 3, fill: "hsl(190 90% 35%)" }} activeDot={{ r: 5 }} />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
     </div>
   );
 }
 
 function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firstKey: string; secondKey: string; max?: number }) {
   const rows = data.slice(0, 8);
-  const top = max ?? Math.max(10, ...rows.flatMap((r) => [Number(r[firstKey] || 0), Number(r[secondKey] || 0)]));
+  const isPct = max === 100;
+  const firstLabel = firstKey === "avgScore" ? "Avg Score" : firstKey === "pctOfMax" ? "% of Max" : firstKey;
+  const secondLabel = secondKey === "avgMax" ? "Max Score" : secondKey === "avgAccuracy" ? "Accuracy" : secondKey;
+  const height = Math.max(220, rows.length * 52);
   return (
-    <div className="h-[240px] space-y-3 rounded-lg border border-border bg-card/60 p-4 overflow-hidden">
-      {rows.map((r) => {
-        const first = Math.min(100, (Number(r[firstKey] || 0) / top) * 100);
-        const second = Math.min(100, (Number(r[secondKey] || 0) / top) * 100);
-        return (
-          <div key={r.name} className="grid grid-cols-[46px_1fr] items-center gap-3 text-xs">
-            <div className="truncate font-medium text-muted-foreground">{r.name}</div>
-            <div className="space-y-1.5">
-              <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${first}%` }} /></div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-secondary-foreground/40" style={{ width: `${second}%` }} /></div>
-            </div>
-          </div>
-        );
-      })}
+    <div style={{ height }} className="w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={rows} layout="vertical" margin={{ top: 8, right: 28, left: 8, bottom: 8 }} barCategoryGap={14}>
+          <defs>
+            <linearGradient id={`gA-${firstKey}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
+              <stop offset="100%" stopColor="hsl(190 90% 45%)" stopOpacity={0.85} />
+            </linearGradient>
+            <linearGradient id={`gB-${secondKey}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="hsl(160 70% 45%)" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="hsl(160 70% 60%)" stopOpacity={0.75} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 4" stroke="hsl(var(--border))" horizontal={false} opacity={0.4} />
+          <XAxis type="number" domain={max ? [0, max] : ["auto", "auto"]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}${isPct ? "%" : ""}`} />
+          <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--foreground))", fontWeight: 600 }} axisLine={false} tickLine={false} width={70} />
+          <RTooltip
+            contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12 }}
+            formatter={(v: any, n: any) => [`${v}${isPct ? "%" : ""}`, n === firstKey ? firstLabel : secondLabel]}
+          />
+          <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} formatter={(v) => (v === firstKey ? firstLabel : secondLabel)} />
+          <Bar dataKey={firstKey} fill={`url(#gA-${firstKey})`} radius={[0, 6, 6, 0]} barSize={14} />
+          <Bar dataKey={secondKey} fill={`url(#gB-${secondKey})`} radius={[0, 6, 6, 0]} barSize={14} />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
 
 function MiniDistribution({ data }: { data: any[] }) {
-  const top = Math.max(1, ...data.map((d) => Number(d.count || 0)));
   return (
-    <div className="h-[200px] flex items-end gap-2 rounded-lg border border-border bg-card/60 p-4">
-      {data.map((d) => {
-        const h = Math.max(6, (Number(d.count || 0) / top) * 150);
-        return (
-          <div key={d.name} className="flex-1 min-w-0 text-center">
-            <div className="mx-auto w-full max-w-8 rounded-t-md bg-primary" style={{ height: h }} />
-            <div className="mt-2 truncate text-[10px] text-muted-foreground">{d.name}</div>
-          </div>
-        );
-      })}
+    <div className="h-[200px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 4 }}>
+          <defs>
+            <linearGradient id="g-dist" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 4" stroke="hsl(var(--border))" vertical={false} opacity={0.4} />
+          <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} />
+          <RTooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12 }} formatter={(v: any) => [`${v} mock${Number(v) === 1 ? "" : "s"}`, "Count"]} />
+          <Bar dataKey="count" fill="url(#g-dist)" radius={[6, 6, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
+
+function OverallPerformanceRadar({ data }: { data: { metric: string; value: number }[] }) {
+  return (
+    <div className="h-[260px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart data={data} margin={{ top: 8, right: 18, bottom: 8, left: 18 }}>
+          <defs>
+            <linearGradient id="g-radar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+              <stop offset="100%" stopColor="hsl(190 90% 45%)" stopOpacity={0.4} />
+            </linearGradient>
+          </defs>
+          <PolarGrid stroke="hsl(var(--border))" />
+          <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 600 }} />
+          <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
+          <Radar dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#g-radar)" fillOpacity={0.85} />
+          <RTooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12 }} formatter={(v: any) => [`${v}/100`, "Score"]} />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function ActivityHeatmap({ days, max }: { days: { date: Date; key: string; count: number }[]; max: number }) {
+  // Render 5 columns × 7 rows (Mon-Sun) — like a GitHub contribution graph.
+  const intensity = (c: number) => {
+    if (c === 0) return "bg-slate-100";
+    const r = c / max;
+    if (r >= 0.8) return "bg-sky-600";
+    if (r >= 0.55) return "bg-sky-500";
+    if (r >= 0.3) return "bg-sky-400";
+    return "bg-sky-200";
+  };
+  const rows = [0, 1, 2, 3, 4, 5, 6]; // day-of-week rows
+  const cols = [0, 1, 2, 3, 4]; // weeks
+  // Re-shape days[35] into 5 cols × 7 rows by column-major fill (week by week)
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-1.5">
+        <div className="flex flex-col justify-between text-[9px] text-muted-foreground pr-1 py-0.5">
+          <span>Mon</span><span>Wed</span><span>Fri</span><span>Sun</span>
+        </div>
+        <div className="flex-1 grid grid-cols-5 gap-1.5">
+          {cols.map((c) => (
+            <div key={c} className="grid grid-rows-7 gap-1.5">
+              {rows.map((r) => {
+                const d = days[c * 7 + r];
+                if (!d) return <div key={r} className="aspect-square rounded-sm" />;
+                return (
+                  <div
+                    key={r}
+                    title={`${d.date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })} • ${d.count} mock${d.count === 1 ? "" : "s"}`}
+                    className={`aspect-square rounded-sm ${intensity(d.count)} transition-transform hover:scale-110`}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>Less</span>
+        <div className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-sm bg-slate-100" />
+          <span className="h-2.5 w-2.5 rounded-sm bg-sky-200" />
+          <span className="h-2.5 w-2.5 rounded-sm bg-sky-400" />
+          <span className="h-2.5 w-2.5 rounded-sm bg-sky-500" />
+          <span className="h-2.5 w-2.5 rounded-sm bg-sky-600" />
+        </div>
+        <span>More</span>
+      </div>
+    </div>
+  );
+}
+
+function XpProgress({ xp, level, streak, rank }: { xp: number; level: number; streak: number; rank: number | null }) {
+  // XP needed for next level grows by 250 per level (simple, predictable curve).
+  const needed = level * 250;
+  const current = xp % needed || (xp > 0 ? xp : 0);
+  const pct = needed > 0 ? Math.min(100, Math.round((current / needed) * 100)) : 0;
+  const ringData = [{ name: "xp", value: pct, fill: "hsl(38 95% 55%)" }];
+  return (
+    <div className="space-y-3">
+      <div className="h-[160px] w-full relative">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadialBarChart innerRadius="70%" outerRadius="100%" data={ringData} startAngle={90} endAngle={-270}>
+            <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+            <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
+          </RadialBarChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 grid place-items-center pointer-events-none">
+          <div className="text-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Level</div>
+            <div className="text-3xl font-bold text-amber-600 leading-none">{level}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">{current}/{needed} XP</div>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-lg bg-amber-50 border border-amber-100 p-2">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total XP</div>
+          <div className="text-sm font-bold text-amber-700 tabular-nums">{xp.toLocaleString("en-IN")}</div>
+        </div>
+        <div className="rounded-lg bg-rose-50 border border-rose-100 p-2">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Streak</div>
+          <div className="text-sm font-bold text-rose-600 tabular-nums inline-flex items-center gap-1">
+            <Flame className="h-3 w-3" /> {streak}d
+          </div>
+        </div>
+        <div className="rounded-lg bg-sky-50 border border-sky-100 p-2">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank</div>
+          <div className="text-sm font-bold text-sky-700 tabular-nums">{rank ? `#${rank}` : "—"}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function Kpi({ label, value, icon }: any) {
   return (
