@@ -510,10 +510,11 @@ export default function PersonalizedHubGuide({
                   <motion.div
                     key={step.id}
                     custom={direction}
-                    initial={{ opacity: 0, x: direction * 40, scale: 0.96 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -direction * 40, scale: 0.96 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    initial={{ opacity: 0, rotateY: direction * 75, scale: 0.85, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, rotateY: 0, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, rotateY: -direction * 75, scale: 0.85, filter: "blur(8px)" }}
+                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ transformPerspective: 1200, transformStyle: "preserve-3d" }}
                     className="absolute inset-0"
                   >
                     <Illust />
@@ -528,26 +529,42 @@ export default function PersonalizedHubGuide({
                 <motion.div
                   key={step.id + "-copy"}
                   custom={direction}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -16 }}
-                  transition={{ duration: 0.35 }}
+                  initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -24, filter: "blur(6px)" }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   className="flex-1"
                 >
-                  <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white px-2.5 py-1 rounded-full bg-gradient-to-r", step.accent)}>
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 18 }}
+                    className={cn("inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white px-2.5 py-1 rounded-full bg-gradient-to-r", step.accent)}
+                  >
                     <Sparkles className="h-3 w-3" /> {step.badge}
-                  </span>
-                  <h2 className="mt-3 text-2xl sm:text-[26px] font-extrabold text-gray-900 leading-tight">
+                  </motion.span>
+                  <motion.h2
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.18, duration: 0.45, ease: "easeOut" }}
+                    className="mt-3 text-2xl sm:text-[26px] font-extrabold text-gray-900 leading-tight"
+                  >
                     {step.title}
-                  </h2>
-                  <p className="mt-3 text-sm sm:text-[15px] text-gray-600 leading-relaxed">
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.28, duration: 0.45, ease: "easeOut" }}
+                    className="mt-3 text-sm sm:text-[15px] text-gray-600 leading-relaxed"
+                  >
                     {step.desc}
-                  </p>
+                  </motion.p>
 
                   {isLast && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.4, type: "spring", stiffness: 220, damping: 18 }}
                       className="mt-5 rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs text-sky-800 flex items-start gap-2"
                     >
                       <Trophy className="h-4 w-4 mt-0.5 shrink-0 text-sky-600" />
