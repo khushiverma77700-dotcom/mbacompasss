@@ -185,7 +185,7 @@ const SECTION_TOOLS: Record<string, any> = {
         type: "array",
         minItems: 8,
         description:
-          "AT LEAST 8 rows — ideally 12-20. Cover EVERY accepted exam (CAT is mandatory for IIMs/most B-schools; add XAT for XLRI/XAT-accepting schools; GMAT/GRE for ISB/IIM PGPX/1-year programmes; CMAT/MAT/NMAT/SNAP/IIFT/TISSNET where applicable) × EVERY category (General, EWS, OBC-NCL, SC, ST, PwD) × at least the last 2-3 admission cycles (2023, 2024, 2025) so frontend can plot the trend. NEVER return an empty array — if exact figures are not publicly confirmed, return realistic researched bands with a 'Indicative' note.",
+          "AT LEAST 8 rows — ideally 12-20. Cover EVERY accepted exam (CAT is mandatory for IIMs/most B-schools; add XAT for XLRI/XAT-accepting schools; GMAT/GRE for ISB/IIM PGPX/1-year programmes; CMAT/MAT/NMAT/SNAP/IIFT where applicable) × EVERY category (General, EWS, OBC-NCL, SC, ST, PwD) × at least the last 2-3 admission cycles (2023, 2024, 2025) so frontend can plot the trend. NEVER return an empty array — if exact figures are not publicly confirmed, return realistic researched bands with a 'Indicative' note.",
         items: {
           type: "object",
           properties: {
