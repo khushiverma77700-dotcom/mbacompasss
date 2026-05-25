@@ -202,21 +202,28 @@ export default function AdminExplanationCleaner() {
           .neq("explanation_html", "");
 
     if (browseStatus === "pending") {
-      q = q.not("explanation_html", "ilike", "%<h4>%");
+      q = q.not(expCol, "ilike", "%<h4>%");
     } else {
-      q = q.ilike("explanation_html", "%<h4>%");
+      q = q.ilike(expCol, "%<h4>%");
     }
-    if (scope === "test" && testId) q = q.eq("mock_sections.test_id", testId);
-    if (scope === "section" && sectionId) q = q.eq("section_id", sectionId);
-    if (scope === "topic") {
-      if (topic) q = q.ilike("topic", topic);
-      if (testId) q = q.eq("mock_sections.test_id", testId);
+    if (!isPersonalized) {
+      if (scope === "test" && testId) q = q.eq("mock_sections.test_id", testId);
+      if (scope === "section" && sectionId) q = q.eq("section_id", sectionId);
+      if (scope === "topic") {
+        if (topic) q = q.ilike("topic", topic);
+        if (testId) q = q.eq("mock_sections.test_id", testId);
+      }
+      if (scope === "question" && questionId) q = q.eq("id", questionId);
     }
-    if (scope === "question" && questionId) q = q.eq("id", questionId);
 
     const { data, count, error } = await q.order("id").limit(50);
     if (error) toast.error(error.message);
-    setBrowseRows((data as any[]) ?? []);
+    const normalized = isPersonalized
+      ? (data as any[] ?? []).map((r) => ({
+          id: r.id, topic: r.topic, explanation_html: r.explanation, mock_sections: null,
+        }))
+      : (data as any[]) ?? [];
+    setBrowseRows(normalized);
     setBrowseCount(count ?? null);
     setBrowseLoading(false);
   };
