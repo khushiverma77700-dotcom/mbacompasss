@@ -704,8 +704,10 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Cumulative score + Accuracy trend */}
+      <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={2} height={260} />}>
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
