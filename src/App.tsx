@@ -482,9 +482,9 @@ const isDashboardHostFn = () =>
 const DashboardHostRoot = () => {
   if (isDashboardHostFn()) {
     return (
-      <LazyPage>
+      <Suspense fallback={<StudentShellFallback />}>
         <StudentLayout />
-      </LazyPage>
+      </Suspense>
     );
   }
   return (
