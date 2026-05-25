@@ -412,13 +412,13 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = "gpt-4o";
+  const modelId = "gpt-4o-mini";
   const callStartedAt = Date.now();
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
-  // Generous budget so explanations + LaTeX + SVG visuals don't get truncated mid-formula.
-  const perQ = 1100;
-  const passageBudget = opts.set_mode ? 2400 : 0;
-  const tokenBudget = Math.min(12000, passageBudget + perQ * Math.max(1, opts.count));
+  // Budget tuned for gpt-4o-mini: enough room for LaTeX + explanations without truncation.
+  const perQ = 900;
+  const passageBudget = opts.set_mode ? 2000 : 0;
+  const tokenBudget = Math.min(8000, passageBudget + perQ * Math.max(1, opts.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [{ role: "system", content: sys }, { role: "user", content: user }],
