@@ -11,6 +11,8 @@ export default function StudentInstallPage() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | "desktop">("desktop");
+  const [busy, setBusy] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
 
   useEffect(() => {
     const ua = navigator.userAgent || "";
@@ -28,15 +30,42 @@ export default function StudentInstallPage() {
       setDeferred(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
-    window.addEventListener("appinstalled", () => setInstalled(true));
+    window.addEventListener("appinstalled", () => {
+      setInstalled(true);
+      setDeferred(null);
+    });
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);
   }, []);
 
+  const scrollToSteps = () => {
+    document.getElementById("install-steps")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const install = async () => {
-    if (!deferred) return;
-    await deferred.prompt();
-    const { outcome } = await deferred.userChoice;
-    if (outcome === "accepted") setInstalled(true);
+    if (!deferred) {
+      const ua = navigator.userAgent || "";
+      const isIos = /iphone|ipad|ipod/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+      setHint(
+        isIos
+          ? "On iPhone/iPad: tap the Share icon in Safari, then 'Add to Home Screen'."
+          : "Open your browser menu → 'Install app' / 'Add to Home Screen'. Follow the step-by-step guide below."
+      );
+      scrollToSteps();
+      return;
+    }
+    try {
+      setBusy(true);
+      await deferred.prompt();
+      const { outcome } = await deferred.userChoice;
+      if (outcome === "accepted") setInstalled(true);
+      setDeferred(null);
+    } catch (err) {
+      console.error("[install] prompt failed", err);
+      setHint("Couldn't open the install dialog. Use the manual steps below.");
+      scrollToSteps();
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -73,15 +102,28 @@ export default function StudentInstallPage() {
                 <div className="text-xs opacity-80">Look for the MBA Compass icon on your home screen.</div>
               </div>
             </div>
-          ) : deferred ? (
-            <button
-              onClick={install}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-3 text-white font-semibold shadow-lg shadow-sky-500/30 hover:shadow-xl transition"
-            >
-              <Download className="h-4 w-4" />
-              Install Now
-            </button>
-          ) : null}
+          ) : (
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                onClick={install}
+                disabled={busy}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-3 text-white font-semibold shadow-lg shadow-sky-500/30 hover:shadow-xl transition disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" />
+                {busy ? "Opening…" : deferred ? "Install Now" : "Show me how"}
+              </button>
+              {!deferred && (
+                <span className="text-xs text-muted-foreground max-w-xs">
+                  Your browser didn't offer a one-tap install. Use the quick guide below.
+                </span>
+              )}
+            </div>
+          )}
+          {hint && (
+            <div className="mt-3 text-xs rounded-lg border border-sky-200 bg-sky-50 dark:bg-sky-500/10 dark:border-sky-500/30 text-sky-800 dark:text-sky-200 px-3 py-2">
+              {hint}
+            </div>
+          )}
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
@@ -102,7 +144,7 @@ export default function StudentInstallPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4">
+      <div id="install-steps" className="mt-8 grid gap-4 scroll-mt-24">
         <PlatformCard
           active={platform === "android"}
           title="Android (Chrome)"
