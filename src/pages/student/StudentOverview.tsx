@@ -1235,7 +1235,7 @@ export default function StudentOverview() {
   );
 }
 
-function PredictorGauge({ value }: { value: number }) {
+const PredictorGauge = memo(function PredictorGauge({ value }: { value: number }) {
   const pct = Math.max(0, Math.min(100, value));
   return (
     <div className="h-44 grid place-items-center">
@@ -1252,9 +1252,9 @@ function PredictorGauge({ value }: { value: number }) {
       </div>
     </div>
   );
-}
+});
 
-function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; barKey: string; lineKey?: string; max?: number; target?: number }) {
+const MiniTrendChart = memo(function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; barKey: string; lineKey?: string; max?: number; target?: number }) {
   const rows = data.slice(-12);
   if (rows.length === 0) {
     return (
@@ -1295,9 +1295,9 @@ function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; b
       </ResponsiveContainer>
     </div>
   );
-}
+});
 
-function SectionalPerformanceList({ data }: { data: any[] }) {
+const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }: { data: any[] }) {
   const rows = data.slice().sort((a, b) => b.pctOfMax - a.pctOfMax);
   const toneFor = (pct: number) =>
     pct >= 75 ? "from-emerald-500 to-teal-500"
@@ -1369,9 +1369,9 @@ function SectionalPerformanceList({ data }: { data: any[] }) {
       ))}
     </div>
   );
-}
+});
 
-function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firstKey: string; secondKey: string; max?: number }) {
+const MiniGroupedBars = memo(function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firstKey: string; secondKey: string; max?: number }) {
 
   const rows = data.slice(0, 8);
   const isPct = max === 100;
@@ -1406,9 +1406,9 @@ function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firs
       </ResponsiveContainer>
     </div>
   );
-}
+});
 
-function MiniDistribution({ data }: { data: any[] }) {
+const MiniDistribution = memo(function MiniDistribution({ data }: { data: any[] }) {
   return (
     <div className="h-[200px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -1428,9 +1428,9 @@ function MiniDistribution({ data }: { data: any[] }) {
       </ResponsiveContainer>
     </div>
   );
-}
+});
 
-function OverallPerformanceRadar({ data }: { data: { metric: string; value: number }[] }) {
+const OverallPerformanceRadar = memo(function OverallPerformanceRadar({ data }: { data: { metric: string; value: number }[] }) {
   return (
     <div className="h-[260px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -1450,9 +1450,9 @@ function OverallPerformanceRadar({ data }: { data: { metric: string; value: numb
       </ResponsiveContainer>
     </div>
   );
-}
+});
 
-function ActivityHeatmap({ days, max }: { days: { date: Date; key: string; count: number }[]; max: number }) {
+const ActivityHeatmap = memo(function ActivityHeatmap({ days, max }: { days: { date: Date; key: string; count: number }[]; max: number }) {
   // Render 5 columns × 7 rows (Mon-Sun) — like a GitHub contribution graph.
   const intensity = (c: number) => {
     if (c === 0) return "bg-slate-100";
@@ -1502,9 +1502,9 @@ function ActivityHeatmap({ days, max }: { days: { date: Date; key: string; count
       </div>
     </div>
   );
-}
+});
 
-function XpProgress({ xp, level, streak, rank }: { xp: number; level: number; streak: number; rank: number | null }) {
+const XpProgress = memo(function XpProgress({ xp, level, streak, rank }: { xp: number; level: number; streak: number; rank: number | null }) {
   // XP needed for next level grows by 250 per level (simple, predictable curve).
   const needed = level * 250;
   const current = xp % needed || (xp > 0 ? xp : 0);
@@ -1545,10 +1545,10 @@ function XpProgress({ xp, level, streak, rank }: { xp: number; level: number; st
       </div>
     </div>
   );
-}
+});
 
 
-function Kpi({ label, value, icon }: any) {
+const Kpi = memo(function Kpi({ label, value, icon }: any) {
   return (
     <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-2.5 sm:px-3 py-2 sm:py-2.5 border border-white/20 min-w-0">
       <div className="text-[9.5px] sm:text-[10px] uppercase tracking-wider text-white/75 flex items-center gap-1 truncate">
@@ -1557,7 +1557,7 @@ function Kpi({ label, value, icon }: any) {
       <div className="text-base sm:text-xl font-bold mt-0.5 tabular-nums">{value}</div>
     </div>
   );
-}
+});
 
 const TONE_MAP: Record<string, { ring: string; icon: string; bg: string; bar: string }> = {
   sky:     { ring: "ring-sky-100 dark:ring-sky-500/20",         icon: "text-sky-600 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10",       bg: "from-sky-500/10",       bar: "bg-sky-500" },
@@ -1570,7 +1570,7 @@ const TONE_MAP: Record<string, { ring: string; icon: string; bg: string; bar: st
   green:   { ring: "ring-green-100 dark:ring-green-500/20",     icon: "text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-500/10", bg: "from-green-500/10",   bar: "bg-green-500" },
 };
 
-function StatTile({ icon: Icon, label, value, sub, tone = "sky", trend }: any) {
+const StatTile = memo(function StatTile({ icon: Icon, label, value, sub, tone = "sky", trend }: any) {
   const t = TONE_MAP[tone] ?? TONE_MAP.sky;
   const trendColor = typeof trend === "number"
     ? trend > 0 ? "text-emerald-600 dark:text-emerald-400" : trend < 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"
@@ -1589,9 +1589,9 @@ function StatTile({ icon: Icon, label, value, sub, tone = "sky", trend }: any) {
       {sub && <div className={`relative text-[11px] mt-1 truncate ${trendColor}`}>{sub}</div>}
     </Card>
   );
-}
+});
 
-function QuickAction({ to, icon: Icon, label, desc, tone = "sky" }: any) {
+const QuickAction = memo(function QuickAction({ to, icon: Icon, label, desc, tone = "sky" }: any) {
   const t = TONE_MAP[tone] ?? TONE_MAP.sky;
   return (
     <Link
@@ -1608,9 +1608,9 @@ function QuickAction({ to, icon: Icon, label, desc, tone = "sky" }: any) {
       <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
     </Link>
   );
-}
+});
 
-function SectionHeading({ icon: Icon, title, subtitle }: any) {
+const SectionHeading = memo(function SectionHeading({ icon: Icon, title, subtitle }: any) {
   return (
     <div className="flex items-end justify-between mb-3 gap-3">
       <div className="min-w-0">
@@ -1621,15 +1621,15 @@ function SectionHeading({ icon: Icon, title, subtitle }: any) {
       </div>
     </div>
   );
-}
+});
 
-function StatusLabel({ status }: { status: string }) {
+const StatusLabel = memo(function StatusLabel({ status }: { status: string }) {
   const map: Record<string, string> = {
     in_progress: "In progress", submitted: "Completed", auto_submitted: "Auto-submitted", abandoned: "Abandoned",
   };
   return <span>{map[status] ?? status}</span>;
-}
-function ToolCard({ title, desc, href }: any) {
+});
+const ToolCard = memo(function ToolCard({ title, desc, href }: any) {
   return (
     <Link to={href} className="block p-4 rounded-xl border border-sky-100 hover:border-sky-300 hover:shadow-sm transition-all bg-gradient-to-br from-white to-sky-50/30">
       <div className="font-semibold text-sm">{title}</div>
@@ -1637,9 +1637,9 @@ function ToolCard({ title, desc, href }: any) {
       <div className="text-xs text-sky-700 mt-2 font-medium">Open tool →</div>
     </Link>
   );
-}
+});
 
-function GamificationStrip({ rewards, rank }: { rewards: any; rank: number | null }) {
+const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { rewards: any; rank: number | null }) {
   const xp = Number(rewards?.xp ?? 0);
   const level = Number(rewards?.level ?? 1);
   const coins = Number(rewards?.coins ?? 0);
@@ -1696,7 +1696,7 @@ function GamificationStrip({ rewards, rank }: { rewards: any; rank: number | nul
       </div>
     </Card>
   );
-}
+});
 
 function ExamCountdownStrip({ exams }: { exams: any[] }) {
   if (!exams || exams.length === 0) {
