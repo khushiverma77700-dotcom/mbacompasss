@@ -163,14 +163,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       resolvedAdminUserIdRef.current = user.id;
 
       const cached = readAdminCache(user.id);
-      if (cached) {
-        setIsAdmin(cached.isAdmin);
-        setAllowedSections(cached.allowedSections);
+      if (cached && cached.isAdmin === false) {
+        // Safe to trust a "not admin" cache — at worst delays granting admin to a freshly-promoted user.
+        setIsAdmin(false);
+        setAllowedSections(null);
         setAdminLoading(false);
-        // continue to background-refresh so newly granted admin access shows up immediately
       } else {
+        // For positive (isAdmin=true) or missing cache, NEVER render admin UI until the
+        // server-side role check completes. This blocks tampered sessionStorage values
+        // from letting a non-admin briefly see admin pages.
         setAdminLoading(true);
       }
+
 
       try {
         const [rolesRes, permRes] = await Promise.all([
