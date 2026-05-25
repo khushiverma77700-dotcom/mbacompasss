@@ -273,10 +273,6 @@ function DetailInner() {
     ["Topic Tests", c.has_topic_tests],
     ["Previous Year Papers", c.has_previous_year_papers],
     ["Personalized Mock Hub", c.has_personalized_hub],
-    ["Live Classes", c.has_live_classes],
-    ["Recorded Lectures", c.has_recorded_lectures],
-    ["Study Material (PDFs)", c.has_study_material],
-    ["1:1 Mentorship", c.has_mentorship_1on1],
     ["Doubt Resolution", c.has_doubt_resolution],
     ["Mock Analysis", c.has_mock_analysis],
     ["Performance Analytics", c.has_performance_analytics],
@@ -364,11 +360,10 @@ function DetailInner() {
                 )}
 
               {/* Hero highlight strip */}
-              <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="mt-6 grid grid-cols-3 gap-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="violet" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
-                <HeroChip icon={Zap} label="Live Classes" value={c.live_classes_count ?? 0} tint="amber" />
               </div>
 
               {Object.keys(mockAgg.byExam).length > 0 && (
@@ -446,13 +441,12 @@ function DetailInner() {
 
       {/* STATS STRIP */}
       <section className="container mx-auto px-4 -mt-6 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatCard icon={Layers} value={mockAgg.total || c.full_mocks_count || 0} label="Total Mocks" />
           <StatCard icon={Target} value={mockAgg.byType.full_length || c.full_mocks_count || 0} label="Full Length" />
           <StatCard icon={ListChecks} value={(mockAgg.byType.sectional || 0) + (mockAgg.byType.topic_wise || 0) || c.sectional_mocks_count || 0} label="Sectional / Topic" />
           <StatCard icon={FileText} value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} label="Total Questions" />
           <StatCard icon={Clock} value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} label="Practice Hours" />
-          <StatCard icon={Zap} value={c.live_classes_count ?? 0} label="Live Classes" />
         </div>
       </section>
 

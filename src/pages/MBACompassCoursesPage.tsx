@@ -250,12 +250,11 @@ function CoursesInner() {
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-2">Every MBA Compass program includes</h2>
           <p className="text-center text-muted-foreground mb-8">A complete prep ecosystem — not just classes.</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             {[
               { icon: Sparkles, t: "AI Study Planner", d: "Auto-generated daily tasks, weak-topic radar, percentile forecast." },
               { icon: BookOpen, t: "Concept Library", d: "300+ video lessons + practice sets across QA, VARC, DILR." },
               { icon: Target, t: "Adaptive Mocks", d: "Full mocks + sectionals with deep AI analysis." },
-              { icon: Flame, t: "1:1 Mentorship", d: "Weekly mentorship calls with 99%ilers & IIM alumni." },
             ].map((f, i) => (
               <Card key={i} className="p-5 border-sky-100 hover:shadow-md transition">
                 <f.icon className="h-6 w-6 text-sky-600 mb-3" />
