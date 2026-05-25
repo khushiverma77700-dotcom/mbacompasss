@@ -68,7 +68,9 @@ export default function StudentOverview() {
   const [sectionNameMap, setSectionNameMap] = useState<Record<string, string>>({});
   const [rewards, setRewards] = useState<any>(null);
   const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
-  const [, setNowTick] = useState(0);
+  // Per-minute tick has been moved into ExamCountdownStrip — only that
+  // small component now re-renders every 60s instead of the entire 1800-line
+  // overview tree (huge perf win on slower devices).
 
   // Greeting changes by time of day — small touch that makes the dashboard feel alive
   const greeting = useMemo(() => {
