@@ -574,13 +574,20 @@ function TopicWiseView({
   topics: string[]; topicFilter: string; onTopicChange: (v: string) => void;
   onUpgrade: () => void;
 }) {
-  // Summary across the current exam scope (ignore section/topic filter so it reflects total catalog)
+  // Summary scoped to current section (and topic) filter — only counts mocks within
+  // the selected section so each section shows its own count, not the global total.
   const summary = useMemo(() => {
-    const total = allTopicWise.length;
+    const scoped = allTopicWise.filter((t) => {
+      const sec = (t.category || "").trim().toUpperCase();
+      if (sectionFilter !== "All" && sec !== sectionFilter) return false;
+      if (topicFilter !== "All" && (t.topic || "").trim() !== topicFilter) return false;
+      return true;
+    });
+    const total = scoped.length;
     const secSet = new Set<string>();
     const topicSet = new Set<string>();
     let attempted = 0;
-    allTopicWise.forEach((t) => {
+    scoped.forEach((t) => {
       const sec = (t.category || "").trim().toUpperCase();
       if (sec) secSet.add(sec);
       if (t.topic && t.topic.trim()) topicSet.add(`${sec}::${t.topic.trim()}`);
@@ -590,7 +597,8 @@ function TopicWiseView({
     const unattempted = Math.max(0, total - attempted);
     const progress = total > 0 ? Math.round((attempted / total) * 100) : 0;
     return { total, sections: secSet.size, topics: topicSet.size, attempted, unattempted, progress };
-  }, [allTopicWise, attemptedByTest]);
+  }, [allTopicWise, attemptedByTest, sectionFilter, topicFilter]);
+
 
   // Group filtered items by section → topic for display
   const grouped = useMemo(() => {
