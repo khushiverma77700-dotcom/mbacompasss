@@ -309,6 +309,43 @@ export default function StudentOverview() {
     return bands;
   }, [submitted]);
 
+  // 35-day activity heatmap (5 weeks × 7 days). Counts submitted mocks per day,
+  // so students can see their consistency at a glance — the GitHub-style cell intensity
+  // makes streaks visually obvious.
+  const heatmap = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(today);
+    start.setDate(today.getDate() - 34);
+    const counts: Record<string, number> = {};
+    for (const a of submitted) {
+      if (!a.submitted_at) continue;
+      const k = new Date(a.submitted_at).toISOString().slice(0, 10);
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    const days: { date: Date; key: string; count: number }[] = [];
+    for (let i = 0; i < 35; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const k = d.toISOString().slice(0, 10);
+      days.push({ date: d, key: k, count: counts[k] ?? 0 });
+    }
+    const max = Math.max(1, ...days.map((d) => d.count));
+    return { days, max, total: days.reduce((s, d) => s + d.count, 0) };
+  }, [submitted]);
+
+  // Composite "Overall Performance" — normalised 0-100 scores across 6 dimensions
+  // for a radar chart that summarises the student in one glance.
+  const radarData = useMemo(() => ([
+    { metric: "Score %", value: Math.min(100, stats.avgPctScore || 0) },
+    { metric: "Accuracy", value: Math.min(100, stats.accuracy || 0) },
+    { metric: "Consistency", value: Math.min(100, stats.consistency || 0) },
+    { metric: "Percentile", value: Math.min(100, stats.avgPercentile || 0) },
+    { metric: "Best", value: Math.min(100, stats.bestPercentile || 0) },
+    { metric: "Streak", value: Math.min(100, (stats.streak || 0) * 10) },
+  ]), [stats]);
+
+
+
   const taskProgress = tasks.length
     ? Math.round((tasks.filter((t) => t.is_completed).length / tasks.length) * 100) : 0;
 
