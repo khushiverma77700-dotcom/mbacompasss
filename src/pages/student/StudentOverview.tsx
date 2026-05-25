@@ -1161,8 +1161,10 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Recent attempts */}
+      <LazyMount minHeight={260} fallback={<ChartSkeleton height={220} />}>
       <div className="grid grid-cols-1 gap-4">
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
