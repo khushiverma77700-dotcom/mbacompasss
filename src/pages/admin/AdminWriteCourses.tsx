@@ -61,7 +61,7 @@ type GeneratedCourse = {
 
 const EXAM_OPTIONS = [
   "CAT", "XAT", "GMAT", "NMAT", "SNAP", "CMAT", "MAT",
-  "MAH-CET", "IIFT", "TISSNET", "MICAT", "GD-PI-WAT",
+  "MAH-CET", "IIFT", "MICAT", "GD-PI-WAT",
 ];
 
 const buildLatestDateContext = () => {

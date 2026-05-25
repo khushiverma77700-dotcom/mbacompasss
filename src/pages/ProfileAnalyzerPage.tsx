@@ -49,7 +49,7 @@ interface PremiumNarrative {
 }
 
 const STORAGE_KEY = "profile_analyzer_v2_draft";
-const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "TISSNET", "ATMA"];
+const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "ATMA"];
 const STREAM_OPTIONS = ["Engineering", "Commerce", "Science", "Arts", "Medical", "Law", "Other"];
 const SPECIALIZATIONS = ["Finance", "Marketing", "Operations", "HR", "IT & Analytics", "Strategy", "General Management", "Entrepreneurship"];
 const CATEGORY_OPTIONS = ["General", "OBC", "OBC-NCL", "SC", "ST", "EWS", "PwD"];
@@ -1059,7 +1059,7 @@ const ProfileAnalyzerPage = () => {
       "mainEntity": [
         { "@type": "Question", "name": "Is the MBA Profile Analyser really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our AI-powered MBA profile analyser is 100% free with no hidden charges." } },
         { "@type": "Question", "name": "How accurate is the IIM admission probability calculator?", "acceptedAnswer": { "@type": "Answer", "text": "Our tool is trained on data from 25,000+ MBA aspirants and historical admission trends from all IIMs, XLRI, FMS, and 50+ top B-schools." } },
-        { "@type": "Question", "name": "Which MBA entrance exams does this tool support?", "acceptedAnswer": { "@type": "Answer", "text": "The profile analyser supports CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT, IIFT, TISSNET, and ATMA." } },
+        { "@type": "Question", "name": "Which MBA entrance exams does this tool support?", "acceptedAnswer": { "@type": "Answer", "text": "The profile analyser supports CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT, IIFT, and ATMA." } },
         { "@type": "Question", "name": "Can I retake the MBA profile analysis?", "acceptedAnswer": { "@type": "Answer", "text": "You can retake the analysis after a 60-day cooldown period." } },
         { "@type": "Question", "name": "What is the difference between Dream, Target, and Safe colleges?", "acceptedAnswer": { "@type": "Answer", "text": "Dream colleges have below 30% admission probability, Target colleges have 30-60%, and Safe colleges have above 60% probability." } },
       ],
@@ -1482,7 +1482,7 @@ const ProfileAnalyzerPage = () => {
                     {[
                       { q: "Is the MBA Profile Analyser really free?", a: "Yes, our AI-powered MBA profile analyser is 100% free. You get a comprehensive 5-dimension score breakdown, college predictions, and peer comparison without any payment or hidden charges." },
                       { q: "How accurate is the IIM admission probability calculator?", a: "Our tool is trained on data from 25,000+ MBA aspirants and historical admission trends from all IIMs, XLRI, FMS, and 50+ top B-schools. The prediction accuracy improves continuously as more students use the tool." },
-                      { q: "Which MBA entrance exams does this tool support?", a: "The profile analyser supports CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT, IIFT, TISSNET, and ATMA — covering all major MBA entrance exams in India." },
+                      { q: "Which MBA entrance exams does this tool support?", a: "The profile analyser supports CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT, IIFT, and ATMA — covering all major MBA entrance exams in India." },
                       { q: "Can I retake the MBA profile analysis?", a: "You can retake the analysis after a 60-day cooldown period. This ensures you have time to work on your profile improvements before re-evaluating." },
                       { q: "What is the difference between Dream, Target, and Safe colleges?", a: "Dream colleges are where your admission chances are below 30%, Target colleges have 30-60% probability, and Safe colleges have above 60% admission probability based on your profile." },
                     ].map((faq, i) => (

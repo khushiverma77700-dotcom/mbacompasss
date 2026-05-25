@@ -189,7 +189,7 @@ const SECTION_TOOLS: Record<string, any> = {
         items: {
           type: "object",
           properties: {
-            exam: { type: "string", description: "Exam name — CAT, XAT, GMAT, GRE, CMAT, MAT, NMAT, SNAP, IIFT, TISSNET, etc." },
+            exam: { type: "string", description: "Exam name — CAT, XAT, GMAT, GRE, CMAT, MAT, NMAT, SNAP, IIFT, etc." },
             category: { type: "string", description: "General | EWS | OBC-NCL | SC | ST | PwD | NC-OBC." },
             year: { type: "string", description: "Admission cycle year, e.g. '2025', '2024', '2023'." },
             percentile: { type: "string", description: "Overall cutoff (percentile for CAT/XAT/CMAT/NMAT, score for GMAT/GRE), e.g. '99.5%ile', '95+ %ile', 'GMAT 720+'." },

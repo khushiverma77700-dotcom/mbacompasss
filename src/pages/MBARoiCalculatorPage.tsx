@@ -35,7 +35,7 @@ import {
 } from "recharts";
 
 const STREAM_OPTIONS = ["Engineering", "Commerce", "Science", "Arts", "Medical", "Law", "Other"];
-const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "TISSNET", "ATMA"];
+const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "ATMA"];
 const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3"];
 const SPEC_OPTIONS = ["Finance", "Marketing", "Operations", "HR", "IT & Analytics", "Strategy", "General Management", "Entrepreneurship", "Business Analytics", "Consulting"];
 const LOCATION_OPTIONS = ["India", "Abroad", "No Preference"];

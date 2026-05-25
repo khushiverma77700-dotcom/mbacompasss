@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
       existingHeaders,
     };
 
-    const systemPrompt = `You are a world-class SEO analyst specializing in Indian MBA education (CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT, TISSNET, MAT, ATMA, KMAT).
+    const systemPrompt = `You are a world-class SEO analyst specializing in Indian MBA education (CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT, MAT, ATMA, KMAT).
 
 YOUR MISSION: Perform an exhaustive SEO audit of this page. Read EVERY word of the content. Identify EVERY SEO issue. Provide SPECIFIC, actionable fixes.
 

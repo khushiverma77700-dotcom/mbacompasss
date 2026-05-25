@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 
 const MODE_OPTIONS = ["Offline", "Online", "Hybrid"];
-const EXAM_OPTIONS = ["CAT", "XAT", "GMAT", "NMAT", "SNAP", "CMAT", "MAT", "MAH-CET", "IIFT", "TISSNET", "MICAT"];
+const EXAM_OPTIONS = ["CAT", "XAT", "GMAT", "NMAT", "SNAP", "CMAT", "MAT", "MAH-CET", "IIFT", "MICAT"];
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
