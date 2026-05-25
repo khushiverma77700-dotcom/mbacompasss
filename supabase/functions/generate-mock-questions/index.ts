@@ -1202,13 +1202,13 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // Kick off up to three section workers in parallel. Do NOT pre-lock the
-      // row here: retry-mock-section owns the lock. Pre-locking made the worker
-      // think another worker was active and exit without generating anything.
+      // Kick off up to two section workers in parallel. Lowered from 3 to keep
+      // OpenAI TPM headroom — 3 parallel sections were tripping the 200K TPM
+      // limit, causing 429s mid-generation and wasted tokens.
       const workerUrl = `${url}/functions/v1/retry-mock-section`;
       const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
       const allJobIds = sectionRecords.map((r) => r.jobId).filter(Boolean) as string[];
-      const initialJobIds = allJobIds.slice(0, 3);
+      const initialJobIds = allJobIds.slice(0, 2);
       for (const firstJobId of initialJobIds) {
         await admin.from("mock_section_jobs").update({
           status: "pending",
