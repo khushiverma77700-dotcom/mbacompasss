@@ -21,6 +21,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PlannerTaskDialog, { TaskFormValue } from "@/components/student/PlannerTaskDialog";
 import PlannerSuggestions from "@/components/student/PlannerSuggestions";
+import DayPlannerAnimatedTour from "@/components/student/DayPlannerAnimatedTour";
 import { Recurrence, addDays, fmtDate, fmtFullDate, todayStr, describeRecurrence } from "@/lib/plannerRecurrence";
 
 interface Task {
