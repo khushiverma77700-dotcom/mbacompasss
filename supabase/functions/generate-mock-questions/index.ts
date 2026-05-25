@@ -585,6 +585,8 @@ CRITICAL RULES:
    - "options[].text" must contain ONLY the pure option text. Do NOT prefix it with "A)", "(A)", "A.", "a)", "1)" or any letter/number label.
    - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.
 10. MATH RENDERING — render every fraction, root, exponent, summation or symbol with LaTeX delimited by $...$ for inline (e.g. $\\frac{a}{b}$, $\\sqrt{x^2+1}$, $x_1 \\le x_2$) or $$...$$ for block. NEVER mix block math inside a sentence — block $$...$$ must always live on its OWN line/paragraph, never sandwiched between words like "we have: $$...$$. Calculating gives". Use inline $...$ when the formula belongs to a sentence; use block $$...$$ only when it stands alone as a centered equation. Never write fractions as "a/b" when they should be stacked.
+   - JSON STRING ESCAPING (CRITICAL): Because LaTeX lives inside a JSON string, EVERY single backslash MUST be doubled. Write \\\\frac, \\\\sqrt, \\\\cdot, \\\\times, \\\\div, \\\\le, \\\\ge, \\\\neq, \\\\sum, \\\\int, \\\\pi, \\\\theta, \\\\Rightarrow, \\\\therefore, \\\\circ etc. Single-backslash LaTeX (\\frac, \\sqrt) will render as garbage — ALWAYS use \\\\. Do not use unicode math symbols (×, ÷, ≤, ≥, ≠, √, π, ∑, ∫) inside math expressions — use the LaTeX command instead.
+   - Use proper LaTeX for: percentages ($45\\\\%$), degrees ($60^{\\\\circ}$), units ($12\\\\text{ cm}$), subscripts ($x_{1}$), superscripts ($x^{2}$), mixed fractions ($2\\\\tfrac{1}{3}$).
 11. INLINE SVG VISUALS — whenever a question implies a chart, graph, diagram, arrangement, or geometric figure, you MUST emit a clean inline <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">…</svg> (or 480x320 for geometry) with proper <rect>/<circle>/<line>/<polygon>/<path>/<text> elements. Required for: DI charts (bar/pie/line/scatter/stacked/Venn), LR arrangements (seating/floor/network/tournament/blood-relations), Quant geometry/mensuration/coordinate/trigonometry diagrams. Label vertices (A, B, C…), axes, bars, slices, and given measurements directly in the SVG. NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below" or "as shown in figure" without actually drawing it. The SVG must be self-contained, human-readable, and use stroke="#1e293b" fill colors that render on white backgrounds.
 
 EXPLANATION FORMAT (NON-NEGOTIABLE — bad explanations will be rejected):
@@ -672,10 +674,12 @@ async function callOpenAIBatch(args: {
 
   const lvlLower = String(args.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = "gpt-4o-mini";
+  // Upgraded from gpt-4o-mini → gpt-4o: significantly better LaTeX/formula fidelity,
+  // cleaner HTML output, and far fewer truncated/garbled math expressions.
+  const modelId = "gpt-4o";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
-  // ~1700 tokens per question covers stem + 4 options + explanation + inline SVG visuals.
-  const tokenBudget = Math.min(12000, 1800 * Math.max(1, args.count));
+  // ~2200 tokens per question gives explanations + inline SVG + LaTeX room without truncation.
+  const tokenBudget = Math.min(16000, 2200 * Math.max(1, args.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [
