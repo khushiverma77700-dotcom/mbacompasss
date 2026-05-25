@@ -72,14 +72,8 @@ const ROWS: { group: string; rows: { key: keyof Course | string; label: string; 
   {
     group: "Learning",
     rows: [
-      { key: "live_classes_count", label: "Live classes count", type: "num" },
-      { key: "total_video_hours", label: "Recorded video hours", type: "num" },
       { key: "total_practice_questions", label: "Practice questions", type: "num" },
-      { key: "has_live_classes", label: "Live classes included", type: "bool" },
-      { key: "has_recorded_lectures", label: "Recorded lectures", type: "bool" },
-      { key: "has_study_material", label: "Study material (PDFs)", type: "bool" },
       { key: "has_doubt_resolution", label: "Doubt resolution", type: "bool" },
-      { key: "has_mentorship_1on1", label: "1:1 Mentorship", type: "bool" },
     ],
   },
   {
