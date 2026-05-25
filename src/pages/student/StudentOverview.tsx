@@ -42,9 +42,10 @@ function ChartSkeleton({ height = 260, title = true }: { height?: number; title?
     </div>
   );
 }
-function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: number; height?: number }) {
+function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: 2 | 3; height?: number }) {
+  const grid = cols === 3 ? "grid lg:grid-cols-3 gap-4" : "grid lg:grid-cols-2 gap-4";
   return (
-    <div className={`grid lg:grid-cols-${cols} gap-4`}>
+    <div className={grid}>
       {Array.from({ length: cols }).map((_, i) => <ChartSkeleton key={i} height={height} />)}
     </div>
   );
