@@ -789,7 +789,7 @@ const App = () => (
 
             {/* Routes */}
             {isDashboardHostFn() ? (
-              <Route path="/" element={<LazyPage><StudentLayout /></LazyPage>}>
+              <Route path="/" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                 <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
               </Route>
             ) : (
