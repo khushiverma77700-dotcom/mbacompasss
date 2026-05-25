@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -209,7 +210,35 @@ function DetailInner() {
     canonical: c?.slug ? `https://mbacompass.in/mba-compass/${c.slug}` : undefined,
   });
 
-  if (loading) return <div className="container mx-auto px-4 py-12 text-muted-foreground">Loading…</div>;
+  if (loading) return (
+    <div className="bg-background">
+      <section className="bg-gradient-to-br from-sky-50 via-white to-blue-50 py-10">
+        <div className="container mx-auto px-4">
+          <Skeleton className="h-5 w-32 mb-6" />
+          <div className="grid lg:grid-cols-[1.4fr_1fr] gap-8">
+            <div className="space-y-4">
+              <div className="flex gap-2"><Skeleton className="h-5 w-14" /><Skeleton className="h-5 w-14" /><Skeleton className="h-5 w-14" /></div>
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-4/5" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-3/4" />
+              <div className="flex gap-3 pt-3"><Skeleton className="h-10 w-32" /><Skeleton className="h-10 w-32" /></div>
+            </div>
+            <Skeleton className="aspect-[16/10] w-full rounded-xl" />
+          </div>
+        </div>
+      </section>
+      <div className="container mx-auto px-4 py-10 space-y-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+        </div>
+        <Skeleton className="h-10 w-64" />
+        <div className="grid md:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
+        </div>
+      </div>
+    </div>
+  );
   if (!c) return (
     <div className="container mx-auto px-4 py-16 text-center">
       <h1 className="text-2xl font-bold">Course not found</h1>
