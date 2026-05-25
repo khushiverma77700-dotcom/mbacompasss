@@ -375,12 +375,12 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           </div>
           {fixedType !== "topic_wise" && (
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              {EXAM_FILTERS.map((f) => {
+              {["All", ...EXAM_FILTERS].map((f) => {
                 const active = examFilter === f;
                 return (
                   <button
                     key={f}
-                    onClick={() => setExamFilter(active ? "CAT" : f)}
+                    onClick={() => setExamFilter(f)}
                     className={[
                       "px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold border transition",
                       active
@@ -388,7 +388,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                         : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700",
                     ].join(" ")}
                   >
-                    {f}
+                    {f === "All" ? "All Exams" : f}
                   </button>
                 );
               })}
