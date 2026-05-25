@@ -533,18 +533,37 @@ const AdminMockTests = () => {
 
   return (
     <div>
+      {/* Highlighted repair tool banner — surfaces passage scan/repair actions */}
+      <div className="mb-5 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-500/10 dark:via-orange-500/10 dark:to-amber-500/10 p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 shrink-0 rounded-lg bg-amber-500 text-white grid place-items-center">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="font-semibold text-foreground">Sectional Passage Repair Tool</div>
+              <div className="text-xs text-muted-foreground max-w-xl">
+                Scan all sectional tests (VARC / DILR family) that were generated without passages or caselets, then re-queue them so the AI rebuilds the section correctly.
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap shrink-0">
+            <Button variant="outline" size="sm" disabled={repairing} onClick={() => runRepair(true)} className="border-amber-400 text-amber-900 hover:bg-amber-100 dark:text-amber-200">
+              Scan sectional passages
+            </Button>
+            <Button size="sm" disabled={repairing} onClick={() => runRepair(false)} className="bg-amber-600 hover:bg-amber-700 text-white">
+              {repairing ? "Repairing…" : "Repair missing passages"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">Mock Tests</h1>
           <p className="text-sm text-muted-foreground mt-1">CAT-style mock test management</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" disabled={repairing} onClick={() => runRepair(true)}>
-            Scan sectional passages
-          </Button>
-          <Button size="sm" disabled={repairing} onClick={() => runRepair(false)} className="bg-amber-600 hover:bg-amber-700 text-white">
-            {repairing ? "Repairing…" : "Repair missing passages"}
-          </Button>
           <Button variant="outline" onClick={() => setAiOpen(true)}>
             <Sparkles className="w-4 h-4 mr-2 text-primary" /> Generate Mocks From AI
           </Button>
