@@ -17,7 +17,9 @@ import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, ReferenceLine, RadarChart, PolarGrid, PolarAngleAxis,
   PolarRadiusAxis, Radar, RadialBarChart, RadialBar, Legend, BarChart,
+  ScatterChart, Scatter, ZAxis, PieChart, Pie, Cell, AreaChart, Area,
 } from "recharts";
+
 
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
