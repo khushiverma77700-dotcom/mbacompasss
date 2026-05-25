@@ -274,7 +274,6 @@ function DetailInner() {
     ["Previous Year Papers", c.has_previous_year_papers],
     ["Personalized Mock Hub", c.has_personalized_hub],
     ["Doubt Resolution", c.has_doubt_resolution],
-    ["Doubt Resolution", c.has_doubt_resolution],
     ["Mock Analysis", c.has_mock_analysis],
     ["Performance Analytics", c.has_performance_analytics],
     ["Leaderboard Access", c.has_leaderboard_access],
