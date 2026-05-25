@@ -23,6 +23,32 @@ import {
 
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
+import { LazyMount } from "@/hooks/useInView";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Reusable skeleton placeholder shown while a chart section is still
+// below the fold or its chunk is hydrating. Keeps the page from looking
+// frozen — the user always sees a loading shape, never a blank gap.
+function ChartSkeleton({ height = 260, title = true }: { height?: number; title?: boolean }) {
+  return (
+    <div className="rounded-xl border border-sky-100/70 bg-white p-5 shadow-sm">
+      {title && (
+        <div className="mb-3 space-y-1.5">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-56" />
+        </div>
+      )}
+      <Skeleton className="w-full rounded-lg" style={{ height }} />
+    </div>
+  );
+}
+function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: number; height?: number }) {
+  return (
+    <div className={`grid lg:grid-cols-${cols} gap-4`}>
+      {Array.from({ length: cols }).map((_, i) => <ChartSkeleton key={i} height={height} />)}
+    </div>
+  );
+}
 
 
 
