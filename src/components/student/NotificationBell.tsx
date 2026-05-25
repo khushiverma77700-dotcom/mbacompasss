@@ -16,8 +16,10 @@ export default function NotificationBell() {
         .from("student_notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .eq("is_read", false);
+        .eq("is_read", false)
+        .neq("type", "daily_test");
       if (active) setCount(c ?? 0);
+
     };
     load();
     const ch = supabase

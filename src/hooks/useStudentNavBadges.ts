@@ -66,7 +66,9 @@ export function useStudentNavBadges(): StudentNavBadges {
         supabase.from("student_notifications")
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id)
-          .eq("is_read", false),
+          .eq("is_read", false)
+          .neq("type", "daily_test"),
+
         // Support tickets with admin replies or status changes since last seen
         supabase.from("support_tickets")
           .select("id, updated_at, last_admin_reply_at, status")

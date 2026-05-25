@@ -107,11 +107,13 @@ export default function StudentNotifications() {
       .from("student_notifications")
       .select("*")
       .eq("user_id", user.id)
+      .neq("type", "daily_test")
       .order("created_at", { ascending: false })
       .limit(300);
     setItems((data ?? []) as any);
     setLoading(false);
   };
+
 
   useEffect(() => { load(); }, [user]);
 
@@ -124,10 +126,13 @@ export default function StudentNotifications() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
-          setItems((prev) => [payload.new as any, ...prev]);
+          const n = payload.new as any;
+          if (n?.type === "daily_test") return;
+          setItems((prev) => [n, ...prev]);
           setLivePulse(true);
           setTimeout(() => setLivePulse(false), 2000);
         }
+
       )
       .on(
         "postgres_changes",
