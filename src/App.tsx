@@ -13,6 +13,7 @@ import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
+import StudentShellFallback from "@/components/student/StudentShellFallback";
 
 type LazyWithPreload<T extends React.ComponentType<any>> = React.LazyExoticComponent<T> & {
   preload: () => Promise<{ default: T }>;
@@ -481,9 +482,9 @@ const isDashboardHostFn = () =>
 const DashboardHostRoot = () => {
   if (isDashboardHostFn()) {
     return (
-      <LazyPage>
+      <Suspense fallback={<StudentShellFallback />}>
         <StudentLayout />
-      </LazyPage>
+      </Suspense>
     );
   }
   return (
@@ -525,6 +526,28 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
 const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={null}>{children}</Suspense>
 );
+
+// Suspense wrapper used for the StudentLayout route. On a cold hit to
+// /student (or dashboard.mbacompass.in), the layout chunk can take several
+// seconds to download — without an immediate visible shell, users see a
+// blank white screen. StudentShellFallback paints the dashboard chrome
+// (top bar + sidebar + card grid skeleton) instantly so the page feels alive.
+const StudentLazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<StudentShellFallback />}>{children}</Suspense>
+);
+
+// Kick off downloading the StudentLayout + StudentOverview chunks the
+// moment the app boots if the user is heading into the LMS. This runs in
+// parallel with React's lazy() import so the chunk is usually ready by
+// the time the route renders.
+if (typeof window !== "undefined") {
+  const path = window.location.pathname;
+  const onDashHost = window.location.hostname === "dashboard.mbacompass.in";
+  if (onDashHost || path.startsWith("/student")) {
+    StudentLayout.preload?.();
+    StudentOverview.preload?.();
+  }
+}
 
 // Keeps the previous page mounted while the next route's chunk loads. The
 // route tree is rendered against a *deferred* location, so React only swaps
@@ -766,7 +789,7 @@ const App = () => (
 
             {/* Routes */}
             {isDashboardHostFn() ? (
-              <Route path="/" element={<LazyPage><StudentLayout /></LazyPage>}>
+              <Route path="/" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                 <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
               </Route>
             ) : (
@@ -819,7 +842,7 @@ const App = () => (
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="/student/login" element={<LazyPage><StudentLogin /></LazyPage>} />
             <Route path="/student/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
-            <Route path="/student" element={<LazyPage><StudentLayout /></LazyPage>}>
+            <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
               <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
               <Route path="mocks" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
               <Route path="mocks/full-length" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
