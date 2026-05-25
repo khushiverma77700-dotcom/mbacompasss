@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import DOMPurify from "isomorphic-dompurify";
+import MathContent from "@/components/mock/MathContent";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -169,9 +169,9 @@ export default function MyMocksPage() {
                   <div className="text-xs text-muted-foreground mb-1">
                     {b.question?.section?.test?.name} · {b.question?.section?.code}
                   </div>
-                  <div
+                  <MathContent
+                    html={b.question?.question_html ?? ""}
                     className="prose prose-sm max-w-none line-clamp-3"
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(b.question?.question_html ?? "") }}
                   />
                   {b.notes && <div className="mt-2 text-sm italic text-muted-foreground">"{b.notes}"</div>}
                 </Card>
