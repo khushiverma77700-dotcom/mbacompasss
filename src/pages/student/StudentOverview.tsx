@@ -1854,4 +1854,4 @@ const ExamCountdownStrip = memo(function ExamCountdownStrip({ exams }: { exams: 
       </div>
     </div>
   );
-}
+});
