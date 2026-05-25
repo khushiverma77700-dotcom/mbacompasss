@@ -5,13 +5,58 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory IP rate-limit (best-effort; resets per cold start).
+// Limits anonymous abuse / user-enumeration scraping.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 10; // 10 checks / IP / minute
+const ipHits = new Map<string, { count: number; windowStart: number }>();
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const cur = ipHits.get(ip);
+  if (!cur || now - cur.windowStart > RATE_WINDOW_MS) {
+    ipHits.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  cur.count += 1;
+  return cur.count > RATE_MAX;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("cf-connecting-ip") ||
+    "unknown";
+
+  if (rateLimited(ip)) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests" }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   try {
-    const { phone, email } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const phoneRaw = typeof body?.phone === "string" ? body.phone.trim() : "";
+    const emailRaw = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+
+    // Strict input validation: reject anything that isn't a well-formed candidate.
+    const phone = /^\d{10}$/.test(phoneRaw) ? phoneRaw : "";
+    const email =
+      emailRaw.length > 0 && emailRaw.length <= 255 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)
+        ? emailRaw
+        : "";
+
+    if (!phone && !email) {
+      return new Response(
+        JSON.stringify({ error: "Provide a valid email or 10-digit phone" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -22,8 +67,7 @@ Deno.serve(async (req) => {
       emailExists: false,
     };
 
-    // Check phone in profiles
-    if (phone && /^\d{10}$/.test(phone)) {
+    if (phone) {
       const { count } = await supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
@@ -31,14 +75,15 @@ Deno.serve(async (req) => {
       result.phoneExists = (count ?? 0) > 0;
     }
 
-    // Check email in auth.users
     if (email) {
-      const { data } = await supabase.auth.admin.listUsers();
-      if (data?.users) {
-        result.emailExists = data.users.some(
-          (u) => u.email?.toLowerCase() === email.toLowerCase()
-        );
-      }
+      // Targeted lookup — avoids scanning the full user list each call.
+      const { data } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 1,
+        // @ts-ignore — filter is supported by the GoTrue admin API
+        filter: `email.eq.${email}`,
+      });
+      result.emailExists = !!data?.users?.some((u) => u.email?.toLowerCase() === email);
     }
 
     return new Response(JSON.stringify(result), {
@@ -48,7 +93,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("check-duplicate error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Internal error" }),
+      JSON.stringify({ error: "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
