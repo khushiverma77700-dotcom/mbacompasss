@@ -712,11 +712,12 @@ async function callOpenAIBatch(args: {
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx / network).
   // OpenAI 502s in the field were causing whole batches to be discarded.
-  const MAX_INLINE_RETRIES = 4;
+  const MAX_INLINE_RETRIES = 6;
   let resp: Response | null = null;
   let lastErr: string | null = null;
   const callStart = Date.now();
   let attemptsUsed = 0;
+  let rateLimitedAttempts = 0;
   for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
     attemptsUsed = attempt;
     const ctrl = new AbortController();
@@ -730,8 +731,20 @@ async function callOpenAIBatch(args: {
       });
       clearTimeout(timer);
       if (resp.ok) break;
-      // Retry on 408/429/5xx
-      if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
+      // 429 — respect Retry-After / OpenAI "try again in Xs" hint, don't burn budget.
+      if (resp.status === 429 && rateLimitedAttempts < 4) {
+        rateLimitedAttempts++;
+        const txt = await resp.text();
+        const waitMs = parseOpenAI429Wait(resp.headers, txt);
+        lastErr = `AI 429: ${txt.slice(0, 200)}`;
+        console.warn(`[callOpenAIBatch] 429 rate-limited, sleeping ${waitMs}ms (rl ${rateLimitedAttempts}/4)`);
+        await new Promise((r) => setTimeout(r, waitMs));
+        resp = null;
+        attempt--; // don't consume a generic retry slot
+        continue;
+      }
+      // Other transient errors
+      if ([408, 425, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         const txt = await resp.text();
         lastErr = `AI call failed (${resp.status}): ${txt.slice(0, 200)}`;
         console.warn(`[callOpenAIBatch] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
