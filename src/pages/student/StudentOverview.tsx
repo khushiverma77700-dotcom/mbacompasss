@@ -161,11 +161,8 @@ export default function StudentOverview() {
     };
   }, [user]);
 
-  // Re-render every minute so countdowns stay live without manual refresh.
-  useEffect(() => {
-    const id = setInterval(() => setNowTick((t) => t + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
+  // (Per-minute tick moved into ExamCountdownStrip — see component below.)
+
 
   const submitted = useMemo(
     () => attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted"),
