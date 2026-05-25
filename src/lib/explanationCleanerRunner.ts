@@ -2,7 +2,7 @@
 // Survives route changes — only dies on full page reload / tab close.
 import { supabase } from "@/integrations/supabase/client";
 
-export type CleanerScope = "all" | "test" | "section" | "topic" | "question";
+export type CleanerScope = "all" | "test" | "section" | "topic" | "question" | "personalized";
 
 export type CleanerConfig = {
   scope: CleanerScope;
@@ -102,13 +102,17 @@ export const explanationCleaner = {
 
   buildFilters(config: CleanerConfig) {
     const f: any = { force: config.force, done_only: config.done_only === true };
-    if (config.scope === "test") f.test_id = config.test_id || undefined;
-    if (config.scope === "section") f.section_id = config.section_id || undefined;
-    if (config.scope === "topic") {
-      f.topic = config.topic || undefined;
-      if (config.test_id) f.test_id = config.test_id;
+    if (config.scope === "personalized") {
+      f.source = "personalized";
+    } else {
+      if (config.scope === "test") f.test_id = config.test_id || undefined;
+      if (config.scope === "section") f.section_id = config.section_id || undefined;
+      if (config.scope === "topic") {
+        f.topic = config.topic || undefined;
+        if (config.test_id) f.test_id = config.test_id;
+      }
+      if (config.scope === "question") f.question_id = config.question_id || undefined;
     }
-    if (config.scope === "question") f.question_id = config.question_id || undefined;
     return f;
   },
 

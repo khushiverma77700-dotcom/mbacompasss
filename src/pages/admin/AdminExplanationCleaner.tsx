@@ -187,28 +187,43 @@ export default function AdminExplanationCleaner() {
       return;
     }
     setBrowseLoading(true);
-    let q = supabase
-      .from("mock_questions")
-      .select("id, topic, explanation_html, mock_sections!inner(test_id, name, code)", { count: "exact" })
-      .not("explanation_html", "is", null)
-      .neq("explanation_html", "");
+    const isPersonalized = scope === "personalized";
+    const expCol = isPersonalized ? "explanation" : "explanation_html";
+    let q: any = isPersonalized
+      ? supabase
+          .from("personalized_questions")
+          .select("id, topic, explanation", { count: "exact" })
+          .not("explanation", "is", null)
+          .neq("explanation", "")
+      : supabase
+          .from("mock_questions")
+          .select("id, topic, explanation_html, mock_sections!inner(test_id, name, code)", { count: "exact" })
+          .not("explanation_html", "is", null)
+          .neq("explanation_html", "");
 
     if (browseStatus === "pending") {
-      q = q.not("explanation_html", "ilike", "%<h4>%");
+      q = q.not(expCol, "ilike", "%<h4>%");
     } else {
-      q = q.ilike("explanation_html", "%<h4>%");
+      q = q.ilike(expCol, "%<h4>%");
     }
-    if (scope === "test" && testId) q = q.eq("mock_sections.test_id", testId);
-    if (scope === "section" && sectionId) q = q.eq("section_id", sectionId);
-    if (scope === "topic") {
-      if (topic) q = q.ilike("topic", topic);
-      if (testId) q = q.eq("mock_sections.test_id", testId);
+    if (!isPersonalized) {
+      if (scope === "test" && testId) q = q.eq("mock_sections.test_id", testId);
+      if (scope === "section" && sectionId) q = q.eq("section_id", sectionId);
+      if (scope === "topic") {
+        if (topic) q = q.ilike("topic", topic);
+        if (testId) q = q.eq("mock_sections.test_id", testId);
+      }
+      if (scope === "question" && questionId) q = q.eq("id", questionId);
     }
-    if (scope === "question" && questionId) q = q.eq("id", questionId);
 
     const { data, count, error } = await q.order("id").limit(50);
     if (error) toast.error(error.message);
-    setBrowseRows((data as any[]) ?? []);
+    const normalized = isPersonalized
+      ? (data as any[] ?? []).map((r) => ({
+          id: r.id, topic: r.topic, explanation_html: r.explanation, mock_sections: null,
+        }))
+      : (data as any[]) ?? [];
+    setBrowseRows(normalized);
     setBrowseCount(count ?? null);
     setBrowseLoading(false);
   };
@@ -279,12 +294,17 @@ export default function AdminExplanationCleaner() {
           <div>
             <Label>Scope</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              {(["all","test","section","topic","question"] as CleanerScope[]).map((s) => (
+              {(["all","test","section","topic","question","personalized"] as CleanerScope[]).map((s) => (
                 <Button key={s} size="sm" variant={scope === s ? "default" : "outline"} onClick={() => setScope(s)} disabled={rs.running || rs.paused}>
-                  {s === "all" ? "All mocks" : s === "test" ? "Mock-wise" : s === "section" ? "Section-wise" : s === "topic" ? "Topic-wise" : "Single question"}
+                  {s === "all" ? "All mocks" : s === "test" ? "Mock-wise" : s === "section" ? "Section-wise" : s === "topic" ? "Topic-wise" : s === "question" ? "Single question" : "Personalized Hub"}
                 </Button>
               ))}
             </div>
+            {scope === "personalized" && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Cleans <strong>all Personalized Hub questions</strong> (AI-generated bank used in /student/personalized-hub). Rewrites explanations with the same structured format and proper LaTeX.
+              </p>
+            )}
           </div>
 
           {(scope === "test" || scope === "section" || scope === "topic") && (
