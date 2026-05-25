@@ -659,6 +659,7 @@ export default function StudentOverview() {
       </div>
 
       {/* Predictor + cumulative trend */}
+      <LazyMount minHeight={300} fallback={<ChartRowSkeleton cols={3} height={220} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
