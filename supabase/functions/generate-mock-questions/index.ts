@@ -181,6 +181,25 @@ const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
 const MAX_FIRECRAWL_CHECKS_PER_SECTION = 4; // cap web-checks tightly to avoid stalls
 const MAX_ATTEMPTS_PER_QUESTION = 60;   // no wall-clock cutoff; retry enough times to hit exact count
 
+/** Parse OpenAI 429 Retry-After hint to wait ms (capped 65s, min 1.5s). */
+function parseOpenAI429Wait(headers: Headers | null, body: string): number {
+  const MIN = 1500, MAX = 65_000;
+  const ra = headers?.get("retry-after");
+  if (ra) {
+    const secs = Number(ra);
+    if (Number.isFinite(secs) && secs > 0) return Math.min(MAX, Math.max(MIN, Math.ceil(secs * 1000)));
+    const date = Date.parse(ra);
+    if (!Number.isNaN(date)) return Math.min(MAX, Math.max(MIN, date - Date.now()));
+  }
+  const txt = String(body || "");
+  const ms = txt.match(/try again in\s+([\d.]+)\s*ms/i);
+  if (ms) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(ms[1]))));
+  const s = txt.match(/try again in\s+([\d.]+)\s*s/i);
+  if (s) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(s[1]) * 1000)));
+  if (/tokens per min|TPM/i.test(txt)) return 30_000;
+  return 8_000;
+}
+
 // Map mock_section.code (e.g. "DILR") + exam to the personalized_questions catalog
 // Uses src/data/personalizedExams.ts vocabulary so the admin hub counter picks it up.
 const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
@@ -693,11 +712,12 @@ async function callOpenAIBatch(args: {
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx / network).
   // OpenAI 502s in the field were causing whole batches to be discarded.
-  const MAX_INLINE_RETRIES = 4;
+  const MAX_INLINE_RETRIES = 6;
   let resp: Response | null = null;
   let lastErr: string | null = null;
   const callStart = Date.now();
   let attemptsUsed = 0;
+  let rateLimitedAttempts = 0;
   for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
     attemptsUsed = attempt;
     const ctrl = new AbortController();
@@ -711,8 +731,20 @@ async function callOpenAIBatch(args: {
       });
       clearTimeout(timer);
       if (resp.ok) break;
-      // Retry on 408/429/5xx
-      if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
+      // 429 — respect Retry-After / OpenAI "try again in Xs" hint, don't burn budget.
+      if (resp.status === 429 && rateLimitedAttempts < 4) {
+        rateLimitedAttempts++;
+        const txt = await resp.text();
+        const waitMs = parseOpenAI429Wait(resp.headers, txt);
+        lastErr = `AI 429: ${txt.slice(0, 200)}`;
+        console.warn(`[callOpenAIBatch] 429 rate-limited, sleeping ${waitMs}ms (rl ${rateLimitedAttempts}/4)`);
+        await new Promise((r) => setTimeout(r, waitMs));
+        resp = null;
+        attempt--; // don't consume a generic retry slot
+        continue;
+      }
+      // Other transient errors
+      if ([408, 425, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         const txt = await resp.text();
         lastErr = `AI call failed (${resp.status}): ${txt.slice(0, 200)}`;
         console.warn(`[callOpenAIBatch] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
@@ -1170,13 +1202,13 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // Kick off up to three section workers in parallel. Do NOT pre-lock the
-      // row here: retry-mock-section owns the lock. Pre-locking made the worker
-      // think another worker was active and exit without generating anything.
+      // Kick off up to two section workers in parallel. Lowered from 3 to keep
+      // OpenAI TPM headroom — 3 parallel sections were tripping the 200K TPM
+      // limit, causing 429s mid-generation and wasted tokens.
       const workerUrl = `${url}/functions/v1/retry-mock-section`;
       const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
       const allJobIds = sectionRecords.map((r) => r.jobId).filter(Boolean) as string[];
-      const initialJobIds = allJobIds.slice(0, 3);
+      const initialJobIds = allJobIds.slice(0, 2);
       for (const firstJobId of initialJobIds) {
         await admin.from("mock_section_jobs").update({
           status: "pending",

@@ -57,6 +57,28 @@ function isAIQuotaBlockedError(message: unknown): boolean {
   return m.includes("402") || m.includes("403") || m.includes("payment required") || m.includes("permission_denied") || m.includes("denied access") || m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
 }
 
+/** Parse OpenAI's 429 Retry-After hint. Returns wait time in ms (capped 65s, min 1.5s). */
+function parseOpenAI429Wait(headers: Headers | null, body: string): number {
+  const MIN = 1500, MAX = 65_000;
+  // 1) Standard Retry-After header (seconds, or HTTP date)
+  const ra = headers?.get("retry-after");
+  if (ra) {
+    const secs = Number(ra);
+    if (Number.isFinite(secs) && secs > 0) return Math.min(MAX, Math.max(MIN, Math.ceil(secs * 1000)));
+    const date = Date.parse(ra);
+    if (!Number.isNaN(date)) return Math.min(MAX, Math.max(MIN, date - Date.now()));
+  }
+  // 2) "Please try again in 1.234s" or "in 845ms"
+  const txt = String(body || "");
+  const ms = txt.match(/try again in\s+([\d.]+)\s*ms/i);
+  if (ms) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(ms[1]))));
+  const s = txt.match(/try again in\s+([\d.]+)\s*s/i);
+  if (s) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(s[1]) * 1000)));
+  // 3) TPM messages — wait a full reset window
+  if (/tokens per min|TPM/i.test(txt)) return 30_000;
+  return 8_000;
+}
+
 function parseJsonContent(content: unknown): any {
   if (typeof content !== "string") return content;
   try { return JSON.parse(content); } catch {
@@ -428,9 +450,10 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   };
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx).
-  const MAX_INLINE_RETRIES = 4;
+  const MAX_INLINE_RETRIES = 6;
   let resp: Response | null = null;
   let lastErr: string | null = null;
+  let rateLimitedAttempts = 0;
   for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
@@ -447,7 +470,17 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       const quotaBlocked = resp.status === 401 || resp.status === 402 || resp.status === 403 || /invalid_api_key|payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
       await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: quotaBlocked ? "credit_exhausted" : "error", errorMsg: `HTTP ${resp.status}: ${txt.slice(0, 220)}`, latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
       if (quotaBlocked) throw new Error(`OpenAI API blocked: ${txt.slice(0, 240)}`);
-      if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
+      if (resp.status === 429 && rateLimitedAttempts < 4) {
+        rateLimitedAttempts++;
+        const waitMs = parseOpenAI429Wait(resp.headers, txt);
+        lastErr = `OpenAI 429: ${txt.slice(0, 200)}`;
+        console.warn(`[retry-mock-section] 429 rate-limited, sleeping ${waitMs}ms (attempt ${rateLimitedAttempts}/4)`);
+        await new Promise((r) => setTimeout(r, waitMs));
+        resp = null;
+        attempt--; // don't consume a generic retry on a 429
+        continue;
+      }
+      if ([408, 425, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         lastErr = `OpenAI ${resp.status}: ${txt.slice(0, 200)}`;
         console.warn(`[retry-mock-section] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
         const backoff = Math.min(20000, 2000 * Math.pow(2, attempt - 1)) + Math.random() * 1500;
