@@ -160,16 +160,48 @@ export default function AdminBulkMockGeneration() {
     [drafts],
   );
 
+  const [repairing, setRepairing] = useState(false);
+  const repairSectionalPassages = async (dryRun: boolean) => {
+    setRepairing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("repair-sectional-passages", {
+        body: { dry_run: dryRun },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if (dryRun) {
+        toast.success(`Found ${(data as any).total ?? 0} sectional sections missing passages.`);
+      } else {
+        toast.success(`Requeued ${(data as any).requeued ?? 0} sections (found ${(data as any).found ?? 0}). They will rebuild with passages in the background.`);
+      }
+    } catch (e: any) {
+      toast.error(e.message ?? "Repair failed");
+    } finally {
+      setRepairing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Layers className="h-5 w-5 text-sky-600" /> Bulk AI Mock Generation
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Queue many mock generation requests at once. The system will generate questions in the background and add finished mocks to the database automatically.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Layers className="h-5 w-5 text-sky-600" /> Bulk AI Mock Generation
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Queue many mock generation requests at once. The system will generate questions in the background and add finished mocks to the database automatically.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" disabled={repairing} onClick={() => repairSectionalPassages(true)}>
+            Scan sectional passages
+          </Button>
+          <Button size="sm" disabled={repairing} onClick={() => repairSectionalPassages(false)} className="bg-amber-600 hover:bg-amber-700">
+            {repairing ? "Repairing…" : "Repair missing passages"}
+          </Button>
+        </div>
       </div>
+
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>

@@ -1079,6 +1079,22 @@ Deno.serve(async (req) => {
             // 4 caselets × 5 = 20; if section has fewer Qs, scale down qPerSet.
             secSets = 4; secQPerSet = Math.max(4, Math.floor(sec.questions / 4));
           }
+        } else if (category === "sectional") {
+          // Sectional tests targeting a single section must include passages/
+          // caselets whenever the section is intrinsically passage- or caselet-
+          // bound (RC for verbal, DI caselets + LR sets for DILR-style).
+          const sc = String(sec.code || "").toUpperCase();
+          if (["VARC", "VALR", "LS", "GE", "LC", "VABI"].includes(sc)) {
+            // RC-heavy verbal sectional: ~3-4 RCs of 4 questions each,
+            // remaining Qs are standalone (parajumbles, vocab, etc.)
+            secSets = Math.max(1, Math.min(4, Math.floor(sec.questions / 4)));
+            secQPerSet = 4;
+          } else if (["DILR", "LRDI", "DI", "LR", "AR", "QADI", "QADS"].includes(sc)) {
+            // DI/LR sectional: 3-4 caselets/sets of 5 questions each
+            secSets = Math.max(1, Math.min(4, Math.floor(sec.questions / 5)));
+            secQPerSet = 5;
+          }
+          // else: pure QA / GK / IE / etc. stay standalone
         } else if (category === "topic") {
           // Topic-wise tests are standalone by default. Sets/passages are only
           // added when the topic itself is intrinsically passage- or caselet-
