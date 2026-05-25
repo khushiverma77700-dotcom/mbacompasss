@@ -279,12 +279,17 @@ export default function AdminExplanationCleaner() {
           <div>
             <Label>Scope</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              {(["all","test","section","topic","question"] as CleanerScope[]).map((s) => (
+              {(["all","test","section","topic","question","personalized"] as CleanerScope[]).map((s) => (
                 <Button key={s} size="sm" variant={scope === s ? "default" : "outline"} onClick={() => setScope(s)} disabled={rs.running || rs.paused}>
-                  {s === "all" ? "All mocks" : s === "test" ? "Mock-wise" : s === "section" ? "Section-wise" : s === "topic" ? "Topic-wise" : "Single question"}
+                  {s === "all" ? "All mocks" : s === "test" ? "Mock-wise" : s === "section" ? "Section-wise" : s === "topic" ? "Topic-wise" : s === "question" ? "Single question" : "Personalized Hub"}
                 </Button>
               ))}
             </div>
+            {scope === "personalized" && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Cleans <strong>all Personalized Hub questions</strong> (AI-generated bank used in /student/personalized-hub). Rewrites explanations with the same structured format and proper LaTeX.
+              </p>
+            )}
           </div>
 
           {(scope === "test" || scope === "section" || scope === "topic") && (
