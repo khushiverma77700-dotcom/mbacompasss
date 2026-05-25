@@ -510,10 +510,11 @@ export default function PersonalizedHubGuide({
                   <motion.div
                     key={step.id}
                     custom={direction}
-                    initial={{ opacity: 0, x: direction * 40, scale: 0.96 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -direction * 40, scale: 0.96 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    initial={{ opacity: 0, rotateY: direction * 75, scale: 0.85, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, rotateY: 0, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, rotateY: -direction * 75, scale: 0.85, filter: "blur(8px)" }}
+                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ transformPerspective: 1200, transformStyle: "preserve-3d" }}
                     className="absolute inset-0"
                   >
                     <Illust />
