@@ -405,7 +405,7 @@ function CourseCard({ course }: { course: Course }) {
             </div>
           </div>
           <Button asChild size="sm" className="bg-sky-600 hover:bg-sky-700">
-            <Link to={`/mba-compass/${course.slug}`}>View <ArrowRight className="h-4 w-4 ml-1" /></Link>
+            <Link to={`/mba-compass/${course.slug}`} onMouseEnter={prefetchDetail} onTouchStart={prefetchDetail}>View <ArrowRight className="h-4 w-4 ml-1" /></Link>
           </Button>
         </div>
       </div>
