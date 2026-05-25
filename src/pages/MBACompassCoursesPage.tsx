@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import {
   GraduationCap, Clock, Sparkles, CheckCircle2, ArrowRight, Star, Users, Target, Flame, BookOpen,
@@ -13,6 +14,26 @@ import {
 import SEOHead from "@/components/SEOHead";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import { toast } from "sonner";
+
+// Prefetch the course-detail chunk on Link hover so navigation feels instant.
+const prefetchDetail = () => import("./MBACompassCourseDetailPage").catch(() => {});
+
+const CourseCardSkeleton = () => (
+  <Card className="overflow-hidden border-sky-100 flex flex-col">
+    <Skeleton className="aspect-[16/9] w-full" />
+    <div className="p-5 flex-1 flex flex-col gap-2">
+      <div className="flex gap-1.5"><Skeleton className="h-4 w-12" /><Skeleton className="h-4 w-10" /></div>
+      <Skeleton className="h-5 w-4/5" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-2/3" />
+      <div className="grid grid-cols-3 gap-2 mt-3"><Skeleton className="h-8" /><Skeleton className="h-8" /><Skeleton className="h-8" /></div>
+      <div className="mt-auto pt-4 flex items-end justify-between border-t border-sky-50">
+        <Skeleton className="h-7 w-20" />
+        <Skeleton className="h-8 w-20" />
+      </div>
+    </div>
+  </Card>
+);
 
 const EXAM_OPTIONS = [
   { value: "CAT", label: "CAT" },
