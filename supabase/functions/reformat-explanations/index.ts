@@ -62,6 +62,7 @@ type Filters = {
   question_id?: string;
   force?: boolean;
   done_only?: boolean;
+  source?: "mock" | "personalized";
 };
 
 function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
@@ -75,7 +76,6 @@ function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
     .neq("explanation_html", "");
 
   if (f.done_only) {
-    // Only already-formatted questions (those containing our <h4> markers)
     q = q.ilike("explanation_html", "%<h4>%");
   } else if (!f.force) {
     q = q.not("explanation_html", "ilike", "%<h4>%");
@@ -84,6 +84,21 @@ function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
   if (f.section_id) q = q.eq("section_id", f.section_id);
   if (f.topic) q = q.ilike("topic", f.topic);
   if (f.test_id) q = q.eq("mock_sections.test_id", f.test_id);
+  return q;
+}
+
+function buildPersonalizedQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
+  let q = admin
+    .from("personalized_questions")
+    .select("id, topic, explanation", opts.count ? { count: "exact" } : undefined)
+    .not("explanation", "is", null)
+    .neq("explanation", "");
+  if (f.done_only) {
+    q = q.ilike("explanation", "%<h4>%");
+  } else if (!f.force) {
+    q = q.not("explanation", "ilike", "%<h4>%");
+  }
+  if (f.question_id) q = q.eq("id", f.question_id);
   return q;
 }
 
@@ -118,21 +133,26 @@ Deno.serve(async (req) => {
       question_id: body.question_id || undefined,
       force: body.force === true,
       done_only: body.done_only === true,
+      source: body.source === "personalized" ? "personalized" : "mock",
     };
     const batchSize: number = Math.min(Math.max(body.batch_size ?? 20, 1), 40);
     const mode: "count" | "process" | "stats" = body.mode === "count" ? "count" : body.mode === "stats" ? "stats" : "process";
 
+    const isPersonalized = filters.source === "personalized";
+    const queryFn = isPersonalized ? buildPersonalizedQuery : buildQuery;
+    const tableName = isPersonalized ? "personalized_questions" : "mock_questions";
+    const expField = isPersonalized ? "explanation" : "explanation_html";
+
     if (mode === "count" || mode === "stats") {
-      const { count: remaining } = await buildQuery(admin, filters, { count: true }).limit(1);
-      // total ignores pending/done filter so we can show "done / total"
-      const { count: totalRaw } = await buildQuery(admin, { ...filters, force: true, done_only: false }, { count: true }).limit(1);
+      const { count: remaining } = await queryFn(admin, filters, { count: true }).limit(1);
+      const { count: totalRaw } = await queryFn(admin, { ...filters, force: true, done_only: false }, { count: true }).limit(1);
       return new Response(
         JSON.stringify({ remaining: remaining ?? 0, total: totalRaw ?? 0, done: (totalRaw ?? 0) - (remaining ?? 0) }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const { data: rows, error: selErr } = await buildQuery(admin, filters).limit(batchSize);
+    const { data: rows, error: selErr } = await queryFn(admin, filters).limit(batchSize);
     if (selErr) throw selErr;
     if (!rows || rows.length === 0) {
       return new Response(JSON.stringify({ processed: 0, failed: 0, remaining: 0, done: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -143,23 +163,24 @@ Deno.serve(async (req) => {
     const errors: { id: string; message: string }[] = [];
     await Promise.all(rows.map(async (r: any) => {
       try {
-        const { text: cleaned, promptTokens: pt, completionTokens: ct } = await rewriteOne(r.explanation_html);
+        const src = r[expField];
+        const { text: cleaned, promptTokens: pt, completionTokens: ct } = await rewriteOne(src);
         promptTokens += pt;
         completionTokens += ct;
         if (!cleaned || cleaned.length < 30) throw new Error("empty rewrite");
-        // Preserve original on first cleanup so admins can compare before/after
-        const update: Record<string, unknown> = { explanation_html: cleaned };
-        // Fetch current original-backup status to avoid clobbering it on re-runs
-        const { data: existing } = await admin
-          .from("mock_questions")
-          .select("explanation_html_original")
-          .eq("id", r.id)
-          .maybeSingle();
-        if (!existing?.explanation_html_original) {
-          update.explanation_html_original = r.explanation_html;
+        const update: Record<string, unknown> = { [expField]: cleaned };
+        if (!isPersonalized) {
+          const { data: existing } = await admin
+            .from(tableName)
+            .select("explanation_html_original")
+            .eq("id", r.id)
+            .maybeSingle();
+          if (!existing?.explanation_html_original) {
+            update.explanation_html_original = src;
+          }
         }
         const { error: upErr } = await admin
-          .from("mock_questions")
+          .from(tableName)
           .update(update)
           .eq("id", r.id);
         if (upErr) throw upErr;
@@ -170,7 +191,7 @@ Deno.serve(async (req) => {
       }
     }));
 
-    const { count: remaining } = await buildQuery(admin, filters, { count: true }).limit(1);
+    const { count: remaining } = await queryFn(admin, filters, { count: true }).limit(1);
     return new Response(
       JSON.stringify({
         processed: ok,
