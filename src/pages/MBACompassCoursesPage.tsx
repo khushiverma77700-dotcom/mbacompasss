@@ -340,7 +340,7 @@ function CourseCard({ course }: { course: Course }) {
           {course.level && <Badge variant="outline" className="text-[10px] capitalize text-violet-700 border-violet-200 bg-violet-50">{course.level}</Badge>}
         </div>
 
-        <Link to={`/mba-compass/${course.slug}`}>
+        <Link to={`/mba-compass/${course.slug}`} onMouseEnter={prefetchDetail} onTouchStart={prefetchDetail}>
           <h3 className="font-semibold text-gray-900 group-hover:text-sky-700 transition line-clamp-2">{course.title}</h3>
         </Link>
         {course.subtitle && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{course.subtitle}</p>}
