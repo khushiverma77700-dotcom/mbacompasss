@@ -374,18 +374,24 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
             />
           </div>
           {fixedType !== "topic_wise" && (
-            <div>
-              <Select value={examFilter} onValueChange={setExamFilter}>
-                <SelectTrigger className="h-10 bg-white text-sm">
-                  <SelectValue placeholder="Select exam" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Exams</SelectItem>
-                  {EXAM_FILTERS.map((f) => (
-                    <SelectItem key={f} value={f}>{f}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {["All", ...EXAM_FILTERS].map((f) => {
+                const active = examFilter === f;
+                return (
+                  <button
+                    key={f}
+                    onClick={() => setExamFilter(f)}
+                    className={[
+                      "px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold border transition",
+                      active
+                        ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700",
+                    ].join(" ")}
+                  >
+                    {f === "All" ? "All Exams" : f}
+                  </button>
+                );
+              })}
             </div>
           )}
           {fixedType === "attempted" && (
