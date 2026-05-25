@@ -181,6 +181,25 @@ const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
 const MAX_FIRECRAWL_CHECKS_PER_SECTION = 4; // cap web-checks tightly to avoid stalls
 const MAX_ATTEMPTS_PER_QUESTION = 60;   // no wall-clock cutoff; retry enough times to hit exact count
 
+/** Parse OpenAI 429 Retry-After hint to wait ms (capped 65s, min 1.5s). */
+function parseOpenAI429Wait(headers: Headers | null, body: string): number {
+  const MIN = 1500, MAX = 65_000;
+  const ra = headers?.get("retry-after");
+  if (ra) {
+    const secs = Number(ra);
+    if (Number.isFinite(secs) && secs > 0) return Math.min(MAX, Math.max(MIN, Math.ceil(secs * 1000)));
+    const date = Date.parse(ra);
+    if (!Number.isNaN(date)) return Math.min(MAX, Math.max(MIN, date - Date.now()));
+  }
+  const txt = String(body || "");
+  const ms = txt.match(/try again in\s+([\d.]+)\s*ms/i);
+  if (ms) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(ms[1]))));
+  const s = txt.match(/try again in\s+([\d.]+)\s*s/i);
+  if (s) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(s[1]) * 1000)));
+  if (/tokens per min|TPM/i.test(txt)) return 30_000;
+  return 8_000;
+}
+
 // Map mock_section.code (e.g. "DILR") + exam to the personalized_questions catalog
 // Uses src/data/personalizedExams.ts vocabulary so the admin hub counter picks it up.
 const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
