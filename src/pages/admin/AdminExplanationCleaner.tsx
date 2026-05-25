@@ -187,11 +187,19 @@ export default function AdminExplanationCleaner() {
       return;
     }
     setBrowseLoading(true);
-    let q = supabase
-      .from("mock_questions")
-      .select("id, topic, explanation_html, mock_sections!inner(test_id, name, code)", { count: "exact" })
-      .not("explanation_html", "is", null)
-      .neq("explanation_html", "");
+    const isPersonalized = scope === "personalized";
+    const expCol = isPersonalized ? "explanation" : "explanation_html";
+    let q: any = isPersonalized
+      ? supabase
+          .from("personalized_questions")
+          .select("id, topic, explanation", { count: "exact" })
+          .not("explanation", "is", null)
+          .neq("explanation", "")
+      : supabase
+          .from("mock_questions")
+          .select("id, topic, explanation_html, mock_sections!inner(test_id, name, code)", { count: "exact" })
+          .not("explanation_html", "is", null)
+          .neq("explanation_html", "");
 
     if (browseStatus === "pending") {
       q = q.not("explanation_html", "ilike", "%<h4>%");
