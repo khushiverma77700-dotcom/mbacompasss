@@ -13,6 +13,8 @@ import { EXAMS, DIFFICULTIES, getExam } from "@/data/personalizedExams";
 import { Sparkles, Timer, ListChecks, TrendingUp, Lock, RefreshCcw, PlayCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import PersonalizedHubGuide from "@/components/student/PersonalizedHubGuide";
+import PersonalizedMockGeneratingOverlay from "@/components/student/PersonalizedMockGeneratingOverlay";
+
 
 const QUESTION_OPTIONS = [5, 10, 15, 20, 25, 30, 40, 50];
 
@@ -105,7 +107,15 @@ export default function StudentPersonalizedHub() {
 
   return (
     <div className="space-y-6">
+      <PersonalizedMockGeneratingOverlay
+        open={creating}
+        examCode={examCode}
+        sections={sections}
+        difficulty={difficulty}
+        numQuestions={numQuestions}
+      />
       <PersonalizedHubGuide forceOpen={showGuide} onClose={() => setShowGuide(false)} />
+
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-sky-600" />
