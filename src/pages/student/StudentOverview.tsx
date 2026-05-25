@@ -627,11 +627,8 @@ export default function StudentOverview() {
           </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-2 gap-6">
-              <MiniGroupedBars data={sectional} firstKey="avgScore" secondKey="avgMax" />
+            <SectionalPerformanceList data={sectional} />
 
-              <MiniGroupedBars data={sectional} firstKey="pctOfMax" secondKey="avgAccuracy" max={100} />
-            </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
               {sectional.map((s) => (
