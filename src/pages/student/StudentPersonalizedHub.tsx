@@ -107,7 +107,15 @@ export default function StudentPersonalizedHub() {
 
   return (
     <div className="space-y-6">
+      <PersonalizedMockGeneratingOverlay
+        open={creating}
+        examCode={examCode}
+        sections={sections}
+        difficulty={difficulty}
+        numQuestions={numQuestions}
+      />
       <PersonalizedHubGuide forceOpen={showGuide} onClose={() => setShowGuide(false)} />
+
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-sky-600" />
