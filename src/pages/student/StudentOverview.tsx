@@ -1698,7 +1698,14 @@ const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { r
   );
 });
 
-function ExamCountdownStrip({ exams }: { exams: any[] }) {
+const ExamCountdownStrip = memo(function ExamCountdownStrip({ exams }: { exams: any[] }) {
+  // Self-contained per-minute tick — keeps countdowns live without
+  // re-rendering the entire StudentOverview page every 60 seconds.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
   if (!exams || exams.length === 0) {
     return (
       <Card className="p-5 border-sky-100 dark:border-sky-500/20 bg-gradient-to-br from-sky-50/60 to-white dark:from-sky-500/5 dark:to-background">
