@@ -469,7 +469,38 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       const quotaBlocked = resp.status === 401 || resp.status === 402 || resp.status === 403 || /invalid_api_key|payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
       await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: quotaBlocked ? "credit_exhausted" : "error", errorMsg: `HTTP ${resp.status}: ${txt.slice(0, 220)}`, latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
       if (quotaBlocked) throw new Error(`OpenAI API blocked: ${txt.slice(0, 240)}`);
-      if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
+  // Inline retry with exponential backoff for transient errors (429 / 5xx).
+  const MAX_INLINE_RETRIES = 6;
+  let resp: Response | null = null;
+  let lastErr: string | null = null;
+  let rateLimitedAttempts = 0;
+  for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
+    try {
+      resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (resp.ok) break;
+      const txt = await resp.text();
+      const quotaBlocked = resp.status === 401 || resp.status === 402 || resp.status === 403 || /invalid_api_key|payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
+      await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: quotaBlocked ? "credit_exhausted" : "error", errorMsg: `HTTP ${resp.status}: ${txt.slice(0, 220)}`, latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
+      if (quotaBlocked) throw new Error(`OpenAI API blocked: ${txt.slice(0, 240)}`);
+      if (resp.status === 429 && rateLimitedAttempts < 4) {
+        rateLimitedAttempts++;
+        const waitMs = parseOpenAI429Wait(resp.headers, txt);
+        lastErr = `OpenAI 429: ${txt.slice(0, 200)}`;
+        console.warn(`[retry-mock-section] 429 rate-limited, sleeping ${waitMs}ms (attempt ${rateLimitedAttempts}/4)`);
+        await new Promise((r) => setTimeout(r, waitMs));
+        resp = null;
+        attempt--; // don't consume a generic retry on a 429
+        continue;
+      }
+      if ([408, 425, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         lastErr = `OpenAI ${resp.status}: ${txt.slice(0, 200)}`;
         console.warn(`[retry-mock-section] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
         const backoff = Math.min(20000, 2000 * Math.pow(2, attempt - 1)) + Math.random() * 1500;
