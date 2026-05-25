@@ -1203,6 +1203,7 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Weak & Strength analysis now lives on dedicated sidebar pages:
           /student/weak-areas and /student/strength-areas */}
