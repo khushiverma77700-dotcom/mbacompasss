@@ -733,8 +733,10 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Sectional deep dive */}
+      <LazyMount minHeight={360} fallback={<ChartSkeleton height={320} />}>
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
