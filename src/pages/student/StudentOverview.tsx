@@ -657,6 +657,48 @@ export default function StudentOverview() {
         )}
       </Card>
 
+      {/* Overall Performance + 35-day Activity Heatmap + XP Progress */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <Card className="p-5 border-sky-100/70 bg-gradient-to-br from-white via-sky-50/30 to-white">
+          <h2 className="font-semibold flex items-center gap-2 mb-1">
+            <Compass className="h-4 w-4 text-sky-600" /> Overall Performance
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3">Composite snapshot across six dimensions (0-100)</p>
+          {submitted.length === 0 ? (
+            <div className="h-56 grid place-items-center text-sm text-muted-foreground text-center">
+              Submit a mock to unlock your performance profile.
+            </div>
+          ) : (
+            <OverallPerformanceRadar data={radarData} />
+          )}
+        </Card>
+
+        <Card className="p-5 border-sky-100/70">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Activity className="h-4 w-4 text-sky-600" /> 35-Day Activity Heatmap
+            </h2>
+            <Badge variant="secondary" className="text-[10px]">{heatmap.total} mocks</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">Each cell = one day. Darker means more mocks attempted.</p>
+          <ActivityHeatmap days={heatmap.days} max={heatmap.max} />
+        </Card>
+
+        <Card className="p-5 border-amber-100/70 bg-gradient-to-br from-amber-50/40 via-white to-white">
+          <h2 className="font-semibold flex items-center gap-2 mb-1">
+            <Trophy className="h-4 w-4 text-amber-600" /> XP & Streak
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3">Your momentum, rank and reward level</p>
+          <XpProgress
+            xp={Number(rewards?.total_xp ?? rewards?.xp ?? 0)}
+            level={Number(rewards?.level ?? 1)}
+            streak={stats.streak}
+            rank={leaderboardRank}
+          />
+        </Card>
+      </div>
+
+
       {/* Distribution + Today's plan + Heatmap */}
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
