@@ -485,10 +485,12 @@ export default function MocksListPage() {
       )}
 
       {/* DUAL FEEDBACK MARQUEES — Text RTL + Images LTR */}
-      <DualFeedbackMarquees
-        textItems={settings.student_feedback_text ?? []}
-        imageItems={settings.student_feedback_images ?? []}
-      />
+      <LazyMount minHeight={300} fallback={<SectionSkeleton h={240} />}>
+        <DualFeedbackMarquees
+          textItems={settings.student_feedback_text ?? []}
+          imageItems={settings.student_feedback_images ?? []}
+        />
+      </LazyMount>
 
       {/* EXPERT FEEDBACK */}
       {settings.expert_feedback && settings.expert_feedback.length > 0 && (
