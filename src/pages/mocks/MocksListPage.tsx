@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LazyMount } from "@/hooks/useInView";
 import {
   Accordion,
   AccordionContent,
@@ -32,15 +34,27 @@ import {
   Quote,
   Award,
 } from "lucide-react";
-import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
 import SEOHead from "@/components/SEOHead";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
-import { toast } from "sonner";
-import { SampleAIReport } from "@/components/mock/SampleAIReport";
-import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
-import { DualFeedbackMarquees } from "@/components/mock/DualFeedbackMarquees";
-import DayPlannerShowcase from "@/components/mock/DayPlannerShowcase";
-import CoursesCTABand from "@/components/mock/CoursesCTABand";
+
+// Lazy-load all heavy below-the-fold widgets so the hero paints instantly.
+const SampleAIReport = lazy(() => import("@/components/mock/SampleAIReport").then(m => ({ default: m.SampleAIReport })));
+const AutoTestimonialMarquee = lazy(() => import("@/components/mock/AutoTestimonialMarquee").then(m => ({ default: m.AutoTestimonialMarquee })));
+const DualFeedbackMarquees = lazy(() => import("@/components/mock/DualFeedbackMarquees").then(m => ({ default: m.DualFeedbackMarquees })));
+const DayPlannerShowcase = lazy(() => import("@/components/mock/DayPlannerShowcase"));
+const CoursesCTABand = lazy(() => import("@/components/mock/CoursesCTABand"));
+
+const SectionSkeleton = ({ h = 320 }: { h?: number }) => (
+  <div className="container mx-auto px-4 py-10">
+    <Skeleton className="h-8 w-2/3 max-w-md mx-auto mb-3" />
+    <Skeleton className="h-4 w-1/2 max-w-sm mx-auto mb-8" />
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" style={{ minHeight: h }}>
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-40 w-full" />
+    </div>
+  </div>
+);
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
@@ -115,23 +129,16 @@ function useCountdown(endsAt: string | null) {
 export default function MocksListPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [tests, setTests] = useState<MockTest[]>([]);
-  const [checkoutTest, setCheckoutTest] = useState<MockTest | null>(null);
   const pricingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    (async () => {
-      const [{ data: s }, { data: t }] = await Promise.all([
-        supabase.from("mocks_landing_settings").select("*").maybeSingle(),
-        supabase
-          .from("mock_tests")
-          .select("id, slug, name, price_inr, pricing_type")
-          .eq("is_published", true)
-          .order("created_at", { ascending: false }),
-      ]);
-      if (s) setSettings(s as any);
-      setTests((t ?? []) as MockTest[]);
-    })();
+    // Single lightweight fetch — no longer pulls the full mock_tests catalog,
+    // since every Buy CTA now routes to /courses.
+    supabase
+      .from("mocks_landing_settings")
+      .select("*")
+      .maybeSingle()
+      .then(({ data }) => { if (data) setSettings(data as any); });
   }, []);
 
   useEffect(() => {
@@ -142,14 +149,25 @@ export default function MocksListPage() {
     }
   }, [settings?.meta_pixel_id]);
 
+  // Prefetch the /courses chunk while user reads the hero, so the redirect feels instant.
+  useEffect(() => {
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 400));
+    schedule(() => { import("@/pages/MBACompassCoursesPage").catch(() => {}); });
+  }, []);
+
   const countdown = useCountdown(settings?.offer_ends_at ?? null);
 
-  const targetTest = useMemo(() => {
-    if (!settings) return null;
-    if (settings.cta_target_test_id) return tests.find((x) => x.id === settings.cta_target_test_id) ?? null;
-    return tests[0] ?? null;
-  }, [settings, tests]);
+  const goToCourses = () => {
+    pixelTrack("InitiateCheckout", {
+      content_name: settings?.bundle_title ?? "MBA Compass Courses",
+      value: settings?.price_current,
+      currency: "INR",
+    });
+    navigate("/courses");
+  };
 
+  // Hero primary CTA scrolls to the pricing block; pricing block CTA routes to /courses.
   const scrollToPricing = () => {
     pixelTrack("AddToCart", {
       content_name: settings?.bundle_title,
@@ -159,31 +177,33 @@ export default function MocksListPage() {
     pricingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const startCheckout = async () => {
-    if (!targetTest) {
-      toast.error("No mock test configured. Please contact support.");
-      return;
-    }
-    pixelTrack("InitiateCheckout", {
-      content_name: targetTest.name,
-      value: settings?.price_current,
-      currency: "INR",
-    });
-    // Free underlying test OR free bundle price → no payment needed.
-    // Route to the mock intro page where the user can read rules and
-    // manually start the attempt (no auto-start).
-    const isFree =
-      targetTest.pricing_type === "free" || Number(settings?.price_current ?? 0) <= 0;
-    if (isFree) {
-      navigate(`/mocks/${targetTest.slug}`);
-      return;
-    }
-    // Paid bundle → open Razorpay/Stripe checkout dialog.
-    setCheckoutTest(targetTest);
-  };
+  const startCheckout = goToCourses;
 
   if (!settings) {
-    return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Loading…</div>;
+    // Skeleton hero — paints instantly so users never see a blank screen.
+    return (
+      <div className="bg-background">
+        <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
+          <div className="container mx-auto px-4 py-14 md:py-24">
+            <div className="grid lg:grid-cols-2 gap-10 items-center">
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-3/4" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-2/3" />
+                <div className="flex gap-3 pt-4">
+                  <Skeleton className="h-12 w-44" />
+                  <Skeleton className="h-12 w-32" />
+                </div>
+              </div>
+              <Skeleton className="h-80 w-full rounded-2xl" />
+            </div>
+          </div>
+        </section>
+        <SectionSkeleton />
+      </div>
+    );
   }
 
   const discountPct = settings.price_original > 0
@@ -335,86 +355,101 @@ export default function MocksListPage() {
       </section>
 
       {/* COURSES CTA — inline strip below hero (1/4) */}
-      <section className="py-8 bg-white">
-        <CoursesCTABand block={settings.courses_cta_block} variant="inline" />
-      </section>
+      <LazyMount minHeight={120} fallback={<div className="py-8" />}>
+        <section className="py-8 bg-white">
+          <CoursesCTABand block={settings.courses_cta_block} variant="inline" />
+        </section>
+      </LazyMount>
 
       {/* DAY PLANNER — FREE ACCESS */}
-      <DayPlannerShowcase block={settings.day_planner_block} />
+      <LazyMount minHeight={400} fallback={<SectionSkeleton />}>
+        <DayPlannerShowcase block={settings.day_planner_block} />
+      </LazyMount>
 
       {/* WHY MBA COMPASS MOCKS */}
       {settings.why_us_points && settings.why_us_points.length > 0 && (
-        <section className="py-16 bg-gradient-to-b from-sky-50/40 to-white">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="text-center max-w-3xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold">{settings.why_us_title || "Why MBA Compass Mocks?"}</h2>
-              <p className="text-muted-foreground mt-2">{settings.why_us_subtitle}</p>
+        <LazyMount minHeight={400} fallback={<SectionSkeleton />}>
+          <section className="py-16 bg-gradient-to-b from-sky-50/40 to-white">
+            <div className="container mx-auto px-4 max-w-6xl">
+              <div className="text-center max-w-3xl mx-auto">
+                <h2 className="text-2xl md:text-3xl font-bold">{settings.why_us_title || "Why MBA Compass Mocks?"}</h2>
+                <p className="text-muted-foreground mt-2">{settings.why_us_subtitle}</p>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+                {settings.why_us_points.map((p: any, i: number) => {
+                  const Icon = ICONS[p.icon] ?? Sparkles;
+                  return (
+                    <Card key={i} className="p-6 border-sky-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all">
+                      <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center mb-4 shadow-md">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="font-semibold">{p.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{p.desc}</p>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
-              {settings.why_us_points.map((p: any, i: number) => {
-                const Icon = ICONS[p.icon] ?? Sparkles;
-                return (
-                  <Card key={i} className="p-6 border-sky-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center mb-4 shadow-md">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="font-semibold">{p.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{p.desc}</p>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+          </section>
+        </LazyMount>
       )}
 
       {/* MOCK PLATFORM FEATURES — Rich (dark) */}
       {settings.platform_features && settings.platform_features.length > 0 && (
-        <section className="py-20 bg-gradient-to-br from-slate-900 via-sky-950 to-sky-900 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-sky-500/20 blur-3xl animate-blob" />
-            <div className="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl animate-blob [animation-delay:4s]" />
-            <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:48px_48px]" />
-          </div>
-          <div className="container mx-auto px-4 max-w-6xl relative">
-            <div className="text-center max-w-3xl mx-auto">
-              <Badge className="mb-3 bg-sky-500/20 text-sky-200 hover:bg-sky-500/20 border-sky-400/30 backdrop-blur">Mock Platform Features</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold text-white">A mock platform built for serious aspirants</h2>
-              <p className="text-sky-100/80 mt-3 text-lg">Tools that turn every mock into measurable progress.</p>
+        <LazyMount minHeight={500} fallback={<SectionSkeleton h={400} />}>
+          <section className="py-20 bg-gradient-to-br from-slate-900 via-sky-950 to-sky-900 relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-sky-500/20 blur-3xl animate-blob" />
+              <div className="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl animate-blob [animation-delay:4s]" />
+              <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:48px_48px]" />
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
-              {settings.platform_features.map((f: any, i: number) => {
-                const Icon = ICONS[f.icon] ?? Sparkles;
-                return (
-                  <Card key={i} className="group p-6 border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br from-sky-400/30 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative">
-                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/40 mb-4 group-hover:scale-110 transition-transform">
-                        <Icon className="h-6 w-6" />
+            <div className="container mx-auto px-4 max-w-6xl relative">
+              <div className="text-center max-w-3xl mx-auto">
+                <Badge className="mb-3 bg-sky-500/20 text-sky-200 hover:bg-sky-500/20 border-sky-400/30 backdrop-blur">Mock Platform Features</Badge>
+                <h2 className="text-3xl md:text-4xl font-bold text-white">A mock platform built for serious aspirants</h2>
+                <p className="text-sky-100/80 mt-3 text-lg">Tools that turn every mock into measurable progress.</p>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
+                {settings.platform_features.map((f: any, i: number) => {
+                  const Icon = ICONS[f.icon] ?? Sparkles;
+                  return (
+                    <Card key={i} className="group p-6 border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                      <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br from-sky-400/30 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative">
+                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/40 mb-4 group-hover:scale-110 transition-transform">
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <h3 className="font-semibold text-white text-lg">{f.title}</h3>
+                        <p className="text-sm text-sky-100/70 mt-2 leading-relaxed">{f.desc}</p>
+                        {f.badge && <Badge className="mt-3 bg-emerald-400/20 text-emerald-200 border-emerald-300/30 hover:bg-emerald-400/20">{f.badge}</Badge>}
                       </div>
-                      <h3 className="font-semibold text-white text-lg">{f.title}</h3>
-                      <p className="text-sm text-sky-100/70 mt-2 leading-relaxed">{f.desc}</p>
-                      {f.badge && <Badge className="mt-3 bg-emerald-400/20 text-emerald-200 border-emerald-300/30 hover:bg-emerald-400/20">{f.badge}</Badge>}
-                    </div>
-                  </Card>
-                );
-              })}
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </LazyMount>
       )}
 
       {/* SAMPLE AI REPORT (tabbed, sample-style) */}
-      <SampleAIReport
-        title={settings.ai_report_title || "CAT Mock Analysis — Powered by AI"}
-        subtitle={settings.ai_report_subtitle || "Switch tabs to explore the same report your account generates after every mock."}
-      />
+      <LazyMount minHeight={500} fallback={<SectionSkeleton h={400} />}>
+        <SampleAIReport
+          title={settings.ai_report_title || "CAT Mock Analysis — Powered by AI"}
+          subtitle={settings.ai_report_subtitle || "Switch tabs to explore the same report your account generates after every mock."}
+        />
+      </LazyMount>
 
       {/* AUTO TESTIMONIALS MARQUEE */}
-      <AutoTestimonialMarquee items={settings.auto_testimonials ?? []} />
+      <LazyMount minHeight={240} fallback={<SectionSkeleton h={200} />}>
+        <AutoTestimonialMarquee items={settings.auto_testimonials ?? []} />
+      </LazyMount>
 
       {/* COURSES CTA — full band */}
-      <CoursesCTABand block={settings.courses_cta_block} variant="full" />
+      <LazyMount minHeight={300} fallback={<SectionSkeleton h={250} />}>
+        <CoursesCTABand block={settings.courses_cta_block} variant="full" />
+      </LazyMount>
+
 
       {/* STUDENT ANALYSIS — 3 column grid */}
       {settings.student_analyses && settings.student_analyses.length > 0 && (
@@ -450,10 +485,12 @@ export default function MocksListPage() {
       )}
 
       {/* DUAL FEEDBACK MARQUEES — Text RTL + Images LTR */}
-      <DualFeedbackMarquees
-        textItems={settings.student_feedback_text ?? []}
-        imageItems={settings.student_feedback_images ?? []}
-      />
+      <LazyMount minHeight={300} fallback={<SectionSkeleton h={240} />}>
+        <DualFeedbackMarquees
+          textItems={settings.student_feedback_text ?? []}
+          imageItems={settings.student_feedback_images ?? []}
+        />
+      </LazyMount>
 
       {/* EXPERT FEEDBACK */}
       {settings.expert_feedback && settings.expert_feedback.length > 0 && (
@@ -617,7 +654,9 @@ export default function MocksListPage() {
       </section>
 
       {/* COURSES CTA — compact gradient strip before FAQ */}
-      <CoursesCTABand block={settings.courses_cta_block} variant="compact" />
+      <LazyMount minHeight={180} fallback={<SectionSkeleton h={150} />}>
+        <CoursesCTABand block={settings.courses_cta_block} variant="compact" />
+      </LazyMount>
 
       {/* FAQ */}
       {settings.faqs?.length > 0 && (
@@ -653,19 +692,8 @@ export default function MocksListPage() {
           <div className="text-xs text-muted-foreground line-through">₹{settings.price_original}</div>
           <div className="font-bold text-lg leading-none">₹{settings.price_current}</div>
         </div>
-        <Button onClick={scrollToPricing} className="flex-1">Buy Now</Button>
+        <Button onClick={goToCourses} className="flex-1">Buy Now</Button>
       </div>
-
-      {checkoutTest && (
-        <MockCheckoutDialog
-          open={!!checkoutTest}
-          onOpenChange={(o) => !o && setCheckoutTest(null)}
-          testId={checkoutTest.id}
-          testName={settings.bundle_title || checkoutTest.name}
-          priceInr={Number(settings.price_current ?? checkoutTest.price_inr)}
-          onEnrolled={() => navigate(`/mocks/thank-you?test=${checkoutTest.slug}`)}
-        />
-      )}
     </div>
   );
 }
