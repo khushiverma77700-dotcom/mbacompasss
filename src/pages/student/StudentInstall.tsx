@@ -11,6 +11,8 @@ export default function StudentInstallPage() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | "desktop">("desktop");
+  const [busy, setBusy] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
 
   useEffect(() => {
     const ua = navigator.userAgent || "";
@@ -28,15 +30,42 @@ export default function StudentInstallPage() {
       setDeferred(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
-    window.addEventListener("appinstalled", () => setInstalled(true));
+    window.addEventListener("appinstalled", () => {
+      setInstalled(true);
+      setDeferred(null);
+    });
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);
   }, []);
 
+  const scrollToSteps = () => {
+    document.getElementById("install-steps")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const install = async () => {
-    if (!deferred) return;
-    await deferred.prompt();
-    const { outcome } = await deferred.userChoice;
-    if (outcome === "accepted") setInstalled(true);
+    if (!deferred) {
+      const ua = navigator.userAgent || "";
+      const isIos = /iphone|ipad|ipod/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+      setHint(
+        isIos
+          ? "On iPhone/iPad: tap the Share icon in Safari, then 'Add to Home Screen'."
+          : "Open your browser menu → 'Install app' / 'Add to Home Screen'. Follow the step-by-step guide below."
+      );
+      scrollToSteps();
+      return;
+    }
+    try {
+      setBusy(true);
+      await deferred.prompt();
+      const { outcome } = await deferred.userChoice;
+      if (outcome === "accepted") setInstalled(true);
+      setDeferred(null);
+    } catch (err) {
+      console.error("[install] prompt failed", err);
+      setHint("Couldn't open the install dialog. Use the manual steps below.");
+      scrollToSteps();
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
