@@ -3,17 +3,17 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
-const ADMIN_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — render instantly, revalidate in background
+const ADMIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min — session-scoped, expires fast so a tampered cache cannot persistently fake admin
 
 const clearAdminCache = (userId?: string) => {
   if (typeof window === "undefined") return;
   try {
     if (userId) {
-      window.localStorage.removeItem(`mbc-admin-status:${userId}`);
       window.sessionStorage.removeItem(`mbc-admin-status:${userId}`);
+      window.localStorage.removeItem(`mbc-admin-status:${userId}`); // clear legacy persistent cache
       return;
     }
-    for (const store of [window.localStorage, window.sessionStorage]) {
+    for (const store of [window.sessionStorage, window.localStorage]) {
       for (const key of Object.keys(store)) {
         if (key.startsWith("mbc-admin-status:")) store.removeItem(key);
       }
@@ -34,11 +34,16 @@ const getAdminCacheKey = (userId: string) => `mbc-admin-status:${userId}`;
 const readAdminCache = (userId: string): AdminCacheEntry | null => {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(getAdminCacheKey(userId));
+    // Only read from sessionStorage; purge any legacy localStorage entry so a
+    // tampered persistent value cannot keep faking admin across tabs/reloads.
+    try { window.localStorage.removeItem(getAdminCacheKey(userId)); } catch { /* ignore */ }
+    const raw = window.sessionStorage.getItem(getAdminCacheKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as AdminCacheEntry;
-    if (!parsed) return null;
-    return parsed; // return even if expired — caller decides whether to revalidate
+    if (!parsed || typeof parsed.expiresAt !== "number") return null;
+    // Hard-expire: never return stale entries — server revalidation must run.
+    if (Date.now() > parsed.expiresAt) return null;
+    return parsed;
   } catch {
     return null;
   }
@@ -47,7 +52,7 @@ const readAdminCache = (userId: string): AdminCacheEntry | null => {
 const writeAdminCache = (userId: string, value: Omit<AdminCacheEntry, "expiresAt">) => {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(
+    window.sessionStorage.setItem(
       getAdminCacheKey(userId),
       JSON.stringify({ ...value, expiresAt: Date.now() + ADMIN_CACHE_TTL_MS })
     );
@@ -158,14 +163,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       resolvedAdminUserIdRef.current = user.id;
 
       const cached = readAdminCache(user.id);
-      if (cached) {
-        setIsAdmin(cached.isAdmin);
-        setAllowedSections(cached.allowedSections);
+      if (cached && cached.isAdmin === false) {
+        // Safe to trust a "not admin" cache — at worst delays granting admin to a freshly-promoted user.
+        setIsAdmin(false);
+        setAllowedSections(null);
         setAdminLoading(false);
-        // continue to background-refresh so newly granted admin access shows up immediately
       } else {
+        // For positive (isAdmin=true) or missing cache, NEVER render admin UI until the
+        // server-side role check completes. This blocks tampered sessionStorage values
+        // from letting a non-admin briefly see admin pages.
         setAdminLoading(true);
       }
+
 
       try {
         const [rolesRes, permRes] = await Promise.all([
