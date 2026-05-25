@@ -822,9 +822,11 @@ export default function StudentOverview() {
           />
         </Card>
       </div>
+      </LazyMount>
 
       {/* ── Advanced Analytics: deeper diagnostic charts ───────────────────── */}
       {submitted.length > 0 && (
+        <LazyMount minHeight={300} fallback={<ChartRowSkeleton cols={2} height={260} />}>
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Strength / Weakness Quadrant */}
           <Card className="p-5 border-sky-100/70">
