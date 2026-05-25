@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } from "@/lib/studentModeNav";
 import { useAuth } from "@/contexts/AuthContext";
