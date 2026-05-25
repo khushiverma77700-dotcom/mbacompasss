@@ -910,7 +910,82 @@ function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; b
   );
 }
 
+function SectionalPerformanceList({ data }: { data: any[] }) {
+  const rows = data.slice().sort((a, b) => b.pctOfMax - a.pctOfMax);
+  const toneFor = (pct: number) =>
+    pct >= 75 ? "from-emerald-500 to-teal-500"
+    : pct >= 50 ? "from-sky-500 to-indigo-500"
+    : pct >= 30 ? "from-amber-500 to-orange-500"
+    : "from-rose-500 to-pink-500";
+  const accTone = (pct: number) =>
+    pct >= 75 ? "from-emerald-400 to-emerald-500"
+    : pct >= 50 ? "from-sky-400 to-sky-500"
+    : "from-slate-400 to-slate-500";
+
+  return (
+    <div className="space-y-3">
+      <div className="hidden md:grid grid-cols-12 gap-3 px-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <div className="col-span-4">Section</div>
+        <div className="col-span-5">Score % of max</div>
+        <div className="col-span-3 text-right">Accuracy · Attempts</div>
+      </div>
+      {rows.map((s) => (
+        <div
+          key={s.name}
+          className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center rounded-xl border border-sky-100/80 bg-gradient-to-r from-white to-sky-50/40 px-3 py-3 hover:shadow-sm transition"
+        >
+          <div className="md:col-span-4 flex items-center gap-2 min-w-0">
+            <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${toneFor(s.pctOfMax)} text-white grid place-items-center text-xs font-bold shadow-sm`}>
+              {String(s.name).split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
+            </div>
+            <div className="min-w-0">
+              <div className="font-medium text-sm truncate" title={s.name}>{s.name}</div>
+              <div className="text-[11px] text-muted-foreground">
+                Avg {s.avgScore} / {s.avgMax}
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-5">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${toneFor(s.pctOfMax)} transition-all`}
+                  style={{ width: `${Math.min(100, s.pctOfMax)}%` }}
+                />
+              </div>
+              <div className="w-10 text-right text-xs font-semibold tabular-nums">{s.pctOfMax}%</div>
+            </div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${accTone(s.avgAccuracy)}`}
+                  style={{ width: `${Math.min(100, s.avgAccuracy)}%` }}
+                />
+              </div>
+              <div className="w-10 text-right text-[11px] text-muted-foreground tabular-nums">{s.avgAccuracy}%</div>
+            </div>
+          </div>
+
+          <div className="md:col-span-3 flex md:justify-end items-center gap-3 text-xs">
+            <div className="flex flex-col md:items-end">
+              <span className="text-muted-foreground">Accuracy</span>
+              <span className="font-semibold">{s.avgAccuracy}%</span>
+            </div>
+            <div className="h-8 w-px bg-slate-200 hidden md:block" />
+            <div className="flex flex-col md:items-end">
+              <span className="text-muted-foreground">Attempts</span>
+              <span className="font-semibold">{s.avgAttempted}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firstKey: string; secondKey: string; max?: number }) {
+
   const rows = data.slice(0, 8);
   const isPct = max === 100;
   const firstLabel = firstKey === "avgScore" ? "Avg Score" : firstKey === "pctOfMax" ? "% of Max" : firstKey;
