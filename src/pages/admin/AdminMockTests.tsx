@@ -619,20 +619,20 @@ const AdminMockTests = () => {
             </SelectContent>
           </Select>
         </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Exam</Label>
+          <Select value={examFilter} onValueChange={setExamFilter}>
+            <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Exams</SelectItem>
+              {Object.keys(MOCK_TOPIC_CATALOG).sort().map((ex) => (
+                <SelectItem key={ex} value={ex}>{ex}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {showAdvancedFilters && (
           <>
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Exam</Label>
-              <Select value={examFilter} onValueChange={setExamFilter}>
-                <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Exams</SelectItem>
-                  {Object.keys(MOCK_TOPIC_CATALOG).sort().map((ex) => (
-                    <SelectItem key={ex} value={ex}>{ex}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="flex items-center gap-2">
               <Label className="text-xs text-muted-foreground">Section</Label>
               <Select value={sectionFilter} onValueChange={setSectionFilter}>
@@ -661,6 +661,7 @@ const AdminMockTests = () => {
             )}
           </>
         )}
+
         {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
           <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
             Clear filters
