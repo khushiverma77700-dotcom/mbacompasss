@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LazyMount } from "@/hooks/useInView";
 import {
   Accordion,
   AccordionContent,
@@ -32,15 +34,27 @@ import {
   Quote,
   Award,
 } from "lucide-react";
-import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
 import SEOHead from "@/components/SEOHead";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
-import { toast } from "sonner";
-import { SampleAIReport } from "@/components/mock/SampleAIReport";
-import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
-import { DualFeedbackMarquees } from "@/components/mock/DualFeedbackMarquees";
-import DayPlannerShowcase from "@/components/mock/DayPlannerShowcase";
-import CoursesCTABand from "@/components/mock/CoursesCTABand";
+
+// Lazy-load all heavy below-the-fold widgets so the hero paints instantly.
+const SampleAIReport = lazy(() => import("@/components/mock/SampleAIReport").then(m => ({ default: m.SampleAIReport })));
+const AutoTestimonialMarquee = lazy(() => import("@/components/mock/AutoTestimonialMarquee").then(m => ({ default: m.AutoTestimonialMarquee })));
+const DualFeedbackMarquees = lazy(() => import("@/components/mock/DualFeedbackMarquees").then(m => ({ default: m.DualFeedbackMarquees })));
+const DayPlannerShowcase = lazy(() => import("@/components/mock/DayPlannerShowcase"));
+const CoursesCTABand = lazy(() => import("@/components/mock/CoursesCTABand"));
+
+const SectionSkeleton = ({ h = 320 }: { h?: number }) => (
+  <div className="container mx-auto px-4 py-10">
+    <Skeleton className="h-8 w-2/3 max-w-md mx-auto mb-3" />
+    <Skeleton className="h-4 w-1/2 max-w-sm mx-auto mb-8" />
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" style={{ minHeight: h }}>
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-40 w-full" />
+    </div>
+  </div>
+);
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
