@@ -13,8 +13,14 @@ import {
   Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
   CalendarDays, GraduationCap, Rocket, ChevronRight, Star, Compass, Layers,
 } from "lucide-react";
+import {
+  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
+  ResponsiveContainer, ReferenceLine, Cell, RadarChart, PolarGrid, PolarAngleAxis,
+  PolarRadiusAxis, Radar, RadialBarChart, RadialBar, Legend, BarChart,
+} from "recharts";
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
+
 
 
 export default function StudentOverview() {
