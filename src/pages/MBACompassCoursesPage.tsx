@@ -228,7 +228,9 @@ function CoursesInner() {
             Showing <span className="font-semibold text-gray-900">{filtered.length}</span> {filtered.length === 1 ? "course" : "courses"}
           </div>
           {loading ? (
-            <div className="text-muted-foreground">Loading programs…</div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => <CourseCardSkeleton key={i} />)}
+            </div>
           ) : filtered.length === 0 ? (
             <Card className="p-12 text-center">
               <GraduationCap className="h-10 w-10 mx-auto text-sky-500 mb-3" />
