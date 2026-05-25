@@ -673,19 +673,8 @@ export default function MocksListPage() {
           <div className="text-xs text-muted-foreground line-through">₹{settings.price_original}</div>
           <div className="font-bold text-lg leading-none">₹{settings.price_current}</div>
         </div>
-        <Button onClick={scrollToPricing} className="flex-1">Buy Now</Button>
+        <Button onClick={goToCourses} className="flex-1">Buy Now</Button>
       </div>
-
-      {checkoutTest && (
-        <MockCheckoutDialog
-          open={!!checkoutTest}
-          onOpenChange={(o) => !o && setCheckoutTest(null)}
-          testId={checkoutTest.id}
-          testName={settings.bundle_title || checkoutTest.name}
-          priceInr={Number(settings.price_current ?? checkoutTest.price_inr)}
-          onEnrolled={() => navigate(`/mocks/thank-you?test=${checkoutTest.slug}`)}
-        />
-      )}
     </div>
   );
 }
