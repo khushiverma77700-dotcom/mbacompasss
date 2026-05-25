@@ -74,10 +74,17 @@ export default function InstallAppPrompt() {
   };
 
   const install = async () => {
-    if (!deferred) return;
+    if (!deferred) {
+      // No native prompt available — send user to the install guide
+      window.location.href = "/student/install";
+      return;
+    }
     try {
       await deferred.prompt();
       await deferred.userChoice;
+    } catch (err) {
+      console.error("[install-prompt] failed", err);
+      window.location.href = "/student/install";
     } finally {
       dismiss();
     }
