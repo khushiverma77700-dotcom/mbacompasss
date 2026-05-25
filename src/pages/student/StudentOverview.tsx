@@ -345,6 +345,97 @@ export default function StudentOverview() {
     { metric: "Streak", value: Math.min(100, (stats.streak || 0) * 10) },
   ]), [stats]);
 
+  // ── Advanced analytics ────────────────────────────────────────────────────
+  // Strength / Weakness Quadrant: each section as a point on (Attempts, Accuracy).
+  // Top-right = strong, bottom-right = high effort low return, etc.
+  const strengthMatrix = useMemo(() => {
+    return sectional.map((s) => ({
+      name: s.name,
+      short: String(s.name).split(/\s+/).map((w: string) => w[0]).join("").toUpperCase().slice(0, 3),
+      x: s.avgAttempted,
+      y: s.avgAccuracy,
+      z: Math.max(40, s.pctOfMax * 2),
+    }));
+  }, [sectional]);
+
+  // Question outcome donut (correct vs incorrect across all submitted mocks).
+  const outcomeData = useMemo(() => {
+    const correct = submitted.reduce((s, x) => s + Number(x.total_correct || 0), 0);
+    const attempted = submitted.reduce((s, x) => s + Number(x.total_attempted || 0), 0);
+    const incorrect = Math.max(0, attempted - correct);
+    return [
+      { name: "Correct", value: correct, color: "hsl(160 70% 42%)" },
+      { name: "Incorrect", value: incorrect, color: "hsl(0 75% 60%)" },
+    ];
+  }, [submitted]);
+
+  // Day-of-week performance: avg score % grouped by weekday of submission.
+  const weekdayPerf = useMemo(() => {
+    const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const agg = labels.map((d) => ({ day: d, pct: 0, accuracy: 0, count: 0 }));
+    for (const a of submitted) {
+      if (!a.submitted_at) continue;
+      const idx = new Date(a.submitted_at).getDay();
+      const max = Number(a.max_score || 0);
+      const pct = max > 0 ? (Number(a.total_score || 0) / max) * 100 : 0;
+      agg[idx].pct += pct;
+      agg[idx].accuracy += Number(a.accuracy || 0);
+      agg[idx].count += 1;
+    }
+    return agg.map((r) => ({
+      day: r.day,
+      pct: r.count ? +(r.pct / r.count).toFixed(1) : 0,
+      accuracy: r.count ? +(r.accuracy / r.count).toFixed(1) : 0,
+      count: r.count,
+    }));
+  }, [submitted]);
+
+  // Pace trend: avg seconds spent per attempted question, per recent mock.
+  const paceTrend = useMemo(() => {
+    const chrono = submitted.slice().reverse().slice(-10);
+    return chrono.map((x, i) => {
+      const sec = x.started_at && x.submitted_at
+        ? Math.max(0, (new Date(x.submitted_at).getTime() - new Date(x.started_at).getTime()) / 1000)
+        : 0;
+      const att = Number(x.total_attempted || 0);
+      const spq = att > 0 ? +(sec / att).toFixed(1) : 0;
+      return {
+        name: `M${i + 1}`,
+        secPerQ: spq,
+        accuracy: Number(x.accuracy || 0),
+      };
+    });
+  }, [submitted]);
+
+  // Best vs Avg percentile per section.
+  const bestVsAvg = useMemo(() => {
+    const agg: Record<string, { sum: number; count: number; best: number }> = {};
+    const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+    for (const a of submitted) {
+      const ss = a.sectional_scores || {};
+      for (const k of Object.keys(ss)) {
+        const sec: any = (ss as any)[k] || {};
+        const name = sectionNameMap[k] || (isUuid(k) ? null : k);
+        if (!name) continue;
+        const p = Number(sec.percentile || 0);
+        if (!agg[name]) agg[name] = { sum: 0, count: 0, best: 0 };
+        agg[name].sum += p;
+        agg[name].count += 1;
+        agg[name].best = Math.max(agg[name].best, p);
+      }
+    }
+    return Object.entries(agg)
+      .map(([name, v]) => ({
+        name,
+        short: String(name).split(/\s+/).map((w) => w[0]).join("").toUpperCase().slice(0, 3),
+        avg: v.count ? Math.round(v.sum / v.count) : 0,
+        best: Math.round(v.best),
+      }))
+      .sort((a, b) => b.best - a.best);
+  }, [submitted, sectionNameMap]);
+
+
+
 
 
   const taskProgress = tasks.length
