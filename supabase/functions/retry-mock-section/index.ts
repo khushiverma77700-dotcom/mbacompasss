@@ -57,6 +57,28 @@ function isAIQuotaBlockedError(message: unknown): boolean {
   return m.includes("402") || m.includes("403") || m.includes("payment required") || m.includes("permission_denied") || m.includes("denied access") || m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
 }
 
+/** Parse OpenAI's 429 Retry-After hint. Returns wait time in ms (capped 65s, min 1.5s). */
+function parseOpenAI429Wait(headers: Headers | null, body: string): number {
+  const MIN = 1500, MAX = 65_000;
+  // 1) Standard Retry-After header (seconds, or HTTP date)
+  const ra = headers?.get("retry-after");
+  if (ra) {
+    const secs = Number(ra);
+    if (Number.isFinite(secs) && secs > 0) return Math.min(MAX, Math.max(MIN, Math.ceil(secs * 1000)));
+    const date = Date.parse(ra);
+    if (!Number.isNaN(date)) return Math.min(MAX, Math.max(MIN, date - Date.now()));
+  }
+  // 2) "Please try again in 1.234s" or "in 845ms"
+  const txt = String(body || "");
+  const ms = txt.match(/try again in\s+([\d.]+)\s*ms/i);
+  if (ms) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(ms[1]))));
+  const s = txt.match(/try again in\s+([\d.]+)\s*s/i);
+  if (s) return Math.min(MAX, Math.max(MIN, Math.ceil(Number(s[1]) * 1000)));
+  // 3) TPM messages — wait a full reset window
+  if (/tokens per min|TPM/i.test(txt)) return 30_000;
+  return 8_000;
+}
+
 function parseJsonContent(content: unknown): any {
   if (typeof content !== "string") return content;
   try { return JSON.parse(content); } catch {
