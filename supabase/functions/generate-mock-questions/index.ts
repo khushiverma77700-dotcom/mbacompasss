@@ -674,12 +674,12 @@ async function callOpenAIBatch(args: {
 
   const lvlLower = String(args.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  // Upgraded from gpt-4o-mini → gpt-4o: significantly better LaTeX/formula fidelity,
-  // cleaner HTML output, and far fewer truncated/garbled math expressions.
-  const modelId = "gpt-4o";
+  // Using gpt-4o-mini for cost efficiency. Formatting/LaTeX quality is maintained via
+  // strict prompt rules (double-escaped backslashes, explicit LaTeX guidelines).
+  const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
-  // ~2200 tokens per question gives explanations + inline SVG + LaTeX room without truncation.
-  const tokenBudget = Math.min(16000, 2200 * Math.max(1, args.count));
+  // ~1800 tokens per question keeps room for LaTeX + explanations without overspending.
+  const tokenBudget = Math.min(12000, 1800 * Math.max(1, args.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [
