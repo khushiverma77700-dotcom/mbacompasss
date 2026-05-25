@@ -654,7 +654,9 @@ export default function MocksListPage() {
       </section>
 
       {/* COURSES CTA — compact gradient strip before FAQ */}
-      <CoursesCTABand block={settings.courses_cta_block} variant="compact" />
+      <LazyMount minHeight={180} fallback={<SectionSkeleton h={150} />}>
+        <CoursesCTABand block={settings.courses_cta_block} variant="compact" />
+      </LazyMount>
 
       {/* FAQ */}
       {settings.faqs?.length > 0 && (
