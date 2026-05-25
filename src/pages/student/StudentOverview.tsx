@@ -23,6 +23,33 @@ import {
 
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
+import { LazyMount } from "@/hooks/useInView";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Reusable skeleton placeholder shown while a chart section is still
+// below the fold or its chunk is hydrating. Keeps the page from looking
+// frozen — the user always sees a loading shape, never a blank gap.
+function ChartSkeleton({ height = 260, title = true }: { height?: number; title?: boolean }) {
+  return (
+    <div className="rounded-xl border border-sky-100/70 bg-white p-5 shadow-sm">
+      {title && (
+        <div className="mb-3 space-y-1.5">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-56" />
+        </div>
+      )}
+      <Skeleton className="w-full rounded-lg" style={{ height }} />
+    </div>
+  );
+}
+function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: 2 | 3; height?: number }) {
+  const grid = cols === 3 ? "grid lg:grid-cols-3 gap-4" : "grid lg:grid-cols-2 gap-4";
+  return (
+    <div className={grid}>
+      {Array.from({ length: cols }).map((_, i) => <ChartSkeleton key={i} height={height} />)}
+    </div>
+  );
+}
 
 
 
@@ -632,6 +659,7 @@ export default function StudentOverview() {
       </div>
 
       {/* Predictor + cumulative trend */}
+      <LazyMount minHeight={300} fallback={<ChartRowSkeleton cols={3} height={220} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -676,8 +704,10 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Cumulative score + Accuracy trend */}
+      <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={2} height={260} />}>
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -703,8 +733,10 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Sectional deep dive */}
+      <LazyMount minHeight={360} fallback={<ChartSkeleton height={320} />}>
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -747,8 +779,10 @@ export default function StudentOverview() {
           </>
         )}
       </Card>
+      </LazyMount>
 
       {/* Overall Performance + 35-day Activity Heatmap + XP Progress */}
+      <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={3} height={240} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5 border-sky-100/70 bg-gradient-to-br from-white via-sky-50/30 to-white">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -788,9 +822,11 @@ export default function StudentOverview() {
           />
         </Card>
       </div>
+      </LazyMount>
 
       {/* ── Advanced Analytics: deeper diagnostic charts ───────────────────── */}
       {submitted.length > 0 && (
+        <LazyMount minHeight={300} fallback={<ChartRowSkeleton cols={2} height={260} />}>
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Strength / Weakness Quadrant */}
           <Card className="p-5 border-sky-100/70">
@@ -1039,12 +1075,14 @@ export default function StudentOverview() {
             </Card>
           )}
         </div>
+        </LazyMount>
       )}
 
 
 
 
       {/* Distribution + Today's plan + Heatmap */}
+      <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={3} height={240} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-3">
@@ -1123,8 +1161,10 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Recent attempts */}
+      <LazyMount minHeight={260} fallback={<ChartSkeleton height={220} />}>
       <div className="grid grid-cols-1 gap-4">
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
@@ -1163,6 +1203,7 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </LazyMount>
 
       {/* Weak & Strength analysis now lives on dedicated sidebar pages:
           /student/weak-areas and /student/strength-areas */}
