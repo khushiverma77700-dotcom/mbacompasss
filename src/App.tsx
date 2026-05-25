@@ -13,6 +13,7 @@ import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
+import StudentShellFallback from "@/components/student/StudentShellFallback";
 
 type LazyWithPreload<T extends React.ComponentType<any>> = React.LazyExoticComponent<T> & {
   preload: () => Promise<{ default: T }>;
