@@ -520,7 +520,13 @@ const AdminMockTests = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground">Mock Tests</h1>
           <p className="text-sm text-muted-foreground mt-1">CAT-style mock test management</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" disabled={repairing} onClick={() => runRepair(true)}>
+            Scan sectional passages
+          </Button>
+          <Button size="sm" disabled={repairing} onClick={() => runRepair(false)} className="bg-amber-600 hover:bg-amber-700 text-white">
+            {repairing ? "Repairing…" : "Repair missing passages"}
+          </Button>
           <Button variant="outline" onClick={() => setAiOpen(true)}>
             <Sparkles className="w-4 h-4 mr-2 text-primary" /> Generate Mocks From AI
           </Button>
