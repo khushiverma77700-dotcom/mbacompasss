@@ -360,11 +360,10 @@ function DetailInner() {
                 )}
 
               {/* Hero highlight strip */}
-              <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="mt-6 grid grid-cols-3 gap-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="violet" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
-                <HeroChip icon={Zap} label="Live Classes" value={c.live_classes_count ?? 0} tint="amber" />
               </div>
 
               {Object.keys(mockAgg.byExam).length > 0 && (
