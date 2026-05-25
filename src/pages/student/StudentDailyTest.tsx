@@ -172,7 +172,32 @@ export default function StudentDailyTest() {
   const missed = useMemo(() => filteredHistory.filter(h => h.assigned_date < todayKey && !h.progress?.completed_at), [filteredHistory, todayKey]);
   const completed = useMemo(() => filteredHistory.filter(h => h.progress?.completed_at), [filteredHistory]);
 
-  if (loading) return <div className="text-muted-foreground">Loading…</div>;
+  if (loading) return (
+    <div className="space-y-6 animate-in fade-in">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <CalendarDays className="h-6 w-6 text-sky-600" /> Daily Test
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">Build the daily habit. A fresh mock every day, picked for you.</p>
+      </div>
+      <Card className="p-6 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 text-white border-0 shadow-xl relative overflow-hidden">
+        <div className="space-y-3">
+          <div className="h-3 w-40 bg-white/20 rounded animate-pulse" />
+          <div className="h-6 w-3/5 bg-white/30 rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-white/20 rounded animate-pulse" />
+          <div className="grid grid-cols-3 gap-2 pt-4">
+            <div className="h-14 bg-white/10 rounded animate-pulse" />
+            <div className="h-14 bg-white/10 rounded animate-pulse" />
+            <div className="h-14 bg-white/10 rounded animate-pulse" />
+          </div>
+        </div>
+      </Card>
+      <div className="grid md:grid-cols-3 gap-4">
+        {[0,1,2].map(i => <Card key={i} className="p-4 h-32 animate-pulse bg-muted/40" />)}
+      </div>
+      <Card className="p-5 h-64 animate-pulse bg-muted/30" />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
