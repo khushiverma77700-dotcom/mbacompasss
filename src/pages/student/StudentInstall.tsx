@@ -144,7 +144,7 @@ export default function StudentInstallPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4">
+      <div id="install-steps" className="mt-8 grid gap-4 scroll-mt-24">
         <PlatformCard
           active={platform === "android"}
           title="Android (Chrome)"
