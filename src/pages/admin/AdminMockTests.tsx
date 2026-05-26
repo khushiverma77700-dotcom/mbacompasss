@@ -224,7 +224,7 @@ const AdminMockTests = () => {
       for (const ds of deficits) {
         const { data: jobs } = await supabase
           .from("mock_section_jobs")
-          .select("id, generation_id")
+          .select("id, generation_id, sets, questions_per_set")
           .eq("section_id", ds.id)
           .order("created_at", { ascending: false })
           .limit(1);
