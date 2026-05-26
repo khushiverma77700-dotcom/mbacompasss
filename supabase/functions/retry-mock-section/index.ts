@@ -47,6 +47,26 @@ const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less
 // the section reaches its target or the watchdog cancels it after hours.
 const MAX_ATTEMPTS_PER_QUESTION = 200;
 
+function buildEmergencyDilrQuestion(n: number, seed: number) {
+  const a = 42 + ((seed + n * 7) % 31);
+  const b = 58 + ((seed + n * 11) % 37);
+  const c = 36 + ((seed + n * 13) % 29);
+  const d = 49 + ((seed + n * 17) % 41);
+  const total = a + b + c + d;
+  const correct = total - Math.min(a, b, c, d);
+  return {
+    question_html: `<div><p>The table shows four teams' completed tasks in a project sprint.</p><table><thead><tr><th>Team</th><th>Tasks</th></tr></thead><tbody><tr><td>A</td><td>${a}</td></tr><tr><td>B</td><td>${b}</td></tr><tr><td>C</td><td>${c}</td></tr><tr><td>D</td><td>${d}</td></tr></tbody></table><p>If the lowest-performing team is excluded, what is the total number of tasks completed by the remaining teams?</p></div>`,
+    options: [correct, correct + 4, correct - 6, total].map((value, idx) => ({
+      label: ["A", "B", "C", "D"][idx],
+      text: String(value),
+      is_correct: idx === 0,
+    })),
+    explanation_html: `The four task counts are ${a}, ${b}, ${c}, and ${d}. The lowest value is ${Math.min(a, b, c, d)}, so exclude that team. The remaining total is ${total} - ${Math.min(a, b, c, d)} = ${correct}.`,
+    topic: "Data Interpretation",
+    subtopic: "Table based calculation",
+  };
+}
+
 function isAIRateLimitError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
   return m.includes("429") || m.includes("rate limit") || m.includes("too many requests");
@@ -900,15 +920,20 @@ Deno.serve(async (req) => {
 
           let qs: any[] = [];
           try {
-            qs = await callOpenAIBatch({
-              exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
-              count: batch, mcq: batchMcq, tita: batchTita, level: job.level || "mixed",
-              positive: job.positive_marks || 1, negative: job.negative_marks || 0,
-              userId,
-              topic: job.strict_topic || job.topic || null,
-              uniquenessSeed: `${runSeed}-batch-${attempts}-${produced}-${crypto.randomUUID()}`,
-              avoidSnippets: corpus.snippets.slice(0, 10),
-            }) as any[];
+            const pressureBeforeCall = runAttemptNumber + attempts;
+            if (pressureBeforeCall > 200 && sectionFamilyOf(job.section_code) === "logic-data") {
+              qs = Array.from({ length: batch }, (_, idx) => buildEmergencyDilrQuestion(produced + idx + 1, pressureBeforeCall + idx));
+            } else {
+              qs = await callOpenAIBatch({
+                exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
+                count: batch, mcq: batchMcq, tita: batchTita, level: job.level || "mixed",
+                positive: job.positive_marks || 1, negative: job.negative_marks || 0,
+                userId,
+                topic: job.strict_topic || job.topic || null,
+                uniquenessSeed: `${runSeed}-batch-${attempts}-${produced}-${crypto.randomUUID()}`,
+                avoidSnippets: corpus.snippets.slice(0, 10),
+              }) as any[];
+            }
           } catch (e) {
             const msg = String((e as Error)?.message || e);
             const quotaBlocked = isAIQuotaBlockedError(msg);
@@ -937,10 +962,13 @@ Deno.serve(async (req) => {
 
             if (seen.has(hash)) { dupHash++; continue; }
 
-            // Soften thresholds as attempts mount so we don't hang forever on
-            // a difficult level where the bank is already crowded.
-            const simT = attempts > 80 ? 0.85 : SIM_THRESHOLD;
-            const shT  = attempts > 80 ? 0.55 : PARAPHRASE_THRESHOLD;
+            // Soften thresholds as attempts mount so DILR top-ups do not hang
+            // forever in a crowded bank. `attempts` resets every worker tick,
+            // so include the persisted runAttemptNumber as pressure too.
+            const pressure = runAttemptNumber + attempts;
+            const simT = pressure > 120 ? 0.97 : pressure > 40 ? 0.93 : SIM_THRESHOLD;
+            const shT  = pressure > 120 ? 0.78 : pressure > 40 ? 0.70 : PARAPHRASE_THRESHOLD;
+            const forceAccept = pressure > 180 && sectionFamilyOf(job.section_code) === "logic-data";
 
             const candTokens = tokenize(norm);
             let maxSim = 0;
@@ -949,7 +977,7 @@ Deno.serve(async (req) => {
               if (s > maxSim) maxSim = s;
               if (maxSim >= simT) break;
             }
-            if (maxSim >= simT) { dupSimilarity++; continue; }
+            if (!forceAccept && maxSim >= simT) { dupSimilarity++; continue; }
 
             const candShingles = buildShingles(norm, 5);
             let maxShingle = 0;
@@ -958,7 +986,7 @@ Deno.serve(async (req) => {
               if (s > maxShingle) maxShingle = s;
               if (maxShingle >= shT) break;
             }
-            if (maxShingle >= shT) { dupParaphrase++; continue; }
+            if (!forceAccept && maxShingle >= shT) { dupParaphrase++; continue; }
 
             seen.add(hash);
             corpus.tokens.push(candTokens);
