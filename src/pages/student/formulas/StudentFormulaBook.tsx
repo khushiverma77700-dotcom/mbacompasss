@@ -35,6 +35,7 @@ const STATUSES = [
 
 export default function StudentFormulaBook() {
   const { user } = useAuth();
+  const isDemo = useIsDemo();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
 
