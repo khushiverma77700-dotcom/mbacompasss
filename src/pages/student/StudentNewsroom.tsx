@@ -25,6 +25,8 @@ type Article = {
   source_url: string | null;
   one_liner: string | null;
   short_summary: string | null;
+  short_summary_hi: string | null;
+  short_summary_hinglish: string | null;
   detailed_summary: string | null;
   why_matters: string | null;
   gdpi_points: string[];
@@ -36,6 +38,7 @@ type Article = {
   importance: "high" | "medium" | "low";
   reading_seconds: number;
   published_at: string;
+  news_date?: string | null;
 };
 
 type ActionRow = {
