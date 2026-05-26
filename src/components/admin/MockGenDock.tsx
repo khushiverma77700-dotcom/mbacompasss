@@ -73,7 +73,10 @@ export default function MockGenDock() {
     });
   }, [jobs]);
 
-  if (!jobs.length) return null;
+  // Don't early-return when isOpen is true even with no jobs yet — the panel
+  // may have just been opened by enqueue()/trackRequest() and we want
+  // immediate visual feedback while the first poll lands (1–3s).
+  if (!jobs.length && !isOpen) return null;
 
 
   return (
@@ -177,20 +180,31 @@ export default function MockGenDock() {
 
             {/* Scrollable list of jobs */}
             <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-2">
-              {sortedJobs.map((j) => (
-                <JobRow key={j.id}
-                  job={j}
-                  queuePos={queuePosById.get(j.id)}
-                  totalPending={pendingCount}
-                  expanded={expandedJob === j.id}
-                  onToggle={() => setExpandedJob(expandedJob === j.id ? null : j.id)}
-                  onCancel={() => cancel(j.id)}
-                  onDismiss={() => dismiss(j.id)}
-                  onRunNow={() => runNow(j.id)}
-                  onRetry={() => retry(j.id)}
-                  onRegenerateFailed={() => regenerateFailed(j.id)} />
-
-              ))}
+              {sortedJobs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-10 px-4 text-center">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-lg shadow-sky-500/30 mb-3">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                  <div className="text-sm font-semibold text-slate-800">Queuing your mock…</div>
+                  <div className="text-[11px] text-slate-600 mt-1">
+                    Spinning up the generator on our servers. Progress will appear here in a moment.
+                  </div>
+                </div>
+              ) : (
+                sortedJobs.map((j) => (
+                  <JobRow key={j.id}
+                    job={j}
+                    queuePos={queuePosById.get(j.id)}
+                    totalPending={pendingCount}
+                    expanded={expandedJob === j.id}
+                    onToggle={() => setExpandedJob(expandedJob === j.id ? null : j.id)}
+                    onCancel={() => cancel(j.id)}
+                    onDismiss={() => dismiss(j.id)}
+                    onRunNow={() => runNow(j.id)}
+                    onRetry={() => retry(j.id)}
+                    onRegenerateFailed={() => regenerateFailed(j.id)} />
+                ))
+              )}
             </div>
 
             <div className="px-3 py-2 border-t border-sky-100/80 bg-white/40 text-[11px] text-slate-500 text-center">
