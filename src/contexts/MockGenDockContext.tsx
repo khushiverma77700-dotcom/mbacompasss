@@ -190,6 +190,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       toast(`Queued ${items.length} mock${items.length > 1 ? "s" : ""}`, {
         description: "Generation runs on the server and continues even if you close the laptop.",
       });
+      // Kick the worker right away so the first slot doesn't wait for the next poll.
+      supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
       await fetchAll();
     } catch (e: any) {
       toast.error("Failed to queue mocks", { description: e?.message || "Try again" });
