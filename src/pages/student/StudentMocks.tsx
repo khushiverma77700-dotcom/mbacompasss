@@ -1045,26 +1045,69 @@ function MockCardItem({
         )}
 
         {owned && latestSubmitted && pct != null && !lock && (
-          <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50/50 p-3 mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-medium text-emerald-700 inline-flex items-center gap-1">
-                <Award className="h-3 w-3" /> Last Attempt
-              </span>
-              <span className="text-lg font-bold text-emerald-700 leading-none">{pct}<span className="text-xs">%ile</span></span>
-            </div>
-            <Progress value={pct} className="h-1.5 bg-emerald-100" />
-            <div className="flex justify-between mt-2 text-[11px] text-emerald-700/80">
-              <span>Score {latestSubmitted.total_score ?? 0}/{latestSubmitted.max_score ?? 0}</span>
-              {accuracy != null && <span>Accuracy {accuracy}%</span>}
+          <div className="relative rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-cyan-50/40 p-3 mb-3 overflow-hidden">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-200/30 blur-2xl" />
+            <div className="relative flex items-center gap-3">
+              {/* radial percentile dial */}
+              <div className="relative shrink-0 h-14 w-14">
+                <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--muted))" strokeOpacity="0.25" strokeWidth="3" />
+                  <circle
+                    cx="18" cy="18" r="15.9" fill="none"
+                    stroke="url(#mockGrad)" strokeWidth="3" strokeLinecap="round"
+                    strokeDasharray={`${pct}, 100`}
+                  />
+                  <defs>
+                    <linearGradient id="mockGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center flex-col leading-none">
+                  <span className="text-base font-bold text-emerald-700 tabular-nums">{pct}</span>
+                  <span className="text-[8px] font-semibold text-emerald-600/80">%ile</span>
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] uppercase tracking-wider font-semibold text-emerald-700/80 inline-flex items-center gap-1">
+                  <Award className="h-3 w-3" /> Last Attempt
+                </div>
+                <div className="text-sm font-bold text-emerald-900">
+                  {latestSubmitted.total_score ?? 0}<span className="text-emerald-700/60 font-medium">/{latestSubmitted.max_score ?? 0}</span>
+                </div>
+                <div className="mt-1 flex items-center gap-2 text-[10px] text-emerald-700/80">
+                  {accuracy != null && (
+                    <span className="inline-flex items-center gap-0.5 bg-white/70 border border-emerald-200/70 rounded px-1.5 py-0.5 font-semibold">
+                      {accuracy}% acc
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-0.5 bg-white/70 border border-emerald-200/70 rounded px-1.5 py-0.5 font-semibold">
+                    {latestSubmitted.total_attempted ?? 0} attempted
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {owned && inProgress && !latestSubmitted && !lock && (
-          <div className="rounded-lg border border-sky-100 bg-sky-50/60 p-2.5 mb-3 text-xs text-sky-700 font-medium inline-flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" /> Attempt in progress — resume now
+          <div className="relative rounded-xl border border-sky-200/70 bg-gradient-to-br from-sky-50 via-blue-50/50 to-indigo-50/40 p-3 mb-3 overflow-hidden">
+            <div className="pointer-events-none absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-sky-200/30 blur-2xl" />
+            <div className="relative flex items-center gap-2.5">
+              <div className="relative shrink-0 h-9 w-9 rounded-lg bg-white/80 border border-sky-200 flex items-center justify-center shadow-sm">
+                <Clock className="h-4 w-4 text-sky-600" />
+                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-sky-500 animate-ping" />
+                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-sky-500" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-wider font-semibold text-sky-700/80">Attempt in progress</div>
+                <div className="text-sm font-bold text-sky-900">Resume now to keep your streak</div>
+              </div>
+            </div>
           </div>
         )}
+
 
         <div className="mt-auto flex flex-wrap gap-2 pt-1">
           {!owned ? (
