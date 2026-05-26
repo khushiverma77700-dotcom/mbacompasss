@@ -187,7 +187,7 @@ const AdminMockTests = () => {
       let kicked = 0;
       const skipped: string[] = [];
       const generationIds = new Set<string>();
-      const createdJobIds: string[] = [];
+      const jobIdsToKick: string[] = [];
 
       // Lazily create a fallback generation row when sections lack a prior job.
       let fallbackGenerationId: string | null = null;
@@ -244,7 +244,7 @@ const AdminMockTests = () => {
             final_reason: null,
             updated_at: new Date().toISOString(),
           }).eq("id", job.id);
-          supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id, auto: true } }).catch(() => {});
+          jobIdsToKick.push(job.id);
           kicked++;
           continue;
         }
@@ -291,8 +291,7 @@ const AdminMockTests = () => {
           skipped.push(ds.code);
           continue;
         }
-        createdJobIds.push(newJob.id);
-        supabase.functions.invoke("retry-mock-section", { body: { job_id: newJob.id, auto: true } }).catch(() => {});
+        jobIdsToKick.push(newJob.id);
         kicked++;
       }
 
@@ -312,6 +311,8 @@ const AdminMockTests = () => {
         const genIds = Array.from(generationIds);
         await supabase.from("ai_mock_generations").update({
           status: "running", error_message: null, finished_at: null,
+          total_requested: totalTargetForDeficitSections,
+          total_generated: totalActualForDeficitSections,
         }).in("id", genIds);
         const { data: bulkItems } = await supabase
           .from("bulk_mock_request_items")
@@ -365,6 +366,10 @@ const AdminMockTests = () => {
           }
         } catch {/* non-fatal — dock just won't show progress */}
       }
+
+      jobIdsToKick.forEach((jobId) => {
+        supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId, auto: true } }).catch(() => {});
+      });
 
       openDock();
 
