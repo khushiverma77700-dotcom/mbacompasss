@@ -24,6 +24,8 @@ export interface DockJob {
   finishedAt?: number;
   /** Parent bulk_mock_requests.id this row belongs to */
   request_id?: string;
+  /** True when completed but with one or more failed sections (needs_review) */
+  hasFailedSections?: boolean;
 }
 
 interface DockCtx {
@@ -34,6 +36,8 @@ interface DockCtx {
   clearFinished: () => void;
   runNow: (id: string) => Promise<void>;
   retry: (id: string) => Promise<void>;
+  regenerateFailed: (id: string) => Promise<void>;
+
   isOpen: boolean;
   open: () => void;
   close: () => void;
