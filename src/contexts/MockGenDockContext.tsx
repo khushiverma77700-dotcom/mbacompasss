@@ -37,7 +37,7 @@ interface DockCtx {
   runNow: (id: string) => Promise<void>;
   retry: (id: string) => Promise<void>;
   regenerateFailed: (id: string) => Promise<void>;
-  trackRequest: (requestId: string) => void;
+  trackRequest: (requestId: string) => Promise<void>;
   refresh: () => Promise<void>;
 
   isOpen: boolean;
@@ -315,14 +315,27 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     await fetchAll();
   }, [jobs, fetchAll]);
 
-  const trackRequest = useCallback((requestId: string) => {
+  const trackRequest = useCallback(async (requestId: string) => {
     if (!requestId) return;
     if (!trackedReqIdsRef.current.includes(requestId)) {
       trackedReqIdsRef.current = [...trackedReqIdsRef.current, requestId];
       writeTrackedIds(trackedReqIdsRef.current);
     }
+    const { data: requestItems } = await supabase
+      .from("bulk_mock_request_items")
+      .select("id")
+      .eq("request_id", requestId);
+    let restored = false;
+    for (const row of requestItems ?? []) {
+      const id = (row as any).id;
+      if (dismissedIdsRef.current.has(id)) {
+        dismissedIdsRef.current.delete(id);
+        restored = true;
+      }
+    }
+    if (restored) writeDismissedIds(Array.from(dismissedIdsRef.current));
     setIsOpen(true);
-    fetchAll();
+    await fetchAll();
   }, [fetchAll]);
 
 
