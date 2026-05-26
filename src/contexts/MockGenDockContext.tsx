@@ -47,12 +47,19 @@ interface DockCtx {
 
 const Ctx = createContext<DockCtx | null>(null);
 const LS_KEY = "mock_gen_dock_request_ids_v1";
+const LS_DISMISSED_KEY = "mock_gen_dock_dismissed_ids_v1";
 
 function readTrackedIds(): string[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
 }
 function writeTrackedIds(ids: string[]) {
   try { localStorage.setItem(LS_KEY, JSON.stringify([...new Set(ids)].slice(-30))); } catch { /* ignore */ }
+}
+function readDismissedIds(): string[] {
+  try { return JSON.parse(localStorage.getItem(LS_DISMISSED_KEY) || "[]"); } catch { return []; }
+}
+function writeDismissedIds(ids: string[]) {
+  try { localStorage.setItem(LS_DISMISSED_KEY, JSON.stringify([...new Set(ids)].slice(-500))); } catch { /* ignore */ }
 }
 
 function mapRow(row: any): DockJob {
@@ -90,6 +97,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const [jobs, setJobs] = useState<DockJob[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const trackedReqIdsRef = useRef<string[]>(readTrackedIds());
+  const dismissedIdsRef = useRef<Set<string>>(new Set(readDismissedIds()));
   const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
   const autoKickedRef = useRef<Record<string, number>>({});
 
@@ -104,7 +112,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       .select("id, request_id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at, created_at")
       .in("request_id", ids)
       .order("created_at", { ascending: true });
-    const next = (data ?? []).map(mapRow);
+    const next = (data ?? []).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id));
     // Fire completion / failure toasts when status flips
     for (const j of next) {
       const prev = prevStatusRef.current[j.id];
@@ -214,6 +222,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   }, [jobs, fetchAll]);
 
   const dismiss = useCallback((id: string) => {
+    dismissedIdsRef.current.add(id);
+    writeDismissedIds(Array.from(dismissedIdsRef.current));
     setJobs((js) => js.filter((j) => j.id !== id));
   }, []);
 
@@ -228,6 +238,11 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   }, [fetchAll]);
 
   const retry = useCallback(async (id: string) => {
+    // If user retried a dismissed item, allow it to reappear.
+    if (dismissedIdsRef.current.has(id)) {
+      dismissedIdsRef.current.delete(id);
+      writeDismissedIds(Array.from(dismissedIdsRef.current));
+    }
     // Reset failed item back to pending and let the worker pump it.
     await supabase.from("bulk_mock_request_items").update({
       status: "pending",
@@ -244,6 +259,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
 
   const clearFinished = useCallback(() => {
     const finalIds = new Set(jobs.filter((j) => ["completed", "failed", "cancelled"].includes(j.status)).map((j) => j.id));
+    finalIds.forEach((id) => dismissedIdsRef.current.add(id));
+    writeDismissedIds(Array.from(dismissedIdsRef.current));
     setJobs((js) => js.filter((j) => !finalIds.has(j.id)));
     const remainingReqIds = new Set(jobs.filter((j) => !finalIds.has(j.id) && j.request_id).map((j) => j.request_id!));
     trackedReqIdsRef.current = trackedReqIdsRef.current.filter((id) => remainingReqIds.has(id));

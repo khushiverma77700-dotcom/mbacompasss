@@ -54,6 +54,24 @@ export default function MockGenDock() {
   const totalGenerated = jobs.reduce((s, j) => s + (j.total_generated || 0), 0);
   const overallPct = totalRequested > 0 ? Math.round((totalGenerated / totalRequested) * 100) : 0;
 
+  // Sort: completed first, then running/starting, then pending, then failed/cancelled.
+  const sortedJobs = useMemo(() => {
+    const order: Record<DockJob["status"], number> = {
+      completed: 0,
+      running: 1,
+      starting: 1,
+      pending: 2,
+      failed: 3,
+      cancelled: 3,
+    };
+    return [...jobs].sort((a, b) => {
+      const da = order[a.status] ?? 99;
+      const db = order[b.status] ?? 99;
+      if (da !== db) return da - db;
+      return a.createdAt - b.createdAt;
+    });
+  }, [jobs]);
+
   if (!jobs.length) return null;
 
 
@@ -158,7 +176,7 @@ export default function MockGenDock() {
 
             {/* Scrollable list of jobs */}
             <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-2">
-              {jobs.map((j) => (
+              {sortedJobs.map((j) => (
                 <JobRow key={j.id}
                   job={j}
                   queuePos={queuePosById.get(j.id)}
