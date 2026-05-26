@@ -1043,14 +1043,13 @@ Deno.serve(async (req) => {
           if (!auto) return;
           const workerUrl = `${url}/functions/v1/retry-mock-section`;
           const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
-          const nextLockUntil = new Date(Date.now() + 8 * 60_000).toISOString();
           const queued = admin.from("mock_section_jobs").update({
             status: "pending",
             worker_lock_until: null,
             current_step: "Queued next generation tick…",
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
-          const next = fetch(workerUrl, {
+          const next = queued.then(() => fetch(workerUrl, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${internalWorkerSecret}`,
@@ -1058,7 +1057,7 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ job_id, auto: true, service: true, continuation: true, internal_secret: internalWorkerSecret }),
-          }).then(async (resp) => {
+          })).then(async (resp) => {
             if (!resp.ok) {
               await admin.from("mock_section_jobs").update({
                 status: "pending",
@@ -1077,7 +1076,7 @@ Deno.serve(async (req) => {
             }).eq("id", job_id);
           });
           // @ts-ignore
-          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(Promise.all([queued, next]));
+          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
         }
 
         // If we exited the standalone loop because attempts hit the cap but
