@@ -91,7 +91,7 @@ export default function StudentNewsroom() {
         .order("published_at", { ascending: false })
         .limit(200);
       if (error) throw error;
-      return (data as Article[]) || [];
+      return ((data as unknown) as Article[]) || [];
     },
   });
 
