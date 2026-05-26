@@ -334,8 +334,10 @@ export default function StudentNewsroom() {
                     <h3 className="font-bold text-sm md:text-base text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-1.5">
                       {a.headline}
                     </h3>
-                    {a.one_liner && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{a.one_liner}</p>
+                    {(pickSummary(a) || a.one_liner) && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3" lang={lang === "hi" ? "hi" : "en"}>
+                        {pickSummary(a) || a.one_liner}
+                      </p>
                     )}
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                       <span className="flex items-center gap-2">
