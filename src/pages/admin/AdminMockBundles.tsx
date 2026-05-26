@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Search, Package, Loader2, ChevronDown, ChevronRight, ArrowUp, ArrowDown, X } from "lucide-react";
+import AdminFilterBar, { type FilterConfig } from "@/components/admin/AdminFilterBar";
 import { toast } from "sonner";
 import { FeatureMap } from "@/lib/courseFeatures";
 import { HighlightMap } from "@/lib/courseHighlights";
@@ -93,6 +94,11 @@ export default function AdminMockBundles() {
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [listStatus, setListStatus] = useState<string>("all");
+  const [listExam, setListExam] = useState<string>("all");
+  const [listType, setListType] = useState<string>("all");
+  const [listHighlight, setListHighlight] = useState<string>("all");
+  const [listPrice, setListPrice] = useState<string>("all");
   const [editing, setEditing] = useState<Partial<Bundle> | null>(null);
   const [editingItems, setEditingItems] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -323,29 +329,106 @@ export default function AdminMockBundles() {
     load();
   };
 
-  const filtered = bundles.filter((b) => !q || b.name.toLowerCase().includes(q.toLowerCase()));
+  const filtered = bundles.filter((b) => {
+    if (q && !b.name.toLowerCase().includes(q.toLowerCase())) return false;
+    if (listStatus === "published" && !b.is_published) return false;
+    if (listStatus === "draft" && b.is_published) return false;
+    if (listExam !== "all") {
+      const exams = [b.exam_code, ...(b.filter_exams ?? [])].filter(Boolean) as string[];
+      if (!exams.includes(listExam)) return false;
+    }
+    if (listType !== "all" && !(b.filter_types ?? []).includes(listType)) return false;
+    if (listHighlight === "yes" && !b.highlight_on_mocks) return false;
+    if (listHighlight === "no" && b.highlight_on_mocks) return false;
+    const price = Number(b.price_inr) || 0;
+    if (listPrice === "free" && price !== 0) return false;
+    if (listPrice === "u500" && !(price > 0 && price < 500)) return false;
+    if (listPrice === "500-1999" && !(price >= 500 && price < 2000)) return false;
+    if (listPrice === "2000-4999" && !(price >= 2000 && price < 5000)) return false;
+    if (listPrice === "5000p" && !(price >= 5000)) return false;
+    return true;
+  });
+
+  const listFilters: FilterConfig[] = [
+    {
+      type: "select", key: "status", label: "Status", width: "w-32",
+      options: [
+        { value: "all", label: "All status" },
+        { value: "published", label: "Published" },
+        { value: "draft", label: "Draft" },
+      ],
+    },
+    {
+      type: "select", key: "exam", label: "Exam", width: "w-32",
+      options: [{ value: "all", label: "All exams" }, ...BUNDLE_EXAM_OPTIONS.map((e) => ({ value: e, label: e }))],
+    },
+    {
+      type: "select", key: "type", label: "Type", width: "w-40",
+      options: [{ value: "all", label: "All types" }, ...BUNDLE_TYPE_OPTIONS.map((t) => ({ value: t.v, label: t.l }))],
+    },
+    {
+      type: "select", key: "highlight", label: "Featured", width: "w-32",
+      options: [
+        { value: "all", label: "All" },
+        { value: "yes", label: "Featured" },
+        { value: "no", label: "Not featured" },
+      ],
+    },
+    {
+      type: "select", key: "price", label: "Price", width: "w-40",
+      options: [
+        { value: "all", label: "Any price" },
+        { value: "free", label: "Free" },
+        { value: "u500", label: "Under ₹500" },
+        { value: "500-1999", label: "₹500 – ₹1,999" },
+        { value: "2000-4999", label: "₹2,000 – ₹4,999" },
+        { value: "5000p", label: "₹5,000+" },
+      ],
+    },
+  ];
+
+  const filterValues: Record<string, string> = {
+    status: listStatus, exam: listExam, type: listType, highlight: listHighlight, price: listPrice,
+  };
+  const setFilterValue = (key: string, v: string) => {
+    if (key === "status") setListStatus(v);
+    else if (key === "exam") setListExam(v);
+    else if (key === "type") setListType(v);
+    else if (key === "highlight") setListHighlight(v);
+    else if (key === "price") setListPrice(v);
+  };
+  const clearAll = () => {
+    setQ(""); setListStatus("all"); setListExam("all"); setListType("all"); setListHighlight("all"); setListPrice("all");
+  };
+  const activeCount = [listStatus, listExam, listType, listHighlight, listPrice].filter((v) => v !== "all").length;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2"><Package className="h-6 w-6" /> Mock Bundles</h1>
           <p className="text-sm text-muted-foreground">Give the bundle a name, pick the mocks. That's it.</p>
         </div>
-        <div className="flex gap-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search bundles..." value={q} onChange={(e) => setQ(e.target.value)} className="pl-8 w-56" />
-          </div>
-          <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Bundle</Button>
-        </div>
+        <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Bundle</Button>
       </div>
+
+      <AdminFilterBar
+        searchValue={q}
+        onSearchChange={setQ}
+        searchPlaceholder="Search bundles…"
+        filters={listFilters}
+        values={filterValues}
+        onFilterChange={setFilterValue}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={loading ? null : `${filtered.length} of ${bundles.length} bundles`}
+      />
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : (
         <div className="grid gap-3">
-          {filtered.length === 0 && <Card className="p-8 text-center text-sm text-muted-foreground">No bundles yet. Click "New Bundle" to create one.</Card>}
+          {filtered.length === 0 && <Card className="p-8 text-center text-sm text-muted-foreground">No bundles match your filters.</Card>}
           {filtered.map((b) => (
             <Card key={b.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex-1">
