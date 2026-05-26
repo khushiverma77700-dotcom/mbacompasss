@@ -32,6 +32,7 @@ import {
   Award,
   Download,
   Sigma,
+  Newspaper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,7 @@ const navItems: NavItem[] = [
   { to: "/student/tools", label: "AI Tools", icon: Sparkles, feature: "ai_tools" },
   { to: "/student/vocabulary", label: "B-School Vocabulary", icon: BookOpen, feature: "vocabulary_hub" },
   { to: "/student/formulas", label: "Quant Formula Book", icon: Sigma, feature: "formula_book" },
+  { to: "/student/newsroom", label: "MBA Newsroom", icon: Newspaper, feature: "mba_newsroom" },
   { to: "/student/sop-review", label: "AI SOP Review", icon: FileText },
   { to: "/student/support", label: "Support Center", icon: LifeBuoy, feature: "support" },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
@@ -449,13 +451,15 @@ function SidebarContent() {
   const dayPlanner = visibleItems.find((i) => i.to === "/student/day-planner");
   const vocabItem = visibleItems.find((i) => i.to === "/student/vocabulary");
   const formulaItem = visibleItems.find((i) => i.to === "/student/formulas");
+  const newsroomItem = visibleItems.find((i) => i.to === "/student/newsroom");
   const restItems = visibleItems.filter(
     (i) =>
       i.to !== "/student" &&
       i.to !== "/student/notifications" &&
       i.to !== "/student/day-planner" &&
       i.to !== "/student/vocabulary" &&
-      i.to !== "/student/formulas"
+      i.to !== "/student/formulas" &&
+      i.to !== "/student/newsroom"
   );
 
   // Knowledge Duo block renderer — 3D premium card look for Vocab + Formula Book
@@ -639,6 +643,13 @@ function SidebarContent() {
             iconBg: "bg-gradient-to-br from-violet-500 to-fuchsia-600",
             gradient: "from-violet-50/80 to-fuchsia-50/60",
             activeBorder: "border-violet-300/80 ring-1 ring-violet-300/40 text-violet-700 dark:text-violet-300",
+          })}
+        {newsroomItem &&
+          renderKnowledgeDuo(newsroomItem, {
+            iconBg: "bg-gradient-to-br from-sky-500 to-indigo-600",
+            gradient: "from-sky-50/80 to-indigo-50/60",
+            activeBorder: "border-sky-300/80 ring-1 ring-sky-300/40 text-sky-700 dark:text-sky-300",
+            badge: "bg-gradient-to-r from-rose-500 to-orange-500",
           })}
       </div>
 
