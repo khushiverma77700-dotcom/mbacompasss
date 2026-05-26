@@ -1299,13 +1299,14 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
               className="h-8 text-xs w-[110px]"
             />
             <Button
-              size="sm" className="h-8 px-2 text-xs" disabled={saving || !dt}
+              size="sm" className="h-8 px-2 text-xs bg-orange-500 hover:bg-orange-600" disabled={saving || !dt}
               onClick={async () => {
                 const iso = dt ? new Date(dt).toISOString() : null;
-                await apply({ is_published: test.is_published ?? false, is_live: test.is_live ?? false, scheduled_start_at: iso });
+                // Saving a schedule from this popover always promotes the mock to Live.
+                await apply({ is_published: true, is_live: true, scheduled_start_at: iso });
                 setShowSchedule(false);
               }}
-            >Save</Button>
+            >Save & Go Live</Button>
             {test.scheduled_start_at && (
               <Button
                 size="sm" variant="ghost" className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
