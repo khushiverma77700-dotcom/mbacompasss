@@ -30,6 +30,7 @@ const MAX_ACTIVE_PER_BATCH = 3;
 const MAX_ACTIVE_GLOBAL = 3;
 const SECTION_LOCK_MS = 8 * 60_000;
 const MAX_ACTIVE_SECTIONS_PER_GENERATION = 3;
+const NULL_UUID = "00000000-0000-0000-0000-000000000000";
 
 async function countGlobalActive(admin: any): Promise<number> {
   const { count } = await admin
@@ -38,6 +39,80 @@ async function countGlobalActive(admin: any): Promise<number> {
     .eq("paused", false)
     .eq("status", "processing");
   return count || 0;
+}
+
+async function enforceGenerationCap(admin: any): Promise<{ demoted: number; promoted: number; activeGenerationIds: string[] }> {
+  const { data: activeRows } = await admin
+    .from("bulk_mock_request_items")
+    .select("id,generation_id,started_at,created_at")
+    .eq("paused", false)
+    .eq("status", "processing")
+    .not("generation_id", "is", null)
+    .order("started_at", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
+
+  const keepRows = (activeRows || []).slice(0, MAX_ACTIVE_GLOBAL);
+  const overflowRows = (activeRows || []).slice(MAX_ACTIVE_GLOBAL);
+  let demoted = 0;
+
+  if (overflowRows.length > 0) {
+    const overflowIds = overflowRows.map((row: any) => row.id);
+    const overflowGenIds = overflowRows.map((row: any) => row.generation_id).filter(Boolean);
+    const { data: demotedRows } = await admin
+      .from("bulk_mock_request_items")
+      .update({
+        status: "pending",
+        worker_lock_until: null,
+        error_message: "Waiting for a free mock generation slot",
+      })
+      .in("id", overflowIds)
+      .select("id");
+    demoted = demotedRows?.length || overflowIds.length;
+    if (overflowGenIds.length > 0) {
+      await admin
+        .from("mock_section_jobs")
+        .update({
+          status: "pending",
+          worker_lock_until: null,
+          current_step: "Waiting for a free mock generation slot",
+          updated_at: new Date().toISOString(),
+        })
+        .in("generation_id", overflowGenIds)
+        .in("status", ["pending", "processing"]);
+    }
+  }
+
+  const activeAfterDemote = keepRows.length;
+  const slots = Math.max(0, MAX_ACTIVE_GLOBAL - activeAfterDemote);
+  let promoted = 0;
+  let activeGenerationIds = keepRows.map((row: any) => String(row.generation_id)).filter(Boolean);
+
+  if (slots > 0) {
+    const { data: queuedRows } = await admin
+      .from("bulk_mock_request_items")
+      .select("id,generation_id,created_at")
+      .eq("paused", false)
+      .eq("status", "pending")
+      .not("generation_id", "is", null)
+      .order("created_at", { ascending: true })
+      .limit(slots);
+    const promoteIds = (queuedRows || []).map((row: any) => row.id);
+    if (promoteIds.length > 0) {
+      const nowIso = new Date().toISOString();
+      await admin
+        .from("bulk_mock_request_items")
+        .update({
+          status: "processing",
+          error_message: null,
+          started_at: nowIso,
+        })
+        .in("id", promoteIds);
+      promoted = promoteIds.length;
+      activeGenerationIds = activeGenerationIds.concat((queuedRows || []).map((row: any) => String(row.generation_id)).filter(Boolean));
+    }
+  }
+
+  return { demoted, promoted, activeGenerationIds: activeGenerationIds.slice(0, MAX_ACTIVE_GLOBAL) };
 }
 
 
