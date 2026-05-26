@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare, Package, BookOpen, Wand2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare, Package, BookOpen, Wand2, CalendarClock, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -1051,25 +1051,63 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
           onClick={() => { setDt(isoToLocalInput(test.scheduled_start_at) || ""); setShowSchedule(true); }}
         >Live</Button>
       </div>
-      {mode === "live" && test.scheduled_start_at && !showSchedule && (
-        <div className="text-[10px] text-muted-foreground">
-          {new Date(test.scheduled_start_at).toLocaleString()}
-        </div>
-      )}
-      {showSchedule && (
+
+      {/* Inline schedule editor — always available without opening the mock */}
+      {!showSchedule ? (
+        <button
+          type="button"
+          onClick={() => { setDt(isoToLocalInput(test.scheduled_start_at) || ""); setShowSchedule(true); }}
+          className={`group inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] transition ${
+            test.scheduled_start_at
+              ? "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
+              : "border-dashed border-slate-300 text-muted-foreground hover:bg-slate-50"
+          }`}
+          title={test.scheduled_start_at ? "Click to change scheduled date" : "Click to set scheduled date"}
+        >
+          <CalendarClock className="w-3 h-3" />
+          {test.scheduled_start_at
+            ? new Date(test.scheduled_start_at).toLocaleString(undefined, {
+                day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+              })
+            : "Set schedule"}
+        </button>
+      ) : (
         <div className="flex items-center gap-1 pt-1">
           <Input
             type="datetime-local" value={dt}
             onChange={(e) => setDt(e.target.value)}
             className="h-7 text-[11px] w-[180px]"
           />
-          <Button size="sm" className="h-7 px-2 text-[11px]" disabled={saving} onClick={saveSchedule}>Save</Button>
-          <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => setShowSchedule(false)}>×</Button>
+          <Button
+            size="sm" className="h-7 px-2 text-[11px]" disabled={saving}
+            onClick={async () => {
+              const iso = dt ? new Date(dt).toISOString() : null;
+              // Save schedule WITHOUT forcing the test to live — preserve current publish/live state
+              await apply({ is_published: test.is_published ?? false, is_live: test.is_live ?? false, scheduled_start_at: iso });
+              setShowSchedule(false);
+            }}
+          >Save</Button>
+          {test.scheduled_start_at && (
+            <Button
+              size="sm" variant="ghost" className="h-7 px-2 text-[11px] text-rose-600 hover:bg-rose-50"
+              disabled={saving}
+              onClick={async () => {
+                await apply({ is_published: test.is_published ?? false, is_live: test.is_live ?? false, scheduled_start_at: null });
+                setDt("");
+                setShowSchedule(false);
+              }}
+              title="Clear scheduled date"
+            >Clear</Button>
+          )}
+          <Button size="sm" variant="ghost" className="h-7 px-1.5 text-[11px]" onClick={() => setShowSchedule(false)}>
+            <X className="w-3 h-3" />
+          </Button>
         </div>
       )}
     </div>
   );
 }
+
 
 
 export default AdminMockTests;
