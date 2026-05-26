@@ -195,6 +195,7 @@ const AdminVocabulary = lazyWithPreload(() => import("./pages/admin/AdminVocabul
 const AdminFormulas = lazyWithPreload(() => import("./pages/admin/AdminFormulas"));
 const StudentFormulaBook = lazyWithPreload(() => import("./pages/student/formulas/StudentFormulaBook"));
 const StudentNewsroom = lazyWithPreload(() => import("./pages/student/StudentNewsroom"));
+const AdminNewsroom = lazyWithPreload(() => import("./pages/admin/AdminNewsroom"));
 const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
 const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 const DemoShell = lazyWithPreload(() => import("./components/demo/DemoShell"));
