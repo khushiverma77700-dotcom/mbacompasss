@@ -920,15 +920,20 @@ Deno.serve(async (req) => {
 
           let qs: any[] = [];
           try {
-            qs = await callOpenAIBatch({
-              exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
-              count: batch, mcq: batchMcq, tita: batchTita, level: job.level || "mixed",
-              positive: job.positive_marks || 1, negative: job.negative_marks || 0,
-              userId,
-              topic: job.strict_topic || job.topic || null,
-              uniquenessSeed: `${runSeed}-batch-${attempts}-${produced}-${crypto.randomUUID()}`,
-              avoidSnippets: corpus.snippets.slice(0, 10),
-            }) as any[];
+            const pressureBeforeCall = runAttemptNumber + attempts;
+            if (pressureBeforeCall > 200 && sectionFamilyOf(job.section_code) === "logic-data") {
+              qs = Array.from({ length: batch }, (_, idx) => buildEmergencyDilrQuestion(produced + idx + 1, pressureBeforeCall + idx));
+            } else {
+              qs = await callOpenAIBatch({
+                exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
+                count: batch, mcq: batchMcq, tita: batchTita, level: job.level || "mixed",
+                positive: job.positive_marks || 1, negative: job.negative_marks || 0,
+                userId,
+                topic: job.strict_topic || job.topic || null,
+                uniquenessSeed: `${runSeed}-batch-${attempts}-${produced}-${crypto.randomUUID()}`,
+                avoidSnippets: corpus.snippets.slice(0, 10),
+              }) as any[];
+            }
           } catch (e) {
             const msg = String((e as Error)?.message || e);
             const quotaBlocked = isAIQuotaBlockedError(msg);
