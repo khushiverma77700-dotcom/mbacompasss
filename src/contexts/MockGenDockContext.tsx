@@ -55,6 +55,7 @@ interface DockCtx {
 const Ctx = createContext<DockCtx | null>(null);
 const LS_KEY = "mock_gen_dock_request_ids_v1";
 const LS_DISMISSED_KEY = "mock_gen_dock_dismissed_ids_v1";
+const DOCK_ITEM_SELECT = "id, request_id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at, created_at";
 
 function readTrackedIds(): string[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
@@ -101,6 +102,19 @@ function mapRow(row: any): DockJob {
   };
 }
 
+function optimisticJob(item: { label: string; payload: any }, idx: number): DockJob {
+  const perSet = Number(item.payload.questions_per_set ?? item.payload.total_questions ?? 20) || 20;
+  const sets = Number(item.payload.sets ?? 1) || 1;
+  return {
+    id: `optimistic-${Date.now()}-${idx}-${Math.random().toString(36).slice(2)}`,
+    label: item.label,
+    status: "pending",
+    total_requested: perSet * sets,
+    total_generated: 0,
+    createdAt: Date.now() + idx,
+  };
+}
+
 
 export function MockGenDockProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useState<DockJob[]>([]);
@@ -109,19 +123,22 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const dismissedIdsRef = useRef<Set<string>>(new Set(readDismissedIds()));
   const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
   const autoKickedRef = useRef<Record<string, number>>({});
+  const optimisticJobsRef = useRef<DockJob[]>([]);
 
   // Hydrate from DB on mount + poll every 3s. Survives page reloads,
   // navigation, and laptop reboots — the source of truth is the bulk
   // mock request tables, dispatched by an edge-side cron.
   const fetchAll = useCallback(async () => {
     const ids = trackedReqIdsRef.current;
-    if (!ids.length) { setJobs([]); return; }
+    if (!ids.length) { setJobs(optimisticJobsRef.current); return; }
     const { data } = await supabase
       .from("bulk_mock_request_items")
-      .select("id, request_id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at, created_at")
+      .select(DOCK_ITEM_SELECT)
       .in("request_id", ids)
       .order("created_at", { ascending: true });
-    const next = (data ?? []).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id));
+    const mapped = (data ?? []).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id));
+    if (mapped.length > 0) optimisticJobsRef.current = [];
+    const next = mapped.length > 0 ? mapped : optimisticJobsRef.current;
     // Fire completion / failure toasts when status flips
     for (const j of next) {
       const prev = prevStatusRef.current[j.id];
@@ -138,8 +155,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       prevStatusRef.current[j.id] = j.status;
     }
     // Drop request_ids that have no items anymore (rare)
-    const haveIds = new Set(next.map((j) => j.request_id).filter(Boolean));
-    if (ids.some((id) => !haveIds.has(id)) && next.length > 0) {
+    const haveIds = new Set(mapped.map((j) => j.request_id).filter(Boolean));
+    if (mapped.length > 0 && ids.some((id) => !haveIds.has(id))) {
       trackedReqIdsRef.current = Array.from(haveIds) as string[];
       writeTrackedIds(trackedReqIdsRef.current);
     }
@@ -152,7 +169,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       let slots = Math.max(0, MAX_PARALLEL - runningCount);
       if (slots > 0) {
         const pending = next
-          .filter((j) => j.status === "pending")
+          .filter((j) => j.status === "pending" && !!j.request_id && !j.id.startsWith("optimistic-"))
           .sort((a, b) => a.createdAt - b.createdAt);
         const now = Date.now();
         for (const j of pending) {
@@ -182,6 +199,10 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
 
   const enqueue = useCallback(async (items: { label: string; payload: any }[]) => {
     if (!items.length) return;
+    const optimistic = items.map(optimisticJob);
+    optimisticJobsRef.current = optimistic;
+    setJobs(optimistic);
+    setIsOpen(true);
     try {
       const { data, error } = await supabase.functions.invoke("bulk-mock-worker", {
         body: {
@@ -204,6 +225,15 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       trackedReqIdsRef.current = [...trackedReqIdsRef.current, reqId];
       writeTrackedIds(trackedReqIdsRef.current);
       setIsOpen(true);
+      const { data: requestRows } = await supabase
+        .from("bulk_mock_request_items")
+        .select(DOCK_ITEM_SELECT)
+        .eq("request_id", reqId)
+        .order("created_at", { ascending: true });
+      if (requestRows?.length) {
+        optimisticJobsRef.current = [];
+        setJobs((requestRows as any[]).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id)));
+      }
       toast(`Queued ${items.length} mock${items.length > 1 ? "s" : ""}`, {
         description: "Generation runs on the server and continues even if you close the laptop.",
       });
@@ -211,6 +241,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
       await fetchAll();
     } catch (e: any) {
+      optimisticJobsRef.current = [];
+      setJobs([]);
       toast.error("Failed to queue mocks", { description: e?.message || "Try again" });
     }
   }, [fetchAll]);
