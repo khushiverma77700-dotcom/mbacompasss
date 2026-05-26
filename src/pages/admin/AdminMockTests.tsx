@@ -350,7 +350,9 @@ const AdminMockTests = () => {
               status: "processing",
             }).select("id").single();
           if (!reqErr && newReq?.id) {
-            const items = deficits.map((d) => ({
+            const items = deficits
+              .filter((d) => sectionGenerationIds.has(d.id))
+              .map((d) => ({
               request_id: newReq.id,
               exam_code: examCode,
               category,
@@ -362,12 +364,15 @@ const AdminMockTests = () => {
               status: "processing",
               total_requested: d.total,
               total_generated: d.actual,
-              generation_id: Array.from(generationIds)[0] ?? null,
+              generation_id: sectionGenerationIds.get(d.id) ?? null,
               started_at: new Date().toISOString(),
             }));
-            await supabase.from("bulk_mock_request_items").insert(items);
-            trackRequest(newReq.id);
-            tracked++;
+            if (items.length > 0) {
+              const { error: itemErr } = await supabase.from("bulk_mock_request_items").insert(items);
+              if (itemErr) throw itemErr;
+              trackRequest(newReq.id);
+              tracked++;
+            }
           }
         } catch {/* non-fatal — dock just won't show progress */}
       }
@@ -377,6 +382,7 @@ const AdminMockTests = () => {
       });
 
       openDock();
+      await refreshDock();
 
       toast({
         title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
