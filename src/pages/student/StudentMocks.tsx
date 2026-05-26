@@ -827,13 +827,14 @@ function useCountdown(target: Date | null): string {
 
 function BucketGrid({
   items, typeLabel, examFilter, onUpgrade, groupBySection,
-  sectionFilter, onSectionChange,
+  sectionFilter, onSectionChange, isFullLength,
 }: {
   items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
   typeLabel: string; examFilter: string; onUpgrade: () => void;
   groupBySection?: boolean;
   sectionFilter?: string;
   onSectionChange?: (v: string) => void;
+  isFullLength?: boolean;
 }) {
   // Section chips + filtering for sectional mocks
   const sectionsAvailable = useMemo(() => {
