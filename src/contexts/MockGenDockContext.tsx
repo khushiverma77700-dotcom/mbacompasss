@@ -38,6 +38,7 @@ interface DockCtx {
   retry: (id: string) => Promise<void>;
   regenerateFailed: (id: string) => Promise<void>;
   trackRequest: (requestId: string) => void;
+  refresh: () => Promise<void>;
 
   isOpen: boolean;
   open: () => void;
@@ -341,7 +342,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     const doneCount = jobs.filter((j) => j.status === "completed").length;
     const failCount = jobs.filter((j) => j.status === "failed" || j.status === "cancelled").length;
     return {
-      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest,
+      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest, refresh: fetchAll,
       isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false), toggle: () => setIsOpen((o) => !o),
       activeCount, pendingCount, doneCount, failCount,
     };
