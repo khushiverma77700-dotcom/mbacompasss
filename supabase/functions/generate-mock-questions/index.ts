@@ -874,28 +874,44 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is admin
+    // Verify caller is admin — either via user JWT (normal admin call)
+    // OR via internal service key + _as_user_id (server-side pump / cron).
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return jsonResp(401, { error: "Missing auth" });
-    }
-    const userClient = createClient(url, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userRes } = await userClient.auth.getUser();
-    const user = userRes?.user;
-    if (!user) return jsonResp(401, { error: "Invalid auth" });
-
+    const internalKey = req.headers.get("x-internal-pump-key") || "";
     const admin = createClient(url, serviceKey);
-    const { data: roleRow } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) return jsonResp(403, { error: "Admin role required" });
 
+    // Parse body once and reuse below.
     const body = await req.json().catch(() => ({}));
+
+    let user: { id: string } | null = null;
+    if (internalKey && internalKey === serviceKey && body?._as_user_id) {
+      const { data: roleRow } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", body._as_user_id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) return jsonResp(403, { error: "_as_user_id is not admin" });
+      user = { id: body._as_user_id };
+    } else {
+      if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
+      const userClient = createClient(url, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userRes } = await userClient.auth.getUser();
+      const u = userRes?.user;
+      if (!u) return jsonResp(401, { error: "Invalid auth" });
+      const { data: roleRow } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", u.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) return jsonResp(403, { error: "Admin role required" });
+      user = { id: u.id };
+    }
+
+
     const {
       exam_code = "CAT",
       category = "full_length",   // sectional | topic | full_length | daily | practice

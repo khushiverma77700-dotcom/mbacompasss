@@ -22,7 +22,9 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const DISPATCH_LOCK_MS = 2 * 60_000;
 const DISPATCH_TIMEOUT_MS = 45_000;
-const MAX_ACTIVE_PER_BATCH = 1;
+// Max items per batch generating in parallel. 3 = sweet spot with 200K TPM.
+const MAX_ACTIVE_PER_BATCH = 3;
+
 
 async function reconcile(admin: any) {
   // Recover rows where the worker died after marking "processing" but before
@@ -115,7 +117,7 @@ function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
   return fetch(url, { ...init, signal: ctrl.signal }).finally(() => clearTimeout(timer));
 }
 
-async function dispatchItem(admin: any, item: any, userToken: string) {
+async function dispatchItem(admin: any, item: any, auth: { userToken?: string; asUserId?: string }) {
   const nowIso = new Date().toISOString();
   const lockIso = new Date(Date.now() + DISPATCH_LOCK_MS).toISOString();
   const { data: claimed } = await admin
@@ -137,23 +139,35 @@ async function dispatchItem(admin: any, item: any, userToken: string) {
   if (!claimed) return false;
 
   try {
+    // Build headers: either user Bearer (online admin) OR internal pump key
+    // with stored admin user id (cron / laptop-off pump).
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+    };
+    const reqBody: Record<string, any> = {
+      exam_code: claimed.exam_code,
+      category: claimed.category,
+      level: claimed.level,
+      questions_per_set: claimed.questions_per_set,
+      sets: claimed.sets,
+      section_code: claimed.section_code || undefined,
+      topic: claimed.topic || undefined,
+      test_name_prefix: claimed.test_name_prefix || undefined,
+    };
+    if (auth.userToken) {
+      headers.Authorization = `Bearer ${auth.userToken}`;
+    } else if (auth.asUserId) {
+      headers["x-internal-pump-key"] = SERVICE_KEY;
+      reqBody._as_user_id = auth.asUserId;
+    } else {
+      throw new Error("No auth provided for dispatch");
+    }
+
     const resp = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/generate-mock-questions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${userToken}`,
-        apikey: ANON_KEY,
-      },
-      body: JSON.stringify({
-        exam_code: claimed.exam_code,
-        category: claimed.category,
-        level: claimed.level,
-        questions_per_set: claimed.questions_per_set,
-        sets: claimed.sets,
-        section_code: claimed.section_code || undefined,
-        topic: claimed.topic || undefined,
-        test_name_prefix: claimed.test_name_prefix || undefined,
-      }),
+      headers,
+      body: JSON.stringify(reqBody),
     }, DISPATCH_TIMEOUT_MS);
     const result = await resp.json().catch(() => ({}));
     if (!resp.ok) {
@@ -195,9 +209,10 @@ async function dispatchItem(admin: any, item: any, userToken: string) {
   }
 }
 
-async function pumpPending(admin: any, userToken: string, limit = 3) {
+async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: string }, limit = 3) {
   const nowIso = new Date().toISOString();
   const { data: activeByRequest } = await admin
+
     .from("bulk_mock_request_items")
     .select("request_id")
     .eq("paused", false)
@@ -208,7 +223,7 @@ async function pumpPending(admin: any, userToken: string, limit = 3) {
   }
   const { data: pending } = await admin
     .from("bulk_mock_request_items")
-    .select("*")
+    .select("*, bulk_mock_requests!inner(created_by)")
     .eq("paused", false)
     .is("generation_id", null)
     .in("status", ["pending", "processing"])
@@ -219,11 +234,18 @@ async function pumpPending(admin: any, userToken: string, limit = 3) {
   let dispatched = 0;
   for (const itm of pending ?? []) {
     if ((activeCounts.get(itm.request_id) || 0) >= MAX_ACTIVE_PER_BATCH) continue;
-    if (await dispatchItem(admin, itm, userToken)) dispatched++;
+    // Per-item auth: prefer caller's user token (interactive admin call).
+    // Otherwise fall back to internal pump with the batch's created_by admin.
+    const itemAuth = auth.userToken
+      ? { userToken: auth.userToken }
+      : { asUserId: itm.bulk_mock_requests?.created_by };
+    if (!itemAuth.userToken && !itemAuth.asUserId) continue;
+    if (await dispatchItem(admin, itm, itemAuth)) dispatched++;
     activeCounts.set(itm.request_id, (activeCounts.get(itm.request_id) || 0) + 1);
   }
   return dispatched;
 }
+
 
 async function legacyDispatchItem(admin: any, item: any, userToken: string) {
   await admin
@@ -293,9 +315,20 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const auth = req.headers.get("Authorization") || "";
   const userToken = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  const internalKey = req.headers.get("x-internal-pump-key") || "";
+  const isInternal = !!internalKey && internalKey === SERVICE_KEY;
 
   // Always reconcile first.
   const reconciled = await reconcile(admin);
+
+  // ---- Cron / internal-key pump (runs even when no admin is online) ----
+  // Used by pg_cron every minute so generation keeps progressing while the
+  // admin's laptop is off. Pumps up to 3 pending items globally using each
+  // batch's stored created_by admin via the internal-pump header.
+  if (isInternal) {
+    const dispatched = await pumpPending(admin, {}, 3);
+    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched });
+  }
 
   // Reconcile-only mode.
   if (body?.reconcile && !body?.items && !body?.resume_id) {
@@ -322,7 +355,7 @@ Deno.serve(async (req) => {
   if (!roleRow) return json(403, { error: "admin only" });
 
   if (body?.reconcile && !body?.items && !body?.resume_id) {
-    const dispatched = await pumpPending(admin, userToken, 3);
+    const dispatched = await pumpPending(admin, { userToken }, 3);
     return json(200, { ok: true, mode: "reconcile", reconciled, dispatched });
   }
 
@@ -337,9 +370,10 @@ Deno.serve(async (req) => {
     await admin.from("bulk_mock_request_items").update({ paused: false }).eq("id", itm.id);
     // dispatch in background
     // @ts-ignore EdgeRuntime is available in Supabase Edge runtime
-    EdgeRuntime.waitUntil(dispatchItem(admin, itm, userToken));
+    EdgeRuntime.waitUntil(dispatchItem(admin, itm, { userToken }));
     return json(200, { ok: true, dispatched: 1 });
   }
+
 
   // Create new batch.
   const items = Array.isArray(body?.items) ? body.items : [];
@@ -378,7 +412,8 @@ Deno.serve(async (req) => {
 
   // Start every inserted row. Each dispatch only needs generate-mock-questions
   // to return its 202 + generation_id; the heavy AI work remains in section workers.
-  const runAll = async () => { await pumpPending(admin, userToken, inserted?.length ?? 0); };
+  const runAll = async () => { await pumpPending(admin, { userToken }, inserted?.length ?? 0); };
+
   // @ts-ignore
   EdgeRuntime.waitUntil(runAll());
 

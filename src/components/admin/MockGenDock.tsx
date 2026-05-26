@@ -151,15 +151,48 @@ export default function MockGenDock() {
 // ----------------------------------------------------------------------------
 
 function statusMeta(status: DockJob["status"]) {
+  // Shady gradient skins per status:
+  //   completed → green   |  running/starting → yellow   |  pending → red
   switch (status) {
-    case "pending":   return { icon: Clock,         color: "text-slate-500",   ring: "border-slate-200 bg-white/70",   label: "Queued" };
-    case "starting":  return { icon: Loader2,       color: "text-sky-600",     ring: "border-sky-200 bg-sky-50/70",     label: "Starting", spin: true };
-    case "running":   return { icon: Loader2,       color: "text-sky-600",     ring: "border-sky-200 bg-sky-50/70",     label: "Generating", spin: true };
-    case "completed": return { icon: CheckCircle2,  color: "text-emerald-600", ring: "border-emerald-200 bg-emerald-50/70", label: "Done" };
-    case "failed":    return { icon: XCircle,       color: "text-rose-600",    ring: "border-rose-200 bg-rose-50/70",   label: "Failed" };
-    case "cancelled": return { icon: XCircle,       color: "text-slate-500",   ring: "border-slate-200 bg-slate-50/70", label: "Cancelled" };
+    case "pending":
+      return {
+        icon: Clock, color: "text-rose-700", label: "Not started",
+        ring: "border-rose-200/80 bg-gradient-to-br from-rose-50 via-rose-100/60 to-rose-50 shadow-inner shadow-rose-200/40",
+        bar: "[&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-rose-400 [&_[data-state]]:to-rose-500",
+        dot: "bg-rose-500",
+      };
+    case "starting":
+    case "running":
+      return {
+        icon: Loader2, spin: true, color: "text-amber-700", label: status === "starting" ? "Starting" : "In progress",
+        ring: "border-amber-200/80 bg-gradient-to-br from-amber-50 via-yellow-100/70 to-amber-50 shadow-inner shadow-amber-200/40",
+        bar: "[&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-amber-400 [&_[data-state]]:via-yellow-400 [&_[data-state]]:to-amber-500",
+        dot: "bg-amber-500 animate-pulse",
+      };
+    case "completed":
+      return {
+        icon: CheckCircle2, color: "text-emerald-700", label: "Completed",
+        ring: "border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-green-100/70 to-emerald-50 shadow-inner shadow-emerald-200/40",
+        bar: "[&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-emerald-400 [&_[data-state]]:to-green-500",
+        dot: "bg-emerald-500",
+      };
+    case "failed":
+      return {
+        icon: XCircle, color: "text-rose-700", label: "Failed",
+        ring: "border-rose-300/80 bg-gradient-to-br from-rose-100 via-rose-200/60 to-rose-100 shadow-inner shadow-rose-300/40",
+        bar: "[&_[data-state]]:bg-rose-500",
+        dot: "bg-rose-600",
+      };
+    case "cancelled":
+      return {
+        icon: XCircle, color: "text-slate-600", label: "Cancelled",
+        ring: "border-slate-200/80 bg-gradient-to-br from-slate-50 via-slate-100/60 to-slate-50",
+        bar: "[&_[data-state]]:bg-slate-400",
+        dot: "bg-slate-400",
+      };
   }
 }
+
 
 function JobRow({
   job, expanded, onToggle, onCancel, onDismiss,
@@ -177,10 +210,15 @@ function JobRow({
   const isFinal = ["completed", "failed", "cancelled"].includes(job.status);
 
   return (
-    <div className={`rounded-xl border ${meta.ring} backdrop-blur-sm transition-all`}>
+    <div className={`relative rounded-xl border ${meta.ring} backdrop-blur-sm transition-all overflow-hidden`}>
+      {/* Glossy shimmer overlay — adds the "shady" depth */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-white/10" />
+      {/* Left status accent bar */}
+      <div className={`pointer-events-none absolute left-0 top-0 bottom-0 w-1 ${meta.dot}`} />
+
       <button
         onClick={onToggle}
-        className="w-full text-left px-3 py-2.5 flex items-start gap-2.5"
+        className="relative w-full text-left pl-4 pr-3 py-2.5 flex items-start gap-2.5"
       >
         <div className={`mt-0.5 ${meta.color} flex-shrink-0`}>
           <Icon className={`h-4 w-4 ${meta.spin ? "animate-spin" : ""}`} />
@@ -188,20 +226,22 @@ function JobRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-slate-900 truncate">{job.label}</div>
-            <Badge variant="outline" className={`text-[10px] ${meta.color} border-current/30`}>
+            <Badge variant="outline" className={`text-[10px] font-semibold ${meta.color} bg-white/70 border-current/40 shadow-sm`}>
+              <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
               {meta.label}
             </Badge>
           </div>
-          <div className="mt-1 text-[11px] text-slate-600 flex items-center justify-between gap-2">
+          <div className="mt-1 text-[11px] text-slate-700 flex items-center justify-between gap-2">
             <span>
               {generated}/{requested || "?"} questions
               {job.error ? ` · ${job.error.slice(0, 60)}` : ""}
             </span>
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </div>
-          <Progress value={pct} className="h-1.5 mt-1.5" />
+          <Progress value={pct} className={`h-1.5 mt-1.5 bg-white/70 ${meta.bar}`} />
         </div>
       </button>
+
 
       {/* Row actions */}
       <div className="flex items-center justify-end gap-1 px-3 pb-2">
