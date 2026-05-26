@@ -814,13 +814,32 @@ const AdminMockTests = () => {
                         : partial
                         ? "bg-amber-100 text-amber-700 border-amber-300"
                         : "bg-slate-100 text-slate-600 border-slate-300";
+                      const isFilling = fillingTestId === t.id;
                       return (
-                        <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
-                          {actual}/{expected}
-                        </Badge>
+                        <div className="flex flex-col items-start gap-1">
+                          <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
+                            {actual}/{expected}
+                          </Badge>
+                          {partial && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px] border-amber-300 text-amber-700 hover:bg-amber-50"
+                              disabled={isFilling}
+                              onClick={() => handleFillMissingQuestions(t.id, t.name)}
+                              title="Generate the missing questions in each section that came up short"
+                            >
+                              {isFilling
+                                ? <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                : <Wand2 className="w-3 h-3 mr-1" />}
+                              Generate missing {expected - actual}
+                            </Button>
+                          )}
+                        </div>
                       );
                     })()}
                   </TableCell>
+
                   <TableCell>
                     <InlineLaunchControls
                       test={t}
