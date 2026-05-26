@@ -22,9 +22,9 @@ import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgre
  */
 export default function MockGenDock() {
   const {
-    jobs, isOpen, open, close, toggle,
+    jobs, isOpen, open, close,
     activeCount, pendingCount, doneCount, failCount,
-    cancel, dismiss, clearFinished,
+    cancel, dismiss, clearFinished, runNow, retry,
   } = useMockGenDock();
   const panelRef = useRef<HTMLDivElement>(null);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
@@ -36,12 +36,26 @@ export default function MockGenDock() {
       if (!panelRef.current) return;
       if (!panelRef.current.contains(e.target as Node)) close();
     };
-    // Defer to avoid closing on the same click that opened the panel
     const t = setTimeout(() => document.addEventListener("mousedown", onDown), 0);
     return () => { clearTimeout(t); document.removeEventListener("mousedown", onDown); };
   }, [isOpen, close]);
 
+  // Compute queue position (1-based) for each pending job by created order.
+  const queuePosById = useMemo(() => {
+    const map = new Map<string, number>();
+    const pendings = jobs
+      .filter((j) => j.status === "pending")
+      .sort((a, b) => a.createdAt - b.createdAt);
+    pendings.forEach((j, i) => map.set(j.id, i + 1));
+    return map;
+  }, [jobs]);
+
+  const totalRequested = jobs.reduce((s, j) => s + (j.total_requested || 0), 0);
+  const totalGenerated = jobs.reduce((s, j) => s + (j.total_generated || 0), 0);
+  const overallPct = totalRequested > 0 ? Math.round((totalGenerated / totalRequested) * 100) : 0;
+
   if (!jobs.length) return null;
+
 
   return (
     <>
