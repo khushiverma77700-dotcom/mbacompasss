@@ -158,6 +158,7 @@ export default function StudentLayout() {
   // falling through to public pages or login history entries.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (isDemo) return; // demo mode keeps its own /demo/* paths, don't bounce
     const state = window.history.state ?? {};
     window.history.replaceState({ ...state, mbcStudentSafe: true }, "", window.location.href);
 
@@ -174,7 +175,7 @@ export default function StudentLayout() {
 
     window.addEventListener("popstate", keepInsideDashboard);
     return () => window.removeEventListener("popstate", keepInsideDashboard);
-  }, [navigate]);
+  }, [isDemo, navigate]);
 
   // Lock body scroll while the mobile drawer is open.
   // NOTE: must be declared BEFORE any early return to preserve hook order
