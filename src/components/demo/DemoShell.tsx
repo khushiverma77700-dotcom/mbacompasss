@@ -1,40 +1,98 @@
 import { ReactNode, useCallback } from "react";
 import { Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { DemoLockProvider, useDemoLock } from "./DemoLockPopup";
 
 /**
  * Wraps the LIVE student dashboard for /demo/* routes.
- * - Provides DemoModeProvider so StudentLayout bypasses auth
- * - Intercepts every click (capture phase) and shows the lock popup
- *   instead of letting the user actually navigate / submit / mutate.
- * - Hover, scroll, animations, counters, graphs all stay live.
- * - Elements with `data-demo-allow="true"` (the popup itself, its
- *   buttons, the badge) are exempt from the intercept.
+ * Behaviour:
+ *  - Sidebar / nav links are ALLOWED — internal /student/* links are rewritten
+ *    to /demo/* so the user can browse every section freely.
+ *  - Items explicitly marked `data-demo-blurred="true"` always trigger the
+ *    upsell popup (used to lock all-but-first formula / vocab cards).
+ *  - Items marked `data-demo-allow="true"` pass through (tabs, the badge,
+ *    the popup itself, the section switcher checkboxes, etc.).
+ *  - Everything else (buttons, form submits, mutating actions) → popup.
  */
 function ClickInterceptor({ children }: { children: ReactNode }) {
   const { open } = useDemoLock();
+  const navigate = useNavigate();
+
+  const rewriteToDemo = useCallback((href: string): string | null => {
+    try {
+      // Only handle same-origin URLs.
+      const url = href.startsWith("/")
+        ? new URL(href, window.location.origin)
+        : new URL(href);
+      if (url.origin !== window.location.origin) return null;
+      let path = url.pathname;
+      if (path.startsWith("/student")) path = "/demo" + path.slice("/student".length);
+      else if (path === "/" || path === "") path = "/demo";
+      else if (!path.startsWith("/demo")) return null;
+      return path + url.search + url.hash;
+    } catch {
+      return null;
+    }
+  }, []);
 
   const handleCapture = useCallback(
     (e: React.MouseEvent) => {
       const el = e.target as HTMLElement | null;
-      if (el && el.closest?.('[data-demo-allow="true"]')) return;
+      if (!el) return;
+
+      // Blurred / locked card → always show popup.
+      if (el.closest?.('[data-demo-blurred="true"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        open();
+        return;
+      }
+
+      // Explicitly allowed element → let it through untouched.
+      if (el.closest?.('[data-demo-allow="true"]')) return;
+
+      // Internal navigation link → rewrite to /demo/* and navigate.
+      const anchor = el.closest?.("a") as HTMLAnchorElement | null;
+      if (anchor && anchor.getAttribute("href")) {
+        const href = anchor.getAttribute("href") || "";
+        const target = anchor.getAttribute("target");
+        if (target && target !== "_self") return; // external tab — let through
+        const rewritten = rewriteToDemo(href);
+        if (rewritten) {
+          e.preventDefault();
+          e.stopPropagation();
+          navigate(rewritten);
+          return;
+        }
+      }
+
+      // Anything else (button, submit, mutating click) → popup.
       e.preventDefault();
       e.stopPropagation();
       open();
     },
-    [open]
+    [open, navigate, rewriteToDemo]
   );
 
-  // Also block keyboard "Enter"/"Space" activations on focused controls.
   const handleKeyCapture = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key !== "Enter" && e.key !== " ") return;
       const el = e.target as HTMLElement | null;
-      if (el && el.closest?.('[data-demo-allow="true"]')) return;
-      const tag = (el?.tagName || "").toLowerCase();
-      if (["a", "button", "input", "select", "textarea"].includes(tag) || el?.getAttribute("role") === "button") {
+      if (!el) return;
+      if (el.closest?.('[data-demo-blurred="true"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        open();
+        return;
+      }
+      if (el.closest?.('[data-demo-allow="true"]')) return;
+      // Let anchors flow through their own click handling (browser turns
+      // Enter into a click which our click capture will rewrite).
+      if (el.closest?.("a[href]")) return;
+      const tag = (el.tagName || "").toLowerCase();
+      if (["button", "input", "select", "textarea"].includes(tag) || el.getAttribute("role") === "button") {
         e.preventDefault();
         e.stopPropagation();
         open();
