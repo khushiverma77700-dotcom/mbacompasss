@@ -1120,27 +1120,43 @@ function MockCardItem({
           )}
         </div>
 
-        {owned && lock && (
-          <div className="relative rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-3 mb-3 overflow-hidden">
-            <div className="pointer-events-none absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-amber-200/30 blur-2xl" />
-            <div className="relative flex items-start gap-3">
-              <div className="shrink-0 h-9 w-9 rounded-lg bg-white/80 border border-amber-200 flex items-center justify-center shadow-sm">
-                <Calendar className="h-4 w-4 text-amber-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] uppercase tracking-wider font-semibold text-amber-700/80">
-                  {lock.kind === "scheduled" ? "Unlocks on" : "Status"}
+        {owned && lock && (() => {
+          const daysLeft = lock.kind === "scheduled"
+            ? Math.max(0, Math.ceil((lock.unlocksAt.getTime() - Date.now()) / 86400000))
+            : null;
+          return (
+            <div className="relative rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-3 mb-3 overflow-hidden">
+              <div className="pointer-events-none absolute -right-6 -bottom-6 h-24 w-24 rounded-full bg-amber-200/40 blur-2xl" />
+              <div className="relative flex items-start gap-3">
+                <div className="shrink-0 h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-rose-500 text-white flex items-center justify-center shadow-md ring-2 ring-white">
+                  {isFullLength ? <Sparkles className="h-5 w-5" /> : <Calendar className="h-4 w-4" />}
                 </div>
-                <div className="text-sm font-bold text-amber-900 leading-tight">{lock.label}</div>
-                {lock.kind === "scheduled" && (
-                  <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-white/70 border border-amber-200/70 rounded-md px-1.5 py-0.5">
-                    <Clock className="h-2.5 w-2.5" /> <span className="tabular-nums">{countdown}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] uppercase tracking-wider font-bold text-amber-700">
+                    {isFullLength && lock.kind === "scheduled" ? "New Mock — Goes Live" : lock.kind === "scheduled" ? "Unlocks on" : "Status"}
                   </div>
-                )}
+                  {isFullLength && daysLeft != null ? (
+                    <div className="text-base font-extrabold text-amber-900 leading-tight tabular-nums">
+                      in {daysLeft} day{daysLeft === 1 ? "" : "s"}
+                    </div>
+                  ) : (
+                    <div className="text-sm font-bold text-amber-900 leading-tight">{lock.label}</div>
+                  )}
+                  {lock.kind === "scheduled" && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-white/80 border border-amber-200 rounded-md px-1.5 py-0.5">
+                        <Clock className="h-2.5 w-2.5" /> <span className="tabular-nums">{countdown}</span>
+                      </span>
+                      {isFullLength && (
+                        <span className="text-[10px] text-amber-700/80 font-medium truncate">{lock.label}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {owned && latestSubmitted && pct != null && !lock && (
           <div className="relative rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-cyan-50/40 p-3 mb-3 overflow-hidden">
