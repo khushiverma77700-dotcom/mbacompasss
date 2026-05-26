@@ -94,8 +94,10 @@ function mapRow(row: any): DockJob {
     startedAt: row.started_at ? new Date(row.started_at).getTime() : undefined,
     finishedAt: row.finished_at ? new Date(row.finished_at).getTime() : undefined,
     request_id: row.request_id,
+    hasFailedSections: row.status === "needs_review",
   };
 }
+
 
 export function MockGenDockProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useState<DockJob[]>([]);
