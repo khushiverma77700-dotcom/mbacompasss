@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Loader2, CheckCircle2, XCircle, Clock, X, ChevronRight,
-  ChevronDown, ChevronUp, Trash2, StopCircle, Layers,
+  ChevronDown, ChevronUp, Trash2, StopCircle, Layers, Zap, RotateCw,
+  Timer, ListOrdered,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useMockGenDock, type DockJob } from "@/contexts/MockGenDockContext";
 import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
+
 
 /**
  * Floating, glassmorphism mock-generation dock pinned to the right edge.
@@ -20,9 +22,9 @@ import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgre
  */
 export default function MockGenDock() {
   const {
-    jobs, isOpen, open, close, toggle,
+    jobs, isOpen, open, close,
     activeCount, pendingCount, doneCount, failCount,
-    cancel, dismiss, clearFinished,
+    cancel, dismiss, clearFinished, runNow, retry,
   } = useMockGenDock();
   const panelRef = useRef<HTMLDivElement>(null);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
@@ -34,12 +36,26 @@ export default function MockGenDock() {
       if (!panelRef.current) return;
       if (!panelRef.current.contains(e.target as Node)) close();
     };
-    // Defer to avoid closing on the same click that opened the panel
     const t = setTimeout(() => document.addEventListener("mousedown", onDown), 0);
     return () => { clearTimeout(t); document.removeEventListener("mousedown", onDown); };
   }, [isOpen, close]);
 
+  // Compute queue position (1-based) for each pending job by created order.
+  const queuePosById = useMemo(() => {
+    const map = new Map<string, number>();
+    const pendings = jobs
+      .filter((j) => j.status === "pending")
+      .sort((a, b) => a.createdAt - b.createdAt);
+    pendings.forEach((j, i) => map.set(j.id, i + 1));
+    return map;
+  }, [jobs]);
+
+  const totalRequested = jobs.reduce((s, j) => s + (j.total_requested || 0), 0);
+  const totalGenerated = jobs.reduce((s, j) => s + (j.total_generated || 0), 0);
+  const overallPct = totalRequested > 0 ? Math.round((totalGenerated / totalRequested) * 100) : 0;
+
   if (!jobs.length) return null;
+
 
   return (
     <>
@@ -119,10 +135,24 @@ export default function MockGenDock() {
                   </Button>
                 </div>
               </div>
-              {/* Concurrency hint */}
-              <div className="relative mt-2 flex items-center gap-1.5 text-[10px] text-slate-600">
-                <Layers className="h-3 w-3" />
-                <span>Up to 3 mocks generate in parallel. The next queued one starts automatically.</span>
+              {/* Concurrency hint + overall progress */}
+              <div className="relative mt-2 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-600">
+                  <Layers className="h-3 w-3" />
+                  <span>Up to 3 mocks generate in parallel — server keeps running even if you close your laptop.</span>
+                </div>
+                {totalRequested > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-600 mb-0.5">
+                      <span>Overall progress</span>
+                      <span className="font-semibold tabular-nums">{totalGenerated} / {totalRequested} · {overallPct}%</span>
+                    </div>
+                    <Progress
+                      value={overallPct}
+                      className="h-1.5 bg-white/70 [&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-sky-400 [&_[data-state]]:via-blue-500 [&_[data-state]]:to-indigo-500"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -131,16 +161,21 @@ export default function MockGenDock() {
               {jobs.map((j) => (
                 <JobRow key={j.id}
                   job={j}
+                  queuePos={queuePosById.get(j.id)}
+                  totalPending={pendingCount}
                   expanded={expandedJob === j.id}
                   onToggle={() => setExpandedJob(expandedJob === j.id ? null : j.id)}
                   onCancel={() => cancel(j.id)}
-                  onDismiss={() => dismiss(j.id)} />
+                  onDismiss={() => dismiss(j.id)}
+                  onRunNow={() => runNow(j.id)}
+                  onRetry={() => retry(j.id)} />
               ))}
             </div>
 
             <div className="px-3 py-2 border-t border-sky-100/80 bg-white/40 text-[11px] text-slate-500 text-center">
               Click outside to minimize · The dock keeps running across pages
             </div>
+
           </motion.div>
         )}
       </AnimatePresence>
@@ -194,11 +229,29 @@ function statusMeta(status: DockJob["status"]) {
 }
 
 
+function fmtDuration(ms: number): string {
+  if (ms < 0 || !isFinite(ms)) return "—";
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const rs = s % 60;
+  if (m < 60) return `${m}m ${rs}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+
 function JobRow({
-  job, expanded, onToggle, onCancel, onDismiss,
+  job, queuePos, totalPending, expanded, onToggle, onCancel, onDismiss, onRunNow, onRetry,
 }: {
-  job: DockJob; expanded: boolean;
-  onToggle: () => void; onCancel: () => void; onDismiss: () => void;
+  job: DockJob;
+  queuePos?: number;
+  totalPending: number;
+  expanded: boolean;
+  onToggle: () => void;
+  onCancel: () => void;
+  onDismiss: () => void;
+  onRunNow: () => void;
+  onRetry: () => void;
 }) {
   const meta = statusMeta(job.status);
   const Icon = meta.icon;
@@ -209,11 +262,31 @@ function JobRow({
     : (job.status === "completed" ? 100 : job.status === "running" ? 3 : 0);
   const isFinal = ["completed", "failed", "cancelled"].includes(job.status);
 
+  // Tick every second so the "running for" timer updates live.
+  const [, force] = useState(0);
+  useEffect(() => {
+    if (job.status !== "running" && job.status !== "starting") return;
+    const t = setInterval(() => force((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [job.status]);
+
+  let etaLabel: string | null = null;
+  let runningLabel: string | null = null;
+  if ((job.status === "running" || job.status === "starting") && job.startedAt) {
+    const elapsed = Date.now() - job.startedAt;
+    runningLabel = `Running for ${fmtDuration(elapsed)}`;
+    if (generated > 0 && requested > 0 && generated < requested) {
+      const perQ = elapsed / generated;
+      const remainingMs = perQ * (requested - generated);
+      etaLabel = `~${fmtDuration(remainingMs)} left`;
+    }
+  } else if (job.status === "completed" && job.startedAt && job.finishedAt) {
+    runningLabel = `Took ${fmtDuration(job.finishedAt - job.startedAt)}`;
+  }
+
   return (
     <div className={`relative rounded-xl border ${meta.ring} backdrop-blur-sm transition-all overflow-hidden`}>
-      {/* Glossy shimmer overlay — adds the "shady" depth */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-white/10" />
-      {/* Left status accent bar */}
       <div className={`pointer-events-none absolute left-0 top-0 bottom-0 w-1 ${meta.dot}`} />
 
       <button
@@ -226,25 +299,62 @@ function JobRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-slate-900 truncate">{job.label}</div>
-            <Badge variant="outline" className={`text-[10px] font-semibold ${meta.color} bg-white/70 border-current/40 shadow-sm`}>
+            <Badge variant="outline" className={`text-[10px] font-semibold ${meta.color} bg-white/70 border-current/40 shadow-sm shrink-0`}>
               <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
               {meta.label}
             </Badge>
           </div>
+
+          {job.status === "pending" && queuePos && (
+            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/70 border border-rose-200 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+              <ListOrdered className="h-3 w-3" />
+              Queue position {queuePos} of {totalPending}
+            </div>
+          )}
+
           <div className="mt-1 text-[11px] text-slate-700 flex items-center justify-between gap-2">
-            <span>
+            <span className="tabular-nums">
               {generated}/{requested || "?"} questions
-              {job.error ? ` · ${job.error.slice(0, 60)}` : ""}
+              {pct > 0 ? ` · ${pct}%` : ""}
             </span>
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </div>
+
+          {(runningLabel || etaLabel) && (
+            <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-600">
+              {runningLabel && (
+                <span className="inline-flex items-center gap-1"><Timer className="h-3 w-3" /> {runningLabel}</span>
+              )}
+              {etaLabel && (
+                <span className="inline-flex items-center gap-1 text-amber-700 font-semibold">{etaLabel}</span>
+              )}
+            </div>
+          )}
+
+          {job.error && (
+            <div className="mt-1 text-[10px] text-rose-700/90 line-clamp-2">
+              {job.error}
+            </div>
+          )}
+
           <Progress value={pct} className={`h-1.5 mt-1.5 bg-white/70 ${meta.bar}`} />
         </div>
       </button>
 
-
-      {/* Row actions */}
       <div className="flex items-center justify-end gap-1 px-3 pb-2">
+        {job.status === "pending" && (
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-sky-700 hover:bg-sky-50"
+            onClick={(e) => { e.stopPropagation(); onRunNow(); }}
+            title="Force this mock to start now (skip queue)">
+            <Zap className="h-3 w-3 mr-1" /> Run now
+          </Button>
+        )}
+        {job.status === "failed" && (
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-amber-700 hover:bg-amber-50"
+            onClick={(e) => { e.stopPropagation(); onRetry(); }}>
+            <RotateCw className="h-3 w-3 mr-1" /> Retry
+          </Button>
+        )}
         {!isFinal && (
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-rose-600 hover:bg-rose-50"
             onClick={(e) => { e.stopPropagation(); onCancel(); }}>
@@ -280,9 +390,18 @@ function JobRow({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-t border-current/10 bg-white/50"
           >
-            <p className="px-3 py-2 text-[11px] text-slate-500">
-              {job.status === "pending" ? "Waiting for a free slot…" : "Dispatching to AI worker…"}
-            </p>
+            <div className="px-3 py-2 text-[11px] text-slate-600 space-y-1">
+              <p>
+                {job.status === "pending"
+                  ? `Waiting in queue${queuePos ? ` (position ${queuePos})` : ""}. The server dispatches the next 3 pending mocks automatically every minute.`
+                  : "Dispatching to AI worker…"}
+              </p>
+              {job.status === "pending" && (
+                <p className="text-slate-500">
+                  Don't want to wait? Hit <span className="font-semibold text-sky-700">Run now</span> to force-start this mock immediately.
+                </p>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

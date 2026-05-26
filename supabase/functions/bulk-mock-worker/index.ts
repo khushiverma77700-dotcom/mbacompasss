@@ -212,7 +212,6 @@ async function dispatchItem(admin: any, item: any, auth: { userToken?: string; a
 async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: string }, limit = 3) {
   const nowIso = new Date().toISOString();
   const { data: activeByRequest } = await admin
-
     .from("bulk_mock_request_items")
     .select("request_id")
     .eq("paused", false)
@@ -221,6 +220,9 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
   for (const row of activeByRequest || []) {
     activeCounts.set(row.request_id, (activeCounts.get(row.request_id) || 0) + 1);
   }
+  // Fetch a wide window of pending items (across batches) so a saturated
+  // older batch can't starve newer single-mock batches. We still cap the
+  // number we actually dispatch to `limit` globally.
   const { data: pending } = await admin
     .from("bulk_mock_request_items")
     .select("*, bulk_mock_requests!inner(created_by)")
@@ -229,22 +231,24 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
     .in("status", ["pending", "processing"])
     .or(`worker_lock_until.is.null,worker_lock_until.lt.${nowIso}`)
     .order("created_at", { ascending: true })
-    .limit(limit);
+    .limit(100);
 
   let dispatched = 0;
   for (const itm of pending ?? []) {
+    if (dispatched >= limit) break;
     if ((activeCounts.get(itm.request_id) || 0) >= MAX_ACTIVE_PER_BATCH) continue;
-    // Per-item auth: prefer caller's user token (interactive admin call).
-    // Otherwise fall back to internal pump with the batch's created_by admin.
     const itemAuth = auth.userToken
       ? { userToken: auth.userToken }
       : { asUserId: itm.bulk_mock_requests?.created_by };
     if (!itemAuth.userToken && !itemAuth.asUserId) continue;
-    if (await dispatchItem(admin, itm, itemAuth)) dispatched++;
-    activeCounts.set(itm.request_id, (activeCounts.get(itm.request_id) || 0) + 1);
+    if (await dispatchItem(admin, itm, itemAuth)) {
+      dispatched++;
+      activeCounts.set(itm.request_id, (activeCounts.get(itm.request_id) || 0) + 1);
+    }
   }
   return dispatched;
 }
+
 
 
 async function legacyDispatchItem(admin: any, item: any, userToken: string) {
