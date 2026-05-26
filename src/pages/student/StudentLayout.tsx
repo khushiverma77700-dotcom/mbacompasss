@@ -166,6 +166,15 @@ export default function StudentLayout() {
     return () => window.removeEventListener("popstate", keepInsideDashboard);
   }, [navigate]);
 
+  // Lock body scroll while the mobile drawer is open.
+  // NOTE: must be declared BEFORE any early return to preserve hook order
+  // (otherwise logging out triggers React error #300).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
   // Render an instant lightweight shell while auth resolves so the user never
   // sees a blank screen on first hit. The auth check still runs in the
   // background; once `user` is null we redirect from the effect above.
@@ -201,12 +210,6 @@ export default function StudentLayout() {
     );
   }
 
-  // Lock body scroll while the mobile drawer is open.
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [mobileOpen]);
 
   return (
     <StudentThemeProvider>
