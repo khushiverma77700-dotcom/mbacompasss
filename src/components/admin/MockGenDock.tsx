@@ -73,7 +73,10 @@ export default function MockGenDock() {
     });
   }, [jobs]);
 
-  if (!jobs.length) return null;
+  // Don't early-return when isOpen is true even with no jobs yet — the panel
+  // may have just been opened by enqueue()/trackRequest() and we want
+  // immediate visual feedback while the first poll lands (1–3s).
+  if (!jobs.length && !isOpen) return null;
 
 
   return (
