@@ -31,7 +31,19 @@ type Bundle = {
   features: FeatureMap;
   highlights: HighlightMap;
   included_categories: string[];
+  filter_exams: string[];
+  filter_types: string[];
 };
+
+const BUNDLE_EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
+const BUNDLE_TYPE_OPTIONS = [
+  { v: "full_length",   l: "Full Length" },
+  { v: "sectional",     l: "Sectional" },
+  { v: "topic_wise",    l: "Topic-wise" },
+  { v: "daily",         l: "Daily Test" },
+  { v: "previous_year", l: "Previous Year" },
+  { v: "mixed",         l: "Mixed / Other" },
+];
 
 type MockOption = {
   id: string;
