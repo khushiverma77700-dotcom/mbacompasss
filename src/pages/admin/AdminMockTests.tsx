@@ -181,6 +181,9 @@ const AdminMockTests = () => {
         return;
       }
 
+      const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
+      const totalTargetForDeficitSections = deficits.reduce((a, b) => a + b.total, 0);
+      const totalActualForDeficitSections = deficits.reduce((a, b) => a + b.actual, 0);
       let kicked = 0;
       const skipped: string[] = [];
       const generationIds = new Set<string>();
@@ -201,8 +204,8 @@ const AdminMockTests = () => {
             request: { source: "top_up_missing", test_id: testId, test_name: (testRow as any)?.name || testName },
             result_summary: {},
             status: "running",
-            total_requested: deficits.reduce((a, b) => a + b.deficit, 0),
-            total_generated: 0,
+            total_requested: totalTargetForDeficitSections,
+            total_generated: totalActualForDeficitSections,
             total_rejected_duplicate: 0,
             total_rejected_web_match: 0,
             created_by: userRes?.user?.id ?? null,
@@ -233,6 +236,8 @@ const AdminMockTests = () => {
             attempts: 0,
             total_questions: ds.total,
             questions_done: ds.actual,
+            sets: job.sets || 0,
+            questions_per_set: job.questions_per_set || 0,
             worker_lock_until: null,
             current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
             error_message: null,
@@ -315,6 +320,8 @@ const AdminMockTests = () => {
         if (bulkItems?.length) {
           await supabase.from("bulk_mock_request_items").update({
             status: "processing", error_message: null, finished_at: null, paused: false,
+            total_requested: totalTargetForDeficitSections,
+            total_generated: totalActualForDeficitSections,
           }).in("id", bulkItems.map((b: any) => b.id));
           const reqIds = Array.from(new Set(bulkItems.map((b: any) => b.request_id).filter(Boolean)));
           reqIds.forEach((rid) => { trackRequest(rid); tracked++; });
@@ -347,8 +354,8 @@ const AdminMockTests = () => {
               sets: 1,
               test_name_prefix: (testRow as any)?.name ?? null,
               status: "processing",
-              total_requested: d.deficit,
-              total_generated: 0,
+              total_requested: d.total,
+              total_generated: d.actual,
               generation_id: Array.from(generationIds)[0] ?? null,
               started_at: new Date().toISOString(),
             }));
@@ -361,7 +368,6 @@ const AdminMockTests = () => {
 
       openDock();
 
-      const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
       toast({
         title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
         description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued — see Mocks dock for progress${skipped.length ? ` · skipped: ${skipped.join(", ")}` : ""}`,
