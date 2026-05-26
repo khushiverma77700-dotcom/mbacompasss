@@ -781,6 +781,25 @@ const AdminMockTests = () => {
             <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Exams</SelectItem>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Status</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="live">Live</SelectItem>
+              <SelectItem value="scheduled">Scheduled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Exam</Label>
+          <Select value={examFilter} onValueChange={setExamFilter}>
+            <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Exams</SelectItem>
               {Object.keys(MOCK_TOPIC_CATALOG).sort().map((ex) => (
                 <SelectItem key={ex} value={ex}>{ex}</SelectItem>
               ))}
