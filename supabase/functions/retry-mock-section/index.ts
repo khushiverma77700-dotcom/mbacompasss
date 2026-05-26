@@ -680,7 +680,15 @@ Deno.serve(async (req) => {
         // ===========================================================
         // PHASE 1 — SET-BASED QUESTIONS (one set per worker tick)
         // ===========================================================
-        const needSet = setsTotal > 0 && setsDone < setsTotal && produced < setQuestionsTarget;
+        const shouldAbandonSetMode = setsTotal > 0 && setsDone > 0 && produced > 0 && runAttemptNumber >= Math.max(6, setsTotal + 2);
+        const needSet = setsTotal > 0 && !shouldAbandonSetMode && setsDone < setsTotal && produced < setQuestionsTarget;
+        if (shouldAbandonSetMode && setsDone < setsTotal && produced < target) {
+          await admin.from("mock_section_jobs").update({
+            current_step: `Set mode stalled after ${setsDone}/${setsTotal} sets — switching to standalone top-up for remaining questions…`,
+            worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq("id", job_id);
+        }
         if (needSet) {
           attempts++;
           const setIdx = setsDone + 1;
