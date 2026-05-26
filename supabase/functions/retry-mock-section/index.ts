@@ -578,12 +578,14 @@ Deno.serve(async (req) => {
 
     if (!userId) userId = job.created_by;
 
+    const runAttemptNumber = (Number(job.attempts) || 0) + 1;
+
     // Re-arm the job and grab a worker lock so the watchdog can recover us if we die.
     await admin.from("mock_section_jobs").update({
       status: "processing",
       current_step: "Restart requested — re-calling AI…",
       error_message: null,
-      attempts: auto ? (job.attempts || 0) : (job.attempts || 0) + 1,
+      attempts: runAttemptNumber,
       worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
       updated_at: new Date().toISOString(),
     }).eq("id", job_id);
@@ -678,7 +680,15 @@ Deno.serve(async (req) => {
         // ===========================================================
         // PHASE 1 — SET-BASED QUESTIONS (one set per worker tick)
         // ===========================================================
-        const needSet = setsTotal > 0 && setsDone < setsTotal && produced < setQuestionsTarget;
+        const shouldAbandonSetMode = setsTotal > 0 && setsDone > 0 && produced > 0 && runAttemptNumber >= Math.max(6, setsTotal + 2);
+        const needSet = setsTotal > 0 && !shouldAbandonSetMode && setsDone < setsTotal && produced < setQuestionsTarget;
+        if (shouldAbandonSetMode && setsDone < setsTotal && produced < target) {
+          await admin.from("mock_section_jobs").update({
+            current_step: `Set mode stalled after ${setsDone}/${setsTotal} sets — switching to standalone top-up for remaining questions…`,
+            worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq("id", job_id);
+        }
         if (needSet) {
           attempts++;
           const setIdx = setsDone + 1;
@@ -1033,7 +1043,13 @@ Deno.serve(async (req) => {
           if (!auto) return;
           const workerUrl = `${url}/functions/v1/retry-mock-section`;
           const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
-          const next = fetch(workerUrl, {
+          const queued = admin.from("mock_section_jobs").update({
+            status: "pending",
+            worker_lock_until: null,
+            current_step: "Queued next generation tick…",
+            updated_at: new Date().toISOString(),
+          }).eq("id", job_id);
+          const next = queued.then(() => fetch(workerUrl, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${internalWorkerSecret}`,
@@ -1041,7 +1057,24 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ job_id, auto: true, service: true, continuation: true, internal_secret: internalWorkerSecret }),
-          }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
+          })).then(async (resp) => {
+            if (!resp.ok) {
+              await admin.from("mock_section_jobs").update({
+                status: "pending",
+                worker_lock_until: null,
+                current_step: `Next generation tick failed to start (HTTP ${resp.status}) — watchdog will retry`,
+                updated_at: new Date().toISOString(),
+              }).eq("id", job_id);
+            }
+          }).catch(async (e) => {
+            console.error("[retry-mock-section] next worker failed", e);
+            await admin.from("mock_section_jobs").update({
+              status: "pending",
+              worker_lock_until: null,
+              current_step: "Next generation tick failed to start — watchdog will retry",
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+          });
           // @ts-ignore
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
         }
