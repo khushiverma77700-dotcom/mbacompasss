@@ -47,6 +47,26 @@ const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less
 // the section reaches its target or the watchdog cancels it after hours.
 const MAX_ATTEMPTS_PER_QUESTION = 200;
 
+function buildEmergencyDilrQuestion(n: number, seed: number) {
+  const a = 42 + ((seed + n * 7) % 31);
+  const b = 58 + ((seed + n * 11) % 37);
+  const c = 36 + ((seed + n * 13) % 29);
+  const d = 49 + ((seed + n * 17) % 41);
+  const total = a + b + c + d;
+  const correct = total - Math.min(a, b, c, d);
+  return {
+    question_html: `<div><p>The table shows four teams' completed tasks in a project sprint.</p><table><thead><tr><th>Team</th><th>Tasks</th></tr></thead><tbody><tr><td>A</td><td>${a}</td></tr><tr><td>B</td><td>${b}</td></tr><tr><td>C</td><td>${c}</td></tr><tr><td>D</td><td>${d}</td></tr></tbody></table><p>If the lowest-performing team is excluded, what is the total number of tasks completed by the remaining teams?</p></div>`,
+    options: [correct, correct + 4, correct - 6, total].map((value, idx) => ({
+      label: ["A", "B", "C", "D"][idx],
+      text: String(value),
+      is_correct: idx === 0,
+    })),
+    explanation_html: `The four task counts are ${a}, ${b}, ${c}, and ${d}. The lowest value is ${Math.min(a, b, c, d)}, so exclude that team. The remaining total is ${total} - ${Math.min(a, b, c, d)} = ${correct}.`,
+    topic: "Data Interpretation",
+    subtopic: "Table based calculation",
+  };
+}
+
 function isAIRateLimitError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
   return m.includes("429") || m.includes("rate limit") || m.includes("too many requests");
