@@ -235,7 +235,7 @@ const AdminMockTests = () => {
             error_message: null,
             updated_at: new Date().toISOString(),
           }).eq("id", job.id);
-          supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id } }).catch(() => {});
+          supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id, auto: true } }).catch(() => {});
           kicked++;
           continue;
         }
@@ -283,7 +283,7 @@ const AdminMockTests = () => {
           continue;
         }
         createdJobIds.push(newJob.id);
-        supabase.functions.invoke("retry-mock-section", { body: { job_id: newJob.id } }).catch(() => {});
+        supabase.functions.invoke("retry-mock-section", { body: { job_id: newJob.id, auto: true } }).catch(() => {});
         kicked++;
       }
 
