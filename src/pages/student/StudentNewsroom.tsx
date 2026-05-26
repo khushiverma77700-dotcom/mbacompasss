@@ -396,10 +396,36 @@ export default function StudentNewsroom() {
                 </p>
               )}
 
-              {open.short_summary && (
+              {(open.short_summary || open.short_summary_hi || open.short_summary_hinglish) && (
                 <section>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Quick Summary</h4>
-                  <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{open.short_summary}</p>
+                  <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Quick Summary</h4>
+                    <div className="flex gap-1">
+                      {([
+                        { k: "en", label: "EN", available: !!open.short_summary },
+                        { k: "hi", label: "हिं", available: !!open.short_summary_hi },
+                        { k: "hinglish", label: "Hi-EN", available: !!open.short_summary_hinglish },
+                      ] as const).map((o) => (
+                        <button
+                          key={o.k}
+                          disabled={!o.available}
+                          onClick={() => setLang(o.k)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded border transition ${
+                            lang === o.k
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : o.available
+                                ? "bg-card border-border hover:bg-accent"
+                                : "opacity-40 cursor-not-allowed border-border"
+                          }`}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground whitespace-pre-line" lang={lang === "hi" ? "hi" : "en"}>
+                    {pickSummary(open)}
+                  </p>
                 </section>
               )}
 
