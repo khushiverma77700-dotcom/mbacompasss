@@ -24,8 +24,21 @@ const DISPATCH_LOCK_MS = 2 * 60_000;
 const DISPATCH_TIMEOUT_MS = 45_000;
 // Max items per batch generating in parallel. 3 = sweet spot with 200K TPM.
 const MAX_ACTIVE_PER_BATCH = 3;
+// Hard global cap across ALL batches — never run more than this many mocks in
+// parallel, no matter how many requests are queued or how many "Run now" /
+// auto-kicks fire. Prevents the dock from spinning up 6+ generations at once.
+const MAX_ACTIVE_GLOBAL = 3;
 const SECTION_LOCK_MS = 8 * 60_000;
 const MAX_ACTIVE_SECTIONS_PER_GENERATION = 3;
+
+async function countGlobalActive(admin: any): Promise<number> {
+  const { count } = await admin
+    .from("bulk_mock_request_items")
+    .select("id", { count: "exact", head: true })
+    .eq("paused", false)
+    .eq("status", "processing");
+  return count || 0;
+}
 
 
 async function reconcile(admin: any) {
