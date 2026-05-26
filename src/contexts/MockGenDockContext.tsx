@@ -259,6 +259,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
 
   const clearFinished = useCallback(() => {
     const finalIds = new Set(jobs.filter((j) => ["completed", "failed", "cancelled"].includes(j.status)).map((j) => j.id));
+    finalIds.forEach((id) => dismissedIdsRef.current.add(id));
+    writeDismissedIds(Array.from(dismissedIdsRef.current));
     setJobs((js) => js.filter((j) => !finalIds.has(j.id)));
     const remainingReqIds = new Set(jobs.filter((j) => !finalIds.has(j.id) && j.request_id).map((j) => j.request_id!));
     trackedReqIdsRef.current = trackedReqIdsRef.current.filter((id) => remainingReqIds.has(id));
