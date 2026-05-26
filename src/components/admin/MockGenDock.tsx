@@ -24,8 +24,9 @@ export default function MockGenDock() {
   const {
     jobs, isOpen, open, close,
     activeCount, pendingCount, doneCount, failCount,
-    cancel, dismiss, clearFinished, runNow, retry,
+    cancel, dismiss, clearFinished, runNow, retry, regenerateFailed,
   } = useMockGenDock();
+
   const panelRef = useRef<HTMLDivElement>(null);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
