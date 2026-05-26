@@ -113,13 +113,14 @@ const AdminMockTests = () => {
   };
   const { filters, setFilter } = useAdminFilters({
     storageKey: "admin.mockTests.filters",
-    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all", section: "all", topic: "all" },
+    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all", status: "all", section: "all", topic: "all" },
     preserveKeys: ["edit"],
   });
   const categoryFilter = filters.category;
   const examFilter = filters.exam;
   const difficultyFilter = filters.difficulty;
   const readinessFilter = filters.readiness;
+  const statusFilter = filters.status;
   const sectionFilter = filters.section;
   const topicFilter = filters.topic;
   const setCategoryFilter = (v: string) => {
@@ -133,6 +134,7 @@ const AdminMockTests = () => {
   const setExamFilter = (v: string) => { setFilter("exam", v); setFilter("section", "all"); setFilter("topic", "all"); };
   const setDifficultyFilter = (v: string) => setFilter("difficulty", v);
   const setReadinessFilter = (v: string) => setFilter("readiness", v);
+  const setStatusFilter = (v: string) => setFilter("status", v);
   const setSectionFilter = (v: string) => { setFilter("section", v); setFilter("topic", "all"); };
   const setTopicFilter = (v: string) => setFilter("topic", v);
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
