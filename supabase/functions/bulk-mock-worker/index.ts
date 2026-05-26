@@ -30,6 +30,7 @@ const MAX_ACTIVE_PER_BATCH = 3;
 const MAX_ACTIVE_GLOBAL = 3;
 const SECTION_LOCK_MS = 8 * 60_000;
 const MAX_ACTIVE_SECTIONS_PER_GENERATION = 3;
+const NULL_UUID = "00000000-0000-0000-0000-000000000000";
 
 async function countGlobalActive(admin: any): Promise<number> {
   const { count } = await admin
@@ -38,6 +39,80 @@ async function countGlobalActive(admin: any): Promise<number> {
     .eq("paused", false)
     .eq("status", "processing");
   return count || 0;
+}
+
+async function enforceGenerationCap(admin: any): Promise<{ demoted: number; promoted: number; activeGenerationIds: string[] }> {
+  const { data: activeRows } = await admin
+    .from("bulk_mock_request_items")
+    .select("id,generation_id,started_at,created_at")
+    .eq("paused", false)
+    .eq("status", "processing")
+    .not("generation_id", "is", null)
+    .order("started_at", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
+
+  const keepRows = (activeRows || []).slice(0, MAX_ACTIVE_GLOBAL);
+  const overflowRows = (activeRows || []).slice(MAX_ACTIVE_GLOBAL);
+  let demoted = 0;
+
+  if (overflowRows.length > 0) {
+    const overflowIds = overflowRows.map((row: any) => row.id);
+    const overflowGenIds = overflowRows.map((row: any) => row.generation_id).filter(Boolean);
+    const { data: demotedRows } = await admin
+      .from("bulk_mock_request_items")
+      .update({
+        status: "pending",
+        worker_lock_until: null,
+        error_message: "Waiting for a free mock generation slot",
+      })
+      .in("id", overflowIds)
+      .select("id");
+    demoted = demotedRows?.length || overflowIds.length;
+    if (overflowGenIds.length > 0) {
+      await admin
+        .from("mock_section_jobs")
+        .update({
+          status: "pending",
+          worker_lock_until: null,
+          current_step: "Waiting for a free mock generation slot",
+          updated_at: new Date().toISOString(),
+        })
+        .in("generation_id", overflowGenIds)
+        .in("status", ["pending", "processing"]);
+    }
+  }
+
+  const activeAfterDemote = keepRows.length;
+  const slots = Math.max(0, MAX_ACTIVE_GLOBAL - activeAfterDemote);
+  let promoted = 0;
+  let activeGenerationIds = keepRows.map((row: any) => String(row.generation_id)).filter(Boolean);
+
+  if (slots > 0) {
+    const { data: queuedRows } = await admin
+      .from("bulk_mock_request_items")
+      .select("id,generation_id,created_at")
+      .eq("paused", false)
+      .eq("status", "pending")
+      .not("generation_id", "is", null)
+      .order("created_at", { ascending: true })
+      .limit(slots);
+    const promoteIds = (queuedRows || []).map((row: any) => row.id);
+    if (promoteIds.length > 0) {
+      const nowIso = new Date().toISOString();
+      await admin
+        .from("bulk_mock_request_items")
+        .update({
+          status: "processing",
+          error_message: null,
+          started_at: nowIso,
+        })
+        .in("id", promoteIds);
+      promoted = promoteIds.length;
+      activeGenerationIds = activeGenerationIds.concat((queuedRows || []).map((row: any) => String(row.generation_id)).filter(Boolean));
+    }
+  }
+
+  return { demoted, promoted, activeGenerationIds: activeGenerationIds.slice(0, MAX_ACTIVE_GLOBAL) };
 }
 
 
@@ -140,13 +215,26 @@ async function reconcile(admin: any) {
   return updated;
 }
 
-async function kickPendingSectionJobs(admin: any, limit = 6) {
+async function kickPendingSectionJobs(admin: any, limit = 6, activeGenerationIds?: string[]) {
   const nowIso = new Date().toISOString();
+  const targetGenerationIds = activeGenerationIds?.length
+    ? activeGenerationIds
+    : (await admin
+      .from("bulk_mock_request_items")
+      .select("generation_id")
+      .eq("paused", false)
+      .eq("status", "processing")
+      .not("generation_id", "is", null)
+      .order("started_at", { ascending: true, nullsFirst: false })
+      .limit(MAX_ACTIVE_GLOBAL)).data?.map((row: any) => String(row.generation_id)).filter(Boolean) || [];
+  if (targetGenerationIds.length === 0) return 0;
+
   const { data: activeRows } = await admin
     .from("mock_section_jobs")
     .select("generation_id")
     .eq("status", "processing")
-    .gt("worker_lock_until", nowIso);
+    .gt("worker_lock_until", nowIso)
+    .in("generation_id", targetGenerationIds);
   const activeByGeneration = new Map<string, number>();
   for (const row of activeRows || []) {
     const key = String(row.generation_id || "");
@@ -157,6 +245,7 @@ async function kickPendingSectionJobs(admin: any, limit = 6) {
     .from("mock_section_jobs")
     .select("id,generation_id,error_message")
     .eq("status", "pending")
+    .in("generation_id", targetGenerationIds.length ? targetGenerationIds : [NULL_UUID])
     .order("created_at", { ascending: true })
     .limit(100);
 
@@ -165,6 +254,7 @@ async function kickPendingSectionJobs(admin: any, limit = 6) {
     if (kicked >= limit) break;
     const generationId = String(job.generation_id || "");
     if (!generationId) continue;
+    if (!targetGenerationIds.includes(generationId)) continue;
     const errText = String(job.error_message || "").toLowerCase();
     if (errText.includes("exceeded your current quota") || errText.includes("quota/rate-limit blocked") || errText.includes("billing")) continue;
     if ((activeByGeneration.get(generationId) || 0) >= MAX_ACTIVE_SECTIONS_PER_GENERATION) continue;
@@ -430,7 +520,7 @@ Deno.serve(async (req) => {
 
   // Always reconcile first.
   const reconciled = await reconcile(admin);
-  const sectionsKickedPromise = kickPendingSectionJobs(admin, 6);
+  let generationCap = await enforceGenerationCap(admin);
 
   // ---- Cron / internal-key pump (runs even when no admin is online) ----
   // Used by pg_cron every minute so generation keeps progressing while the
@@ -438,18 +528,19 @@ Deno.serve(async (req) => {
   // batch's stored created_by admin via the internal-pump header.
   if (isInternal) {
     const dispatched = await pumpPending(admin, {}, 3);
-    const sections_kicked = await sectionsKickedPromise;
-    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched, sections_kicked });
+    generationCap = await enforceGenerationCap(admin);
+    const sections_kicked = await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds);
+    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched, sections_kicked, generation_cap: generationCap });
   }
 
   // Reconcile-only mode.
   if (body?.reconcile && !body?.items && !body?.resume_id) {
-    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0, sections_kicked: await sectionsKickedPromise });
+    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0, sections_kicked: await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds), generation_cap: generationCap });
     // Continue below to validate the admin and pump stalled/pending rows.
   }
 
   // Need user auth for any dispatch.
-  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, sections_kicked: await sectionsKickedPromise });
+  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, sections_kicked: await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds), generation_cap: generationCap });
 
   // Validate user is admin.
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
@@ -468,8 +559,9 @@ Deno.serve(async (req) => {
 
   if (body?.reconcile && !body?.items && !body?.resume_id) {
     const dispatched = await pumpPending(admin, { userToken }, 3);
-    const sections_kicked = await sectionsKickedPromise;
-    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked });
+    generationCap = await enforceGenerationCap(admin);
+    const sections_kicked = await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds);
+    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked, generation_cap: generationCap });
   }
 
   // Resume single item — still respect the global parallelism cap so a stream

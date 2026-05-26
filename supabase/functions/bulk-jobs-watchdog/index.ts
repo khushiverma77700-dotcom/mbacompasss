@@ -20,6 +20,8 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const MOCK_MAX_ACTIVE_GENERATIONS = 3;
+const MOCK_MAX_ACTIVE_SECTIONS_PER_GENERATION = 3;
 
 // A job is considered stuck if it has not been updated for this many minutes.
 const STUCK_MINUTES = 3;
@@ -217,10 +219,22 @@ Deno.serve(async (req) => {
       (report.errors as string[]).push(`gen auto-fail: ${(err as Error).message}`);
     }
 
+    const { data: activeMockGenerations } = await admin
+      .from("bulk_mock_request_items")
+      .select("generation_id,started_at,created_at")
+      .eq("paused", false)
+      .eq("status", "processing")
+      .not("generation_id", "is", null)
+      .order("started_at", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true })
+      .limit(MOCK_MAX_ACTIVE_GENERATIONS);
+    const activeGenerationIds = new Set((activeMockGenerations || []).map((g: any) => String(g.generation_id)));
+
     const { data: pendingMockJobs, error: e3 } = await admin
       .from("mock_section_jobs")
       .select("id,generation_id,status,updated_at,worker_lock_until,error_message,current_step")
       .eq("status", "pending")
+      .in("generation_id", Array.from(activeGenerationIds).length ? Array.from(activeGenerationIds) : ["00000000-0000-0000-0000-000000000000"])
       .order("created_at", { ascending: true });
 
     if (e3) (report.errors as string[]).push(`mock fetch: ${e3.message}`);
@@ -232,14 +246,15 @@ Deno.serve(async (req) => {
         const errText = String((job as any).error_message || "").toLowerCase();
         if (errText.includes("exceeded your current quota") || errText.includes("quota/rate-limit blocked") || errText.includes("billing")) continue;
         const generationId = String((job as any).generation_id || (job as any).id);
-        if ((kickedPerGeneration.get(generationId) || 0) >= 3) continue;
+        if (!activeGenerationIds.has(generationId)) continue;
+        if ((kickedPerGeneration.get(generationId) || 0) >= MOCK_MAX_ACTIVE_SECTIONS_PER_GENERATION) continue;
         const { count: activeCount } = await admin
           .from("mock_section_jobs")
           .select("id", { count: "exact", head: true })
           .eq("generation_id", (job as any).generation_id)
           .eq("status", "processing")
           .gt("worker_lock_until", new Date().toISOString());
-        if ((activeCount || 0) >= 3) continue;
+        if ((activeCount || 0) >= MOCK_MAX_ACTIVE_SECTIONS_PER_GENERATION) continue;
         await admin
           .from("mock_section_jobs")
           .update({
