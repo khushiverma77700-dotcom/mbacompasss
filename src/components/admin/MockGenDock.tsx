@@ -24,8 +24,9 @@ export default function MockGenDock() {
   const {
     jobs, isOpen, open, close,
     activeCount, pendingCount, doneCount, failCount,
-    cancel, dismiss, clearFinished, runNow, retry,
+    cancel, dismiss, clearFinished, runNow, retry, regenerateFailed,
   } = useMockGenDock();
+
   const panelRef = useRef<HTMLDivElement>(null);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
@@ -186,7 +187,9 @@ export default function MockGenDock() {
                   onCancel={() => cancel(j.id)}
                   onDismiss={() => dismiss(j.id)}
                   onRunNow={() => runNow(j.id)}
-                  onRetry={() => retry(j.id)} />
+                  onRetry={() => retry(j.id)}
+                  onRegenerateFailed={() => regenerateFailed(j.id)} />
+
               ))}
             </div>
 
@@ -259,7 +262,7 @@ function fmtDuration(ms: number): string {
 }
 
 function JobRow({
-  job, queuePos, totalPending, expanded, onToggle, onCancel, onDismiss, onRunNow, onRetry,
+  job, queuePos, totalPending, expanded, onToggle, onCancel, onDismiss, onRunNow, onRetry, onRegenerateFailed,
 }: {
   job: DockJob;
   queuePos?: number;
@@ -270,7 +273,9 @@ function JobRow({
   onDismiss: () => void;
   onRunNow: () => void;
   onRetry: () => void;
+  onRegenerateFailed: () => void;
 }) {
+
   const meta = statusMeta(job.status);
   const Icon = meta.icon;
   const requested = job.total_requested ?? 0;
@@ -373,6 +378,14 @@ function JobRow({
             <RotateCw className="h-3 w-3 mr-1" /> Retry
           </Button>
         )}
+        {job.status === "completed" && job.hasFailedSections && (
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-amber-700 hover:bg-amber-50"
+            onClick={(e) => { e.stopPropagation(); onRegenerateFailed(); }}
+            title="Re-generate only the sections that failed">
+            <RotateCw className="h-3 w-3 mr-1" /> Regenerate failed
+          </Button>
+        )}
+
         {!isFinal && (
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-rose-600 hover:bg-rose-50"
             onClick={(e) => { e.stopPropagation(); onCancel(); }}>
