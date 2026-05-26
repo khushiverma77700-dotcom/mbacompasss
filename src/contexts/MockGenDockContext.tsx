@@ -32,6 +32,8 @@ interface DockCtx {
   cancel: (id: string) => void;
   dismiss: (id: string) => void;
   clearFinished: () => void;
+  runNow: (id: string) => Promise<void>;
+  retry: (id: string) => Promise<void>;
   isOpen: boolean;
   open: () => void;
   close: () => void;
@@ -41,6 +43,7 @@ interface DockCtx {
   doneCount: number;
   failCount: number;
 }
+
 
 const Ctx = createContext<DockCtx | null>(null);
 const LS_KEY = "mock_gen_dock_request_ids_v1";
