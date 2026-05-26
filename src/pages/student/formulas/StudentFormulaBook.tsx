@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +35,7 @@ const STATUSES = [
 
 export default function StudentFormulaBook() {
   const { user } = useAuth();
+  const isDemo = useIsDemo();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
 
@@ -487,13 +489,14 @@ export default function StudentFormulaBook() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {visible.map((f) => {
+          {visible.map((f, _idx) => {
             const p = progress[f.id];
             const isDone = p?.status === "completed" || p?.status === "mastered";
             const isRevise = p?.status === "revise_later";
             const saved = !!p?.bookmarked;
+            const demoLocked = isDemo && _idx > 0;
             return (
-              <Card key={f.id} className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl", isDone && "opacity-90")}>
+              <Card key={f.id} data-demo-blurred={demoLocked ? "true" : undefined} className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl", isDone && "opacity-90", demoLocked && "blur-[6px] select-none")}>
                 <div aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1", isDone ? "bg-emerald-400" : isRevise ? "bg-amber-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500")} />
                 <CardContent className="relative flex flex-1 flex-col gap-5 p-6">
                   {/* Title + badges */}
