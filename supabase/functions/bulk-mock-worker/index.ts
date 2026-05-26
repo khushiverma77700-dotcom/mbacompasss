@@ -317,6 +317,15 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
   for (const row of activeByRequest || []) {
     activeCounts.set(row.request_id, (activeCounts.get(row.request_id) || 0) + 1);
   }
+  // Global parallelism cap — never have more than MAX_ACTIVE_GLOBAL items in
+  // "processing" at the same time. Shrink `limit` accordingly before we even
+  // hit the database for pending items.
+  let globalActive = 0;
+  for (const n of activeCounts.values()) globalActive += n;
+  const globalSlots = Math.max(0, MAX_ACTIVE_GLOBAL - globalActive);
+  const effectiveLimit = Math.min(limit, globalSlots);
+  if (effectiveLimit <= 0) return 0;
+
   // Fetch a wide window of pending items (across batches) so a saturated
   // older batch can't starve newer single-mock batches. We still cap the
   // number we actually dispatch to `limit` globally.
@@ -332,7 +341,7 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
 
   let dispatched = 0;
   for (const itm of pending ?? []) {
-    if (dispatched >= limit) break;
+    if (dispatched >= effectiveLimit) break;
     if ((activeCounts.get(itm.request_id) || 0) >= MAX_ACTIVE_PER_BATCH) continue;
     const itemAuth = auth.userToken
       ? { userToken: auth.userToken }
