@@ -195,6 +195,7 @@ const AdminVocabulary = lazyWithPreload(() => import("./pages/admin/AdminVocabul
 const AdminFormulas = lazyWithPreload(() => import("./pages/admin/AdminFormulas"));
 const StudentFormulaBook = lazyWithPreload(() => import("./pages/student/formulas/StudentFormulaBook"));
 const StudentNewsroom = lazyWithPreload(() => import("./pages/student/StudentNewsroom"));
+const AdminNewsroom = lazyWithPreload(() => import("./pages/admin/AdminNewsroom"));
 const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
 const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 const DemoShell = lazyWithPreload(() => import("./components/demo/DemoShell"));
@@ -778,6 +779,7 @@ const App = () => (
               <Route path="support-tickets" element={<LazyPage><AdminSupportTickets /></LazyPage>} />
               <Route path="personalized-hub" element={<LazyPage><AdminPersonalizedHub /></LazyPage>} />
               <Route path="vocabulary" element={<LazyPage><AdminVocabulary /></LazyPage>} />
+              <Route path="newsroom" element={<LazyPage><AdminNewsroom /></LazyPage>} />
               <Route path="formulas" element={<LazyPage><AdminFormulas /></LazyPage>} />
               
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
