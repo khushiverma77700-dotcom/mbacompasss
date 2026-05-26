@@ -1006,10 +1006,11 @@ function UpcomingLaunchesStrip({ items }: { items: { test: Test; at: Date; owned
 
 
 function MockCardItem({
-  item, onUpgrade,
+  item, onUpgrade, isFullLength,
 }: {
   item: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null };
   onUpgrade: () => void;
+  isFullLength?: boolean;
 }) {
   const { test, owned, inProgress, latestSubmitted } = item;
   const lock = getLockInfo(test);
@@ -1018,6 +1019,9 @@ function MockCardItem({
   const accuracy = latestSubmitted?.total_attempted
     ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
     : null;
+
+  // Highlight launched full-length mocks (is_live + not locked + no past attempt)
+  const isLaunchedFullLength = !!(isFullLength && test.is_live && !lock && owned && !latestSubmitted);
 
   // status accent palette
   const statusTheme = !owned
@@ -1028,6 +1032,8 @@ function MockCardItem({
     ? { grad: "from-emerald-400 via-teal-500 to-cyan-500", glow: "from-emerald-200/50", chip: "bg-emerald-50 text-emerald-700 border-emerald-200", ring: "ring-emerald-200" }
     : inProgress
     ? { grad: "from-sky-400 via-blue-500 to-indigo-500", glow: "from-sky-200/50", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
+    : isLaunchedFullLength
+    ? { grad: "from-rose-500 via-orange-500 to-amber-500", glow: "from-rose-200/60", chip: "bg-rose-50 text-rose-700 border-rose-200", ring: "ring-rose-200" }
     : { grad: "from-violet-400 via-fuchsia-500 to-pink-500", glow: "from-violet-200/40", chip: "bg-violet-50 text-violet-700 border-violet-200", ring: "ring-violet-200" };
 
   const statusLabel = !owned
@@ -1038,22 +1044,39 @@ function MockCardItem({
     ? "In Progress"
     : latestSubmitted
     ? "Attempted"
+    : isLaunchedFullLength
+    ? "LIVE NOW"
     : "Ready";
 
   return (
     <Card
       className={`group relative overflow-hidden p-0 flex flex-col rounded-2xl border bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
-        !owned ? "border-slate-200/80" : "border-slate-200/80 hover:border-slate-300"
+        isLaunchedFullLength
+          ? "border-rose-300 ring-2 ring-rose-200/60 shadow-lg shadow-rose-200/40"
+          : !owned ? "border-slate-200/80" : "border-slate-200/80 hover:border-slate-300"
       }`}
     >
+      {/* LIVE NOW corner ribbon for launched full-length mocks */}
+      {isLaunchedFullLength && (
+        <div className="absolute top-3 -right-9 z-10 rotate-45 pointer-events-none">
+          <div className="bg-gradient-to-r from-rose-600 to-orange-500 text-white text-[10px] font-bold tracking-wider px-10 py-1 shadow-md">
+            LIVE
+          </div>
+        </div>
+      )}
+
       {/* decorative glow */}
       <div className={`pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${statusTheme.glow} to-transparent blur-2xl opacity-70`} />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
-      {/* gradient header strip */}
-      <div className={`relative h-1.5 w-full bg-gradient-to-r ${statusTheme.grad}`}>
+      {/* gradient header strip — thicker + animated for launched mocks */}
+      <div className={`relative ${isLaunchedFullLength ? "h-2.5" : "h-1.5"} w-full bg-gradient-to-r ${statusTheme.grad}`}>
+        {isLaunchedFullLength && (
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent)] bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]" />
+        )}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.6)_50%,transparent_100%)] opacity-0 group-hover:opacity-100 group-hover:animate-[shimmer_1.5s_ease-in-out] -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
       </div>
+
 
       <div className="relative p-4 sm:p-5 flex flex-col flex-1">
         {/* header row: exam shield + status pill */}
