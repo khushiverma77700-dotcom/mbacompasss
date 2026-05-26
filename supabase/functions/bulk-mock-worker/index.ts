@@ -22,7 +22,9 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const DISPATCH_LOCK_MS = 2 * 60_000;
 const DISPATCH_TIMEOUT_MS = 45_000;
-const MAX_ACTIVE_PER_BATCH = 1;
+// Max items per batch generating in parallel. 3 = sweet spot with 200K TPM.
+const MAX_ACTIVE_PER_BATCH = 3;
+
 
 async function reconcile(admin: any) {
   // Recover rows where the worker died after marking "processing" but before
