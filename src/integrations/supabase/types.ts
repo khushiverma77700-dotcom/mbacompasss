@@ -4574,10 +4574,13 @@ export type Database = {
           id: string
           importance: string
           key_facts: Json
+          news_date: string
           one_liner: string | null
           published_at: string
           reading_seconds: number
           short_summary: string | null
+          short_summary_hi: string | null
+          short_summary_hinglish: string | null
           source_name: string | null
           source_url: string | null
           tags: string[]
@@ -4596,10 +4599,13 @@ export type Database = {
           id?: string
           importance?: string
           key_facts?: Json
+          news_date?: string
           one_liner?: string | null
           published_at?: string
           reading_seconds?: number
           short_summary?: string | null
+          short_summary_hi?: string | null
+          short_summary_hinglish?: string | null
           source_name?: string | null
           source_url?: string | null
           tags?: string[]
@@ -4618,10 +4624,13 @@ export type Database = {
           id?: string
           importance?: string
           key_facts?: Json
+          news_date?: string
           one_liner?: string | null
           published_at?: string
           reading_seconds?: number
           short_summary?: string | null
+          short_summary_hi?: string | null
+          short_summary_hinglish?: string | null
           source_name?: string | null
           source_url?: string | null
           tags?: string[]
