@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare, Package, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare, Package, BookOpen, Wand2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -133,6 +133,69 @@ const AdminMockTests = () => {
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
   const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
   const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
+  const [fillingTestId, setFillingTestId] = useState<string | null>(null);
+
+  const handleFillMissingQuestions = async (testId: string, testName: string) => {
+    setFillingTestId(testId);
+    try {
+      const { data: sections, error: secErr } = await supabase
+        .from("mock_sections")
+        .select("id, code, name, total_questions")
+        .eq("test_id", testId);
+      if (secErr) throw secErr;
+      if (!sections?.length) {
+        toast({ title: "No sections found", variant: "destructive" });
+        return;
+      }
+      const deficits: { id: string; code: string; deficit: number }[] = [];
+      for (const s of sections) {
+        const { count } = await supabase
+          .from("mock_questions")
+          .select("id", { count: "exact", head: true })
+          .eq("section_id", s.id);
+        const deficit = (s.total_questions || 0) - (count || 0);
+        if (deficit > 0) deficits.push({ id: s.id, code: s.code, deficit });
+      }
+      if (!deficits.length) {
+        toast({ title: "Already complete", description: "No missing questions in this mock." });
+        return;
+      }
+      let kicked = 0;
+      const skipped: string[] = [];
+      for (const ds of deficits) {
+        const { data: jobs } = await supabase
+          .from("mock_section_jobs")
+          .select("id")
+          .eq("section_id", ds.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        const jobId = jobs?.[0]?.id;
+        if (!jobId) { skipped.push(ds.code); continue; }
+        await supabase.from("mock_section_jobs").update({
+          status: "pending",
+          attempts: 0,
+          worker_lock_until: null,
+          current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
+          error_message: null,
+          updated_at: new Date().toISOString(),
+        }).eq("id", jobId);
+        supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId } }).catch(() => {});
+        kicked++;
+      }
+      const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
+      toast({
+        title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
+        description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued${skipped.length ? ` · skipped (no prior job): ${skipped.join(", ")}` : ""}`,
+      });
+      // Refresh counts shortly after
+      setTimeout(() => { fetchTests(); }, 4000);
+    } catch (e: any) {
+      toast({ title: "Failed to top up", description: e?.message || "Try again", variant: "destructive" });
+    } finally {
+      setFillingTestId(null);
+    }
+  };
+
 
   const updateSortOrder = async (id: string, raw: string) => {
     const parsed = parseInt(raw, 10);
@@ -751,13 +814,32 @@ const AdminMockTests = () => {
                         : partial
                         ? "bg-amber-100 text-amber-700 border-amber-300"
                         : "bg-slate-100 text-slate-600 border-slate-300";
+                      const isFilling = fillingTestId === t.id;
                       return (
-                        <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
-                          {actual}/{expected}
-                        </Badge>
+                        <div className="flex flex-col items-start gap-1">
+                          <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
+                            {actual}/{expected}
+                          </Badge>
+                          {partial && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px] border-amber-300 text-amber-700 hover:bg-amber-50"
+                              disabled={isFilling}
+                              onClick={() => handleFillMissingQuestions(t.id, t.name)}
+                              title="Generate the missing questions in each section that came up short"
+                            >
+                              {isFilling
+                                ? <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                : <Wand2 className="w-3 h-3 mr-1" />}
+                              Generate missing {expected - actual}
+                            </Button>
+                          )}
+                        </div>
                       );
                     })()}
                   </TableCell>
+
                   <TableCell>
                     <InlineLaunchControls
                       test={t}
