@@ -194,6 +194,7 @@ const AdminMockTests = () => {
       // Re-arm parent generation(s) + matching bulk_mock_request_items, and
       // surface them in the side Mocks dock so the admin can watch progress.
       let tracked = 0;
+      const trackedReqIds = new Set<string>();
       if (generationIds.size > 0) {
         const genIds = Array.from(generationIds);
         await supabase.from("ai_mock_generations").update({
@@ -208,10 +209,60 @@ const AdminMockTests = () => {
             status: "processing", error_message: null, finished_at: null, paused: false,
           }).in("id", bulkItems.map((b: any) => b.id));
           const reqIds = Array.from(new Set(bulkItems.map((b: any) => b.request_id).filter(Boolean)));
-          reqIds.forEach((rid) => { trackRequest(rid); tracked++; });
+          reqIds.forEach((rid) => { trackRequest(rid); trackedReqIds.add(rid); tracked++; });
         }
       }
-      if (tracked === 0) openDock();
+
+      // Fallback: no bulk_mock_request_items existed for these sections (mock was
+      // not created via /admin/bulk-mock-generation). Create a synthetic bulk
+      // request so the dock can surface progress for "Generate missing" too.
+      if (tracked === 0 && kicked > 0) {
+        try {
+          // Fetch test metadata for labeling + section codes for items
+          const [{ data: testRow }, { data: secRows }, { data: userRes }] = await Promise.all([
+            supabase.from("mock_tests").select("name, exam_code, category").eq("id", testId).maybeSingle(),
+            supabase.from("mock_sections").select("id, code").eq("test_id", testId),
+            supabase.auth.getUser(),
+          ]);
+          const codeMap = new Map((secRows ?? []).map((r: any) => [r.id, r.code]));
+          const examCode = (testRow as any)?.exam_code || "CAT";
+          const category = (testRow as any)?.category || "full_length";
+          const label = `Top up: ${(testRow as any)?.name || testName}`;
+          const { data: newReq, error: reqErr } = await supabase
+            .from("bulk_mock_requests")
+            .insert({
+              created_by: userRes?.user?.id,
+              label,
+              total_items: deficits.length,
+              status: "processing",
+            }).select("id").single();
+          if (!reqErr && newReq?.id) {
+            const items = deficits.map((d) => ({
+              request_id: newReq.id,
+              exam_code: examCode,
+              category,
+              level: "mixed",
+              section_code: codeMap.get(d.id) ?? d.code,
+              questions_per_set: d.deficit,
+              sets: 1,
+              test_name_prefix: (testRow as any)?.name ?? null,
+              status: "processing",
+              total_requested: d.deficit,
+              total_generated: 0,
+              generation_id: Array.from(generationIds)[0] ?? null,
+              started_at: new Date().toISOString(),
+            }));
+            await supabase.from("bulk_mock_request_items").insert(items);
+            trackRequest(newReq.id);
+            trackedReqIds.add(newReq.id);
+            tracked++;
+          }
+        } catch {/* non-fatal — dock just won't show progress */}
+      }
+
+      // Always open the dock so the admin sees the new entries (or empty state)
+      openDock();
+
 
       const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
       toast({
