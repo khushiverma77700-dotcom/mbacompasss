@@ -141,7 +141,7 @@ const AdminMockTests = () => {
   const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
   const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
   const [fillingTestId, setFillingTestId] = useState<string | null>(null);
-  const { trackRequest, open: openDock } = useMockGenDock();
+  const { trackRequest, open: openDock, refresh: refreshDock } = useMockGenDock();
 
   const handleFillMissingQuestions = async (testId: string, testName: string) => {
     setFillingTestId(testId);
@@ -187,6 +187,7 @@ const AdminMockTests = () => {
       let kicked = 0;
       const skipped: string[] = [];
       const generationIds = new Set<string>();
+      const sectionGenerationIds = new Map<string, string>();
       const jobIdsToKick: string[] = [];
 
       // Lazily create a fallback generation row when sections lack a prior job.
