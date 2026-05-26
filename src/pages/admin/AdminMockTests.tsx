@@ -146,31 +146,77 @@ const AdminMockTests = () => {
   const handleFillMissingQuestions = async (testId: string, testName: string) => {
     setFillingTestId(testId);
     try {
+      const { data: testRow } = await supabase
+        .from("mock_tests")
+        .select("name, exam_code, category")
+        .eq("id", testId)
+        .maybeSingle();
+      const examCode = (testRow as any)?.exam_code || "CAT";
+      const category = (testRow as any)?.category || "full_length";
+
       const { data: sections, error: secErr } = await supabase
         .from("mock_sections")
-        .select("id, code, name, total_questions")
+        .select("id, code, name, total_questions, duration_minutes")
         .eq("test_id", testId);
       if (secErr) throw secErr;
       if (!sections?.length) {
         toast({ title: "No sections found", variant: "destructive" });
         return;
       }
-      const deficits: { id: string; code: string; deficit: number }[] = [];
+      const deficits: { id: string; code: string; name: string; deficit: number; duration: number; total: number }[] = [];
       for (const s of sections) {
         const { count } = await supabase
           .from("mock_questions")
           .select("id", { count: "exact", head: true })
           .eq("section_id", s.id);
         const deficit = (s.total_questions || 0) - (count || 0);
-        if (deficit > 0) deficits.push({ id: s.id, code: s.code, deficit });
+        if (deficit > 0) deficits.push({
+          id: s.id, code: s.code, name: s.name,
+          deficit, duration: s.duration_minutes || 60, total: s.total_questions || 0,
+        });
       }
       if (!deficits.length) {
         toast({ title: "Already complete", description: "No missing questions in this mock." });
         return;
       }
+
       let kicked = 0;
       const skipped: string[] = [];
       const generationIds = new Set<string>();
+      const createdJobIds: string[] = [];
+
+      // Lazily create a fallback generation row when sections lack a prior job.
+      let fallbackGenerationId: string | null = null;
+      const ensureGenerationId = async (): Promise<string | null> => {
+        if (fallbackGenerationId) return fallbackGenerationId;
+        const { data: userRes } = await supabase.auth.getUser();
+        const { data: gen, error: genErr } = await supabase
+          .from("ai_mock_generations")
+          .insert({
+            test_id: testId,
+            exam_code: examCode,
+            category,
+            level: "mixed",
+            request: { source: "top_up_missing", test_id: testId, test_name: (testRow as any)?.name || testName },
+            result_summary: {},
+            status: "running",
+            total_requested: deficits.reduce((a, b) => a + b.deficit, 0),
+            total_generated: 0,
+            total_rejected_duplicate: 0,
+            total_rejected_web_match: 0,
+            created_by: userRes?.user?.id ?? null,
+          })
+          .select("id")
+          .single();
+        if (genErr) {
+          console.error("[top-up] failed to create generation", genErr);
+          return null;
+        }
+        fallbackGenerationId = gen?.id ?? null;
+        if (fallbackGenerationId) generationIds.add(fallbackGenerationId);
+        return fallbackGenerationId;
+      };
+
       for (const ds of deficits) {
         const { data: jobs } = await supabase
           .from("mock_section_jobs")
@@ -179,24 +225,80 @@ const AdminMockTests = () => {
           .order("created_at", { ascending: false })
           .limit(1);
         const job = jobs?.[0];
-        if (!job?.id) { skipped.push(ds.code); continue; }
-        if (job.generation_id) generationIds.add(job.generation_id);
-        await supabase.from("mock_section_jobs").update({
-          status: "pending",
-          attempts: 0,
-          worker_lock_until: null,
-          current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
-          error_message: null,
-          updated_at: new Date().toISOString(),
-        }).eq("id", job.id);
-        supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id } }).catch(() => {});
+        if (job?.id) {
+          if (job.generation_id) generationIds.add(job.generation_id);
+          await supabase.from("mock_section_jobs").update({
+            status: "pending",
+            attempts: 0,
+            worker_lock_until: null,
+            current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
+            error_message: null,
+            updated_at: new Date().toISOString(),
+          }).eq("id", job.id);
+          supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id } }).catch(() => {});
+          kicked++;
+          continue;
+        }
+
+        // No existing job for this section — create one so we can actually
+        // generate the missing questions (sectional/topic mocks created
+        // outside the bulk flow land here, which is why the old flow
+        // silently did nothing for them).
+        const genId = await ensureGenerationId();
+        if (!genId) { skipped.push(ds.code); continue; }
+
+        const { data: userRes } = await supabase.auth.getUser();
+        const { data: newJob, error: jobErr } = await supabase
+          .from("mock_section_jobs")
+          .insert({
+            generation_id: genId,
+            test_id: testId,
+            section_id: ds.id,
+            exam_code: examCode,
+            category,
+            level: "mixed",
+            section_code: ds.code,
+            section_name: ds.name,
+            total_questions: ds.deficit,
+            mcq_count: ds.deficit,
+            tita_count: 0,
+            topic: null,
+            strict_topic: null,
+            positive_marks: 3,
+            negative_marks: 1,
+            verify_internet: false,
+            sets: 1,
+            questions_per_set: ds.deficit,
+            status: "pending",
+            attempts: 0,
+            questions_done: 0,
+            current_step: `Top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
+            created_by: userRes?.user?.id ?? null,
+          })
+          .select("id")
+          .single();
+        if (jobErr || !newJob?.id) {
+          console.error("[top-up] failed to create section job", jobErr);
+          skipped.push(ds.code);
+          continue;
+        }
+        createdJobIds.push(newJob.id);
+        supabase.functions.invoke("retry-mock-section", { body: { job_id: newJob.id } }).catch(() => {});
         kicked++;
+      }
+
+      if (kicked === 0) {
+        toast({
+          title: "Could not start top-up",
+          description: skipped.length ? `Skipped: ${skipped.join(", ")}` : "No sections were re-queued.",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Re-arm parent generation(s) + matching bulk_mock_request_items, and
       // surface them in the side Mocks dock so the admin can watch progress.
       let tracked = 0;
-      const trackedReqIds = new Set<string>();
       if (generationIds.size > 0) {
         const genIds = Array.from(generationIds);
         await supabase.from("ai_mock_generations").update({
@@ -211,24 +313,16 @@ const AdminMockTests = () => {
             status: "processing", error_message: null, finished_at: null, paused: false,
           }).in("id", bulkItems.map((b: any) => b.id));
           const reqIds = Array.from(new Set(bulkItems.map((b: any) => b.request_id).filter(Boolean)));
-          reqIds.forEach((rid) => { trackRequest(rid); trackedReqIds.add(rid); tracked++; });
+          reqIds.forEach((rid) => { trackRequest(rid); tracked++; });
         }
       }
 
       // Fallback: no bulk_mock_request_items existed for these sections (mock was
       // not created via /admin/bulk-mock-generation). Create a synthetic bulk
       // request so the dock can surface progress for "Generate missing" too.
-      if (tracked === 0 && kicked > 0) {
+      if (tracked === 0) {
         try {
-          // Fetch test metadata for labeling + section codes for items
-          const [{ data: testRow }, { data: secRows }, { data: userRes }] = await Promise.all([
-            supabase.from("mock_tests").select("name, exam_code, category").eq("id", testId).maybeSingle(),
-            supabase.from("mock_sections").select("id, code").eq("test_id", testId),
-            supabase.auth.getUser(),
-          ]);
-          const codeMap = new Map((secRows ?? []).map((r: any) => [r.id, r.code]));
-          const examCode = (testRow as any)?.exam_code || "CAT";
-          const category = (testRow as any)?.category || "full_length";
+          const { data: userRes } = await supabase.auth.getUser();
           const label = `Top up: ${(testRow as any)?.name || testName}`;
           const { data: newReq, error: reqErr } = await supabase
             .from("bulk_mock_requests")
@@ -244,7 +338,7 @@ const AdminMockTests = () => {
               exam_code: examCode,
               category,
               level: "mixed",
-              section_code: codeMap.get(d.id) ?? d.code,
+              section_code: d.code,
               questions_per_set: d.deficit,
               sets: 1,
               test_name_prefix: (testRow as any)?.name ?? null,
@@ -256,20 +350,17 @@ const AdminMockTests = () => {
             }));
             await supabase.from("bulk_mock_request_items").insert(items);
             trackRequest(newReq.id);
-            trackedReqIds.add(newReq.id);
             tracked++;
           }
         } catch {/* non-fatal — dock just won't show progress */}
       }
 
-      // Always open the dock so the admin sees the new entries (or empty state)
       openDock();
-
 
       const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
       toast({
         title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
-        description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued — see Mocks dock for progress${skipped.length ? ` · skipped (no prior job): ${skipped.join(", ")}` : ""}`,
+        description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued — see Mocks dock for progress${skipped.length ? ` · skipped: ${skipped.join(", ")}` : ""}`,
       });
       // Refresh counts shortly after
       setTimeout(() => { fetchTests(); }, 4000);
