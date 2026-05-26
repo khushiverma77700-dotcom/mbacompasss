@@ -24,8 +24,21 @@ const DISPATCH_LOCK_MS = 2 * 60_000;
 const DISPATCH_TIMEOUT_MS = 45_000;
 // Max items per batch generating in parallel. 3 = sweet spot with 200K TPM.
 const MAX_ACTIVE_PER_BATCH = 3;
+// Hard global cap across ALL batches — never run more than this many mocks in
+// parallel, no matter how many requests are queued or how many "Run now" /
+// auto-kicks fire. Prevents the dock from spinning up 6+ generations at once.
+const MAX_ACTIVE_GLOBAL = 3;
 const SECTION_LOCK_MS = 8 * 60_000;
 const MAX_ACTIVE_SECTIONS_PER_GENERATION = 3;
+
+async function countGlobalActive(admin: any): Promise<number> {
+  const { count } = await admin
+    .from("bulk_mock_request_items")
+    .select("id", { count: "exact", head: true })
+    .eq("paused", false)
+    .eq("status", "processing");
+  return count || 0;
+}
 
 
 async function reconcile(admin: any) {
@@ -304,6 +317,15 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
   for (const row of activeByRequest || []) {
     activeCounts.set(row.request_id, (activeCounts.get(row.request_id) || 0) + 1);
   }
+  // Global parallelism cap — never have more than MAX_ACTIVE_GLOBAL items in
+  // "processing" at the same time. Shrink `limit` accordingly before we even
+  // hit the database for pending items.
+  let globalActive = 0;
+  for (const n of activeCounts.values()) globalActive += n;
+  const globalSlots = Math.max(0, MAX_ACTIVE_GLOBAL - globalActive);
+  const effectiveLimit = Math.min(limit, globalSlots);
+  if (effectiveLimit <= 0) return 0;
+
   // Fetch a wide window of pending items (across batches) so a saturated
   // older batch can't starve newer single-mock batches. We still cap the
   // number we actually dispatch to `limit` globally.
@@ -319,7 +341,7 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
 
   let dispatched = 0;
   for (const itm of pending ?? []) {
-    if (dispatched >= limit) break;
+    if (dispatched >= effectiveLimit) break;
     if ((activeCounts.get(itm.request_id) || 0) >= MAX_ACTIVE_PER_BATCH) continue;
     const itemAuth = auth.userToken
       ? { userToken: auth.userToken }
@@ -450,7 +472,9 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked });
   }
 
-  // Resume single item.
+  // Resume single item — still respect the global parallelism cap so a stream
+  // of "Run now" clicks (or the dock's auto-kick polling) can't spin up more
+  // than MAX_ACTIVE_GLOBAL generations at once.
   if (body?.resume_id) {
     const { data: itm } = await admin
       .from("bulk_mock_request_items")
@@ -458,8 +482,15 @@ Deno.serve(async (req) => {
       .eq("id", body.resume_id)
       .maybeSingle();
     if (!itm) return json(404, { error: "item not found" });
+    // If this item is already running, nothing to do.
+    if (itm.status === "processing" && itm.generation_id) {
+      return json(200, { ok: true, dispatched: 0, reason: "already running" });
+    }
+    const active = await countGlobalActive(admin);
+    if (active >= MAX_ACTIVE_GLOBAL) {
+      return json(200, { ok: true, dispatched: 0, reason: "global cap reached", active });
+    }
     await admin.from("bulk_mock_request_items").update({ paused: false }).eq("id", itm.id);
-    // dispatch in background
     // @ts-ignore EdgeRuntime is available in Supabase Edge runtime
     EdgeRuntime.waitUntil(dispatchItem(admin, itm, { userToken }));
     return json(200, { ok: true, dispatched: 1 });
@@ -503,7 +534,9 @@ Deno.serve(async (req) => {
 
   // Start every inserted row. Each dispatch only needs generate-mock-questions
   // to return its 202 + generation_id; the heavy AI work remains in section workers.
-  const runAll = async () => { await pumpPending(admin, { userToken }, inserted?.length ?? 0); };
+  // Only kick the global cap's worth of items right now; pumpPending's own
+  // global-cap guard will short-circuit if other batches are already busy.
+  const runAll = async () => { await pumpPending(admin, { userToken }, MAX_ACTIVE_GLOBAL); };
 
   // @ts-ignore
   EdgeRuntime.waitUntil(runAll());
