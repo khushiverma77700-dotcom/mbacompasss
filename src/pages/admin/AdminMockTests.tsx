@@ -188,7 +188,7 @@ const AdminMockTests = () => {
         description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued${skipped.length ? ` · skipped (no prior job): ${skipped.join(", ")}` : ""}`,
       });
       // Refresh counts shortly after
-      setTimeout(() => { loadTests().catch(() => {}); }, 4000);
+      setTimeout(() => { fetchTests(); }, 4000);
     } catch (e: any) {
       toast({ title: "Failed to top up", description: e?.message || "Try again", variant: "destructive" });
     } finally {
