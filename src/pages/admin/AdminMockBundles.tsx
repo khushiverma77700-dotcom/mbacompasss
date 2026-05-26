@@ -94,6 +94,11 @@ export default function AdminMockBundles() {
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [listStatus, setListStatus] = useState<string>("all");
+  const [listExam, setListExam] = useState<string>("all");
+  const [listType, setListType] = useState<string>("all");
+  const [listHighlight, setListHighlight] = useState<string>("all");
+  const [listPrice, setListPrice] = useState<string>("all");
   const [editing, setEditing] = useState<Partial<Bundle> | null>(null);
   const [editingItems, setEditingItems] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
