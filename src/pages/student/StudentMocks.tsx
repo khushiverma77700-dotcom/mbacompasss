@@ -949,69 +949,98 @@ function MockCardItem({
     ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
     : null;
 
+  // status accent palette
+  const statusTheme = !owned
+    ? { grad: "from-slate-400 via-slate-500 to-slate-600", glow: "from-slate-200/40", chip: "bg-slate-100 text-slate-600 border-slate-200", ring: "ring-slate-200" }
+    : lock
+    ? { grad: "from-amber-400 via-orange-500 to-rose-500", glow: "from-amber-200/50", chip: "bg-amber-50 text-amber-700 border-amber-200", ring: "ring-amber-200" }
+    : latestSubmitted
+    ? { grad: "from-emerald-400 via-teal-500 to-cyan-500", glow: "from-emerald-200/50", chip: "bg-emerald-50 text-emerald-700 border-emerald-200", ring: "ring-emerald-200" }
+    : inProgress
+    ? { grad: "from-sky-400 via-blue-500 to-indigo-500", glow: "from-sky-200/50", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
+    : { grad: "from-violet-400 via-fuchsia-500 to-pink-500", glow: "from-violet-200/40", chip: "bg-violet-50 text-violet-700 border-violet-200", ring: "ring-violet-200" };
+
+  const statusLabel = !owned
+    ? "Locked"
+    : lock
+    ? lock.kind === "scheduled" ? "Scheduled" : "Coming Soon"
+    : inProgress
+    ? "In Progress"
+    : latestSubmitted
+    ? "Attempted"
+    : "Ready";
+
   return (
     <Card
-      className={`group relative overflow-hidden p-0 flex flex-col transition-all hover:shadow-lg hover:-translate-y-0.5 ${
-        !owned ? "border-sky-100" : "border-slate-200"
+      className={`group relative overflow-hidden p-0 flex flex-col rounded-2xl border bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+        !owned ? "border-slate-200/80" : "border-slate-200/80 hover:border-slate-300"
       }`}
     >
-      {/* top accent bar */}
-      <div
-        className={`h-1.5 w-full ${
-          !owned
-            ? "bg-gradient-to-r from-slate-200 to-slate-300"
-            : lock
-            ? "bg-gradient-to-r from-amber-400 to-orange-500"
-            : latestSubmitted
-            ? "bg-gradient-to-r from-emerald-400 to-teal-500"
-            : inProgress
-            ? "bg-gradient-to-r from-sky-400 to-blue-500"
-            : "bg-gradient-to-r from-violet-400 to-purple-500"
-        }`}
-      />
+      {/* decorative glow */}
+      <div className={`pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br ${statusTheme.glow} to-transparent blur-2xl opacity-70`} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-              {test.exam_code && (
-                <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">
-                  {test.exam_code}
-                </Badge>
-              )}
+      {/* gradient header strip */}
+      <div className={`relative h-1.5 w-full bg-gradient-to-r ${statusTheme.grad}`}>
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.6)_50%,transparent_100%)] opacity-0 group-hover:opacity-100 group-hover:animate-[shimmer_1.5s_ease-in-out] -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      </div>
+
+      <div className="relative p-4 sm:p-5 flex flex-col flex-1">
+        {/* header row: exam shield + status pill */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            {test.exam_code && (
+              <div className={`shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br ${statusTheme.grad} text-white shadow-sm ring-2 ring-white`}>
+                <span className="text-[10px] font-bold tracking-wide leading-none">{test.exam_code.slice(0,4).toUpperCase()}</span>
+              </div>
+            )}
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{test.test_type || test.category || "Mock Test"}</div>
+              <div className="font-bold leading-tight text-[15px] line-clamp-2 text-slate-900">{test.name}</div>
             </div>
-            <div className="font-semibold leading-tight text-[15px] line-clamp-2">{test.name}</div>
           </div>
-          {!owned && (
-            <div className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500">
-              <Lock className="h-3.5 w-3.5" />
-            </div>
-          )}
-          {owned && lock && (
-            <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500 gap-0.5">
-              <Sparkles className="h-3 w-3" /> {lock.kind === "scheduled" ? "Scheduled" : "Soon"}
-            </Badge>
-          )}
+          <Badge variant="outline" className={`shrink-0 text-[10px] font-semibold gap-1 ${statusTheme.chip} border`}>
+            {!owned ? <Lock className="h-2.5 w-2.5" /> : lock ? <Sparkles className="h-2.5 w-2.5" /> : inProgress ? <Clock className="h-2.5 w-2.5" /> : latestSubmitted ? <Award className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5" />}
+            {statusLabel}
+          </Badge>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-          <span className="inline-flex items-center gap-1">
+        {/* meta chips */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5">
             <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
           </span>
+          {test.difficulty && (
+            <span className={`inline-flex items-center gap-1 text-[11px] font-medium rounded-md px-2 py-0.5 border ${difficultyTone(test.difficulty)}`}>
+              {test.difficulty}
+            </span>
+          )}
+          {test.topic && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 max-w-[140px] truncate">
+              {test.topic}
+            </span>
+          )}
         </div>
 
         {owned && lock && (
-          <div className="rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/50 p-3 mb-3">
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700 mb-1">
-              <Calendar className="h-3.5 w-3.5" />
-              {lock.kind === "scheduled" ? "To be unlocked on" : "Status"}
-            </div>
-            <div className="text-sm font-semibold text-amber-900 leading-tight">{lock.label}</div>
-            {lock.kind === "scheduled" && (
-              <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-amber-700/90">
-                <Clock className="h-3 w-3" /> Unlocks in <span className="font-semibold">{countdown}</span>
+          <div className="relative rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-3 mb-3 overflow-hidden">
+            <div className="pointer-events-none absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-amber-200/30 blur-2xl" />
+            <div className="relative flex items-start gap-3">
+              <div className="shrink-0 h-9 w-9 rounded-lg bg-white/80 border border-amber-200 flex items-center justify-center shadow-sm">
+                <Calendar className="h-4 w-4 text-amber-600" />
               </div>
-            )}
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] uppercase tracking-wider font-semibold text-amber-700/80">
+                  {lock.kind === "scheduled" ? "Unlocks on" : "Status"}
+                </div>
+                <div className="text-sm font-bold text-amber-900 leading-tight">{lock.label}</div>
+                {lock.kind === "scheduled" && (
+                  <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-white/70 border border-amber-200/70 rounded-md px-1.5 py-0.5">
+                    <Clock className="h-2.5 w-2.5" /> <span className="tabular-nums">{countdown}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
