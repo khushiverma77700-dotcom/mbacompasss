@@ -55,10 +55,30 @@ Deno.serve(async (req) => {
     stuck_minutes_threshold: STUCK_MINUTES,
     college_jobs_resumed: [] as string[],
     section_jobs_resumed: [] as string[],
+    mock_worker_pump: null,
     errors: [] as string[],
   };
 
   try {
+    // Keep AI mock batches moving from the server side. This is the laptop-off
+    // safety path: pg_cron calls this watchdog, then the watchdog calls the mock
+    // worker with the service key so queued mocks can dispatch without a browser.
+    try {
+      const pumpResp = await fetch(`${SUPABASE_URL}/functions/v1/bulk-mock-worker`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_ROLE}`,
+          apikey: SERVICE_ROLE,
+          "x-internal-pump-key": SERVICE_ROLE,
+        },
+        body: JSON.stringify({ cron: true, source: "bulk-jobs-watchdog" }),
+      });
+      (report as any).mock_worker_pump = await pumpResp.json().catch(() => ({ status: pumpResp.status }));
+    } catch (err) {
+      (report.errors as string[]).push(`mock worker pump: ${(err as Error).message}`);
+    }
+
     const { data: recovered, error: recoverError } = await admin.rpc("recover_stale_bulk_jobs", {
       _threshold_minutes: STUCK_MINUTES,
     });
