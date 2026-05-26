@@ -222,6 +222,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   }, [jobs, fetchAll]);
 
   const dismiss = useCallback((id: string) => {
+    dismissedIdsRef.current.add(id);
+    writeDismissedIds(Array.from(dismissedIdsRef.current));
     setJobs((js) => js.filter((j) => j.id !== id));
   }, []);
 
