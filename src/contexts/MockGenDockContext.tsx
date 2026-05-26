@@ -97,6 +97,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const [jobs, setJobs] = useState<DockJob[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const trackedReqIdsRef = useRef<string[]>(readTrackedIds());
+  const dismissedIdsRef = useRef<Set<string>>(new Set(readDismissedIds()));
   const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
   const autoKickedRef = useRef<Record<string, number>>({});
 
