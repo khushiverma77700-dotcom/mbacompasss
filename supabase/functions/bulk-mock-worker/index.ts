@@ -408,6 +408,7 @@ Deno.serve(async (req) => {
 
   // Always reconcile first.
   const reconciled = await reconcile(admin);
+  const sectionsKickedPromise = kickPendingSectionJobs(admin, 6);
 
   // ---- Cron / internal-key pump (runs even when no admin is online) ----
   // Used by pg_cron every minute so generation keeps progressing while the
@@ -415,17 +416,18 @@ Deno.serve(async (req) => {
   // batch's stored created_by admin via the internal-pump header.
   if (isInternal) {
     const dispatched = await pumpPending(admin, {}, 3);
-    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched });
+    const sections_kicked = await sectionsKickedPromise;
+    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched, sections_kicked });
   }
 
   // Reconcile-only mode.
   if (body?.reconcile && !body?.items && !body?.resume_id) {
-    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0 });
+    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0, sections_kicked: await sectionsKickedPromise });
     // Continue below to validate the admin and pump stalled/pending rows.
   }
 
   // Need user auth for any dispatch.
-  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled });
+  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, sections_kicked: await sectionsKickedPromise });
 
   // Validate user is admin.
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
@@ -444,7 +446,8 @@ Deno.serve(async (req) => {
 
   if (body?.reconcile && !body?.items && !body?.resume_id) {
     const dispatched = await pumpPending(admin, { userToken }, 3);
-    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched });
+    const sections_kicked = await sectionsKickedPromise;
+    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked });
   }
 
   // Resume single item.
