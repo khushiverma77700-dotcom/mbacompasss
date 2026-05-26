@@ -831,8 +831,8 @@ const AdminMockTests = () => {
           </>
         )}
 
-        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
+        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || statusFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setStatusFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
             Clear filters
           </Button>
         )}
