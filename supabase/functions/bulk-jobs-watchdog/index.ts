@@ -190,7 +190,6 @@ Deno.serve(async (req) => {
 
     // Also close out parent generations that are 'running' but have no live work.
     try {
-      await admin.rpc("exec_sql", { sql: "" }).catch(() => {}); // no-op; close via direct update below
       const { data: staleGens } = await admin
         .from("ai_mock_generations")
         .select("id")
