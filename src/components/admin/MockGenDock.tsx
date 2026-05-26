@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Loader2, CheckCircle2, XCircle, Clock, X, ChevronRight,
-  ChevronDown, ChevronUp, Trash2, StopCircle, Layers,
+  ChevronDown, ChevronUp, Trash2, StopCircle, Layers, Zap, RotateCw,
+  Timer, ListOrdered,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useMockGenDock, type DockJob } from "@/contexts/MockGenDockContext";
 import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
+
 
 /**
  * Floating, glassmorphism mock-generation dock pinned to the right edge.
