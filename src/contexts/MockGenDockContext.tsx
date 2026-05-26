@@ -112,7 +112,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       .select("id, request_id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at, created_at")
       .in("request_id", ids)
       .order("created_at", { ascending: true });
-    const next = (data ?? []).map(mapRow);
+    const next = (data ?? []).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id));
     // Fire completion / failure toasts when status flips
     for (const j of next) {
       const prev = prevStatusRef.current[j.id];
