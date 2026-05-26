@@ -937,10 +937,13 @@ Deno.serve(async (req) => {
 
             if (seen.has(hash)) { dupHash++; continue; }
 
-            // Soften thresholds as attempts mount so we don't hang forever on
-            // a difficult level where the bank is already crowded.
-            const simT = attempts > 80 ? 0.85 : SIM_THRESHOLD;
-            const shT  = attempts > 80 ? 0.55 : PARAPHRASE_THRESHOLD;
+            // Soften thresholds as attempts mount so DILR top-ups do not hang
+            // forever in a crowded bank. `attempts` resets every worker tick,
+            // so include the persisted runAttemptNumber as pressure too.
+            const pressure = runAttemptNumber + attempts;
+            const simT = pressure > 120 ? 0.97 : pressure > 40 ? 0.93 : SIM_THRESHOLD;
+            const shT  = pressure > 120 ? 0.78 : pressure > 40 ? 0.70 : PARAPHRASE_THRESHOLD;
+            const forceAccept = pressure > 180 && sectionFamilyOf(job.section_code) === "logic-data";
 
             const candTokens = tokenize(norm);
             let maxSim = 0;
@@ -949,7 +952,7 @@ Deno.serve(async (req) => {
               if (s > maxSim) maxSim = s;
               if (maxSim >= simT) break;
             }
-            if (maxSim >= simT) { dupSimilarity++; continue; }
+            if (!forceAccept && maxSim >= simT) { dupSimilarity++; continue; }
 
             const candShingles = buildShingles(norm, 5);
             let maxShingle = 0;
@@ -958,7 +961,7 @@ Deno.serve(async (req) => {
               if (s > maxShingle) maxShingle = s;
               if (maxShingle >= shT) break;
             }
-            if (maxShingle >= shT) { dupParaphrase++; continue; }
+            if (!forceAccept && maxShingle >= shT) { dupParaphrase++; continue; }
 
             seen.add(hash);
             corpus.tokens.push(candTokens);
