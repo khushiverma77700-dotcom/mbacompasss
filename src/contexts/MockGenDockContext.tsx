@@ -47,12 +47,19 @@ interface DockCtx {
 
 const Ctx = createContext<DockCtx | null>(null);
 const LS_KEY = "mock_gen_dock_request_ids_v1";
+const LS_DISMISSED_KEY = "mock_gen_dock_dismissed_ids_v1";
 
 function readTrackedIds(): string[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
 }
 function writeTrackedIds(ids: string[]) {
   try { localStorage.setItem(LS_KEY, JSON.stringify([...new Set(ids)].slice(-30))); } catch { /* ignore */ }
+}
+function readDismissedIds(): string[] {
+  try { return JSON.parse(localStorage.getItem(LS_DISMISSED_KEY) || "[]"); } catch { return []; }
+}
+function writeDismissedIds(ids: string[]) {
+  try { localStorage.setItem(LS_DISMISSED_KEY, JSON.stringify([...new Set(ids)].slice(-500))); } catch { /* ignore */ }
 }
 
 function mapRow(row: any): DockJob {
