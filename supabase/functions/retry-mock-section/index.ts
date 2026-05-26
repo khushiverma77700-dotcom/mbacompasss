@@ -578,12 +578,14 @@ Deno.serve(async (req) => {
 
     if (!userId) userId = job.created_by;
 
+    const runAttemptNumber = (Number(job.attempts) || 0) + 1;
+
     // Re-arm the job and grab a worker lock so the watchdog can recover us if we die.
     await admin.from("mock_section_jobs").update({
       status: "processing",
       current_step: "Restart requested — re-calling AI…",
       error_message: null,
-      attempts: auto ? (job.attempts || 0) : (job.attempts || 0) + 1,
+      attempts: runAttemptNumber,
       worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
       updated_at: new Date().toISOString(),
     }).eq("id", job_id);
