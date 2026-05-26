@@ -187,29 +187,59 @@ export default function StudentNewsroom() {
     return Array.from(s);
   }, [articles]);
 
+  const pickSummary = (a: Article): string =>
+    (lang === "hi" && a.short_summary_hi) ||
+    (lang === "hinglish" && a.short_summary_hinglish) ||
+    a.short_summary ||
+    a.one_liner ||
+    "";
+
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
       {/* Hero */}
-      <div className="rounded-2xl border border-sky-200/60 bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-5 md:p-6 mb-5 shadow-sm">
-        <div className="flex items-start gap-4">
+      <div className="relative overflow-hidden rounded-2xl border border-sky-200/60 bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-5 md:p-6 mb-5 shadow-sm">
+        <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-gradient-to-br from-sky-300/30 to-indigo-300/30 blur-2xl pointer-events-none" />
+        <div className="relative flex items-start gap-4 flex-wrap">
           <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 grid place-items-center text-white shadow-lg">
             <Newspaper className="h-6 w-6" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-[200px]">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-bold text-xl md:text-2xl text-foreground">MBA Newsroom</h1>
+              <h1 className="font-bold text-xl md:text-2xl text-foreground">News &amp; Insights</h1>
               <Badge className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-0">
                 <Sparkles className="h-3 w-3 mr-1" /> AI-Curated
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              Daily current affairs, business, policy and GDPI-ready briefs — built for CAT, XAT, SNAP, NMAT aspirants.
+              Daily current affairs, business, policy & GDPI-ready briefs — built for CAT, XAT, SNAP, NMAT aspirants.
             </p>
           </div>
           <Button onClick={handleRefresh} disabled={refreshing} size="sm" className="gap-2">
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             {refreshing ? "Updating…" : "Refresh"}
           </Button>
+        </div>
+
+        {/* Language toggle */}
+        <div className="relative mt-4 flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Read in</span>
+          {([
+            { k: "en", label: "English" },
+            { k: "hi", label: "हिंदी" },
+            { k: "hinglish", label: "Hinglish" },
+          ] as const).map((o) => (
+            <button
+              key={o.k}
+              onClick={() => setLang(o.k)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
+                lang === o.k
+                  ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white border-transparent shadow"
+                  : "bg-card text-foreground border-border hover:bg-accent"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
         </div>
       </div>
 
