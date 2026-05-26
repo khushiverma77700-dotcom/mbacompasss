@@ -337,11 +337,12 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     const doneCount = jobs.filter((j) => j.status === "completed").length;
     const failCount = jobs.filter((j) => j.status === "failed" || j.status === "cancelled").length;
     return {
-      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed,
+      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest,
       isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false), toggle: () => setIsOpen((o) => !o),
       activeCount, pendingCount, doneCount, failCount,
     };
-  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed]);
+  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest]);
+
 
 
 
