@@ -282,6 +282,8 @@ export default function AdminMockBundles() {
         features: (editing.features ?? {}) as any,
         highlights: (editing.highlights ?? {}) as any,
         included_categories: derivedCats.length ? derivedCats : (editing.included_categories ?? []),
+        filter_exams: editing.filter_exams ?? [],
+        filter_types: editing.filter_types ?? [],
       };
       if (bundleId) {
         const { error } = await supabase.from("mock_bundles").update(payload).eq("id", bundleId);
