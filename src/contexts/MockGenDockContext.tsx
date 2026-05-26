@@ -91,6 +91,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const [isOpen, setIsOpen] = useState(false);
   const trackedReqIdsRef = useRef<string[]>(readTrackedIds());
   const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
+  const autoKickedRef = useRef<Record<string, number>>({});
 
   // Hydrate from DB on mount + poll every 3s. Survives page reloads,
   // navigation, and laptop reboots — the source of truth is the bulk
@@ -126,7 +127,31 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       writeTrackedIds(trackedReqIdsRef.current);
     }
     setJobs(next);
+
+    // Auto-dispatch: keep up to 3 mocks running in parallel without admin clicking "Run now".
+    try {
+      const MAX_PARALLEL = 3;
+      const runningCount = next.filter((j) => j.status === "running" || j.status === "starting").length;
+      let slots = Math.max(0, MAX_PARALLEL - runningCount);
+      if (slots > 0) {
+        const pending = next
+          .filter((j) => j.status === "pending")
+          .sort((a, b) => a.createdAt - b.createdAt);
+        const now = Date.now();
+        for (const j of pending) {
+          if (slots <= 0) break;
+          const last = autoKickedRef.current[j.id] || 0;
+          if (now - last < 15000) continue; // throttle re-kicks per item
+          autoKickedRef.current[j.id] = now;
+          slots--;
+          supabase.functions
+            .invoke("bulk-mock-worker", { body: { resume_id: j.id } })
+            .catch(() => {});
+        }
+      }
+    } catch { /* ignore */ }
   }, []);
+
 
   useEffect(() => {
     fetchAll();
@@ -165,6 +190,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       toast(`Queued ${items.length} mock${items.length > 1 ? "s" : ""}`, {
         description: "Generation runs on the server and continues even if you close the laptop.",
       });
+      // Kick the worker right away so the first slot doesn't wait for the next poll.
+      supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
       await fetchAll();
     } catch (e: any) {
       toast.error("Failed to queue mocks", { description: e?.message || "Try again" });
