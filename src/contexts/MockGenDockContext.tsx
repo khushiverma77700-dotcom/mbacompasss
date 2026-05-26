@@ -37,6 +37,7 @@ interface DockCtx {
   runNow: (id: string) => Promise<void>;
   retry: (id: string) => Promise<void>;
   regenerateFailed: (id: string) => Promise<void>;
+  trackRequest: (requestId: string) => void;
 
   isOpen: boolean;
   open: () => void;
@@ -47,6 +48,7 @@ interface DockCtx {
   doneCount: number;
   failCount: number;
 }
+
 
 
 const Ctx = createContext<DockCtx | null>(null);
@@ -308,6 +310,17 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     await fetchAll();
   }, [jobs, fetchAll]);
 
+  const trackRequest = useCallback((requestId: string) => {
+    if (!requestId) return;
+    if (!trackedReqIdsRef.current.includes(requestId)) {
+      trackedReqIdsRef.current = [...trackedReqIdsRef.current, requestId];
+      writeTrackedIds(trackedReqIdsRef.current);
+    }
+    setIsOpen(true);
+    fetchAll();
+  }, [fetchAll]);
+
+
   const clearFinished = useCallback(() => {
     const finalIds = new Set(jobs.filter((j) => ["completed", "failed", "cancelled"].includes(j.status)).map((j) => j.id));
     finalIds.forEach((id) => dismissedIdsRef.current.add(id));
@@ -324,11 +337,12 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     const doneCount = jobs.filter((j) => j.status === "completed").length;
     const failCount = jobs.filter((j) => j.status === "failed" || j.status === "cancelled").length;
     return {
-      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed,
+      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest,
       isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false), toggle: () => setIsOpen((o) => !o),
       activeCount, pendingCount, doneCount, failCount,
     };
-  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed]);
+  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest]);
+
 
 
 
