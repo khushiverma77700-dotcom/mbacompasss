@@ -20,6 +20,8 @@ import FileUpload from "@/components/admin/FileUpload";
 import AIGenerateMockDialog from "@/components/admin/AIGenerateMockDialog";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
 import { MOCK_TOPIC_CATALOG } from "@/data/mockTopics";
+import { useMockGenDock } from "@/contexts/MockGenDockContext";
+
 
 const sectionCodeOf = (t: any): string | null => {
   return t?.generation_meta?.request?.section_code ?? null;
