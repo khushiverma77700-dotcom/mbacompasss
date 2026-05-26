@@ -575,6 +575,18 @@ LR-DI VISUAL MANDATE (NON-NEGOTIABLE): For every DI caselet that references a ba
     setsBlock = `\n\nQUANT GEOMETRY VISUAL MANDATE (NON-NEGOTIABLE): For every Quant question involving geometry, mensuration, coordinate geometry, trigonometry diagrams, circles/triangles/polygons, 3D solids, or any spatial figure — you MUST emit a SELF-CONTAINED inline <svg viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg">…</svg> diagram with labelled vertices (A, B, C…), angle marks, side lengths, and any given measurements. Use <line>, <polygon>, <circle>, <path> and <text> appropriately. NEVER write "as shown in figure" without actually drawing the figure. NEVER reference external images. For non-geometry Quant (algebra/arithmetic/number system), SVG is not required.`;
   }
 
+  if (sectionFamily(opts.section_code) === "judgement-gk") {
+    const currentYear = new Date().getFullYear();
+    const previousYear = currentYear - 1;
+    setsBlock += `\n\nGK / CURRENT AFFAIRS RECENCY MANDATE (NON-NEGOTIABLE):
+- The current year is ${currentYear}. Generate questions reflecting the LATEST events, appointments, awards, sports results, summits, books, schemes, budgets, indices, and global affairs from ${previousYear}–${currentYear}.
+- DO NOT use stale 2022 / 2023 events as the answer focus. Outdated facts (old PMs, old CEOs, old award winners, old tournament champions, old GDP rankings, old cabinet ministers, old capitals/currencies that have since changed) are FORBIDDEN.
+- Prefer events, data points, and announcements from the last 18 months whenever the topic permits (latest Union Budget, latest Economic Survey, latest Padma awards, latest Nobel/Booker/Oscar winners, latest ICC/FIFA/Olympic outcomes, latest G20/BRICS/UN summits, latest space missions, latest startup unicorns, latest RBI policy, latest CEO/PM/President appointments).
+- Static GK (history, geography, polity, economics fundamentals, science basics, books-authors classics) is allowed but must NOT dominate — at least 60% of the questions must be recent current affairs from ${previousYear}–${currentYear}.
+- In the explanation, briefly mention the month/year of the event so freshness is auditable.`;
+  }
+
+
   const examCalibration = buildExamCalibrationBlock(opts.exam, opts.level, opts.section_code);
 
   const sectionScopeLock = buildSectionScopeLockGen(opts.exam, opts.section_code, opts.section_name);
