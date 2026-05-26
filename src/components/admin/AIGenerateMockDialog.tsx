@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
 import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
+import { useMockGenDock } from "@/contexts/MockGenDockContext";
+
 import { Progress } from "@/components/ui/progress";
 import { getTopicsFor } from "@/data/mockTopics";
 
@@ -207,11 +209,13 @@ type BatchItemRow = {
 
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
   const { toast } = useToast();
+  const dock = useMockGenDock();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
   const progress = useMockGenerationProgress(step === 3 ? generationId : null);
+
 
   // ---------------- Batch (queue multiple generations) ----------------
   const [batch, setBatch] = useState<BatchDraft[]>([]);
@@ -434,31 +438,30 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
         payload.total_tita = tita;
       }
 
-      const { data, error } = await supabase.functions.invoke("generate-mock-questions", { body: payload });
-      if (error) throw error;
+      // Build a friendly label and enqueue into the floating dock instead of
+      // blocking the dialog. Up to 3 mocks generate in parallel; the dock
+      // shows live progress on the right side.
+      const label = [
+        exam,
+        category.replace("_", " "),
+        category === "sectional" ? sectionCode : null,
+        topic ? `"${topic}"` : null,
+        level,
+        category === "full_length"
+          ? `${sectionPlanTotal}Q full-length`
+          : `${perSet}Q × ${sets} set${sets > 1 ? "s" : ""}`,
+      ].filter(Boolean).join(" · ");
 
-      const newGenId = data?.generation_id;
-      if (!newGenId) {
-        // Legacy synchronous response
-        setResult(data);
-        setStep(2);
-        toast({ title: "Mock generation complete", description: `${data?.stats?.generated || 0} questions generated.` });
-        onCreated?.();
-        return;
-      }
-
-      setGenerationId(newGenId);
-      setStep(3);
-      toast({
-        title: "Generation started",
-        description: "AI is writing your questions in the background. Watch progress below.",
-      });
+      dock.enqueue([{ label, payload }]);
+      onCreated?.();
+      close();
     } catch (e: any) {
       toast({ title: "Generation failed", description: e?.message || "Try again", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
   };
+
 
   // ---------------- Batch helpers ----------------
   const validateCurrentForm = (): string | null => {
@@ -506,36 +509,35 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     if (!batch.length) return;
     setBatchSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("bulk-mock-worker", {
-        body: {
-          label: `${batch.length} mock${batch.length > 1 ? "s" : ""} from AI dialog`,
-          items: batch.map((b) => ({
-            exam_code: b.exam_code,
-            category: b.category,
-            level: b.level,
-            section_code: b.section_code,
-            topic: b.topic,
-            questions_per_set: b.questions_per_set,
-            sets: b.sets,
-            test_name_prefix: b.test_name_prefix,
-          })),
+      // Enqueue each batch draft into the floating dock as an individual
+      // generation. The dock dispatches up to 3 in parallel and auto-starts
+      // the next one as a slot frees up — exactly what the admin asked for.
+      const items = batch.map((b) => ({
+        label: b.label,
+        payload: {
+          exam_code: b.exam_code,
+          category: b.category,
+          level: b.level,
+          section_code: b.section_code,
+          topic: b.topic,
+          questions_per_set: b.questions_per_set,
+          total_questions: b.questions_per_set,
+          sets: b.sets,
+          test_name_prefix: b.test_name_prefix,
+          verify_internet: false,
         },
-      });
-      if (error) throw error;
-      const reqId = (data as any)?.request_id;
-      if (!reqId) throw new Error("No request id returned");
-      setBatchRequestId(reqId);
-      setStep(4);
-      toast({
-        title: "Batch started",
-        description: `${batch.length} requests queued. Generating in the background — live report below.`,
-      });
+      }));
+      dock.enqueue(items);
+      setBatch([]);
+      onCreated?.();
+      close();
     } catch (e: any) {
       toast({ title: "Batch start failed", description: e?.message || "Try again", variant: "destructive" });
     } finally {
       setBatchSubmitting(false);
     }
   };
+
 
   // Poll batch items + trigger reconcile while step 4 is open
   useEffect(() => {

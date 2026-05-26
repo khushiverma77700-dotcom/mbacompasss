@@ -1,0 +1,251 @@
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sparkles, Loader2, CheckCircle2, XCircle, Clock, X, ChevronRight,
+  ChevronDown, ChevronUp, Trash2, StopCircle, Layers,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useMockGenDock, type DockJob } from "@/contexts/MockGenDockContext";
+import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
+
+/**
+ * Floating, glassmorphism mock-generation dock pinned to the right edge.
+ * - Minimized: small translucent pill showing live counts
+ * - Expanded: scrollable panel with every queued / running / finished job
+ * - Click outside expanded panel to minimize
+ * - Up to 3 jobs run in parallel (handled by context); the next pending
+ *   auto-starts whenever a slot frees
+ */
+export default function MockGenDock() {
+  const {
+    jobs, isOpen, open, close, toggle,
+    activeCount, pendingCount, doneCount, failCount,
+    cancel, dismiss, clearFinished,
+  } = useMockGenDock();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
+
+  // Click outside collapses the expanded panel back to pill
+  useEffect(() => {
+    if (!isOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!panelRef.current) return;
+      if (!panelRef.current.contains(e.target as Node)) close();
+    };
+    // Defer to avoid closing on the same click that opened the panel
+    const t = setTimeout(() => document.addEventListener("mousedown", onDown), 0);
+    return () => { clearTimeout(t); document.removeEventListener("mousedown", onDown); };
+  }, [isOpen, close]);
+
+  if (!jobs.length) return null;
+
+  return (
+    <>
+      {/* Minimized pill (always visible when jobs exist) */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            key="pill"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            onClick={open}
+            className="fixed right-4 bottom-6 z-[100] flex items-center gap-2 rounded-full px-4 py-2.5
+                       bg-white/70 backdrop-blur-xl border border-sky-200/70 shadow-lg shadow-sky-500/10
+                       hover:bg-white/90 transition group"
+          >
+            <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white">
+              {activeCount > 0
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Sparkles className="h-4 w-4" />}
+              {pendingCount + activeCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-400 ring-2 ring-white animate-pulse" />
+              )}
+            </span>
+            <span className="text-sm font-semibold text-slate-800">
+              AI Mocks
+            </span>
+            <span className="text-xs text-slate-600">
+              {activeCount} running · {pendingCount} queued
+              {doneCount ? ` · ${doneCount} done` : ""}
+            </span>
+            <ChevronRight className="h-4 w-4 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Expanded panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="panel"
+            ref={panelRef}
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 60 }}
+            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            className="fixed right-3 top-16 bottom-4 z-[100] w-[min(420px,calc(100vw-1.5rem))]
+                       flex flex-col rounded-2xl overflow-hidden
+                       bg-white/75 backdrop-blur-2xl border border-sky-200/70
+                       shadow-2xl shadow-sky-900/15"
+          >
+            {/* Header */}
+            <div className="relative px-4 py-3 bg-gradient-to-br from-sky-50/80 via-white/40 to-blue-50/80 border-b border-sky-100/80">
+              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-sky-300/30 blur-3xl pointer-events-none" />
+              <div className="relative flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow shadow-sky-500/30">
+                    {activeCount > 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-slate-900">AI Mock Generation</div>
+                    <div className="text-[11px] text-slate-600">
+                      {activeCount} running · {pendingCount} queued · {doneCount} done
+                      {failCount ? ` · ${failCount} failed` : ""}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {(doneCount + failCount) > 0 && (
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                      onClick={clearFinished} title="Clear finished">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={close}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {/* Concurrency hint */}
+              <div className="relative mt-2 flex items-center gap-1.5 text-[10px] text-slate-600">
+                <Layers className="h-3 w-3" />
+                <span>Up to 3 mocks generate in parallel. The next queued one starts automatically.</span>
+              </div>
+            </div>
+
+            {/* Scrollable list of jobs */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-2">
+              {jobs.map((j) => (
+                <JobRow key={j.id}
+                  job={j}
+                  expanded={expandedJob === j.id}
+                  onToggle={() => setExpandedJob(expandedJob === j.id ? null : j.id)}
+                  onCancel={() => cancel(j.id)}
+                  onDismiss={() => dismiss(j.id)} />
+              ))}
+            </div>
+
+            <div className="px-3 py-2 border-t border-sky-100/80 bg-white/40 text-[11px] text-slate-500 text-center">
+              Click outside to minimize · The dock keeps running across pages
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ----------------------------------------------------------------------------
+
+function statusMeta(status: DockJob["status"]) {
+  switch (status) {
+    case "pending":   return { icon: Clock,         color: "text-slate-500",   ring: "border-slate-200 bg-white/70",   label: "Queued" };
+    case "starting":  return { icon: Loader2,       color: "text-sky-600",     ring: "border-sky-200 bg-sky-50/70",     label: "Starting", spin: true };
+    case "running":   return { icon: Loader2,       color: "text-sky-600",     ring: "border-sky-200 bg-sky-50/70",     label: "Generating", spin: true };
+    case "completed": return { icon: CheckCircle2,  color: "text-emerald-600", ring: "border-emerald-200 bg-emerald-50/70", label: "Done" };
+    case "failed":    return { icon: XCircle,       color: "text-rose-600",    ring: "border-rose-200 bg-rose-50/70",   label: "Failed" };
+    case "cancelled": return { icon: XCircle,       color: "text-slate-500",   ring: "border-slate-200 bg-slate-50/70", label: "Cancelled" };
+  }
+}
+
+function JobRow({
+  job, expanded, onToggle, onCancel, onDismiss,
+}: {
+  job: DockJob; expanded: boolean;
+  onToggle: () => void; onCancel: () => void; onDismiss: () => void;
+}) {
+  const meta = statusMeta(job.status);
+  const Icon = meta.icon;
+  const requested = job.total_requested ?? 0;
+  const generated = job.total_generated ?? 0;
+  const pct = requested > 0
+    ? Math.min(100, Math.round((generated / requested) * 100))
+    : (job.status === "completed" ? 100 : job.status === "running" ? 3 : 0);
+  const isFinal = ["completed", "failed", "cancelled"].includes(job.status);
+
+  return (
+    <div className={`rounded-xl border ${meta.ring} backdrop-blur-sm transition-all`}>
+      <button
+        onClick={onToggle}
+        className="w-full text-left px-3 py-2.5 flex items-start gap-2.5"
+      >
+        <div className={`mt-0.5 ${meta.color} flex-shrink-0`}>
+          <Icon className={`h-4 w-4 ${meta.spin ? "animate-spin" : ""}`} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm font-semibold text-slate-900 truncate">{job.label}</div>
+            <Badge variant="outline" className={`text-[10px] ${meta.color} border-current/30`}>
+              {meta.label}
+            </Badge>
+          </div>
+          <div className="mt-1 text-[11px] text-slate-600 flex items-center justify-between gap-2">
+            <span>
+              {generated}/{requested || "?"} questions
+              {job.error ? ` · ${job.error.slice(0, 60)}` : ""}
+            </span>
+            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </div>
+          <Progress value={pct} className="h-1.5 mt-1.5" />
+        </div>
+      </button>
+
+      {/* Row actions */}
+      <div className="flex items-center justify-end gap-1 px-3 pb-2">
+        {!isFinal && (
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-rose-600 hover:bg-rose-50"
+            onClick={(e) => { e.stopPropagation(); onCancel(); }}>
+            <StopCircle className="h-3 w-3 mr-1" /> Cancel
+          </Button>
+        )}
+        {isFinal && (
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-slate-600 hover:bg-slate-100"
+            onClick={(e) => { e.stopPropagation(); onDismiss(); }}>
+            <X className="h-3 w-3 mr-1" /> Dismiss
+          </Button>
+        )}
+      </div>
+
+      <AnimatePresence initial={false}>
+        {expanded && job.generation_id && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden border-t border-current/10 bg-white/50"
+          >
+            <div className="p-2 max-h-[60vh] overflow-y-auto">
+              <MockGenerationProgressPanel generationId={job.generation_id} compact />
+            </div>
+          </motion.div>
+        )}
+        {expanded && !job.generation_id && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden border-t border-current/10 bg-white/50"
+          >
+            <p className="px-3 py-2 text-[11px] text-slate-500">
+              {job.status === "pending" ? "Waiting for a free slot…" : "Dispatching to AI worker…"}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

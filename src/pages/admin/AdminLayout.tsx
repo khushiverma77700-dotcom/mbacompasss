@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminThemeToggle, { applyAdminTheme, getInitialAdminTheme } from "@/components/admin/AdminThemeToggle";
 import { adminNavGroups, allAdminNavItems } from "./adminNav";
+import { MockGenDockProvider } from "@/contexts/MockGenDockContext";
+import MockGenDock from "@/components/admin/MockGenDock";
+
 
 const AdminLayout = () => {
   const { user, isAdmin, allowedSections, loading, adminLoading } = useAuth();
@@ -276,6 +279,7 @@ const AdminLayout = () => {
   );
 
   return (
+    <MockGenDockProvider>
     <div className="admin-scope min-h-screen flex bg-muted/30">
       {/* Mobile top bar */}
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between gap-2 px-3 bg-card/95 backdrop-blur border-b border-border">
@@ -318,8 +322,13 @@ const AdminLayout = () => {
           )}
         </div>
       </main>
+
+      {/* Floating AI mock generation dock (right side) */}
+      <MockGenDock />
     </div>
+    </MockGenDockProvider>
   );
 };
+
 
 export default AdminLayout;
