@@ -24,9 +24,12 @@ const DISPATCH_LOCK_MS = 2 * 60_000;
 const DISPATCH_TIMEOUT_MS = 45_000;
 // Max items per batch generating in parallel. 3 = sweet spot with 200K TPM.
 const MAX_ACTIVE_PER_BATCH = 3;
+const SECTION_LOCK_MS = 8 * 60_000;
+const MAX_ACTIVE_SECTIONS_PER_GENERATION = 3;
 
 
 async function reconcile(admin: any) {
+  const nowIso = new Date().toISOString();
   // Recover rows where the worker died after marking "processing" but before
   // generate-mock-questions returned a generation_id. These are the rows that
   // made bulk batches look permanently stuck after only one real mock started.
@@ -35,7 +38,20 @@ async function reconcile(admin: any) {
     .update({ status: "pending", worker_lock_until: null, error_message: "Recovered stale dispatch — queued again" })
     .eq("status", "processing")
     .is("generation_id", null)
-    .or(`worker_lock_until.is.null,worker_lock_until.lt.${new Date().toISOString()}`);
+    .or(`worker_lock_until.is.null,worker_lock_until.lt.${nowIso}`);
+
+  // Recover section workers whose lock expired. Without this, a section can sit
+  // forever as "queued/processing" after an Edge runtime shutdown.
+  await admin
+    .from("mock_section_jobs")
+    .update({
+      status: "pending",
+      worker_lock_until: null,
+      current_step: "Auto-recovered stale section worker — queued again",
+      updated_at: nowIso,
+    })
+    .eq("status", "processing")
+    .or(`worker_lock_until.is.null,worker_lock_until.lt.${nowIso}`);
 
   const { data: processing } = await admin
     .from("bulk_mock_request_items")
@@ -109,6 +125,74 @@ async function reconcile(admin: any) {
     await admin.from("bulk_mock_requests").update({ status: next }).eq("id", p.id);
   }
   return updated;
+}
+
+async function kickPendingSectionJobs(admin: any, limit = 6) {
+  const nowIso = new Date().toISOString();
+  const { data: activeRows } = await admin
+    .from("mock_section_jobs")
+    .select("generation_id")
+    .eq("status", "processing")
+    .gt("worker_lock_until", nowIso);
+  const activeByGeneration = new Map<string, number>();
+  for (const row of activeRows || []) {
+    const key = String(row.generation_id || "");
+    if (key) activeByGeneration.set(key, (activeByGeneration.get(key) || 0) + 1);
+  }
+
+  const { data: pending } = await admin
+    .from("mock_section_jobs")
+    .select("id,generation_id,error_message")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(100);
+
+  let kicked = 0;
+  for (const job of pending || []) {
+    if (kicked >= limit) break;
+    const generationId = String(job.generation_id || "");
+    if (!generationId) continue;
+    const errText = String(job.error_message || "").toLowerCase();
+    if (errText.includes("exceeded your current quota") || errText.includes("quota/rate-limit blocked") || errText.includes("billing")) continue;
+    if ((activeByGeneration.get(generationId) || 0) >= MAX_ACTIVE_SECTIONS_PER_GENERATION) continue;
+
+    const lockUntil = new Date(Date.now() + SECTION_LOCK_MS).toISOString();
+    await admin
+      .from("mock_section_jobs")
+      .update({
+        status: "processing",
+        current_step: "Watchdog kicked off worker…",
+        worker_lock_until: lockUntil,
+        updated_at: nowIso,
+      })
+      .eq("id", job.id)
+      .eq("status", "pending");
+
+    const kick = fetchWithTimeout(`${SUPABASE_URL}/functions/v1/retry-mock-section`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        apikey: SERVICE_KEY,
+      },
+      body: JSON.stringify({ job_id: job.id, auto: true, service: true, internal_secret: SERVICE_KEY }),
+    }, 10_000).catch(async (e) => {
+      await admin
+        .from("mock_section_jobs")
+        .update({
+          status: "pending",
+          worker_lock_until: null,
+          current_step: `Worker kickoff retry scheduled: ${String(e?.message || e).slice(0, 160)}`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", job.id);
+    });
+    // @ts-ignore EdgeRuntime is available in Supabase Edge runtime
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kick);
+    kicked++;
+    activeByGeneration.set(generationId, (activeByGeneration.get(generationId) || 0) + 1);
+  }
+  return kicked;
 }
 
 function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
@@ -324,6 +408,7 @@ Deno.serve(async (req) => {
 
   // Always reconcile first.
   const reconciled = await reconcile(admin);
+  const sectionsKickedPromise = kickPendingSectionJobs(admin, 6);
 
   // ---- Cron / internal-key pump (runs even when no admin is online) ----
   // Used by pg_cron every minute so generation keeps progressing while the
@@ -331,17 +416,18 @@ Deno.serve(async (req) => {
   // batch's stored created_by admin via the internal-pump header.
   if (isInternal) {
     const dispatched = await pumpPending(admin, {}, 3);
-    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched });
+    const sections_kicked = await sectionsKickedPromise;
+    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched, sections_kicked });
   }
 
   // Reconcile-only mode.
   if (body?.reconcile && !body?.items && !body?.resume_id) {
-    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0 });
+    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0, sections_kicked: await sectionsKickedPromise });
     // Continue below to validate the admin and pump stalled/pending rows.
   }
 
   // Need user auth for any dispatch.
-  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled });
+  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, sections_kicked: await sectionsKickedPromise });
 
   // Validate user is admin.
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
@@ -360,7 +446,8 @@ Deno.serve(async (req) => {
 
   if (body?.reconcile && !body?.items && !body?.resume_id) {
     const dispatched = await pumpPending(admin, { userToken }, 3);
-    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched });
+    const sections_kicked = await sectionsKickedPromise;
+    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked });
   }
 
   // Resume single item.
