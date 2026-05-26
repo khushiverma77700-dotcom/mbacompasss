@@ -215,13 +215,26 @@ async function reconcile(admin: any) {
   return updated;
 }
 
-async function kickPendingSectionJobs(admin: any, limit = 6) {
+async function kickPendingSectionJobs(admin: any, limit = 6, activeGenerationIds?: string[]) {
   const nowIso = new Date().toISOString();
+  const targetGenerationIds = activeGenerationIds?.length
+    ? activeGenerationIds
+    : (await admin
+      .from("bulk_mock_request_items")
+      .select("generation_id")
+      .eq("paused", false)
+      .eq("status", "processing")
+      .not("generation_id", "is", null)
+      .order("started_at", { ascending: true, nullsFirst: false })
+      .limit(MAX_ACTIVE_GLOBAL)).data?.map((row: any) => String(row.generation_id)).filter(Boolean) || [];
+  if (targetGenerationIds.length === 0) return 0;
+
   const { data: activeRows } = await admin
     .from("mock_section_jobs")
     .select("generation_id")
     .eq("status", "processing")
-    .gt("worker_lock_until", nowIso);
+    .gt("worker_lock_until", nowIso)
+    .in("generation_id", targetGenerationIds);
   const activeByGeneration = new Map<string, number>();
   for (const row of activeRows || []) {
     const key = String(row.generation_id || "");
@@ -232,6 +245,7 @@ async function kickPendingSectionJobs(admin: any, limit = 6) {
     .from("mock_section_jobs")
     .select("id,generation_id,error_message")
     .eq("status", "pending")
+    .in("generation_id", targetGenerationIds.length ? targetGenerationIds : [NULL_UUID])
     .order("created_at", { ascending: true })
     .limit(100);
 
@@ -240,6 +254,7 @@ async function kickPendingSectionJobs(admin: any, limit = 6) {
     if (kicked >= limit) break;
     const generationId = String(job.generation_id || "");
     if (!generationId) continue;
+    if (!targetGenerationIds.includes(generationId)) continue;
     const errText = String(job.error_message || "").toLowerCase();
     if (errText.includes("exceeded your current quota") || errText.includes("quota/rate-limit blocked") || errText.includes("billing")) continue;
     if ((activeByGeneration.get(generationId) || 0) >= MAX_ACTIVE_SECTIONS_PER_GENERATION) continue;
