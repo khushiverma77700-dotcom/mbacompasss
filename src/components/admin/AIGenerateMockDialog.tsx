@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
 import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
+import { useMockGenDock } from "@/contexts/MockGenDockContext";
+
 import { Progress } from "@/components/ui/progress";
 import { getTopicsFor } from "@/data/mockTopics";
 
