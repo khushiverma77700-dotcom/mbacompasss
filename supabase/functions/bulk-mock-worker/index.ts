@@ -117,7 +117,7 @@ function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
   return fetch(url, { ...init, signal: ctrl.signal }).finally(() => clearTimeout(timer));
 }
 
-async function dispatchItem(admin: any, item: any, userToken: string) {
+async function dispatchItem(admin: any, item: any, auth: { userToken?: string; asUserId?: string }) {
   const nowIso = new Date().toISOString();
   const lockIso = new Date(Date.now() + DISPATCH_LOCK_MS).toISOString();
   const { data: claimed } = await admin
@@ -139,23 +139,35 @@ async function dispatchItem(admin: any, item: any, userToken: string) {
   if (!claimed) return false;
 
   try {
+    // Build headers: either user Bearer (online admin) OR internal pump key
+    // with stored admin user id (cron / laptop-off pump).
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+    };
+    const reqBody: Record<string, any> = {
+      exam_code: claimed.exam_code,
+      category: claimed.category,
+      level: claimed.level,
+      questions_per_set: claimed.questions_per_set,
+      sets: claimed.sets,
+      section_code: claimed.section_code || undefined,
+      topic: claimed.topic || undefined,
+      test_name_prefix: claimed.test_name_prefix || undefined,
+    };
+    if (auth.userToken) {
+      headers.Authorization = `Bearer ${auth.userToken}`;
+    } else if (auth.asUserId) {
+      headers["x-internal-pump-key"] = SERVICE_KEY;
+      reqBody._as_user_id = auth.asUserId;
+    } else {
+      throw new Error("No auth provided for dispatch");
+    }
+
     const resp = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/generate-mock-questions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${userToken}`,
-        apikey: ANON_KEY,
-      },
-      body: JSON.stringify({
-        exam_code: claimed.exam_code,
-        category: claimed.category,
-        level: claimed.level,
-        questions_per_set: claimed.questions_per_set,
-        sets: claimed.sets,
-        section_code: claimed.section_code || undefined,
-        topic: claimed.topic || undefined,
-        test_name_prefix: claimed.test_name_prefix || undefined,
-      }),
+      headers,
+      body: JSON.stringify(reqBody),
     }, DISPATCH_TIMEOUT_MS);
     const result = await resp.json().catch(() => ({}));
     if (!resp.ok) {
@@ -197,9 +209,10 @@ async function dispatchItem(admin: any, item: any, userToken: string) {
   }
 }
 
-async function pumpPending(admin: any, userToken: string, limit = 3) {
+async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: string }, limit = 3) {
   const nowIso = new Date().toISOString();
   const { data: activeByRequest } = await admin
+
     .from("bulk_mock_request_items")
     .select("request_id")
     .eq("paused", false)
