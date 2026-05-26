@@ -220,12 +220,15 @@ Deno.serve(async (req) => {
     }
 
     const { data: activeMockGenerations } = await admin
-      .from("ai_mock_generations")
-      .select("id")
-      .eq("status", "running")
+      .from("bulk_mock_request_items")
+      .select("generation_id,started_at,created_at")
+      .eq("paused", false)
+      .eq("status", "processing")
+      .not("generation_id", "is", null)
+      .order("started_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true })
       .limit(MOCK_MAX_ACTIVE_GENERATIONS);
-    const activeGenerationIds = new Set((activeMockGenerations || []).map((g: any) => String(g.id)));
+    const activeGenerationIds = new Set((activeMockGenerations || []).map((g: any) => String(g.generation_id)));
 
     const { data: pendingMockJobs, error: e3 } = await admin
       .from("mock_section_jobs")
