@@ -776,12 +776,6 @@ const AdminMockTests = () => {
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Exam</Label>
-          <Select value={examFilter} onValueChange={setExamFilter}>
-            <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Exams</SelectItem>
-        <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Status</Label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
