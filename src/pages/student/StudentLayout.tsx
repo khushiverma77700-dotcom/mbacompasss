@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
@@ -86,7 +87,15 @@ const insightsGroup: NavItem[] = [
 ];
 
 export default function StudentLayout() {
-  const { user, loading } = useAuth();
+  const isDemo = useIsDemo();
+  const { user: authUser, loading: authLoading } = useAuth();
+  // In demo mode, pretend a dummy student is signed in so the entire
+  // dashboard renders exactly the same as the real one — no auth, no redirect.
+  const demoUser = isDemo
+    ? ({ id: "demo-user", email: "demo@mbacompass.in", user_metadata: { display_name: "Demo Student" } } as any)
+    : null;
+  const user = isDemo ? demoUser : authUser;
+  const loading = isDemo ? false : authLoading;
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -131,10 +140,11 @@ export default function StudentLayout() {
   }, []);
 
   useEffect(() => {
+    if (isDemo) return;
     if (!loading && !user) {
       navigate("/student/login?redirect=" + encodeURIComponent(location.pathname), { replace: true });
     }
-  }, [loading, user, navigate, location.pathname]);
+  }, [isDemo, loading, user, navigate, location.pathname]);
 
   // Note: we no longer block the dashboard or sign the user out when they
   // have no purchased course. Students who land here from the credentials
