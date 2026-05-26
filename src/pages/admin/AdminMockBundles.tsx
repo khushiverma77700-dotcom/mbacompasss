@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Search, Package, Loader2, ChevronDown, ChevronRight, ArrowUp, ArrowDown, X } from "lucide-react";
+import AdminFilterBar, { type FilterConfig } from "@/components/admin/AdminFilterBar";
 import { toast } from "sonner";
 import { FeatureMap } from "@/lib/courseFeatures";
 import { HighlightMap } from "@/lib/courseHighlights";
