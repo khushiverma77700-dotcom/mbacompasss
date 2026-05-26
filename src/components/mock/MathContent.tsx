@@ -114,12 +114,20 @@ const renderMath = (input: string): string => {
   // 3. Inline math: \( ... \)
   out = out.replace(/\\\(([\s\S]+?)\\\)/g, (_m, expr) => renderInline(String(expr).trim()));
 
-  // 4. Inline math: $ ... $  (currency-aware)
+  // 4. Inline math: $ ... $  (currency-aware + prose-aware)
   out = out.replace(/\$([^\$\n<>]+?)\$/g, (m, expr) => {
     const e = String(expr).trim();
     if (!e) return m;
     if (/^[\d,]+(?:\.\d+)?$/.test(e)) return m;
     if (/^[\d,.\s]+(?:USD|INR|EUR|GBP|Rs\.?)?$/i.test(e)) return m;
+    // Prose-guard: if the inner chunk looks like an English sentence (no LaTeX
+    // tokens + 2+ alphabetic words), it's almost certainly a pair of currency
+    // $ signs wrapping prose like "$1 million ... profit of $2".
+    const hasLatex = LATEX_TOKEN_RE.test(e) || /[\^_{}\\]/.test(e);
+    if (!hasLatex) {
+      const wordCount = (e.match(/\b[A-Za-z]{2,}\b/g) || []).length;
+      if (wordCount >= 2) return m;
+    }
     return renderInline(e);
   });
 
