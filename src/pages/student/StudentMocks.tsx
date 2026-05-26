@@ -1113,40 +1113,43 @@ function MockCardItem({
           {!owned ? (
             <Button
               size="sm"
-              className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-sm"
+              className="w-full h-10 gap-1.5 rounded-lg bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-black text-white shadow-md hover:shadow-lg transition-shadow"
               onClick={onUpgrade}
             >
               <Sparkles className="h-3.5 w-3.5" /> Upgrade to unlock
+              <ChevronRight className="h-3.5 w-3.5 ml-auto" />
             </Button>
           ) : lock ? (
-            <Button size="sm" disabled className="w-full gap-1">
+            <Button size="sm" disabled className="w-full h-10 gap-1.5 rounded-lg bg-slate-100 text-slate-500 border border-slate-200">
               <Lock className="h-3.5 w-3.5" />
-              {lock.kind === "scheduled" ? `Unlocks in ${countdown}` : "Coming soon"}
+              {lock.kind === "scheduled" ? <>Unlocks in <span className="tabular-nums font-semibold">{countdown}</span></> : "Coming soon"}
             </Button>
           ) : inProgress ? (
             <Link to={mockAttemptPath(inProgress.id)} className="flex-1" {...studentMockLinkProps}>
-              <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700">
+              <Button size="sm" className="w-full h-10 gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg">
                 <Clock className="h-3.5 w-3.5" /> Resume Attempt
+                <ChevronRight className="h-3.5 w-3.5 ml-auto" />
               </Button>
             </Link>
           ) : latestSubmitted ? (
             <div className="w-full flex flex-col gap-2">
-              <div className="flex gap-2">
-                <Link to={mockResultPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
-                  <Button size="sm" variant="outline" className="w-full gap-1">
+              <div className="grid grid-cols-2 gap-2">
+                <Link to={mockResultPath(latestSubmitted.id)} {...studentMockLinkProps}>
+                  <Button size="sm" variant="outline" className="w-full h-9 gap-1 rounded-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800">
                     <BarChart3 className="h-3.5 w-3.5" /> Report
                   </Button>
                 </Link>
-                <Link to={mockReviewPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
-                  <Button size="sm" variant="outline" className="w-full gap-1">
+                <Link to={mockReviewPath(latestSubmitted.id)} {...studentMockLinkProps}>
+                  <Button size="sm" variant="outline" className="w-full h-9 gap-1 rounded-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800">
                     <FileText className="h-3.5 w-3.5" /> Review
                   </Button>
                 </Link>
               </div>
               {test.slug && (
                 <Link to={mockIntroPath(test.slug)} className="w-full" {...studentMockLinkProps}>
-                  <Button size="sm" className="w-full gap-1 bg-emerald-600 hover:bg-emerald-700">
+                  <Button size="sm" className="w-full h-10 gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700 text-white shadow-md hover:shadow-lg">
                     <Play className="h-3.5 w-3.5" /> Retake Mock
+                    <ChevronRight className="h-3.5 w-3.5 ml-auto" />
                   </Button>
                 </Link>
               )}
@@ -1154,7 +1157,7 @@ function MockCardItem({
           ) : (
             test.slug && (
               <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
-                <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
+                <Button size="sm" className="w-full h-10 gap-1.5 rounded-lg bg-gradient-to-r from-violet-500 via-fuchsia-600 to-pink-600 hover:from-violet-600 hover:to-pink-700 text-white shadow-md hover:shadow-lg">
                   <Play className="h-3.5 w-3.5" /> Start Mock
                   <ChevronRight className="h-3.5 w-3.5 ml-auto" />
                 </Button>
@@ -1162,6 +1165,7 @@ function MockCardItem({
             )
           )}
         </div>
+
       </div>
     </Card>
   );
