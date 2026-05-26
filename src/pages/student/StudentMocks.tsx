@@ -923,20 +923,87 @@ function BucketGrid({
     );
   }
 
+  // Upcoming full-length launches strip (next 3 scheduled in future)
+  const upcoming = useMemo(() => {
+    if (!isFullLength) return [];
+    const now = Date.now();
+    return items
+      .map((it) => {
+        const launch = it.test.launch_date ? new Date(it.test.launch_date) : null;
+        const sched = it.test.scheduled_start_at ? new Date(it.test.scheduled_start_at) : null;
+        const future = [launch, sched].filter((d): d is Date => !!d && d.getTime() > now);
+        if (!future.length) return null;
+        const at = future.sort((a, b) => a.getTime() - b.getTime())[0];
+        return { ...it, at };
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x)
+      .sort((a, b) => a.at.getTime() - b.at.getTime())
+      .slice(0, 3);
+  }, [items, isFullLength]);
+
   if (!items.length) return renderEmpty;
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map((item) => (
-        <MockCardItem
-          key={item.test.id}
-          item={item}
-          onUpgrade={onUpgrade}
-        />
-      ))}
+    <div className="space-y-4">
+      {upcoming.length > 0 && <UpcomingLaunchesStrip items={upcoming} />}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {items.map((item) => (
+          <MockCardItem
+            key={item.test.id}
+            item={item}
+            onUpgrade={onUpgrade}
+            isFullLength={isFullLength}
+          />
+        ))}
+      </div>
     </div>
   );
 }
+
+function UpcomingLaunchesStrip({ items }: { items: { test: Test; at: Date; owned: boolean }[] }) {
+  const first = items[0];
+  const firstCountdown = useCountdown(first.at);
+  const daysLeft = Math.max(0, Math.ceil((first.at.getTime() - Date.now()) / 86400000));
+  return (
+    <Card className="relative overflow-hidden p-0 border-0 shadow-lg">
+      <div className="absolute inset-0 bg-gradient-to-br from-rose-500 via-orange-500 to-amber-500" />
+      <div className="absolute inset-0 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.15),transparent_40%)]" />
+      <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/20 blur-3xl pointer-events-none" />
+      <div className="relative p-4 sm:p-5 text-white">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="relative shrink-0">
+            <div className="absolute inset-0 rounded-2xl bg-white/30 blur-md animate-pulse" />
+            <div className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white/15 backdrop-blur border border-white/30 grid place-items-center">
+              <Sparkles className="h-6 w-6 sm:h-7 sm:w-7" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur text-[10px] font-bold uppercase tracking-wider mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> New Mock Drop
+            </div>
+            <div className="text-base sm:text-lg font-bold leading-tight">
+              {first.test.name}
+            </div>
+            <div className="text-xs sm:text-sm text-white/90 mt-0.5">
+              Goes live in <span className="font-bold tabular-nums">{daysLeft > 0 ? `${daysLeft} day${daysLeft === 1 ? "" : "s"}` : firstCountdown}</span>
+              {daysLeft > 0 && <span className="text-white/70"> · {firstCountdown}</span>}
+            </div>
+          </div>
+          {items.length > 1 && (
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <div className="h-10 w-px bg-white/30" />
+              <div className="text-[11px] text-white/90">
+                <div className="font-semibold">+{items.length - 1} more</div>
+                <div className="text-white/70">queued to launch</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 
 function MockCardItem({
   item, onUpgrade,
