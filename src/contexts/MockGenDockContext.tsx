@@ -37,6 +37,7 @@ interface DockCtx {
   runNow: (id: string) => Promise<void>;
   retry: (id: string) => Promise<void>;
   regenerateFailed: (id: string) => Promise<void>;
+  trackRequest: (requestId: string) => void;
 
   isOpen: boolean;
   open: () => void;
@@ -47,6 +48,7 @@ interface DockCtx {
   doneCount: number;
   failCount: number;
 }
+
 
 
 const Ctx = createContext<DockCtx | null>(null);
