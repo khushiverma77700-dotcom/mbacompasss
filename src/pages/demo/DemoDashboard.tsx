@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, MouseEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -13,7 +13,6 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { DemoLockProvider, useDemoLock } from "@/components/demo/DemoLockPopup";
 
 /* =========================================================================
    Dummy data — realistic enough to feel premium
@@ -585,23 +584,6 @@ function ViewNotifications() {
 function Shell() {
   const [active, setActive] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { open: openLock } = useDemoLock();
-
-  // Global click guard: any <button>/<a>/[role=button] inside the demo
-  // that isn't marked with data-demo-allow shows the lock popup.
-  const handleClickCapture = (e: MouseEvent<HTMLDivElement>) => {
-    const el = (e.target as HTMLElement).closest(
-      'button, a, [role="button"], input, textarea, select'
-    ) as HTMLElement | null;
-    if (!el) return;
-    if (el.closest('[data-demo-allow="true"]')) return;
-    e.preventDefault();
-    e.stopPropagation();
-    // Try to read button label as feature name
-    const label = el.getAttribute("aria-label") || el.textContent?.trim().slice(0, 36) || "";
-    openLock(label && label.length < 36 ? label : undefined);
-  };
-
   useEffect(() => { document.title = "MBA Compass Demo Dashboard · Read-only Preview"; }, []);
 
   const view = useMemo(() => {
@@ -620,7 +602,6 @@ function Shell() {
 
   return (
     <div
-      onClickCapture={handleClickCapture}
       className="flex min-h-screen bg-gradient-to-br from-sky-50/60 via-white to-blue-50/40"
     >
       {/* Sidebar */}
@@ -736,9 +717,5 @@ function Shell() {
 }
 
 export default function DemoDashboard() {
-  return (
-    <DemoLockProvider>
-      <Shell />
-    </DemoLockProvider>
-  );
+  return <Shell />;
 }
