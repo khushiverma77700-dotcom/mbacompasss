@@ -310,6 +310,17 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     await fetchAll();
   }, [jobs, fetchAll]);
 
+  const trackRequest = useCallback((requestId: string) => {
+    if (!requestId) return;
+    if (!trackedReqIdsRef.current.includes(requestId)) {
+      trackedReqIdsRef.current = [...trackedReqIdsRef.current, requestId];
+      writeTrackedIds(trackedReqIdsRef.current);
+    }
+    setIsOpen(true);
+    fetchAll();
+  }, [fetchAll]);
+
+
   const clearFinished = useCallback(() => {
     const finalIds = new Set(jobs.filter((j) => ["completed", "failed", "cancelled"].includes(j.status)).map((j) => j.id));
     finalIds.forEach((id) => dismissedIdsRef.current.add(id));
