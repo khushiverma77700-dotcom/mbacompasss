@@ -509,36 +509,35 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     if (!batch.length) return;
     setBatchSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("bulk-mock-worker", {
-        body: {
-          label: `${batch.length} mock${batch.length > 1 ? "s" : ""} from AI dialog`,
-          items: batch.map((b) => ({
-            exam_code: b.exam_code,
-            category: b.category,
-            level: b.level,
-            section_code: b.section_code,
-            topic: b.topic,
-            questions_per_set: b.questions_per_set,
-            sets: b.sets,
-            test_name_prefix: b.test_name_prefix,
-          })),
+      // Enqueue each batch draft into the floating dock as an individual
+      // generation. The dock dispatches up to 3 in parallel and auto-starts
+      // the next one as a slot frees up — exactly what the admin asked for.
+      const items = batch.map((b) => ({
+        label: b.label,
+        payload: {
+          exam_code: b.exam_code,
+          category: b.category,
+          level: b.level,
+          section_code: b.section_code,
+          topic: b.topic,
+          questions_per_set: b.questions_per_set,
+          total_questions: b.questions_per_set,
+          sets: b.sets,
+          test_name_prefix: b.test_name_prefix,
+          verify_internet: false,
         },
-      });
-      if (error) throw error;
-      const reqId = (data as any)?.request_id;
-      if (!reqId) throw new Error("No request id returned");
-      setBatchRequestId(reqId);
-      setStep(4);
-      toast({
-        title: "Batch started",
-        description: `${batch.length} requests queued. Generating in the background — live report below.`,
-      });
+      }));
+      dock.enqueue(items);
+      setBatch([]);
+      onCreated?.();
+      close();
     } catch (e: any) {
       toast({ title: "Batch start failed", description: e?.message || "Try again", variant: "destructive" });
     } finally {
       setBatchSubmitting(false);
     }
   };
+
 
   // Poll batch items + trigger reconcile while step 4 is open
   useEffect(() => {
