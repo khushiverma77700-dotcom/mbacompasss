@@ -1,6 +1,6 @@
-// MBA Newsroom — AI-curated daily current affairs generator
-// Calls Lovable AI to produce categorized news cards for MBA aspirants and
-// upserts them into public.news_articles.
+// News & Insights — AI-curated current affairs generator
+// Accepts categories[], date range, count per category. Produces trilingual
+// short summaries (English / Hindi / Hinglish) and upserts into public.news_articles.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   "National", "International", "Economy & Finance", "Politics & Government",
   "Business & Startups", "MBA & Education", "AI & Technology", "Sports",
   "Environment & Climate", "Science & Innovation", "Corporate Affairs",
@@ -27,26 +27,40 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const body = await req.json().catch(() => ({}));
-    const count = Math.min(Number(body?.count) || 12, 20);
-    const focus = typeof body?.focus === "string" ? body.focus : "";
-
-    const todayISO = new Date().toISOString().slice(0, 10);
+    const categories: string[] = Array.isArray(body?.categories) && body.categories.length
+      ? body.categories.filter((c: any) => typeof c === "string")
+      : DEFAULT_CATEGORIES;
+    const countPerCategory = Math.max(1, Math.min(Number(body?.count_per_category) || 3, 8));
+    const dateFrom: string = body?.date_from || new Date().toISOString().slice(0, 10);
+    const dateTo: string = body?.date_to || dateFrom;
+    const focus: string = typeof body?.focus === "string" ? body.focus : "";
 
     const sys = `You are an MBA current-affairs editor for Indian B-school aspirants (CAT/XAT/SNAP/NMAT/GDPI/WAT).
-Generate concise, factually-grounded, exam-focused news cards for ${todayISO}.
-Cover a balanced mix of categories. Use simple English. Highlight implications for the Indian economy, business, policy and B-school interviews.
-Return STRICTLY valid JSON matching the schema. Do not add commentary.`;
+Generate concise, factually-grounded, exam-focused news cards covering the date range ${dateFrom} to ${dateTo}.
+Cover the requested categories with the most updated, important happenings in India and globally during that window.
+Use realistic Indian sources (Economic Times, Mint, Business Standard, The Hindu, PIB, RBI, Bloomberg, Reuters).
+Return STRICTLY valid JSON via the tool. No commentary.`;
 
-    const user = `Produce ${count} news cards${focus ? ` focused on: ${focus}` : ""}.
-Allowed categories (use exactly one per card): ${CATEGORIES.join(", ")}.
-Importance values: "high" | "medium" | "low".
-For exam_relevance, score 0-10 for keys: cat, xat, snap, nmat, gdpi, wat.
-For vocabulary, include 1-3 advanced/MBA-interview words used in the story with crisp meanings.
-gdpi_points: 3-5 ready-to-use interview/discussion bullets.
-wat_topics: 2-3 essay angles.
-key_facts: 3-6 short factual bullets with numbers/names where helpful.
-Keep one_liner under 140 chars. short_summary 3-5 lines. detailed_summary 6-10 lines.
-Pick realistic likely Indian sources (Economic Times, Mint, Business Standard, The Hindu, PIB, RBI, Bloomberg, Reuters).`;
+    const user = `Generate ${countPerCategory} news cards FOR EACH of these categories: ${categories.join(", ")}.
+${focus ? `Extra focus / topic constraint: ${focus}\n` : ""}
+For each card include:
+- headline (English, sharp, <120 chars)
+- one_liner (English, <140 chars)
+- short_summary (English, 3-5 lines)
+- short_summary_hi (Hindi, Devanagari, 3-5 lines — same factual content)
+- short_summary_hinglish (Hinglish — Hindi written in Roman script mixed with English, casual student tone, 3-5 lines)
+- detailed_summary (English, 6-10 lines)
+- why_matters (English, 2-3 lines on impact for India/business/MBA)
+- key_facts (3-6 bullets with numbers/names)
+- gdpi_points (3-5 interview/discussion bullets)
+- wat_topics (2-3 essay angles)
+- vocabulary (1-3 advanced MBA words: { word, meaning })
+- exam_relevance (0-10 scores for cat, xat, snap, nmat, gdpi, wat)
+- importance ("high" | "medium" | "low")
+- reading_seconds (30-90)
+- source_name, source_url (realistic)
+- news_date (YYYY-MM-DD within ${dateFrom}..${dateTo})
+- category (exactly one from the requested list)`;
 
     const schema = {
       type: "object",
@@ -62,10 +76,13 @@ Pick realistic likely Indian sources (Economic Times, Mint, Business Standard, T
               source_url: { type: "string" },
               one_liner: { type: "string" },
               short_summary: { type: "string" },
+              short_summary_hi: { type: "string" },
+              short_summary_hinglish: { type: "string" },
               detailed_summary: { type: "string" },
               why_matters: { type: "string" },
               importance: { type: "string", enum: ["high", "medium", "low"] },
               reading_seconds: { type: "number" },
+              news_date: { type: "string" },
               gdpi_points: { type: "array", items: { type: "string" } },
               wat_topics: { type: "array", items: { type: "string" } },
               key_facts: { type: "array", items: { type: "string" } },
@@ -86,7 +103,7 @@ Pick realistic likely Indian sources (Economic Times, Mint, Business Standard, T
               },
               tags: { type: "array", items: { type: "string" } },
             },
-            required: ["headline", "category", "one_liner", "short_summary", "detailed_summary", "importance"],
+            required: ["headline", "category", "short_summary", "short_summary_hi", "short_summary_hinglish", "importance"],
           },
         },
       },
@@ -125,7 +142,7 @@ Pick realistic likely Indian sources (Economic Times, Mint, Business Standard, T
         });
       }
       if (aiRes.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits in Settings > Workspace > Usage." }), {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Settings > Workspace > Usage." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -139,6 +156,11 @@ Pick realistic likely Indian sources (Economic Times, Mint, Business Standard, T
     const parsed = typeof argsRaw === "string" ? JSON.parse(argsRaw) : argsRaw;
     const articles: any[] = Array.isArray(parsed?.articles) ? parsed.articles : [];
 
+    const safeDate = (d: any): string => {
+      if (typeof d !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return dateTo;
+      return d;
+    };
+
     const rows = articles.map((a) => ({
       headline: String(a.headline || "").slice(0, 500),
       category: String(a.category || "National"),
@@ -146,6 +168,8 @@ Pick realistic likely Indian sources (Economic Times, Mint, Business Standard, T
       source_url: a.source_url || null,
       one_liner: a.one_liner || null,
       short_summary: a.short_summary || null,
+      short_summary_hi: a.short_summary_hi || null,
+      short_summary_hinglish: a.short_summary_hinglish || null,
       detailed_summary: a.detailed_summary || null,
       why_matters: a.why_matters || null,
       gdpi_points: a.gdpi_points || [],
@@ -156,6 +180,7 @@ Pick realistic likely Indian sources (Economic Times, Mint, Business Standard, T
       tags: Array.isArray(a.tags) ? a.tags : [],
       importance: ["high", "medium", "low"].includes(a.importance) ? a.importance : "medium",
       reading_seconds: Number(a.reading_seconds) || 45,
+      news_date: safeDate(a.news_date),
       ai_generated: true,
       published_at: new Date().toISOString(),
     }));
