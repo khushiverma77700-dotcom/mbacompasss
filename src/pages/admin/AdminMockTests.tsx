@@ -1288,6 +1288,18 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
             initialFocus
             className={cn("p-3 pointer-events-auto")}
           />
+          <div className="flex items-center justify-between gap-2 border-t px-2 py-1.5 bg-slate-50">
+            <span className="text-[10px] text-slate-500">Want it live immediately?</span>
+            <Button
+              size="sm" variant="ghost"
+              className="h-7 px-2 text-[11px] text-orange-600 hover:bg-orange-50"
+              disabled={saving}
+              onClick={async () => {
+                await apply({ is_published: true, is_live: true, scheduled_start_at: null });
+                setShowSchedule(false);
+              }}
+            >Go Live now</Button>
+          </div>
           <div className="flex items-center gap-2 border-t p-2">
             <Input
               type="time"
