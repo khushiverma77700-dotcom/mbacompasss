@@ -520,7 +520,7 @@ Deno.serve(async (req) => {
 
   // Always reconcile first.
   const reconciled = await reconcile(admin);
-  const sectionsKickedPromise = kickPendingSectionJobs(admin, 6);
+  let generationCap = await enforceGenerationCap(admin);
 
   // ---- Cron / internal-key pump (runs even when no admin is online) ----
   // Used by pg_cron every minute so generation keeps progressing while the
@@ -528,18 +528,19 @@ Deno.serve(async (req) => {
   // batch's stored created_by admin via the internal-pump header.
   if (isInternal) {
     const dispatched = await pumpPending(admin, {}, 3);
-    const sections_kicked = await sectionsKickedPromise;
-    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched, sections_kicked });
+    generationCap = await enforceGenerationCap(admin);
+    const sections_kicked = await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds);
+    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched, sections_kicked, generation_cap: generationCap });
   }
 
   // Reconcile-only mode.
   if (body?.reconcile && !body?.items && !body?.resume_id) {
-    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0, sections_kicked: await sectionsKickedPromise });
+    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0, sections_kicked: await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds), generation_cap: generationCap });
     // Continue below to validate the admin and pump stalled/pending rows.
   }
 
   // Need user auth for any dispatch.
-  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, sections_kicked: await sectionsKickedPromise });
+  if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, sections_kicked: await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds), generation_cap: generationCap });
 
   // Validate user is admin.
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
@@ -558,8 +559,9 @@ Deno.serve(async (req) => {
 
   if (body?.reconcile && !body?.items && !body?.resume_id) {
     const dispatched = await pumpPending(admin, { userToken }, 3);
-    const sections_kicked = await sectionsKickedPromise;
-    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked });
+    generationCap = await enforceGenerationCap(admin);
+    const sections_kicked = await kickPendingSectionJobs(admin, 6, generationCap.activeGenerationIds);
+    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked, generation_cap: generationCap });
   }
 
   // Resume single item — still respect the global parallelism cap so a stream
