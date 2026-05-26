@@ -1271,8 +1271,12 @@ function MockCardItem({
           ) : (
             test.slug && (
               <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
-                <Button size="sm" className="w-full h-10 gap-1.5 rounded-lg bg-gradient-to-r from-violet-500 via-fuchsia-600 to-pink-600 hover:from-violet-600 hover:to-pink-700 text-white shadow-md hover:shadow-lg">
-                  <Play className="h-3.5 w-3.5" /> Start Mock
+                <Button size="sm" className={`w-full h-10 gap-1.5 rounded-lg text-white shadow-md hover:shadow-lg ${
+                  isLaunchedFullLength
+                    ? "bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 hover:from-rose-700 hover:to-amber-600 shadow-rose-300/60 animate-[pulse_2.5s_ease-in-out_infinite]"
+                    : "bg-gradient-to-r from-violet-500 via-fuchsia-600 to-pink-600 hover:from-violet-600 hover:to-pink-700"
+                }`}>
+                  <Play className="h-3.5 w-3.5" /> {isLaunchedFullLength ? "Attempt Now" : "Start Mock"}
                   <ChevronRight className="h-3.5 w-3.5 ml-auto" />
                 </Button>
               </Link>
