@@ -314,7 +314,15 @@ const AdminMockTests = () => {
     .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
     .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter)
     .filter((t) => sectionFilter === "all" || sectionCodeOf(t) === sectionFilter)
-    .filter((t) => topicFilter === "all" || (t.topic || "") === topicFilter);
+    .filter((t) => topicFilter === "all" || (t.topic || "") === topicFilter)
+    .filter((t) => {
+      if (statusFilter === "all") return true;
+      if (statusFilter === "live") return !!t.is_live;
+      if (statusFilter === "scheduled") return !!t.is_live && !!t.scheduled_start_at;
+      if (statusFilter === "published") return !!t.is_published && !t.is_live;
+      if (statusFilter === "draft") return !t.is_published && !t.is_live;
+      return true;
+    });
 
   // Advanced filter visibility: only relevant for sectional / topic categories
   const showAdvancedFilters = categoryFilter === "sectional" || categoryFilter === "topic_wise" || categoryFilter === "topic";
