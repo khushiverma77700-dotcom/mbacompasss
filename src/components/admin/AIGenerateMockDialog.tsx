@@ -619,7 +619,14 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   <Label className="text-xs">
                     Section <span className="text-destructive">*</span>
                   </Label>
-                  <Select value={sectionCode} onValueChange={setSectionCode}>
+                  <Select
+                    value={`${exam}:${sectionCode}`}
+                    onValueChange={(v) => {
+                      const [pickedExam, pickedCode] = v.split(":");
+                      if (pickedExam && pickedExam !== exam) setExam(pickedExam);
+                      setSectionCode(pickedCode);
+                    }}
+                  >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(() => {
@@ -633,7 +640,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                               </div>
                             )}
                             {examSections.map((s) => (
-                              <SelectItem key={`${exam}-${s.code}`} value={s.code}>
+                              <SelectItem key={`${exam}-${s.code}`} value={`${exam}:${s.code}`}>
                                 {exam} — {s.code} — {s.name}
                               </SelectItem>
                             ))}
@@ -643,7 +650,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                                   {examCode} sections
                                 </div>
                                 {profile.sections.map((s) => (
-                                  <SelectItem key={`${examCode}-${s.code}`} value={s.code}>
+                                  <SelectItem key={`${examCode}-${s.code}`} value={`${examCode}:${s.code}`}>
                                     {examCode} — {s.code} — {s.name}
                                   </SelectItem>
                                 ))}
