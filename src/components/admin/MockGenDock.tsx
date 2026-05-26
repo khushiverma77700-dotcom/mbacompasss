@@ -262,7 +262,7 @@ function fmtDuration(ms: number): string {
 }
 
 function JobRow({
-  job, queuePos, totalPending, expanded, onToggle, onCancel, onDismiss, onRunNow, onRetry,
+  job, queuePos, totalPending, expanded, onToggle, onCancel, onDismiss, onRunNow, onRetry, onRegenerateFailed,
 }: {
   job: DockJob;
   queuePos?: number;
@@ -273,7 +273,9 @@ function JobRow({
   onDismiss: () => void;
   onRunNow: () => void;
   onRetry: () => void;
+  onRegenerateFailed: () => void;
 }) {
+
   const meta = statusMeta(job.status);
   const Icon = meta.icon;
   const requested = job.total_requested ?? 0;
