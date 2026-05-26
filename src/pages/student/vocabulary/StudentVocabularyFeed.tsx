@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 
 // MBA exam-focused filters (CAT + OMETs)
 const EXAMS = [
@@ -44,6 +45,7 @@ const TARGET_PRESETS = [3, 5, 10, 15, 20];
 
 export default function StudentVocabularyFeed() {
   const [params, setParams] = useSearchParams();
+  const isDemo = useIsDemo();
   const { user } = useAuth();
   const { toast } = useToast();
   const [words, setWords] = useState<any[]>([]);
@@ -612,17 +614,20 @@ export default function StudentVocabularyFeed() {
         }
         return (
         <div className="grid gap-4 md:grid-cols-2">
-          {list.map((w) => {
+          {list.map((w, _idx) => {
             const isRead = readIds.has(w.id);
             const isSaved = bookmarkIds.has(w.id);
             const syllables = (w.pronunciation_syllables || w.word).split(/[-·•\s]+/).filter(Boolean);
+            const demoLocked = isDemo && _idx > 0;
             return (
 
               <Card
                 key={w.id}
+                data-demo-blurred={demoLocked ? "true" : undefined}
                 className={cn(
                   "group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl",
                   isRead && "opacity-85",
+                  demoLocked && "blur-[6px] select-none",
                 )}
               >
                 <div
