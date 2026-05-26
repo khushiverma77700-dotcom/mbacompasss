@@ -163,16 +163,17 @@ const AdminMockTests = () => {
         toast({ title: "No sections found", variant: "destructive" });
         return;
       }
-      const deficits: { id: string; code: string; name: string; deficit: number; duration: number; total: number }[] = [];
+      const deficits: { id: string; code: string; name: string; deficit: number; actual: number; duration: number; total: number }[] = [];
       for (const s of sections) {
         const { count } = await supabase
           .from("mock_questions")
           .select("id", { count: "exact", head: true })
           .eq("section_id", s.id);
-        const deficit = (s.total_questions || 0) - (count || 0);
+        const actual = count || 0;
+        const deficit = (s.total_questions || 0) - actual;
         if (deficit > 0) deficits.push({
           id: s.id, code: s.code, name: s.name,
-          deficit, duration: s.duration_minutes || 60, total: s.total_questions || 0,
+          deficit, actual, duration: s.duration_minutes || 60, total: s.total_questions || 0,
         });
       }
       if (!deficits.length) {
@@ -180,10 +181,13 @@ const AdminMockTests = () => {
         return;
       }
 
+      const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
+      const totalTargetForDeficitSections = deficits.reduce((a, b) => a + b.total, 0);
+      const totalActualForDeficitSections = deficits.reduce((a, b) => a + b.actual, 0);
       let kicked = 0;
       const skipped: string[] = [];
       const generationIds = new Set<string>();
-      const createdJobIds: string[] = [];
+      const jobIdsToKick: string[] = [];
 
       // Lazily create a fallback generation row when sections lack a prior job.
       let fallbackGenerationId: string | null = null;
@@ -200,8 +204,8 @@ const AdminMockTests = () => {
             request: { source: "top_up_missing", test_id: testId, test_name: (testRow as any)?.name || testName },
             result_summary: {},
             status: "running",
-            total_requested: deficits.reduce((a, b) => a + b.deficit, 0),
-            total_generated: 0,
+            total_requested: totalTargetForDeficitSections,
+            total_generated: totalActualForDeficitSections,
             total_rejected_duplicate: 0,
             total_rejected_web_match: 0,
             created_by: userRes?.user?.id ?? null,
@@ -220,7 +224,7 @@ const AdminMockTests = () => {
       for (const ds of deficits) {
         const { data: jobs } = await supabase
           .from("mock_section_jobs")
-          .select("id, generation_id")
+          .select("id, generation_id, sets, questions_per_set")
           .eq("section_id", ds.id)
           .order("created_at", { ascending: false })
           .limit(1);
@@ -230,12 +234,17 @@ const AdminMockTests = () => {
           await supabase.from("mock_section_jobs").update({
             status: "pending",
             attempts: 0,
+            total_questions: ds.total,
+            questions_done: ds.actual,
+            sets: job.sets || 0,
+            questions_per_set: job.questions_per_set || 0,
             worker_lock_until: null,
             current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
             error_message: null,
+            final_reason: null,
             updated_at: new Date().toISOString(),
           }).eq("id", job.id);
-          supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id, auto: true } }).catch(() => {});
+          jobIdsToKick.push(job.id);
           kicked++;
           continue;
         }
@@ -259,8 +268,8 @@ const AdminMockTests = () => {
             level: "mixed",
             section_code: ds.code,
             section_name: ds.name,
-            total_questions: ds.deficit,
-            mcq_count: ds.deficit,
+            total_questions: ds.total,
+            mcq_count: ds.total,
             tita_count: 0,
             topic: null,
             strict_topic: null,
@@ -271,7 +280,7 @@ const AdminMockTests = () => {
             questions_per_set: ds.deficit,
             status: "pending",
             attempts: 0,
-            questions_done: 0,
+            questions_done: ds.actual,
             current_step: `Top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
             created_by: userRes?.user?.id ?? null,
           })
@@ -282,8 +291,7 @@ const AdminMockTests = () => {
           skipped.push(ds.code);
           continue;
         }
-        createdJobIds.push(newJob.id);
-        supabase.functions.invoke("retry-mock-section", { body: { job_id: newJob.id, auto: true } }).catch(() => {});
+        jobIdsToKick.push(newJob.id);
         kicked++;
       }
 
@@ -303,6 +311,8 @@ const AdminMockTests = () => {
         const genIds = Array.from(generationIds);
         await supabase.from("ai_mock_generations").update({
           status: "running", error_message: null, finished_at: null,
+          total_requested: totalTargetForDeficitSections,
+          total_generated: totalActualForDeficitSections,
         }).in("id", genIds);
         const { data: bulkItems } = await supabase
           .from("bulk_mock_request_items")
@@ -311,6 +321,8 @@ const AdminMockTests = () => {
         if (bulkItems?.length) {
           await supabase.from("bulk_mock_request_items").update({
             status: "processing", error_message: null, finished_at: null, paused: false,
+            total_requested: totalTargetForDeficitSections,
+            total_generated: totalActualForDeficitSections,
           }).in("id", bulkItems.map((b: any) => b.id));
           const reqIds = Array.from(new Set(bulkItems.map((b: any) => b.request_id).filter(Boolean)));
           reqIds.forEach((rid) => { trackRequest(rid); tracked++; });
@@ -343,8 +355,8 @@ const AdminMockTests = () => {
               sets: 1,
               test_name_prefix: (testRow as any)?.name ?? null,
               status: "processing",
-              total_requested: d.deficit,
-              total_generated: 0,
+              total_requested: d.total,
+              total_generated: d.actual,
               generation_id: Array.from(generationIds)[0] ?? null,
               started_at: new Date().toISOString(),
             }));
@@ -355,9 +367,12 @@ const AdminMockTests = () => {
         } catch {/* non-fatal — dock just won't show progress */}
       }
 
+      jobIdsToKick.forEach((jobId) => {
+        supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId, auto: true } }).catch(() => {});
+      });
+
       openDock();
 
-      const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
       toast({
         title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
         description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued — see Mocks dock for progress${skipped.length ? ` · skipped: ${skipped.join(", ")}` : ""}`,
@@ -1005,7 +1020,8 @@ const AdminMockTests = () => {
                       const expected = (t.expected_questions as number) ?? 0;
                       const actual = (t.actual_questions as number) ?? 0;
                       const complete = expected > 0 && actual >= expected;
-                      const partial = expected > 0 && actual > 0 && actual < expected;
+                      const incomplete = expected > 0 && actual < expected;
+                      const partial = incomplete && actual > 0;
                       const cls = complete
                         ? "bg-emerald-100 text-emerald-700 border-emerald-300"
                         : partial
@@ -1017,7 +1033,7 @@ const AdminMockTests = () => {
                           <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
                             {actual}/{expected}
                           </Badge>
-                          {partial && (
+                          {incomplete && (
                             <Button
                               size="sm"
                               variant="outline"
