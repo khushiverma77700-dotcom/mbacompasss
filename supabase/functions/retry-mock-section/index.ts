@@ -1043,6 +1043,13 @@ Deno.serve(async (req) => {
           if (!auto) return;
           const workerUrl = `${url}/functions/v1/retry-mock-section`;
           const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
+          const nextLockUntil = new Date(Date.now() + 8 * 60_000).toISOString();
+          const queued = admin.from("mock_section_jobs").update({
+            status: "pending",
+            worker_lock_until: null,
+            current_step: "Queued next generation tick…",
+            updated_at: new Date().toISOString(),
+          }).eq("id", job_id);
           const next = fetch(workerUrl, {
             method: "POST",
             headers: {
@@ -1051,9 +1058,26 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ job_id, auto: true, service: true, continuation: true, internal_secret: internalWorkerSecret }),
-          }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
+          }).then(async (resp) => {
+            if (!resp.ok) {
+              await admin.from("mock_section_jobs").update({
+                status: "pending",
+                worker_lock_until: null,
+                current_step: `Next generation tick failed to start (HTTP ${resp.status}) — watchdog will retry`,
+                updated_at: new Date().toISOString(),
+              }).eq("id", job_id);
+            }
+          }).catch(async (e) => {
+            console.error("[retry-mock-section] next worker failed", e);
+            await admin.from("mock_section_jobs").update({
+              status: "pending",
+              worker_lock_until: null,
+              current_step: "Next generation tick failed to start — watchdog will retry",
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+          });
           // @ts-ignore
-          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
+          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(Promise.all([queued, next]));
         }
 
         // If we exited the standalone loop because attempts hit the cap but
