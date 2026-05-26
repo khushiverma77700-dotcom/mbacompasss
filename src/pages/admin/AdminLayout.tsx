@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminThemeToggle, { applyAdminTheme, getInitialAdminTheme } from "@/components/admin/AdminThemeToggle";
 import { adminNavGroups, allAdminNavItems } from "./adminNav";
+import { MockGenDockProvider } from "@/contexts/MockGenDockContext";
+import MockGenDock from "@/components/admin/MockGenDock";
+
 
 const AdminLayout = () => {
   const { user, isAdmin, allowedSections, loading, adminLoading } = useAuth();
