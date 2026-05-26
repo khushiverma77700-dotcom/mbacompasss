@@ -127,7 +127,31 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       writeTrackedIds(trackedReqIdsRef.current);
     }
     setJobs(next);
+
+    // Auto-dispatch: keep up to 3 mocks running in parallel without admin clicking "Run now".
+    try {
+      const MAX_PARALLEL = 3;
+      const runningCount = next.filter((j) => j.status === "running" || j.status === "starting").length;
+      let slots = Math.max(0, MAX_PARALLEL - runningCount);
+      if (slots > 0) {
+        const pending = next
+          .filter((j) => j.status === "pending")
+          .sort((a, b) => a.createdAt - b.createdAt);
+        const now = Date.now();
+        for (const j of pending) {
+          if (slots <= 0) break;
+          const last = autoKickedRef.current[j.id] || 0;
+          if (now - last < 15000) continue; // throttle re-kicks per item
+          autoKickedRef.current[j.id] = now;
+          slots--;
+          supabase.functions
+            .invoke("bulk-mock-worker", { body: { resume_id: j.id } })
+            .catch(() => {});
+        }
+      }
+    } catch { /* ignore */ }
   }, []);
+
 
   useEffect(() => {
     fetchAll();
