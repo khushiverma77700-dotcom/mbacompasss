@@ -4562,6 +4562,113 @@ export type Database = {
         }
         Relationships: []
       }
+      news_articles: {
+        Row: {
+          ai_generated: boolean
+          category: string
+          created_at: string
+          detailed_summary: string | null
+          exam_relevance: Json
+          gdpi_points: Json
+          headline: string
+          id: string
+          importance: string
+          key_facts: Json
+          one_liner: string | null
+          published_at: string
+          reading_seconds: number
+          short_summary: string | null
+          source_name: string | null
+          source_url: string | null
+          tags: string[]
+          vocabulary: Json
+          wat_topics: Json
+          why_matters: string | null
+        }
+        Insert: {
+          ai_generated?: boolean
+          category: string
+          created_at?: string
+          detailed_summary?: string | null
+          exam_relevance?: Json
+          gdpi_points?: Json
+          headline: string
+          id?: string
+          importance?: string
+          key_facts?: Json
+          one_liner?: string | null
+          published_at?: string
+          reading_seconds?: number
+          short_summary?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          tags?: string[]
+          vocabulary?: Json
+          wat_topics?: Json
+          why_matters?: string | null
+        }
+        Update: {
+          ai_generated?: boolean
+          category?: string
+          created_at?: string
+          detailed_summary?: string | null
+          exam_relevance?: Json
+          gdpi_points?: Json
+          headline?: string
+          id?: string
+          importance?: string
+          key_facts?: Json
+          one_liner?: string | null
+          published_at?: string
+          reading_seconds?: number
+          short_summary?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          tags?: string[]
+          vocabulary?: Json
+          wat_topics?: Json
+          why_matters?: string | null
+        }
+        Relationships: []
+      }
+      news_user_actions: {
+        Row: {
+          article_id: string
+          is_liked: boolean
+          is_read: boolean
+          is_saved: boolean
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          is_liked?: boolean
+          is_read?: boolean
+          is_saved?: boolean
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          is_liked?: boolean
+          is_read?: boolean
+          is_saved?: boolean
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_user_actions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "news_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
