@@ -55,6 +55,7 @@ interface DockCtx {
 const Ctx = createContext<DockCtx | null>(null);
 const LS_KEY = "mock_gen_dock_request_ids_v1";
 const LS_DISMISSED_KEY = "mock_gen_dock_dismissed_ids_v1";
+const DOCK_ITEM_SELECT = "id, request_id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at, created_at";
 
 function readTrackedIds(): string[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
@@ -101,6 +102,19 @@ function mapRow(row: any): DockJob {
   };
 }
 
+function optimisticJob(item: { label: string; payload: any }, idx: number): DockJob {
+  const perSet = Number(item.payload.questions_per_set ?? item.payload.total_questions ?? 20) || 20;
+  const sets = Number(item.payload.sets ?? 1) || 1;
+  return {
+    id: `optimistic-${Date.now()}-${idx}-${Math.random().toString(36).slice(2)}`,
+    label: item.label,
+    status: "pending",
+    total_requested: perSet * sets,
+    total_generated: 0,
+    createdAt: Date.now() + idx,
+  };
+}
+
 
 export function MockGenDockProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useState<DockJob[]>([]);
@@ -109,6 +123,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const dismissedIdsRef = useRef<Set<string>>(new Set(readDismissedIds()));
   const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
   const autoKickedRef = useRef<Record<string, number>>({});
+  const optimisticJobsRef = useRef<DockJob[]>([]);
 
   // Hydrate from DB on mount + poll every 3s. Survives page reloads,
   // navigation, and laptop reboots — the source of truth is the bulk
