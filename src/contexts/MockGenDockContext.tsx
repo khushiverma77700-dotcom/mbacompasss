@@ -91,6 +91,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const [isOpen, setIsOpen] = useState(false);
   const trackedReqIdsRef = useRef<string[]>(readTrackedIds());
   const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
+  const autoKickedRef = useRef<Record<string, number>>({});
 
   // Hydrate from DB on mount + poll every 3s. Survives page reloads,
   // navigation, and laptop reboots — the source of truth is the bulk
