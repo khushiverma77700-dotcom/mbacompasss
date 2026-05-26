@@ -187,7 +187,9 @@ export default function MockGenDock() {
                   onCancel={() => cancel(j.id)}
                   onDismiss={() => dismiss(j.id)}
                   onRunNow={() => runNow(j.id)}
-                  onRetry={() => retry(j.id)} />
+                  onRetry={() => retry(j.id)}
+                  onRegenerateFailed={() => regenerateFailed(j.id)} />
+
               ))}
             </div>
 
