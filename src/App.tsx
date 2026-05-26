@@ -194,6 +194,7 @@ const StudentVocabularyAnalytics = lazyWithPreload(() => import("./pages/student
 const AdminVocabulary = lazyWithPreload(() => import("./pages/admin/AdminVocabulary"));
 const AdminFormulas = lazyWithPreload(() => import("./pages/admin/AdminFormulas"));
 const StudentFormulaBook = lazyWithPreload(() => import("./pages/student/formulas/StudentFormulaBook"));
+const StudentNewsroom = lazyWithPreload(() => import("./pages/student/StudentNewsroom"));
 const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
 const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 const DemoShell = lazyWithPreload(() => import("./components/demo/DemoShell"));
@@ -894,6 +895,7 @@ const App = () => (
                   <Route path="formulas" element={<InnerLazyPage><StudentFormulaBook /></InnerLazyPage>} />
                   <Route path="formula/:slug" element={<InnerLazyPage><FormulaDetailPage /></InnerLazyPage>} />
                   <Route path="formulas/list" element={<InnerLazyPage><FormulasListPage /></InnerLazyPage>} />
+                  <Route path="newsroom" element={<InnerLazyPage><StudentNewsroom /></InnerLazyPage>} />
                 </>
               );
               return (
