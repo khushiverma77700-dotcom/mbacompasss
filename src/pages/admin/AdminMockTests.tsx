@@ -133,6 +133,69 @@ const AdminMockTests = () => {
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
   const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
   const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
+  const [fillingTestId, setFillingTestId] = useState<string | null>(null);
+
+  const handleFillMissingQuestions = async (testId: string, testName: string) => {
+    setFillingTestId(testId);
+    try {
+      const { data: sections, error: secErr } = await supabase
+        .from("mock_sections")
+        .select("id, code, name, total_questions")
+        .eq("test_id", testId);
+      if (secErr) throw secErr;
+      if (!sections?.length) {
+        toast({ title: "No sections found", variant: "destructive" });
+        return;
+      }
+      const deficits: { id: string; code: string; deficit: number }[] = [];
+      for (const s of sections) {
+        const { count } = await supabase
+          .from("mock_questions")
+          .select("id", { count: "exact", head: true })
+          .eq("section_id", s.id);
+        const deficit = (s.total_questions || 0) - (count || 0);
+        if (deficit > 0) deficits.push({ id: s.id, code: s.code, deficit });
+      }
+      if (!deficits.length) {
+        toast({ title: "Already complete", description: "No missing questions in this mock." });
+        return;
+      }
+      let kicked = 0;
+      const skipped: string[] = [];
+      for (const ds of deficits) {
+        const { data: jobs } = await supabase
+          .from("mock_section_jobs")
+          .select("id")
+          .eq("section_id", ds.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        const jobId = jobs?.[0]?.id;
+        if (!jobId) { skipped.push(ds.code); continue; }
+        await supabase.from("mock_section_jobs").update({
+          status: "pending",
+          attempts: 0,
+          worker_lock_until: null,
+          current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
+          error_message: null,
+          updated_at: new Date().toISOString(),
+        }).eq("id", jobId);
+        supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId } }).catch(() => {});
+        kicked++;
+      }
+      const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
+      toast({
+        title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
+        description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued${skipped.length ? ` · skipped (no prior job): ${skipped.join(", ")}` : ""}`,
+      });
+      // Refresh counts shortly after
+      setTimeout(() => { loadTests().catch(() => {}); }, 4000);
+    } catch (e: any) {
+      toast({ title: "Failed to top up", description: e?.message || "Try again", variant: "destructive" });
+    } finally {
+      setFillingTestId(null);
+    }
+  };
+
 
   const updateSortOrder = async (id: string, raw: string) => {
     const parsed = parseInt(raw, 10);
