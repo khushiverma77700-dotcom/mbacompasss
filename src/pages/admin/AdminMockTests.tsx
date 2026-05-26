@@ -136,6 +136,7 @@ const AdminMockTests = () => {
   const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
   const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
   const [fillingTestId, setFillingTestId] = useState<string | null>(null);
+  const { trackRequest, open: openDock } = useMockGenDock();
 
   const handleFillMissingQuestions = async (testId: string, testName: string) => {
     setFillingTestId(testId);
@@ -164,15 +165,17 @@ const AdminMockTests = () => {
       }
       let kicked = 0;
       const skipped: string[] = [];
+      const generationIds = new Set<string>();
       for (const ds of deficits) {
         const { data: jobs } = await supabase
           .from("mock_section_jobs")
-          .select("id")
+          .select("id, generation_id")
           .eq("section_id", ds.id)
           .order("created_at", { ascending: false })
           .limit(1);
-        const jobId = jobs?.[0]?.id;
-        if (!jobId) { skipped.push(ds.code); continue; }
+        const job = jobs?.[0];
+        if (!job?.id) { skipped.push(ds.code); continue; }
+        if (job.generation_id) generationIds.add(job.generation_id);
         await supabase.from("mock_section_jobs").update({
           status: "pending",
           attempts: 0,
@@ -180,14 +183,37 @@ const AdminMockTests = () => {
           current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
           error_message: null,
           updated_at: new Date().toISOString(),
-        }).eq("id", jobId);
-        supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId } }).catch(() => {});
+        }).eq("id", job.id);
+        supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id } }).catch(() => {});
         kicked++;
       }
+
+      // Re-arm parent generation(s) + matching bulk_mock_request_items, and
+      // surface them in the side Mocks dock so the admin can watch progress.
+      let tracked = 0;
+      if (generationIds.size > 0) {
+        const genIds = Array.from(generationIds);
+        await supabase.from("ai_mock_generations").update({
+          status: "running", error_message: null, finished_at: null,
+        }).in("id", genIds);
+        const { data: bulkItems } = await supabase
+          .from("bulk_mock_request_items")
+          .select("id, request_id")
+          .in("generation_id", genIds);
+        if (bulkItems?.length) {
+          await supabase.from("bulk_mock_request_items").update({
+            status: "processing", error_message: null, finished_at: null, paused: false,
+          }).in("id", bulkItems.map((b: any) => b.id));
+          const reqIds = Array.from(new Set(bulkItems.map((b: any) => b.request_id).filter(Boolean)));
+          reqIds.forEach((rid) => { trackRequest(rid); tracked++; });
+        }
+      }
+      if (tracked === 0) openDock();
+
       const totalDeficit = deficits.reduce((a, b) => a + b.deficit, 0);
       toast({
         title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
-        description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued${skipped.length ? ` · skipped (no prior job): ${skipped.join(", ")}` : ""}`,
+        description: `${kicked} section${kicked > 1 ? "s" : ""} re-queued — see Mocks dock for progress${skipped.length ? ` · skipped (no prior job): ${skipped.join(", ")}` : ""}`,
       });
       // Refresh counts shortly after
       setTimeout(() => { fetchTests(); }, 4000);
@@ -197,6 +223,7 @@ const AdminMockTests = () => {
       setFillingTestId(null);
     }
   };
+
 
 
   const updateSortOrder = async (id: string, raw: string) => {
