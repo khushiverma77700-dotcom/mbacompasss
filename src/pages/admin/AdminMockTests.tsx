@@ -234,6 +234,11 @@ const AdminMockTests = () => {
           if (job.generation_id) {
             generationIds.add(job.generation_id);
             sectionGenerationIds.set(ds.id, job.generation_id);
+          } else {
+            const genId = await ensureGenerationId();
+            if (!genId) { skipped.push(ds.code); continue; }
+            sectionGenerationIds.set(ds.id, genId);
+            await supabase.from("mock_section_jobs").update({ generation_id: genId }).eq("id", job.id);
           }
           await supabase.from("mock_section_jobs").update({
             status: "pending",
