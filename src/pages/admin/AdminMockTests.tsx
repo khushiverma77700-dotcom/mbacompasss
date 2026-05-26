@@ -12,6 +12,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare, Package, BookOpen, Wand2, CalendarClock, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -1052,58 +1055,73 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
         >Live</Button>
       </div>
 
-      {/* Inline schedule editor — always available without opening the mock */}
-      {!showSchedule ? (
-        <button
-          type="button"
-          onClick={() => { setDt(isoToLocalInput(test.scheduled_start_at) || ""); setShowSchedule(true); }}
-          className={`group inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] transition ${
-            test.scheduled_start_at
-              ? "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
-              : "border-dashed border-slate-300 text-muted-foreground hover:bg-slate-50"
-          }`}
-          title={test.scheduled_start_at ? "Click to change scheduled date" : "Click to set scheduled date"}
-        >
-          <CalendarClock className="w-3 h-3" />
-          {test.scheduled_start_at
-            ? new Date(test.scheduled_start_at).toLocaleString(undefined, {
-                day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
-              })
-            : "Set schedule"}
-        </button>
-      ) : (
-        <div className="flex items-center gap-1 pt-1">
-          <Input
-            type="datetime-local" value={dt}
-            onChange={(e) => setDt(e.target.value)}
-            className="h-7 text-[11px] w-[180px]"
-          />
-          <Button
-            size="sm" className="h-7 px-2 text-[11px]" disabled={saving}
-            onClick={async () => {
-              const iso = dt ? new Date(dt).toISOString() : null;
-              // Save schedule WITHOUT forcing the test to live — preserve current publish/live state
-              await apply({ is_published: test.is_published ?? false, is_live: test.is_live ?? false, scheduled_start_at: iso });
-              setShowSchedule(false);
+      {/* Inline schedule editor — popover calendar so it always opens */}
+      <Popover open={showSchedule} onOpenChange={(o) => { if (o) setDt(isoToLocalInput(test.scheduled_start_at) || ""); setShowSchedule(o); }}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={`group inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] transition ${
+              test.scheduled_start_at
+                ? "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
+                : "border-dashed border-slate-300 text-muted-foreground hover:bg-slate-50"
+            }`}
+            title={test.scheduled_start_at ? "Click to change scheduled date" : "Click to set scheduled date"}
+          >
+            <CalendarClock className="w-3 h-3" />
+            {test.scheduled_start_at
+              ? new Date(test.scheduled_start_at).toLocaleString(undefined, {
+                  day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                })
+              : "Set schedule"}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0 z-50 bg-popover" align="start">
+          <Calendar
+            mode="single"
+            selected={dt ? new Date(dt) : undefined}
+            onSelect={(d) => {
+              if (!d) return;
+              const time = dt && dt.includes("T") ? dt.split("T")[1] : "09:00";
+              const yyyy = d.getFullYear();
+              const mm = String(d.getMonth() + 1).padStart(2, "0");
+              const dd = String(d.getDate()).padStart(2, "0");
+              setDt(`${yyyy}-${mm}-${dd}T${time}`);
             }}
-          >Save</Button>
-          {test.scheduled_start_at && (
+            initialFocus
+            className={cn("p-3 pointer-events-auto")}
+          />
+          <div className="flex items-center gap-2 border-t p-2">
+            <Input
+              type="time"
+              value={dt && dt.includes("T") ? dt.split("T")[1] : ""}
+              onChange={(e) => {
+                const datePart = dt && dt.includes("T") ? dt.split("T")[0] : new Date().toISOString().slice(0, 10);
+                setDt(`${datePart}T${e.target.value}`);
+              }}
+              className="h-8 text-xs w-[110px]"
+            />
             <Button
-              size="sm" variant="ghost" className="h-7 px-2 text-[11px] text-rose-600 hover:bg-rose-50"
-              disabled={saving}
+              size="sm" className="h-8 px-2 text-xs" disabled={saving || !dt}
               onClick={async () => {
-                await apply({ is_published: test.is_published ?? false, is_live: test.is_live ?? false, scheduled_start_at: null });
-                setDt("");
+                const iso = dt ? new Date(dt).toISOString() : null;
+                await apply({ is_published: test.is_published ?? false, is_live: test.is_live ?? false, scheduled_start_at: iso });
                 setShowSchedule(false);
               }}
-              title="Clear scheduled date"
-            >Clear</Button>
-          )}
-          <Button size="sm" variant="ghost" className="h-7 px-1.5 text-[11px]" onClick={() => setShowSchedule(false)}>
-            <X className="w-3 h-3" />
-          </Button>
-        </div>
-      )}
+            >Save</Button>
+            {test.scheduled_start_at && (
+              <Button
+                size="sm" variant="ghost" className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
+                disabled={saving}
+                onClick={async () => {
+                  await apply({ is_published: test.is_published ?? false, is_live: test.is_live ?? false, scheduled_start_at: null });
+                  setDt("");
+                  setShowSchedule(false);
+                }}
+              >Clear</Button>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
