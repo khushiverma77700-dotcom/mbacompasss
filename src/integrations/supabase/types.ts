@@ -3473,6 +3473,8 @@ export type Database = {
           description: string | null
           exam_code: string | null
           features: Json
+          filter_exams: string[]
+          filter_types: string[]
           highlight_on_mocks: boolean
           highlights: Json
           id: string
@@ -3493,6 +3495,8 @@ export type Database = {
           description?: string | null
           exam_code?: string | null
           features?: Json
+          filter_exams?: string[]
+          filter_types?: string[]
           highlight_on_mocks?: boolean
           highlights?: Json
           id?: string
@@ -3513,6 +3517,8 @@ export type Database = {
           description?: string | null
           exam_code?: string | null
           features?: Json
+          filter_exams?: string[]
+          filter_types?: string[]
           highlight_on_mocks?: boolean
           highlights?: Json
           id?: string

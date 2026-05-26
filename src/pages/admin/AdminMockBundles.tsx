@@ -31,7 +31,19 @@ type Bundle = {
   features: FeatureMap;
   highlights: HighlightMap;
   included_categories: string[];
+  filter_exams: string[];
+  filter_types: string[];
 };
+
+const BUNDLE_EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
+const BUNDLE_TYPE_OPTIONS = [
+  { v: "full_length",   l: "Full Length" },
+  { v: "sectional",     l: "Sectional" },
+  { v: "topic_wise",    l: "Topic-wise" },
+  { v: "daily",         l: "Daily Test" },
+  { v: "previous_year", l: "Previous Year" },
+  { v: "mixed",         l: "Mixed / Other" },
+];
 
 type MockOption = {
   id: string;
@@ -74,7 +86,7 @@ const makeUniqueBundleSlug = async (rawSlug: string, currentBundleId?: string) =
 const EMPTY: Partial<Bundle> = {
   name: "", slug: "", description: "", exam_code: null, price_inr: 0, original_price_inr: null,
   validity_days: 365, is_published: true, highlight_on_mocks: false, sort_order: 0,
-  features: {}, highlights: {}, included_categories: [],
+  features: {}, highlights: {}, included_categories: [], filter_exams: [], filter_types: [],
 };
 
 export default function AdminMockBundles() {
@@ -131,6 +143,8 @@ export default function AdminMockBundles() {
       features: (b.features ?? {}) as FeatureMap,
       highlights: (b.highlights ?? {}) as HighlightMap,
       included_categories: b.included_categories ?? [],
+      filter_exams: b.filter_exams ?? [],
+      filter_types: b.filter_types ?? [],
     });
     const { data } = await supabase.from("mock_bundle_items").select("test_id, sort_order").eq("bundle_id", b.id).order("sort_order");
     setEditingItems((data ?? []).map((x: any) => x.test_id));
@@ -268,6 +282,8 @@ export default function AdminMockBundles() {
         features: (editing.features ?? {}) as any,
         highlights: (editing.highlights ?? {}) as any,
         included_categories: derivedCats.length ? derivedCats : (editing.included_categories ?? []),
+        filter_exams: editing.filter_exams ?? [],
+        filter_types: editing.filter_types ?? [],
       };
       if (bundleId) {
         const { error } = await supabase.from("mock_bundles").update(payload).eq("id", bundleId);
@@ -337,6 +353,13 @@ export default function AdminMockBundles() {
                   <span className="font-semibold">{b.name}</span>
                   <Badge variant={b.is_published ? "default" : "secondary"}>{b.is_published ? "Published" : "Draft"}</Badge>
                   {b.exam_code && <Badge variant="outline">{b.exam_code}</Badge>}
+                  {(b.filter_exams ?? []).map((x) => (
+                    <Badge key={`fe-${x}`} variant="outline" className="border-sky-300 text-sky-700 bg-sky-50 text-[10px]">{x}</Badge>
+                  ))}
+                  {(b.filter_types ?? []).map((x) => {
+                    const lbl = BUNDLE_TYPE_OPTIONS.find((o) => o.v === x)?.l ?? x;
+                    return <Badge key={`ft-${x}`} variant="outline" className="border-violet-300 text-violet-700 bg-violet-50 text-[10px]">{lbl}</Badge>;
+                  })}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">/{b.slug} · ₹{Number(b.price_inr).toLocaleString()} · {b.validity_days}d access</div>
               </div>
@@ -366,6 +389,58 @@ export default function AdminMockBundles() {
                   placeholder="e.g. CAT 2026 Full Mock Pack"
                 />
               </div>
+
+              {/* Filter tags (exam + type) for /courses filtering */}
+              <div className="rounded-lg border border-sky-100 bg-sky-50/30 p-3 space-y-3">
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-sky-800">Exam tags</Label>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">Pick one or more exams this bundle is for. Used to filter bundles on the catalog.</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {BUNDLE_EXAM_OPTIONS.map((e) => {
+                      const on = (editing.filter_exams ?? []).includes(e);
+                      return (
+                        <button
+                          key={e}
+                          type="button"
+                          onClick={() => {
+                            const cur = new Set(editing.filter_exams ?? []);
+                            on ? cur.delete(e) : cur.add(e);
+                            setEditing({ ...editing, filter_exams: Array.from(cur) });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${on ? "bg-sky-600 text-white border-sky-600" : "bg-white border-sky-200 text-sky-700 hover:bg-sky-50"}`}
+                        >
+                          {e}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-violet-800">Type / Category tags</Label>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">Full Length, Sectional, Topic-wise, etc. Multiple allowed.</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {BUNDLE_TYPE_OPTIONS.map((t) => {
+                      const on = (editing.filter_types ?? []).includes(t.v);
+                      return (
+                        <button
+                          key={t.v}
+                          type="button"
+                          onClick={() => {
+                            const cur = new Set(editing.filter_types ?? []);
+                            on ? cur.delete(t.v) : cur.add(t.v);
+                            setEditing({ ...editing, filter_types: Array.from(cur) });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${on ? "bg-violet-600 text-white border-violet-600" : "bg-white border-violet-200 text-violet-700 hover:bg-violet-50"}`}
+                        >
+                          {t.l}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
 
               {/* Mocks picker */}
               <div className="space-y-2">
