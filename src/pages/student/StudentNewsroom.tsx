@@ -84,6 +84,7 @@ export default function StudentNewsroom() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState<Article | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [lang, setLang] = useState<"en" | "hi" | "hinglish">("en");
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["newsroom-articles"],
