@@ -844,6 +844,9 @@ const App = () => (
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="/student/login" element={<LazyPage><StudentLogin /></LazyPage>} />
             <Route path="/student/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
+            <Route path="/demo" element={<LazyPage><DemoLanding /></LazyPage>} />
+            <Route path="/demo/dashboard" element={<LazyPage><DemoDashboard /></LazyPage>} />
+            <Route path="/demo/dashboard/*" element={<LazyPage><DemoDashboard /></LazyPage>} />
             <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
               <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
               <Route path="mocks" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
