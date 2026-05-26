@@ -412,7 +412,8 @@ Deno.serve(async (req) => {
 
   // Start every inserted row. Each dispatch only needs generate-mock-questions
   // to return its 202 + generation_id; the heavy AI work remains in section workers.
-  const runAll = async () => { await pumpPending(admin, userToken, inserted?.length ?? 0); };
+  const runAll = async () => { await pumpPending(admin, { userToken }, inserted?.length ?? 0); };
+
   // @ts-ignore
   EdgeRuntime.waitUntil(runAll());
 
