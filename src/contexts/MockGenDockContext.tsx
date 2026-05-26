@@ -346,7 +346,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false), toggle: () => setIsOpen((o) => !o),
       activeCount, pendingCount, doneCount, failCount,
     };
-  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest]);
+  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest, fetchAll]);
 
 
 
