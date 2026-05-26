@@ -51,6 +51,26 @@ const sectionCodeOf = (m: MockOption): string | null => m?.generation_meta?.requ
 const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 
+const makeUniqueBundleSlug = async (rawSlug: string, currentBundleId?: string) => {
+  const base = slugify(rawSlug) || `bundle-${Date.now()}`;
+  const { data, error } = await supabase
+    .from("mock_bundles")
+    .select("id, slug")
+    .like("slug", `${base}%`);
+  if (error) throw error;
+
+  const taken = new Set(
+    (data ?? [])
+      .filter((row: any) => row.id !== currentBundleId)
+      .map((row: any) => row.slug)
+  );
+  if (!taken.has(base)) return base;
+
+  let suffix = 2;
+  while (taken.has(`${base}-${suffix}`)) suffix += 1;
+  return `${base}-${suffix}`;
+};
+
 const EMPTY: Partial<Bundle> = {
   name: "", slug: "", description: "", exam_code: null, price_inr: 0, original_price_inr: null,
   validity_days: 365, is_published: true, highlight_on_mocks: false, sort_order: 0,
@@ -219,7 +239,8 @@ export default function AdminMockBundles() {
     if (!editing?.name?.trim()) { toast.error("Name is required"); return; }
     setSaving(true);
     try {
-      const slug = editing.slug?.trim() || slugify(editing.name);
+      let bundleId = (editing as Bundle).id;
+      const slug = await makeUniqueBundleSlug(editing.slug?.trim() || editing.name, bundleId);
       // Auto-derive included categories from selected mocks so /courses filtering keeps working
       const derivedCats = Array.from(
         new Set(
@@ -248,7 +269,6 @@ export default function AdminMockBundles() {
         highlights: (editing.highlights ?? {}) as any,
         included_categories: derivedCats.length ? derivedCats : (editing.included_categories ?? []),
       };
-      let bundleId = (editing as Bundle).id;
       if (bundleId) {
         const { error } = await supabase.from("mock_bundles").update(payload).eq("id", bundleId);
         if (error) throw error;
