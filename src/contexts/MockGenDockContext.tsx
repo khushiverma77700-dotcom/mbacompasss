@@ -37,7 +37,8 @@ interface DockCtx {
   runNow: (id: string) => Promise<void>;
   retry: (id: string) => Promise<void>;
   regenerateFailed: (id: string) => Promise<void>;
-  trackRequest: (requestId: string) => void;
+  trackRequest: (requestId: string) => Promise<void>;
+  refresh: () => Promise<void>;
 
   isOpen: boolean;
   open: () => void;
@@ -314,14 +315,27 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     await fetchAll();
   }, [jobs, fetchAll]);
 
-  const trackRequest = useCallback((requestId: string) => {
+  const trackRequest = useCallback(async (requestId: string) => {
     if (!requestId) return;
     if (!trackedReqIdsRef.current.includes(requestId)) {
       trackedReqIdsRef.current = [...trackedReqIdsRef.current, requestId];
       writeTrackedIds(trackedReqIdsRef.current);
     }
+    const { data: requestItems } = await supabase
+      .from("bulk_mock_request_items")
+      .select("id")
+      .eq("request_id", requestId);
+    let restored = false;
+    for (const row of requestItems ?? []) {
+      const id = (row as any).id;
+      if (dismissedIdsRef.current.has(id)) {
+        dismissedIdsRef.current.delete(id);
+        restored = true;
+      }
+    }
+    if (restored) writeDismissedIds(Array.from(dismissedIdsRef.current));
     setIsOpen(true);
-    fetchAll();
+    await fetchAll();
   }, [fetchAll]);
 
 
@@ -341,11 +355,11 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     const doneCount = jobs.filter((j) => j.status === "completed").length;
     const failCount = jobs.filter((j) => j.status === "failed" || j.status === "cancelled").length;
     return {
-      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest,
+      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest, refresh: fetchAll,
       isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false), toggle: () => setIsOpen((o) => !o),
       activeCount, pendingCount, doneCount, failCount,
     };
-  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest]);
+  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed, trackRequest, fetchAll]);
 
 
 

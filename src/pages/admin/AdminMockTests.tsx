@@ -141,7 +141,7 @@ const AdminMockTests = () => {
   const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
   const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
   const [fillingTestId, setFillingTestId] = useState<string | null>(null);
-  const { trackRequest, open: openDock } = useMockGenDock();
+  const { trackRequest, open: openDock, refresh: refreshDock } = useMockGenDock();
 
   const handleFillMissingQuestions = async (testId: string, testName: string) => {
     setFillingTestId(testId);
@@ -187,6 +187,7 @@ const AdminMockTests = () => {
       let kicked = 0;
       const skipped: string[] = [];
       const generationIds = new Set<string>();
+      const sectionGenerationIds = new Map<string, string>();
       const jobIdsToKick: string[] = [];
 
       // Lazily create a fallback generation row when sections lack a prior job.
@@ -230,7 +231,15 @@ const AdminMockTests = () => {
           .limit(1);
         const job = jobs?.[0];
         if (job?.id) {
-          if (job.generation_id) generationIds.add(job.generation_id);
+          if (job.generation_id) {
+            generationIds.add(job.generation_id);
+            sectionGenerationIds.set(ds.id, job.generation_id);
+          } else {
+            const genId = await ensureGenerationId();
+            if (!genId) { skipped.push(ds.code); continue; }
+            sectionGenerationIds.set(ds.id, genId);
+            await supabase.from("mock_section_jobs").update({ generation_id: genId }).eq("id", job.id);
+          }
           await supabase.from("mock_section_jobs").update({
             status: "pending",
             attempts: 0,
@@ -255,6 +264,7 @@ const AdminMockTests = () => {
         // silently did nothing for them).
         const genId = await ensureGenerationId();
         if (!genId) { skipped.push(ds.code); continue; }
+        sectionGenerationIds.set(ds.id, genId);
 
         const { data: userRes } = await supabase.auth.getUser();
         const { data: newJob, error: jobErr } = await supabase
@@ -325,7 +335,8 @@ const AdminMockTests = () => {
             total_generated: totalActualForDeficitSections,
           }).in("id", bulkItems.map((b: any) => b.id));
           const reqIds = Array.from(new Set(bulkItems.map((b: any) => b.request_id).filter(Boolean)));
-          reqIds.forEach((rid) => { trackRequest(rid); tracked++; });
+          await Promise.all(reqIds.map((rid) => trackRequest(rid)));
+          tracked += reqIds.length;
         }
       }
 
@@ -345,7 +356,9 @@ const AdminMockTests = () => {
               status: "processing",
             }).select("id").single();
           if (!reqErr && newReq?.id) {
-            const items = deficits.map((d) => ({
+            const items = deficits
+              .filter((d) => sectionGenerationIds.has(d.id))
+              .map((d) => ({
               request_id: newReq.id,
               exam_code: examCode,
               category,
@@ -357,12 +370,15 @@ const AdminMockTests = () => {
               status: "processing",
               total_requested: d.total,
               total_generated: d.actual,
-              generation_id: Array.from(generationIds)[0] ?? null,
+              generation_id: sectionGenerationIds.get(d.id) ?? null,
               started_at: new Date().toISOString(),
             }));
-            await supabase.from("bulk_mock_request_items").insert(items);
-            trackRequest(newReq.id);
-            tracked++;
+            if (items.length > 0) {
+              const { error: itemErr } = await supabase.from("bulk_mock_request_items").insert(items);
+              if (itemErr) throw itemErr;
+              await trackRequest(newReq.id);
+              tracked++;
+            }
           }
         } catch {/* non-fatal — dock just won't show progress */}
       }
@@ -372,6 +388,7 @@ const AdminMockTests = () => {
       });
 
       openDock();
+      await refreshDock();
 
       toast({
         title: `Generating ${totalDeficit} missing question${totalDeficit > 1 ? "s" : ""}`,
