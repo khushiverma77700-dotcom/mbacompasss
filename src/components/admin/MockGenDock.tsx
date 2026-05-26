@@ -151,15 +151,48 @@ export default function MockGenDock() {
 // ----------------------------------------------------------------------------
 
 function statusMeta(status: DockJob["status"]) {
+  // Shady gradient skins per status:
+  //   completed → green   |  running/starting → yellow   |  pending → red
   switch (status) {
-    case "pending":   return { icon: Clock,         color: "text-slate-500",   ring: "border-slate-200 bg-white/70",   label: "Queued" };
-    case "starting":  return { icon: Loader2,       color: "text-sky-600",     ring: "border-sky-200 bg-sky-50/70",     label: "Starting", spin: true };
-    case "running":   return { icon: Loader2,       color: "text-sky-600",     ring: "border-sky-200 bg-sky-50/70",     label: "Generating", spin: true };
-    case "completed": return { icon: CheckCircle2,  color: "text-emerald-600", ring: "border-emerald-200 bg-emerald-50/70", label: "Done" };
-    case "failed":    return { icon: XCircle,       color: "text-rose-600",    ring: "border-rose-200 bg-rose-50/70",   label: "Failed" };
-    case "cancelled": return { icon: XCircle,       color: "text-slate-500",   ring: "border-slate-200 bg-slate-50/70", label: "Cancelled" };
+    case "pending":
+      return {
+        icon: Clock, color: "text-rose-700", label: "Not started",
+        ring: "border-rose-200/80 bg-gradient-to-br from-rose-50 via-rose-100/60 to-rose-50 shadow-inner shadow-rose-200/40",
+        bar: "[&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-rose-400 [&_[data-state]]:to-rose-500",
+        dot: "bg-rose-500",
+      };
+    case "starting":
+    case "running":
+      return {
+        icon: Loader2, spin: true, color: "text-amber-700", label: status === "starting" ? "Starting" : "In progress",
+        ring: "border-amber-200/80 bg-gradient-to-br from-amber-50 via-yellow-100/70 to-amber-50 shadow-inner shadow-amber-200/40",
+        bar: "[&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-amber-400 [&_[data-state]]:via-yellow-400 [&_[data-state]]:to-amber-500",
+        dot: "bg-amber-500 animate-pulse",
+      };
+    case "completed":
+      return {
+        icon: CheckCircle2, color: "text-emerald-700", label: "Completed",
+        ring: "border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-green-100/70 to-emerald-50 shadow-inner shadow-emerald-200/40",
+        bar: "[&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-emerald-400 [&_[data-state]]:to-green-500",
+        dot: "bg-emerald-500",
+      };
+    case "failed":
+      return {
+        icon: XCircle, color: "text-rose-700", label: "Failed",
+        ring: "border-rose-300/80 bg-gradient-to-br from-rose-100 via-rose-200/60 to-rose-100 shadow-inner shadow-rose-300/40",
+        bar: "[&_[data-state]]:bg-rose-500",
+        dot: "bg-rose-600",
+      };
+    case "cancelled":
+      return {
+        icon: XCircle, color: "text-slate-600", label: "Cancelled",
+        ring: "border-slate-200/80 bg-gradient-to-br from-slate-50 via-slate-100/60 to-slate-50",
+        bar: "[&_[data-state]]:bg-slate-400",
+        dot: "bg-slate-400",
+      };
   }
 }
+
 
 function JobRow({
   job, expanded, onToggle, onCancel, onDismiss,
