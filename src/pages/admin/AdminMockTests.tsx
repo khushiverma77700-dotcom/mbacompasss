@@ -231,7 +231,10 @@ const AdminMockTests = () => {
           .limit(1);
         const job = jobs?.[0];
         if (job?.id) {
-          if (job.generation_id) generationIds.add(job.generation_id);
+          if (job.generation_id) {
+            generationIds.add(job.generation_id);
+            sectionGenerationIds.set(ds.id, job.generation_id);
+          }
           await supabase.from("mock_section_jobs").update({
             status: "pending",
             attempts: 0,
@@ -256,6 +259,7 @@ const AdminMockTests = () => {
         // silently did nothing for them).
         const genId = await ensureGenerationId();
         if (!genId) { skipped.push(ds.code); continue; }
+        sectionGenerationIds.set(ds.id, genId);
 
         const { data: userRes } = await supabase.auth.getUser();
         const { data: newJob, error: jobErr } = await supabase
