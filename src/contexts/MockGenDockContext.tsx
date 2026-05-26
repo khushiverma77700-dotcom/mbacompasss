@@ -238,6 +238,11 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   }, [fetchAll]);
 
   const retry = useCallback(async (id: string) => {
+    // If user retried a dismissed item, allow it to reappear.
+    if (dismissedIdsRef.current.has(id)) {
+      dismissedIdsRef.current.delete(id);
+      writeDismissedIds(Array.from(dismissedIdsRef.current));
+    }
     // Reset failed item back to pending and let the worker pump it.
     await supabase.from("bulk_mock_request_items").update({
       status: "pending",
