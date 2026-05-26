@@ -66,6 +66,7 @@ const FEATURE_ICON: Record<FeatureKey, any> = {
   ai_tools: Zap,
   vocabulary_hub: BookOpen,
   formula_book: BookOpen,
+  mba_newsroom: BookOpen,
   buy_mocks: ShoppingBag,
   support: ShieldCheck,
 };
