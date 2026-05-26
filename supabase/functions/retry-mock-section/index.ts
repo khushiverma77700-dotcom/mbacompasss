@@ -543,8 +543,13 @@ Deno.serve(async (req) => {
     //  1) Internal worker kickoff / self-recursion signed with the service key
     //  2) End-user JWT (admin clicked "Retry section")
     let userId: string | null = null;
-    const isServiceCall = body?.service === true && !!internalWorkerSecret && (
-      bearerToken === internalWorkerSecret || apiKeyHeader === internalWorkerSecret || body?.internal_secret === internalWorkerSecret
+    const validInternalSecrets = new Set(
+      [internalWorkerSecret, serviceKey].filter((value) => typeof value === "string" && value.length > 0),
+    );
+    const isServiceCall = body?.service === true && (
+      validInternalSecrets.has(bearerToken) ||
+      validInternalSecrets.has(apiKeyHeader) ||
+      validInternalSecrets.has(String(body?.internal_secret || ""))
     );
     if (!isServiceCall) {
       if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
