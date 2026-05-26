@@ -673,7 +673,7 @@ function Shell() {
               transition={{ duration: 2.4, repeat: Infinity }}
               className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-1 text-[11px] font-bold text-white shadow"
             >
-              <Sparkles className="h-3 w-3" /> DEMO MODE · PREVIEW ACCESS
+              <Sparkles className="h-3 w-3" /> DEMO MODE · FULL ACCESS PREVIEW
             </motion.div>
           </div>
           <div className="flex items-center gap-2">
