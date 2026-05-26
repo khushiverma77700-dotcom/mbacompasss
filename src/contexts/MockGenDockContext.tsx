@@ -4,29 +4,31 @@ import { toast } from "sonner";
 
 export type DockJobStatus =
   | "pending"      // queued, not yet dispatched
-  | "starting"     // dispatch invoke in flight
+  | "starting"     // dispatch invoke in flight (legacy/local only)
   | "running"      // generation_id received, polling
   | "completed"
   | "failed"
   | "cancelled";
 
 export interface DockJob {
-  id: string;                    // local uid
-  label: string;                 // human label
-  payload: any;                  // body for generate-mock-questions
+  /** Local UI id (same as bulk_mock_request_items.id once persisted) */
+  id: string;
+  label: string;
   status: DockJobStatus;
-  generation_id?: string;
+  generation_id?: string | null;
   total_requested?: number;
   total_generated?: number;
   error?: string;
   createdAt: number;
   startedAt?: number;
   finishedAt?: number;
+  /** Parent bulk_mock_requests.id this row belongs to */
+  request_id?: string;
 }
 
 interface DockCtx {
   jobs: DockJob[];
-  enqueue: (items: { label: string; payload: any }[]) => void;
+  enqueue: (items: { label: string; payload: any }[]) => Promise<void>;
   cancel: (id: string) => void;
   dismiss: (id: string) => void;
   clearFinished: () => void;
@@ -41,132 +43,159 @@ interface DockCtx {
 }
 
 const Ctx = createContext<DockCtx | null>(null);
-const MAX_PARALLEL = 3;
+const LS_KEY = "mock_gen_dock_request_ids_v1";
+
+function readTrackedIds(): string[] {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
+}
+function writeTrackedIds(ids: string[]) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify([...new Set(ids)].slice(-30))); } catch { /* ignore */ }
+}
+
+function mapRow(row: any): DockJob {
+  // bulk_mock_request_items → DockJob
+  const status: DockJobStatus =
+    row.status === "completed" ? "completed" :
+    row.status === "failed" ? "failed" :
+    row.status === "needs_review" ? "completed" :
+    row.status === "processing" ? (row.generation_id ? "running" : "starting") :
+    "pending";
+  const label = [
+    row.exam_code,
+    String(row.category || "").replace("_", " "),
+    row.section_code || null,
+    row.topic ? `"${row.topic}"` : null,
+    row.level,
+    `${row.questions_per_set}Q × ${row.sets} set${row.sets > 1 ? "s" : ""}`,
+  ].filter(Boolean).join(" · ");
+  return {
+    id: row.id,
+    label,
+    status,
+    generation_id: row.generation_id,
+    total_requested: row.total_requested ?? undefined,
+    total_generated: row.total_generated ?? 0,
+    error: row.error_message || undefined,
+    createdAt: new Date(row.created_at || Date.now()).getTime(),
+    startedAt: row.started_at ? new Date(row.started_at).getTime() : undefined,
+    finishedAt: row.finished_at ? new Date(row.finished_at).getTime() : undefined,
+    request_id: row.request_id,
+  };
+}
 
 export function MockGenDockProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useState<DockJob[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const jobsRef = useRef<DockJob[]>([]);
-  jobsRef.current = jobs;
+  const trackedReqIdsRef = useRef<string[]>(readTrackedIds());
+  const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
 
-  const update = useCallback((id: string, patch: Partial<DockJob>) => {
-    setJobs((js) => js.map((j) => (j.id === id ? { ...j, ...patch } : j)));
-  }, []);
-
-  // ---- Dispatcher: keep up to MAX_PARALLEL "starting" or "running" jobs ----
-  const pump = useCallback(async () => {
-    const current = jobsRef.current;
-    const active = current.filter((j) => j.status === "starting" || j.status === "running").length;
-    if (active >= MAX_PARALLEL) return;
-
-    const next = current.find((j) => j.status === "pending");
-    if (!next) return;
-
-    // Optimistically mark starting BEFORE awaiting to prevent double-dispatch on rapid pump
-    update(next.id, { status: "starting", startedAt: Date.now() });
-
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-mock-questions", { body: next.payload });
-      if (error) throw error;
-      const genId = data?.generation_id;
-      if (!genId) {
-        // Legacy synchronous response — treat as completed immediately
-        update(next.id, {
-          status: "completed",
-          finishedAt: Date.now(),
-          total_generated: data?.stats?.generated ?? 0,
-        });
-        toast.success(`${next.label} — completed`, { description: `${data?.stats?.generated || 0} questions generated.` });
-      } else {
-        update(next.id, { status: "running", generation_id: genId });
-      }
-    } catch (e: any) {
-      update(next.id, { status: "failed", error: e?.message || "Failed to start", finishedAt: Date.now() });
-      toast.error(`${next.label} — failed to start`, { description: e?.message || "" });
-    } finally {
-      // Try to pump another slot
-      setTimeout(() => pump(), 50);
-    }
-  }, [update]);
-
-  // Re-pump whenever counts change
-  useEffect(() => {
-    const active = jobs.filter((j) => j.status === "starting" || j.status === "running").length;
-    const pending = jobs.filter((j) => j.status === "pending").length;
-    if (pending > 0 && active < MAX_PARALLEL) pump();
-  }, [jobs, pump]);
-
-  // ---- Poll status of all running generations ----
-  useEffect(() => {
-    const id = setInterval(async () => {
-      const running = jobsRef.current.filter((j) => j.status === "running" && j.generation_id);
-      if (!running.length) return;
-      const ids = running.map((j) => j.generation_id!) as string[];
-      const { data } = await supabase
-        .from("ai_mock_generations")
-        .select("id, status, total_requested, total_generated, error_message")
-        .in("id", ids);
-      if (!data) return;
-      for (const row of data as any[]) {
-        const job = jobsRef.current.find((j) => j.generation_id === row.id);
-        if (!job) continue;
-        const patch: Partial<DockJob> = {
-          total_requested: row.total_requested ?? job.total_requested,
-          total_generated: row.total_generated ?? job.total_generated,
-        };
-        if (row.status === "completed") {
-          patch.status = "completed";
-          patch.finishedAt = Date.now();
-          toast.success(`${job.label} — done`, {
-            description: `${row.total_generated || 0} questions generated.`,
+  // Hydrate from DB on mount + poll every 3s. Survives page reloads,
+  // navigation, and laptop reboots — the source of truth is the bulk
+  // mock request tables, dispatched by an edge-side cron.
+  const fetchAll = useCallback(async () => {
+    const ids = trackedReqIdsRef.current;
+    if (!ids.length) { setJobs([]); return; }
+    const { data } = await supabase
+      .from("bulk_mock_request_items")
+      .select("id, request_id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at, created_at")
+      .in("request_id", ids)
+      .order("created_at", { ascending: true });
+    const next = (data ?? []).map(mapRow);
+    // Fire completion / failure toasts when status flips
+    for (const j of next) {
+      const prev = prevStatusRef.current[j.id];
+      if (prev && prev !== j.status) {
+        if (j.status === "completed") {
+          toast.success(`${j.label} — done`, {
+            description: `${j.total_generated || 0} questions generated.`,
             duration: 6000,
           });
-        } else if (row.status === "failed" || row.status === "cancelled") {
-          patch.status = row.status === "failed" ? "failed" : "cancelled";
-          patch.finishedAt = Date.now();
-          patch.error = row.error_message || undefined;
-          toast.error(`${job.label} — ${row.status}`, { description: row.error_message || "" });
+        } else if (j.status === "failed") {
+          toast.error(`${j.label} — failed`, { description: j.error || "" });
         }
-        if (patch.status) update(job.id, patch);
       }
-    }, 2500);
-    return () => clearInterval(id);
-  }, [update]);
-
-  const enqueue = useCallback((items: { label: string; payload: any }[]) => {
-    const additions: DockJob[] = items.map((it) => ({
-      id: crypto.randomUUID(),
-      label: it.label,
-      payload: it.payload,
-      status: "pending",
-      createdAt: Date.now(),
-    }));
-    setJobs((js) => [...js, ...additions]);
-    setIsOpen(true);
-    toast(`Queued ${items.length} mock${items.length > 1 ? "s" : ""} for AI generation`, {
-      description: "Up to 3 will generate in parallel. Track progress in the dock on the right.",
-    });
+      prevStatusRef.current[j.id] = j.status;
+    }
+    // Drop request_ids that have no items anymore (rare)
+    const haveIds = new Set(next.map((j) => j.request_id).filter(Boolean));
+    if (ids.some((id) => !haveIds.has(id)) && next.length > 0) {
+      trackedReqIdsRef.current = Array.from(haveIds) as string[];
+      writeTrackedIds(trackedReqIdsRef.current);
+    }
+    setJobs(next);
   }, []);
 
+  useEffect(() => {
+    fetchAll();
+    const t = setInterval(fetchAll, 3000);
+    // Trigger server reconcile periodically (also keeps cron-less envs moving)
+    const t2 = setInterval(() => {
+      supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
+    }, 8000);
+    return () => { clearInterval(t); clearInterval(t2); };
+  }, [fetchAll]);
+
+  const enqueue = useCallback(async (items: { label: string; payload: any }[]) => {
+    if (!items.length) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("bulk-mock-worker", {
+        body: {
+          label: items[0].label.slice(0, 80) + (items.length > 1 ? ` (+${items.length - 1})` : ""),
+          items: items.map((it) => ({
+            exam_code: it.payload.exam_code,
+            category: it.payload.category,
+            level: it.payload.level,
+            section_code: it.payload.section_code || null,
+            topic: it.payload.topic || null,
+            questions_per_set: it.payload.questions_per_set ?? it.payload.total_questions ?? 20,
+            sets: it.payload.sets ?? 1,
+            test_name_prefix: it.payload.test_name_prefix || null,
+          })),
+        },
+      });
+      if (error) throw error;
+      const reqId = (data as any)?.request_id;
+      if (!reqId) throw new Error("Server did not return a request id");
+      trackedReqIdsRef.current = [...trackedReqIdsRef.current, reqId];
+      writeTrackedIds(trackedReqIdsRef.current);
+      setIsOpen(true);
+      toast(`Queued ${items.length} mock${items.length > 1 ? "s" : ""}`, {
+        description: "Generation runs on the server and continues even if you close the laptop.",
+      });
+      await fetchAll();
+    } catch (e: any) {
+      toast.error("Failed to queue mocks", { description: e?.message || "Try again" });
+    }
+  }, [fetchAll]);
+
   const cancel = useCallback(async (id: string) => {
-    const j = jobsRef.current.find((x) => x.id === id);
+    const j = jobs.find((x) => x.id === id);
     if (!j) return;
-    if (j.status === "pending") {
-      update(id, { status: "cancelled", finishedAt: Date.now() });
-      return;
-    }
-    if (j.generation_id && (j.status === "running" || j.status === "starting")) {
+    if (j.generation_id) {
       await supabase.from("ai_mock_generations").update({ status: "cancelled" }).eq("id", j.generation_id);
-      update(id, { status: "cancelled", finishedAt: Date.now() });
     }
-  }, [update]);
+    await supabase.from("bulk_mock_request_items").update({
+      status: "failed",
+      paused: true,
+      error_message: "Cancelled by admin",
+      finished_at: new Date().toISOString(),
+    }).eq("id", id);
+    await fetchAll();
+  }, [jobs, fetchAll]);
 
   const dismiss = useCallback((id: string) => {
     setJobs((js) => js.filter((j) => j.id !== id));
+    // Note: we don't delete from DB — just hide locally
   }, []);
+
   const clearFinished = useCallback(() => {
-    setJobs((js) => js.filter((j) => !["completed", "failed", "cancelled"].includes(j.status)));
-  }, []);
+    const finalIds = new Set(jobs.filter((j) => ["completed", "failed", "cancelled"].includes(j.status)).map((j) => j.id));
+    setJobs((js) => js.filter((j) => !finalIds.has(j.id)));
+    // Drop any request_ids whose items are all finished from the tracked list
+    const remainingReqIds = new Set(jobs.filter((j) => !finalIds.has(j.id) && j.request_id).map((j) => j.request_id!));
+    trackedReqIdsRef.current = trackedReqIdsRef.current.filter((id) => remainingReqIds.has(id));
+    writeTrackedIds(trackedReqIdsRef.current);
+  }, [jobs]);
 
   const value = useMemo<DockCtx>(() => {
     const activeCount = jobs.filter((j) => j.status === "starting" || j.status === "running").length;
