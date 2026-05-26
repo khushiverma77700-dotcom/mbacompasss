@@ -263,6 +263,51 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     await fetchAll();
   }, [fetchAll]);
 
+  const regenerateFailed = useCallback(async (id: string) => {
+    const j = jobs.find((x) => x.id === id);
+    if (!j?.generation_id) {
+      toast.error("No generation linked to this mock");
+      return;
+    }
+    // Find sections that are not completed (failed / dead / stalled)
+    const { data: failedSections } = await supabase
+      .from("mock_section_jobs")
+      .select("id, status")
+      .eq("generation_id", j.generation_id)
+      .neq("status", "completed");
+    if (!failedSections?.length) {
+      toast("No failed sections found", { description: "Everything is already complete." });
+      return;
+    }
+    // Re-arm those section jobs
+    await supabase.from("mock_section_jobs").update({
+      status: "pending",
+      worker_lock_until: null,
+      attempts: 0,
+      error_message: null,
+      current_step: "Re-armed: regenerate failed sections",
+      updated_at: new Date().toISOString(),
+    }).in("id", failedSections.map((s: any) => s.id));
+    // Mark generation + bulk item as running again
+    await supabase.from("ai_mock_generations").update({
+      status: "running", error_message: null, finished_at: null,
+    }).eq("id", j.generation_id);
+    await supabase.from("bulk_mock_request_items").update({
+      status: "processing", error_message: null, finished_at: null,
+    }).eq("id", id);
+    // Allow it to reappear in the dock if previously dismissed
+    if (dismissedIdsRef.current.has(id)) {
+      dismissedIdsRef.current.delete(id);
+      writeDismissedIds(Array.from(dismissedIdsRef.current));
+    }
+    // Kick each failed section
+    for (const fj of failedSections) {
+      supabase.functions.invoke("retry-mock-section", { body: { job_id: fj.id } }).catch(() => {});
+    }
+    toast.success(`Regenerating ${failedSections.length} failed section${failedSections.length > 1 ? "s" : ""}`);
+    await fetchAll();
+  }, [jobs, fetchAll]);
+
   const clearFinished = useCallback(() => {
     const finalIds = new Set(jobs.filter((j) => ["completed", "failed", "cancelled"].includes(j.status)).map((j) => j.id));
     finalIds.forEach((id) => dismissedIdsRef.current.add(id));
@@ -279,11 +324,12 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     const doneCount = jobs.filter((j) => j.status === "completed").length;
     const failCount = jobs.filter((j) => j.status === "failed" || j.status === "cancelled").length;
     return {
-      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry,
+      jobs, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed,
       isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false), toggle: () => setIsOpen((o) => !o),
       activeCount, pendingCount, doneCount, failCount,
     };
-  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry]);
+  }, [jobs, isOpen, enqueue, cancel, dismiss, clearFinished, runNow, retry, regenerateFailed]);
+
 
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
