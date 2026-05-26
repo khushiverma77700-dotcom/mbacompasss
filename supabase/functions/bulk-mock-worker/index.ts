@@ -223,7 +223,7 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
   }
   const { data: pending } = await admin
     .from("bulk_mock_request_items")
-    .select("*")
+    .select("*, bulk_mock_requests!inner(created_by)")
     .eq("paused", false)
     .is("generation_id", null)
     .in("status", ["pending", "processing"])
@@ -234,11 +234,18 @@ async function pumpPending(admin: any, auth: { userToken?: string; asUserId?: st
   let dispatched = 0;
   for (const itm of pending ?? []) {
     if ((activeCounts.get(itm.request_id) || 0) >= MAX_ACTIVE_PER_BATCH) continue;
-    if (await dispatchItem(admin, itm, userToken)) dispatched++;
+    // Per-item auth: prefer caller's user token (interactive admin call).
+    // Otherwise fall back to internal pump with the batch's created_by admin.
+    const itemAuth = auth.userToken
+      ? { userToken: auth.userToken }
+      : { asUserId: itm.bulk_mock_requests?.created_by };
+    if (!itemAuth.userToken && !itemAuth.asUserId) continue;
+    if (await dispatchItem(admin, itm, itemAuth)) dispatched++;
     activeCounts.set(itm.request_id, (activeCounts.get(itm.request_id) || 0) + 1);
   }
   return dispatched;
 }
+
 
 async function legacyDispatchItem(admin: any, item: any, userToken: string) {
   await admin
