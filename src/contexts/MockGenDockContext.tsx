@@ -133,10 +133,12 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     if (!ids.length) { setJobs([]); return; }
     const { data } = await supabase
       .from("bulk_mock_request_items")
-      .select("id, request_id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at, created_at")
+      .select(DOCK_ITEM_SELECT)
       .in("request_id", ids)
       .order("created_at", { ascending: true });
-    const next = (data ?? []).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id));
+    const mapped = (data ?? []).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id));
+    if (mapped.length > 0) optimisticJobsRef.current = [];
+    const next = mapped.length > 0 ? mapped : optimisticJobsRef.current;
     // Fire completion / failure toasts when status flips
     for (const j of next) {
       const prev = prevStatusRef.current[j.id];
@@ -197,6 +199,10 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
 
   const enqueue = useCallback(async (items: { label: string; payload: any }[]) => {
     if (!items.length) return;
+    const optimistic = items.map(optimisticJob);
+    optimisticJobsRef.current = optimistic;
+    setJobs(optimistic);
+    setIsOpen(true);
     try {
       const { data, error } = await supabase.functions.invoke("bulk-mock-worker", {
         body: {
@@ -219,6 +225,15 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       trackedReqIdsRef.current = [...trackedReqIdsRef.current, reqId];
       writeTrackedIds(trackedReqIdsRef.current);
       setIsOpen(true);
+      const { data: requestRows } = await supabase
+        .from("bulk_mock_request_items")
+        .select(DOCK_ITEM_SELECT)
+        .eq("request_id", reqId)
+        .order("created_at", { ascending: true });
+      if (requestRows?.length) {
+        optimisticJobsRef.current = [];
+        setJobs((requestRows as any[]).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id)));
+      }
       toast(`Queued ${items.length} mock${items.length > 1 ? "s" : ""}`, {
         description: "Generation runs on the server and continues even if you close the laptop.",
       });
