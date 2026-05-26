@@ -272,12 +272,16 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       return;
     }
     // Find sections that are not completed (failed / dead / stalled)
-    const { data: failedSections } = await supabase
+    // OR completed but short on questions (questions_done < total_questions).
+    const { data: allSections } = await supabase
       .from("mock_section_jobs")
-      .select("id, status")
-      .eq("generation_id", j.generation_id)
-      .neq("status", "completed");
-    if (!failedSections?.length) {
+      .select("id, status, questions_done, total_questions")
+      .eq("generation_id", j.generation_id);
+    const failedSections = (allSections ?? []).filter((s: any) =>
+      s.status !== "completed" ||
+      (Number(s.questions_done ?? 0) < Number(s.total_questions ?? 0))
+    );
+    if (!failedSections.length) {
       toast("No failed sections found", { description: "Everything is already complete." });
       return;
     }
