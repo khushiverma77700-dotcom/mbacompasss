@@ -472,7 +472,9 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, mode: "reconcile", reconciled, dispatched, sections_kicked });
   }
 
-  // Resume single item.
+  // Resume single item — still respect the global parallelism cap so a stream
+  // of "Run now" clicks (or the dock's auto-kick polling) can't spin up more
+  // than MAX_ACTIVE_GLOBAL generations at once.
   if (body?.resume_id) {
     const { data: itm } = await admin
       .from("bulk_mock_request_items")
@@ -480,8 +482,15 @@ Deno.serve(async (req) => {
       .eq("id", body.resume_id)
       .maybeSingle();
     if (!itm) return json(404, { error: "item not found" });
+    // If this item is already running, nothing to do.
+    if (itm.status === "processing" && itm.generation_id) {
+      return json(200, { ok: true, dispatched: 0, reason: "already running" });
+    }
+    const active = await countGlobalActive(admin);
+    if (active >= MAX_ACTIVE_GLOBAL) {
+      return json(200, { ok: true, dispatched: 0, reason: "global cap reached", active });
+    }
     await admin.from("bulk_mock_request_items").update({ paused: false }).eq("id", itm.id);
-    // dispatch in background
     // @ts-ignore EdgeRuntime is available in Supabase Edge runtime
     EdgeRuntime.waitUntil(dispatchItem(admin, itm, { userToken }));
     return json(200, { ok: true, dispatched: 1 });
