@@ -176,7 +176,7 @@ export default function MockGenDock() {
 
             {/* Scrollable list of jobs */}
             <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-2">
-              {jobs.map((j) => (
+              {sortedJobs.map((j) => (
                 <JobRow key={j.id}
                   job={j}
                   queuePos={queuePosById.get(j.id)}
