@@ -135,10 +135,24 @@ export default function MockGenDock() {
                   </Button>
                 </div>
               </div>
-              {/* Concurrency hint */}
-              <div className="relative mt-2 flex items-center gap-1.5 text-[10px] text-slate-600">
-                <Layers className="h-3 w-3" />
-                <span>Up to 3 mocks generate in parallel. The next queued one starts automatically.</span>
+              {/* Concurrency hint + overall progress */}
+              <div className="relative mt-2 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-600">
+                  <Layers className="h-3 w-3" />
+                  <span>Up to 3 mocks generate in parallel — server keeps running even if you close your laptop.</span>
+                </div>
+                {totalRequested > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-600 mb-0.5">
+                      <span>Overall progress</span>
+                      <span className="font-semibold tabular-nums">{totalGenerated} / {totalRequested} · {overallPct}%</span>
+                    </div>
+                    <Progress
+                      value={overallPct}
+                      className="h-1.5 bg-white/70 [&_[data-state]]:bg-gradient-to-r [&_[data-state]]:from-sky-400 [&_[data-state]]:via-blue-500 [&_[data-state]]:to-indigo-500"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -147,16 +161,21 @@ export default function MockGenDock() {
               {jobs.map((j) => (
                 <JobRow key={j.id}
                   job={j}
+                  queuePos={queuePosById.get(j.id)}
+                  totalPending={pendingCount}
                   expanded={expandedJob === j.id}
                   onToggle={() => setExpandedJob(expandedJob === j.id ? null : j.id)}
                   onCancel={() => cancel(j.id)}
-                  onDismiss={() => dismiss(j.id)} />
+                  onDismiss={() => dismiss(j.id)}
+                  onRunNow={() => runNow(j.id)}
+                  onRetry={() => retry(j.id)} />
               ))}
             </div>
 
             <div className="px-3 py-2 border-t border-sky-100/80 bg-white/40 text-[11px] text-slate-500 text-center">
               Click outside to minimize · The dock keeps running across pages
             </div>
+
           </motion.div>
         )}
       </AnimatePresence>
