@@ -1015,7 +1015,8 @@ const AdminMockTests = () => {
                       const expected = (t.expected_questions as number) ?? 0;
                       const actual = (t.actual_questions as number) ?? 0;
                       const complete = expected > 0 && actual >= expected;
-                      const partial = expected > 0 && actual > 0 && actual < expected;
+                      const incomplete = expected > 0 && actual < expected;
+                      const partial = incomplete && actual > 0;
                       const cls = complete
                         ? "bg-emerald-100 text-emerald-700 border-emerald-300"
                         : partial
@@ -1027,7 +1028,7 @@ const AdminMockTests = () => {
                           <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
                             {actual}/{expected}
                           </Badge>
-                          {partial && (
+                          {incomplete && (
                             <Button
                               size="sm"
                               variant="outline"
