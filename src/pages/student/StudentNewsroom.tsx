@@ -167,7 +167,7 @@ export default function StudentNewsroom() {
         body: { count: 12 },
       });
       if (error) throw error;
-      toast({ title: "Newsroom updated", description: `${data?.inserted ?? 0} fresh stories added.` });
+      toast({ title: "News updated", description: `${data?.inserted ?? 0} fresh stories added.` });
       qc.invalidateQueries({ queryKey: ["newsroom-articles"] });
     } catch (e: any) {
       toast({ title: "Refresh failed", description: e?.message || "Try again later.", variant: "destructive" });
