@@ -440,6 +440,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
             groupBySection={fixedType === "sectional"}
             sectionFilter={fixedType === "sectional" ? sectionFilter : undefined}
             onSectionChange={fixedType === "sectional" ? setSectionFilter : undefined}
+            isFullLength={fixedType === "full_length"}
           />
         )
       ) : (
