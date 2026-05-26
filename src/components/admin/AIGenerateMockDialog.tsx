@@ -209,11 +209,13 @@ type BatchItemRow = {
 
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
   const { toast } = useToast();
+  const dock = useMockGenDock();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
   const progress = useMockGenerationProgress(step === 3 ? generationId : null);
+
 
   // ---------------- Batch (queue multiple generations) ----------------
   const [batch, setBatch] = useState<BatchDraft[]>([]);
