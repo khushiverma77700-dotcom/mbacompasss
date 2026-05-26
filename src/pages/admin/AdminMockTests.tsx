@@ -163,16 +163,17 @@ const AdminMockTests = () => {
         toast({ title: "No sections found", variant: "destructive" });
         return;
       }
-      const deficits: { id: string; code: string; name: string; deficit: number; duration: number; total: number }[] = [];
+      const deficits: { id: string; code: string; name: string; deficit: number; actual: number; duration: number; total: number }[] = [];
       for (const s of sections) {
         const { count } = await supabase
           .from("mock_questions")
           .select("id", { count: "exact", head: true })
           .eq("section_id", s.id);
-        const deficit = (s.total_questions || 0) - (count || 0);
+        const actual = count || 0;
+        const deficit = (s.total_questions || 0) - actual;
         if (deficit > 0) deficits.push({
           id: s.id, code: s.code, name: s.name,
-          deficit, duration: s.duration_minutes || 60, total: s.total_questions || 0,
+          deficit, actual, duration: s.duration_minutes || 60, total: s.total_questions || 0,
         });
       }
       if (!deficits.length) {
@@ -230,9 +231,12 @@ const AdminMockTests = () => {
           await supabase.from("mock_section_jobs").update({
             status: "pending",
             attempts: 0,
+            total_questions: ds.total,
+            questions_done: ds.actual,
             worker_lock_until: null,
             current_step: `Re-armed: top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
             error_message: null,
+            final_reason: null,
             updated_at: new Date().toISOString(),
           }).eq("id", job.id);
           supabase.functions.invoke("retry-mock-section", { body: { job_id: job.id, auto: true } }).catch(() => {});
@@ -259,8 +263,8 @@ const AdminMockTests = () => {
             level: "mixed",
             section_code: ds.code,
             section_name: ds.name,
-            total_questions: ds.deficit,
-            mcq_count: ds.deficit,
+            total_questions: ds.total,
+            mcq_count: ds.total,
             tita_count: 0,
             topic: null,
             strict_topic: null,
@@ -271,7 +275,7 @@ const AdminMockTests = () => {
             questions_per_set: ds.deficit,
             status: "pending",
             attempts: 0,
-            questions_done: 0,
+            questions_done: ds.actual,
             current_step: `Top up ${ds.deficit} missing question${ds.deficit > 1 ? "s" : ""}`,
             created_by: userRes?.user?.id ?? null,
           })
