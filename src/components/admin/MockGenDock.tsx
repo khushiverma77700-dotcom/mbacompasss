@@ -210,10 +210,15 @@ function JobRow({
   const isFinal = ["completed", "failed", "cancelled"].includes(job.status);
 
   return (
-    <div className={`rounded-xl border ${meta.ring} backdrop-blur-sm transition-all`}>
+    <div className={`relative rounded-xl border ${meta.ring} backdrop-blur-sm transition-all overflow-hidden`}>
+      {/* Glossy shimmer overlay — adds the "shady" depth */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-white/10" />
+      {/* Left status accent bar */}
+      <div className={`pointer-events-none absolute left-0 top-0 bottom-0 w-1 ${meta.dot}`} />
+
       <button
         onClick={onToggle}
-        className="w-full text-left px-3 py-2.5 flex items-start gap-2.5"
+        className="relative w-full text-left pl-4 pr-3 py-2.5 flex items-start gap-2.5"
       >
         <div className={`mt-0.5 ${meta.color} flex-shrink-0`}>
           <Icon className={`h-4 w-4 ${meta.spin ? "animate-spin" : ""}`} />
@@ -221,20 +226,22 @@ function JobRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-slate-900 truncate">{job.label}</div>
-            <Badge variant="outline" className={`text-[10px] ${meta.color} border-current/30`}>
+            <Badge variant="outline" className={`text-[10px] font-semibold ${meta.color} bg-white/70 border-current/40 shadow-sm`}>
+              <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
               {meta.label}
             </Badge>
           </div>
-          <div className="mt-1 text-[11px] text-slate-600 flex items-center justify-between gap-2">
+          <div className="mt-1 text-[11px] text-slate-700 flex items-center justify-between gap-2">
             <span>
               {generated}/{requested || "?"} questions
               {job.error ? ` · ${job.error.slice(0, 60)}` : ""}
             </span>
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </div>
-          <Progress value={pct} className="h-1.5 mt-1.5" />
+          <Progress value={pct} className={`h-1.5 mt-1.5 bg-white/70 ${meta.bar}`} />
         </div>
       </button>
+
 
       {/* Row actions */}
       <div className="flex items-center justify-end gap-1 px-3 pb-2">
