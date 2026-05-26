@@ -155,8 +155,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       prevStatusRef.current[j.id] = j.status;
     }
     // Drop request_ids that have no items anymore (rare)
-    const haveIds = new Set(next.map((j) => j.request_id).filter(Boolean));
-    if (ids.some((id) => !haveIds.has(id)) && next.length > 0) {
+    const haveIds = new Set(mapped.map((j) => j.request_id).filter(Boolean));
+    if (mapped.length > 0 && ids.some((id) => !haveIds.has(id))) {
       trackedReqIdsRef.current = Array.from(haveIds) as string[];
       writeTrackedIds(trackedReqIdsRef.current);
     }
@@ -169,7 +169,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       let slots = Math.max(0, MAX_PARALLEL - runningCount);
       if (slots > 0) {
         const pending = next
-          .filter((j) => j.status === "pending")
+          .filter((j) => j.status === "pending" && !!j.request_id && !j.id.startsWith("optimistic-"))
           .sort((a, b) => a.createdAt - b.createdAt);
         const now = Date.now();
         for (const j of pending) {
