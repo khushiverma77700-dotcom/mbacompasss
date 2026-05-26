@@ -211,8 +211,8 @@ export default function StudentPersonalizedHub() {
             <Label>Sections</Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {exam?.sections.map((s) => (
-                <label key={s} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm ${sections.includes(s) ? "bg-sky-50 border-sky-300 text-sky-800" : "border-gray-200"}`}>
-                  <Checkbox checked={sections.includes(s)} onCheckedChange={() => toggleSection(s)} />
+                <label key={s} data-demo-allow="true" className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm ${sections.includes(s) ? "bg-sky-50 border-sky-300 text-sky-800" : "border-gray-200"}`}>
+                  <Checkbox data-demo-allow="true" checked={sections.includes(s)} onCheckedChange={() => toggleSection(s)} />
                   {s}
                 </label>
               ))}
