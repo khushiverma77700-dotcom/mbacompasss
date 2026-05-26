@@ -390,6 +390,58 @@ export default function AdminMockBundles() {
                 />
               </div>
 
+              {/* Filter tags (exam + type) for /courses filtering */}
+              <div className="rounded-lg border border-sky-100 bg-sky-50/30 p-3 space-y-3">
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-sky-800">Exam tags</Label>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">Pick one or more exams this bundle is for. Used to filter bundles on the catalog.</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {BUNDLE_EXAM_OPTIONS.map((e) => {
+                      const on = (editing.filter_exams ?? []).includes(e);
+                      return (
+                        <button
+                          key={e}
+                          type="button"
+                          onClick={() => {
+                            const cur = new Set(editing.filter_exams ?? []);
+                            on ? cur.delete(e) : cur.add(e);
+                            setEditing({ ...editing, filter_exams: Array.from(cur) });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${on ? "bg-sky-600 text-white border-sky-600" : "bg-white border-sky-200 text-sky-700 hover:bg-sky-50"}`}
+                        >
+                          {e}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-violet-800">Type / Category tags</Label>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">Full Length, Sectional, Topic-wise, etc. Multiple allowed.</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {BUNDLE_TYPE_OPTIONS.map((t) => {
+                      const on = (editing.filter_types ?? []).includes(t.v);
+                      return (
+                        <button
+                          key={t.v}
+                          type="button"
+                          onClick={() => {
+                            const cur = new Set(editing.filter_types ?? []);
+                            on ? cur.delete(t.v) : cur.add(t.v);
+                            setEditing({ ...editing, filter_types: Array.from(cur) });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${on ? "bg-violet-600 text-white border-violet-600" : "bg-white border-violet-200 text-violet-700 hover:bg-violet-50"}`}
+                        >
+                          {t.l}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+
               {/* Mocks picker */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
