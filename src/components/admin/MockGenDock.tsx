@@ -378,6 +378,14 @@ function JobRow({
             <RotateCw className="h-3 w-3 mr-1" /> Retry
           </Button>
         )}
+        {job.status === "completed" && job.hasFailedSections && (
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-amber-700 hover:bg-amber-50"
+            onClick={(e) => { e.stopPropagation(); onRegenerateFailed(); }}
+            title="Re-generate only the sections that failed">
+            <RotateCw className="h-3 w-3 mr-1" /> Regenerate failed
+          </Button>
+        )}
+
         {!isFinal && (
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-rose-600 hover:bg-rose-50"
             onClick={(e) => { e.stopPropagation(); onCancel(); }}>
