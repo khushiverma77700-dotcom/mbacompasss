@@ -843,60 +843,79 @@ const App = () => (
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="/student/login" element={<LazyPage><StudentLogin /></LazyPage>} />
             <Route path="/student/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
-            <Route path="/demo" element={<LazyPage><DemoLanding /></LazyPage>} />
-            <Route path="/demo/dashboard" element={<LazyPage><DemoDashboard /></LazyPage>} />
-            <Route path="/demo/dashboard/*" element={<LazyPage><DemoDashboard /></LazyPage>} />
-            <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
-              <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
-              <Route path="mocks" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
-              <Route path="mocks/full-length" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
-              <Route path="mocks/sectional" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
-              <Route path="mocks/topic-wise" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
-              <Route path="mocks/practice" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
-              <Route path="mocks/attempted" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
-              <Route path="mocks/test/:slug" element={<InnerLazyPage><MockTestIntroPage /></InnerLazyPage>} />
-              <Route path="mocks/result/:attemptId" element={<InnerLazyPage><MockResultPage /></InnerLazyPage>} />
-              <Route path="mocks/review/:attemptId" element={<InnerLazyPage><MockReviewPage /></InnerLazyPage>} />
-              <Route path="mocks/leaderboard/:slug" element={<InnerLazyPage><MockLeaderboardPage /></InnerLazyPage>} />
-              <Route path="weak-areas" element={<InnerLazyPage><StudentWeakAreas /></InnerLazyPage>} />
-              <Route path="strength-areas" element={<InnerLazyPage><StudentStrengthAreas /></InnerLazyPage>} />
-              <Route path="buy-mocks" element={<InnerLazyPage><StudentBuyMocks /></InnerLazyPage>} />
-              <Route path="all-india-rank" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
-              <Route path="performance" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
-              <Route path="goals" element={<InnerLazyPage><StudentGoals /></InnerLazyPage>} />
-              
-              <Route path="tools" element={<InnerLazyPage><StudentTools /></InnerLazyPage>} />
-              <Route path="profile" element={<InnerLazyPage><StudentProfile /></InnerLazyPage>} />
-              <Route path="install" element={<InnerLazyPage><StudentInstall /></InnerLazyPage>} />
-              <Route path="rewards" element={<InnerLazyPage><StudentRewards /></InnerLazyPage>} />
-              <Route path="day-planner" element={<InnerLazyPage><StudentDayPlanner /></InnerLazyPage>} />
-              <Route path="day-planner/performance" element={<InnerLazyPage><StudentPlannerPerformance /></InnerLazyPage>} />
-              <Route path="leaderboard" element={<InnerLazyPage><StudentLeaderboard /></InnerLazyPage>} />
-              <Route path="performx" element={<InnerLazyPage><StudentPerformX /></InnerLazyPage>} />
-              <Route path="notifications" element={<InnerLazyPage><StudentNotifications /></InnerLazyPage>} />
-              <Route path="orders" element={<InnerLazyPage><StudentOrders /></InnerLazyPage>} />
-              <Route path="analysis/:attemptId" element={<InnerLazyPage><StudentDeepAnalysis /></InnerLazyPage>} />
-              <Route path="daily-test" element={<InnerLazyPage><StudentDailyTest /></InnerLazyPage>} />
-              <Route path="daily-test/report/:attemptId" element={<InnerLazyPage><StudentDailyTestReportPage /></InnerLazyPage>} />
-              <Route path="attempts" element={<InnerLazyPage><StudentAttempts /></InnerLazyPage>} />
-              <Route path="support" element={<InnerLazyPage><StudentSupport /></InnerLazyPage>} />
-              <Route path="personalized-hub" element={<InnerLazyPage><StudentPersonalizedHub /></InnerLazyPage>} />
-              <Route path="personalized-hub/attempt/:attemptId" element={<InnerLazyPage><PersonalizedMockRunnerPage /></InnerLazyPage>} />
-              <Route path="personalized-hub/result/:attemptId" element={<InnerLazyPage><PersonalizedMockResultPage /></InnerLazyPage>} />
-              <Route path="sop-review" element={<InnerLazyPage><StudentSOPReview /></InnerLazyPage>} />
-              <Route path="vocabulary" element={<InnerLazyPage><StudentVocabularyHub /></InnerLazyPage>} />
-              <Route path="vocabulary/feed" element={<InnerLazyPage><StudentVocabularyFeed /></InnerLazyPage>} />
-              <Route path="vocabulary/search" element={<InnerLazyPage><StudentVocabularySearch /></InnerLazyPage>} />
-              <Route path="vocabulary/bookmarks" element={<InnerLazyPage><StudentVocabularyBookmarks /></InnerLazyPage>} />
-              <Route path="vocabulary/quiz" element={<InnerLazyPage><StudentVocabularyQuiz /></InnerLazyPage>} />
-              <Route path="vocabulary/revision" element={<InnerLazyPage><StudentVocabularyRevision /></InnerLazyPage>} />
-              <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
-              <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
-              <Route path="vocabulary/word/:slug" element={<InnerLazyPage><StudentVocabularyWord /></InnerLazyPage>} />
-              <Route path="formulas" element={<InnerLazyPage><StudentFormulaBook /></InnerLazyPage>} />
-              <Route path="formula/:slug" element={<InnerLazyPage><FormulaDetailPage /></InnerLazyPage>} />
-              <Route path="formulas/list" element={<InnerLazyPage><FormulasListPage /></InnerLazyPage>} />
-            </Route>
+            {(() => {
+              const studentChildRoutes = (
+                <>
+                  <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
+                  <Route path="mocks" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
+                  <Route path="mocks/full-length" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
+                  <Route path="mocks/sectional" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
+                  <Route path="mocks/topic-wise" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
+                  <Route path="mocks/practice" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
+                  <Route path="mocks/attempted" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
+                  <Route path="mocks/test/:slug" element={<InnerLazyPage><MockTestIntroPage /></InnerLazyPage>} />
+                  <Route path="mocks/result/:attemptId" element={<InnerLazyPage><MockResultPage /></InnerLazyPage>} />
+                  <Route path="mocks/review/:attemptId" element={<InnerLazyPage><MockReviewPage /></InnerLazyPage>} />
+                  <Route path="mocks/leaderboard/:slug" element={<InnerLazyPage><MockLeaderboardPage /></InnerLazyPage>} />
+                  <Route path="weak-areas" element={<InnerLazyPage><StudentWeakAreas /></InnerLazyPage>} />
+                  <Route path="strength-areas" element={<InnerLazyPage><StudentStrengthAreas /></InnerLazyPage>} />
+                  <Route path="buy-mocks" element={<InnerLazyPage><StudentBuyMocks /></InnerLazyPage>} />
+                  <Route path="all-india-rank" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
+                  <Route path="performance" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
+                  <Route path="goals" element={<InnerLazyPage><StudentGoals /></InnerLazyPage>} />
+                  <Route path="tools" element={<InnerLazyPage><StudentTools /></InnerLazyPage>} />
+                  <Route path="profile" element={<InnerLazyPage><StudentProfile /></InnerLazyPage>} />
+                  <Route path="install" element={<InnerLazyPage><StudentInstall /></InnerLazyPage>} />
+                  <Route path="rewards" element={<InnerLazyPage><StudentRewards /></InnerLazyPage>} />
+                  <Route path="day-planner" element={<InnerLazyPage><StudentDayPlanner /></InnerLazyPage>} />
+                  <Route path="day-planner/performance" element={<InnerLazyPage><StudentPlannerPerformance /></InnerLazyPage>} />
+                  <Route path="leaderboard" element={<InnerLazyPage><StudentLeaderboard /></InnerLazyPage>} />
+                  <Route path="performx" element={<InnerLazyPage><StudentPerformX /></InnerLazyPage>} />
+                  <Route path="notifications" element={<InnerLazyPage><StudentNotifications /></InnerLazyPage>} />
+                  <Route path="orders" element={<InnerLazyPage><StudentOrders /></InnerLazyPage>} />
+                  <Route path="analysis/:attemptId" element={<InnerLazyPage><StudentDeepAnalysis /></InnerLazyPage>} />
+                  <Route path="daily-test" element={<InnerLazyPage><StudentDailyTest /></InnerLazyPage>} />
+                  <Route path="daily-test/report/:attemptId" element={<InnerLazyPage><StudentDailyTestReportPage /></InnerLazyPage>} />
+                  <Route path="attempts" element={<InnerLazyPage><StudentAttempts /></InnerLazyPage>} />
+                  <Route path="support" element={<InnerLazyPage><StudentSupport /></InnerLazyPage>} />
+                  <Route path="personalized-hub" element={<InnerLazyPage><StudentPersonalizedHub /></InnerLazyPage>} />
+                  <Route path="personalized-hub/attempt/:attemptId" element={<InnerLazyPage><PersonalizedMockRunnerPage /></InnerLazyPage>} />
+                  <Route path="personalized-hub/result/:attemptId" element={<InnerLazyPage><PersonalizedMockResultPage /></InnerLazyPage>} />
+                  <Route path="sop-review" element={<InnerLazyPage><StudentSOPReview /></InnerLazyPage>} />
+                  <Route path="vocabulary" element={<InnerLazyPage><StudentVocabularyHub /></InnerLazyPage>} />
+                  <Route path="vocabulary/feed" element={<InnerLazyPage><StudentVocabularyFeed /></InnerLazyPage>} />
+                  <Route path="vocabulary/search" element={<InnerLazyPage><StudentVocabularySearch /></InnerLazyPage>} />
+                  <Route path="vocabulary/bookmarks" element={<InnerLazyPage><StudentVocabularyBookmarks /></InnerLazyPage>} />
+                  <Route path="vocabulary/quiz" element={<InnerLazyPage><StudentVocabularyQuiz /></InnerLazyPage>} />
+                  <Route path="vocabulary/revision" element={<InnerLazyPage><StudentVocabularyRevision /></InnerLazyPage>} />
+                  <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
+                  <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
+                  <Route path="vocabulary/word/:slug" element={<InnerLazyPage><StudentVocabularyWord /></InnerLazyPage>} />
+                  <Route path="formulas" element={<InnerLazyPage><StudentFormulaBook /></InnerLazyPage>} />
+                  <Route path="formula/:slug" element={<InnerLazyPage><FormulaDetailPage /></InnerLazyPage>} />
+                  <Route path="formulas/list" element={<InnerLazyPage><FormulasListPage /></InnerLazyPage>} />
+                </>
+              );
+              return (
+                <>
+                  <Route
+                    path="/demo"
+                    element={
+                      <LazyPage>
+                        <DemoShell>
+                          <StudentLazyPage><StudentLayout /></StudentLazyPage>
+                        </DemoShell>
+                      </LazyPage>
+                    }
+                  >
+                    {studentChildRoutes}
+                  </Route>
+                  <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
+                    {studentChildRoutes}
+                  </Route>
+                </>
+              );
+            })()}
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
