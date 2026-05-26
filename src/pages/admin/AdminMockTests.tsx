@@ -113,13 +113,14 @@ const AdminMockTests = () => {
   };
   const { filters, setFilter } = useAdminFilters({
     storageKey: "admin.mockTests.filters",
-    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all", section: "all", topic: "all" },
+    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all", status: "all", section: "all", topic: "all" },
     preserveKeys: ["edit"],
   });
   const categoryFilter = filters.category;
   const examFilter = filters.exam;
   const difficultyFilter = filters.difficulty;
   const readinessFilter = filters.readiness;
+  const statusFilter = filters.status;
   const sectionFilter = filters.section;
   const topicFilter = filters.topic;
   const setCategoryFilter = (v: string) => {
@@ -133,6 +134,7 @@ const AdminMockTests = () => {
   const setExamFilter = (v: string) => { setFilter("exam", v); setFilter("section", "all"); setFilter("topic", "all"); };
   const setDifficultyFilter = (v: string) => setFilter("difficulty", v);
   const setReadinessFilter = (v: string) => setFilter("readiness", v);
+  const setStatusFilter = (v: string) => setFilter("status", v);
   const setSectionFilter = (v: string) => { setFilter("section", v); setFilter("topic", "all"); };
   const setTopicFilter = (v: string) => setFilter("topic", v);
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
@@ -312,7 +314,15 @@ const AdminMockTests = () => {
     .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
     .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter)
     .filter((t) => sectionFilter === "all" || sectionCodeOf(t) === sectionFilter)
-    .filter((t) => topicFilter === "all" || (t.topic || "") === topicFilter);
+    .filter((t) => topicFilter === "all" || (t.topic || "") === topicFilter)
+    .filter((t) => {
+      if (statusFilter === "all") return true;
+      if (statusFilter === "live") return !!t.is_live;
+      if (statusFilter === "scheduled") return !!t.is_live && !!t.scheduled_start_at;
+      if (statusFilter === "published") return !!t.is_published && !t.is_live;
+      if (statusFilter === "draft") return !t.is_published && !t.is_live;
+      return true;
+    });
 
   // Advanced filter visibility: only relevant for sectional / topic categories
   const showAdvancedFilters = categoryFilter === "sectional" || categoryFilter === "topic_wise" || categoryFilter === "topic";
@@ -766,6 +776,19 @@ const AdminMockTests = () => {
           </Select>
         </div>
         <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Status</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="live">Live</SelectItem>
+              <SelectItem value="scheduled">Scheduled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Exam</Label>
           <Select value={examFilter} onValueChange={setExamFilter}>
             <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
@@ -808,8 +831,8 @@ const AdminMockTests = () => {
           </>
         )}
 
-        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
+        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || statusFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setStatusFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
             Clear filters
           </Button>
         )}
