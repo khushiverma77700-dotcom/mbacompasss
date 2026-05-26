@@ -124,12 +124,29 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const prevStatusRef = useRef<Record<string, DockJobStatus>>({});
   const autoKickedRef = useRef<Record<string, number>>({});
   const optimisticJobsRef = useRef<DockJob[]>([]);
+  const currentUserIdRef = useRef<string | null>(null);
 
   // Hydrate from DB on mount + poll every 3s. Survives page reloads,
   // navigation, and laptop reboots — the source of truth is the bulk
   // mock request tables, dispatched by an edge-side cron.
   const fetchAll = useCallback(async () => {
-    const ids = trackedReqIdsRef.current;
+    let ids = trackedReqIdsRef.current;
+    if (!currentUserIdRef.current) {
+      const { data: userRes } = await supabase.auth.getUser();
+      currentUserIdRef.current = userRes.user?.id ?? null;
+    }
+    if (currentUserIdRef.current) {
+      const { data: recentRequests } = await supabase
+        .from("bulk_mock_requests")
+        .select("id")
+        .eq("created_by", currentUserIdRef.current)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      const recentIds = (recentRequests ?? []).map((r: any) => r.id).filter(Boolean);
+      ids = [...new Set([...ids, ...recentIds])].slice(-30);
+      trackedReqIdsRef.current = ids;
+      writeTrackedIds(ids);
+    }
     if (!ids.length) { setJobs(optimisticJobsRef.current); return; }
     const { data } = await supabase
       .from("bulk_mock_request_items")
