@@ -576,13 +576,31 @@ Deno.serve(async (req) => {
     if (!itm) return json(404, { error: "item not found" });
     // If this item is already running, nothing to do.
     if (itm.status === "processing" && itm.generation_id) {
-      return json(200, { ok: true, dispatched: 0, reason: "already running" });
+      const sections_kicked = await kickPendingSectionJobs(admin, 6, [String(itm.generation_id)]);
+      return json(200, { ok: true, dispatched: 0, sections_kicked, reason: "already running" });
     }
     const active = await countGlobalActive(admin);
     if (active >= MAX_ACTIVE_GLOBAL) {
       return json(200, { ok: true, dispatched: 0, reason: "global cap reached", active });
     }
     await admin.from("bulk_mock_request_items").update({ paused: false }).eq("id", itm.id);
+    if (itm.generation_id) {
+      await admin
+        .from("bulk_mock_request_items")
+        .update({
+          status: "processing",
+          paused: false,
+          error_message: null,
+          started_at: itm.started_at ?? new Date().toISOString(),
+        })
+        .eq("id", itm.id);
+      await admin
+        .from("ai_mock_generations")
+        .update({ status: "running", error_message: null, finished_at: null })
+        .eq("id", itm.generation_id);
+      const sections_kicked = await kickPendingSectionJobs(admin, 6, [String(itm.generation_id)]);
+      return json(200, { ok: true, dispatched: 1, resumed_existing: true, sections_kicked });
+    }
     // @ts-ignore EdgeRuntime is available in Supabase Edge runtime
     EdgeRuntime.waitUntil(dispatchItem(admin, itm, { userToken }));
     return json(200, { ok: true, dispatched: 1 });
