@@ -130,7 +130,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   // mock request tables, dispatched by an edge-side cron.
   const fetchAll = useCallback(async () => {
     const ids = trackedReqIdsRef.current;
-    if (!ids.length) { setJobs([]); return; }
+    if (!ids.length) { setJobs(optimisticJobsRef.current); return; }
     const { data } = await supabase
       .from("bulk_mock_request_items")
       .select(DOCK_ITEM_SELECT)
@@ -241,6 +241,8 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
       supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
       await fetchAll();
     } catch (e: any) {
+      optimisticJobsRef.current = [];
+      setJobs([]);
       toast.error("Failed to queue mocks", { description: e?.message || "Try again" });
     }
   }, [fetchAll]);
