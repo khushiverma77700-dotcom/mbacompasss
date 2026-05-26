@@ -511,6 +511,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                   groupBySection={t.key === "sectional"}
                   sectionFilter={t.key === "sectional" ? sectionFilter : undefined}
                   onSectionChange={t.key === "sectional" ? setSectionFilter : undefined}
+                  isFullLength={t.key === "full_length"}
                 />
               )}
             </TabsContent>
