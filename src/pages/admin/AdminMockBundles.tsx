@@ -353,6 +353,13 @@ export default function AdminMockBundles() {
                   <span className="font-semibold">{b.name}</span>
                   <Badge variant={b.is_published ? "default" : "secondary"}>{b.is_published ? "Published" : "Draft"}</Badge>
                   {b.exam_code && <Badge variant="outline">{b.exam_code}</Badge>}
+                  {(b.filter_exams ?? []).map((x) => (
+                    <Badge key={`fe-${x}`} variant="outline" className="border-sky-300 text-sky-700 bg-sky-50 text-[10px]">{x}</Badge>
+                  ))}
+                  {(b.filter_types ?? []).map((x) => {
+                    const lbl = BUNDLE_TYPE_OPTIONS.find((o) => o.v === x)?.l ?? x;
+                    return <Badge key={`ft-${x}`} variant="outline" className="border-violet-300 text-violet-700 bg-violet-50 text-[10px]">{lbl}</Badge>;
+                  })}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">/{b.slug} · ₹{Number(b.price_inr).toLocaleString()} · {b.validity_days}d access</div>
               </div>
