@@ -86,7 +86,7 @@ const makeUniqueBundleSlug = async (rawSlug: string, currentBundleId?: string) =
 const EMPTY: Partial<Bundle> = {
   name: "", slug: "", description: "", exam_code: null, price_inr: 0, original_price_inr: null,
   validity_days: 365, is_published: true, highlight_on_mocks: false, sort_order: 0,
-  features: {}, highlights: {}, included_categories: [],
+  features: {}, highlights: {}, included_categories: [], filter_exams: [], filter_types: [],
 };
 
 export default function AdminMockBundles() {
