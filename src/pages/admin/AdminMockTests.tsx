@@ -335,7 +335,8 @@ const AdminMockTests = () => {
             total_generated: totalActualForDeficitSections,
           }).in("id", bulkItems.map((b: any) => b.id));
           const reqIds = Array.from(new Set(bulkItems.map((b: any) => b.request_id).filter(Boolean)));
-          reqIds.forEach((rid) => { trackRequest(rid); tracked++; });
+          await Promise.all(reqIds.map((rid) => trackRequest(rid)));
+          tracked += reqIds.length;
         }
       }
 
@@ -375,7 +376,7 @@ const AdminMockTests = () => {
             if (items.length > 0) {
               const { error: itemErr } = await supabase.from("bulk_mock_request_items").insert(items);
               if (itemErr) throw itemErr;
-              trackRequest(newReq.id);
+              await trackRequest(newReq.id);
               tracked++;
             }
           }
