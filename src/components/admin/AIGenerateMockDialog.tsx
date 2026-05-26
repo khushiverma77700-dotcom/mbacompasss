@@ -438,31 +438,30 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
         payload.total_tita = tita;
       }
 
-      const { data, error } = await supabase.functions.invoke("generate-mock-questions", { body: payload });
-      if (error) throw error;
+      // Build a friendly label and enqueue into the floating dock instead of
+      // blocking the dialog. Up to 3 mocks generate in parallel; the dock
+      // shows live progress on the right side.
+      const label = [
+        exam,
+        category.replace("_", " "),
+        category === "sectional" ? sectionCode : null,
+        topic ? `"${topic}"` : null,
+        level,
+        category === "full_length"
+          ? `${sectionPlanTotal}Q full-length`
+          : `${perSet}Q × ${sets} set${sets > 1 ? "s" : ""}`,
+      ].filter(Boolean).join(" · ");
 
-      const newGenId = data?.generation_id;
-      if (!newGenId) {
-        // Legacy synchronous response
-        setResult(data);
-        setStep(2);
-        toast({ title: "Mock generation complete", description: `${data?.stats?.generated || 0} questions generated.` });
-        onCreated?.();
-        return;
-      }
-
-      setGenerationId(newGenId);
-      setStep(3);
-      toast({
-        title: "Generation started",
-        description: "AI is writing your questions in the background. Watch progress below.",
-      });
+      dock.enqueue([{ label, payload }]);
+      onCreated?.();
+      close();
     } catch (e: any) {
       toast({ title: "Generation failed", description: e?.message || "Try again", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
   };
+
 
   // ---------------- Batch helpers ----------------
   const validateCurrentForm = (): string | null => {
