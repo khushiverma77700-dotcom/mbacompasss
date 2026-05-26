@@ -315,9 +315,20 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const auth = req.headers.get("Authorization") || "";
   const userToken = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  const internalKey = req.headers.get("x-internal-pump-key") || "";
+  const isInternal = !!internalKey && internalKey === SERVICE_KEY;
 
   // Always reconcile first.
   const reconciled = await reconcile(admin);
+
+  // ---- Cron / internal-key pump (runs even when no admin is online) ----
+  // Used by pg_cron every minute so generation keeps progressing while the
+  // admin's laptop is off. Pumps up to 3 pending items globally using each
+  // batch's stored created_by admin via the internal-pump header.
+  if (isInternal) {
+    const dispatched = await pumpPending(admin, {}, 3);
+    return json(200, { ok: true, mode: "internal-pump", reconciled, dispatched });
+  }
 
   // Reconcile-only mode.
   if (body?.reconcile && !body?.items && !body?.resume_id) {
@@ -344,7 +355,7 @@ Deno.serve(async (req) => {
   if (!roleRow) return json(403, { error: "admin only" });
 
   if (body?.reconcile && !body?.items && !body?.resume_id) {
-    const dispatched = await pumpPending(admin, userToken, 3);
+    const dispatched = await pumpPending(admin, { userToken }, 3);
     return json(200, { ok: true, mode: "reconcile", reconciled, dispatched });
   }
 
@@ -359,9 +370,10 @@ Deno.serve(async (req) => {
     await admin.from("bulk_mock_request_items").update({ paused: false }).eq("id", itm.id);
     // dispatch in background
     // @ts-ignore EdgeRuntime is available in Supabase Edge runtime
-    EdgeRuntime.waitUntil(dispatchItem(admin, itm, userToken));
+    EdgeRuntime.waitUntil(dispatchItem(admin, itm, { userToken }));
     return json(200, { ok: true, dispatched: 1 });
   }
+
 
   // Create new batch.
   const items = Array.isArray(body?.items) ? body.items : [];
