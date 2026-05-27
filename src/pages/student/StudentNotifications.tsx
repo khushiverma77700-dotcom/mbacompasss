@@ -232,15 +232,15 @@ export default function StudentNotifications() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Updates Timeline</h1>
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  <span className={cn("inline-flex items-center gap-1", livePulse && "text-emerald-600")}>
-                    <span className="relative flex h-2 w-2">
+                <p className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className={cn("inline-flex items-center gap-1 whitespace-nowrap", livePulse && "text-emerald-600")}>
+                    <span className="relative flex h-2 w-2 shrink-0">
                       <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", livePulse ? "animate-ping bg-emerald-400" : "bg-emerald-400")} />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                     </span>
                     Live
                   </span>
-                  <span>·</span>
+                  <span className="hidden sm:inline">·</span>
                   <span>All product updates, mocks and exam alerts in one feed</span>
                 </p>
               </div>
