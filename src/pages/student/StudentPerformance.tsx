@@ -44,23 +44,28 @@ export default function StudentPerformance() {
   );
 
   const sectionalAvg = useMemo(() => {
-    const sums: Record<string, { score: number; max: number; attempts: number }> = {};
+    const sums: Record<string, { score: number; max: number; attempts: number; label: string }> = {};
     attempts.forEach((a) => {
       const s = (a.sectional_scores as any) || {};
-      Object.entries(s).forEach(([code, v]: any) => {
-        if (!sums[code]) sums[code] = { score: 0, max: 0, attempts: 0 };
-        sums[code].score += Number(v?.score || 0);
-        sums[code].max += Number(v?.max || v?.max_score || 0);
-        sums[code].attempts += 1;
+      Object.entries(s).forEach(([key, v]: any) => {
+        const label =
+          (v && (v.code || v.name)) ||
+          (typeof key === "string" && !/^[0-9a-f]{8}-/i.test(key) ? key : "Section");
+        const bucket = String(label);
+        if (!sums[bucket]) sums[bucket] = { score: 0, max: 0, attempts: 0, label: bucket };
+        sums[bucket].score += Number(v?.score || 0);
+        sums[bucket].max += Number(v?.max || v?.max_score || 0);
+        sums[bucket].attempts += 1;
       });
     });
     const safe = (n: number) => (Number.isFinite(n) ? n : 0);
-    return Object.entries(sums).map(([code, v]) => ({
-      section: code,
+    return Object.values(sums).map((v) => ({
+      section: v.label,
       score: v.attempts > 0 ? Math.round(safe(v.score / v.attempts)) : 0,
       max: v.attempts > 0 ? Math.round(safe(v.max / v.attempts)) : 0,
     }));
   }, [attempts]);
+
 
   const radarData = useMemo(
     () =>
