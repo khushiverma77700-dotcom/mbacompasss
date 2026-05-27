@@ -136,7 +136,8 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
 
   return (
     <Dialog open={!!slug} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-6">
+      <DialogContent className="max-w-3xl p-4 sm:p-6 w-screen h-[100dvh] max-h-[100dvh] rounded-none sm:w-auto sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-y-auto overflow-x-hidden">
+
         <DialogTopBar onClose={onClose} title={word?.word} />
 
         {loading || !word ? (
