@@ -83,7 +83,8 @@ export default function StudentNewsroom() {
   const [category, setCategory] = useState<string>("All");
   const [open, setOpen] = useState<Article | null>(null);
   const [lang, setLang] = useState<"en" | "hi" | "hinglish">("en");
-  const [expanded, setExpanded] = useState<Record<string, string | null>>({});
+  const [focusSection, setFocusSection] = useState<string | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["newsroom-articles"],
