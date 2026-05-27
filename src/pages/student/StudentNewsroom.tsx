@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";
@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/hooks/use-toast";
 import {
   Newspaper, Bookmark, BookmarkCheck, Star, Check, Clock, Flame,
   Globe, Building2, TrendingUp, GraduationCap, Cpu, Trophy, Leaf, FlaskConical,
-  Briefcase, LineChart, Award, Zap, MessagesSquare, ChevronDown, BookOpen, Lightbulb, PenLine,
+  Briefcase, LineChart, Award, Zap, MessagesSquare, BookOpen, Lightbulb, PenLine,
+  ChevronLeft, ChevronRight, Calendar, ArrowRight, Sparkles,
 } from "lucide-react";
 
 type Article = {
