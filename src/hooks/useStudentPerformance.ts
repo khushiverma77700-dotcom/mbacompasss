@@ -86,10 +86,6 @@ export function useStudentPerformance(): StudentPerformanceData {
   const isDemo = useIsDemo();
   const qc = useQueryClient();
 
-  // Demo mode: short-circuit every query with Aman's hardcoded dataset.
-  if (isDemo) {
-    return computeDemoPerformance();
-  }
 
 
   const initialAttempts = useMemo<MockAttempt[] | undefined>(() => {
