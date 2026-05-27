@@ -94,7 +94,7 @@ export default function StudentLayout() {
   // In demo mode, pretend a dummy student is signed in so the entire
   // dashboard renders exactly the same as the real one — no auth, no redirect.
   const demoUser = isDemo
-    ? ({ id: "demo-user", email: "demo@mbacompass.in", user_metadata: { display_name: "Demo Student" } } as any)
+    ? ({ id: "demo-user", email: "aman@demo.in", user_metadata: { display_name: "Aman Verma" } } as any)
     : null;
   const user = isDemo ? demoUser : authUser;
   const loading = isDemo ? false : authLoading;
