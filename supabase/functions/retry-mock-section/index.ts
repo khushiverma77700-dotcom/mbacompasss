@@ -608,6 +608,12 @@ Deno.serve(async (req) => {
     if (job.status === "completed" && (job.questions_done || 0) >= (job.total_questions || 0)) {
       return jsonResp(200, { ok: true, message: "Already completed" });
     }
+    // Stop runaway self-scheduling on failed jobs (e.g. unique-key conflict loops).
+    // Only an explicit manual retry (auto=false, continuation=false) may resume.
+    if (job.status === "failed" && auto) {
+      return jsonResp(200, { ok: true, message: "Job marked failed — not auto-resuming" });
+    }
+
     const lockUntil = job.worker_lock_until ? new Date(job.worker_lock_until).getTime() : 0;
     const queuedProcessing = /queued reliable|queued fast|watchdog kicked/i.test(String(job.current_step || ""));
     if (auto && !continuation && job.status === "processing" && lockUntil > Date.now() + 30_000 && !queuedProcessing) {
