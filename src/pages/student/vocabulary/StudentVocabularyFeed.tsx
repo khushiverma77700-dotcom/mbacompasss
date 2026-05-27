@@ -706,7 +706,12 @@ export default function StudentVocabularyFeed() {
                     </div>
                   )}
 
-                  <div className="relative z-10 mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                  <div className="relative z-10 mt-3 flex items-center gap-1.5 rounded-lg border border-dashed border-sky-300 bg-sky-50/70 px-2.5 py-1.5 text-[11px] font-medium text-sky-700 pointer-events-none">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                    <span>Tap card for full analysis — examples, synonyms, mnemonics & usage</span>
+                  </div>
+
+                  <div className="relative z-10 mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
                     <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">
                       {w.category?.replace("_", " ")}
                     </Badge>
