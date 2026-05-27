@@ -2,6 +2,11 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } from "@/lib/studentModeNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
+import {
+  DEMO_PROFILE, DEMO_TASKS, DEMO_GOALS, DEMO_STUDY_PROFILE, DEMO_WEAK_TOPICS,
+  DEMO_REWARDS, DEMO_ENROLLMENTS, DEMO_EXAM_COUNTDOWNS, DEMO_LEADERBOARD_RANK,
+} from "@/lib/demoData";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
