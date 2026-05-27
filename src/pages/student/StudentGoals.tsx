@@ -11,12 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-import SectionSkeleton from "@/components/student/SectionSkeleton";
   Sparkles, Target, Flame, Zap, Brain, CheckCircle2, Plus, Trash2,
   Trophy, Calendar, BookOpenCheck, RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 const SECTIONS = ["QA", "VARC", "DILR"] as const;
 const TASK_TEMPLATES = [
   { section: "QA", task_type: "practice", title: "20 QA practice questions", target_value: 20, duration_minutes: 45 },

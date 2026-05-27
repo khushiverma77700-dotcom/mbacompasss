@@ -10,8 +10,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { History, Search, Filter, ArrowDownAZ, Calendar, Trophy, Eye, Brain, Download } from "lucide-react";
 import { ensureStudentMode, mockAttemptPath, mockResultPath } from "@/lib/studentModeNav";
-import SectionSkeleton from "@/components/student/SectionSkeleton";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Completed", auto_submitted: "Auto-submitted",
   in_progress: "In progress", abandoned: "Abandoned",

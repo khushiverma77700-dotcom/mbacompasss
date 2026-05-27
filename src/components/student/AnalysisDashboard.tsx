@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-import SectionSkeleton from "@/components/student/SectionSkeleton";
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
 import {
@@ -33,6 +32,7 @@ import {
 } from "./StrengthWeaknessAnalysis";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 type Mode = "strength" | "weak" | "performance" | "leaderboard";
 
 export default function AnalysisDashboard({ mode }: { mode: Mode }) {
