@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+import SectionSkeleton from "@/components/student/SectionSkeleton";
   Select,
   SelectContent,
   SelectItem,

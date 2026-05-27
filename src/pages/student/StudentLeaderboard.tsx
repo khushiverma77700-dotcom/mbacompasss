@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Trophy, Crown, Medal, Flame, Coins, Zap } from "lucide-react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 interface Row {
   rank: number; user_id: string; display_handle: string;

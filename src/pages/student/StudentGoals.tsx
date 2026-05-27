@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+import SectionSkeleton from "@/components/student/SectionSkeleton";
   Sparkles, Target, Flame, Zap, Brain, CheckCircle2, Plus, Trash2,
   Trophy, Calendar, BookOpenCheck, RefreshCw,
 } from "lucide-react";

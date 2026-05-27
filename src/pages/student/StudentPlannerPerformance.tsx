@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
+import SectionSkeleton from "@/components/student/SectionSkeleton";
   ArrowLeft, CalendarRange, CheckCircle2, Flame, Clock, Target,
   TrendingUp, Activity, Trophy,
 } from "lucide-react";

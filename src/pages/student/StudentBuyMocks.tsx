@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ShoppingBag, Clock, Sparkles, ArrowRight, BookOpen } from "lucide-react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 export default function StudentBuyMocks() {
   const { user } = useAuth();

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Pin } from "lucide-react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 export default function StudentAnnouncements() {
   const [items, setItems] = useState<any[]>([]);

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+import SectionSkeleton from "@/components/student/SectionSkeleton";
   LineChart,
   Line,
   BarChart,
