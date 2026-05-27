@@ -242,6 +242,10 @@ export function useStudentPerformance(): StudentPerformanceData {
     }));
   }, [submitted]);
 
+  // Demo-mode override: all hooks above ran with `enabled: false`, so we
+  // simply ignore their (empty) results and return Aman's hardcoded dataset.
+  if (isDemo) return computeDemoPerformance();
+
   return {
     attempts, submitted, inProgress,
     loading: isLoading,
