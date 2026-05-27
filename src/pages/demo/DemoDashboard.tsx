@@ -409,7 +409,7 @@ function ViewPerformance() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-5">
-          <SectionTitle title="🔻 Weak Areas" subtitle="Prioritised by AI based on cost-per-mark" />
+          <SectionTitle icon={Flame} title="Weak Areas" subtitle="Prioritised by AI based on cost-per-mark" />
           <ul className="space-y-2 text-sm">
             {["LR Sets — Arrangements", "Geometry — Mensuration", "RC — Inference questions", "DI Caselet — Pie + Table"].map((w, i) => (
               <li key={i} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm">
