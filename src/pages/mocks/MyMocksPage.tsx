@@ -64,7 +64,7 @@ export default function MyMocksPage() {
     })();
   }, [authLoading, user]);
 
-  if (authLoading) return <div className="p-8 text-muted-foreground">Loading…</div>;
+  if (authLoading) return <div className="container mx-auto px-4 py-8 max-w-6xl"><SectionSkeleton rows={2} /></div>;
   if (!user) {
     return (
       <div className="container mx-auto p-8 max-w-md text-center">
@@ -90,7 +90,7 @@ export default function MyMocksPage() {
 
         <TabsContent value="attempts" className="mt-4">
           {loading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <SectionSkeleton rows={2} />
           ) : attempts.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">No attempts yet. <Link className="text-primary" to="/mocks">Browse mocks →</Link></Card>
           ) : (
@@ -134,7 +134,7 @@ export default function MyMocksPage() {
 
         <TabsContent value="enrollments" className="mt-4">
           {loading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <SectionSkeleton rows={2} />
           ) : enrollments.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">No enrollments yet.</Card>
           ) : (
@@ -159,7 +159,7 @@ export default function MyMocksPage() {
 
         <TabsContent value="bookmarks" className="mt-4">
           {loading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <SectionSkeleton rows={2} />
           ) : bookmarks.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">No bookmarked questions.</Card>
           ) : (
