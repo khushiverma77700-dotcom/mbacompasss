@@ -107,37 +107,7 @@ const AdminLayout = () => {
     };
   }, [user, isAdmin]);
 
-  useEffect(() => {
-    if (!user || !isAdmin) return;
-
-    let cancelled = false;
-
-    const checkNightlyIndexing = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("google-indexing", {
-          body: { action: "current_run_status" },
-        });
-
-        if (!cancelled) {
-          setNightlyIndexingLive(Boolean(!error && (data as any)?.ok && (data as any)?.data?.is_active));
-        }
-      } catch {
-        if (!cancelled) setNightlyIndexingLive(false);
-      }
-    };
-
-    const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 3000));
-    const handle = schedule(checkNightlyIndexing, { timeout: 8000 });
-    const interval = window.setInterval(checkNightlyIndexing, 30000);
-
-    return () => {
-      cancelled = true;
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      try { cancel(handle); } catch {}
-      window.clearInterval(interval);
-    };
-  }, [user, isAdmin]);
+  // Google Indexing nightly auto-run polling removed to reduce backend load.
 
   // Apply admin theme on mount, restore light on unmount
   useEffect(() => {
