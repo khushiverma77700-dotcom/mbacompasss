@@ -372,7 +372,7 @@ export default function StudentNewsroom() {
                         {a.detailed_summary && (
                           <button
                             onClick={() => openWithSection(a, "detail")}
-                            className="group/chip flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50/60 hover:bg-sky-100 px-2.5 py-2 text-xs font-semibold text-sky-800 transition"
+                            className="group/chip flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50/60 hover:bg-sky-100 px-2.5 py-2 text-xs font-semibold text-sky-800 transition dark:border-sky-400/40 dark:bg-sky-500/15 dark:text-sky-200 dark:hover:bg-sky-500/25"
                           >
                             <BookOpen className="h-3.5 w-3.5" />
                             <span className="truncate">Detailed</span>
@@ -382,7 +382,7 @@ export default function StudentNewsroom() {
                         {a.why_matters && (
                           <button
                             onClick={() => openWithSection(a, "why")}
-                            className="group/chip flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 hover:bg-amber-100 px-2.5 py-2 text-xs font-semibold text-amber-800 transition"
+                            className="group/chip flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 hover:bg-amber-100 px-2.5 py-2 text-xs font-semibold text-amber-800 transition dark:border-amber-400/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/25"
                           >
                             <Lightbulb className="h-3.5 w-3.5" />
                             <span className="truncate">Why matters</span>
@@ -392,7 +392,7 @@ export default function StudentNewsroom() {
                         {a.wat_topics?.length > 0 && (
                           <button
                             onClick={() => openWithSection(a, "wat")}
-                            className="group/chip flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50/60 hover:bg-violet-100 px-2.5 py-2 text-xs font-semibold text-violet-800 transition"
+                            className="group/chip flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50/60 hover:bg-violet-100 px-2.5 py-2 text-xs font-semibold text-violet-800 transition dark:border-violet-400/40 dark:bg-violet-500/15 dark:text-violet-200 dark:hover:bg-violet-500/25"
                           >
                             <PenLine className="h-3.5 w-3.5" />
                             <span className="truncate">WAT/Essay</span>
@@ -402,7 +402,7 @@ export default function StudentNewsroom() {
                         {a.gdpi_points?.length > 0 && (
                           <button
                             onClick={() => openWithSection(a, "gdpi")}
-                            className="group/chip flex items-center gap-1.5 rounded-lg border border-fuchsia-200 bg-fuchsia-50/60 hover:bg-fuchsia-100 px-2.5 py-2 text-xs font-semibold text-fuchsia-800 transition"
+                            className="group/chip flex items-center gap-1.5 rounded-lg border border-fuchsia-200 bg-fuchsia-50/60 hover:bg-fuchsia-100 px-2.5 py-2 text-xs font-semibold text-fuchsia-800 transition dark:border-fuchsia-400/40 dark:bg-fuchsia-500/15 dark:text-fuchsia-200 dark:hover:bg-fuchsia-500/25"
                           >
                             <MessagesSquare className="h-3.5 w-3.5" />
                             <span className="truncate">GDPI</span>
