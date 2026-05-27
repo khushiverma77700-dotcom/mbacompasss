@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useIsDemo } from "@/contexts/DemoModeContext";
+import { useOpenWord } from "@/components/student/QuickViewProvider";
 
 // MBA exam-focused filters (CAT + OMETs)
 const EXAMS = [
