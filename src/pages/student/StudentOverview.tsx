@@ -137,35 +137,38 @@ export default function StudentOverview() {
 
     run(
       supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
-      (prof: any) => setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student"),
+      (prof: any) => {
+        const name = prof?.display_name ?? user.email?.split("@")[0] ?? "Student";
+        setDisplayName(name); writeOverviewCache(user.id, { displayName: name });
+      },
     );
     run(
       supabase.from("student_daily_tasks").select("*").eq("user_id", user.id).eq("task_date", today),
-      (tk: any) => setTasks(tk ?? []),
+      (tk: any) => { setTasks(tk ?? []); writeOverviewCache(user.id, { tasks: tk ?? [] }); },
     );
     run(
       supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
         .order("due_date", { ascending: true }).limit(3),
-      (g: any) => setGoals(g ?? []),
+      (g: any) => { setGoals(g ?? []); writeOverviewCache(user.id, { goals: g ?? [] }); },
     );
     run(
       supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
-      (pf: any) => setProfile(pf),
+      (pf: any) => { setProfile(pf); writeOverviewCache(user.id, { profile: pf }); },
     );
     run(
       supabase.from("student_weak_topics").select("*").eq("user_id", user.id)
         .order("level", { ascending: true }).limit(12),
-      (wk: any) => setWeak(wk ?? []),
+      (wk: any) => { setWeak(wk ?? []); writeOverviewCache(user.id, { weak: wk ?? [] }); },
     );
     run(
       supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
-      (rw: any) => setRewards(rw),
+      (rw: any) => { setRewards(rw); writeOverviewCache(user.id, { rewards: rw }); },
     );
     run(
       supabase.from("mock_enrollments")
         .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
         .eq("user_id", user.id).order("enrolled_at", { ascending: false }),
-      (e: any) => setEnrollments(e ?? []),
+      (e: any) => { setEnrollments(e ?? []); writeOverviewCache(user.id, { enrollments: e ?? [] }); },
     );
     run(
       supabase.from("exams").select("name, slug, exam_date").not("exam_date", "is", null)
@@ -175,6 +178,7 @@ export default function StudentOverview() {
           .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
           .slice(0, 8);
         setExamCountdowns(upcoming);
+        writeOverviewCache(user.id, { examCountdowns: upcoming });
       },
     );
 
@@ -192,7 +196,11 @@ export default function StudentOverview() {
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 800));
     const handle = schedule(async () => {
       const { data } = await supabase.rpc("get_my_leaderboard_rank" as any);
-      if (!cancelled) setLeaderboardRank(typeof data === "number" ? data : null);
+      if (!cancelled) {
+        const rank = typeof data === "number" ? data : null;
+        setLeaderboardRank(rank);
+        writeOverviewCache(user.id, { leaderboardRank: rank });
+      }
     });
     return () => {
       cancelled = true;
