@@ -605,8 +605,11 @@ export default function StudentFormulaBook() {
                         {isDone ? "Done" : "Complete"}
                       </Button>
                     </div>
-                    <Link to={`/student/formula/${f.slug}`} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-900">
-                      Open <ArrowRight className="h-3 w-3" />
+                    <Link
+                      to={`/student/formula/${f.slug}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:scale-[0.98]"
+                    >
+                      <BookOpen className="h-4 w-4" /> View Full Details <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
                 </CardContent>
