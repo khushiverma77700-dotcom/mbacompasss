@@ -638,13 +638,18 @@ export default function StudentVocabularyFeed() {
                   )}
                 />
                 <CardContent className="relative flex flex-1 flex-col p-4 sm:p-6">
-                  <div className="flex items-start justify-between gap-3">
+                  {!demoLocked && (
+                    <Link
+                      to={`/student/vocabulary/word/${w.slug}`}
+                      className="absolute inset-0 z-0"
+                      aria-label={`Open ${w.word}`}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-start justify-between gap-3 pointer-events-none">
                     <div className="min-w-0 flex-1">
-                      <Link to={`/student/vocabulary/word/${w.slug}`} className="block">
-                        <h3 className="font-heading text-2xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 sm:text-3xl md:text-4xl break-words">
-                          {w.word}
-                        </h3>
-                      </Link>
+                      <h3 className="font-heading text-2xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 sm:text-3xl md:text-4xl break-words">
+                        {w.word}
+                      </h3>
                       {w.part_of_speech && (
                         <div className="mt-1 text-xs italic text-slate-500">{w.part_of_speech}</div>
                       )}
@@ -656,8 +661,8 @@ export default function StudentVocabularyFeed() {
 
                   {/* Pronunciation - tap to play */}
                   <button
-                    onClick={() => speak(w.word)}
-                    className="group/p mt-3 inline-flex items-start gap-2 self-start rounded-xl border border-sky-200 bg-sky-50/50 px-3 py-2 transition-all hover:scale-[1.02] hover:border-sky-400 hover:bg-sky-50 active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); speak(w.word); }}
+                    className="group/p relative z-10 mt-3 inline-flex items-start gap-2 self-start rounded-xl border border-sky-200 bg-sky-50/50 px-3 py-2 transition-all hover:scale-[1.02] hover:border-sky-400 hover:bg-sky-50 active:scale-95"
                     aria-label={`Play pronunciation of ${w.word}`}
                   >
                     <span className="mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm">
