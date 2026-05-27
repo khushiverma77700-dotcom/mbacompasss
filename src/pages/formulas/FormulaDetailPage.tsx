@@ -170,8 +170,10 @@ export default function FormulaDetailPage() {
               </Button>
             </div>
           </div>
-          <div className="mt-4 rounded-xl bg-slate-900/95 p-5 ring-1 ring-slate-800">
-            <MathExpression tex={formula.expression_latex} plain={formula.expression} className="text-2xl text-sky-100" />
+          <div className="mt-4 overflow-hidden rounded-xl bg-slate-900/95 p-3 ring-1 ring-slate-800 sm:p-5">
+            <div className="overflow-x-auto">
+              <MathExpression tex={formula.expression_latex} plain={formula.expression} className="text-lg text-sky-100 sm:text-2xl" />
+            </div>
           </div>
         </div>
       </Card>

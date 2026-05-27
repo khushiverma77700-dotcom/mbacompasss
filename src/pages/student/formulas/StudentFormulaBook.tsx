@@ -528,7 +528,7 @@ export default function StudentFormulaBook() {
                   </div>
 
                   {/* Formula expression */}
-                  <div className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 shadow-lg sm:p-5">
+                  <div className="overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-3 shadow-lg sm:p-5">
                     <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-500/20">
@@ -549,12 +549,13 @@ export default function StudentFormulaBook() {
                       </button>
                     </div>
                     {plainMode[f.id] ? (
-                      <code className="block max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-black/30 px-3 py-3 font-mono text-[13px] leading-relaxed text-sky-100 sm:px-5 sm:py-4 sm:text-[15px]">
+                      <code className="block w-full max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-black/30 px-3 py-3 font-mono text-[12px] leading-relaxed text-sky-100 sm:px-5 sm:py-4 sm:text-[15px]">
                         {f.expression || f.expression_latex || ""}
                       </code>
                     ) : (
-                      <div className="max-w-full overflow-x-auto">
-                        <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-base text-sky-50 sm:text-lg md:text-xl" />
+                      <div className="formula-scroll -mx-3 w-[calc(100%+1.5rem)] overflow-x-auto px-3 sm:mx-0 sm:w-full sm:px-0">
+                        <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-sm text-sky-50 sm:text-lg md:text-xl" />
+                        <div className="mt-1 text-right text-[10px] uppercase tracking-wider text-slate-500 sm:hidden">swipe →</div>
                       </div>
                     )}
                   </div>
