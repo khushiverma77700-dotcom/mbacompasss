@@ -306,7 +306,7 @@ function ViewOverview() {
       <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
         <SectionTitle icon={Activity} title="Weekly Momentum" subtitle="XP earned & minutes studied — last 7 days" />
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={WEEKLY_ACTIVITY}>
+          <ComposedChart data={WEEKLY_ACTIVITY}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="day" tick={{ fontSize: 11 }} />
             <YAxis yAxisId="l" tick={{ fontSize: 11 }} />
@@ -314,7 +314,7 @@ function ViewOverview() {
             <RTooltip /><Legend />
             <Bar yAxisId="l" dataKey="xp" name="XP" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
             <Line yAxisId="r" type="monotone" dataKey="mins" name="Minutes" stroke="#f59e0b" strokeWidth={2.4} dot={{ r: 4 }} />
-          </BarChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>
