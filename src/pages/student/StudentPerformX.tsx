@@ -186,18 +186,27 @@ export default function StudentPerformX() {
         acc[k].count += 1;
       });
     });
-    return Object.entries(acc).map(([k, v]) => {
-      // Resolve label: built-in code → friendly name, else mock_sections lookup, else short fallback
+    const rows = Object.entries(acc).map(([k, v]) => {
       const fromMap = sectionMap[k];
       const friendly =
         SECTION_LABELS[k] ??
         (fromMap ? (SECTION_LABELS[fromMap.code] ?? fromMap.name) : null) ??
         (k.length > 12 ? `Section ${Object.keys(acc).indexOf(k) + 1}` : k);
       return {
-        section: friendly.length > 18 ? friendly.slice(0, 16) + "…" : friendly,
+        section: friendly.length > 22 ? friendly.slice(0, 20) + "…" : friendly,
         value: v.count ? Math.round((v.sum / v.count / Math.max(1, v.max)) * 100) : 0,
       };
     });
+    // Dedupe by friendly label (average values for the same section across exams)
+    const merged = new Map<string, { section: string; sum: number; n: number }>();
+    rows.forEach((r) => {
+      const cur = merged.get(r.section);
+      if (cur) { cur.sum += r.value; cur.n += 1; }
+      else merged.set(r.section, { section: r.section, sum: r.value, n: 1 });
+    });
+    return Array.from(merged.values())
+      .map((m) => ({ section: m.section, value: Math.round(m.sum / m.n) }))
+      .sort((a, b) => b.value - a.value);
   }, [attempts, sectionMap]);
 
   // Section bar (with rank simulation)
@@ -769,19 +778,39 @@ export default function StudentPerformX() {
         </Card>
 
         <Card className="p-5 border-sky-100">
-          <div className="flex items-center gap-2 mb-3"><Target className="h-5 w-5 text-violet-600" /><div className="font-bold">Section Mastery</div></div>
-          <div className="h-52">
-            {radarData.length ? (
-              <ResponsiveContainer>
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis dataKey="section" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                  <Radar dataKey="value" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
-                </RadarChart>
-              </ResponsiveContainer>
-            ) : <div className="h-full grid place-items-center text-sm text-muted-foreground">No sectional data yet.</div>}
+          <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+            <div className="flex items-center gap-2"><Target className="h-5 w-5 text-violet-600" /><div className="font-bold">Section Mastery</div></div>
+            <UIBadge variant="secondary" className="text-[10px]">Avg score / 100</UIBadge>
           </div>
+          <p className="text-[11px] text-muted-foreground mb-3">Your average sectional score across all mocks — higher means stronger mastery.</p>
+          {radarData.length ? (
+            <div className="space-y-2.5">
+              {radarData.slice(0, 8).map((r, i) => {
+                const colors = ["#0ea5e9", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899", "#14b8a6", "#6366f1", "#f97316"];
+                const c = colors[i % colors.length];
+                const tone = r.value >= 70 ? "Strong" : r.value >= 50 ? "On track" : "Needs work";
+                return (
+                  <div key={r.section}>
+                    <div className="flex items-center justify-between text-xs mb-1 gap-2">
+                      <span className="font-medium text-foreground truncate">{r.section}</span>
+                      <span className="shrink-0 tabular-nums font-semibold" style={{ color: c }}>
+                        {r.value}<span className="text-muted-foreground font-normal">/100</span>
+                        <span className="ml-1.5 text-[10px] font-medium text-muted-foreground">· {tone}</span>
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${Math.max(2, r.value)}%`, background: c }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="h-24 grid place-items-center text-sm text-muted-foreground">No sectional data yet.</div>
+          )}
           <div className="mt-3 pt-3 border-t border-border/40">
             <div className="text-xs font-semibold mb-2 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> When you study most</div>
             <div className="h-24">
