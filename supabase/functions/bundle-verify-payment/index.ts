@@ -60,22 +60,7 @@ Deno.serve(async (req) => {
       .update({ order_id: order.id })
       .eq("user_id", user.id).eq("bundle_id", order.bundle_id);
 
-    // Fire-and-forget welcome email
-    try {
-      const { data: bundle } = await admin.from("mock_bundles")
-        .select("name, price").eq("id", order.bundle_id).maybeSingle();
-      const { data: profile } = await admin.from("profiles")
-        .select("full_name, email").eq("id", user.id).maybeSingle();
-      admin.functions.invoke("send-welcome-email", {
-        body: {
-          user_id: user.id,
-          recipient_email: profile?.email || user.email,
-          recipient_name: profile?.full_name || "",
-          course_name: bundle?.name || "Mock Bundle",
-          amount: bundle?.price ?? "",
-        },
-      }).catch((e) => console.error("welcome email invoke failed", e));
-    } catch (e) { console.error("welcome email setup failed", e); }
+    // Welcome email automation removed to reduce backend load.
 
     return new Response(JSON.stringify({ success: true, bundle_id: order.bundle_id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
