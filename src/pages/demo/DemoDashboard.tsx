@@ -467,6 +467,30 @@ function ViewPersonalized() {
   return (
     <div className="space-y-5">
       <SectionTitle icon={Brain} title="Personalised AI Hub" subtitle="Every mock here is generated live from your performance signal" />
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard icon={Sparkles} label="Mocks Generated" value="128" sub="this month" accent="from-violet-500 to-fuchsia-600" />
+        <StatCard icon={Brain} label="AI Sessions" value="86" sub="last 7 days" accent="from-sky-500 to-blue-600" />
+        <StatCard icon={Target} label="Avg Accuracy" value="84%" sub="↑ 9% vs library" accent="from-emerald-500 to-teal-600" />
+        <StatCard icon={Clock} label="Avg Sprint Time" value="22m" sub="optimal pace" accent="from-amber-400 to-orange-500" />
+      </div>
+
+      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+        <SectionTitle icon={BarChart3} title="Hub Usage Breakdown" subtitle="Mocks generated per exam · last 7 days" />
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={HUB_USAGE}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="d" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <RTooltip /><Legend />
+            <Bar dataKey="cat" stackId="a" fill="#0284c7" name="CAT" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="xat" stackId="a" fill="#7c3aed" name="XAT" />
+            <Bar dataKey="nmat" stackId="a" fill="#10b981" name="NMAT" />
+            <Bar dataKey="snap" stackId="a" fill="#f59e0b" name="SNAP" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {tiles.map((t, i) => (
           <motion.div key={i} whileHover={{ y: -4 }}
