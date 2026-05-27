@@ -184,9 +184,42 @@ export default function StudentNewsroom() {
     a.one_liner ||
     "";
 
-  const toggleExpand = (id: string, section: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: prev[id] === section ? null : section }));
+  const openWithSection = (a: Article, section: string | null) => {
+    setFocusSection(section);
+    openArticle(a);
   };
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (d.toDateString() === now.toDateString()) return "Today";
+    const yest = new Date(now); yest.setDate(yest.getDate() - 1);
+    if (d.toDateString() === yest.toDateString()) return "Yesterday";
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  };
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = scrollerRef.current; if (!el) return;
+    el.scrollBy({ left: dir * (el.clientWidth * 0.9), behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (!open) setFocusSection(null);
+  }, [open]);
+
+  useEffect(() => {
+    if (open && focusSection) {
+      const id = window.setTimeout(() => {
+        const node = document.getElementById(`news-sec-${focusSection}`);
+        node?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+      return () => window.clearTimeout(id);
+    }
+  }, [open, focusSection]);
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
