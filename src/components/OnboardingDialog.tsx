@@ -84,24 +84,13 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
     onComplete();
   };
 
-  const isAdminEmail = (userEmail || "").toLowerCase() === "admin@admin.com";
-
   const handleSendOtp = async () => {
     const err = validatePhone(phone);
     if (err) { setPhoneError(err); setPhoneTouched(true); return; }
 
-    // Admin bypass: skip password + OTP entirely for admin@admin.com
-    if (isAdminEmail) {
-      setOtpSending(true);
-      try {
-        setPhoneVerified(true);
-        setOtpStep(false);
-        await finalize();
-      } finally {
-        setOtpSending(false);
-      }
-      return;
-    }
+    // Admin fast-path is handled server-side via the is_admin_email RPC below.
+
+
 
 
     setOtpSending(true);
@@ -222,8 +211,9 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
 
           {!otpStep && !phoneVerified && (
             <Button onClick={handleSendOtp} className="w-full h-11" disabled={otpSending || phone.length !== 10}>
-              {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{isAdminEmail ? "Finishing…" : "Sending OTP…"}</> : <>{isAdminEmail ? "Continue" : "Send OTP"} <ArrowRight className="w-4 h-4 ml-1" /></>}
+              {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP…</> : <>Send OTP <ArrowRight className="w-4 h-4 ml-1" /></>}
             </Button>
+
           )}
 
 
