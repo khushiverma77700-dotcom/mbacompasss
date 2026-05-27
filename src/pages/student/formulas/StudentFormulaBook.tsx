@@ -456,14 +456,15 @@ export default function StudentFormulaBook() {
             </div>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
               {dailySet.slice(0, 5).map((f) => (
-                <Link
+                <button
                   key={f.id}
-                  to={`/student/formula/${f.slug}`}
-                  className="group rounded-xl border border-amber-200 bg-white/80 p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  type="button"
+                  onClick={() => openFormula(f.slug)}
+                  className="group text-left rounded-xl border border-amber-200 bg-white/80 p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-amber-700">{f.name}</div>
                   <div className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">{f.topic_slug?.replace(/-/g, " ")}</div>
-                </Link>
+                </button>
               ))}
             </div>
           </CardContent>
