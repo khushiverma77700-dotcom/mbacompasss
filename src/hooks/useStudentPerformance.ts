@@ -83,7 +83,14 @@ async function fetchSectionalScores(userId: string): Promise<Record<string, any>
 
 export function useStudentPerformance(): StudentPerformanceData {
   const { user } = useAuth();
+  const isDemo = useIsDemo();
   const qc = useQueryClient();
+
+  // Demo mode: short-circuit every query with Aman's hardcoded dataset.
+  if (isDemo) {
+    return computeDemoPerformance();
+  }
+
 
   const initialAttempts = useMemo<MockAttempt[] | undefined>(() => {
     if (!user?.id || typeof window === "undefined") return undefined;
