@@ -14,37 +14,39 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, RadarChart, Radar,
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend,
+  ComposedChart,
 } from "recharts";
 
 /* =========================================================================
    Dummy data — realistic enough to feel premium
    ========================================================================= */
 const STUDENT = {
-  name: "Aarav Sharma",
+  name: "Aman Verma",
+  initials: "AV",
   target: "IIM Ahmedabad · CAT '26",
-  streak: 27,
-  xp: 8420,
-  level: 14,
-  rank: 312,
-  percentile: 96.4,
+  streak: 34,
+  xp: 11280,
+  level: 17,
+  rank: 248,
+  percentile: 97.1,
 };
 
 const PERF_TREND = [
-  { m: "Mock 1", score: 62, percentile: 78, target: 95 },
-  { m: "Mock 2", score: 71, percentile: 84, target: 95 },
-  { m: "Mock 3", score: 68, percentile: 82, target: 95 },
-  { m: "Mock 4", score: 79, percentile: 89, target: 95 },
-  { m: "Mock 5", score: 84, percentile: 92, target: 95 },
-  { m: "Mock 6", score: 88, percentile: 94, target: 95 },
-  { m: "Mock 7", score: 92, percentile: 96.4, target: 95 },
+  { m: "Mock 1", score: 64, percentile: 79, target: 96 },
+  { m: "Mock 2", score: 72, percentile: 85, target: 96 },
+  { m: "Mock 3", score: 69, percentile: 83, target: 96 },
+  { m: "Mock 4", score: 81, percentile: 90, target: 96 },
+  { m: "Mock 5", score: 86, percentile: 93, target: 96 },
+  { m: "Mock 6", score: 90, percentile: 95.2, target: 96 },
+  { m: "Mock 7", score: 94, percentile: 97.1, target: 96 },
 ];
 
 const SECTIONAL_RADAR = [
-  { area: "VARC", you: 88, top: 96 },
-  { area: "DILR", you: 74, top: 94 },
-  { area: "QA", you: 91, top: 97 },
-  { area: "GK", you: 68, top: 88 },
-  { area: "Vocab", you: 82, top: 92 },
+  { area: "VARC", you: 89, top: 96 },
+  { area: "DILR", you: 76, top: 94 },
+  { area: "QA", you: 93, top: 97 },
+  { area: "GK", you: 71, top: 88 },
+  { area: "Vocab", you: 84, top: 92 },
 ];
 
 const TIME_PIE = [
@@ -55,13 +57,56 @@ const TIME_PIE = [
 ];
 
 const ACCURACY_BARS = [
-  { topic: "Algebra", acc: 92 },
-  { topic: "Geometry", acc: 78 },
-  { topic: "RC", acc: 86 },
-  { topic: "PJ", acc: 72 },
-  { topic: "LR Sets", acc: 64 },
-  { topic: "DI Caselet", acc: 81 },
+  { topic: "Algebra", acc: 93 },
+  { topic: "Geometry", acc: 79 },
+  { topic: "RC", acc: 87 },
+  { topic: "PJ", acc: 74 },
+  { topic: "LR Sets", acc: 66 },
+  { topic: "DI Caselet", acc: 83 },
 ];
+
+// 7-day XP & study minutes — used in overview weekly bar
+const WEEKLY_ACTIVITY = [
+  { day: "Mon", xp: 420, mins: 145 },
+  { day: "Tue", xp: 510, mins: 180 },
+  { day: "Wed", xp: 380, mins: 120 },
+  { day: "Thu", xp: 620, mins: 210 },
+  { day: "Fri", xp: 540, mins: 195 },
+  { day: "Sat", xp: 780, mins: 260 },
+  { day: "Sun", xp: 690, mins: 230 },
+];
+
+// 12-week leaderboard XP race
+const XP_RACE = [
+  { wk: "W1", you: 320, top: 540 },
+  { wk: "W2", you: 410, top: 600 },
+  { wk: "W3", you: 480, top: 640 },
+  { wk: "W4", you: 560, top: 690 },
+  { wk: "W5", you: 640, top: 720 },
+  { wk: "W6", you: 720, top: 760 },
+  { wk: "W7", you: 810, top: 790 },
+  { wk: "W8", you: 880, top: 820 },
+  { wk: "W9", you: 940, top: 860 },
+  { wk: "W10", you: 1020, top: 900 },
+  { wk: "W11", you: 1110, top: 940 },
+  { wk: "W12", you: 1180, top: 980 },
+];
+
+// Personalized hub usage history
+const HUB_USAGE = [
+  { d: "M", cat: 4, xat: 2, nmat: 1, snap: 1 },
+  { d: "T", cat: 5, xat: 1, nmat: 2, snap: 1 },
+  { d: "W", cat: 3, xat: 3, nmat: 1, snap: 2 },
+  { d: "T", cat: 6, xat: 2, nmat: 2, snap: 1 },
+  { d: "F", cat: 4, xat: 4, nmat: 1, snap: 2 },
+  { d: "S", cat: 7, xat: 3, nmat: 3, snap: 2 },
+  { d: "S", cat: 5, xat: 2, nmat: 2, snap: 3 },
+];
+
+// Planner heatmap — 8 weeks x 7 days study intensity (0-4)
+const HEATMAP = Array.from({ length: 8 }, () =>
+  Array.from({ length: 7 }, () => Math.floor(Math.random() * 5))
+);
 
 const MOCKS = [
   { title: "CAT Full Mock #14 — Adaptive AI", type: "Full Length", duration: 120, questions: 66, badge: "LIVE", color: "from-rose-500 to-orange-500" },
@@ -73,12 +118,12 @@ const MOCKS = [
 ];
 
 const LEADERBOARD = [
-  { rank: 1, name: "Ishita R.", xp: 14820, badge: "🥇" },
-  { rank: 2, name: "Karthik V.", xp: 13990, badge: "🥈" },
-  { rank: 3, name: "Niharika S.", xp: 13510, badge: "🥉" },
+  { rank: 1, name: "Ishita R.", xp: 14820, badge: "1st" },
+  { rank: 2, name: "Karthik V.", xp: 13990, badge: "2nd" },
+  { rank: 3, name: "Niharika S.", xp: 13510, badge: "3rd" },
   { rank: 4, name: "Rohan M.", xp: 12880, badge: "" },
   { rank: 5, name: "Sneha P.", xp: 12110, badge: "" },
-  { rank: 6, name: "Aarav Sharma", xp: 8420, badge: "you" },
+  { rank: 6, name: "Aman Verma", xp: 11280, badge: "you" },
 ];
 
 const PLAN_TODAY = [
@@ -167,7 +212,7 @@ function ViewOverview() {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold backdrop-blur">
               <GraduationCap className="h-3.5 w-3.5" /> {STUDENT.target}
             </div>
-            <h1 className="mt-3 text-2xl font-bold sm:text-3xl">Good morning, {STUDENT.name} 👋</h1>
+            <h1 className="mt-3 text-2xl font-bold sm:text-3xl">Good morning, {STUDENT.name}</h1>
             <p className="mt-1 text-sm text-sky-100">You're <span className="font-semibold text-white">{STUDENT.percentile}%ile</span> · {STUDENT.streak}-day streak · Rank #{STUDENT.rank}</p>
           </div>
           <div className="flex gap-3">
@@ -255,6 +300,22 @@ function ViewOverview() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* Weekly XP + study minutes */}
+      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+        <SectionTitle icon={Activity} title="Weekly Momentum" subtitle="XP earned & minutes studied — last 7 days" />
+        <ResponsiveContainer width="100%" height={240}>
+          <ComposedChart data={WEEKLY_ACTIVITY}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+            <YAxis yAxisId="l" tick={{ fontSize: 11 }} />
+            <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 11 }} />
+            <RTooltip /><Legend />
+            <Bar yAxisId="l" dataKey="xp" name="XP" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
+            <Line yAxisId="r" type="monotone" dataKey="mins" name="Minutes" stroke="#f59e0b" strokeWidth={2.4} dot={{ r: 4 }} />
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -365,7 +426,7 @@ function ViewPerformance() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-5">
-          <SectionTitle title="🔻 Weak Areas" subtitle="Prioritised by AI based on cost-per-mark" />
+          <SectionTitle icon={Flame} title="Weak Areas" subtitle="Prioritised by AI based on cost-per-mark" />
           <ul className="space-y-2 text-sm">
             {["LR Sets — Arrangements", "Geometry — Mensuration", "RC — Inference questions", "DI Caselet — Pie + Table"].map((w, i) => (
               <li key={i} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm">
@@ -376,7 +437,7 @@ function ViewPerformance() {
           </ul>
         </div>
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5">
-          <SectionTitle title="🚀 Strength Areas" subtitle="Defend & maintain" />
+          <SectionTitle icon={Rocket} title="Strength Areas" subtitle="Defend & maintain" />
           <ul className="space-y-2 text-sm">
             {["Algebra — Equations", "RC — Main idea", "Number System", "Vocab — Synonyms"].map((w, i) => (
               <li key={i} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm">
@@ -406,6 +467,30 @@ function ViewPersonalized() {
   return (
     <div className="space-y-5">
       <SectionTitle icon={Brain} title="Personalised AI Hub" subtitle="Every mock here is generated live from your performance signal" />
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard icon={Sparkles} label="Mocks Generated" value="128" sub="this month" accent="from-violet-500 to-fuchsia-600" />
+        <StatCard icon={Brain} label="AI Sessions" value="86" sub="last 7 days" accent="from-sky-500 to-blue-600" />
+        <StatCard icon={Target} label="Avg Accuracy" value="84%" sub="↑ 9% vs library" accent="from-emerald-500 to-teal-600" />
+        <StatCard icon={Clock} label="Avg Sprint Time" value="22m" sub="optimal pace" accent="from-amber-400 to-orange-500" />
+      </div>
+
+      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+        <SectionTitle icon={BarChart3} title="Hub Usage Breakdown" subtitle="Mocks generated per exam · last 7 days" />
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={HUB_USAGE}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="d" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <RTooltip /><Legend />
+            <Bar dataKey="cat" stackId="a" fill="#0284c7" name="CAT" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="xat" stackId="a" fill="#7c3aed" name="XAT" />
+            <Bar dataKey="nmat" stackId="a" fill="#10b981" name="NMAT" />
+            <Bar dataKey="snap" stackId="a" fill="#f59e0b" name="SNAP" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {tiles.map((t, i) => (
           <motion.div key={i} whileHover={{ y: -4 }}
@@ -429,28 +514,89 @@ function ViewPersonalized() {
    View: Planner
    ========================================================================= */
 function ViewPlanner() {
+  const HEAT_COLORS = ["#f1f5f9", "#bae6fd", "#7dd3fc", "#38bdf8", "#0284c7"];
+  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+  const weeklyHours = [
+    { d: "Mon", h: 2.4 }, { d: "Tue", h: 3.0 }, { d: "Wed", h: 2.0 },
+    { d: "Thu", h: 3.5 }, { d: "Fri", h: 3.2 }, { d: "Sat", h: 4.3 }, { d: "Sun", h: 3.8 },
+  ];
   return (
     <div className="space-y-5">
       <SectionTitle icon={CalendarDays} title="Day Planner" subtitle="AI-balanced schedule · 5 tasks · 2 complete" />
-      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm font-semibold text-slate-800">Today · Tuesday</div>
-          <button className="rounded-lg bg-sky-100 px-3 py-1.5 text-xs font-semibold text-sky-700">+ Add task</button>
+
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard icon={Flame} label="Active Streak" value="34d" sub="Personal best" accent="from-amber-400 to-orange-500" />
+        <StatCard icon={Clock} label="This Week" value="22.2h" sub="↑ 14% vs last" accent="from-sky-500 to-blue-600" />
+        <StatCard icon={Target} label="Goal Hit Rate" value="86%" sub="last 30 days" accent="from-emerald-500 to-teal-600" />
+        <StatCard icon={CheckCircle2} label="Tasks Done" value="412" sub="all time" accent="from-violet-500 to-fuchsia-600" />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Today's tasks */}
+        <div className="lg:col-span-2 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="text-sm font-semibold text-slate-800">Today · Tuesday</div>
+            <button className="rounded-lg bg-sky-100 px-3 py-1.5 text-xs font-semibold text-sky-700">+ Add task</button>
+          </div>
+          <ul className="space-y-2">
+            {PLAN_TODAY.map((p, i) => (
+              <li key={i} className={`flex items-center gap-3 rounded-xl border p-3 ${p.done ? "border-emerald-100 bg-emerald-50/50" : "border-slate-100 bg-slate-50/50"}`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-full ${p.done ? "bg-emerald-500 text-white" : "bg-white ring-1 ring-slate-200 text-slate-400"}`}>
+                  {p.done ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
+                </div>
+                <div className="flex-1">
+                  <div className={`text-sm font-medium ${p.done ? "text-slate-500 line-through" : "text-slate-900"}`}>{p.task}</div>
+                  <div className="text-xs text-slate-500">{p.time} · {p.section}</div>
+                </div>
+                <button className="text-xs font-semibold text-sky-600">Open</button>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="space-y-2">
-          {PLAN_TODAY.map((p, i) => (
-            <li key={i} className={`flex items-center gap-3 rounded-xl border p-3 ${p.done ? "border-emerald-100 bg-emerald-50/50" : "border-slate-100 bg-slate-50/50"}`}>
-              <div className={`flex h-9 w-9 items-center justify-center rounded-full ${p.done ? "bg-emerald-500 text-white" : "bg-white ring-1 ring-slate-200 text-slate-400"}`}>
-                {p.done ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
-              </div>
-              <div className="flex-1">
-                <div className={`text-sm font-medium ${p.done ? "text-slate-500 line-through" : "text-slate-900"}`}>{p.task}</div>
-                <div className="text-xs text-slate-500">{p.time} · {p.section}</div>
-              </div>
-              <button className="text-xs font-semibold text-sky-600">Open</button>
-            </li>
-          ))}
-        </ul>
+
+        {/* Weekly hours bar */}
+        <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+          <SectionTitle icon={BarChart3} title="Weekly Hours" subtitle="Study time per day" />
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={weeklyHours}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="d" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <RTooltip />
+              <Bar dataKey="h" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* 8-week consistency heatmap */}
+      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+        <SectionTitle icon={Activity} title="Consistency Heatmap" subtitle="Last 8 weeks · daily study intensity" />
+        <div className="flex items-start gap-3">
+          <div className="grid grid-rows-7 gap-1 pt-1">
+            {dayLabels.map((d, i) => (
+              <div key={i} className="h-4 w-4 text-[9px] font-semibold text-slate-400 text-right">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto">
+            {HEATMAP.flatMap((week, wi) =>
+              week.map((v, di) => (
+                <div
+                  key={`${wi}-${di}`}
+                  className="h-4 w-4 rounded-sm ring-1 ring-slate-100"
+                  style={{ backgroundColor: HEAT_COLORS[v] }}
+                  title={`Wk ${wi + 1} ${dayLabels[di]} — intensity ${v}/4`}
+                />
+              ))
+            )}
+          </div>
+          <div className="ml-auto flex items-center gap-1 text-[10px] text-slate-500">
+            Less {HEAT_COLORS.map((c, i) => (
+              <span key={i} className="h-3 w-3 rounded-sm" style={{ backgroundColor: c }} />
+            ))} More
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -463,12 +609,59 @@ function ViewLeaderboard() {
   return (
     <div className="space-y-5">
       <SectionTitle icon={Trophy} title="All-India Leaderboard" subtitle="Top performers this week" />
+
+      {/* Podium */}
+      <div className="grid grid-cols-3 gap-3">
+        {[1, 0, 2].map((podiumIdx, displayIdx) => {
+          const l = LEADERBOARD[podiumIdx];
+          const heights = ["h-28", "h-36", "h-24"];
+          const tones = ["from-slate-300 to-slate-500", "from-amber-300 to-amber-500", "from-orange-300 to-orange-500"];
+          return (
+            <div key={podiumIdx} className="flex flex-col items-center justify-end">
+              <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white shadow-lg">
+                {l.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+              </div>
+              <div className="text-xs font-semibold text-slate-900 text-center">{l.name}</div>
+              <div className="text-[11px] text-slate-500">{l.xp.toLocaleString()} XP</div>
+              <div className={`${heights[displayIdx]} mt-2 w-full rounded-t-xl bg-gradient-to-b ${tones[displayIdx]} flex items-start justify-center pt-2 text-lg font-bold text-white shadow-inner`}>
+                #{l.rank}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* XP race chart */}
+      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+        <SectionTitle icon={LineIcon} title="XP Race vs #1" subtitle="Your weekly XP gain catching up to the top rank" />
+        <ResponsiveContainer width="100%" height={240}>
+          <AreaChart data={XP_RACE}>
+            <defs>
+              <linearGradient id="gYou" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.5} />
+                <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="wk" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <RTooltip /><Legend />
+            <Area type="monotone" dataKey="top" name="Top rank" stroke="#f59e0b" fill="url(#gTop)" strokeWidth={2} />
+            <Area type="monotone" dataKey="you" name="You" stroke="#0284c7" fill="url(#gYou)" strokeWidth={2.4} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
       <div className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm">
         {LEADERBOARD.map((l, i) => {
           const isYou = l.badge === "you";
           return (
             <div key={i} className={`flex items-center gap-4 border-b border-sky-50 p-4 last:border-0 ${isYou ? "bg-gradient-to-r from-sky-50 to-blue-50" : ""}`}>
-              <div className="w-8 text-center text-lg font-bold text-slate-700">{l.badge && l.badge !== "you" ? l.badge : `#${l.rank}`}</div>
+              <div className="w-10 text-center text-sm font-bold text-slate-700">{l.badge && l.badge !== "you" ? l.badge : `#${l.rank}`}</div>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">
                 {l.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
               </div>
@@ -484,6 +677,7 @@ function ViewLeaderboard() {
     </div>
   );
 }
+
 
 /* =========================================================================
    Reusable: Locked overlay for blurred preview cards
@@ -940,7 +1134,7 @@ function Shell() {
           <div className="flex items-center gap-2">
             <button className="rounded-lg p-2 text-slate-600 hover:bg-sky-50"><Bell className="h-4 w-4" /></button>
             <div className="hidden items-center gap-2 rounded-xl border border-sky-100 bg-white px-3 py-1.5 sm:flex">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-xs font-bold text-white">AS</div>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-xs font-bold text-white">{STUDENT.initials}</div>
               <div className="text-xs">
                 <div className="font-semibold text-slate-900">{STUDENT.name}</div>
                 <div className="text-slate-500">Demo Student</div>
