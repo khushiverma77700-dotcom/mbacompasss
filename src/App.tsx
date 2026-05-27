@@ -877,7 +877,7 @@ const App = () => (
                   <Route path="vocabulary/feed" element={<InnerLazyPage><StudentVocabularyFeed /></InnerLazyPage>} />
                   <Route path="vocabulary/search" element={<InnerLazyPage><StudentVocabularySearch /></InnerLazyPage>} />
                   <Route path="vocabulary/bookmarks" element={<InnerLazyPage><StudentVocabularyBookmarks /></InnerLazyPage>} />
-                  <Route path="vocabulary/quiz" element={<InnerLazyPage><StudentVocabularyQuiz /></InnerLazyPage>} />
+                  
                   <Route path="vocabulary/revision" element={<InnerLazyPage><StudentVocabularyRevision /></InnerLazyPage>} />
                   <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
                   <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
