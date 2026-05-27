@@ -93,6 +93,19 @@ export default function StudentOverview() {
 
   useEffect(() => {
     if (!user) return;
+    // Demo mode: short-circuit every Supabase fetch with Aman's hardcoded dataset.
+    if (isDemo) {
+      setDisplayName(DEMO_PROFILE.display_name);
+      setTasks(DEMO_TASKS as any);
+      setGoals(DEMO_GOALS as any);
+      setProfile(DEMO_STUDY_PROFILE as any);
+      setWeak(DEMO_WEAK_TOPICS as any);
+      setRewards(DEMO_REWARDS as any);
+      setEnrollments(DEMO_ENROLLMENTS as any);
+      setExamCountdowns(DEMO_EXAM_COUNTDOWNS as any);
+      setLeaderboardRank(DEMO_LEADERBOARD_RANK);
+      return;
+    }
     let cancelled = false;
     const today = new Date().toISOString().slice(0, 10);
 
