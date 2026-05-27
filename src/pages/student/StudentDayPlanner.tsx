@@ -265,7 +265,7 @@ export default function StudentDayPlanner() {
     load();
   };
 
-  if (loading) return <div className="text-muted-foreground">Loading your planner…</div>;
+  if (loading) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

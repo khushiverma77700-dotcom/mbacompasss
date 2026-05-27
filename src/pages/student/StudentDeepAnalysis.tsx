@@ -33,7 +33,7 @@ export default function StudentDeepAnalysis() {
     toast.success("AI analysis ready");
   };
 
-  if (loading) return <div className="text-muted-foreground">Loading…</div>;
+  if (loading) return <SectionSkeleton />;
 
   if (!analysis) {
     return (

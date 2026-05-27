@@ -48,7 +48,7 @@ export default function StudentRewards() {
   const xpForNext = level * 500;
   const progressPct = Math.min(100, ((xp % 500) / 500) * 100);
 
-  if (loading) return <div className="text-muted-foreground">Loading…</div>;
+  if (loading) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

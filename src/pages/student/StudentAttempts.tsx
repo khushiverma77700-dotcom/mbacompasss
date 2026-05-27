@@ -165,7 +165,7 @@ export default function StudentAttempts() {
     setMinScore(""); setMaxScore(""); setSort("date_desc");
   };
 
-  if (loading) return <div className="text-muted-foreground">Loading attempts…</div>;
+  if (loading) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

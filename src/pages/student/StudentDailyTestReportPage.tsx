@@ -141,7 +141,7 @@ export default function StudentDailyTestReportPage() {
     return { total, correct, wrong, skipped, attempted, totalScore, maxScore, accuracy, totalTime, avgTime, bySection, byDiff, byTopic, respByQ, optByQ };
   }, [attempt, sections, questions, options, responses]);
 
-  if (loading) return <div className="p-6 text-muted-foreground">Loading detailed report…</div>;
+  if (loading) return <div className="p-6"><SectionSkeleton /></div>;
   if (!attempt || !stats) return <div className="p-6">Report not available.</div>;
 
   const last7 = history.slice(0, 7).filter((p: any) => p.completed_at).length;

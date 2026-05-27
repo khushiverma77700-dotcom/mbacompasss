@@ -574,7 +574,7 @@ function LeaderboardBlock() {
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  if (loading) return <Card className="p-5 text-sm text-muted-foreground">Loading leaderboard…</Card>;
+  if (loading) return <Card className="p-5"><SectionSkeleton rows={2} /></Card>;
   if (rows.length === 0) return <Card className="p-5 text-sm text-muted-foreground">Leaderboard will populate once aspirants start submitting mocks.</Card>;
 
   const me = rows.find((r) => r.is_self);

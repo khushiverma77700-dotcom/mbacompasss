@@ -35,7 +35,7 @@ export default function StudentBuyMocks() {
 
   const groups = useMemo(() => groupByExam(tests.filter((t) => !enrolled.has(t.id))), [tests, enrolled]);
 
-  if (loading) return <div className="text-muted-foreground">Loading mock catalog…</div>;
+  if (loading) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

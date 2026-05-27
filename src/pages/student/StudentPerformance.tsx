@@ -83,7 +83,7 @@ export default function StudentPerformance() {
     ];
   }, [attempts]);
 
-  if (loading) return <div className="text-muted-foreground">Loading performance…</div>;
+  if (loading) return <SectionSkeleton />;
 
   if (attempts.length === 0)
     return (
