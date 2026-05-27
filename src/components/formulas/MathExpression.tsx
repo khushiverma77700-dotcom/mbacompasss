@@ -1,5 +1,6 @@
 // Small KaTeX wrapper that lazy-loads only when rendered.
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 function normalizeDisplayMath(value?: string | null) {
   return String(value || "")
@@ -34,14 +35,16 @@ function normalizeDisplayMath(value?: string | null) {
 
 export function MathExpression({ tex, plain, className }: { tex?: string | null; plain?: string | null; className?: string }) {
   const [html, setHtml] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    if (!tex) { setHtml(null); return; }
+    setHtml(null);
+    setFailed(false);
+    if (!tex) { setFailed(true); return; }
     (async () => {
       try {
         const katex = await import("katex");
-        // CSS is light enough to inline once
         if (!document.getElementById("katex-css")) {
           const link = document.createElement("link");
           link.id = "katex-css";
@@ -55,18 +58,34 @@ export function MathExpression({ tex, plain, className }: { tex?: string | null;
         });
         if (!cancelled) setHtml(rendered);
       } catch {
-        if (!cancelled) setHtml(null);
+        if (!cancelled) { setHtml(null); setFailed(true); }
       }
     })();
     return () => { cancelled = true; };
   }, [tex]);
 
-  if (html) {
-    return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+  const fallbackText = plain || tex || "";
+
+  if (html && !failed) {
+    return (
+      <div
+        className={cn("max-w-full overflow-x-auto overflow-y-hidden", className)}
+        role="math"
+        aria-label={fallbackText || "formula"}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
   }
   return (
-    <code className={className ?? "block rounded-lg bg-slate-900/95 px-4 py-3 font-mono text-base text-sky-100"}>
-      {plain || tex || ""}
+    <code
+      role="math"
+      aria-label={fallbackText || "formula"}
+      className={cn(
+        "block max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-slate-900/40 px-3 py-2 font-mono text-sm leading-relaxed text-sky-100 sm:text-base",
+        className,
+      )}
+    >
+      {fallbackText}
     </code>
   );
 }

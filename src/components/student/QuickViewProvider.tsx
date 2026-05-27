@@ -336,9 +336,10 @@ function FormulaDialog({ slug, onClose }: { slug: string | null; onClose: () => 
                 ))}
               </div>
 
-              <div className="mt-4 rounded-xl bg-slate-900/95 p-4 ring-1 ring-slate-800 overflow-x-auto">
-                <MathExpression tex={formula.expression_latex} plain={formula.expression} className="text-lg sm:text-xl text-sky-100" />
+              <div className="mt-4 max-w-full overflow-x-auto rounded-xl bg-slate-900/95 p-3 ring-1 ring-slate-800 sm:p-4">
+                <MathExpression tex={formula.expression_latex} plain={formula.expression} className="text-base text-sky-100 sm:text-lg md:text-xl" />
               </div>
+
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button variant={progress?.bookmarked ? "default" : "outline"} size="sm" onClick={() => upsertProgress({ bookmarked: !progress?.bookmarked })}>
