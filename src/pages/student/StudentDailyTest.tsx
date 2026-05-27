@@ -329,23 +329,59 @@ export default function StudentDailyTest() {
         </Card>
 
         <Card className="p-4 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50/40">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xs uppercase font-semibold text-sky-700 tracking-wider">Improvement Trend</div>
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-xs uppercase font-semibold text-sky-700 tracking-wider">Accuracy Trend</div>
             <TrendingUp className="h-4 w-4 text-sky-600" />
           </div>
+          <div className="text-[11px] text-muted-foreground mb-3">
+            Your accuracy % on the last 7 attempts — taller bar means a better attempt.
+          </div>
           {improvement && improvement.attempts.length > 0 ? (
-            <div className="flex items-end gap-1 h-16 mt-2">
-              {improvement.attempts.slice(-7).map((a: any, i: number) => {
-                const acc = Number(a.accuracy) || 0;
-                return (
-                  <div key={i} className="flex-1 bg-sky-500/80 rounded-t" style={{ height: `${Math.max(8, acc)}%` }} title={`${acc}% on ${new Date(a.submitted_at).toLocaleDateString()}`} />
-                );
-              })}
-            </div>
+            <>
+              <div className="relative h-24 mt-2 pl-7">
+                {/* Y-axis labels */}
+                <div className="absolute left-0 top-0 bottom-5 w-6 flex flex-col justify-between text-[9px] text-muted-foreground text-right pr-1">
+                  <span>100%</span>
+                  <span>50%</span>
+                  <span>0%</span>
+                </div>
+                {/* Grid lines */}
+                <div className="absolute left-7 right-0 top-0 bottom-5 border-l border-b border-sky-200/70">
+                  <div className="absolute left-0 right-0 top-1/2 border-t border-dashed border-sky-200/60" />
+                </div>
+                {/* Bars */}
+                <div className="absolute left-7 right-0 top-0 bottom-5 flex items-end gap-1.5 px-1">
+                  {improvement.attempts.slice(-7).map((a: any, i: number) => {
+                    const acc = Math.max(0, Math.min(100, Number(a.accuracy) || 0));
+                    const d = new Date(a.submitted_at);
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                        <span className="text-[9px] font-semibold text-sky-700 mb-0.5">{Math.round(acc)}%</span>
+                        <div
+                          className="w-full bg-gradient-to-t from-sky-500 to-sky-400 rounded-t"
+                          style={{ height: `${Math.max(4, acc)}%` }}
+                          title={`${Math.round(acc)}% on ${d.toLocaleDateString()}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* X-axis date labels */}
+                <div className="absolute left-7 right-0 bottom-0 h-5 flex gap-1.5 px-1">
+                  {improvement.attempts.slice(-7).map((a: any, i: number) => {
+                    const d = new Date(a.submitted_at);
+                    return (
+                      <div key={i} className="flex-1 text-center text-[9px] text-muted-foreground truncate">
+                        {d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           ) : (
             <div className="text-xs text-muted-foreground mt-3">Your accuracy chart will appear after your first attempt.</div>
           )}
-          <div className="text-[11px] text-muted-foreground mt-2">Last 7 attempts</div>
         </Card>
       </div>
 
