@@ -904,7 +904,8 @@ const App = () => (
               return (
                 <>
                   {/* Standalone rich demo dashboard at /demo — bypasses StudentLayout
-                      so we can show fully populated dummy charts/data. */}
+                      so we can show fully populated dummy charts/data. Internal
+                      navigation lives inside DemoDashboard's own sidebar. */}
                   <Route
                     path="/demo"
                     element={
@@ -915,20 +916,6 @@ const App = () => (
                       </LazyPage>
                     }
                   />
-                  {/* Sub-routes (/demo/mocks, /demo/performance, …) keep using
-                      the real StudentLayout so deep links still work. */}
-                  <Route
-                    path="/demo"
-                    element={
-                      <LazyPage>
-                        <DemoShell>
-                          <StudentLazyPage><StudentLayout /></StudentLazyPage>
-                        </DemoShell>
-                      </LazyPage>
-                    }
-                  >
-                    {studentChildRoutes}
-                  </Route>
                   <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                     {studentChildRoutes}
                   </Route>
