@@ -186,18 +186,27 @@ export default function StudentPerformX() {
         acc[k].count += 1;
       });
     });
-    return Object.entries(acc).map(([k, v]) => {
-      // Resolve label: built-in code → friendly name, else mock_sections lookup, else short fallback
+    const rows = Object.entries(acc).map(([k, v]) => {
       const fromMap = sectionMap[k];
       const friendly =
         SECTION_LABELS[k] ??
         (fromMap ? (SECTION_LABELS[fromMap.code] ?? fromMap.name) : null) ??
         (k.length > 12 ? `Section ${Object.keys(acc).indexOf(k) + 1}` : k);
       return {
-        section: friendly.length > 18 ? friendly.slice(0, 16) + "…" : friendly,
+        section: friendly.length > 22 ? friendly.slice(0, 20) + "…" : friendly,
         value: v.count ? Math.round((v.sum / v.count / Math.max(1, v.max)) * 100) : 0,
       };
     });
+    // Dedupe by friendly label (average values for the same section across exams)
+    const merged = new Map<string, { section: string; sum: number; n: number }>();
+    rows.forEach((r) => {
+      const cur = merged.get(r.section);
+      if (cur) { cur.sum += r.value; cur.n += 1; }
+      else merged.set(r.section, { section: r.section, sum: r.value, n: 1 });
+    });
+    return Array.from(merged.values())
+      .map((m) => ({ section: m.section, value: Math.round(m.sum / m.n) }))
+      .sort((a, b) => b.value - a.value);
   }, [attempts, sectionMap]);
 
   // Section bar (with rank simulation)
