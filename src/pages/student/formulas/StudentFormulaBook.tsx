@@ -505,9 +505,9 @@ export default function StudentFormulaBook() {
                   {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <Link to={`/student/formula/${f.slug}`} className="block">
+                      <button type="button" onClick={() => openFormula(f.slug)} className="block text-left w-full">
                         <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
-                      </Link>
+                      </button>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <Badge variant="outline" className="border-sky-200 text-[10px] uppercase tracking-wide text-sky-700">{f.difficulty}</Badge>
                         {f.is_high_weightage && <Badge className="border-1 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
