@@ -681,3 +681,56 @@
   font-size: 0.85em;
 }
 
+
+/* ============================================================
+   MOBILE: Recharts global responsiveness
+   Makes all charts inside the student dashboard fit small screens
+   without overflowing horizontally and shrinks dense axis labels.
+   ============================================================ */
+@media (max-width: 640px) {
+  .recharts-responsive-container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .recharts-wrapper,
+  .recharts-surface {
+    max-width: 100% !important;
+  }
+  .recharts-cartesian-axis-tick text,
+  .recharts-polar-angle-axis-tick text,
+  .recharts-polar-radius-axis-tick text {
+    font-size: 10px !important;
+  }
+  .recharts-legend-wrapper {
+    font-size: 11px !important;
+    padding-top: 4px !important;
+  }
+  .recharts-legend-item {
+    margin-right: 6px !important;
+  }
+  .recharts-tooltip-wrapper {
+    font-size: 12px !important;
+  }
+}
+
+/* Prevent any chart card from causing horizontal page scroll on phones */
+@media (max-width: 640px) {
+  .recharts-responsive-container,
+  .recharts-wrapper {
+    overflow: hidden;
+  }
+}
+
+/* MOBILE: Tabs / filter strips that overflow should scroll horizontally
+   instead of stacking into multiple visually-clashing rows. Applied to
+   any element opting in via the .filter-scroll utility. */
+.filter-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.5rem;
+}
+.filter-scroll::-webkit-scrollbar { display: none; }
+.filter-scroll > * { flex-shrink: 0; white-space: nowrap; }
