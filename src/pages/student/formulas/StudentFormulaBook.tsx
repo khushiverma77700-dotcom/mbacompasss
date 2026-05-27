@@ -332,8 +332,8 @@ export default function StudentFormulaBook() {
         </div>
       )}
 
-      {/* STICKY SMART SEARCH */}
-      <Card className="sticky top-[60px] z-30 border-slate-200 bg-white/95 shadow-sm backdrop-blur-md md:top-4">
+      {/* SMART SEARCH */}
+      <Card className="border-slate-200 bg-white shadow-sm">
         <CardContent className="p-3 md:p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
