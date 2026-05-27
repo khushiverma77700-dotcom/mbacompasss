@@ -1026,7 +1026,7 @@ function MockCardItem({
   const statusTheme = !owned
     ? { grad: "from-slate-400 via-slate-500 to-slate-600", glow: "from-slate-200/40", chip: "bg-slate-100 text-slate-600 border-slate-200", ring: "ring-slate-200" }
     : lock
-    ? { grad: "from-amber-400 via-orange-500 to-rose-500", glow: "from-amber-200/50", chip: "bg-amber-50 text-amber-700 border-amber-200", ring: "ring-amber-200" }
+    ? { grad: "from-sky-400 via-sky-500 to-blue-500", glow: "from-sky-100/40", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
     : latestSubmitted
     ? { grad: "from-emerald-400 via-teal-500 to-cyan-500", glow: "from-emerald-200/50", chip: "bg-emerald-50 text-emerald-700 border-emerald-200", ring: "ring-emerald-200" }
     : inProgress
