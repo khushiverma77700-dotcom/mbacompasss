@@ -2,6 +2,8 @@ import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
+import { DEMO_ATTEMPTS } from "@/lib/demoData";
 
 /**
  * Central performance engine for the Student LMS.
