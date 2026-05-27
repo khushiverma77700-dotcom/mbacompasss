@@ -510,41 +510,56 @@ export function TopicAnalysisPanel({ heading, description, topics, tone }: {
           <Badge variant="outline" className="border-slate-200">{topics.length} topics</Badge>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-5 mt-5">
-          {/* Bar chart of accuracy per topic */}
-          <div className="lg:col-span-2 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={topics.slice(0, 10).map((t) => ({
-                  name: t.topic.length > 14 ? t.topic.slice(0, 14) + "…" : t.topic,
-                  accuracy: t.accuracy,
-                  readiness: t.readiness,
-                }))}
-                layout="vertical"
-                margin={{ left: 40 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
-                <Tooltip />
-                <Bar dataKey="accuracy" fill={tone === "weak" ? COLORS.weak : COLORS.strong} radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        {(() => {
+          const hasAccuracy = topics.some((t) => (t.accuracy ?? 0) > 0);
+          if (!hasAccuracy) {
+            return (
+              <div className="mt-5 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-6 text-center">
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-200">No accuracy data yet for these topics</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Attempt a few more questions in your tracked topics — the chart fills in automatically once you have correct answers logged.
+                </p>
+              </div>
+            );
+          }
+          return (
+            <div className="grid lg:grid-cols-3 gap-5 mt-5">
+              {/* Bar chart of accuracy per topic */}
+              <div className="lg:col-span-2 h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={topics.slice(0, 10).map((t) => ({
+                      name: t.topic.length > 14 ? t.topic.slice(0, 14) + "…" : t.topic,
+                      accuracy: t.accuracy,
+                      readiness: t.readiness,
+                    }))}
+                    layout="vertical"
+                    margin={{ top: 5, right: 12, left: 4, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:opacity-30" />
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={88} />
+                    <Tooltip />
+                    <Bar dataKey="accuracy" fill={tone === "weak" ? COLORS.weak : COLORS.strong} radius={[0, 4, 4, 0]} minPointSize={2} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
 
-          {/* Pie of distribution */}
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={distribution} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75}>
-                  {distribution.map((d, i) => <Cell key={i} fill={d.color} />)}
-                </Pie>
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+              {/* Pie of distribution */}
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={distribution} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75}>
+                      {distribution.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    </Pie>
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          );
+        })()}
       </Card>
 
       {/* Drill-down accordion */}
