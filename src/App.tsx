@@ -903,19 +903,25 @@ const App = () => (
               );
               return (
                 <>
-                  {/* Standalone rich demo dashboard at /demo — bypasses StudentLayout
-                      so we can show fully populated dummy charts/data. Internal
-                      navigation lives inside DemoDashboard's own sidebar. */}
+                  {/* /demo/* renders the EXACT same StudentLayout + child pages
+                      as /student, wrapped in DemoShell which provides:
+                        - DemoModeProvider (useIsDemo() === true everywhere)
+                        - Click interceptor → "Buy Full Course" popup
+                      In demo mode, data hooks short-circuit to Aman Verma's
+                      hardcoded dummy dataset (src/lib/demoData.ts) so every
+                      chart, leaderboard and widget is fully populated. */}
                   <Route
                     path="/demo"
                     element={
                       <LazyPage>
                         <DemoShell>
-                          <DemoDashboard />
+                          <StudentLazyPage><StudentLayout /></StudentLazyPage>
                         </DemoShell>
                       </LazyPage>
                     }
-                  />
+                  >
+                    {studentChildRoutes}
+                  </Route>
                   <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                     {studentChildRoutes}
                   </Route>

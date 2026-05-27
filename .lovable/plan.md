@@ -1,112 +1,67 @@
+## Goal
 
-# Quant Formula Book — MVP Plan
+`dashboard.mbacompass.in/demo` should render the **same UI** as the live `/student` dashboard (StudentLayout + StudentOverview + child pages), but with:
+- Student identity = **Aman Verma** (Aman dummy profile, 97.1%ile, 34-day streak, 11,280 XP, Rank #248)
+- Every chart, leaderboard, weak topics list, planner task list etc. **pre-filled with realistic dummy data** (instead of empty Supabase results for a non-existent user)
+- Feature cards (B-School Vocabulary, Quant Formula Book, News & Insights) → **first card clickable** (opens detail dialog), rest blurred with "Unlock Full Access" overlay
+- All other clicks intercepted by the existing `DemoShell` upsell popup (already working)
 
-A new feature mirroring the architecture of the existing B-School Vocabulary hub: public SEO formula pages + a logged-in student revision dashboard + admin CRUD with AI generation. Powered by OpenAI gpt-5-mini through the Lovable AI Gateway.
+## Plan
 
-## What ships in v1
+### 1. Stop rendering the custom DemoDashboard at `/demo`
+- `src/App.tsx` — remove the standalone `<Route path="/demo" element={<DemoDashboard/>}>` route. Keep only the StudentLayout-based parent route so `/demo` resolves to the real `StudentOverview` index route.
+- Remove unused `DemoDashboard` lazy import (file kept for reference but not routed).
 
-- Public, indexable formula pages at `/formula/:slug` for SEO traffic
-- A public directory landing at `/formulas`
-- Student revision dashboard at `/student/formulas` (new sidebar item right under B-School Vocabulary)
-- Smart instant search with topic / exam / difficulty / status filters that apply while typing
-- Per-formula detail with explanation, derivation, shortcuts, common mistakes, examples, related formulas
-- AI "Explain simpler", "Generate practice question", and step-by-step solution
-- Daily Revision mode (10 formulas/day, streak, completion %, weak-formula resurfacing)
-- Bookmark / Mark Completed / Mark for Revision / progress tracking
-- Admin CRUD + bulk AI seed (~150 starter formulas) + per-topic bulk-generate (mirrors vocab pattern)
+### 2. Demo-mode data adapter
+Single source of truth so the live components don't need invasive rewrites.
 
-Deferred to v2: SM-2 spaced repetition tuning, retention scoring, custom revision lists, leaderboard, deep analytics dashboards.
+- New file `src/lib/demoData.ts` — exports Aman's full dummy dataset:
+  - profile (`displayName`, `email`, `target_exam`)
+  - `attempts[]` (7 submitted mocks, realistic percentiles 79 → 97.1, sectional_scores, accuracy, total_score, started_at/submitted_at)
+  - `enrollments[]`, `goals[]`, `tasks[]` (today's planner), `weak_topics[]`, `rewards` (XP 11280 / level 17 / streak 34), `leaderboardRank: 248`, `examCountdowns[]`
+  - `vocabulary`, `formulas`, `news` first-card previews
+- New hook `src/hooks/useDemoMode.ts` — `useDemoMode()` returns `true` when pathname starts with `/demo`.
 
-## Information architecture
+### 3. Short-circuit the data layer in demo mode
+Minimal, surgical injections — no UI changes to the live components.
 
-```text
-Public
-  /formulas                       directory + smart search
-  /formula/:slug                  SEO-optimized formula detail
+- `src/contexts/AuthContext.tsx` (or `StudentLayout.tsx` if cleaner) — in demo mode, expose `user = { id: "demo-user", email: "aman@demo.in", user_metadata: { display_name: "Aman Verma" } }`.
+- `src/hooks/useStudentPerformance.ts` — early return `DEMO_DATA.attempts` when `useDemoMode()` is true.
+- `src/pages/student/StudentOverview.tsx` — wrap each `supabase.from(...)` query in an `if (isDemo) { apply(DEMO_DATA.xxx); return; }` guard at the top of the `run(...)` block. ~7 guards, each 2 lines.
+- Same pattern for `StudentLeaderboard`, `StudentDayPlanner`, `StudentPerformX` index pages (only the data fetches — no JSX changes).
 
-Student (auth)
-  /student/formulas               revision dashboard (hero, daily mode, search, filters)
-  /student/formulas/topic/:topic  topic-scoped revision
-  /student/formulas/daily         today's revision set
-  /student/formulas/practice/:id  AI practice mode for one formula
-  /student/formulas/bookmarks     saved + revision-later
-  /student/formulas/progress      mastery + analytics (light)
+### 4. Lock feature cards in demo mode
+- `src/pages/student/vocabulary/StudentVocabularyFeed.tsx`, `StudentFormulaBook.tsx`, `StudentNewsroom.tsx` — when `useDemoMode()` is true, render only the dummy preview list: first card normal, rest wrapped with the existing `LockedOverlay` from `DemoDashboard.tsx` (extract to `src/components/demo/LockedOverlay.tsx` so it can be shared).
+- All other interactions are already intercepted by `DemoShell`'s `ClickInterceptor` (popup on any non-allowed click), so no extra wiring needed.
 
-Admin
-  /admin/formulas                 list + filters + bulk AI seed + per-topic generate
-  /admin/formulas/new             create
-  /admin/formulas/:id             edit
+### 5. Sidebar branding in demo mode
+- `StudentLayout.tsx` — when in demo mode, show the existing "DEMO MODE · FULL ACCESS PREVIEW" pill in the top bar and the "READ-ONLY PREVIEW · Buy Full Course" CTA in the sidebar (matching today's demo look).
+
+## Files touched
+
+```
+src/App.tsx                              (remove standalone /demo route)
+src/lib/demoData.ts                      (new — Aman dummy dataset)
+src/hooks/useDemoMode.ts                 (new)
+src/components/demo/LockedOverlay.tsx    (new — extracted from DemoDashboard)
+src/contexts/AuthContext.tsx             (demo user override)
+src/hooks/useStudentPerformance.ts       (demo short-circuit)
+src/pages/student/StudentOverview.tsx    (demo guards on data fetches)
+src/pages/student/StudentLeaderboard.tsx (demo guards)
+src/pages/student/StudentDayPlanner.tsx  (demo guards)
+src/pages/student/StudentPerformX.tsx    (demo guards)
+src/pages/student/vocabulary/StudentVocabularyFeed.tsx (demo lock overlay)
+src/pages/student/formulas/StudentFormulaBook.tsx      (demo lock overlay)
+src/pages/student/StudentNewsroom.tsx                  (demo lock overlay)
+src/pages/student/StudentLayout.tsx       (demo top-bar pill + sidebar CTA)
 ```
 
-## Database schema (new tables)
+## What I'm NOT changing
+- Live `/student` dashboard behaviour for real students — every change is gated behind `useDemoMode()`.
+- Backend, RLS, Supabase data.
+- `DemoShell` click-interceptor logic (already working).
 
-- `quant_topics` — id, name, slug, parent_slug (e.g. arithmetic > percentages), sort_order, icon, color, weightage
-- `quant_formulas` — id, slug, name, expression (LaTeX/plain), explanation, derivation, shortcuts[], notes, common_mistakes[], related_slugs[], topic_slug, difficulty (beginner|intermediate|cat|advanced), exam_tags[] (CAT, XAT, NMAT, SNAP, CMAT, IIFT, MAT), importance (1–5), is_shortcut bool, is_high_weightage bool, frequency_score int, examples jsonb, seo_title, seo_description, seo_keywords[], faqs jsonb, published bool, created_at, updated_at
-- `quant_formula_progress` — user_id, formula_id, status (none|completed|revise_later|mastered), bookmarked bool, times_revised int, last_revised_at, next_review_at, accuracy_pct, updated_at
-- `quant_revision_sessions` — user_id, session_date, formula_ids[], completed_ids[], duration_seconds, streak_day
-- `quant_streaks` — user_id, current_streak, longest_streak, last_active_date, total_xp, daily_target_formulas (default 10)
-- `quant_practice_attempts` — id, user_id, formula_id, question_text, options jsonb, correct_index, user_answer_index, is_correct, ai_explanation, created_at
+## Risk
+- Touching `StudentOverview.tsx`, `useStudentPerformance.ts`, and `AuthContext.tsx` is invasive even with guards. I'll run a build check after each major edit and verify `/student` still works for logged-in users by inspecting that `useDemoMode()` returns `false` on `/student/*`.
 
-RLS: formulas/topics public read; progress/sessions/streaks/attempts owner-only; admin via `has_role('admin')` for writes.
-
-## Edge functions
-
-- `formula-search` — fast typeahead. Accepts `q`, returns matched formulas + related topics + AI-suggested concept chips. AI call only when `q` length ≥ 3 and no exact DB match.
-- `formula-ai-assist` — modes: `explain_simpler`, `derive_step`, `shortcut_tip`, `worked_example`. Streams response.
-- `formula-practice-generate` — generates 1 practice question (easy/medium/hard) with 4 options + step-by-step solution as JSON via tool calling.
-- `formula-daily-set` — picks today's 10 formulas: weak (low accuracy) + due-for-review + high-weightage backfill. Idempotent per day.
-- `formula-bulk-seed` — admin only; queues batch generation of ~150 formulas across listed topics using gpt-5-mini, mirroring `vocab-bulk-generate` worker-slice pattern.
-- `formula-topic-generate` — admin generates N formulas for a chosen topic on demand.
-
-All functions use `LOVABLE_API_KEY` against `ai.gateway.lovable.dev` with model `openai/gpt-5-mini`. CORS enabled. `logAIUsage` called after each completion (per project memory).
-
-## Student dashboard layout
-
-- Hero: greeting + Level/XP + daily streak + daily target ring (mirrors vocab feed style)
-- Today's Daily Revision card (10 formulas, progress bar, "Start revision")
-- Smart search bar (debounced 200ms, instant chip suggestions)
-- Filter row: Topic, Exam, Difficulty, Importance, Status (Completed / Pending / Bookmarked / Revision Required), "Most Important", "Shortcut Only"
-- Topic grid (cards with icon, weightage, completion %)
-- Bookmarked / Recently revised rails
-- AI assist button per formula card → opens drawer with explain / shortcut / practice tabs
-
-## Public SEO
-
-- `/formula/:slug` — server-renderable structured page: H1 = formula name, expression in math block, explanation, derivation, shortcuts, exam tags, FAQs (JSON-LD `FAQPage`), related formulas. Canonical, OG, JSON-LD `LearningResource`.
-- Auto-enqueue to `indexing_urls` via existing trigger pattern.
-- Sitemap entry source via existing sitemap edge function.
-
-## Admin panel
-
-- `/admin/formulas` list (search, topic/exam/difficulty/status filters, paginated)
-- Create/Edit form with all fields, LaTeX preview, FAQ editor, examples editor
-- Bulk seed button → background worker; live progress (reuse pattern from `vocab-bulk-generate` with attempts/cost/throughput display)
-- Per-topic "Generate N formulas" action
-- Sidebar nav item right under "Vocabulary Hub"
-
-## Frontend wiring
-
-- Add route entries in `src/App.tsx` (lazy)
-- Add `/student/formulas` nav item in `StudentLayout.tsx` directly below the vocabulary item; feature flag `formula_book`
-- Add `formula_book` to `courseFeatures` defaults so it's available to all students (no paywall in v1)
-- Mirror styling of `StudentVocabularyFeed.tsx` (white + light-blue palette per project memory; no dark navy; pointer-events-none on decorative overlays)
-
-## Seed strategy
-
-- One-time seed script (using AI Gateway skill) generates ~150 high-quality formulas across listed topics on first deploy
-- Admin can keep adding via bulk-generate or one-off CRUD afterwards
-
-## Technical notes
-
-- Math rendering: use `katex` (small, mature) for expression display
-- Search: client debounce + Postgres trigram/`ilike` for instant DB hits; AI suggestion only on miss
-- Daily set: cron at 04:00 IST regenerates `quant_daily_picks` materialized list (optional v1; on-demand compute works fine for v1)
-- All AI prompts kept server-side per platform rules; never expose model name to client UI
-
-## Out of scope for v1
-
-- Full SM-2 spaced repetition tuning (basic next_review_at bump only)
-- Retention score, mastery analytics dashboards beyond simple counts
-- Custom user-defined revision lists
-- Public leaderboard for formulas
-- Paywall / feature-gating beyond defaults
+Approve and I'll execute step by step.

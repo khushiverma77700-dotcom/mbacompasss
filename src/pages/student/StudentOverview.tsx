@@ -2,6 +2,11 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } from "@/lib/studentModeNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
+import {
+  DEMO_PROFILE, DEMO_TASKS, DEMO_GOALS, DEMO_STUDY_PROFILE, DEMO_WEAK_TOPICS,
+  DEMO_REWARDS, DEMO_ENROLLMENTS, DEMO_EXAM_COUNTDOWNS, DEMO_LEADERBOARD_RANK,
+} from "@/lib/demoData";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,8 +60,10 @@ function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: 2 | 3; height?: n
 
 export default function StudentOverview() {
   const { user } = useAuth();
+  const isDemo = useIsDemo();
   // Central performance engine — shared with /student/performance, /student/mocks etc.
-  // Realtime: auto-refreshes the moment a mock is submitted.
+  // Realtime: auto-refreshes the moment a mock is submitted. (Demo mode
+  // returns Aman Verma's hardcoded dataset.)
   const { attempts } = useStudentPerformance();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
@@ -86,6 +93,19 @@ export default function StudentOverview() {
 
   useEffect(() => {
     if (!user) return;
+    // Demo mode: short-circuit every Supabase fetch with Aman's hardcoded dataset.
+    if (isDemo) {
+      setDisplayName(DEMO_PROFILE.display_name);
+      setTasks(DEMO_TASKS as any);
+      setGoals(DEMO_GOALS as any);
+      setProfile(DEMO_STUDY_PROFILE as any);
+      setWeak(DEMO_WEAK_TOPICS as any);
+      setRewards(DEMO_REWARDS as any);
+      setEnrollments(DEMO_ENROLLMENTS as any);
+      setExamCountdowns(DEMO_EXAM_COUNTDOWNS as any);
+      setLeaderboardRank(DEMO_LEADERBOARD_RANK);
+      return;
+    }
     let cancelled = false;
     const today = new Date().toISOString().slice(0, 10);
 
@@ -141,12 +161,14 @@ export default function StudentOverview() {
     );
 
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, isDemo]);
 
   // Fetch just the user's rank (single integer) — deferred out of the critical
   // path so the dashboard paints before this lightweight call resolves.
   useEffect(() => {
     if (!user) return;
+    if (isDemo) return; // demo rank already set in the main effect above
+
     let cancelled = false;
     const w = window as any;
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 800));
