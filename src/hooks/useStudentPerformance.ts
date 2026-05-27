@@ -101,7 +101,7 @@ export function useStudentPerformance(): StudentPerformanceData {
   const { data: baseAttempts = [], isLoading } = useQuery({
     queryKey: QUERY_KEY(user?.id),
     queryFn: () => fetchAttempts(user!.id),
-    enabled: !!user?.id,
+    enabled: !!user?.id && !isDemo,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
     initialData: initialAttempts,
@@ -110,7 +110,7 @@ export function useStudentPerformance(): StudentPerformanceData {
   const { data: sectionalMap = {} } = useQuery({
     queryKey: QUERY_KEY_SECTIONAL(user?.id),
     queryFn: () => fetchSectionalScores(user!.id),
-    enabled: !!user?.id,
+    enabled: !!user?.id && !isDemo,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
   });
