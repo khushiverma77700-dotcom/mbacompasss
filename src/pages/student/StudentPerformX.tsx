@@ -556,19 +556,19 @@ export default function StudentPerformX() {
             { label: "Speed Balance", val: balanceScore, color: "#8b5cf6" },
             { label: "Best %ile", val: Math.round(bestPercentile), color: "#f59e0b" },
           ].map((d, i) => (
-            <div key={i} className="rounded-2xl bg-gradient-to-br from-muted/40 to-transparent p-3 border border-border/40">
-              <div className="h-32">
+            <div key={i} className="rounded-2xl bg-gradient-to-br from-muted/40 to-transparent p-2.5 border border-border/40">
+              <div className="h-20 sm:h-24">
                 <ResponsiveContainer>
-                  <RadialBarChart innerRadius="65%" outerRadius="100%" data={[{ name: d.label, value: d.val, fill: d.color }]} startAngle={90} endAngle={-270}>
+                  <RadialBarChart innerRadius="82%" outerRadius="100%" data={[{ name: d.label, value: d.val, fill: d.color }]} startAngle={90} endAngle={-270}>
                     <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
                     <RadialBar dataKey="value" cornerRadius={20} background={{ fill: "hsl(var(--muted))" }} />
                   </RadialBarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="text-center -mt-20 pointer-events-none">
-                <div className="text-2xl font-black" style={{ color: d.color }}>{d.val}<span className="text-xs text-muted-foreground font-medium">/100</span></div>
+              <div className="text-center -mt-14 sm:-mt-16 pointer-events-none">
+                <div className="text-lg sm:text-xl font-black" style={{ color: d.color }}>{d.val}<span className="text-[10px] text-muted-foreground font-medium">/100</span></div>
               </div>
-              <div className="text-center mt-12 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{d.label}</div>
+              <div className="text-center mt-7 sm:mt-9 text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">{d.label}</div>
             </div>
           ))}
         </div>
