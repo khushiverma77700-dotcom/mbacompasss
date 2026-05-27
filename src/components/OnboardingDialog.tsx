@@ -211,8 +211,9 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
 
           {!otpStep && !phoneVerified && (
             <Button onClick={handleSendOtp} className="w-full h-11" disabled={otpSending || phone.length !== 10}>
-              {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{isAdminEmail ? "Finishing…" : "Sending OTP…"}</> : <>{isAdminEmail ? "Continue" : "Send OTP"} <ArrowRight className="w-4 h-4 ml-1" /></>}
+              {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP…</> : <>Send OTP <ArrowRight className="w-4 h-4 ml-1" /></>}
             </Button>
+
           )}
 
 
