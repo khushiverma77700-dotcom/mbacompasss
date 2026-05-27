@@ -312,8 +312,9 @@ function FormulaDialog({ slug, onClose }: { slug: string | null; onClose: () => 
 
   return (
     <Dialog open={!!slug} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-6">
+      <DialogContent className="max-w-3xl p-4 sm:p-6 w-screen h-[100dvh] max-h-[100dvh] rounded-none sm:w-auto sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-y-auto overflow-x-hidden">
         <DialogTopBar onClose={onClose} title={formula?.name} />
+
 
         {loading || !formula ? (
           <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-sky-600" /></div>
