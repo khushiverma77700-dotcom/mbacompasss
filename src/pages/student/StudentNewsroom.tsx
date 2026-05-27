@@ -510,6 +510,9 @@ export default function StudentNewsroom() {
                   {open.source_name && (
                     <span className="text-xs text-muted-foreground">{open.source_name}</span>
                   )}
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-md px-1.5 py-0.5">
+                    <Calendar className="h-2.5 w-2.5" /> {formatDate(open.published_at)}
+                  </span>
                 </div>
                 <DialogTitle className="text-left text-lg md:text-xl">{open.headline}</DialogTitle>
               </DialogHeader>
