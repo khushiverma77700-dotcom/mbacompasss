@@ -103,7 +103,9 @@ const NAV = [
   { id: "personalized", label: "Personalised Hub", icon: Brain },
   { id: "planner", label: "Day Planner", icon: CalendarDays },
   { id: "leaderboard", label: "Leaderboard", icon: Trophy },
-  { id: "vocabulary", label: "Vocabulary", icon: BookMarked },
+  { id: "vocabulary", label: "B-School Vocabulary", icon: BookMarked },
+  { id: "formulas", label: "Quant Formula Book", icon: Calculator },
+  { id: "news", label: "News & Insights", icon: Newspaper },
   { id: "tools", label: "AI Tools", icon: Sparkles },
   { id: "notifications", label: "Notifications", icon: Bell },
 ];
