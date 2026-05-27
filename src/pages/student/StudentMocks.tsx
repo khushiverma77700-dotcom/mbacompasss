@@ -1053,10 +1053,10 @@ function MockCardItem({
 
   return (
     <Card
-      className={`group relative overflow-hidden p-0 flex flex-col rounded-2xl border bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+      className={`group relative overflow-hidden p-0 flex flex-col rounded-2xl border bg-white dark:bg-slate-900/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
         isLaunchedFullLength
-          ? "border-sky-300 ring-2 ring-sky-200/60 shadow-lg shadow-sky-200/40"
-          : !owned ? "border-slate-200/80" : "border-slate-200/80 hover:border-slate-300"
+          ? "border-sky-300 dark:border-sky-500/40 ring-2 ring-sky-200/60 dark:ring-sky-500/20 shadow-lg shadow-sky-200/40"
+          : !owned ? "border-slate-200/80 dark:border-slate-700/60" : "border-slate-200/80 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600"
       }`}
     >
       {/* LIVE NOW corner ribbon for launched full-length mocks */}
@@ -1091,8 +1091,8 @@ function MockCardItem({
               </div>
             )}
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{test.test_type || test.category || "Mock Test"}</div>
-              <div className="font-bold leading-tight text-[15px] line-clamp-2 text-slate-900">{test.name}</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">{test.test_type || test.category || "Mock Test"}</div>
+              <div className="font-bold leading-tight text-[15px] line-clamp-2 text-slate-900 dark:text-slate-100">{test.name}</div>
             </div>
           </div>
           <Badge variant="outline" className={`shrink-0 text-[10px] font-bold gap-1 ${statusTheme.chip} border ${isLaunchedFullLength ? "shadow-sm" : ""}`}>
@@ -1108,7 +1108,7 @@ function MockCardItem({
 
         {/* meta chips */}
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-0.5">
             <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
           </span>
           {test.difficulty && (
@@ -1117,7 +1117,7 @@ function MockCardItem({
             </span>
           )}
           {test.topic && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 max-w-[140px] truncate">
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-0.5 max-w-[140px] truncate">
               {test.topic}
             </span>
           )}
@@ -1277,7 +1277,7 @@ function MockCardItem({
                 <Button size="sm" className={`w-full h-10 gap-1.5 rounded-lg text-white shadow-md hover:shadow-lg ${
                   isLaunchedFullLength
                     ? "bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 shadow-sky-300/60 animate-[pulse_2.5s_ease-in-out_infinite]"
-                    : "bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-black"
+                    : "bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 dark:from-sky-500 dark:via-blue-500 dark:to-indigo-500"
                 }`}>
                   <Play className="h-3.5 w-3.5" /> {isLaunchedFullLength ? "Attempt Now" : "Start Mock"}
                   <ChevronRight className="h-3.5 w-3.5 ml-auto" />
