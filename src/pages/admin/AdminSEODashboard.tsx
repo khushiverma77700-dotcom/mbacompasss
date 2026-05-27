@@ -22,7 +22,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
-import { PageSpeedMonitor } from "@/components/admin/PageSpeedMonitor";
+// PageSpeed Monitor removed to reduce backend load.
 import { useToast } from "@/hooks/use-toast";
 import {
   buildStoredSeoSnapshot, contentTypeConfig, fetchAllSeoSnapshots, mergeKeywordBuckets,
