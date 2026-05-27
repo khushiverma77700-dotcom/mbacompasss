@@ -55,8 +55,10 @@ function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: 2 | 3; height?: n
 
 export default function StudentOverview() {
   const { user } = useAuth();
+  const isDemo = useIsDemo();
   // Central performance engine — shared with /student/performance, /student/mocks etc.
-  // Realtime: auto-refreshes the moment a mock is submitted.
+  // Realtime: auto-refreshes the moment a mock is submitted. (Demo mode
+  // returns Aman Verma's hardcoded dataset.)
   const { attempts } = useStudentPerformance();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
