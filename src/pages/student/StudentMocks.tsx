@@ -943,22 +943,7 @@ function BucketGrid({
   }
 
   // Upcoming full-length launches strip (next 3 scheduled in future)
-  const upcoming = useMemo(() => {
-    if (!isFullLength) return [];
-    const now = Date.now();
-    return items
-      .map((it) => {
-        const launch = it.test.launch_date ? new Date(it.test.launch_date) : null;
-        const sched = it.test.scheduled_start_at ? new Date(it.test.scheduled_start_at) : null;
-        const future = [launch, sched].filter((d): d is Date => !!d && d.getTime() > now);
-        if (!future.length) return null;
-        const at = future.sort((a, b) => a.getTime() - b.getTime())[0];
-        return { ...it, at };
-      })
-      .filter((x): x is NonNullable<typeof x> => !!x)
-      .sort((a, b) => a.at.getTime() - b.at.getTime())
-      .slice(0, 3);
-  }, [items, isFullLength]);
+  // (computed above, before the conditional early return for groupBySection)
 
   if (!items.length) return renderEmpty;
 
