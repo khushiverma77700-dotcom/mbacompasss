@@ -965,36 +965,35 @@ function UpcomingLaunchesStrip({ items }: { items: { test: Test; at: Date; owned
   const firstCountdown = useCountdown(first.at);
   const daysLeft = Math.max(0, Math.ceil((first.at.getTime() - Date.now()) / 86400000));
   return (
-    <Card className="relative overflow-hidden p-0 border-0 shadow-lg">
-      <div className="absolute inset-0 bg-gradient-to-br from-rose-500 via-orange-500 to-amber-500" />
-      <div className="absolute inset-0 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.15),transparent_40%)]" />
-      <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/20 blur-3xl pointer-events-none" />
-      <div className="relative p-4 sm:p-5 text-white">
+    <Card className="relative overflow-hidden p-0 border border-sky-200/70 shadow-sm bg-white">
+      {/* subtle accent strip on the left */}
+      <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-sky-500 via-blue-500 to-indigo-500" />
+      <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-sky-100/60 blur-3xl pointer-events-none" />
+      <div className="relative p-4 sm:p-5 text-slate-800">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <div className="relative shrink-0">
-            <div className="absolute inset-0 rounded-2xl bg-white/30 blur-md animate-pulse" />
-            <div className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white/15 backdrop-blur border border-white/30 grid place-items-center">
+            <div className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-sky-50 border border-sky-200 grid place-items-center text-sky-600">
               <Sparkles className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur text-[10px] font-bold uppercase tracking-wider mb-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> New Mock Drop
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-[10px] font-bold uppercase tracking-wider mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" /> New Mock Drop
             </div>
-            <div className="text-base sm:text-lg font-bold leading-tight">
+            <div className="text-base sm:text-lg font-bold leading-tight text-slate-900">
               {first.test.name}
             </div>
-            <div className="text-xs sm:text-sm text-white/90 mt-0.5">
-              Goes live in <span className="font-bold tabular-nums">{daysLeft > 0 ? `${daysLeft} day${daysLeft === 1 ? "" : "s"}` : firstCountdown}</span>
-              {daysLeft > 0 && <span className="text-white/70"> · {firstCountdown}</span>}
+            <div className="text-xs sm:text-sm text-slate-600 mt-0.5">
+              Goes live in <span className="font-bold tabular-nums text-slate-900">{daysLeft > 0 ? `${daysLeft} day${daysLeft === 1 ? "" : "s"}` : firstCountdown}</span>
+              {daysLeft > 0 && <span className="text-slate-500"> · {firstCountdown}</span>}
             </div>
           </div>
           {items.length > 1 && (
             <div className="hidden sm:flex items-center gap-2 shrink-0">
-              <div className="h-10 w-px bg-white/30" />
-              <div className="text-[11px] text-white/90">
-                <div className="font-semibold">+{items.length - 1} more</div>
-                <div className="text-white/70">queued to launch</div>
+              <div className="h-10 w-px bg-slate-200" />
+              <div className="text-[11px] text-slate-600">
+                <div className="font-semibold text-slate-900">+{items.length - 1} more</div>
+                <div className="text-slate-500">queued to launch</div>
               </div>
             </div>
           )}
@@ -1027,13 +1026,13 @@ function MockCardItem({
   const statusTheme = !owned
     ? { grad: "from-slate-400 via-slate-500 to-slate-600", glow: "from-slate-200/40", chip: "bg-slate-100 text-slate-600 border-slate-200", ring: "ring-slate-200" }
     : lock
-    ? { grad: "from-amber-400 via-orange-500 to-rose-500", glow: "from-amber-200/50", chip: "bg-amber-50 text-amber-700 border-amber-200", ring: "ring-amber-200" }
+    ? { grad: "from-sky-400 via-sky-500 to-blue-500", glow: "from-sky-100/40", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
     : latestSubmitted
     ? { grad: "from-emerald-400 via-teal-500 to-cyan-500", glow: "from-emerald-200/50", chip: "bg-emerald-50 text-emerald-700 border-emerald-200", ring: "ring-emerald-200" }
     : inProgress
     ? { grad: "from-sky-400 via-blue-500 to-indigo-500", glow: "from-sky-200/50", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
     : isLaunchedFullLength
-    ? { grad: "from-rose-500 via-orange-500 to-amber-500", glow: "from-rose-200/60", chip: "bg-rose-50 text-rose-700 border-rose-200", ring: "ring-rose-200" }
+    ? { grad: "from-sky-500 via-blue-600 to-indigo-600", glow: "from-sky-200/50", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
     : { grad: "from-violet-400 via-fuchsia-500 to-pink-500", glow: "from-violet-200/40", chip: "bg-violet-50 text-violet-700 border-violet-200", ring: "ring-violet-200" };
 
   const statusLabel = !owned
@@ -1052,14 +1051,14 @@ function MockCardItem({
     <Card
       className={`group relative overflow-hidden p-0 flex flex-col rounded-2xl border bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
         isLaunchedFullLength
-          ? "border-rose-300 ring-2 ring-rose-200/60 shadow-lg shadow-rose-200/40"
+          ? "border-sky-300 ring-2 ring-sky-200/60 shadow-lg shadow-sky-200/40"
           : !owned ? "border-slate-200/80" : "border-slate-200/80 hover:border-slate-300"
       }`}
     >
       {/* LIVE NOW corner ribbon for launched full-length mocks */}
       {isLaunchedFullLength && (
         <div className="absolute top-3 -right-9 z-10 rotate-45 pointer-events-none">
-          <div className="bg-gradient-to-r from-rose-600 to-orange-500 text-white text-[10px] font-bold tracking-wider px-10 py-1 shadow-md">
+          <div className="bg-gradient-to-r from-sky-600 to-blue-600 text-white text-[10px] font-bold tracking-wider px-10 py-1 shadow-md">
             LIVE
           </div>
         </div>
@@ -1095,8 +1094,8 @@ function MockCardItem({
           <Badge variant="outline" className={`shrink-0 text-[10px] font-bold gap-1 ${statusTheme.chip} border ${isLaunchedFullLength ? "shadow-sm" : ""}`}>
             {isLaunchedFullLength ? (
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500" />
               </span>
             ) : !owned ? <Lock className="h-2.5 w-2.5" /> : lock ? <Sparkles className="h-2.5 w-2.5" /> : inProgress ? <Clock className="h-2.5 w-2.5" /> : latestSubmitted ? <Award className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5" />}
             {statusLabel}
@@ -1125,30 +1124,30 @@ function MockCardItem({
             ? Math.max(0, Math.ceil((lock.unlocksAt.getTime() - Date.now()) / 86400000))
             : null;
           return (
-            <div className="relative rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-3 mb-3 overflow-hidden">
-              <div className="pointer-events-none absolute -right-6 -bottom-6 h-24 w-24 rounded-full bg-amber-200/40 blur-2xl" />
+            <div className="relative rounded-xl border border-sky-200/70 bg-gradient-to-br from-sky-50/70 via-white to-blue-50/40 p-3 mb-3 overflow-hidden">
+              <div className="pointer-events-none absolute -right-6 -bottom-6 h-24 w-24 rounded-full bg-sky-100/50 blur-2xl" />
               <div className="relative flex items-start gap-3">
-                <div className="shrink-0 h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-rose-500 text-white flex items-center justify-center shadow-md ring-2 ring-white">
+                <div className="shrink-0 h-11 w-11 rounded-xl bg-white border border-sky-200 text-sky-600 flex items-center justify-center shadow-sm">
                   {isFullLength ? <Sparkles className="h-5 w-5" /> : <Calendar className="h-4 w-4" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-amber-700">
+                  <div className="text-[10px] uppercase tracking-wider font-bold text-sky-700">
                     {isFullLength && lock.kind === "scheduled" ? "New Mock — Goes Live" : lock.kind === "scheduled" ? "Unlocks on" : "Status"}
                   </div>
                   {isFullLength && daysLeft != null ? (
-                    <div className="text-base font-extrabold text-amber-900 leading-tight tabular-nums">
+                    <div className="text-base font-extrabold text-slate-900 leading-tight tabular-nums">
                       in {daysLeft} day{daysLeft === 1 ? "" : "s"}
                     </div>
                   ) : (
-                    <div className="text-sm font-bold text-amber-900 leading-tight">{lock.label}</div>
+                    <div className="text-sm font-bold text-slate-900 leading-tight">{lock.label}</div>
                   )}
                   {lock.kind === "scheduled" && (
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-white/80 border border-amber-200 rounded-md px-1.5 py-0.5">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 bg-white border border-sky-200 rounded-md px-1.5 py-0.5">
                         <Clock className="h-2.5 w-2.5" /> <span className="tabular-nums">{countdown}</span>
                       </span>
                       {isFullLength && (
-                        <span className="text-[10px] text-amber-700/80 font-medium truncate">{lock.label}</span>
+                        <span className="text-[10px] text-slate-500 font-medium truncate">{lock.label}</span>
                       )}
                     </div>
                   )}
@@ -1273,8 +1272,8 @@ function MockCardItem({
               <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
                 <Button size="sm" className={`w-full h-10 gap-1.5 rounded-lg text-white shadow-md hover:shadow-lg ${
                   isLaunchedFullLength
-                    ? "bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 hover:from-rose-700 hover:to-amber-600 shadow-rose-300/60 animate-[pulse_2.5s_ease-in-out_infinite]"
-                    : "bg-gradient-to-r from-violet-500 via-fuchsia-600 to-pink-600 hover:from-violet-600 hover:to-pink-700"
+                    ? "bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 shadow-sky-300/60 animate-[pulse_2.5s_ease-in-out_infinite]"
+                    : "bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-black"
                 }`}>
                   <Play className="h-3.5 w-3.5" /> {isLaunchedFullLength ? "Attempt Now" : "Start Mock"}
                   <ChevronRight className="h-3.5 w-3.5 ml-auto" />
