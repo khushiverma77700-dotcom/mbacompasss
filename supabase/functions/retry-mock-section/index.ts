@@ -832,10 +832,11 @@ Deno.serve(async (req) => {
             if (maxShingle >= PARAPHRASE_THRESHOLD) { dupParaphrase++; continue; }
             seen.add(hash);
             const cleanedQ = cleanQuestionHtml(q.question_html);
+            const qNum = await nextQuestionNumber(admin, job.section_id);
             const { data: qRow, error: insErr } = await admin.from("mock_questions").insert({
               section_id: job.section_id,
               passage_id: passageRow.id,
-              question_number: produced + inserted + 1,
+              question_number: qNum,
               question_type: "mcq",
               question_html: cleanedQ,
               tita_correct_answers: [],
@@ -847,7 +848,22 @@ Deno.serve(async (req) => {
               explanation_html: q.explanation_html || "",
               content_hash: hash,
             }).select("id").single();
-            if (insErr || !qRow) { dupDb++; continue; }
+            if (insErr || !qRow) {
+              dupDb++;
+              // Abort the section job on repeated unique-constraint conflicts to
+              // prevent runaway CPU loops (e.g. zombie partial sections).
+              if ((insErr as any)?.code === PG_UNIQUE_VIOLATION && dupDb >= 50) {
+                await admin.from("mock_section_jobs").update({
+                  status: "failed",
+                  current_step: `Auto-aborted after ${dupDb} DB conflicts`,
+                  error_message: `Section ${job.section_code} hit ${dupDb} unique-key conflicts; needs manual cleanup.`,
+                  updated_at: new Date().toISOString(),
+                }).eq("id", job_id);
+                return;
+              }
+              continue;
+            }
+
             if (Array.isArray(q.options)) {
               const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
                 question_id: qRow.id,
