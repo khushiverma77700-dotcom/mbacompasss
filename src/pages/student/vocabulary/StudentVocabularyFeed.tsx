@@ -638,13 +638,18 @@ export default function StudentVocabularyFeed() {
                   )}
                 />
                 <CardContent className="relative flex flex-1 flex-col p-4 sm:p-6">
-                  <div className="flex items-start justify-between gap-3">
+                  {!demoLocked && (
+                    <Link
+                      to={`/student/vocabulary/word/${w.slug}`}
+                      className="absolute inset-0 z-0"
+                      aria-label={`Open ${w.word}`}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-start justify-between gap-3 pointer-events-none">
                     <div className="min-w-0 flex-1">
-                      <Link to={`/student/vocabulary/word/${w.slug}`} className="block">
-                        <h3 className="font-heading text-2xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 sm:text-3xl md:text-4xl break-words">
-                          {w.word}
-                        </h3>
-                      </Link>
+                      <h3 className="font-heading text-2xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 sm:text-3xl md:text-4xl break-words">
+                        {w.word}
+                      </h3>
                       {w.part_of_speech && (
                         <div className="mt-1 text-xs italic text-slate-500">{w.part_of_speech}</div>
                       )}
@@ -656,8 +661,8 @@ export default function StudentVocabularyFeed() {
 
                   {/* Pronunciation - tap to play */}
                   <button
-                    onClick={() => speak(w.word)}
-                    className="group/p mt-3 inline-flex items-start gap-2 self-start rounded-xl border border-sky-200 bg-sky-50/50 px-3 py-2 transition-all hover:scale-[1.02] hover:border-sky-400 hover:bg-sky-50 active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); speak(w.word); }}
+                    className="group/p relative z-10 mt-3 inline-flex items-start gap-2 self-start rounded-xl border border-sky-200 bg-sky-50/50 px-3 py-2 transition-all hover:scale-[1.02] hover:border-sky-400 hover:bg-sky-50 active:scale-95"
                     aria-label={`Play pronunciation of ${w.word}`}
                   >
                     <span className="mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm">
@@ -675,7 +680,7 @@ export default function StudentVocabularyFeed() {
                     </span>
                   </button>
 
-                  <div className="mt-4 space-y-2">
+                  <div className="relative z-10 mt-4 space-y-2 pointer-events-none">
                     <p className="text-[15px] leading-relaxed text-slate-800">{w.meaning}</p>
                     {w.meaning_hindi && (
                       <p className="text-sm text-slate-600">
@@ -689,7 +694,7 @@ export default function StudentVocabularyFeed() {
                   </div>
 
                   {Array.isArray(w.exam_appearances) && w.exam_appearances.length > 0 && (
-                    <div className="mt-3 flex flex-wrap items-center gap-1">
+                    <div className="relative z-10 mt-3 flex flex-wrap items-center gap-1 pointer-events-none">
                       <GraduationCap className="h-3 w-3 text-sky-600" />
                       {w.exam_appearances.slice(0, 4).map((e: string) => (
                         <Badge key={e} className="border-0 bg-sky-100 text-[10px] text-sky-700 hover:bg-sky-100">{e}</Badge>
@@ -697,7 +702,7 @@ export default function StudentVocabularyFeed() {
                     </div>
                   )}
 
-                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                  <div className="relative z-10 mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
                     <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">
                       {w.category?.replace("_", " ")}
                     </Badge>
@@ -707,7 +712,7 @@ export default function StudentVocabularyFeed() {
                         size="sm"
                         className="h-8 gap-1 px-2.5 text-xs sm:px-3"
                         disabled={busy === w.id}
-                        onClick={() => toggleBookmark(w.id)}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleBookmark(w.id); }}
                       >
                         <Bookmark className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
                         {isSaved ? "Saved" : "Save"}
@@ -720,7 +725,7 @@ export default function StudentVocabularyFeed() {
                           !isRead && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95",
                         )}
                         disabled={busy === w.id || isRead}
-                        onClick={() => markRead(w.id)}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); markRead(w.id); }}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {isRead ? "Read" : "Mark Read"}

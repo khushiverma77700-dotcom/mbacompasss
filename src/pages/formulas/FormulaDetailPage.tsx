@@ -184,7 +184,6 @@ export default function FormulaDetailPage() {
           <TabsTrigger value="examples">Examples</TabsTrigger>
           <TabsTrigger value="shortcuts">Shortcuts</TabsTrigger>
           <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-          <TabsTrigger value="ai">AI Assist</TabsTrigger>
         </TabsList>
 
         <TabsContent value="explain">
@@ -192,13 +191,13 @@ export default function FormulaDetailPage() {
         </TabsContent>
 
         <TabsContent value="derive">
-          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.derivation || "Derivation not provided — use AI Assist → Derive step."} className="whitespace-pre-line leading-relaxed text-slate-700" /></CardContent></Card>
+          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.derivation || "Derivation not provided for this formula yet."} className="whitespace-pre-line leading-relaxed text-slate-700" /></CardContent></Card>
         </TabsContent>
 
         <TabsContent value="examples">
           <div className="space-y-3">
             {(formula.examples || []).length === 0 && (
-              <Card><CardContent className="p-6 text-sm text-slate-500">No examples yet. Try AI Assist → Worked example.</CardContent></Card>
+              <Card><CardContent className="p-6 text-sm text-slate-500">No worked examples for this formula yet.</CardContent></Card>
             )}
             {(formula.examples || []).map((ex: any, i: number) => (
               <Card key={i}>
@@ -249,20 +248,6 @@ export default function FormulaDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="ai">
-          <Card>
-            <CardContent className="space-y-4 p-6">
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" disabled={aiBusy !== null} onClick={() => runAi("explain_simpler")}><Wand2 className="mr-1 h-3.5 w-3.5" /> Explain simpler</Button>
-                <Button size="sm" variant="outline" disabled={aiBusy !== null} onClick={() => runAi("derive")}>Derive step-by-step</Button>
-                <Button size="sm" variant="outline" disabled={aiBusy !== null} onClick={() => runAi("shortcut")}>Shortcut tip</Button>
-                <Button size="sm" variant="outline" disabled={aiBusy !== null} onClick={() => runAi("worked_example")}>Worked example</Button>
-              </div>
-              {aiBusy && <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-800">AI thinking… ({aiBusy.replace("_", " ")})</div>}
-              {aiText && <div className="prose prose-sm max-w-none rounded-xl border border-sky-100 bg-sky-50/40 p-4" dangerouslySetInnerHTML={{ __html: sanitizedAi }} />}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* FAQs */}
