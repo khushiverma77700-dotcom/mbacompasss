@@ -146,7 +146,9 @@ export default function StudentAvatar() {
           src={imgSrc}
           alt="My avatar"
           className="h-full w-full object-cover bg-white"
-          onError={(e) = loading="lazy" decoding="async"> ((e.currentTarget as HTMLImageElement).src = BRAND_LOGO_URL)}
+          loading="lazy"
+          decoding="async"
+          onError={(e) => ((e.currentTarget as HTMLImageElement).src = BRAND_LOGO_URL)}
         />
         <span className="absolute inset-0 grid place-items-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
           <Camera className="h-3.5 w-3.5 text-white" />
