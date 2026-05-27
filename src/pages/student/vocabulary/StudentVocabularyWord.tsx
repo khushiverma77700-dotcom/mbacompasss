@@ -71,18 +71,6 @@ export default function StudentVocabularyWord() {
     setMarking(false);
   };
 
-  const enrichAI = async () => {
-    if (!word) return;
-    setMarking(true);
-    try {
-      const { data } = await supabase.functions.invoke("vocab-explain", { body: { word: word.word, save: true } });
-      if (data?.word) setWord(data.word);
-      toast({ title: "Updated with AI examples" });
-    } catch (e: any) {
-      toast({ title: "AI error", description: e.message, variant: "destructive" });
-    }
-    setMarking(false);
-  };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-sky-600" /></div>;
   if (!word) return (
