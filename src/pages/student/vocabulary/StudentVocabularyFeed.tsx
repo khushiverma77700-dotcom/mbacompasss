@@ -516,13 +516,14 @@ export default function StudentVocabularyFeed() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {newToday.slice(0, 8).map((w) => (
-                  <Link
+                  <button
                     key={w.id}
-                    to={`/student/vocabulary/word/${w.slug}`}
+                    type="button"
+                    onClick={() => openWord(w.slug)}
                     className="rounded-full border border-violet-200 bg-white px-3 py-1 text-xs font-medium text-violet-800 transition-colors hover:bg-violet-100"
                   >
                     {w.word}
-                  </Link>
+                  </button>
                 ))}
                 {newToday.length > 8 && (
                   <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-700">+{newToday.length - 8} more</span>
