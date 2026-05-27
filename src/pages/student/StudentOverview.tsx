@@ -58,6 +58,23 @@ function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: 2 | 3; height?: n
 
 
 
+// Per-user sessionStorage cache — re-opens paint instantly with last-known data,
+// then fetch refreshes in the background. Cleared by the browser at tab close.
+const OVERVIEW_CACHE_KEY = (uid: string) => `student-overview-cache:v1:${uid}`;
+type OverviewCache = {
+  enrollments?: any[]; goals?: any[]; profile?: any; tasks?: any[]; weak?: any[];
+  displayName?: string; examCountdowns?: any[]; rewards?: any; leaderboardRank?: number | null;
+};
+function readOverviewCache(uid: string): OverviewCache | null {
+  try { const raw = sessionStorage.getItem(OVERVIEW_CACHE_KEY(uid)); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+function writeOverviewCache(uid: string, patch: OverviewCache) {
+  try {
+    const prev = readOverviewCache(uid) ?? {};
+    sessionStorage.setItem(OVERVIEW_CACHE_KEY(uid), JSON.stringify({ ...prev, ...patch }));
+  } catch {}
+}
+
 export default function StudentOverview() {
   const { user } = useAuth();
   const isDemo = useIsDemo();
@@ -65,16 +82,17 @@ export default function StudentOverview() {
   // Realtime: auto-refreshes the moment a mock is submitted. (Demo mode
   // returns Aman Verma's hardcoded dataset.)
   const { attempts } = useStudentPerformance();
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [goals, setGoals] = useState<any[]>([]);
-  const [profile, setProfile] = useState<any>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [weak, setWeak] = useState<any[]>([]);
-  const [displayName, setDisplayName] = useState<string>("");
-  const [examCountdowns, setExamCountdowns] = useState<any[]>([]);
+  const cached = (!isDemo && user) ? readOverviewCache(user.id) : null;
+  const [enrollments, setEnrollments] = useState<any[]>(cached?.enrollments ?? []);
+  const [goals, setGoals] = useState<any[]>(cached?.goals ?? []);
+  const [profile, setProfile] = useState<any>(cached?.profile ?? null);
+  const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? []);
+  const [weak, setWeak] = useState<any[]>(cached?.weak ?? []);
+  const [displayName, setDisplayName] = useState<string>(cached?.displayName ?? "");
+  const [examCountdowns, setExamCountdowns] = useState<any[]>(cached?.examCountdowns ?? []);
   const [sectionNameMap, setSectionNameMap] = useState<Record<string, string>>({});
-  const [rewards, setRewards] = useState<any>(null);
-  const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
+  const [rewards, setRewards] = useState<any>(cached?.rewards ?? null);
+  const [leaderboardRank, setLeaderboardRank] = useState<number | null>(cached?.leaderboardRank ?? null);
   // Per-minute tick has been moved into ExamCountdownStrip — only that
   // small component now re-renders every 60s instead of the entire 1800-line
   // overview tree (huge perf win on slower devices).
@@ -119,35 +137,38 @@ export default function StudentOverview() {
 
     run(
       supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
-      (prof: any) => setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student"),
+      (prof: any) => {
+        const name = prof?.display_name ?? user.email?.split("@")[0] ?? "Student";
+        setDisplayName(name); writeOverviewCache(user.id, { displayName: name });
+      },
     );
     run(
       supabase.from("student_daily_tasks").select("*").eq("user_id", user.id).eq("task_date", today),
-      (tk: any) => setTasks(tk ?? []),
+      (tk: any) => { setTasks(tk ?? []); writeOverviewCache(user.id, { tasks: tk ?? [] }); },
     );
     run(
       supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
         .order("due_date", { ascending: true }).limit(3),
-      (g: any) => setGoals(g ?? []),
+      (g: any) => { setGoals(g ?? []); writeOverviewCache(user.id, { goals: g ?? [] }); },
     );
     run(
       supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
-      (pf: any) => setProfile(pf),
+      (pf: any) => { setProfile(pf); writeOverviewCache(user.id, { profile: pf }); },
     );
     run(
       supabase.from("student_weak_topics").select("*").eq("user_id", user.id)
         .order("level", { ascending: true }).limit(12),
-      (wk: any) => setWeak(wk ?? []),
+      (wk: any) => { setWeak(wk ?? []); writeOverviewCache(user.id, { weak: wk ?? [] }); },
     );
     run(
       supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
-      (rw: any) => setRewards(rw),
+      (rw: any) => { setRewards(rw); writeOverviewCache(user.id, { rewards: rw }); },
     );
     run(
       supabase.from("mock_enrollments")
         .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
         .eq("user_id", user.id).order("enrolled_at", { ascending: false }),
-      (e: any) => setEnrollments(e ?? []),
+      (e: any) => { setEnrollments(e ?? []); writeOverviewCache(user.id, { enrollments: e ?? [] }); },
     );
     run(
       supabase.from("exams").select("name, slug, exam_date").not("exam_date", "is", null)
@@ -157,6 +178,7 @@ export default function StudentOverview() {
           .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
           .slice(0, 8);
         setExamCountdowns(upcoming);
+        writeOverviewCache(user.id, { examCountdowns: upcoming });
       },
     );
 
@@ -174,7 +196,11 @@ export default function StudentOverview() {
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 800));
     const handle = schedule(async () => {
       const { data } = await supabase.rpc("get_my_leaderboard_rank" as any);
-      if (!cancelled) setLeaderboardRank(typeof data === "number" ? data : null);
+      if (!cancelled) {
+        const rank = typeof data === "number" ? data : null;
+        setLeaderboardRank(rank);
+        writeOverviewCache(user.id, { leaderboardRank: rank });
+      }
     });
     return () => {
       cancelled = true;

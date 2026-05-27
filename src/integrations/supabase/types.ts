@@ -7508,6 +7508,30 @@ export type Database = {
           },
         ]
       }
+      mv_global_leaderboard: {
+        Row: {
+          coins: number | null
+          display_handle: string | null
+          level: number | null
+          rank: number | null
+          streak_days: number | null
+          total_mocks_completed: number | null
+          user_id: string | null
+          xp: number | null
+        }
+        Relationships: []
+      }
+      mv_vocab_leaderboard: {
+        Row: {
+          current_streak: number | null
+          display_name: string | null
+          level: number | null
+          rank: number | null
+          total_xp: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_delete_bundle: { Args: { _bundle_id: string }; Returns: Json }
@@ -7831,6 +7855,7 @@ export type Database = {
         Args: { _job_id: string }
         Returns: undefined
       }
+      refresh_leaderboard_caches: { Args: never; Returns: undefined }
       rollover_planner_tasks: { Args: { _user_id: string }; Returns: number }
       rollup_mock_generation: {
         Args: { _generation_id: string }
