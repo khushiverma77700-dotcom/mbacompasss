@@ -299,7 +299,7 @@ const SampleReportPreview = () => {
         {/* Header bar */}
         <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={bschoolLogo} alt="MBA Compass" className="w-6 h-6 rounded" />
+            <img src={bschoolLogo} alt="MBA Compass" className="w-6 h-6 rounded"  loading="lazy" decoding="async" />
             <span className="text-primary-foreground font-bold">Sample AI Report — Detailed Preview</span>
           </div>
           <Badge className="bg-primary-foreground/20 text-primary-foreground border-0">Live Preview</Badge>
@@ -1166,7 +1166,7 @@ const ProfileAnalyzerPage = () => {
               </Float3DCard>
               <Float3DCard className="absolute bottom-[25%] right-[12%] hidden lg:block" delay={0.5} duration={8}>
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-300/30 flex items-center justify-center backdrop-blur-sm shadow-xl">
-                  <img src={bschoolLogo} alt="MBA Compass" className="w-8 h-8 rounded-lg" />
+                  <img src={bschoolLogo} alt="MBA Compass" className="w-8 h-8 rounded-lg"  loading="lazy" decoding="async" />
                 </div>
               </Float3DCard>
 
@@ -1190,7 +1190,7 @@ const ProfileAnalyzerPage = () => {
                   transition={{ type: "spring", stiffness: 100, delay: 0.1 }}
                 >
                   <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 flex items-center justify-center shadow-2xl relative overflow-hidden">
-                    <img src={bschoolLogo} alt="MBA Compass" className="w-14 h-14 rounded-xl" />
+                    <img src={bschoolLogo} alt="MBA Compass" className="w-14 h-14 rounded-xl"  loading="lazy" decoding="async" />
                     <motion.div
                       animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
                       transition={{ repeat: Infinity, duration: 2 }}
@@ -1437,7 +1437,7 @@ const ProfileAnalyzerPage = () => {
             <section className="py-20 px-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5" />
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto text-center relative z-10">
-                <img src={bschoolLogo} alt="MBA Compass" className="w-16 h-16 mx-auto rounded-2xl shadow-lg mb-6" />
+                <img src={bschoolLogo} alt="MBA Compass" className="w-16 h-16 mx-auto rounded-2xl shadow-lg mb-6"  loading="lazy" decoding="async" />
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to Know Your MBA Chances?</h2>
                 <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. 100% free. Mobile verified for your privacy. Instant AI-powered results.</p>
                 <Button size="lg" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="text-lg px-12 py-7 rounded-2xl shadow-2xl group">
@@ -1929,7 +1929,7 @@ const ProfileAnalyzerPage = () => {
                 </motion.div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-                    <img src={bschoolLogo} alt="MBA Compass" className="w-12 h-12 md:w-16 md:h-16 rounded-2xl shadow-2xl" />
+                    <img src={bschoolLogo} alt="MBA Compass" className="w-12 h-12 md:w-16 md:h-16 rounded-2xl shadow-2xl"  loading="lazy" decoding="async" />
                   </motion.div>
                 </div>
                 {[...Array(6)].map((_, i) => (

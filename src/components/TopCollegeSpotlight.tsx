@@ -57,7 +57,7 @@ const TopCollegeSpotlight = () => {
                       #{college.ranking}
                     </div>
                     {college.logo_url ? (
-                      <img src={college.logo_url} alt="" className="w-10 h-10 rounded-xl object-contain bg-white border border-border p-0.5 flex-shrink-0" />
+                      <img src={college.logo_url} alt="" className="w-10 h-10 rounded-xl object-contain bg-white border border-border p-0.5 flex-shrink-0"  loading="lazy" decoding="async" />
                     ) : null}
                     <div className="min-w-0">
                       <h3 className="font-heading font-bold text-foreground text-sm line-clamp-1 group-hover:text-primary transition-colors">{college.name}</h3>

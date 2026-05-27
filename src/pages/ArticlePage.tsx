@@ -276,7 +276,7 @@ const ArticlePage = () => {
                   <Link key={r.id} to={`/article/${r.slug}`} className="group block p-3 rounded-xl hover:bg-muted/60 transition-colors border border-transparent hover:border-border">
                     <div className="flex gap-3">
                       {(r.image_url || r.banner_url) ? (
-                        <img src={(r.image_url || r.banner_url)!} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
+                        <img src={(r.image_url || r.banner_url)!} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0"  loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-16 h-12 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center">
                           <BookOpen className="w-4 h-4 text-muted-foreground/30" />

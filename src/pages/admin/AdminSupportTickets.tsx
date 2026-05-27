@@ -538,7 +538,7 @@ function TicketDetail({
           <div>
             <div className="text-xs font-medium text-muted-foreground mb-1">Attachment</div>
             <a href={ticket.attachment_url} target="_blank" rel="noreferrer">
-              <img src={ticket.attachment_url} alt="" className="rounded border max-h-40" />
+              <img src={ticket.attachment_url} alt="" className="rounded border max-h-40"  loading="lazy" decoding="async" />
             </a>
           </div>
         )}

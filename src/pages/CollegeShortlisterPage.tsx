@@ -1027,7 +1027,7 @@ const CollegeShortlisterPage = () => {
               {/* Header */}
               <div className="flex items-start gap-3 mb-3">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-md flex-shrink-0`}>
-                  {college.logo_url ? <img src={college.logo_url} alt="" className="w-7 h-7 rounded object-contain" /> : <Building2 className="w-5 h-5 text-white" />}
+                  {college.logo_url ? <img src={college.logo_url} alt="" className="w-7 h-7 rounded object-contain"  loading="lazy" decoding="async" /> : <Building2 className="w-5 h-5 text-white" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <Link to={`/college/${college.slug}`} className="font-heading font-semibold text-foreground text-sm hover:text-primary transition-colors line-clamp-1 block">{college.name}</Link>

@@ -478,7 +478,7 @@ export default function AdminMBACompassCourses() {
                     <div className="grid sm:grid-cols-3 gap-3">
                       {(edit.gallery_images ?? []).map((img: string, i: number) => (
                         <div key={i} className="relative">
-                          <img src={img} alt="" className="w-full aspect-video object-cover rounded border" />
+                          <img src={img} alt="" className="w-full aspect-video object-cover rounded border"  loading="lazy" decoding="async" />
                           <button
                             type="button"
                             onClick={() => setEdit({ ...edit, gallery_images: (edit.gallery_images ?? []).filter((_: any, j: number) => j !== i) })}
@@ -716,7 +716,7 @@ export default function AdminMBACompassCourses() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {list.map((c) => (
             <Card key={c.id} className="overflow-hidden">
-              {c.thumbnail_url && <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover" />}
+              {c.thumbnail_url && <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover"  loading="lazy" decoding="async" />}
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

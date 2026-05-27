@@ -13,7 +13,7 @@ export default function StudentShellFallback() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background">
       <div className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border h-14 flex items-center px-4 gap-2">
         <div className="h-8 w-8 rounded-lg overflow-hidden bg-white ring-1 ring-sky-100 grid place-items-center">
-          <img src={BRAND_LOGO_URL} alt="MBA Compass" className="h-full w-full object-contain" />
+          <img src={BRAND_LOGO_URL} alt="MBA Compass" className="h-full w-full object-contain"  loading="lazy" decoding="async" />
         </div>
         <div className="text-sm font-semibold">MBA Compass</div>
       </div>

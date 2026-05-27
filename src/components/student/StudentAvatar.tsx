@@ -146,7 +146,7 @@ export default function StudentAvatar() {
           src={imgSrc}
           alt="My avatar"
           className="h-full w-full object-cover bg-white"
-          onError={(e) => ((e.currentTarget as HTMLImageElement).src = BRAND_LOGO_URL)}
+          onError={(e) = loading="lazy" decoding="async"> ((e.currentTarget as HTMLImageElement).src = BRAND_LOGO_URL)}
         />
         <span className="absolute inset-0 grid place-items-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
           <Camera className="h-3.5 w-3.5 text-white" />
@@ -162,7 +162,7 @@ export default function StudentAvatar() {
               animate={{ scale: 1, opacity: 1 }}
               className="h-24 w-24 rounded-full overflow-hidden ring-4 ring-sky-200 bg-white"
             >
-              <img src={imgSrc} alt="Avatar preview" className="h-full w-full object-cover" />
+              <img src={imgSrc} alt="Avatar preview" className="h-full w-full object-cover"  loading="lazy" decoding="async" />
             </motion.div>
             <div>
               <h3 className="font-semibold">Profile picture</h3>
@@ -201,7 +201,7 @@ export default function StudentAvatar() {
                   transition={{ type: "spring", stiffness: 200, damping: 14 }}
                   className="mx-auto h-28 w-28 rounded-full bg-white ring-4 ring-sky-200 grid place-items-center shadow-xl relative"
                 >
-                  <img src={imgSrc} alt="Your avatar" className="h-full w-full rounded-full object-cover" />
+                  <img src={imgSrc} alt="Your avatar" className="h-full w-full rounded-full object-cover"  loading="lazy" decoding="async" />
                   <motion.span
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
