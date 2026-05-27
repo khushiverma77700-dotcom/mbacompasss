@@ -554,15 +554,15 @@ export default function StudentNewsroom() {
               )}
 
               {open.detailed_summary && (
-                <section>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Detailed View</h4>
+                <section id="news-sec-detail" className={`rounded-lg p-3 transition ${focusSection === "detail" ? "ring-2 ring-sky-300 bg-sky-50/50" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-sky-700 mb-1.5 flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Detailed View</h4>
                   <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{open.detailed_summary}</p>
                 </section>
               )}
 
               {open.why_matters && (
-                <section className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">Why this matters</h4>
+                <section id="news-sec-why" className={`rounded-lg border border-amber-200 bg-amber-50 p-3 ${focusSection === "why" ? "ring-2 ring-amber-300" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1 flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> Why this matters</h4>
                   <p className="text-sm text-amber-900">{open.why_matters}</p>
                 </section>
               )}
@@ -577,7 +577,7 @@ export default function StudentNewsroom() {
               )}
 
               {open.gdpi_points?.length > 0 && (
-                <section className="rounded-lg border border-violet-200 bg-violet-50 p-3">
+                <section id="news-sec-gdpi" className={`rounded-lg border border-violet-200 bg-violet-50 p-3 ${focusSection === "gdpi" ? "ring-2 ring-violet-300" : ""}`}>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-violet-700 mb-1.5 flex items-center gap-1">
                     <MessagesSquare className="h-3.5 w-3.5" /> GDPI / Interview Angles
                   </h4>
@@ -588,8 +588,8 @@ export default function StudentNewsroom() {
               )}
 
               {open.wat_topics?.length > 0 && (
-                <section>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">WAT / Essay Topics</h4>
+                <section id="news-sec-wat" className={`rounded-lg p-3 ${focusSection === "wat" ? "ring-2 ring-fuchsia-300 bg-fuchsia-50/40" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-fuchsia-700 mb-1.5 flex items-center gap-1"><PenLine className="h-3.5 w-3.5" /> WAT / Essay Topics</h4>
                   <ul className="list-disc list-inside text-sm space-y-1">
                     {open.wat_topics.map((f, i) => <li key={i}>{f}</li>)}
                   </ul>
