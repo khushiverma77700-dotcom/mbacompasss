@@ -18,6 +18,7 @@ import { MathExpression } from "@/components/formulas/MathExpression";
 import { MathInlineText } from "@/components/formulas/MathInlineText";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Layers as LayersIcon, BookOpen, Gauge, ListChecks, X } from "lucide-react";
+import { useOpenFormula } from "@/components/student/QuickViewProvider";
 const DIFFS = [
   { k: "all", l: "All" },
   { k: "beginner", l: "Beginner" },
@@ -38,6 +39,7 @@ export default function StudentFormulaBook() {
   const isDemo = useIsDemo();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
+  const openFormula = useOpenFormula();
 
   const [formulas, setFormulas] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
@@ -454,14 +456,15 @@ export default function StudentFormulaBook() {
             </div>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
               {dailySet.slice(0, 5).map((f) => (
-                <Link
+                <button
                   key={f.id}
-                  to={`/student/formula/${f.slug}`}
-                  className="group rounded-xl border border-amber-200 bg-white/80 p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  type="button"
+                  onClick={() => openFormula(f.slug)}
+                  className="group text-left rounded-xl border border-amber-200 bg-white/80 p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-amber-700">{f.name}</div>
                   <div className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">{f.topic_slug?.replace(/-/g, " ")}</div>
-                </Link>
+                </button>
               ))}
             </div>
           </CardContent>
@@ -502,9 +505,9 @@ export default function StudentFormulaBook() {
                   {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <Link to={`/student/formula/${f.slug}`} className="block">
+                      <button type="button" onClick={() => openFormula(f.slug)} className="block text-left w-full">
                         <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
-                      </Link>
+                      </button>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <Badge variant="outline" className="border-sky-200 text-[10px] uppercase tracking-wide text-sky-700">{f.difficulty}</Badge>
                         {f.is_high_weightage && <Badge className="border-1 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
@@ -605,12 +608,13 @@ export default function StudentFormulaBook() {
                         {isDone ? "Done" : "Complete"}
                       </Button>
                     </div>
-                    <Link
-                      to={`/student/formula/${f.slug}`}
+                    <button
+                      type="button"
+                      onClick={() => openFormula(f.slug)}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:scale-[0.98]"
                     >
                       <BookOpen className="h-4 w-4" /> View Full Details <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    </button>
                   </div>
                 </CardContent>
               </Card>

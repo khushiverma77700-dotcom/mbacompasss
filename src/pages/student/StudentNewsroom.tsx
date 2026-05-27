@@ -14,7 +14,7 @@ import {
   Newspaper, Bookmark, BookmarkCheck, Star, Check, Clock, Flame,
   Globe, Building2, TrendingUp, GraduationCap, Cpu, Trophy, Leaf, FlaskConical,
   Briefcase, LineChart, Award, Zap, MessagesSquare, BookOpen, Lightbulb, PenLine,
-  Calendar, ArrowRight, Sparkles,
+  Calendar, ArrowRight, ArrowLeft, Sparkles,
 } from "lucide-react";
 
 type Article = {
@@ -283,9 +283,9 @@ export default function StudentNewsroom() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="w-full overflow-x-auto justify-start h-auto p-1">
+        <TabsList className="flex w-full h-auto gap-1 overflow-x-auto whitespace-nowrap justify-start p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((t) => (
-            <TabsTrigger key={t} value={t} className="text-xs md:text-sm">
+            <TabsTrigger key={t} value={t} className="shrink-0 whitespace-nowrap text-xs md:text-sm">
               {t}
             </TabsTrigger>
           ))}
@@ -472,9 +472,18 @@ export default function StudentNewsroom() {
 
       {/* Detail dialog */}
       <Dialog open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
           {open && (
             <>
+              <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur">
+                <button
+                  onClick={() => setOpen(null)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 active:scale-95 transition"
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="h-4 w-4" /> Back
+                </button>
+              </div>
               <DialogHeader>
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <Badge className={`bg-gradient-to-r ${(CATEGORY_META[open.category] || CATEGORY_META["All"]).color} text-white border-0`}>

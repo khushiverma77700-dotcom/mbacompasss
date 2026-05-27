@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useIsDemo } from "@/contexts/DemoModeContext";
+import { useOpenWord } from "@/components/student/QuickViewProvider";
 
 // MBA exam-focused filters (CAT + OMETs)
 const EXAMS = [
@@ -48,6 +49,7 @@ export default function StudentVocabularyFeed() {
   const isDemo = useIsDemo();
   const { user } = useAuth();
   const { toast } = useToast();
+  const openWord = useOpenWord();
   const [words, setWords] = useState<any[]>([]);
   const [wotd, setWotd] = useState<any>(null);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
@@ -514,13 +516,14 @@ export default function StudentVocabularyFeed() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {newToday.slice(0, 8).map((w) => (
-                  <Link
+                  <button
                     key={w.id}
-                    to={`/student/vocabulary/word/${w.slug}`}
+                    type="button"
+                    onClick={() => openWord(w.slug)}
                     className="rounded-full border border-violet-200 bg-white px-3 py-1 text-xs font-medium text-violet-800 transition-colors hover:bg-violet-100"
                   >
                     {w.word}
-                  </Link>
+                  </button>
                 ))}
                 {newToday.length > 8 && (
                   <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-700">+{newToday.length - 8} more</span>
@@ -639,8 +642,9 @@ export default function StudentVocabularyFeed() {
                 />
                 <CardContent className="relative flex flex-1 flex-col p-4 sm:p-6">
                   {!demoLocked && (
-                    <Link
-                      to={`/student/vocabulary/word/${w.slug}`}
+                    <button
+                      type="button"
+                      onClick={() => openWord(w.slug)}
                       className="absolute inset-0 z-0"
                       aria-label={`Open ${w.word}`}
                     />
@@ -733,13 +737,14 @@ export default function StudentVocabularyFeed() {
                     </div>
                   </div>
 
-                  <Link
-                    to={`/student/vocabulary/word/${w.slug}`}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); openWord(w.slug); }}
                     className="absolute right-3 top-3 hidden h-7 w-7 place-items-center rounded-full bg-white text-sky-600 opacity-0 shadow ring-1 ring-sky-100 transition-opacity group-hover:opacity-100 sm:grid"
                     aria-label="Open"
                   >
                     <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Link>
+                  </button>
                 </CardContent>
               </Card>
             );
