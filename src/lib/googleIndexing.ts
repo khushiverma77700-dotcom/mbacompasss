@@ -1,11 +1,11 @@
 // Google Indexing API integration was removed to reduce backend load.
-// These exports are kept as no-ops so existing admin save flows continue to compile.
+// Stubs accept any args so existing admin save flows continue to compile.
 
-export async function submitToGoogleIndexing(_urls: string | string[]): Promise<{ ok: boolean }> {
+export async function submitToGoogleIndexing(..._args: unknown[]): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
-export async function pingSitemap(): Promise<{ ok: boolean }> {
+export async function pingSitemap(..._args: unknown[]): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
