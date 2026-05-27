@@ -862,6 +862,25 @@ function BucketGrid({
     return map;
   }, [filteredItems, groupBySection]);
 
+  // Upcoming full-length launches strip (next 3 scheduled in future)
+  // NOTE: must be declared before any conditional early-return to respect Rules of Hooks.
+  const upcoming = useMemo(() => {
+    if (!isFullLength) return [] as { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null; at: Date }[];
+    const now = Date.now();
+    return items
+      .map((it) => {
+        const launch = it.test.launch_date ? new Date(it.test.launch_date) : null;
+        const sched = it.test.scheduled_start_at ? new Date(it.test.scheduled_start_at) : null;
+        const future = [launch, sched].filter((d): d is Date => !!d && d.getTime() > now);
+        if (!future.length) return null;
+        const at = future.sort((a, b) => a.getTime() - b.getTime())[0];
+        return { ...it, at };
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x)
+      .sort((a, b) => a.at.getTime() - b.at.getTime())
+      .slice(0, 3);
+  }, [items, isFullLength]);
+
   const renderEmpty = (
     <Card className="p-10 text-center border-dashed border-2 border-sky-100 bg-gradient-to-br from-sky-50/40 to-white">
       <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sky-100 mb-3">
