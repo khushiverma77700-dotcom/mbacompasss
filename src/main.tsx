@@ -35,3 +35,36 @@ requestAnimationFrame(() => {
     document.documentElement.classList.add("app-mounted");
   });
 });
+
+// ─────────────────────────────────────────────────────────────
+// Service Worker registration — production only, never inside
+// the Lovable editor preview or any iframe context.
+// ─────────────────────────────────────────────────────────────
+(() => {
+  const inIframe = (() => {
+    try { return window.self !== window.top; } catch { return true; }
+  })();
+  const host = window.location.hostname;
+  const isPreviewHost =
+    host.includes("id-preview--") ||
+    host.includes("preview--") ||
+    host.includes("lovableproject.com") ||
+    host.includes("lovableproject-dev.com") ||
+    host.endsWith(".lovable.app"); // includes editor preview
+
+  if (inIframe || isPreviewHost || !("serviceWorker" in navigator)) {
+    // Defensive cleanup: unregister any SW that might exist in preview
+    navigator.serviceWorker?.getRegistrations?.().then((regs) => {
+      regs.forEach((r) => r.unregister());
+    }).catch(() => {});
+    return;
+  }
+
+  if (import.meta.env.PROD) {
+    import("workbox-window").then(({ Workbox }) => {
+      const wb = new Workbox("/sw.js");
+      wb.addEventListener("waiting", () => wb.messageSkipWaiting());
+      wb.register().catch(() => {});
+    });
+  }
+})();
