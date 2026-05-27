@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Volume2, Bookmark, ArrowLeft, Loader2, CheckCircle2, RefreshCw, GraduationCap, Sparkles, Quote, Briefcase, Mail, MessageSquare } from "lucide-react";
+import { Volume2, Bookmark, ArrowLeft, Loader2, CheckCircle2, GraduationCap, Sparkles, Quote, Briefcase, Mail, MessageSquare, Lightbulb, Target, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function StudentVocabularyWord() {
