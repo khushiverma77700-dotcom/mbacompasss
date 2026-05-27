@@ -202,10 +202,6 @@ export default function StudentNewsroom() {
     return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   };
 
-  const scrollBy = (dir: 1 | -1) => {
-    const el = scrollerRef.current; if (!el) return;
-    el.scrollBy({ left: dir * (el.clientWidth * 0.9), behavior: "smooth" });
-  };
 
   useEffect(() => {
     if (!open) setFocusSection(null);
