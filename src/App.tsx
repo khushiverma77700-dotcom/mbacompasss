@@ -106,20 +106,14 @@ const AdminDatabaseBackup = lazyWithPreload(() => import("./pages/admin/AdminDat
 const AdminAIUsage = lazyWithPreload(() => import("./pages/admin/AdminAIUsage"));
 const AdminApiKeys = lazyWithPreload(() => import("./pages/admin/AdminApiKeys"));
 const AdminWelcomeEmail = lazyWithPreload(() => import("./pages/admin/AdminWelcomeEmail"));
-const AdminCitationsAudit = lazyWithPreload(() => import("./pages/admin/AdminCitationsAudit"));
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
 const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
 const AdminContentStudio = lazyWithPreload(() => import("./pages/admin/AdminContentStudio"));
 const AdminCourseCategories = lazyWithPreload(() => import("./pages/admin/AdminCourseCategories"));
 const AdminCATScores = lazyWithPreload(() => import("./pages/admin/AdminCATScores"));
 const AdminMegaMenu = lazyWithPreload(() => import("./pages/admin/AdminMegaMenu"));
-const AdminGoogleIndexing = lazyWithPreload(() => import("./pages/admin/AdminGoogleIndexing"));
-const AdminIndexingAudit = lazyWithPreload(() => import("./pages/admin/AdminIndexingAudit"));
-const AdminIndexingRequeue = lazyWithPreload(() => import("./pages/admin/AdminIndexingRequeue"));
 const AdminSpecializations = lazyWithPreload(() => import("./pages/admin/AdminSpecializations"));
-const AdminDomainAudit = lazyWithPreload(() => import("./pages/admin/AdminDomainAudit"));
 const AdminMetaValidator = lazyWithPreload(() => import("./pages/admin/AdminMetaValidator"));
-const AdminDNSStatus = lazyWithPreload(() => import("./pages/admin/AdminDNSStatus"));
 const AdminSafeBrowsingGuide = lazyWithPreload(() => import("./pages/admin/AdminSafeBrowsingGuide"));
 const CATScoreCalculatorPage = lazyWithPreload(() => import("./pages/CATScoreCalculatorPage"));
 const MBARoiCalculatorPage = lazyWithPreload(() => import("./pages/MBARoiCalculatorPage"));
@@ -745,20 +739,14 @@ const App = () => (
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
               <Route path="api-keys" element={<LazyPage><AdminApiKeys /></LazyPage>} />
               <Route path="welcome-email" element={<LazyPage><AdminWelcomeEmail /></LazyPage>} />
-              <Route path="citations-audit" element={<LazyPage><AdminCitationsAudit /></LazyPage>} />
               <Route path="content-refreshes" element={<LazyPage><AdminContentRefreshes /></LazyPage>} />
               <Route path="bulk-refresh" element={<LazyPage><AdminBulkRefresh /></LazyPage>} />
               <Route path="content-studio" element={<LazyPage><AdminContentStudio /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
               <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />
               <Route path="mega-menu" element={<LazyPage><AdminMegaMenu /></LazyPage>} />
-              <Route path="google-indexing" element={<LazyPage><AdminGoogleIndexing /></LazyPage>} />
-              <Route path="indexing-audit" element={<LazyPage><AdminIndexingAudit /></LazyPage>} />
-              <Route path="indexing-requeue" element={<LazyPage><AdminIndexingRequeue /></LazyPage>} />
               <Route path="specializations" element={<LazyPage><AdminSpecializations /></LazyPage>} />
-              <Route path="domain-audit" element={<LazyPage><AdminDomainAudit /></LazyPage>} />
               <Route path="meta-validator" element={<LazyPage><AdminMetaValidator /></LazyPage>} />
-              <Route path="dns-status" element={<LazyPage><AdminDNSStatus /></LazyPage>} />
               <Route path="safe-browsing-guide" element={<LazyPage><AdminSafeBrowsingGuide /></LazyPage>} />
               <Route path="roi-analyses" element={<LazyPage><AdminROIAnalyses /></LazyPage>} />
               <Route path="user-submissions" element={<LazyPage><AdminUserSubmissions /></LazyPage>} />
