@@ -14,7 +14,7 @@ import {
   Newspaper, Bookmark, BookmarkCheck, Star, Check, Clock, Flame,
   Globe, Building2, TrendingUp, GraduationCap, Cpu, Trophy, Leaf, FlaskConical,
   Briefcase, LineChart, Award, Zap, MessagesSquare, BookOpen, Lightbulb, PenLine,
-  Calendar, ArrowRight, Sparkles,
+  Calendar, ArrowRight, ArrowLeft, Sparkles,
 } from "lucide-react";
 
 type Article = {
