@@ -39,6 +39,7 @@ export default function StudentFormulaBook() {
   const isDemo = useIsDemo();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
+  const openFormula = useOpenFormula();
 
   const [formulas, setFormulas] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
