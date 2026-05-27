@@ -1028,9 +1028,10 @@ Deno.serve(async (req) => {
 
             const isTita = q.question_type === "tita";
             const cleanedQHtml = cleanQuestionHtml(q.question_html);
+            const qNum2 = await nextQuestionNumber(admin, job.section_id);
             const { data: qRow, error: insErr } = await admin.from("mock_questions").insert({
               section_id: job.section_id,
-              question_number: produced + 1,
+              question_number: qNum2,
               question_type: isTita ? "tita" : "mcq",
               question_html: cleanedQHtml,
               tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
@@ -1043,8 +1044,21 @@ Deno.serve(async (req) => {
               explanation_html: q.explanation_html || "",
               content_hash: hash,
             }).select("id").single();
-            if (insErr) { dupDb++; continue; }
+            if (insErr) {
+              dupDb++;
+              if ((insErr as any)?.code === PG_UNIQUE_VIOLATION && dupDb >= 50) {
+                await admin.from("mock_section_jobs").update({
+                  status: "failed",
+                  current_step: `Auto-aborted after ${dupDb} DB conflicts`,
+                  error_message: `Section ${job.section_code} hit ${dupDb} unique-key conflicts; needs manual cleanup.`,
+                  updated_at: new Date().toISOString(),
+                }).eq("id", job_id);
+                return;
+              }
+              continue;
+            }
             if (!qRow) { rejectedInvalid++; continue; }
+
 
             if (!isTita && Array.isArray(q.options)) {
               const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
