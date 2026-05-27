@@ -50,7 +50,7 @@ export function QuickViewProvider({ children }: { children: ReactNode }) {
 /* ---------- shared header ---------- */
 function DialogTopBar({ onClose, title }: { onClose: () => void; title?: string }) {
   return (
-    <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-4 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:-mt-6">
+    <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-4 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:-mx-6 sm:-mt-6 sm:px-4">
       <button
         onClick={onClose}
         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 active:scale-95 transition"
@@ -136,7 +136,7 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
 
   return (
     <Dialog open={!!slug} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl p-4 sm:p-6 w-screen h-[100dvh] max-h-[100dvh] rounded-none sm:w-auto sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-y-auto overflow-x-hidden">
+      <DialogContent className="left-0 top-0 translate-x-0 translate-y-0 w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none p-3 sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-auto sm:max-w-3xl sm:h-auto sm:max-h-[92vh] sm:rounded-lg sm:p-6 overflow-y-auto overflow-x-hidden">
 
         <DialogTopBar onClose={onClose} title={word?.word} />
 
@@ -313,7 +313,8 @@ function FormulaDialog({ slug, onClose }: { slug: string | null; onClose: () => 
 
   return (
     <Dialog open={!!slug} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl p-4 sm:p-6 w-screen h-[100dvh] max-h-[100dvh] rounded-none sm:w-auto sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-y-auto overflow-x-hidden">
+      <DialogContent className="left-0 top-0 translate-x-0 translate-y-0 w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none p-3 sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-auto sm:max-w-3xl sm:h-auto sm:max-h-[92vh] sm:rounded-lg sm:p-6 overflow-y-auto overflow-x-hidden">
+
         <DialogTopBar onClose={onClose} title={formula?.name} />
 
 
