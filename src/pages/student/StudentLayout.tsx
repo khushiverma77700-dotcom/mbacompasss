@@ -41,6 +41,7 @@ import ThemeToggle from "@/components/student/ThemeToggle";
 import StudentBottomNav from "@/components/student/StudentBottomNav";
 import InstallAppPrompt from "@/components/student/InstallAppPrompt";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
+import { QuickViewProvider } from "@/components/student/QuickViewProvider";
 import BRAND_LOGO_URL from "@/assets/brandLogo";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
