@@ -848,6 +848,12 @@ const App = () => (
             <Route path="/student/login" element={<LazyPage><StudentLogin /></LazyPage>} />
             <Route path="/student/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
             {(() => {
+              const studentIndexRoute = (
+                <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
+              );
+              const studentChildRoutesNoIndex = (
+                <></>
+              );
               const studentChildRoutes = (
                 <>
                   <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
