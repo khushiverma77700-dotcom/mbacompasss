@@ -105,7 +105,7 @@ const AdminCallbacks = lazyWithPreload(() => import("./pages/admin/AdminCallback
 const AdminDatabaseBackup = lazyWithPreload(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazyWithPreload(() => import("./pages/admin/AdminAIUsage"));
 const AdminApiKeys = lazyWithPreload(() => import("./pages/admin/AdminApiKeys"));
-const AdminWelcomeEmail = lazyWithPreload(() => import("./pages/admin/AdminWelcomeEmail"));
+// Welcome Email admin page removed
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
 const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
 const AdminContentStudio = lazyWithPreload(() => import("./pages/admin/AdminContentStudio"));
@@ -192,8 +192,7 @@ const StudentNewsroom = lazyWithPreload(() => import("./pages/student/StudentNew
 const AdminNewsroom = lazyWithPreload(() => import("./pages/admin/AdminNewsroom"));
 const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
 const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
-const DemoShell = lazyWithPreload(() => import("./components/demo/DemoShell"));
-const DemoDashboard = lazyWithPreload(() => import("./pages/demo/DemoDashboard"));
+// Demo Dashboard removed to reduce load
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
@@ -738,7 +737,7 @@ const App = () => (
               <Route path="database-backup" element={<LazyPage><AdminDatabaseBackup /></LazyPage>} />
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
               <Route path="api-keys" element={<LazyPage><AdminApiKeys /></LazyPage>} />
-              <Route path="welcome-email" element={<LazyPage><AdminWelcomeEmail /></LazyPage>} />
+              {/* welcome-email admin route removed */}
               <Route path="content-refreshes" element={<LazyPage><AdminContentRefreshes /></LazyPage>} />
               <Route path="bulk-refresh" element={<LazyPage><AdminBulkRefresh /></LazyPage>} />
               <Route path="content-studio" element={<LazyPage><AdminContentStudio /></LazyPage>} />
@@ -891,25 +890,7 @@ const App = () => (
               );
               return (
                 <>
-                  {/* /demo/* renders the EXACT same StudentLayout + child pages
-                      as /student, wrapped in DemoShell which provides:
-                        - DemoModeProvider (useIsDemo() === true everywhere)
-                        - Click interceptor → "Buy Full Course" popup
-                      In demo mode, data hooks short-circuit to Aman Verma's
-                      hardcoded dummy dataset (src/lib/demoData.ts) so every
-                      chart, leaderboard and widget is fully populated. */}
-                  <Route
-                    path="/demo"
-                    element={
-                      <LazyPage>
-                        <DemoShell>
-                          <StudentLazyPage><StudentLayout /></StudentLazyPage>
-                        </DemoShell>
-                      </LazyPage>
-                    }
-                  >
-                    {studentChildRoutes}
-                  </Route>
+                  {/* Demo dashboard removed to reduce load. */}
                   <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                     {studentChildRoutes}
                   </Route>

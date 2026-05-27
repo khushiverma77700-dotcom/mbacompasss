@@ -106,7 +106,7 @@ export function useStudentNavBadges(): StudentNavBadges {
 
     const start = () => {
       compute();
-      intervalId = setInterval(compute, 60_000); // refresh every minute
+      // Polling removed — badges now refresh once on tab open instead of every 60s.
     };
 
     const w = window as any;
