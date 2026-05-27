@@ -984,7 +984,7 @@ function Shell() {
           <div className="flex items-center gap-2">
             <button className="rounded-lg p-2 text-slate-600 hover:bg-sky-50"><Bell className="h-4 w-4" /></button>
             <div className="hidden items-center gap-2 rounded-xl border border-sky-100 bg-white px-3 py-1.5 sm:flex">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-xs font-bold text-white">AS</div>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-xs font-bold text-white">{STUDENT.initials}</div>
               <div className="text-xs">
                 <div className="font-semibold text-slate-900">{STUDENT.name}</div>
                 <div className="text-slate-500">Demo Student</div>
