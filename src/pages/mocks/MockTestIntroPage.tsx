@@ -141,9 +141,13 @@ export default function MockTestIntroPage() {
           </ul>
         </div>
 
-        <label className="flex items-start gap-2 mb-6 cursor-pointer">
-          <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(!!v)} className="mt-1" />
-          <span className="text-sm">
+        <label className="flex items-start gap-3 mb-6 cursor-pointer">
+          <Checkbox
+            checked={agreed}
+            onCheckedChange={(v) => setAgreed(!!v)}
+            className="mt-0.5 h-5 w-5 shrink-0 border-2 border-slate-400 bg-white data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600"
+          />
+          <span className="text-sm leading-relaxed">
             I have read and understood all the rules. I agree to take this mock under strict CAT-like conditions.
           </span>
         </label>
