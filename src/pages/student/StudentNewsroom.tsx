@@ -565,20 +565,20 @@ export default function StudentNewsroom() {
               )}
 
               {open.gdpi_points?.length > 0 && (
-                <section id="news-sec-gdpi" className={`rounded-lg border border-violet-200 bg-violet-50 p-3 ${focusSection === "gdpi" ? "ring-2 ring-violet-300" : ""}`}>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-violet-700 mb-1.5 flex items-center gap-1">
+                <section id="news-sec-gdpi" className={`rounded-lg border border-violet-200 bg-violet-50 p-3 dark:border-violet-500/40 dark:bg-violet-500/10 ${focusSection === "gdpi" ? "ring-2 ring-violet-300 dark:ring-violet-400/60" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300 mb-1.5 flex items-center gap-1">
                     <MessagesSquare className="h-3.5 w-3.5" /> GDPI / Interview Angles
                   </h4>
-                  <ul className="list-disc list-inside text-sm space-y-1 text-violet-900">
+                  <ul className="list-disc list-inside text-sm space-y-1 text-violet-900 dark:text-violet-100">
                     {open.gdpi_points.map((f, i) => <li key={i}>{f}</li>)}
                   </ul>
                 </section>
               )}
 
               {open.wat_topics?.length > 0 && (
-                <section id="news-sec-wat" className={`rounded-lg p-3 ${focusSection === "wat" ? "ring-2 ring-fuchsia-300 bg-fuchsia-50/40" : ""}`}>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-fuchsia-700 mb-1.5 flex items-center gap-1"><PenLine className="h-3.5 w-3.5" /> WAT / Essay Topics</h4>
-                  <ul className="list-disc list-inside text-sm space-y-1">
+                <section id="news-sec-wat" className={`rounded-lg border border-fuchsia-200 bg-fuchsia-50 p-3 dark:border-fuchsia-500/40 dark:bg-fuchsia-500/10 ${focusSection === "wat" ? "ring-2 ring-fuchsia-300 dark:ring-fuchsia-400/60" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-fuchsia-700 dark:text-fuchsia-300 mb-1.5 flex items-center gap-1"><PenLine className="h-3.5 w-3.5" /> WAT / Essay Topics</h4>
+                  <ul className="list-disc list-inside text-sm space-y-1 text-fuchsia-900 dark:text-fuchsia-100">
                     {open.wat_topics.map((f, i) => <li key={i}>{f}</li>)}
                   </ul>
                 </section>
