@@ -58,6 +58,23 @@ function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: 2 | 3; height?: n
 
 
 
+// Per-user sessionStorage cache — re-opens paint instantly with last-known data,
+// then fetch refreshes in the background. Cleared by the browser at tab close.
+const OVERVIEW_CACHE_KEY = (uid: string) => `student-overview-cache:v1:${uid}`;
+type OverviewCache = {
+  enrollments?: any[]; goals?: any[]; profile?: any; tasks?: any[]; weak?: any[];
+  displayName?: string; examCountdowns?: any[]; rewards?: any; leaderboardRank?: number | null;
+};
+function readOverviewCache(uid: string): OverviewCache | null {
+  try { const raw = sessionStorage.getItem(OVERVIEW_CACHE_KEY(uid)); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+function writeOverviewCache(uid: string, patch: OverviewCache) {
+  try {
+    const prev = readOverviewCache(uid) ?? {};
+    sessionStorage.setItem(OVERVIEW_CACHE_KEY(uid), JSON.stringify({ ...prev, ...patch }));
+  } catch {}
+}
+
 export default function StudentOverview() {
   const { user } = useAuth();
   const isDemo = useIsDemo();
@@ -65,16 +82,17 @@ export default function StudentOverview() {
   // Realtime: auto-refreshes the moment a mock is submitted. (Demo mode
   // returns Aman Verma's hardcoded dataset.)
   const { attempts } = useStudentPerformance();
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [goals, setGoals] = useState<any[]>([]);
-  const [profile, setProfile] = useState<any>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [weak, setWeak] = useState<any[]>([]);
-  const [displayName, setDisplayName] = useState<string>("");
-  const [examCountdowns, setExamCountdowns] = useState<any[]>([]);
+  const cached = (!isDemo && user) ? readOverviewCache(user.id) : null;
+  const [enrollments, setEnrollments] = useState<any[]>(cached?.enrollments ?? []);
+  const [goals, setGoals] = useState<any[]>(cached?.goals ?? []);
+  const [profile, setProfile] = useState<any>(cached?.profile ?? null);
+  const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? []);
+  const [weak, setWeak] = useState<any[]>(cached?.weak ?? []);
+  const [displayName, setDisplayName] = useState<string>(cached?.displayName ?? "");
+  const [examCountdowns, setExamCountdowns] = useState<any[]>(cached?.examCountdowns ?? []);
   const [sectionNameMap, setSectionNameMap] = useState<Record<string, string>>({});
-  const [rewards, setRewards] = useState<any>(null);
-  const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
+  const [rewards, setRewards] = useState<any>(cached?.rewards ?? null);
+  const [leaderboardRank, setLeaderboardRank] = useState<number | null>(cached?.leaderboardRank ?? null);
   // Per-minute tick has been moved into ExamCountdownStrip — only that
   // small component now re-renders every 60s instead of the entire 1800-line
   // overview tree (huge perf win on slower devices).
