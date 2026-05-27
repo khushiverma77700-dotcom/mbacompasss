@@ -1094,8 +1094,8 @@ function MockCardItem({
           <Badge variant="outline" className={`shrink-0 text-[10px] font-bold gap-1 ${statusTheme.chip} border ${isLaunchedFullLength ? "shadow-sm" : ""}`}>
             {isLaunchedFullLength ? (
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500" />
               </span>
             ) : !owned ? <Lock className="h-2.5 w-2.5" /> : lock ? <Sparkles className="h-2.5 w-2.5" /> : inProgress ? <Clock className="h-2.5 w-2.5" /> : latestSubmitted ? <Award className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5" />}
             {statusLabel}
