@@ -181,7 +181,7 @@ const StudentVocabularyFeed = lazyWithPreload(() => import("./pages/student/voca
 const StudentVocabularyWord = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyWord"));
 const StudentVocabularySearch = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularySearch"));
 const StudentVocabularyBookmarks = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyBookmarks"));
-const StudentVocabularyQuiz = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyQuiz"));
+
 const StudentVocabularyRevision = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyRevision"));
 const StudentVocabularyLeaderboard = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyLeaderboard"));
 const StudentVocabularyAnalytics = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyAnalytics"));
@@ -877,7 +877,7 @@ const App = () => (
                   <Route path="vocabulary/feed" element={<InnerLazyPage><StudentVocabularyFeed /></InnerLazyPage>} />
                   <Route path="vocabulary/search" element={<InnerLazyPage><StudentVocabularySearch /></InnerLazyPage>} />
                   <Route path="vocabulary/bookmarks" element={<InnerLazyPage><StudentVocabularyBookmarks /></InnerLazyPage>} />
-                  <Route path="vocabulary/quiz" element={<InnerLazyPage><StudentVocabularyQuiz /></InnerLazyPage>} />
+                  
                   <Route path="vocabulary/revision" element={<InnerLazyPage><StudentVocabularyRevision /></InnerLazyPage>} />
                   <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
                   <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
