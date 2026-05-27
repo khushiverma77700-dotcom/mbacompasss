@@ -20,31 +20,32 @@ import {
    Dummy data — realistic enough to feel premium
    ========================================================================= */
 const STUDENT = {
-  name: "Aarav Sharma",
+  name: "Aman Verma",
+  initials: "AV",
   target: "IIM Ahmedabad · CAT '26",
-  streak: 27,
-  xp: 8420,
-  level: 14,
-  rank: 312,
-  percentile: 96.4,
+  streak: 34,
+  xp: 11280,
+  level: 17,
+  rank: 248,
+  percentile: 97.1,
 };
 
 const PERF_TREND = [
-  { m: "Mock 1", score: 62, percentile: 78, target: 95 },
-  { m: "Mock 2", score: 71, percentile: 84, target: 95 },
-  { m: "Mock 3", score: 68, percentile: 82, target: 95 },
-  { m: "Mock 4", score: 79, percentile: 89, target: 95 },
-  { m: "Mock 5", score: 84, percentile: 92, target: 95 },
-  { m: "Mock 6", score: 88, percentile: 94, target: 95 },
-  { m: "Mock 7", score: 92, percentile: 96.4, target: 95 },
+  { m: "Mock 1", score: 64, percentile: 79, target: 96 },
+  { m: "Mock 2", score: 72, percentile: 85, target: 96 },
+  { m: "Mock 3", score: 69, percentile: 83, target: 96 },
+  { m: "Mock 4", score: 81, percentile: 90, target: 96 },
+  { m: "Mock 5", score: 86, percentile: 93, target: 96 },
+  { m: "Mock 6", score: 90, percentile: 95.2, target: 96 },
+  { m: "Mock 7", score: 94, percentile: 97.1, target: 96 },
 ];
 
 const SECTIONAL_RADAR = [
-  { area: "VARC", you: 88, top: 96 },
-  { area: "DILR", you: 74, top: 94 },
-  { area: "QA", you: 91, top: 97 },
-  { area: "GK", you: 68, top: 88 },
-  { area: "Vocab", you: 82, top: 92 },
+  { area: "VARC", you: 89, top: 96 },
+  { area: "DILR", you: 76, top: 94 },
+  { area: "QA", you: 93, top: 97 },
+  { area: "GK", you: 71, top: 88 },
+  { area: "Vocab", you: 84, top: 92 },
 ];
 
 const TIME_PIE = [
@@ -55,13 +56,56 @@ const TIME_PIE = [
 ];
 
 const ACCURACY_BARS = [
-  { topic: "Algebra", acc: 92 },
-  { topic: "Geometry", acc: 78 },
-  { topic: "RC", acc: 86 },
-  { topic: "PJ", acc: 72 },
-  { topic: "LR Sets", acc: 64 },
-  { topic: "DI Caselet", acc: 81 },
+  { topic: "Algebra", acc: 93 },
+  { topic: "Geometry", acc: 79 },
+  { topic: "RC", acc: 87 },
+  { topic: "PJ", acc: 74 },
+  { topic: "LR Sets", acc: 66 },
+  { topic: "DI Caselet", acc: 83 },
 ];
+
+// 7-day XP & study minutes — used in overview weekly bar
+const WEEKLY_ACTIVITY = [
+  { day: "Mon", xp: 420, mins: 145 },
+  { day: "Tue", xp: 510, mins: 180 },
+  { day: "Wed", xp: 380, mins: 120 },
+  { day: "Thu", xp: 620, mins: 210 },
+  { day: "Fri", xp: 540, mins: 195 },
+  { day: "Sat", xp: 780, mins: 260 },
+  { day: "Sun", xp: 690, mins: 230 },
+];
+
+// 12-week leaderboard XP race
+const XP_RACE = [
+  { wk: "W1", you: 320, top: 540 },
+  { wk: "W2", you: 410, top: 600 },
+  { wk: "W3", you: 480, top: 640 },
+  { wk: "W4", you: 560, top: 690 },
+  { wk: "W5", you: 640, top: 720 },
+  { wk: "W6", you: 720, top: 760 },
+  { wk: "W7", you: 810, top: 790 },
+  { wk: "W8", you: 880, top: 820 },
+  { wk: "W9", you: 940, top: 860 },
+  { wk: "W10", you: 1020, top: 900 },
+  { wk: "W11", you: 1110, top: 940 },
+  { wk: "W12", you: 1180, top: 980 },
+];
+
+// Personalized hub usage history
+const HUB_USAGE = [
+  { d: "M", cat: 4, xat: 2, nmat: 1, snap: 1 },
+  { d: "T", cat: 5, xat: 1, nmat: 2, snap: 1 },
+  { d: "W", cat: 3, xat: 3, nmat: 1, snap: 2 },
+  { d: "T", cat: 6, xat: 2, nmat: 2, snap: 1 },
+  { d: "F", cat: 4, xat: 4, nmat: 1, snap: 2 },
+  { d: "S", cat: 7, xat: 3, nmat: 3, snap: 2 },
+  { d: "S", cat: 5, xat: 2, nmat: 2, snap: 3 },
+];
+
+// Planner heatmap — 8 weeks x 7 days study intensity (0-4)
+const HEATMAP = Array.from({ length: 8 }, () =>
+  Array.from({ length: 7 }, () => Math.floor(Math.random() * 5))
+);
 
 const MOCKS = [
   { title: "CAT Full Mock #14 — Adaptive AI", type: "Full Length", duration: 120, questions: 66, badge: "LIVE", color: "from-rose-500 to-orange-500" },
@@ -73,12 +117,12 @@ const MOCKS = [
 ];
 
 const LEADERBOARD = [
-  { rank: 1, name: "Ishita R.", xp: 14820, badge: "🥇" },
-  { rank: 2, name: "Karthik V.", xp: 13990, badge: "🥈" },
-  { rank: 3, name: "Niharika S.", xp: 13510, badge: "🥉" },
+  { rank: 1, name: "Ishita R.", xp: 14820, badge: "1st" },
+  { rank: 2, name: "Karthik V.", xp: 13990, badge: "2nd" },
+  { rank: 3, name: "Niharika S.", xp: 13510, badge: "3rd" },
   { rank: 4, name: "Rohan M.", xp: 12880, badge: "" },
   { rank: 5, name: "Sneha P.", xp: 12110, badge: "" },
-  { rank: 6, name: "Aarav Sharma", xp: 8420, badge: "you" },
+  { rank: 6, name: "Aman Verma", xp: 11280, badge: "you" },
 ];
 
 const PLAN_TODAY = [
