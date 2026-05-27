@@ -18,6 +18,7 @@ import { MathExpression } from "@/components/formulas/MathExpression";
 import { MathInlineText } from "@/components/formulas/MathInlineText";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Layers as LayersIcon, BookOpen, Gauge, ListChecks, X } from "lucide-react";
+import { useOpenFormula } from "@/components/student/QuickViewProvider";
 const DIFFS = [
   { k: "all", l: "All" },
   { k: "beginner", l: "Beginner" },
