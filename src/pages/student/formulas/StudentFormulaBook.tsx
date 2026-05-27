@@ -499,15 +499,22 @@ export default function StudentFormulaBook() {
             const saved = !!p?.bookmarked;
             const demoLocked = isDemo && _idx > 0;
             return (
-              <Card key={f.id} data-demo-blurred={demoLocked ? "true" : undefined} className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl", isDone && "opacity-90", demoLocked && "blur-[6px] select-none")}>
+              <Card
+                key={f.id}
+                data-demo-blurred={demoLocked ? "true" : undefined}
+                role="button"
+                tabIndex={0}
+                onClick={() => !demoLocked && openFormula(f.slug)}
+                onKeyDown={(e) => { if (!demoLocked && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openFormula(f.slug); } }}
+                className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl cursor-pointer", isDone && "opacity-90", demoLocked && "blur-[6px] select-none cursor-default")}
+              >
                 <div aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1", isDone ? "bg-emerald-400" : isRevise ? "bg-amber-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500")} />
                 <CardContent className="relative flex flex-1 flex-col gap-5 p-6">
                   {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <button type="button" onClick={() => openFormula(f.slug)} className="block text-left w-full">
-                        <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
-                      </button>
+                      <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
+
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <Badge variant="outline" className="border-sky-200 text-[10px] uppercase tracking-wide text-sky-700">{f.difficulty}</Badge>
                         {f.is_high_weightage && <Badge className="border-1 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
