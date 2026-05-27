@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, BookOpen, BarChart3, Bookmark } from "lucide-react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 interface Enrollment {
   id: string;

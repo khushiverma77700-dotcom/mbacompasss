@@ -142,7 +142,7 @@ export default function PersonalizedMockResultPage() {
     return out;
   }, [qRows]);
 
-  if (!attempt) return <div className="p-6 text-muted-foreground">Loading…</div>;
+  if (!attempt) return <div className="p-4 sm:p-6 max-w-5xl mx-auto"><SectionSkeleton rows={3} /></div>;
 
   const total = attempt.num_questions;
   const correct = attempt.total_correct || 0;
