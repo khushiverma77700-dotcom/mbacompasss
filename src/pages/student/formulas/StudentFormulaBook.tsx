@@ -625,10 +625,13 @@ export default function StudentFormulaBook() {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); openFormula(f.slug); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:scale-[0.98]"
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); e.preventDefault(); openFormula(f.slug); } }}
+                      aria-label={`View full details for ${f.name}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2"
                     >
-                      <BookOpen className="h-4 w-4" /> View Full Details <ArrowRight className="h-4 w-4" />
+                      <BookOpen className="h-4 w-4" aria-hidden /> View Full Details <ArrowRight className="h-4 w-4" aria-hidden />
                     </button>
+
                   </div>
 
                 </CardContent>
