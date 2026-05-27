@@ -804,20 +804,20 @@ export default function StudentOverview() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
               {sectional.map((s) => (
-                <div key={s.name} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
+                <div key={s.name} className="rounded-lg border border-sky-100 bg-sky-50/40 dark:border-slate-700/60 dark:bg-slate-800/60 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold text-sm">{s.name}</div>
+                    <div className="font-semibold text-sm text-foreground">{s.name}</div>
                     <Badge variant="secondary">{s.pctOfMax}%</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-y-1.5 text-xs">
-                    <div className="text-muted-foreground">Avg score</div>
-                    <div className="font-medium text-right">{s.avgScore} / {s.avgMax}</div>
-                    <div className="text-muted-foreground">% of max</div>
-                    <div className="font-medium text-right">{s.pctOfMax}%</div>
-                    <div className="text-muted-foreground">Accuracy</div>
-                    <div className="font-medium text-right">{s.avgAccuracy}%</div>
-                    <div className="text-muted-foreground">Avg attempted</div>
-                    <div className="font-medium text-right">{s.avgAttempted}</div>
+                    <div className="text-muted-foreground dark:text-slate-300">Avg score</div>
+                    <div className="font-medium text-right text-foreground">{s.avgScore} / {s.avgMax}</div>
+                    <div className="text-muted-foreground dark:text-slate-300">% of max</div>
+                    <div className="font-medium text-right text-foreground">{s.pctOfMax}%</div>
+                    <div className="text-muted-foreground dark:text-slate-300">Accuracy</div>
+                    <div className="font-medium text-right text-foreground">{s.avgAccuracy}%</div>
+                    <div className="text-muted-foreground dark:text-slate-300">Avg attempted</div>
+                    <div className="font-medium text-right text-foreground">{s.avgAttempted}</div>
                   </div>
                   <Progress value={s.pctOfMax} className="h-1.5 mt-2" />
                 </div>
