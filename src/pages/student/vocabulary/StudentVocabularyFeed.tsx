@@ -49,6 +49,7 @@ export default function StudentVocabularyFeed() {
   const isDemo = useIsDemo();
   const { user } = useAuth();
   const { toast } = useToast();
+  const openWord = useOpenWord();
   const [words, setWords] = useState<any[]>([]);
   const [wotd, setWotd] = useState<any>(null);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
