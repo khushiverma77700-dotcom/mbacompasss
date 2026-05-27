@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
