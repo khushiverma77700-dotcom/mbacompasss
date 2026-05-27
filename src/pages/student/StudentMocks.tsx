@@ -1032,7 +1032,7 @@ function MockCardItem({
     : inProgress
     ? { grad: "from-sky-400 via-blue-500 to-indigo-500", glow: "from-sky-200/50", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
     : isLaunchedFullLength
-    ? { grad: "from-rose-500 via-orange-500 to-amber-500", glow: "from-rose-200/60", chip: "bg-rose-50 text-rose-700 border-rose-200", ring: "ring-rose-200" }
+    ? { grad: "from-sky-500 via-blue-600 to-indigo-600", glow: "from-sky-200/50", chip: "bg-sky-50 text-sky-700 border-sky-200", ring: "ring-sky-200" }
     : { grad: "from-violet-400 via-fuchsia-500 to-pink-500", glow: "from-violet-200/40", chip: "bg-violet-50 text-violet-700 border-violet-200", ring: "ring-violet-200" };
 
   const statusLabel = !owned
