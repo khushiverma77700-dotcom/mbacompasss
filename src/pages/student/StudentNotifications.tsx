@@ -117,30 +117,17 @@ export default function StudentNotifications() {
 
   useEffect(() => { load(); }, [user]);
 
-  // Realtime: prepend new notifications and pulse the live indicator
+  // Refresh on tab focus/visibility instead of holding an open realtime
+  // socket per student (saves ~1000 idle sockets at 1000 concurrent users).
   useEffect(() => {
     if (!user) return;
-    const ch = supabase
-      .channel(`notifications-feed-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const n = payload.new as any;
-          if (n?.type === "daily_test") return;
-          setItems((prev) => [n, ...prev]);
-          setLivePulse(true);
-          setTimeout(() => setLivePulse(false), 2000);
-        }
-
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` },
-        (payload: any) => setItems((prev) => prev.filter(i => i.id !== payload.old.id))
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const refresh = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", load);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", load);
+    };
   }, [user]);
 
   // Auto-mark read shortly after opening
