@@ -355,7 +355,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
       const results = await Promise.all(
         ids.map(async (id) => {
           try {
-            const { data } = await supabase.functions.invoke("projected-air", { body: { attempt_id: id, mode } });
+            const { data } = await supabase.functions.invoke("projected-air", { body: { attempt_id: id, mode: "motivational" } });
             return [id, data as RankResult] as const;
           } catch {
             return [id, null] as const;
@@ -370,7 +370,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
       });
     })();
     return () => { alive = false; };
-  }, [filtered, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filtered]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const unlockedAttempts = filtered.filter((a) => {
     const r = rankMap[a.id];
