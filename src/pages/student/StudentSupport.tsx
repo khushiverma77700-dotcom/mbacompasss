@@ -376,7 +376,7 @@ export default function StudentSupport() {
         </div>
 
         {stats.awaiting > 0 && (
-          <div className="relative mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-800">
+          <div className="relative mt-4 flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-400/50 bg-amber-50/80 dark:bg-amber-500/15 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
             <MessageSquare className="h-3.5 w-3.5" />
             <span>
               <strong>{stats.awaiting}</strong> ticket{stats.awaiting > 1 ? "s" : ""} awaiting a reply from our team.
