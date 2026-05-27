@@ -534,13 +534,14 @@ export default function StudentFormulaBook() {
                         <span className="text-sm font-bold uppercase tracking-wider text-slate-200">Formula</span>
                       </div>
                       <button
-                        onClick={() => setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] }))}
+                        onClick={(e) => { e.stopPropagation(); setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] })); }}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-[11px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white"
                         title={plainMode[f.id] ? "Show rendered math" : "Show plain text"}
                       >
                         {plainMode[f.id] ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                         {plainMode[f.id] ? "Rendered" : "Plain"}
                       </button>
+
                     </div>
                     {plainMode[f.id] ? (
                       <code className="block overflow-x-auto rounded-xl bg-black/30 px-5 py-4 font-mono text-[15px] leading-relaxed text-sky-100">
