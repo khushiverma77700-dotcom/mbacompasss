@@ -35,20 +35,10 @@ const AdminSitemap = () => {
         value: JSON.stringify({ xml, generated_at: new Date().toISOString(), url_count: totalUrls }),
       }, { onConflict: "key" });
 
-      // 3. Auto-discover: queue every new URL into the indexing pipeline
-      //    (Google Indexing API + IndexNow + sitemap ping). Non-blocking.
-      const [discover, ping] = await Promise.allSettled([
-        supabase.functions.invoke("google-indexing", { body: { action: "discover" } }),
-        supabase.functions.invoke("google-indexing", { body: { action: "ping_sitemap" } }),
-      ]);
-
-      const discovered = discover.status === "fulfilled"
-        ? (discover.value as any)?.data?.discovered ?? (discover.value as any)?.data?.added ?? 0
-        : 0;
-
+      // Google Indexing API integration removed to reduce backend load.
       toast({
         title: "Sitemap Refreshed",
-        description: `${totalUrls} URLs in sitemap. ${discovered ? `${discovered} new URL(s) queued for Google.` : "Google + IndexNow notified."}${ping.status === "rejected" ? " (sitemap ping failed)" : ""}`,
+        description: `${totalUrls} URLs in sitemap.`,
       });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
