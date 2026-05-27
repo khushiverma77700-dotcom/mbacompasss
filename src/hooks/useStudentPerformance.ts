@@ -105,6 +105,8 @@ export function useStudentPerformance(): StudentPerformanceData {
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
     initialData: initialAttempts,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const { data: sectionalMap = {} } = useQuery({
@@ -113,6 +115,8 @@ export function useStudentPerformance(): StudentPerformanceData {
     enabled: !!user?.id && !isDemo,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   // Persist base attempts for instant paint on next mount
@@ -129,24 +133,20 @@ export function useStudentPerformance(): StudentPerformanceData {
     })) as MockAttempt[];
   }, [baseAttempts, sectionalMap]);
 
-  // Realtime: refresh whenever this user's attempts change.
+  // Lightweight refresh on tab visibility regain — replaces the always-open
+  // realtime WebSocket (1 socket per student * 1000 students = 1000 idle
+  // sockets). React Query's refetchOnWindowFocus already covers focus events;
+  // this handles mobile/PWA visibility transitions on the same tab.
   useEffect(() => {
-    if (!user?.id) return;
-    const channel = supabase
-      .channel(`student-perf-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "mock_attempts", filter: `user_id=eq.${user.id}` },
-        () => {
-          qc.invalidateQueries({ queryKey: QUERY_KEY(user.id) });
-          qc.invalidateQueries({ queryKey: QUERY_KEY_SECTIONAL(user.id) });
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
+    if (!user?.id || isDemo) return;
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      qc.invalidateQueries({ queryKey: QUERY_KEY(user.id) });
+      qc.invalidateQueries({ queryKey: QUERY_KEY_SECTIONAL(user.id) });
     };
-  }, [user?.id, qc]);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [user?.id, isDemo, qc]);
 
   const submitted = useMemo(
     () => attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted"),
