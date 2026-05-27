@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-import SectionSkeleton from "@/components/student/SectionSkeleton";
   Select,
   SelectContent,
   SelectItem,
@@ -54,6 +53,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 const CATEGORIES = [
   { value: "mock_issue", label: "Mock Issue" },
   { value: "payment_issue", label: "Payment Issue" },

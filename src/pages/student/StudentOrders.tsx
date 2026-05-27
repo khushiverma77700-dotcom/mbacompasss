@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Receipt, Package } from "lucide-react";
-import SectionSkeleton from "@/components/student/SectionSkeleton";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 export default function StudentOrders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);

@@ -4,8 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Coins, Flame, Trophy, Star, Award, Zap, Target, BookOpenCheck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import SectionSkeleton from "@/components/student/SectionSkeleton";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 interface Rewards {
   coins: number; xp: number; level: number;
   streak_days: number; longest_streak: number;

@@ -9,7 +9,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
-import SectionSkeleton from "@/components/student/SectionSkeleton";
   ArrowLeft, CalendarRange, CheckCircle2, Flame, Clock, Target,
   TrendingUp, Activity, Trophy,
 } from "lucide-react";
@@ -19,6 +18,7 @@ import {
 } from "recharts";
 import { format, subDays } from "date-fns";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 type Range = "7d" | "30d" | "90d" | "custom";
 
 const CATEGORY_COLOR: Record<string, string> = {

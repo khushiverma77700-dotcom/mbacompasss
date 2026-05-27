@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-import SectionSkeleton from "@/components/student/SectionSkeleton";
   LineChart,
   Line,
   BarChart,
@@ -25,6 +24,7 @@ import SectionSkeleton from "@/components/student/SectionSkeleton";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 import AllIndiaRankTab from "@/components/mock/report/AllIndiaRankTab";
 
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 export default function StudentPerformance() {
   const { submitted, loading } = useStudentPerformance();
   const attempts = useMemo(() => submitted.slice().reverse(), [submitted]);
