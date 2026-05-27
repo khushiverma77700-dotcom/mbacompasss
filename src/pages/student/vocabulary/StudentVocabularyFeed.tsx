@@ -642,8 +642,9 @@ export default function StudentVocabularyFeed() {
                 />
                 <CardContent className="relative flex flex-1 flex-col p-4 sm:p-6">
                   {!demoLocked && (
-                    <Link
-                      to={`/student/vocabulary/word/${w.slug}`}
+                    <button
+                      type="button"
+                      onClick={() => openWord(w.slug)}
                       className="absolute inset-0 z-0"
                       aria-label={`Open ${w.word}`}
                     />
