@@ -184,7 +184,6 @@ export default function FormulaDetailPage() {
           <TabsTrigger value="examples">Examples</TabsTrigger>
           <TabsTrigger value="shortcuts">Shortcuts</TabsTrigger>
           <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-          <TabsTrigger value="ai">AI Assist</TabsTrigger>
         </TabsList>
 
         <TabsContent value="explain">
