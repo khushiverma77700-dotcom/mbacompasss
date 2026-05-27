@@ -734,3 +734,61 @@
 }
 .filter-scroll::-webkit-scrollbar { display: none; }
 .filter-scroll > * { flex-shrink: 0; white-space: nowrap; }
+
+/* ============================================================
+   GLOBAL MOBILE SAFEGUARDS (≤640px)
+   Prevent horizontal page overflow and tighten dense layouts so
+   the LMS dashboard renders cleanly on small phones.
+   ============================================================ */
+html, body, #root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 640px) {
+  /* Prevent any element from forcing a horizontal scroll */
+  body, #root {
+    overflow-x: hidden;
+  }
+
+  /* Cap any oversized media / SVG / iframe to viewport width */
+  img, svg, video, iframe, canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Tables become horizontally scrollable instead of breaking layout */
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tighten container padding on phones */
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Cards inside dashboard shouldn't carry oversized internal padding on phones */
+  [data-mbc-card] {
+    padding: 0.75rem !important;
+  }
+
+  /* Long unbreakable strings (URLs, IDs) wrap instead of expanding parent */
+  p, span, div, h1, h2, h3, h4, h5, h6, a, li, td, th {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  /* Headings shrink a notch on tight viewports */
+  h1 { font-size: clamp(1.5rem, 6vw, 2rem); line-height: 1.2; }
+  h2 { font-size: clamp(1.25rem, 5vw, 1.5rem); line-height: 1.25; }
+  h3 { font-size: clamp(1.05rem, 4.2vw, 1.25rem); line-height: 1.3; }
+
+  /* shadcn Dialog / Sheet content: never exceed viewport width */
+  [role="dialog"] {
+    max-width: 100vw !important;
+  }
+}

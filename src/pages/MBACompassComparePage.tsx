@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -144,7 +145,7 @@ function CompareInner() {
         <p className="text-muted-foreground mt-1">Pick your perfect program by features, mocks, mentorship and pricing.</p>
 
         {loading ? (
-          <div className="mt-8 text-muted-foreground">Loading…</div>
+          <div className="mt-8"><SectionSkeleton rows={2} /></div>
         ) : courses.length === 0 ? (
           <Card className="mt-8 p-12 text-center">
             <GraduationCap className="h-10 w-10 mx-auto text-sky-500 mb-3" />

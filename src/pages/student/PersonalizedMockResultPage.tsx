@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -142,7 +143,7 @@ export default function PersonalizedMockResultPage() {
     return out;
   }, [qRows]);
 
-  if (!attempt) return <div className="p-6 text-muted-foreground">Loading…</div>;
+  if (!attempt) return <div className="p-4 sm:p-6 max-w-5xl mx-auto"><SectionSkeleton rows={3} /></div>;
 
   const total = attempt.num_questions;
   const correct = attempt.total_correct || 0;

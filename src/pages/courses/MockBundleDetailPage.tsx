@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -219,7 +220,7 @@ export default function MockBundleDetailPage() {
       : undefined,
   );
 
-  if (loading) return <div className="container mx-auto px-4 py-12 text-muted-foreground">Loading…</div>;
+  if (loading) return <div className="container mx-auto px-4 py-8 max-w-5xl"><SectionSkeleton rows={3} /></div>;
   if (!bundle) return (
     <div className="container mx-auto px-4 py-16 text-center">
       <h1 className="text-2xl font-bold">Course not found</h1>

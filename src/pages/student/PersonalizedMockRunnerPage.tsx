@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -84,7 +85,7 @@ export default function PersonalizedMockRunnerPage() {
     }
   };
 
-  if (!attempt || !current) return <div className="p-8 text-muted-foreground">Loading…</div>;
+  if (!attempt || !current) return <div className="p-4 sm:p-8 max-w-4xl mx-auto"><SectionSkeleton rows={3} /></div>;
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");

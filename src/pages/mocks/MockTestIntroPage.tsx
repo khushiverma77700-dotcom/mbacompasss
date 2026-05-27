@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,7 +84,7 @@ export default function MockTestIntroPage() {
   };
 
   if (loading || authLoading) {
-    return <div className="container mx-auto px-4 py-12 text-muted-foreground">Loading…</div>;
+    return <div className="container mx-auto px-4 py-8 max-w-4xl"><SectionSkeleton rows={2} /></div>;
   }
   if (!test) {
     return <div className="container mx-auto px-4 py-12">Test not found</div>;
