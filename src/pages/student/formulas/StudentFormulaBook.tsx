@@ -601,29 +601,30 @@ export default function StudentFormulaBook() {
                   )}
 
                   {/* Actions */}
-                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1.5">
-                      <Button variant={saved ? "default" : "outline"} size="sm" className="h-8 gap-1 px-2 text-xs" disabled={busyId === f.id} onClick={() => toggleBookmark(f.id)}>
+                      <Button variant={saved ? "default" : "outline"} size="sm" className="h-8 gap-1 px-2 text-xs" disabled={busyId === f.id} onClick={(e) => { e.stopPropagation(); toggleBookmark(f.id); }}>
                         <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-current" : ""}`} />
                         {saved ? "Saved" : "Save"}
                       </Button>
-                      <Button variant={isRevise ? "default" : "outline"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", isRevise && "bg-amber-500 hover:bg-amber-600")} disabled={busyId === f.id} onClick={() => setStatus(f.id, isRevise ? "none" : "revise_later")}>
+                      <Button variant={isRevise ? "default" : "outline"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", isRevise && "bg-amber-500 hover:bg-amber-600")} disabled={busyId === f.id} onClick={(e) => { e.stopPropagation(); setStatus(f.id, isRevise ? "none" : "revise_later"); }}>
                         <RotateCcw className="h-3.5 w-3.5" />
                         {isRevise ? "Marked" : "Revise"}
                       </Button>
-                      <Button variant={isDone ? "secondary" : "default"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", !isDone && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95")} disabled={busyId === f.id || isDone} onClick={() => setStatus(f.id, "completed")}>
+                      <Button variant={isDone ? "secondary" : "default"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", !isDone && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95")} disabled={busyId === f.id || isDone} onClick={(e) => { e.stopPropagation(); setStatus(f.id, "completed"); }}>
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {isDone ? "Done" : "Complete"}
                       </Button>
                     </div>
                     <button
                       type="button"
-                      onClick={() => openFormula(f.slug)}
+                      onClick={(e) => { e.stopPropagation(); openFormula(f.slug); }}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:scale-[0.98]"
                     >
                       <BookOpen className="h-4 w-4" /> View Full Details <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
+
                 </CardContent>
               </Card>
             );
