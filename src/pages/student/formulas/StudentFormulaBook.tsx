@@ -503,12 +503,15 @@ export default function StudentFormulaBook() {
                 key={f.id}
                 data-demo-blurred={demoLocked ? "true" : undefined}
                 role="button"
-                tabIndex={0}
+                tabIndex={demoLocked ? -1 : 0}
+                aria-label={`Open formula details for ${f.name}`}
+                aria-disabled={demoLocked || undefined}
                 onClick={() => !demoLocked && openFormula(f.slug)}
                 onKeyDown={(e) => { if (!demoLocked && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openFormula(f.slug); } }}
-                className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl cursor-pointer", isDone && "opacity-90", demoLocked && "blur-[6px] select-none cursor-default")}
+                className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2", isDone && "opacity-90", demoLocked && "blur-[6px] select-none cursor-default")}
               >
                 <div aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1", isDone ? "bg-emerald-400" : isRevise ? "bg-amber-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500")} />
+
                 <CardContent className="relative flex flex-1 flex-col gap-5 p-6">
                   {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
