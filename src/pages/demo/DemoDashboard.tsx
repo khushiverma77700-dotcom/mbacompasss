@@ -7,7 +7,9 @@ import {
   GraduationCap, Activity, Layers, ChevronRight, Lock, Menu, X, Star,
   CheckCircle2, ArrowRight, ShoppingBag, Compass, BookMarked, FileText,
   Gauge, PieChart as PieIcon, LineChart as LineIcon,
+  Newspaper, Calculator, Globe, Briefcase, Building2, Cpu, Calendar,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, RadarChart, Radar,
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, PieChart, Pie, Cell,
