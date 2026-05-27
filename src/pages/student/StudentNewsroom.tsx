@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/hooks/use-toast";
 import {
-  Newspaper, Sparkles, Bookmark, BookmarkCheck, Star, Check, Clock, Flame,
+  Newspaper, Bookmark, BookmarkCheck, Star, Check, Clock, Flame,
   Globe, Building2, TrendingUp, GraduationCap, Cpu, Trophy, Leaf, FlaskConical,
   Briefcase, LineChart, Award, Zap, MessagesSquare, ChevronDown, BookOpen, Lightbulb, PenLine,
 } from "lucide-react";
@@ -199,9 +199,6 @@ export default function StudentNewsroom() {
           <div className="flex-1 min-w-[200px]">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-bold text-xl md:text-2xl text-foreground">News &amp; Insights</h1>
-              <Badge className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-0">
-                <Sparkles className="h-3 w-3 mr-1" /> AI-Curated
-              </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               Daily current affairs, business, policy & GDPI-ready briefs — built for CAT, XAT, SNAP, NMAT aspirants.
