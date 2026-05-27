@@ -50,7 +50,7 @@ export function QuickViewProvider({ children }: { children: ReactNode }) {
 /* ---------- shared header ---------- */
 function DialogTopBar({ onClose, title }: { onClose: () => void; title?: string }) {
   return (
-    <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-4 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:-mt-6">
+    <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-4 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:-mx-6 sm:-mt-6 sm:px-4">
       <button
         onClick={onClose}
         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 active:scale-95 transition"
