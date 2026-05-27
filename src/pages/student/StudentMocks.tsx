@@ -1051,14 +1051,14 @@ function MockCardItem({
     <Card
       className={`group relative overflow-hidden p-0 flex flex-col rounded-2xl border bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
         isLaunchedFullLength
-          ? "border-rose-300 ring-2 ring-rose-200/60 shadow-lg shadow-rose-200/40"
+          ? "border-sky-300 ring-2 ring-sky-200/60 shadow-lg shadow-sky-200/40"
           : !owned ? "border-slate-200/80" : "border-slate-200/80 hover:border-slate-300"
       }`}
     >
       {/* LIVE NOW corner ribbon for launched full-length mocks */}
       {isLaunchedFullLength && (
         <div className="absolute top-3 -right-9 z-10 rotate-45 pointer-events-none">
-          <div className="bg-gradient-to-r from-rose-600 to-orange-500 text-white text-[10px] font-bold tracking-wider px-10 py-1 shadow-md">
+          <div className="bg-gradient-to-r from-sky-600 to-blue-600 text-white text-[10px] font-bold tracking-wider px-10 py-1 shadow-md">
             LIVE
           </div>
         </div>
