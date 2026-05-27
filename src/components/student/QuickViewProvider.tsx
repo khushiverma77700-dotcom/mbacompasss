@@ -50,7 +50,7 @@ export function QuickViewProvider({ children }: { children: ReactNode }) {
 /* ---------- shared header ---------- */
 function DialogTopBar({ onClose, title }: { onClose: () => void; title?: string }) {
   return (
-    <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
+    <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-4 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:-mt-6">
       <button
         onClick={onClose}
         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 active:scale-95 transition"
@@ -136,7 +136,8 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
 
   return (
     <Dialog open={!!slug} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-6">
+      <DialogContent className="max-w-3xl p-4 sm:p-6 w-screen h-[100dvh] max-h-[100dvh] rounded-none sm:w-auto sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-y-auto overflow-x-hidden">
+
         <DialogTopBar onClose={onClose} title={word?.word} />
 
         {loading || !word ? (
@@ -312,8 +313,9 @@ function FormulaDialog({ slug, onClose }: { slug: string | null; onClose: () => 
 
   return (
     <Dialog open={!!slug} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-6">
+      <DialogContent className="max-w-3xl p-4 sm:p-6 w-screen h-[100dvh] max-h-[100dvh] rounded-none sm:w-auto sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-y-auto overflow-x-hidden">
         <DialogTopBar onClose={onClose} title={formula?.name} />
+
 
         {loading || !formula ? (
           <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-sky-600" /></div>

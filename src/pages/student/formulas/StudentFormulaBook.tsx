@@ -499,15 +499,22 @@ export default function StudentFormulaBook() {
             const saved = !!p?.bookmarked;
             const demoLocked = isDemo && _idx > 0;
             return (
-              <Card key={f.id} data-demo-blurred={demoLocked ? "true" : undefined} className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl", isDone && "opacity-90", demoLocked && "blur-[6px] select-none")}>
+              <Card
+                key={f.id}
+                data-demo-blurred={demoLocked ? "true" : undefined}
+                role="button"
+                tabIndex={0}
+                onClick={() => !demoLocked && openFormula(f.slug)}
+                onKeyDown={(e) => { if (!demoLocked && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openFormula(f.slug); } }}
+                className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl cursor-pointer", isDone && "opacity-90", demoLocked && "blur-[6px] select-none cursor-default")}
+              >
                 <div aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1", isDone ? "bg-emerald-400" : isRevise ? "bg-amber-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500")} />
                 <CardContent className="relative flex flex-1 flex-col gap-5 p-6">
                   {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <button type="button" onClick={() => openFormula(f.slug)} className="block text-left w-full">
-                        <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
-                      </button>
+                      <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
+
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <Badge variant="outline" className="border-sky-200 text-[10px] uppercase tracking-wide text-sky-700">{f.difficulty}</Badge>
                         {f.is_high_weightage && <Badge className="border-1 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
@@ -527,13 +534,14 @@ export default function StudentFormulaBook() {
                         <span className="text-sm font-bold uppercase tracking-wider text-slate-200">Formula</span>
                       </div>
                       <button
-                        onClick={() => setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] }))}
+                        onClick={(e) => { e.stopPropagation(); setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] })); }}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-[11px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white"
                         title={plainMode[f.id] ? "Show rendered math" : "Show plain text"}
                       >
                         {plainMode[f.id] ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                         {plainMode[f.id] ? "Rendered" : "Plain"}
                       </button>
+
                     </div>
                     {plainMode[f.id] ? (
                       <code className="block overflow-x-auto rounded-xl bg-black/30 px-5 py-4 font-mono text-[15px] leading-relaxed text-sky-100">
@@ -593,29 +601,30 @@ export default function StudentFormulaBook() {
                   )}
 
                   {/* Actions */}
-                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1.5">
-                      <Button variant={saved ? "default" : "outline"} size="sm" className="h-8 gap-1 px-2 text-xs" disabled={busyId === f.id} onClick={() => toggleBookmark(f.id)}>
+                      <Button variant={saved ? "default" : "outline"} size="sm" className="h-8 gap-1 px-2 text-xs" disabled={busyId === f.id} onClick={(e) => { e.stopPropagation(); toggleBookmark(f.id); }}>
                         <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-current" : ""}`} />
                         {saved ? "Saved" : "Save"}
                       </Button>
-                      <Button variant={isRevise ? "default" : "outline"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", isRevise && "bg-amber-500 hover:bg-amber-600")} disabled={busyId === f.id} onClick={() => setStatus(f.id, isRevise ? "none" : "revise_later")}>
+                      <Button variant={isRevise ? "default" : "outline"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", isRevise && "bg-amber-500 hover:bg-amber-600")} disabled={busyId === f.id} onClick={(e) => { e.stopPropagation(); setStatus(f.id, isRevise ? "none" : "revise_later"); }}>
                         <RotateCcw className="h-3.5 w-3.5" />
                         {isRevise ? "Marked" : "Revise"}
                       </Button>
-                      <Button variant={isDone ? "secondary" : "default"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", !isDone && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95")} disabled={busyId === f.id || isDone} onClick={() => setStatus(f.id, "completed")}>
+                      <Button variant={isDone ? "secondary" : "default"} size="sm" className={cn("h-8 gap-1 px-2 text-xs", !isDone && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95")} disabled={busyId === f.id || isDone} onClick={(e) => { e.stopPropagation(); setStatus(f.id, "completed"); }}>
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {isDone ? "Done" : "Complete"}
                       </Button>
                     </div>
                     <button
                       type="button"
-                      onClick={() => openFormula(f.slug)}
+                      onClick={(e) => { e.stopPropagation(); openFormula(f.slug); }}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:scale-[0.98]"
                     >
                       <BookOpen className="h-4 w-4" /> View Full Details <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
+
                 </CardContent>
               </Card>
             );
