@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";
@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/hooks/use-toast";
 import {
   Newspaper, Bookmark, BookmarkCheck, Star, Check, Clock, Flame,
   Globe, Building2, TrendingUp, GraduationCap, Cpu, Trophy, Leaf, FlaskConical,
-  Briefcase, LineChart, Award, Zap, MessagesSquare, ChevronDown, BookOpen, Lightbulb, PenLine,
+  Briefcase, LineChart, Award, Zap, MessagesSquare, BookOpen, Lightbulb, PenLine,
+  ChevronLeft, ChevronRight, Calendar, ArrowRight, Sparkles,
 } from "lucide-react";
 
 type Article = {
@@ -83,7 +83,8 @@ export default function StudentNewsroom() {
   const [category, setCategory] = useState<string>("All");
   const [open, setOpen] = useState<Article | null>(null);
   const [lang, setLang] = useState<"en" | "hi" | "hinglish">("en");
-  const [expanded, setExpanded] = useState<Record<string, string | null>>({});
+  const [focusSection, setFocusSection] = useState<string | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["newsroom-articles"],
@@ -183,9 +184,42 @@ export default function StudentNewsroom() {
     a.one_liner ||
     "";
 
-  const toggleExpand = (id: string, section: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: prev[id] === section ? null : section }));
+  const openWithSection = (a: Article, section: string | null) => {
+    setFocusSection(section);
+    openArticle(a);
   };
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (d.toDateString() === now.toDateString()) return "Today";
+    const yest = new Date(now); yest.setDate(yest.getDate() - 1);
+    if (d.toDateString() === yest.toDateString()) return "Yesterday";
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  };
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = scrollerRef.current; if (!el) return;
+    el.scrollBy({ left: dir * (el.clientWidth * 0.9), behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (!open) setFocusSection(null);
+  }, [open]);
+
+  useEffect(() => {
+    if (open && focusSection) {
+      const id = window.setTimeout(() => {
+        const node = document.getElementById(`news-sec-${focusSection}`);
+        node?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+      return () => window.clearTimeout(id);
+    }
+  }, [open, focusSection]);
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
@@ -278,135 +312,183 @@ export default function StudentNewsroom() {
               </p>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((a) => {
-                const meta = CATEGORY_META[a.category] || CATEGORY_META["All"];
-                const Icon = meta.icon;
-                const act = actionMap.get(a.id);
-                const exp = expanded[a.id];
-                return (
-                  <Card
-                    key={a.id}
-                    className="group p-4 hover:shadow-lg transition-all relative overflow-hidden border-border/60 flex flex-col"
-                  >
-                    <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${meta.color}`} />
-                    <div
-                      className="cursor-pointer"
-                      onClick={() => openArticle(a)}
+            <div className="relative -mx-4 md:-mx-6">
+              {/* Scroll buttons (desktop) */}
+              <button
+                type="button"
+                onClick={() => scrollBy(-1)}
+                className="hidden md:grid absolute left-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 place-items-center rounded-full bg-white/95 border border-sky-200 text-sky-700 shadow-lg hover:bg-sky-50 hover:scale-105 transition"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollBy(1)}
+                className="hidden md:grid absolute right-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 place-items-center rounded-full bg-white/95 border border-sky-200 text-sky-700 shadow-lg hover:bg-sky-50 hover:scale-105 transition"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
+              <div
+                ref={scrollerRef}
+                className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-4 md:px-12 pb-4 pt-1 [scrollbar-width:thin]"
+                style={{ scrollbarColor: "rgb(186 230 253) transparent" }}
+              >
+                {filtered.map((a) => {
+                  const meta = CATEGORY_META[a.category] || CATEGORY_META["All"];
+                  const Icon = meta.icon;
+                  const act = actionMap.get(a.id);
+                  const dateLabel = formatDate(a.published_at);
+                  const isFresh = (Date.now() - new Date(a.published_at).getTime()) < 24 * 3600 * 1000;
+                  return (
+                    <Card
+                      key={a.id}
+                      className="group relative overflow-hidden border border-slate-200/80 rounded-2xl flex flex-col bg-gradient-to-b from-white to-slate-50/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 hover:border-sky-300 transition-all duration-300 snap-start shrink-0 w-[88vw] sm:w-[420px] md:w-[360px] lg:w-[380px]"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`h-6 w-6 rounded-md bg-gradient-to-br ${meta.color} grid place-items-center text-white`}>
-                            <Icon className="h-3 w-3" />
+                      {/* Top accent + freshness shimmer */}
+                      <div className={`h-1 w-full bg-gradient-to-r ${meta.color}`} />
+                      {isFresh && (
+                        <div className="absolute top-2 right-2 z-10">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Fresh
                           </span>
-                          <span className="text-[11px] font-semibold text-muted-foreground">{a.category}</span>
                         </div>
-                        <Badge variant="outline" className={`text-[10px] ${importanceBadge(a.importance)}`}>
-                          {a.importance === "high" && <Flame className="h-2.5 w-2.5 mr-0.5" />}
-                          {a.importance.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <h3 className="font-bold text-sm md:text-base text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-1.5">
-                        {a.headline}
-                      </h3>
-                      {(pickSummary(a) || a.one_liner) && (
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3" lang={lang === "hi" ? "hi" : "en"}>
-                          {pickSummary(a) || a.one_liner}
-                        </p>
                       )}
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-2">
-                        <span className="flex items-center gap-2">
-                          {a.source_name && <span className="font-medium">{a.source_name}</span>}
-                          <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {Math.max(15, a.reading_seconds)}s</span>
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* Inline previews */}
-                    <div className="mt-2 space-y-1.5 border-t pt-2">
-                      {a.detailed_summary && (
-                        <Collapsible open={exp === "detail"} onOpenChange={() => toggleExpand(a.id, "detail")}>
-                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-sky-700 hover:text-sky-900 px-2 py-1 rounded hover:bg-sky-50">
-                            <span className="flex items-center gap-1.5"><BookOpen className="h-3 w-3" /> Detailed View</span>
-                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "detail" ? "rotate-180" : ""}`} />
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-foreground/80 whitespace-pre-line line-clamp-[8]">
-                            {a.detailed_summary}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      )}
-                      {a.why_matters && (
-                        <Collapsible open={exp === "why"} onOpenChange={() => toggleExpand(a.id, "why")}>
-                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-amber-700 hover:text-amber-900 px-2 py-1 rounded hover:bg-amber-50">
-                            <span className="flex items-center gap-1.5"><Lightbulb className="h-3 w-3" /> Why this matters</span>
-                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "why" ? "rotate-180" : ""}`} />
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-amber-900">
-                            {a.why_matters}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      )}
-                      {a.wat_topics?.length > 0 && (
-                        <Collapsible open={exp === "wat"} onOpenChange={() => toggleExpand(a.id, "wat")}>
-                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-violet-700 hover:text-violet-900 px-2 py-1 rounded hover:bg-violet-50">
-                            <span className="flex items-center gap-1.5"><PenLine className="h-3 w-3" /> WAT / Essay Topics</span>
-                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "wat" ? "rotate-180" : ""}`} />
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-violet-900">
-                            <ul className="list-disc list-inside space-y-0.5">
-                              {a.wat_topics.slice(0, 5).map((t, i) => <li key={i}>{t}</li>)}
-                            </ul>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      )}
-                      {a.gdpi_points?.length > 0 && (
-                        <Collapsible open={exp === "gdpi"} onOpenChange={() => toggleExpand(a.id, "gdpi")}>
-                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-fuchsia-700 hover:text-fuchsia-900 px-2 py-1 rounded hover:bg-fuchsia-50">
-                            <span className="flex items-center gap-1.5"><MessagesSquare className="h-3 w-3" /> GDPI Angles</span>
-                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "gdpi" ? "rotate-180" : ""}`} />
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-fuchsia-900">
-                            <ul className="list-disc list-inside space-y-0.5">
-                              {a.gdpi_points.slice(0, 5).map((t, i) => <li key={i}>{t}</li>)}
-                            </ul>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      )}
-                    </div>
+                      <div className="p-4 flex flex-col flex-1">
+                        {/* Category + Importance */}
+                        <div className="flex items-center justify-between mb-2 flex-wrap gap-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`h-7 w-7 rounded-lg bg-gradient-to-br ${meta.color} grid place-items-center text-white shadow-sm`}>
+                              <Icon className="h-3.5 w-3.5" />
+                            </span>
+                            <span className="text-[11px] font-bold text-slate-700">{a.category}</span>
+                          </div>
+                          <Badge variant="outline" className={`text-[10px] ${importanceBadge(a.importance)}`}>
+                            {a.importance === "high" && <Flame className="h-2.5 w-2.5 mr-0.5" />}
+                            {a.importance.toUpperCase()}
+                          </Badge>
+                        </div>
 
-                    {/* Action row */}
-                    <div className="mt-3 pt-2 border-t flex items-center gap-1.5 flex-wrap">
-                      <Button
-                        size="sm"
-                        variant={act?.is_read ? "default" : "outline"}
-                        className="h-7 px-2 text-[11px] gap-1"
-                        onClick={(e) => { e.stopPropagation(); updateAction(a, { is_read: !act?.is_read }, "Read"); }}
-                      >
-                        <Check className="h-3 w-3" />
-                        {act?.is_read ? "Read" : "Mark Read"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={act?.is_saved ? "default" : "outline"}
-                        className="h-7 px-2 text-[11px] gap-1"
-                        onClick={(e) => { e.stopPropagation(); updateAction(a, { is_saved: !act?.is_saved }, "Saved"); }}
-                      >
-                        {act?.is_saved ? <BookmarkCheck className="h-3 w-3" /> : <Bookmark className="h-3 w-3" />}
-                        {act?.is_saved ? "Saved" : "Save"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={act?.is_liked ? "default" : "outline"}
-                        className="h-7 px-2 text-[11px] gap-1"
-                        onClick={(e) => { e.stopPropagation(); updateAction(a, { is_liked: !act?.is_liked }, "Important"); }}
-                      >
-                        <Star className={`h-3 w-3 ${act?.is_liked ? "fill-current" : ""}`} />
-                        {act?.is_liked ? "Important" : "Mark Important"}
-                      </Button>
-                    </div>
-                  </Card>
-                );
-              })}
+                        {/* Date + meta strip */}
+                        <div className="flex items-center gap-2 mb-2 text-[10.5px] text-slate-500 flex-wrap">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-100 font-semibold">
+                            <Calendar className="h-2.5 w-2.5" />
+                            {dateLabel}
+                          </span>
+                          {a.source_name && <span className="font-medium truncate max-w-[120px]">· {a.source_name}</span>}
+                          <span className="inline-flex items-center gap-0.5 ml-auto"><Clock className="h-3 w-3" /> {Math.max(15, a.reading_seconds)}s read</span>
+                        </div>
+
+                        <h3
+                          className="font-bold text-[15px] leading-snug text-slate-900 line-clamp-2 mb-1.5 cursor-pointer hover:text-sky-700 transition-colors"
+                          onClick={() => openWithSection(a, null)}
+                        >
+                          {a.headline}
+                        </h3>
+                        {(pickSummary(a) || a.one_liner) && (
+                          <p className="text-[12.5px] text-slate-600 line-clamp-3 mb-3 leading-relaxed" lang={lang === "hi" ? "hi" : "en"}>
+                            {pickSummary(a) || a.one_liner}
+                          </p>
+                        )}
+
+                        {/* Section quick-jump chips → open popup at that section */}
+                        <div className="mt-auto grid grid-cols-2 gap-1.5 pt-2">
+                          {a.detailed_summary && (
+                            <button
+                              onClick={() => openWithSection(a, "detail")}
+                              className="group/chip flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50/60 hover:bg-sky-100 px-2 py-1.5 text-[11px] font-semibold text-sky-800 transition"
+                            >
+                              <BookOpen className="h-3 w-3" />
+                              <span className="truncate">Detailed</span>
+                              <ArrowRight className="h-2.5 w-2.5 ml-auto opacity-60 group-hover/chip:translate-x-0.5 transition-transform" />
+                            </button>
+                          )}
+                          {a.why_matters && (
+                            <button
+                              onClick={() => openWithSection(a, "why")}
+                              className="group/chip flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 hover:bg-amber-100 px-2 py-1.5 text-[11px] font-semibold text-amber-800 transition"
+                            >
+                              <Lightbulb className="h-3 w-3" />
+                              <span className="truncate">Why matters</span>
+                              <ArrowRight className="h-2.5 w-2.5 ml-auto opacity-60 group-hover/chip:translate-x-0.5 transition-transform" />
+                            </button>
+                          )}
+                          {a.wat_topics?.length > 0 && (
+                            <button
+                              onClick={() => openWithSection(a, "wat")}
+                              className="group/chip flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50/60 hover:bg-violet-100 px-2 py-1.5 text-[11px] font-semibold text-violet-800 transition"
+                            >
+                              <PenLine className="h-3 w-3" />
+                              <span className="truncate">WAT/Essay</span>
+                              <ArrowRight className="h-2.5 w-2.5 ml-auto opacity-60 group-hover/chip:translate-x-0.5 transition-transform" />
+                            </button>
+                          )}
+                          {a.gdpi_points?.length > 0 && (
+                            <button
+                              onClick={() => openWithSection(a, "gdpi")}
+                              className="group/chip flex items-center gap-1.5 rounded-lg border border-fuchsia-200 bg-fuchsia-50/60 hover:bg-fuchsia-100 px-2 py-1.5 text-[11px] font-semibold text-fuchsia-800 transition"
+                            >
+                              <MessagesSquare className="h-3 w-3" />
+                              <span className="truncate">GDPI</span>
+                              <ArrowRight className="h-2.5 w-2.5 ml-auto opacity-60 group-hover/chip:translate-x-0.5 transition-transform" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Big CTA */}
+                        <Button
+                          onClick={() => openWithSection(a, null)}
+                          className="mt-3 w-full h-9 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-[12.5px] font-semibold gap-1.5 shadow-sm"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          View Full Brief
+                          <ArrowRight className="h-3.5 w-3.5 ml-auto" />
+                        </Button>
+
+                        {/* Action row */}
+                        <div className="mt-2 pt-2 border-t border-dashed flex items-center gap-1 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant={act?.is_read ? "default" : "outline"}
+                            className="h-7 px-2 text-[11px] gap-1 flex-1 min-w-[70px]"
+                            onClick={(e) => { e.stopPropagation(); updateAction(a, { is_read: !act?.is_read }, "Read"); }}
+                          >
+                            <Check className="h-3 w-3" />
+                            {act?.is_read ? "Read" : "Read"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={act?.is_saved ? "default" : "outline"}
+                            className="h-7 px-2 text-[11px] gap-1 flex-1 min-w-[70px]"
+                            onClick={(e) => { e.stopPropagation(); updateAction(a, { is_saved: !act?.is_saved }, "Saved"); }}
+                          >
+                            {act?.is_saved ? <BookmarkCheck className="h-3 w-3" /> : <Bookmark className="h-3 w-3" />}
+                            {act?.is_saved ? "Saved" : "Save"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={act?.is_liked ? "default" : "outline"}
+                            className="h-7 px-2 text-[11px] gap-1 flex-1 min-w-[70px]"
+                            onClick={(e) => { e.stopPropagation(); updateAction(a, { is_liked: !act?.is_liked }, "Important"); }}
+                          >
+                            <Star className={`h-3 w-3 ${act?.is_liked ? "fill-current" : ""}`} />
+                            {act?.is_liked ? "Important" : "Important"}
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Swipe hint */}
+              <div className="md:hidden text-center text-[11px] text-slate-500 -mt-1 flex items-center justify-center gap-1">
+                <ChevronLeft className="h-3 w-3" /> Swipe to browse <ChevronRight className="h-3 w-3" />
+              </div>
             </div>
           )}
         </TabsContent>
@@ -428,6 +510,9 @@ export default function StudentNewsroom() {
                   {open.source_name && (
                     <span className="text-xs text-muted-foreground">{open.source_name}</span>
                   )}
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-md px-1.5 py-0.5">
+                    <Calendar className="h-2.5 w-2.5" /> {formatDate(open.published_at)}
+                  </span>
                 </div>
                 <DialogTitle className="text-left text-lg md:text-xl">{open.headline}</DialogTitle>
               </DialogHeader>
@@ -472,15 +557,15 @@ export default function StudentNewsroom() {
               )}
 
               {open.detailed_summary && (
-                <section>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Detailed View</h4>
+                <section id="news-sec-detail" className={`rounded-lg p-3 transition ${focusSection === "detail" ? "ring-2 ring-sky-300 bg-sky-50/50" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-sky-700 mb-1.5 flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Detailed View</h4>
                   <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{open.detailed_summary}</p>
                 </section>
               )}
 
               {open.why_matters && (
-                <section className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">Why this matters</h4>
+                <section id="news-sec-why" className={`rounded-lg border border-amber-200 bg-amber-50 p-3 ${focusSection === "why" ? "ring-2 ring-amber-300" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1 flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> Why this matters</h4>
                   <p className="text-sm text-amber-900">{open.why_matters}</p>
                 </section>
               )}
@@ -495,7 +580,7 @@ export default function StudentNewsroom() {
               )}
 
               {open.gdpi_points?.length > 0 && (
-                <section className="rounded-lg border border-violet-200 bg-violet-50 p-3">
+                <section id="news-sec-gdpi" className={`rounded-lg border border-violet-200 bg-violet-50 p-3 ${focusSection === "gdpi" ? "ring-2 ring-violet-300" : ""}`}>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-violet-700 mb-1.5 flex items-center gap-1">
                     <MessagesSquare className="h-3.5 w-3.5" /> GDPI / Interview Angles
                   </h4>
@@ -506,8 +591,8 @@ export default function StudentNewsroom() {
               )}
 
               {open.wat_topics?.length > 0 && (
-                <section>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">WAT / Essay Topics</h4>
+                <section id="news-sec-wat" className={`rounded-lg p-3 ${focusSection === "wat" ? "ring-2 ring-fuchsia-300 bg-fuchsia-50/40" : ""}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-fuchsia-700 mb-1.5 flex items-center gap-1"><PenLine className="h-3.5 w-3.5" /> WAT / Essay Topics</h4>
                   <ul className="list-disc list-inside text-sm space-y-1">
                     {open.wat_topics.map((f, i) => <li key={i}>{f}</li>)}
                   </ul>
