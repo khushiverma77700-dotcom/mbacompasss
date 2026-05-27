@@ -486,35 +486,290 @@ function ViewLeaderboard() {
 }
 
 /* =========================================================================
-   View: Vocabulary
+   Reusable: Locked overlay for blurred preview cards
+   ========================================================================= */
+function LockedOverlay() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/40 backdrop-blur-md">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg ring-4 ring-white/60">
+        <Lock className="h-4 w-4" />
+      </div>
+      <a
+        data-demo-allow="true"
+        href="/mba-compass"
+        className="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-md hover:shadow-lg"
+      >
+        <ShoppingBag className="h-3 w-3" /> Unlock Full Access
+      </a>
+    </div>
+  );
+}
+
+function PreviewHint() {
+  return (
+    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">
+      <Sparkles className="h-3 w-3" /> Tap the first card to preview · Rest unlock with full course
+    </div>
+  );
+}
+
+/* =========================================================================
+   View: B-School Vocabulary (1 clickable + rest blurred)
    ========================================================================= */
 function ViewVocabulary() {
+  const [open, setOpen] = useState<null | typeof words[number]>(null);
   const words = [
-    { w: "Ephemeral", m: "Lasting for a very short time", ex: "Social-media fame is often ephemeral." },
-    { w: "Sycophant", m: "A person who acts obsequiously to gain advantage", ex: "The CEO was surrounded by sycophants." },
-    { w: "Quixotic", m: "Extremely idealistic, unrealistic", ex: "A quixotic quest for perfection." },
-    { w: "Pellucid", m: "Translucently clear", ex: "The pellucid waters of the lagoon." },
+    { w: "Ephemeral", m: "Lasting for a very short time", ex: "Social-media fame is often ephemeral.", syn: "transient, fleeting, momentary", ant: "permanent, eternal", etym: "Greek ephēmeros (lasting only a day)", cat: "Frequently tested in CAT VARC & XAT verbal sections." },
+    { w: "Sycophant", m: "A person who acts obsequiously to gain advantage", ex: "The CEO was surrounded by sycophants.", syn: "flatterer, yes-man", ant: "critic", etym: "Greek sykophantēs", cat: "Common in RC passages on leadership." },
+    { w: "Quixotic", m: "Extremely idealistic, unrealistic", ex: "A quixotic quest for perfection.", syn: "idealistic, utopian", ant: "pragmatic", etym: "From Don Quixote", cat: "Appears in para-jumble & summary questions." },
+    { w: "Pellucid", m: "Translucently clear", ex: "The pellucid waters of the lagoon.", syn: "lucid, transparent", ant: "opaque", etym: "Latin pellucidus", cat: "GMAT & SNAP synonym favourite." },
   ];
   return (
     <div className="space-y-5">
-      <SectionTitle icon={BookMarked} title="Vocabulary Hub" subtitle="MBA-grade Word of the Day · SM-2 revision" />
+      <SectionTitle icon={BookMarked} title="B-School Vocabulary" subtitle="MBA-grade Word of the Day · SM-2 spaced revision" />
+      <PreviewHint />
       <div className="grid gap-4 md:grid-cols-2">
-        {words.map((w, i) => (
-          <motion.div key={i} whileHover={{ y: -3 }}
-            className="rounded-2xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/40 p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <h3 className="text-xl font-bold text-slate-900">{w.w}</h3>
-              <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-700">CAT-Level</span>
+        {words.map((w, i) => {
+          const isPreview = i === 0;
+          return (
+            <div key={i} className="relative">
+              <motion.div
+                whileHover={isPreview ? { y: -3 } : undefined}
+                onClick={isPreview ? () => setOpen(w) : undefined}
+                data-demo-allow={isPreview ? "true" : undefined}
+                className={`rounded-2xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/40 p-5 shadow-sm ${isPreview ? "cursor-pointer ring-2 ring-sky-300 hover:shadow-lg" : "select-none"}`}
+              >
+                <div className="flex items-start justify-between">
+                  <h3 className="text-xl font-bold text-slate-900">{w.w}</h3>
+                  <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-700">CAT-Level</span>
+                </div>
+                <p className="mt-1 text-sm text-slate-700">{w.m}</p>
+                <p className="mt-2 text-xs italic text-slate-500">"{w.ex}"</p>
+                <div className="mt-4 flex gap-2">
+                  <span className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white">Bookmark</span>
+                  <span className="rounded-lg border border-sky-200 px-3 py-1.5 text-xs font-semibold text-sky-700">Take Quiz</span>
+                </div>
+                {isPreview && (
+                  <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-sky-700">
+                    Click to view full breakdown <ArrowRight className="h-3 w-3" />
+                  </div>
+                )}
+              </motion.div>
+              {!isPreview && <LockedOverlay />}
             </div>
-            <p className="mt-1 text-sm text-slate-700">{w.m}</p>
-            <p className="mt-2 text-xs italic text-slate-500">"{w.ex}"</p>
-            <div className="mt-4 flex gap-2">
-              <button className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white">Bookmark</button>
-              <button className="rounded-lg border border-sky-200 px-3 py-1.5 text-xs font-semibold text-sky-700">Take Quiz</button>
-            </div>
-          </motion.div>
-        ))}
+          );
+        })}
       </div>
+
+      <Dialog open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
+        <DialogContent data-demo-allow="true" className="max-w-lg">
+          {open && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{open.w}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 text-sm">
+                <div><span className="font-semibold text-slate-700">Meaning: </span>{open.m}</div>
+                <div className="italic text-slate-600">"{open.ex}"</div>
+                <div className="rounded-lg bg-emerald-50 p-3 text-emerald-800"><span className="font-semibold">Synonyms: </span>{open.syn}</div>
+                <div className="rounded-lg bg-rose-50 p-3 text-rose-800"><span className="font-semibold">Antonyms: </span>{open.ant}</div>
+                <div className="rounded-lg bg-amber-50 p-3 text-amber-800"><span className="font-semibold">Etymology: </span>{open.etym}</div>
+                <div className="rounded-lg bg-sky-50 p-3 text-sky-800"><span className="font-semibold">CAT/MBA insight: </span>{open.cat}</div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* =========================================================================
+   View: Quant Formula Book (1 clickable + rest blurred)
+   ========================================================================= */
+function ViewFormulas() {
+  const [open, setOpen] = useState<null | typeof formulas[number]>(null);
+  const formulas = [
+    { t: "Compound Interest", f: "A = P(1 + r/n)^(nt)", topic: "Arithmetic", color: "from-sky-500 to-blue-600", desc: "Principal P compounded n times per year at rate r for t years.", trick: "For yearly compounding, A = P(1 + r)^t. Always convert r to decimal.", ex: "₹10,000 at 8% for 2 years yearly → 10000(1.08)² = ₹11,664" },
+    { t: "Speed-Time-Distance", f: "Speed = Distance / Time", topic: "Arithmetic", color: "from-emerald-500 to-teal-600", desc: "Core kinematics relationship.", trick: "Use ratios for relative speed problems.", ex: "120 km in 2h → 60 km/h." },
+    { t: "Quadratic Roots", f: "x = (-b ± √(b² - 4ac)) / 2a", topic: "Algebra", color: "from-violet-500 to-fuchsia-600", desc: "Solves ax² + bx + c = 0.", trick: "Discriminant > 0 → 2 real roots.", ex: "x² - 5x + 6 = 0 → x = 2, 3." },
+    { t: "Permutation nPr", f: "nPr = n! / (n - r)!", topic: "P & C", color: "from-amber-500 to-orange-600", desc: "Arrangements of r out of n.", trick: "Use when ORDER matters.", ex: "5P2 = 20." },
+  ];
+  return (
+    <div className="space-y-5">
+      <SectionTitle icon={Calculator} title="Quant Formula Book" subtitle="500+ CAT-ready formulas with tricks & examples" />
+      <PreviewHint />
+      <div className="grid gap-4 md:grid-cols-2">
+        {formulas.map((fm, i) => {
+          const isPreview = i === 0;
+          return (
+            <div key={i} className="relative">
+              <motion.div
+                whileHover={isPreview ? { y: -3 } : undefined}
+                onClick={isPreview ? () => setOpen(fm) : undefined}
+                data-demo-allow={isPreview ? "true" : undefined}
+                className={`rounded-2xl border border-sky-100 bg-white p-5 shadow-sm ${isPreview ? "cursor-pointer ring-2 ring-sky-300 hover:shadow-lg" : "select-none"}`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${fm.color} text-white shadow`}>
+                    <Calculator className="h-4 w-4" />
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">{fm.topic}</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900">{fm.t}</h3>
+                <div className="mt-2 rounded-lg bg-slate-900 px-3 py-2 font-mono text-xs text-emerald-300">{fm.f}</div>
+                {isPreview && (
+                  <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-sky-700">
+                    Click to view trick & example <ArrowRight className="h-3 w-3" />
+                  </div>
+                )}
+              </motion.div>
+              {!isPreview && <LockedOverlay />}
+            </div>
+          );
+        })}
+      </div>
+
+      <Dialog open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
+        <DialogContent data-demo-allow="true" className="max-w-lg">
+          {open && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl">{open.t}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 text-sm">
+                <div className="rounded-lg bg-slate-900 px-4 py-3 font-mono text-sm text-emerald-300">{open.f}</div>
+                <div><span className="font-semibold text-slate-700">Description: </span>{open.desc}</div>
+                <div className="rounded-lg bg-amber-50 p-3 text-amber-800"><span className="font-semibold">Shortcut trick: </span>{open.trick}</div>
+                <div className="rounded-lg bg-emerald-50 p-3 text-emerald-800"><span className="font-semibold">Example: </span>{open.ex}</div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* =========================================================================
+   View: News & Insights (1 clickable + rest blurred)
+   ========================================================================= */
+function ViewNews() {
+  const [open, setOpen] = useState<null | typeof news[number]>(null);
+  const news = [
+    { cat: "Economy & Finance", icon: LineIcon, color: "from-emerald-500 to-teal-600", date: "2h ago", src: "Mint", imp: "HIGH",
+      h: "RBI holds repo rate at 6.5% — focus shifts to inflation glide path",
+      s: "MPC voted 5-1 to keep rates unchanged citing sticky food inflation, while signalling a possible cut in Q2 FY27.",
+      detail: "The Monetary Policy Committee retained the policy repo rate at 6.5% for the seventh consecutive meeting. Governor flagged that core inflation has softened to 3.4% but food inflation remains volatile.",
+      why: "Rate decisions impact corporate borrowing, NIMs of banks and equity valuations — a recurring CAT RC and GDPI theme.",
+      wat: ["Is RBI's inflation targeting framework working?", "Should India shift to a dual mandate like the US Fed?"],
+      gdpi: ["MPC composition (6 members, RBI Governor casting vote)", "Current CPI vs core CPI", "Real interest rate implication for savers"] },
+    { cat: "Business & Startups", icon: Briefcase, color: "from-violet-500 to-fuchsia-600", date: "5h ago", src: "ET", imp: "MED",
+      h: "Zomato spins off quick-commerce arm Blinkit into separate listed entity",
+      s: "Shareholders approved demerger; Blinkit to debut on bourses by Q3 FY27.", detail: "", why: "", wat: [], gdpi: [] },
+    { cat: "MBA & Education", icon: GraduationCap, color: "from-pink-500 to-rose-600", date: "Yesterday", src: "Careers360", imp: "HIGH",
+      h: "IIM Bangalore opens PGP 2026 admissions with revised WAT-PI weightage",
+      s: "Past academics weight reduced to 15%, work-ex experience raised to 25%.", detail: "", why: "", wat: [], gdpi: [] },
+    { cat: "AI & Technology", icon: Cpu, color: "from-cyan-500 to-blue-600", date: "Yesterday", src: "TechCrunch", imp: "MED",
+      h: "OpenAI launches enterprise reasoning model — India among top 3 adopters",
+      s: "GPT-5.5 Pro available via Azure with sovereign-cloud option for Indian banks.", detail: "", why: "", wat: [], gdpi: [] },
+  ];
+  return (
+    <div className="space-y-5">
+      <SectionTitle icon={Newspaper} title="News & Insights" subtitle="Daily curated current affairs · CAT / XAT / GDPI ready" />
+      <PreviewHint />
+      <div className="grid gap-4 md:grid-cols-2">
+        {news.map((n, i) => {
+          const isPreview = i === 0;
+          const Icon = n.icon;
+          return (
+            <div key={i} className="relative">
+              <motion.div
+                whileHover={isPreview ? { y: -3 } : undefined}
+                onClick={isPreview ? () => setOpen(n) : undefined}
+                data-demo-allow={isPreview ? "true" : undefined}
+                className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 shadow-sm flex flex-col ${isPreview ? "cursor-pointer ring-2 ring-sky-300 hover:shadow-xl" : "select-none"}`}
+              >
+                <div className={`h-1.5 w-full bg-gradient-to-r ${n.color}`} />
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br ${n.color} grid place-items-center text-white shadow-sm`}>
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="text-xs font-bold text-slate-700 truncate">{n.cat}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {i === 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Fresh
+                        </span>
+                      )}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${n.imp === "HIGH" ? "bg-rose-100 text-rose-700 border-rose-200" : "bg-amber-100 text-amber-700 border-amber-200"}`}>
+                        {n.imp === "HIGH" && <Flame className="h-2.5 w-2.5 inline mr-0.5" />}{n.imp}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-3 text-[11px] text-slate-500 flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-100 font-semibold">
+                      <Calendar className="h-3 w-3" /> {n.date}
+                    </span>
+                    <span className="font-medium">· {n.src}</span>
+                  </div>
+                  <h3 className="font-bold text-base leading-snug text-slate-900 line-clamp-2 mb-2">{n.h}</h3>
+                  <p className="text-sm text-slate-600 line-clamp-2 mb-3">{n.s}</p>
+                  {isPreview && (
+                    <div className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-700">
+                      Click to read full brief, WAT & GDPI points <ArrowRight className="h-3 w-3" />
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+              {!isPreview && <LockedOverlay />}
+            </div>
+          );
+        })}
+      </div>
+
+      <Dialog open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
+        <DialogContent data-demo-allow="true" className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {open && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl leading-snug">{open.h}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 text-sm">
+                <div className="flex flex-wrap gap-2 text-[11px] text-slate-500">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-100 font-semibold">
+                    <Calendar className="h-3 w-3" /> {open.date}
+                  </span>
+                  <span className="font-medium">· {open.src} · {open.cat}</span>
+                </div>
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Detailed summary</div>
+                  <p className="text-slate-700 leading-relaxed">{open.detail}</p>
+                </div>
+                <div className="rounded-lg bg-amber-50 p-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">Why this matters</div>
+                  <p className="text-amber-900">{open.why}</p>
+                </div>
+                <div className="rounded-lg bg-violet-50 p-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-violet-700 mb-2">WAT / Essay topics</div>
+                  <ul className="list-disc pl-5 space-y-1 text-violet-900">
+                    {open.wat.map((x, k) => <li key={k}>{x}</li>)}
+                  </ul>
+                </div>
+                <div className="rounded-lg bg-emerald-50 p-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2">GDPI talking points</div>
+                  <ul className="list-disc pl-5 space-y-1 text-emerald-900">
+                    {open.gdpi.map((x, k) => <li key={k}>{x}</li>)}
+                  </ul>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
