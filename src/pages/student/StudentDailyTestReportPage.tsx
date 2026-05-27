@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, CheckCircle2, XCircle, Circle, Clock, Target, Award, TrendingUp, BarChart3, ListChecks, Flame, Trophy } from "lucide-react";
 import MathContent from "@/components/mock/MathContent";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 type Section = { id: string; name: string; code: string; total_questions: number; duration_minutes: number };
 type Question = { id: string; section_id: string; question_number: number; question_html: string; question_type: string; positive_marks: number; negative_marks: number; difficulty: string | null; topic: string | null; explanation_html: string | null; tita_correct_answers: string[] | null };
@@ -140,7 +141,7 @@ export default function StudentDailyTestReportPage() {
     return { total, correct, wrong, skipped, attempted, totalScore, maxScore, accuracy, totalTime, avgTime, bySection, byDiff, byTopic, respByQ, optByQ };
   }, [attempt, sections, questions, options, responses]);
 
-  if (loading) return <div className="p-6 text-muted-foreground">Loading detailed report…</div>;
+  if (loading) return <div className="p-6"><SectionSkeleton /></div>;
   if (!attempt || !stats) return <div className="p-6">Report not available.</div>;
 
   const last7 = history.slice(0, 7).filter((p: any) => p.completed_at).length;

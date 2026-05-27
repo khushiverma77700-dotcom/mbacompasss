@@ -56,15 +56,15 @@ export function preloadStudentRoute(path: string) {
   safe(path, entry.load);
 }
 
-/** Prefetch every student-page chunk during browser idle time. */
+/**
+ * Prefetch every student-page chunk during browser idle time.
+ *
+ * NOTE: Previously this fired 24+ dynamic imports as soon as the dashboard
+ * mounted, which competed with the Overview's own Supabase queries and made
+ * the first paint feel slow. We now rely entirely on hover/touch-based
+ * prefetch (preloadStudentRoute) wired into the sidebar, which is just as
+ * fast in practice without saturating the network on first load.
+ */
 export function preloadAllStudentRoutes() {
-  if (typeof window === "undefined") return;
-  const w = window as any;
-  const schedule: (cb: () => void) => number =
-    w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 400));
-
-  // Stagger so we don't saturate the network with 20+ parallel chunk requests.
-  loaders.forEach((entry, i) => {
-    schedule(() => safe(`__all__${i}`, entry.load));
-  });
+  // intentional no-op — see comment above
 }

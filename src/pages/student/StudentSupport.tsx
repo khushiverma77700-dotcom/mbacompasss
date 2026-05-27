@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+import SectionSkeleton from "@/components/student/SectionSkeleton";
   Select,
   SelectContent,
   SelectItem,
@@ -478,7 +479,7 @@ export default function StudentSupport() {
           {!activeTicket ? (
             <Card className="p-4 border-sky-100">
               {loading ? (
-                <div className="text-sm text-muted-foreground py-8 text-center">Loading…</div>
+                <SectionSkeleton rows={2} />
               ) : tickets.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-12 text-center">
                   You haven't raised any tickets yet.

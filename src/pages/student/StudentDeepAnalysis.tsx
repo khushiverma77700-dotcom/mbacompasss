@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, AlertTriangle, Lightbulb, TrendingDown, Target, Clock, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ensureStudentMode, mockResultPath } from "@/lib/studentModeNav";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 export default function StudentDeepAnalysis() {
   const { attemptId } = useParams();
@@ -32,7 +33,7 @@ export default function StudentDeepAnalysis() {
     toast.success("AI analysis ready");
   };
 
-  if (loading) return <div className="text-muted-foreground">Loading…</div>;
+  if (loading) return <SectionSkeleton />;
 
   if (!analysis) {
     return (

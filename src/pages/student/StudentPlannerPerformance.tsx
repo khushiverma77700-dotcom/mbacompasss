@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
+import SectionSkeleton from "@/components/student/SectionSkeleton";
   ArrowLeft, CalendarRange, CheckCircle2, Flame, Clock, Target,
   TrendingUp, Activity, Trophy,
 } from "lucide-react";
@@ -186,7 +187,7 @@ export default function StudentPlannerPerformance() {
     m < 60 ? "bg-sky-400 dark:bg-sky-500/50" :
     m < 120 ? "bg-sky-500 dark:bg-sky-500/70" : "bg-sky-700 dark:bg-sky-400";
 
-  if (loading) return <div className="text-muted-foreground">Loading performance…</div>;
+  if (loading) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

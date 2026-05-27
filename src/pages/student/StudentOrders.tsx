@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Receipt, Package } from "lucide-react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 export default function StudentOrders() {
   const { user } = useAuth();
@@ -29,7 +30,7 @@ export default function StudentOrders() {
         <p className="text-sm text-muted-foreground mt-1">All your mock test purchases and invoices.</p>
       </div>
 
-      {loading ? <div className="text-muted-foreground">Loading…</div> : orders.length === 0 ? (
+      {loading ? <SectionSkeleton /> : orders.length === 0 ? (
         <Card className="p-12 text-center border-sky-100">
           <Package className="h-10 w-10 mx-auto text-sky-300 mb-3" />
           <div className="font-medium">No orders yet</div>

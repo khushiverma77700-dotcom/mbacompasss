@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Pin } from "lucide-react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 export default function StudentAnnouncements() {
   const [items, setItems] = useState<any[]>([]);
@@ -30,7 +31,7 @@ export default function StudentAnnouncements() {
         <p className="text-sm text-muted-foreground">Updates from your mentors and the MBA Compass team.</p>
       </div>
       {loading ? (
-        <div className="text-muted-foreground">Loading…</div>
+        <SectionSkeleton />
       ) : items.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">No announcements yet.</Card>
       ) : (

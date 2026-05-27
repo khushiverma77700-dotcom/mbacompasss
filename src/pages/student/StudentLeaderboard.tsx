@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Trophy, Crown, Medal, Flame, Coins, Zap } from "lucide-react";
+import SectionSkeleton from "@/components/student/SectionSkeleton";
 
 interface Row {
   rank: number; user_id: string; display_handle: string;
@@ -87,7 +88,7 @@ export default function StudentLeaderboard() {
         </TabsList>
         <TabsContent value={tab} className="mt-4">
           {loading ? (
-            <div className="text-muted-foreground">Loading…</div>
+            <SectionSkeleton />
           ) : view.length === 0 ? (
             <Card className="p-8 text-center border-sky-100">
               <Trophy className="h-10 w-10 mx-auto text-sky-300 mb-3" />
