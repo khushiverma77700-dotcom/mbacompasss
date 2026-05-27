@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";
@@ -7,14 +7,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/hooks/use-toast";
 import {
-  Newspaper, Sparkles, Bookmark, BookmarkCheck, Heart, Check, Clock, Flame,
+  Newspaper, Sparkles, Bookmark, BookmarkCheck, Star, Check, Clock, Flame,
   Globe, Building2, TrendingUp, GraduationCap, Cpu, Trophy, Leaf, FlaskConical,
-  Briefcase, LineChart, Award, Zap, MessagesSquare, Search, RefreshCw,
+  Briefcase, LineChart, Award, Zap, MessagesSquare, ChevronDown, BookOpen, Lightbulb, PenLine,
 } from "lucide-react";
 
 type Article = {
@@ -45,7 +45,7 @@ type ActionRow = {
   article_id: string;
   is_read: boolean;
   is_saved: boolean;
-  is_liked: boolean;
+  is_liked: boolean; // reused as "Important"
 };
 
 const CATEGORY_META: Record<string, { icon: any; color: string }> = {
@@ -67,7 +67,7 @@ const CATEGORY_META: Record<string, { icon: any; color: string }> = {
   "GDPI Important": { icon: MessagesSquare, color: "from-purple-500 to-fuchsia-600" },
 };
 
-const TABS = ["All", "Trending", "Today", "Saved", "Read", "GDPI"];
+const TABS = ["All", "Today", "Trending", "Important", "Saved", "Read", "GDPI"];
 
 function importanceBadge(level: Article["importance"]) {
   if (level === "high") return "bg-rose-100 text-rose-700 border-rose-200";
@@ -81,10 +81,9 @@ export default function StudentNewsroom() {
   const qc = useQueryClient();
   const [tab, setTab] = useState("All");
   const [category, setCategory] = useState<string>("All");
-  const [search, setSearch] = useState("");
   const [open, setOpen] = useState<Article | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
   const [lang, setLang] = useState<"en" | "hi" | "hinglish">("en");
+  const [expanded, setExpanded] = useState<Record<string, string | null>>({});
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["newsroom-articles"],
@@ -93,6 +92,7 @@ export default function StudentNewsroom() {
         .from("news_articles")
         .select("*")
         .order("published_at", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
       return ((data as unknown) as Article[]) || [];
@@ -120,15 +120,6 @@ export default function StudentNewsroom() {
   const filtered = useMemo(() => {
     let list = articles || [];
     if (category !== "All") list = list.filter((a) => a.category === category);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (a) =>
-          a.headline.toLowerCase().includes(q) ||
-          a.one_liner?.toLowerCase().includes(q) ||
-          a.tags?.some((t) => t.toLowerCase().includes(q)),
-      );
-    }
     if (tab === "Trending") list = [...list].sort((a, b) => (b.importance === "high" ? 1 : 0) - (a.importance === "high" ? 1 : 0));
     if (tab === "Today") {
       const today = new Date().toDateString();
@@ -136,13 +127,14 @@ export default function StudentNewsroom() {
     }
     if (tab === "Saved") list = list.filter((a) => actionMap.get(a.id)?.is_saved);
     if (tab === "Read") list = list.filter((a) => actionMap.get(a.id)?.is_read);
+    if (tab === "Important") list = list.filter((a) => actionMap.get(a.id)?.is_liked);
     if (tab === "GDPI") list = list.filter((a) => a.category === "GDPI Important" || (a.gdpi_points?.length || 0) >= 3);
     return list;
-  }, [articles, category, search, tab, actionMap]);
+  }, [articles, category, tab, actionMap]);
 
-  const updateAction = async (article: Article, patch: Partial<ActionRow>) => {
+  const updateAction = async (article: Article, patch: Partial<ActionRow>, jumpToTab?: string) => {
     if (!user?.id) {
-      toast({ title: "Sign in", description: "Please sign in to save or like." });
+      toast({ title: "Sign in", description: "Please sign in to save or mark." });
       return;
     }
     const existing = actionMap.get(article.id);
@@ -156,23 +148,20 @@ export default function StudentNewsroom() {
       updated_at: new Date().toISOString(),
     };
     const { error } = await supabase.from("news_user_actions").upsert(row);
-    if (error) toast({ title: "Couldn't save", description: error.message, variant: "destructive" });
-    else qc.invalidateQueries({ queryKey: ["newsroom-actions", user.id] });
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-news", {
-        body: { count: 12 },
-      });
-      if (error) throw error;
-      toast({ title: "News updated", description: `${data?.inserted ?? 0} fresh stories added.` });
-      qc.invalidateQueries({ queryKey: ["newsroom-articles"] });
-    } catch (e: any) {
-      toast({ title: "Refresh failed", description: e?.message || "Try again later.", variant: "destructive" });
-    } finally {
-      setRefreshing(false);
+    if (error) {
+      toast({ title: "Couldn't save", description: error.message, variant: "destructive" });
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["newsroom-actions", user.id] });
+    if (jumpToTab) {
+      const becameTrue =
+        (jumpToTab === "Saved" && patch.is_saved) ||
+        (jumpToTab === "Important" && patch.is_liked) ||
+        (jumpToTab === "Read" && patch.is_read);
+      if (becameTrue) {
+        toast({ title: `Moved to ${jumpToTab}`, description: "Find it in that tab." });
+        setTab(jumpToTab);
+      }
     }
   };
 
@@ -194,6 +183,10 @@ export default function StudentNewsroom() {
     a.one_liner ||
     "";
 
+  const toggleExpand = (id: string, section: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: prev[id] === section ? null : section }));
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
       {/* Hero */}
@@ -214,10 +207,6 @@ export default function StudentNewsroom() {
               Daily current affairs, business, policy & GDPI-ready briefs — built for CAT, XAT, SNAP, NMAT aspirants.
             </p>
           </div>
-          <Button onClick={handleRefresh} disabled={refreshing} size="sm" className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing ? "Updating…" : "Refresh"}
-          </Button>
         </div>
 
         {/* Language toggle */}
@@ -241,17 +230,6 @@ export default function StudentNewsroom() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search news, topics, tags…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
       </div>
 
       {/* Category chips */}
@@ -294,17 +272,13 @@ export default function StudentNewsroom() {
           ) : filtered.length === 0 ? (
             <Card className="p-10 text-center">
               <Newspaper className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <h3 className="font-semibold mb-1">No news here yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <h3 className="font-semibold mb-1">Nothing here yet</h3>
+              <p className="text-sm text-muted-foreground">
                 {tab === "Saved" ? "Bookmark stories to find them here." :
+                  tab === "Important" ? "Mark stories as important to collect them here." :
                   tab === "Read" ? "Open any card to mark it read." :
-                    "Tap Refresh to pull a fresh AI-curated brief."}
+                    "Fresh briefs will appear here automatically."}
               </p>
-              {tab !== "Saved" && tab !== "Read" && (
-                <Button onClick={handleRefresh} disabled={refreshing} size="sm" className="gap-2">
-                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Generate today’s brief
-                </Button>
-              )}
             </Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -312,55 +286,126 @@ export default function StudentNewsroom() {
                 const meta = CATEGORY_META[a.category] || CATEGORY_META["All"];
                 const Icon = meta.icon;
                 const act = actionMap.get(a.id);
+                const exp = expanded[a.id];
                 return (
                   <Card
                     key={a.id}
-                    className="group p-4 hover:shadow-lg transition-all cursor-pointer relative overflow-hidden border-border/60"
-                    onClick={() => openArticle(a)}
+                    className="group p-4 hover:shadow-lg transition-all relative overflow-hidden border-border/60 flex flex-col"
                   >
                     <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${meta.color}`} />
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`h-6 w-6 rounded-md bg-gradient-to-br ${meta.color} grid place-items-center text-white`}>
-                          <Icon className="h-3 w-3" />
-                        </span>
-                        <span className="text-[11px] font-semibold text-muted-foreground">{a.category}</span>
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => openArticle(a)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`h-6 w-6 rounded-md bg-gradient-to-br ${meta.color} grid place-items-center text-white`}>
+                            <Icon className="h-3 w-3" />
+                          </span>
+                          <span className="text-[11px] font-semibold text-muted-foreground">{a.category}</span>
+                        </div>
+                        <Badge variant="outline" className={`text-[10px] ${importanceBadge(a.importance)}`}>
+                          {a.importance === "high" && <Flame className="h-2.5 w-2.5 mr-0.5" />}
+                          {a.importance.toUpperCase()}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className={`text-[10px] ${importanceBadge(a.importance)}`}>
-                        {a.importance === "high" && <Flame className="h-2.5 w-2.5 mr-0.5" />}
-                        {a.importance.toUpperCase()}
-                      </Badge>
+                      <h3 className="font-bold text-sm md:text-base text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-1.5">
+                        {a.headline}
+                      </h3>
+                      {(pickSummary(a) || a.one_liner) && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3" lang={lang === "hi" ? "hi" : "en"}>
+                          {pickSummary(a) || a.one_liner}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-2">
+                        <span className="flex items-center gap-2">
+                          {a.source_name && <span className="font-medium">{a.source_name}</span>}
+                          <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {Math.max(15, a.reading_seconds)}s</span>
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-sm md:text-base text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-1.5">
-                      {a.headline}
-                    </h3>
-                    {(pickSummary(a) || a.one_liner) && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3" lang={lang === "hi" ? "hi" : "en"}>
-                        {pickSummary(a) || a.one_liner}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span className="flex items-center gap-2">
-                        {a.source_name && <span className="font-medium">{a.source_name}</span>}
-                        <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {Math.max(15, a.reading_seconds)}s</span>
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); updateAction(a, { is_saved: !act?.is_saved }); }}
-                          className="p-1 rounded hover:bg-accent"
-                          aria-label="Save"
-                        >
-                          {act?.is_saved ? <BookmarkCheck className="h-3.5 w-3.5 text-sky-600" /> : <Bookmark className="h-3.5 w-3.5" />}
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); updateAction(a, { is_liked: !act?.is_liked }); }}
-                          className="p-1 rounded hover:bg-accent"
-                          aria-label="Like"
-                        >
-                          <Heart className={`h-3.5 w-3.5 ${act?.is_liked ? "fill-rose-500 text-rose-500" : ""}`} />
-                        </button>
-                        {act?.is_read && <Check className="h-3.5 w-3.5 text-emerald-600" />}
-                      </span>
+
+                    {/* Inline previews */}
+                    <div className="mt-2 space-y-1.5 border-t pt-2">
+                      {a.detailed_summary && (
+                        <Collapsible open={exp === "detail"} onOpenChange={() => toggleExpand(a.id, "detail")}>
+                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-sky-700 hover:text-sky-900 px-2 py-1 rounded hover:bg-sky-50">
+                            <span className="flex items-center gap-1.5"><BookOpen className="h-3 w-3" /> Detailed View</span>
+                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "detail" ? "rotate-180" : ""}`} />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-foreground/80 whitespace-pre-line line-clamp-[8]">
+                            {a.detailed_summary}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
+                      {a.why_matters && (
+                        <Collapsible open={exp === "why"} onOpenChange={() => toggleExpand(a.id, "why")}>
+                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-amber-700 hover:text-amber-900 px-2 py-1 rounded hover:bg-amber-50">
+                            <span className="flex items-center gap-1.5"><Lightbulb className="h-3 w-3" /> Why this matters</span>
+                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "why" ? "rotate-180" : ""}`} />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-amber-900">
+                            {a.why_matters}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
+                      {a.wat_topics?.length > 0 && (
+                        <Collapsible open={exp === "wat"} onOpenChange={() => toggleExpand(a.id, "wat")}>
+                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-violet-700 hover:text-violet-900 px-2 py-1 rounded hover:bg-violet-50">
+                            <span className="flex items-center gap-1.5"><PenLine className="h-3 w-3" /> WAT / Essay Topics</span>
+                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "wat" ? "rotate-180" : ""}`} />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-violet-900">
+                            <ul className="list-disc list-inside space-y-0.5">
+                              {a.wat_topics.slice(0, 5).map((t, i) => <li key={i}>{t}</li>)}
+                            </ul>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
+                      {a.gdpi_points?.length > 0 && (
+                        <Collapsible open={exp === "gdpi"} onOpenChange={() => toggleExpand(a.id, "gdpi")}>
+                          <CollapsibleTrigger className="w-full flex items-center justify-between text-[11px] font-semibold text-fuchsia-700 hover:text-fuchsia-900 px-2 py-1 rounded hover:bg-fuchsia-50">
+                            <span className="flex items-center gap-1.5"><MessagesSquare className="h-3 w-3" /> GDPI Angles</span>
+                            <ChevronDown className={`h-3 w-3 transition-transform ${exp === "gdpi" ? "rotate-180" : ""}`} />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="px-2 pt-1 pb-2 text-xs text-fuchsia-900">
+                            <ul className="list-disc list-inside space-y-0.5">
+                              {a.gdpi_points.slice(0, 5).map((t, i) => <li key={i}>{t}</li>)}
+                            </ul>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
+                    </div>
+
+                    {/* Action row */}
+                    <div className="mt-3 pt-2 border-t flex items-center gap-1.5 flex-wrap">
+                      <Button
+                        size="sm"
+                        variant={act?.is_read ? "default" : "outline"}
+                        className="h-7 px-2 text-[11px] gap-1"
+                        onClick={(e) => { e.stopPropagation(); updateAction(a, { is_read: !act?.is_read }, "Read"); }}
+                      >
+                        <Check className="h-3 w-3" />
+                        {act?.is_read ? "Read" : "Mark Read"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={act?.is_saved ? "default" : "outline"}
+                        className="h-7 px-2 text-[11px] gap-1"
+                        onClick={(e) => { e.stopPropagation(); updateAction(a, { is_saved: !act?.is_saved }, "Saved"); }}
+                      >
+                        {act?.is_saved ? <BookmarkCheck className="h-3 w-3" /> : <Bookmark className="h-3 w-3" />}
+                        {act?.is_saved ? "Saved" : "Save"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={act?.is_liked ? "default" : "outline"}
+                        className="h-7 px-2 text-[11px] gap-1"
+                        onClick={(e) => { e.stopPropagation(); updateAction(a, { is_liked: !act?.is_liked }, "Important"); }}
+                      >
+                        <Star className={`h-3 w-3 ${act?.is_liked ? "fill-current" : ""}`} />
+                        {act?.is_liked ? "Important" : "Mark Important"}
+                      </Button>
                     </div>
                   </Card>
                 );
@@ -499,24 +544,33 @@ export default function StudentNewsroom() {
                 </section>
               )}
 
-              <div className="flex items-center gap-2 pt-2 border-t">
+              <div className="flex items-center gap-2 pt-2 border-t flex-wrap">
+                <Button
+                  size="sm"
+                  variant={actionMap.get(open.id)?.is_read ? "default" : "outline"}
+                  onClick={() => updateAction(open, { is_read: !actionMap.get(open.id)?.is_read }, "Read")}
+                  className="gap-1.5"
+                >
+                  <Check className="h-4 w-4" />
+                  {actionMap.get(open.id)?.is_read ? "Read" : "Mark Read"}
+                </Button>
                 <Button
                   size="sm"
                   variant={actionMap.get(open.id)?.is_saved ? "default" : "outline"}
-                  onClick={() => updateAction(open, { is_saved: !actionMap.get(open.id)?.is_saved })}
+                  onClick={() => updateAction(open, { is_saved: !actionMap.get(open.id)?.is_saved }, "Saved")}
                   className="gap-1.5"
                 >
                   {actionMap.get(open.id)?.is_saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-                  {actionMap.get(open.id)?.is_saved ? "Saved" : "Save"}
+                  {actionMap.get(open.id)?.is_saved ? "Saved" : "Save for later"}
                 </Button>
                 <Button
                   size="sm"
                   variant={actionMap.get(open.id)?.is_liked ? "default" : "outline"}
-                  onClick={() => updateAction(open, { is_liked: !actionMap.get(open.id)?.is_liked })}
+                  onClick={() => updateAction(open, { is_liked: !actionMap.get(open.id)?.is_liked }, "Important")}
                   className="gap-1.5"
                 >
-                  <Heart className={`h-4 w-4 ${actionMap.get(open.id)?.is_liked ? "fill-current" : ""}`} />
-                  {actionMap.get(open.id)?.is_liked ? "Liked" : "Like"}
+                  <Star className={`h-4 w-4 ${actionMap.get(open.id)?.is_liked ? "fill-current" : ""}`} />
+                  {actionMap.get(open.id)?.is_liked ? "Important" : "Mark Important"}
                 </Button>
                 {open.source_url && (
                   <Button size="sm" variant="ghost" asChild className="ml-auto">
