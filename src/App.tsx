@@ -890,25 +890,7 @@ const App = () => (
               );
               return (
                 <>
-                  {/* /demo/* renders the EXACT same StudentLayout + child pages
-                      as /student, wrapped in DemoShell which provides:
-                        - DemoModeProvider (useIsDemo() === true everywhere)
-                        - Click interceptor → "Buy Full Course" popup
-                      In demo mode, data hooks short-circuit to Aman Verma's
-                      hardcoded dummy dataset (src/lib/demoData.ts) so every
-                      chart, leaderboard and widget is fully populated. */}
-                  <Route
-                    path="/demo"
-                    element={
-                      <LazyPage>
-                        <DemoShell>
-                          <StudentLazyPage><StudentLayout /></StudentLazyPage>
-                        </DemoShell>
-                      </LazyPage>
-                    }
-                  >
-                    {studentChildRoutes}
-                  </Route>
+                  {/* Demo dashboard removed to reduce load. */}
                   <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                     {studentChildRoutes}
                   </Route>
