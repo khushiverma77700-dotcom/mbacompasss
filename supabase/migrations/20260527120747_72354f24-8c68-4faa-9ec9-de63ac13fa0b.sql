@@ -1,0 +1,1 @@
+UPDATE public.mock_section_jobs SET status = 'failed', current_step = 'Auto-failed: zombie duplicate-key loop', error_message = 'Stopped to relieve CPU. Manual retry required after cleanup.', worker_lock_until = NULL, updated_at = now() WHERE id = '9e8e6b82-3a27-4d44-85fc-f2bf1dc96843';

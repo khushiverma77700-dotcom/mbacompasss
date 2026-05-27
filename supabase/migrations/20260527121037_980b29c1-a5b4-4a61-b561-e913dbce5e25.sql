@@ -1,0 +1,1 @@
+DELETE FROM public.mock_section_jobs WHERE id = '9e8e6b82-3a27-4d44-85fc-f2bf1dc96843';
