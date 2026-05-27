@@ -322,28 +322,27 @@ export default function StudentNewsroom() {
                   >
                     {/* Top accent + freshness shimmer */}
                     <div className={`h-1.5 w-full bg-gradient-to-r ${meta.color}`} />
-                    {isFresh && (
-                      <div className="absolute top-3 right-3 z-10">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Fresh
-                        </span>
-                      </div>
-                    )}
-
                     <div className="p-5 md:p-6 flex flex-col flex-1">
                       {/* Category + Importance */}
                       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`h-9 w-9 rounded-xl bg-gradient-to-br ${meta.color} grid place-items-center text-white shadow-sm`}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br ${meta.color} grid place-items-center text-white shadow-sm`}>
                             <Icon className="h-4 w-4" />
                           </span>
-                          <span className="text-xs font-bold text-slate-700">{a.category}</span>
+                          <span className="text-xs font-bold text-slate-700 truncate">{a.category}</span>
                         </div>
-                        <Badge variant="outline" className={`text-[10px] ${importanceBadge(a.importance)}`}>
-                          {a.importance === "high" && <Flame className="h-2.5 w-2.5 mr-0.5" />}
-                          {a.importance.toUpperCase()}
-                        </Badge>
+                        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                          {isFresh && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Fresh
+                            </span>
+                          )}
+                          <Badge variant="outline" className={`text-[10px] ${importanceBadge(a.importance)}`}>
+                            {a.importance === "high" && <Flame className="h-2.5 w-2.5 mr-0.5" />}
+                            {a.importance.toUpperCase()}
+                          </Badge>
+                        </div>
                       </div>
 
                       {/* Date + meta strip */}
