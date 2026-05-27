@@ -334,7 +334,9 @@ export default function StudentLayout() {
           <main
             className="flex-1 min-w-0 px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:ml-72 pb-[calc(env(safe-area-inset-bottom,0px)+88px)] lg:pb-8"
           >
-            <Outlet />
+            <QuickViewProvider>
+              <Outlet />
+            </QuickViewProvider>
           </main>
         </div>
 
