@@ -161,12 +161,14 @@ export default function StudentOverview() {
     );
 
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, isDemo]);
 
   // Fetch just the user's rank (single integer) — deferred out of the critical
   // path so the dashboard paints before this lightweight call resolves.
   useEffect(() => {
     if (!user) return;
+    if (isDemo) return; // demo rank already set in the main effect above
+
     let cancelled = false;
     const w = window as any;
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 800));
