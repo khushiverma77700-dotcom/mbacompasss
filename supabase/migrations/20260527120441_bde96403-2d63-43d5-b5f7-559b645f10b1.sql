@@ -1,0 +1,1 @@
+UPDATE public.mock_section_jobs SET status = 'failed', current_step = 'Auto-failed: 45k duplicate-key conflicts (zombie loop)', error_message = 'Stopped to relieve CPU; question_number collisions on partial section.', updated_at = now() WHERE id = '9e8e6b82-3a27-4d44-85fc-f2bf1dc96843';
