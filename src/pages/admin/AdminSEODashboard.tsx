@@ -2564,21 +2564,7 @@ const AdminSEODashboard = () => {
           </div>
         )}
 
-        {/* ═══ PAGE SPEED MONITOR (REAL API) ═══ */}
-        {activeTab === "page-speed" && (
-          <PageSpeedMonitor
-            rows={rows}
-            pageSpeedData={pageSpeedData}
-            setPageSpeedData={setPageSpeedData}
-            pageSpeedLoading={pageSpeedLoading}
-            setPageSpeedLoading={setPageSpeedLoading}
-            pageSpeedDevice={pageSpeedDevice}
-            setPageSpeedDevice={setPageSpeedDevice}
-            pageSpeedOptimizing={pageSpeedOptimizing}
-            setPageSpeedOptimizing={setPageSpeedOptimizing}
-            toast={toast}
-          />
-        )}
+        {/* PageSpeed Monitor removed to reduce backend load. */}
 
         {/* ═══ TECHNICAL SEO (ENHANCED) ═══ */}
         {activeTab === "technical" && (
