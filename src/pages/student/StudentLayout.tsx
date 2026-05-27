@@ -80,13 +80,12 @@ const navItems: NavItem[] = [
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
 ];
 
-// "My Insights" — performance analytics group (Strength, Weak, Performance, Leaderboard)
+// "My Insights" — performance analytics group (Strength, Weak, Performance)
 const insightsGroup: NavItem[] = [
   { to: "/student/all-india-rank", label: "All India Rank", icon: Trophy,         feature: "performance_tracker" },
   { to: "/student/strength-areas", label: "My Strength Areas", icon: Award,          feature: "performance_tracker" },
   { to: "/student/weak-areas",     label: "My Weak Areas",     icon: AlertTriangle,  feature: "performance_tracker" },
   { to: "/student/performance",    label: "Performance",       icon: BarChart3,      feature: "performance_tracker" },
-  { to: "/student/leaderboard",    label: "Leaderboard",       icon: Trophy,         feature: "leaderboard" },
 ];
 
 export default function StudentLayout() {
@@ -373,8 +372,7 @@ function SidebarContent() {
     location.pathname.startsWith("/student/all-india-rank") ||
     location.pathname.startsWith("/student/strength-areas") ||
     location.pathname.startsWith("/student/weak-areas") ||
-    location.pathname.startsWith("/student/performance") ||
-    location.pathname.startsWith("/student/leaderboard");
+    location.pathname.startsWith("/student/performance");
   const [insightsOpen, setInsightsOpen] = useState(true);
   useEffect(() => {
     if (isInsightsActive) setInsightsOpen(true);
