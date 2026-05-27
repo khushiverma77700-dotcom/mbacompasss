@@ -199,6 +199,7 @@ const AdminNewsroom = lazyWithPreload(() => import("./pages/admin/AdminNewsroom"
 const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
 const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 const DemoShell = lazyWithPreload(() => import("./components/demo/DemoShell"));
+const DemoDashboard = lazyWithPreload(() => import("./pages/demo/DemoDashboard"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
