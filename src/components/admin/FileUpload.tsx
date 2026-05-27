@@ -90,7 +90,7 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
         />
       )}
       {value && accept?.includes("image") && (
-        <img src={value} alt="Preview" className="h-20 w-auto rounded border border-border object-cover" />
+        <img src={value} alt="Preview" className="h-20 w-auto rounded border border-border object-cover"  loading="lazy" decoding="async" />
       )}
     </div>
   );

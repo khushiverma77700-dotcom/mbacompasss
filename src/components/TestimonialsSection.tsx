@@ -110,7 +110,7 @@ const TestimonialsSection = () => {
                       <p className="text-foreground text-lg leading-relaxed mb-6">{current.content}</p>
                       <div className="flex items-center gap-4">
                         {current.image_url && (
-                          <img src={current.image_url} alt={current.name} className="w-12 h-12 rounded-full object-cover" />
+                          <img src={current.image_url} alt={current.name} className="w-12 h-12 rounded-full object-cover"  loading="lazy" decoding="async" />
                         )}
                         <div>
                           <p className="font-heading font-semibold text-foreground">{current.name}</p>
@@ -130,7 +130,7 @@ const TestimonialsSection = () => {
                   {current.type === "image" && (
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/2">
-                        <img src={current.image_url} alt={current.name} className="w-full h-full object-cover max-h-[400px]" />
+                        <img src={current.image_url} alt={current.name} className="w-full h-full object-cover max-h-[400px]"  loading="lazy" decoding="async" />
                       </div>
                       <div className="md:w-1/2 p-6 flex flex-col justify-center">
                         <p className="font-heading font-semibold text-foreground text-lg mb-1">{current.name}</p>

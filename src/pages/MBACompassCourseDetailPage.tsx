@@ -381,7 +381,7 @@ function DetailInner() {
             <div className="lg:col-span-5">
               <Card className="overflow-hidden border-sky-100 shadow-xl sticky top-20">
                 {c.thumbnail_url ? (
-                  <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover" />
+                  <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover"  loading="lazy" decoding="async" />
                 ) : (
                   <div className="aspect-video bg-gradient-to-br from-sky-100 to-blue-100 grid place-items-center">
                     <GraduationCap className="h-12 w-12 text-sky-400" />
@@ -608,7 +608,7 @@ function DetailInner() {
             {instructors.map((p, i) => (
               <Card key={i} className="p-6 border-sky-100 text-center hover:shadow-lg transition">
                 {p.photo_url
-                  ? <img src={p.photo_url} alt={p.name} className="h-24 w-24 rounded-full mx-auto object-cover ring-4 ring-sky-100" />
+                  ? <img src={p.photo_url} alt={p.name} className="h-24 w-24 rounded-full mx-auto object-cover ring-4 ring-sky-100"  loading="lazy" decoding="async" />
                   : <div className="h-24 w-24 rounded-full mx-auto bg-gradient-to-br from-sky-100 to-blue-100 grid place-items-center ring-4 ring-sky-100"><GraduationCap className="h-10 w-10 text-sky-400" /></div>}
                 <div className="mt-3 font-semibold text-gray-900">{p.name}</div>
                 {p.title && <div className="text-xs text-sky-700 font-medium">{p.title}</div>}
@@ -756,7 +756,7 @@ function DetailInner() {
               <Link key={r.id} to={`/mba-compass/${r.slug}`} className="group">
                 <Card className="overflow-hidden border-sky-100 hover:shadow-lg transition h-full">
                   {r.thumbnail_url ? (
-                    <img src={r.thumbnail_url} alt={r.title} className="w-full aspect-video object-cover group-hover:scale-[1.02] transition" />
+                    <img src={r.thumbnail_url} alt={r.title} className="w-full aspect-video object-cover group-hover:scale-[1.02] transition"  loading="lazy" decoding="async" />
                   ) : (
                     <div className="aspect-video bg-gradient-to-br from-sky-100 to-blue-100 grid place-items-center"><GraduationCap className="h-10 w-10 text-sky-400" /></div>
                   )}

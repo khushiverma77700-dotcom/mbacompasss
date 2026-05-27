@@ -28,7 +28,7 @@ const Footer = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           <div>
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={mbahubLogo} alt="MBA Compass Logo" width="32" height="32" className="w-8 h-8 rounded-lg object-contain" />
+              <img src={mbahubLogo} alt="MBA Compass Logo" width="32" height="32" className="w-8 h-8 rounded-lg object-contain"  loading="lazy" decoding="async" />
               <div className="flex flex-col leading-tight">
                 <span className="font-heading font-bold text-lg text-primary-foreground">MBA Compass</span>
                 <span className="text-[8px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>

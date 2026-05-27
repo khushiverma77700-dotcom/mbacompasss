@@ -60,7 +60,7 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
             <Card key={i} className="overflow-hidden">
               <CardContent className="p-4 space-y-2">
                 {f.photo_url && (
-                  <img src={f.photo_url} alt={f.name} className="w-16 h-16 rounded-full object-cover border" />
+                  <img src={f.photo_url} alt={f.name} className="w-16 h-16 rounded-full object-cover border"  loading="lazy" decoding="async" />
                 )}
                 <div className="font-semibold">{f.name}</div>
                 <div className="text-xs text-muted-foreground">{[f.expertise, f.experience].filter(Boolean).join(" · ")}</div>
@@ -89,7 +89,7 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
                       {t.photo_url ? (
-                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-white shadow" />
+                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-white shadow"  loading="lazy" decoding="async" />
                       ) : (
                         <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${accent} text-white grid place-items-center font-extrabold text-lg shadow`}>
                           {initial}
@@ -179,7 +179,7 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
                     <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-100/40 blur-2xl" />
                     <div className="relative flex items-start gap-3">
                       {t.photo_url ? (
-                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-amber-200" />
+                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-amber-200"  loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white grid place-items-center font-extrabold text-lg ring-2 ring-amber-100">
                           {(t.name || "?").charAt(0).toUpperCase()}

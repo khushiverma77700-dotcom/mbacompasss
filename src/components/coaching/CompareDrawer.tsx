@@ -30,7 +30,7 @@ const CompareDrawer = () => {
                 {s ? (
                   <>
                     {s.logo_url ? (
-                      <img src={s.logo_url} alt={s.name} className="w-7 h-7 rounded object-contain bg-white border border-slate-200 shrink-0" />
+                      <img src={s.logo_url} alt={s.name} className="w-7 h-7 rounded object-contain bg-white border border-slate-200 shrink-0"  loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-7 h-7 rounded bg-white border border-slate-200 flex items-center justify-center shrink-0">
                         <Building2 className="w-3.5 h-3.5 text-slate-400" />

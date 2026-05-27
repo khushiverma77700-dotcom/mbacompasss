@@ -281,7 +281,7 @@ const AdminShortlisterColleges = () => {
                 const score = calculateDifficultyScore({ tier: c.tier, ranking: c.ranking?.toString() || "", placement_avg: c.placement_avg || "", fees: c.fees || "", accreditations: c.accreditations || [], college_category: c.college_category || "Non-IIM" });
                 return (
                   <TableRow key={c.id}>
-                    <TableCell><div className="flex items-center gap-2">{c.logo_url ? <img src={c.logo_url} className="w-7 h-7 rounded object-contain" alt="" /> : <Building2 className="w-4 h-4 text-muted-foreground" />}<span className="font-medium text-xs">{c.name}</span></div></TableCell>
+                    <TableCell><div className="flex items-center gap-2">{c.logo_url ? <img src={c.logo_url} className="w-7 h-7 rounded object-contain" alt=""  loading="lazy" decoding="async" /> : <Building2 className="w-4 h-4 text-muted-foreground" />}<span className="font-medium text-xs">{c.name}</span></div></TableCell>
                     <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "outline"} className="text-[10px]">{c.college_category || "—"}</Badge></TableCell>
                     <TableCell><Badge variant="outline" className="text-[10px]">{c.tier || "—"}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{c.city || "—"}</TableCell>

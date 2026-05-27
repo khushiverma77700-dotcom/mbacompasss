@@ -146,7 +146,7 @@ export default function AdminStudentNotifications() {
               </div>
               {imageUrl ? (
                 <div className="relative inline-block">
-                  <img src={imageUrl} alt="preview" className="max-h-40 rounded-md border" style={{ maxWidth: "100%", height: "auto" }} />
+                  <img src={imageUrl} alt="preview" className="max-h-40 rounded-md border" style={{ maxWidth: "100%", height: "auto" }}  loading="lazy" decoding="async" />
                   <button onClick={() => setImageUrl("")} className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-rose-500 text-white grid place-items-center shadow"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
@@ -179,7 +179,7 @@ export default function AdminStudentNotifications() {
               </div>
               <div className="font-semibold">{title || "Notification title"}</div>
               {message && <div className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{message}</div>}
-              {imageUrl && <img src={imageUrl} alt="" className="mt-3 rounded-md border" style={{ maxWidth: "100%", height: "auto" }} />}
+              {imageUrl && <img src={imageUrl} alt="" className="mt-3 rounded-md border" style={{ maxWidth: "100%", height: "auto" }}  loading="lazy" decoding="async" />}
               {linkUrl && (
                 <div className="mt-3">
                   <span className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white">

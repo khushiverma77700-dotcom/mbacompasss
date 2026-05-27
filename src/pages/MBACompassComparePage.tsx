@@ -164,7 +164,7 @@ function CompareInner() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="aspect-video w-full bg-sky-50 rounded overflow-hidden">
                             {c.thumbnail_url
-                              ? <img src={c.thumbnail_url} alt={c.title} className="w-full h-full object-cover" />
+                              ? <img src={c.thumbnail_url} alt={c.title} className="w-full h-full object-cover"  loading="lazy" decoding="async" />
                               : <div className="w-full h-full grid place-items-center"><GraduationCap className="h-8 w-8 text-sky-400" /></div>}
                           </div>
                         </div>
