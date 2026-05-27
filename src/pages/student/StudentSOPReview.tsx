@@ -319,12 +319,12 @@ export default function StudentSOPReview() {
 
   return (
     <div className="relative max-w-5xl">
-      {/* Blur overlay */}
-      <div className="absolute inset-1 z-30 rounded-2xl backdrop-blur-[6px] bg-white/30 border border-white/40 shadow-2xl flex flex-col items-center justify-center text-center p-6">
+      {/* Blur overlay - fixed on mobile so the message sits in viewport, absolute on larger screens */}
+      <div className="fixed inset-x-3 top-20 bottom-24 sm:absolute sm:inset-1 z-30 rounded-2xl backdrop-blur-[6px] bg-white/30 border border-white/40 shadow-2xl flex items-center justify-center text-center p-4 sm:p-6 overflow-y-auto">
         <div className="relative">
           {/* Decorative glow */}
-          <div className="absolute -inset-10 bg-gradient-to-r from-sky-400/20 via-indigo-400/20 to-blue-400/20 rounded-full blur-2xl" />
-          <div className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-white/60 shadow-xl px-8 py-10 max-w-md">
+          <div className="absolute -inset-10 bg-gradient-to-r from-sky-400/20 via-indigo-400/20 to-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-white/60 shadow-xl px-6 py-8 sm:px-8 sm:py-10 max-w-md mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold mb-4">
               <Sparkles className="h-3.5 w-3.5" /> Coming Soon
             </div>
