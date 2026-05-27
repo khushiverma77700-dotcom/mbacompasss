@@ -29,7 +29,7 @@ const DASHBOARD_ALLOWED_PREFIXES = [
   "/reset-password",
   "/formula",
   "/formulas",
-  "/demo",
+  // "/demo" removed
 ];
 
 const rewriteDashboardMockPath = (pathname: string): string | null => {
