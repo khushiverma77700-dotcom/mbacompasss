@@ -528,34 +528,37 @@ export default function StudentFormulaBook() {
                   </div>
 
                   {/* Formula expression */}
-                  <div className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-5 shadow-lg">
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/20">
+                  <div className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 shadow-lg sm:p-5">
+                    <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-500/20">
                           <Sigma className="h-4 w-4 text-sky-300" />
                         </div>
-                        <span className="text-sm font-bold uppercase tracking-wider text-slate-200">Formula</span>
+                        <span className="truncate text-sm font-bold uppercase tracking-wider text-slate-200">Formula</span>
                       </div>
                       <button
+                        type="button"
                         onClick={(e) => { e.stopPropagation(); setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] })); }}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-[11px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white"
+                        onKeyDown={(e) => e.stopPropagation()}
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-[11px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                        aria-label={plainMode[f.id] ? "Switch to rendered math" : "Switch to plain text"}
                         title={plainMode[f.id] ? "Show rendered math" : "Show plain text"}
                       >
                         {plainMode[f.id] ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                         {plainMode[f.id] ? "Rendered" : "Plain"}
                       </button>
-
                     </div>
                     {plainMode[f.id] ? (
-                      <code className="block overflow-x-auto rounded-xl bg-black/30 px-5 py-4 font-mono text-[15px] leading-relaxed text-sky-100">
+                      <code className="block max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-black/30 px-3 py-3 font-mono text-[13px] leading-relaxed text-sky-100 sm:px-5 sm:py-4 sm:text-[15px]">
                         {f.expression || f.expression_latex || ""}
                       </code>
                     ) : (
-                      <div className="px-1">
-                        <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-xl text-sky-50" />
+                      <div className="max-w-full overflow-x-auto">
+                        <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-base text-sky-50 sm:text-lg md:text-xl" />
                       </div>
                     )}
                   </div>
+
 
                   {/* Explanation */}
                   <div className="border-l-2 border-slate-200 pl-4">
