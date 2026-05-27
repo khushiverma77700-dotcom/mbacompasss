@@ -490,28 +490,89 @@ function ViewPersonalized() {
    View: Planner
    ========================================================================= */
 function ViewPlanner() {
+  const HEAT_COLORS = ["#f1f5f9", "#bae6fd", "#7dd3fc", "#38bdf8", "#0284c7"];
+  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+  const weeklyHours = [
+    { d: "Mon", h: 2.4 }, { d: "Tue", h: 3.0 }, { d: "Wed", h: 2.0 },
+    { d: "Thu", h: 3.5 }, { d: "Fri", h: 3.2 }, { d: "Sat", h: 4.3 }, { d: "Sun", h: 3.8 },
+  ];
   return (
     <div className="space-y-5">
       <SectionTitle icon={CalendarDays} title="Day Planner" subtitle="AI-balanced schedule · 5 tasks · 2 complete" />
-      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm font-semibold text-slate-800">Today · Tuesday</div>
-          <button className="rounded-lg bg-sky-100 px-3 py-1.5 text-xs font-semibold text-sky-700">+ Add task</button>
+
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard icon={Flame} label="Active Streak" value="34d" sub="Personal best" accent="from-amber-400 to-orange-500" />
+        <StatCard icon={Clock} label="This Week" value="22.2h" sub="↑ 14% vs last" accent="from-sky-500 to-blue-600" />
+        <StatCard icon={Target} label="Goal Hit Rate" value="86%" sub="last 30 days" accent="from-emerald-500 to-teal-600" />
+        <StatCard icon={CheckCircle2} label="Tasks Done" value="412" sub="all time" accent="from-violet-500 to-fuchsia-600" />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Today's tasks */}
+        <div className="lg:col-span-2 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="text-sm font-semibold text-slate-800">Today · Tuesday</div>
+            <button className="rounded-lg bg-sky-100 px-3 py-1.5 text-xs font-semibold text-sky-700">+ Add task</button>
+          </div>
+          <ul className="space-y-2">
+            {PLAN_TODAY.map((p, i) => (
+              <li key={i} className={`flex items-center gap-3 rounded-xl border p-3 ${p.done ? "border-emerald-100 bg-emerald-50/50" : "border-slate-100 bg-slate-50/50"}`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-full ${p.done ? "bg-emerald-500 text-white" : "bg-white ring-1 ring-slate-200 text-slate-400"}`}>
+                  {p.done ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
+                </div>
+                <div className="flex-1">
+                  <div className={`text-sm font-medium ${p.done ? "text-slate-500 line-through" : "text-slate-900"}`}>{p.task}</div>
+                  <div className="text-xs text-slate-500">{p.time} · {p.section}</div>
+                </div>
+                <button className="text-xs font-semibold text-sky-600">Open</button>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="space-y-2">
-          {PLAN_TODAY.map((p, i) => (
-            <li key={i} className={`flex items-center gap-3 rounded-xl border p-3 ${p.done ? "border-emerald-100 bg-emerald-50/50" : "border-slate-100 bg-slate-50/50"}`}>
-              <div className={`flex h-9 w-9 items-center justify-center rounded-full ${p.done ? "bg-emerald-500 text-white" : "bg-white ring-1 ring-slate-200 text-slate-400"}`}>
-                {p.done ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
-              </div>
-              <div className="flex-1">
-                <div className={`text-sm font-medium ${p.done ? "text-slate-500 line-through" : "text-slate-900"}`}>{p.task}</div>
-                <div className="text-xs text-slate-500">{p.time} · {p.section}</div>
-              </div>
-              <button className="text-xs font-semibold text-sky-600">Open</button>
-            </li>
-          ))}
-        </ul>
+
+        {/* Weekly hours bar */}
+        <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+          <SectionTitle icon={BarChart3} title="Weekly Hours" subtitle="Study time per day" />
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={weeklyHours}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="d" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <RTooltip />
+              <Bar dataKey="h" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* 8-week consistency heatmap */}
+      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+        <SectionTitle icon={Activity} title="Consistency Heatmap" subtitle="Last 8 weeks · daily study intensity" />
+        <div className="flex items-start gap-3">
+          <div className="grid grid-rows-7 gap-1 pt-1">
+            {dayLabels.map((d, i) => (
+              <div key={i} className="h-4 w-4 text-[9px] font-semibold text-slate-400 text-right">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto">
+            {HEATMAP.flatMap((week, wi) =>
+              week.map((v, di) => (
+                <div
+                  key={`${wi}-${di}`}
+                  className="h-4 w-4 rounded-sm ring-1 ring-slate-100"
+                  style={{ backgroundColor: HEAT_COLORS[v] }}
+                  title={`Wk ${wi + 1} ${dayLabels[di]} — intensity ${v}/4`}
+                />
+              ))
+            )}
+          </div>
+          <div className="ml-auto flex items-center gap-1 text-[10px] text-slate-500">
+            Less {HEAT_COLORS.map((c, i) => (
+              <span key={i} className="h-3 w-3 rounded-sm" style={{ backgroundColor: c }} />
+            ))} More
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -524,12 +585,59 @@ function ViewLeaderboard() {
   return (
     <div className="space-y-5">
       <SectionTitle icon={Trophy} title="All-India Leaderboard" subtitle="Top performers this week" />
+
+      {/* Podium */}
+      <div className="grid grid-cols-3 gap-3">
+        {[1, 0, 2].map((podiumIdx, displayIdx) => {
+          const l = LEADERBOARD[podiumIdx];
+          const heights = ["h-28", "h-36", "h-24"];
+          const tones = ["from-slate-300 to-slate-500", "from-amber-300 to-amber-500", "from-orange-300 to-orange-500"];
+          return (
+            <div key={podiumIdx} className="flex flex-col items-center justify-end">
+              <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white shadow-lg">
+                {l.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+              </div>
+              <div className="text-xs font-semibold text-slate-900 text-center">{l.name}</div>
+              <div className="text-[11px] text-slate-500">{l.xp.toLocaleString()} XP</div>
+              <div className={`${heights[displayIdx]} mt-2 w-full rounded-t-xl bg-gradient-to-b ${tones[displayIdx]} flex items-start justify-center pt-2 text-lg font-bold text-white shadow-inner`}>
+                #{l.rank}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* XP race chart */}
+      <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+        <SectionTitle icon={LineIcon} title="XP Race vs #1" subtitle="Your weekly XP gain catching up to the top rank" />
+        <ResponsiveContainer width="100%" height={240}>
+          <AreaChart data={XP_RACE}>
+            <defs>
+              <linearGradient id="gYou" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.5} />
+                <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="wk" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <RTooltip /><Legend />
+            <Area type="monotone" dataKey="top" name="Top rank" stroke="#f59e0b" fill="url(#gTop)" strokeWidth={2} />
+            <Area type="monotone" dataKey="you" name="You" stroke="#0284c7" fill="url(#gYou)" strokeWidth={2.4} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
       <div className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm">
         {LEADERBOARD.map((l, i) => {
           const isYou = l.badge === "you";
           return (
             <div key={i} className={`flex items-center gap-4 border-b border-sky-50 p-4 last:border-0 ${isYou ? "bg-gradient-to-r from-sky-50 to-blue-50" : ""}`}>
-              <div className="w-8 text-center text-lg font-bold text-slate-700">{l.badge && l.badge !== "you" ? l.badge : `#${l.rank}`}</div>
+              <div className="w-10 text-center text-sm font-bold text-slate-700">{l.badge && l.badge !== "you" ? l.badge : `#${l.rank}`}</div>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">
                 {l.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
               </div>
@@ -545,6 +653,7 @@ function ViewLeaderboard() {
     </div>
   );
 }
+
 
 /* =========================================================================
    Reusable: Locked overlay for blurred preview cards
