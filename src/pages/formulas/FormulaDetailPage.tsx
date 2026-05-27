@@ -191,13 +191,13 @@ export default function FormulaDetailPage() {
         </TabsContent>
 
         <TabsContent value="derive">
-          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.derivation || "Derivation not provided — use AI Assist → Derive step."} className="whitespace-pre-line leading-relaxed text-slate-700" /></CardContent></Card>
+          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.derivation || "Derivation not provided for this formula yet."} className="whitespace-pre-line leading-relaxed text-slate-700" /></CardContent></Card>
         </TabsContent>
 
         <TabsContent value="examples">
           <div className="space-y-3">
             {(formula.examples || []).length === 0 && (
-              <Card><CardContent className="p-6 text-sm text-slate-500">No examples yet. Try AI Assist → Worked example.</CardContent></Card>
+              <Card><CardContent className="p-6 text-sm text-slate-500">No worked examples for this formula yet.</CardContent></Card>
             )}
             {(formula.examples || []).map((ex: any, i: number) => (
               <Card key={i}>
