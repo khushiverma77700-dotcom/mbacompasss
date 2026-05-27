@@ -143,20 +143,20 @@ export default function PlannerTaskDialog({ open, onOpenChange, initial, onSubmi
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="min-w-0">
               <Label>Category</Label>
               <Select value={v.category} onValueChange={(val) => setV({ ...v, category: val })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div className="min-w-0">
               <Label>Priority</Label>
               <Select value={v.priority} onValueChange={(val) => setV({ ...v, priority: val })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                 </SelectContent>
@@ -164,24 +164,25 @@ export default function PlannerTaskDialog({ open, onOpenChange, initial, onSubmi
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="min-w-0">
               <Label>Date</Label>
-              <Input type="date" value={v.scheduled_date} onChange={(e) => setV({ ...v, scheduled_date: e.target.value })} />
+              <Input type="date" className="w-full" value={v.scheduled_date} onChange={(e) => setV({ ...v, scheduled_date: e.target.value })} />
             </div>
-            <div>
+            <div className="min-w-0">
               <Label>Start time</Label>
-              <Input type="time" value={v.scheduled_start_time ?? ""} onChange={(e) => setV({ ...v, scheduled_start_time: e.target.value || null })} />
+              <Input type="time" className="w-full" value={v.scheduled_start_time ?? ""} onChange={(e) => setV({ ...v, scheduled_start_time: e.target.value || null })} />
             </div>
-            <div>
+            <div className="min-w-0">
               <Label>Minutes</Label>
               <Input
-                type="number" min={5} max={600}
+                type="number" min={5} max={600} className="w-full"
                 value={v.estimated_minutes}
                 onChange={(e) => setV({ ...v, estimated_minutes: parseInt(e.target.value) || 30 })}
               />
             </div>
           </div>
+
 
           {/* Recurrence */}
           <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/30">
