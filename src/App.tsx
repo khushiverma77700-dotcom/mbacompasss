@@ -908,6 +908,16 @@ const App = () => (
                     element={
                       <LazyPage>
                         <DemoShell>
+                          <DemoDashboard />
+                        </DemoShell>
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="/demo/*"
+                    element={
+                      <LazyPage>
+                        <DemoShell>
                           <StudentLazyPage><StudentLayout /></StudentLazyPage>
                         </DemoShell>
                       </LazyPage>
