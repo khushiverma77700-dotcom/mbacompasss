@@ -340,7 +340,6 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
   }, [sorted]);
 
   const [exam, setExam] = useState<string>("ALL");
-  const [mode, setMode] = useState<AirMode>("motivational");
   const filtered = useMemo(
     () => (exam === "ALL" ? sorted : sorted.filter((a) => (a.test?.exam_code || "GEN").toUpperCase() === exam)),
     [sorted, exam]
