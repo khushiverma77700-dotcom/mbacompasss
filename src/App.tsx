@@ -181,7 +181,7 @@ const StudentVocabularyFeed = lazyWithPreload(() => import("./pages/student/voca
 const StudentVocabularyWord = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyWord"));
 const StudentVocabularySearch = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularySearch"));
 const StudentVocabularyBookmarks = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyBookmarks"));
-const StudentVocabularyQuiz = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyQuiz"));
+
 const StudentVocabularyRevision = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyRevision"));
 const StudentVocabularyLeaderboard = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyLeaderboard"));
 const StudentVocabularyAnalytics = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyAnalytics"));
