@@ -112,7 +112,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
       { label: "CAT Score Submissions", path: "/admin/cat-scores", icon: Calculator },
       { label: "MBA ROI Analyses", path: "/admin/roi-analyses", icon: TrendingUp },
-      { label: "Citation Sources Audit", path: "/admin/citations-audit", icon: Link2 },
+      // Citation Sources Audit removed
       { label: "Content Studio (All-in-one)", path: "/admin/content-studio", icon: Sparkles },
       { label: "Content Refresh Queue", path: "/admin/content-refreshes", icon: RefreshCw },
       { label: "Bulk Refresh Content", path: "/admin/bulk-refresh", icon: Sparkles },
