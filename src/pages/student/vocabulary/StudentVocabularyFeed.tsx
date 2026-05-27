@@ -737,13 +737,14 @@ export default function StudentVocabularyFeed() {
                     </div>
                   </div>
 
-                  <Link
-                    to={`/student/vocabulary/word/${w.slug}`}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); openWord(w.slug); }}
                     className="absolute right-3 top-3 hidden h-7 w-7 place-items-center rounded-full bg-white text-sky-600 opacity-0 shadow ring-1 ring-sky-100 transition-opacity group-hover:opacity-100 sm:grid"
                     aria-label="Open"
                   >
                     <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Link>
+                  </button>
                 </CardContent>
               </Card>
             );
