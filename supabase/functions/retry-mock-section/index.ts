@@ -41,11 +41,29 @@ function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): str
 const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
+// Returns the next safe question_number for a section by reading MAX from DB.
+// Prevents unique-constraint loops when partial prior runs left rows behind
+// or when two workers race on the same section.
+async function nextQuestionNumber(admin: any, sectionId: string): Promise<number> {
+  const { data } = await admin
+    .from("mock_questions")
+    .select("question_number")
+    .eq("section_id", sectionId)
+    .order("question_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return ((data as any)?.question_number || 0) + 1;
+}
+
+// Postgres unique-violation SQLSTATE
+const PG_UNIQUE_VIOLATION = "23505";
+
 const AI_TIMEOUT_MS = 60_000;
 const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less prompt overhead
 // We never give up early. The worker keeps re-invoking itself until either
 // the section reaches its target or the watchdog cancels it after hours.
 const MAX_ATTEMPTS_PER_QUESTION = 200;
+
 
 function buildEmergencyDilrQuestion(n: number, seed: number) {
   const a = 42 + ((seed + n * 7) % 31);
