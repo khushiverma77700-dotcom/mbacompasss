@@ -853,6 +853,8 @@ function Shell() {
       case "planner": return <ViewPlanner />;
       case "leaderboard": return <ViewLeaderboard />;
       case "vocabulary": return <ViewVocabulary />;
+      case "formulas": return <ViewFormulas />;
+      case "news": return <ViewNews />;
       case "tools": return <ViewTools />;
       case "notifications": return <ViewNotifications />;
       default: return <ViewOverview />;
