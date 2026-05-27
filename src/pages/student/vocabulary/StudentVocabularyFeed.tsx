@@ -680,7 +680,7 @@ export default function StudentVocabularyFeed() {
                     </span>
                   </button>
 
-                  <div className="mt-4 space-y-2">
+                  <div className="relative z-10 mt-4 space-y-2 pointer-events-none">
                     <p className="text-[15px] leading-relaxed text-slate-800">{w.meaning}</p>
                     {w.meaning_hindi && (
                       <p className="text-sm text-slate-600">
@@ -694,7 +694,7 @@ export default function StudentVocabularyFeed() {
                   </div>
 
                   {Array.isArray(w.exam_appearances) && w.exam_appearances.length > 0 && (
-                    <div className="mt-3 flex flex-wrap items-center gap-1">
+                    <div className="relative z-10 mt-3 flex flex-wrap items-center gap-1 pointer-events-none">
                       <GraduationCap className="h-3 w-3 text-sky-600" />
                       {w.exam_appearances.slice(0, 4).map((e: string) => (
                         <Badge key={e} className="border-0 bg-sky-100 text-[10px] text-sky-700 hover:bg-sky-100">{e}</Badge>
@@ -702,7 +702,7 @@ export default function StudentVocabularyFeed() {
                     </div>
                   )}
 
-                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                  <div className="relative z-10 mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
                     <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">
                       {w.category?.replace("_", " ")}
                     </Badge>
@@ -712,7 +712,7 @@ export default function StudentVocabularyFeed() {
                         size="sm"
                         className="h-8 gap-1 px-2.5 text-xs sm:px-3"
                         disabled={busy === w.id}
-                        onClick={() => toggleBookmark(w.id)}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleBookmark(w.id); }}
                       >
                         <Bookmark className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
                         {isSaved ? "Saved" : "Save"}
@@ -725,7 +725,7 @@ export default function StudentVocabularyFeed() {
                           !isRead && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95",
                         )}
                         disabled={busy === w.id || isRead}
-                        onClick={() => markRead(w.id)}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); markRead(w.id); }}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {isRead ? "Read" : "Mark Read"}
