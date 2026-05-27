@@ -283,9 +283,9 @@ export default function StudentNewsroom() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="w-full overflow-x-auto justify-start h-auto p-1">
+        <TabsList className="flex w-full h-auto gap-1 overflow-x-auto whitespace-nowrap justify-start p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((t) => (
-            <TabsTrigger key={t} value={t} className="text-xs md:text-sm">
+            <TabsTrigger key={t} value={t} className="shrink-0 whitespace-nowrap text-xs md:text-sm">
               {t}
             </TabsTrigger>
           ))}
