@@ -202,15 +202,7 @@ const AdminLayout = () => {
                     >
                       <item.icon className="w-4 h-4 shrink-0" />
                       <span className="flex-1">{item.label}</span>
-                      {item.path === "/admin/google-indexing" && nightlyIndexingLive && (
-                        <span className="relative flex items-center justify-center h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/25" title="Nightly auto-run is live">
-                          <Bell className="w-3 h-3 text-emerald-600" />
-                          <span className="pointer-events-none absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                          </span>
-                        </span>
-                      )}
+                      {/* Google Indexing live badge removed */}
                       {(item as any).dotKey && dots[(item as any).dotKey] && (
                         counts[(item as any).dotKey] > 0 ? (
                           <span className="relative inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
