@@ -33,7 +33,7 @@ const AdminLayout = () => {
   // Notification dots state
   const [dots, setDots] = useState<Record<string, boolean>>({});
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [nightlyIndexingLive, setNightlyIndexingLive] = useState(false);
+  // nightlyIndexingLive state removed
 
 
   const toggleGroup = (label: string) => {
