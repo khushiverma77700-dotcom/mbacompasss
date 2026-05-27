@@ -372,19 +372,19 @@ export default function StudentDailyTest() {
         </div>
 
         <Tabs defaultValue="missed" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
-            <TabsTrigger value="missed" className="gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5" /> Missed
-              {missed.length > 0 && <Badge variant="secondary" className="ml-1 bg-rose-100 text-rose-700 border-0 h-4 px-1.5 text-[10px]">{missed.length}</Badge>}
+          <TabsList className="grid grid-cols-4 w-full max-w-2xl h-auto p-1 gap-1">
+            <TabsTrigger value="missed" className="gap-1 px-1.5 sm:px-3 text-[11px] sm:text-sm whitespace-nowrap">
+              <AlertCircle className="h-3.5 w-3.5 hidden sm:inline" /> Missed
+              {missed.length > 0 && <Badge variant="secondary" className="ml-0.5 bg-rose-100 text-rose-700 border-0 h-4 px-1 text-[10px]">{missed.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="upcoming" className="gap-1.5">
-              <CalendarClock className="h-3.5 w-3.5" /> Upcoming
-              {upcoming.length > 0 && <Badge variant="secondary" className="ml-1 bg-sky-100 text-sky-700 border-0 h-4 px-1.5 text-[10px]">{upcoming.length}</Badge>}
+            <TabsTrigger value="upcoming" className="gap-1 px-1.5 sm:px-3 text-[11px] sm:text-sm whitespace-nowrap">
+              <CalendarClock className="h-3.5 w-3.5 hidden sm:inline" /> Upcoming
+              {upcoming.length > 0 && <Badge variant="secondary" className="ml-0.5 bg-sky-100 text-sky-700 border-0 h-4 px-1 text-[10px]">{upcoming.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="completed" className="gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Done
+            <TabsTrigger value="completed" className="gap-1 px-1.5 sm:px-3 text-[11px] sm:text-sm whitespace-nowrap">
+              <CheckCircle2 className="h-3.5 w-3.5 hidden sm:inline" /> Done
             </TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="all" className="px-1.5 sm:px-3 text-[11px] sm:text-sm">All</TabsTrigger>
           </TabsList>
 
           <TabsContent value="missed" className="mt-4">
