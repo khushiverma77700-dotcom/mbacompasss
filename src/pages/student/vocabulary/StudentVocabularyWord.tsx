@@ -197,25 +197,51 @@ export default function StudentVocabularyWord() {
 
       {/* Examples */}
       <Card className="border-slate-200">
-        <CardContent className="p-5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">In Context</div>
-              <h3 className="font-heading text-lg font-semibold text-slate-900">Example Sentences</h3>
-            </div>
-            <Button variant="outline" size="sm" onClick={enrichAI} disabled={marking} className="gap-1 border-sky-200 text-sky-700 hover:bg-sky-50">
-              {marking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Enrich with AI
-            </Button>
+        <CardContent className="p-5 sm:p-6">
+          <div className="mb-4">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">In Context</div>
+            <h3 className="font-heading text-xl font-semibold text-slate-900">Example Sentences &amp; Usage Guide</h3>
+            <p className="mt-1 text-xs text-slate-500">See how <span className="font-semibold text-slate-700">{word.word}</span> is used across real MBA situations — pick the tab that matches your scenario.</p>
           </div>
           <Tabs defaultValue="business">
             <TabsList className="bg-slate-100">
               <TabsTrigger value="business" className="gap-1 data-[state=active]:bg-white"><Briefcase className="h-3.5 w-3.5" /> Business</TabsTrigger>
-              <TabsTrigger value="interview" className="gap-1 data-[state=active]:bg-white"><MessageSquare className="h-3.5 w-3.5" /> Interview</TabsTrigger>
-              <TabsTrigger value="email" className="gap-1 data-[state=active]:bg-white"><Mail className="h-3.5 w-3.5" /> Email</TabsTrigger>
+              <TabsTrigger value="interview" className="gap-1 data-[state=active]:bg-white"><MessageSquare className="h-3.5 w-3.5" /> Interview / GDPI</TabsTrigger>
+              <TabsTrigger value="email" className="gap-1 data-[state=active]:bg-white"><Mail className="h-3.5 w-3.5" /> Email / WAT</TabsTrigger>
             </TabsList>
-            <TabsContent value="business" className="pt-3"><ExampleQuote text={word.example_business} /></TabsContent>
-            <TabsContent value="interview" className="pt-3"><ExampleQuote text={word.example_interview} /></TabsContent>
-            <TabsContent value="email" className="pt-3"><ExampleQuote text={word.example_email} /></TabsContent>
+            <TabsContent value="business" className="pt-4">
+              <ExampleBlock
+                word={word.word}
+                text={word.example_business}
+                scenario="Board rooms, consulting decks, case-study discussions"
+                tip="Use this word when you want to sound analytical and decisive — pair it with data or a clear recommendation."
+                power={`In our analysis, the team ${word.word.toLowerCase?.()} the trade-offs and recommended option B.`}
+                pitfall="Avoid stacking two heavy vocabulary words back-to-back — it reads as forced."
+                tone="sky"
+              />
+            </TabsContent>
+            <TabsContent value="interview" className="pt-4">
+              <ExampleBlock
+                word={word.word}
+                text={word.example_interview}
+                scenario="GDPI panels, HR rounds, profile-based questions"
+                tip="Lead with a personal story, then use the word to label the insight — never start with the word itself."
+                power={`That experience helped me ${word.word.toLowerCase?.()} how cross-functional teams actually make decisions.`}
+                pitfall="Don’t use it twice in the same answer — panelists notice repetition immediately."
+                tone="blue"
+              />
+            </TabsContent>
+            <TabsContent value="email" className="pt-4">
+              <ExampleBlock
+                word={word.word}
+                text={word.example_email}
+                scenario="WAT essays, SOPs, professional emails, LinkedIn posts"
+                tip="In writing, place the word in the second half of the sentence — it adds weight without sounding showy."
+                power={`I would like to ${word.word.toLowerCase?.()} the proposal in detail before our next sync.`}
+                pitfall="Match the register — if the rest of the email is informal, this word will feel out of place."
+                tone="cyan"
+              />
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -238,12 +264,54 @@ function MeaningCard({ label, tone, italic, children }: any) {
   );
 }
 
-function ExampleQuote({ text }: { text?: string }) {
-  if (!text) return <p className="text-sm text-slate-400">No example yet. Use "Enrich with AI" to generate one.</p>;
+function ExampleBlock({
+  word, text, scenario, tip, power, pitfall, tone = "sky",
+}: { word: string; text?: string; scenario: string; tip: string; power: string; pitfall: string; tone?: "sky" | "blue" | "cyan" }) {
+  const border = tone === "sky" ? "border-sky-400" : tone === "blue" ? "border-blue-400" : "border-cyan-400";
+  const bg = tone === "sky" ? "bg-sky-50/50" : tone === "blue" ? "bg-blue-50/50" : "bg-cyan-50/50";
+
   return (
-    <blockquote className="relative rounded-xl border-l-2 border-sky-400 bg-sky-50/40 px-5 py-4 text-sm italic leading-relaxed text-slate-700">
-      <Quote className="absolute -left-1 -top-2 h-5 w-5 text-sky-300" />
-      {text}
-    </blockquote>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+        <Target className="h-3.5 w-3.5 text-slate-400" />
+        <span className="font-semibold uppercase tracking-wider text-slate-600">When to use:</span>
+        <span>{scenario}</span>
+      </div>
+
+      <blockquote className={`relative rounded-xl border-l-2 ${border} ${bg} px-5 py-4 text-[15px] leading-relaxed text-slate-800`}>
+        <Quote className="absolute -left-1 -top-2 h-5 w-5 text-sky-300" />
+        {text ? (
+          <span className="italic">{text}</span>
+        ) : (
+          <span className="text-slate-500">A polished example for this context is being curated. Use the power phrase below in the meantime.</span>
+        )}
+      </blockquote>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+            <Lightbulb className="h-3.5 w-3.5" /> Pro tip
+          </div>
+          <p className="mt-1 text-[13px] leading-6 text-slate-700">{tip}</p>
+        </div>
+        <div className="rounded-xl border border-sky-100 bg-white p-3">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-sky-700">
+            <Sparkles className="h-3.5 w-3.5" /> Power phrase
+          </div>
+          <p className="mt-1 text-[13px] leading-6 text-slate-800">
+            <span className="font-medium">“{power}”</span>
+          </p>
+          <p className="mt-1 text-[11px] text-slate-400">Swap the surrounding words to fit your story — keep <span className="font-semibold text-slate-600">{word}</span> in place.</p>
+        </div>
+      </div>
+
+      <div className="flex items-start gap-2 rounded-xl border border-rose-100 bg-rose-50/40 p-3">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600" />
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Common pitfall</div>
+          <p className="mt-0.5 text-[13px] leading-6 text-slate-700">{pitfall}</p>
+        </div>
+      </div>
+    </div>
   );
 }
