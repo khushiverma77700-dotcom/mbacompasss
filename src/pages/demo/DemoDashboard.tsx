@@ -420,7 +420,7 @@ function ViewPerformance() {
           </ul>
         </div>
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5">
-          <SectionTitle title="🚀 Strength Areas" subtitle="Defend & maintain" />
+          <SectionTitle icon={Rocket} title="Strength Areas" subtitle="Defend & maintain" />
           <ul className="space-y-2 text-sm">
             {["Algebra — Equations", "RC — Main idea", "Number System", "Vocab — Synonyms"].map((w, i) => (
               <li key={i} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm">
