@@ -105,7 +105,7 @@ const AdminCallbacks = lazyWithPreload(() => import("./pages/admin/AdminCallback
 const AdminDatabaseBackup = lazyWithPreload(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazyWithPreload(() => import("./pages/admin/AdminAIUsage"));
 const AdminApiKeys = lazyWithPreload(() => import("./pages/admin/AdminApiKeys"));
-const AdminWelcomeEmail = lazyWithPreload(() => import("./pages/admin/AdminWelcomeEmail"));
+// Welcome Email admin page removed
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
 const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
 const AdminContentStudio = lazyWithPreload(() => import("./pages/admin/AdminContentStudio"));
