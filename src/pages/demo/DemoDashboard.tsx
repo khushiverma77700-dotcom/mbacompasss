@@ -211,7 +211,7 @@ function ViewOverview() {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold backdrop-blur">
               <GraduationCap className="h-3.5 w-3.5" /> {STUDENT.target}
             </div>
-            <h1 className="mt-3 text-2xl font-bold sm:text-3xl">Good morning, {STUDENT.name} 👋</h1>
+            <h1 className="mt-3 text-2xl font-bold sm:text-3xl">Good morning, {STUDENT.name}</h1>
             <p className="mt-1 text-sm text-sky-100">You're <span className="font-semibold text-white">{STUDENT.percentile}%ile</span> · {STUDENT.streak}-day streak · Rank #{STUDENT.rank}</p>
           </div>
           <div className="flex gap-3">
