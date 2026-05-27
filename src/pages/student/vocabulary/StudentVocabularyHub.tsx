@@ -105,11 +105,6 @@ export default function StudentVocabularyHub() {
                 <BookOpen className="h-4 w-4" /> Start Learning
               </Button>
             </Link>
-            <Link to="/student/vocabulary/quiz">
-              <Button size="lg" variant="outline" className="gap-2 border-sky-200 bg-white/70 backdrop-blur">
-                <Brain className="h-4 w-4" /> Quick Quiz
-              </Button>
-            </Link>
           </div>
 
           {/* Stat strip */}
