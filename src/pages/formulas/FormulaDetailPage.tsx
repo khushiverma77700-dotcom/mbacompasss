@@ -248,20 +248,6 @@ export default function FormulaDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="ai">
-          <Card>
-            <CardContent className="space-y-4 p-6">
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" disabled={aiBusy !== null} onClick={() => runAi("explain_simpler")}><Wand2 className="mr-1 h-3.5 w-3.5" /> Explain simpler</Button>
-                <Button size="sm" variant="outline" disabled={aiBusy !== null} onClick={() => runAi("derive")}>Derive step-by-step</Button>
-                <Button size="sm" variant="outline" disabled={aiBusy !== null} onClick={() => runAi("shortcut")}>Shortcut tip</Button>
-                <Button size="sm" variant="outline" disabled={aiBusy !== null} onClick={() => runAi("worked_example")}>Worked example</Button>
-              </div>
-              {aiBusy && <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-800">AI thinking… ({aiBusy.replace("_", " ")})</div>}
-              {aiText && <div className="prose prose-sm max-w-none rounded-xl border border-sky-100 bg-sky-50/40 p-4" dangerouslySetInnerHTML={{ __html: sanitizedAi }} />}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* FAQs */}
