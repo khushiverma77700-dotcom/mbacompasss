@@ -253,3 +253,72 @@ export function useStudentPerformance(): StudentPerformanceData {
     sectional, trend,
   };
 }
+
+/**
+ * Pure-function clone of the hook body that runs over `DEMO_ATTEMPTS` instead
+ * of Supabase. Used only when the user is browsing /demo/*.
+ */
+function computeDemoPerformance(): StudentPerformanceData {
+  const attempts = DEMO_ATTEMPTS as unknown as MockAttempt[];
+  const submitted = attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted");
+  const inProgress: MockAttempt[] = [];
+
+  const n = submitted.length;
+  const ps = submitted.map((x) => Number(x.percentile || 0));
+  const accs = submitted.map((x) => Number(x.accuracy || 0));
+  const totalScore = submitted.reduce((s, x) => s + Number(x.total_score || 0), 0);
+  const totalSec = submitted.reduce((s, x) => {
+    if (x.started_at && x.submitted_at) {
+      return s + Math.max(0, (new Date(x.submitted_at).getTime() - new Date(x.started_at).getTime()) / 1000);
+    }
+    return s;
+  }, 0);
+  const avgPercentile = +(ps.reduce((a, b) => a + b, 0) / n).toFixed(1);
+  const bestPercentile = Math.max(...ps);
+  const avgAccuracy = Math.round(accs.reduce((a, b) => a + b, 0) / n);
+  const avgScore = +(totalScore / n).toFixed(1);
+  const totalHours = +(totalSec / 3600).toFixed(1);
+  const mean = ps.reduce((a, b) => a + b, 0) / n;
+  const variance = ps.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+  const consistency = Math.max(0, Math.round(100 - Math.sqrt(variance)));
+  const chrono = submitted.slice().reverse();
+  const improvement = +((Number(chrono[chrono.length - 1].percentile || 0)) - Number(chrono[0].percentile || 0)).toFixed(1);
+  const lastDelta = +((Number(submitted[0].percentile || 0)) - Number(submitted[1].percentile || 0)).toFixed(1);
+  const days = new Set(submitted.filter((x) => x.submitted_at).map((x) => new Date(x.submitted_at!).toDateString()));
+
+  const agg: Record<string, { score: number; max: number; correct: number; attempted: number; percentile: number; count: number }> = {};
+  for (const a of submitted) {
+    const ss = a.sectional_scores || {};
+    for (const k of Object.keys(ss)) {
+      const sec = ss[k] || {};
+      if (!agg[k]) agg[k] = { score: 0, max: 0, correct: 0, attempted: 0, percentile: 0, count: 0 };
+      agg[k].score += Number(sec.score || 0);
+      agg[k].max += Number(sec.max_score || sec.max || 0);
+      agg[k].correct += Number(sec.correct || 0);
+      agg[k].attempted += Number(sec.attempted || 0);
+      agg[k].percentile += Number(sec.percentile || 0);
+      agg[k].count += 1;
+    }
+  }
+  const sectional = Object.entries(agg).map(([name, v]) => ({
+    name,
+    avgScore: v.count > 0 ? +(v.score / v.count).toFixed(1) : 0,
+    avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
+    avgPercentile: v.count > 0 ? Math.round(v.percentile / v.count) : 0,
+    pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
+  }));
+  const trend = submitted.slice().reverse().slice(-12).map((x, i) => ({
+    name: `M${i + 1}`,
+    percentile: Number(x.percentile || 0),
+    score: Number(x.total_score || 0),
+    accuracy: Number(x.accuracy || 0),
+  }));
+
+  return {
+    attempts, submitted, inProgress,
+    loading: false,
+    totalAttempts: n, avgPercentile, bestPercentile, avgAccuracy, avgScore,
+    totalHours, streakDays: days.size, consistency, improvement, lastDelta,
+    sectional, trend,
+  };
+}
