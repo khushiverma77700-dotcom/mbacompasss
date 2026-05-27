@@ -1367,15 +1367,15 @@ const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }
       {rows.map((s) => (
         <div
           key={s.name}
-          className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center rounded-xl border border-sky-100/80 bg-gradient-to-r from-white to-sky-50/40 px-3 py-3 hover:shadow-sm transition"
+          className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center rounded-xl border border-sky-100/80 bg-gradient-to-r from-white to-sky-50/40 dark:border-slate-700/60 dark:from-slate-800/70 dark:to-slate-800/50 px-3 py-3 hover:shadow-sm transition"
         >
           <div className="md:col-span-4 flex items-center gap-2 min-w-0">
             <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${toneFor(s.pctOfMax)} text-white grid place-items-center text-xs font-bold shadow-sm`}>
               {String(s.name).split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
             </div>
             <div className="min-w-0">
-              <div className="font-medium text-sm truncate" title={s.name}>{s.name}</div>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="font-medium text-sm truncate text-foreground" title={s.name}>{s.name}</div>
+              <div className="text-[11px] text-muted-foreground dark:text-slate-300">
                 Avg {s.avgScore} / {s.avgMax}
               </div>
             </div>
@@ -1383,34 +1383,34 @@ const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }
 
           <div className="md:col-span-5">
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div className="flex-1 h-2.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                 <div
                   className={`h-full rounded-full bg-gradient-to-r ${toneFor(s.pctOfMax)} transition-all`}
                   style={{ width: `${Math.min(100, s.pctOfMax)}%` }}
                 />
               </div>
-              <div className="w-10 text-right text-xs font-semibold tabular-nums">{s.pctOfMax}%</div>
+              <div className="w-10 text-right text-xs font-semibold tabular-nums text-foreground">{s.pctOfMax}%</div>
             </div>
             <div className="flex items-center gap-2 mt-1.5">
-              <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                 <div
                   className={`h-full rounded-full bg-gradient-to-r ${accTone(s.avgAccuracy)}`}
                   style={{ width: `${Math.min(100, s.avgAccuracy)}%` }}
                 />
               </div>
-              <div className="w-10 text-right text-[11px] text-muted-foreground tabular-nums">{s.avgAccuracy}%</div>
+              <div className="w-10 text-right text-[11px] text-muted-foreground dark:text-slate-300 tabular-nums">{s.avgAccuracy}%</div>
             </div>
           </div>
 
           <div className="md:col-span-3 flex md:justify-end items-center gap-3 text-xs">
             <div className="flex flex-col md:items-end">
-              <span className="text-muted-foreground">Accuracy</span>
-              <span className="font-semibold">{s.avgAccuracy}%</span>
+              <span className="text-muted-foreground dark:text-slate-300">Accuracy</span>
+              <span className="font-semibold text-foreground">{s.avgAccuracy}%</span>
             </div>
-            <div className="h-8 w-px bg-slate-200 hidden md:block" />
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden md:block" />
             <div className="flex flex-col md:items-end">
-              <span className="text-muted-foreground">Attempts</span>
-              <span className="font-semibold">{s.avgAttempted}</span>
+              <span className="text-muted-foreground dark:text-slate-300">Attempts</span>
+              <span className="font-semibold text-foreground">{s.avgAttempted}</span>
             </div>
           </div>
         </div>
