@@ -125,6 +125,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
   const autoKickedRef = useRef<Record<string, number>>({});
   const optimisticJobsRef = useRef<DockJob[]>([]);
   const currentUserIdRef = useRef<string | null>(null);
+  const hasOpenJobsRef = useRef(false);
 
   // Hydrate from DB on mount + poll every 3s. Survives page reloads,
   // navigation, and laptop reboots — the source of truth is the bulk
@@ -156,6 +157,7 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
     const mapped = (data ?? []).map(mapRow).filter((j) => !dismissedIdsRef.current.has(j.id));
     if (mapped.length > 0) optimisticJobsRef.current = [];
     const next = mapped.length > 0 ? mapped : optimisticJobsRef.current;
+    hasOpenJobsRef.current = next.some((j) => j.status === "pending" || j.status === "starting" || j.status === "running");
     // Fire completion / failure toasts when status flips
     for (const j of next) {
       const prev = prevStatusRef.current[j.id];
@@ -206,11 +208,14 @@ export function MockGenDockProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     fetchAll();
-    const t = setInterval(fetchAll, 3000);
-    // Trigger server reconcile periodically (also keeps cron-less envs moving)
+    const t = setInterval(fetchAll, 15000);
+    // Trigger server reconcile only while jobs are open. The backend cron also
+    // keeps generation moving, so this must not run every few seconds forever.
     const t2 = setInterval(() => {
-      supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
-    }, 8000);
+      if (hasOpenJobsRef.current) {
+        supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
+      }
+    }, 60000);
     return () => { clearInterval(t); clearInterval(t2); };
   }, [fetchAll]);
 
