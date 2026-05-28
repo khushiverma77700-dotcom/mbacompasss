@@ -22,7 +22,7 @@
     --secondary-foreground: 207 90% 34%;
 
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 22% 38%; /* WCAG AA: ~7:1 on white background */
 
     --accent: 207 73% 94%;
     --accent-foreground: 207 90% 34%;
