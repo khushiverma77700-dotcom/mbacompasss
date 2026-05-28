@@ -63,8 +63,31 @@ requestAnimationFrame(() => {
   if (import.meta.env.PROD) {
     import("workbox-window").then(({ Workbox }) => {
       const wb = new Workbox("/sw.js");
+
+      // When a new SW takes control, force a reload so the installed
+      // PWA picks up the latest build instead of showing the cached one.
+      let reloading = false;
+      wb.addEventListener("controlling", () => {
+        if (reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
+
+      // As soon as a new SW is waiting, activate it immediately.
       wb.addEventListener("waiting", () => wb.messageSkipWaiting());
-      wb.register().catch(() => {});
+
+      wb.register({ immediate: true }).then((reg) => {
+        if (!reg) return;
+        // Check for updates on app focus / visibility (installed PWAs
+        // rarely fully close, so this is the main update trigger).
+        const checkForUpdate = () => reg.update().catch(() => {});
+        window.addEventListener("focus", checkForUpdate);
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") checkForUpdate();
+        });
+        // And poll every 30 min as a safety net.
+        setInterval(checkForUpdate, 30 * 60 * 1000);
+      }).catch(() => {});
     });
   }
 })();
