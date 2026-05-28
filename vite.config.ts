@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "html",
               networkTimeoutSeconds: 3,
-              expiration: { maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 },
+              expiration: { maxEntries: 8, maxAgeSeconds: 60 * 10 },
             },
           },
           {
