@@ -65,7 +65,7 @@ export type MockGenerationProgress = {
   queue: QueueSnapshot;
 };
 
-export function useMockGenerationProgress(generationId: string | null, intervalMs = 1500): MockGenerationProgress {
+export function useMockGenerationProgress(generationId: string | null, intervalMs = 5000): MockGenerationProgress {
   const [jobs, setJobs] = useState<SectionJob[]>([]);
   const [queue, setQueue] = useState<QueueSnapshot>({ pending: 0, processing: 0, completed: 0, failed: 0, retried: 0 });
   const [loading, setLoading] = useState(false);
@@ -91,11 +91,12 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
           .select(SELECT)
           .eq("generation_id", generationId)
           .order("created_at", { ascending: true }),
-        // Global queue snapshot — last 24h of activity gives a meaningful number
+        // Global queue snapshot — only open/recent rows to avoid expensive full-day polling.
         supabase
           .from("mock_section_jobs")
           .select("status, attempts")
-          .gte("updated_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+          .in("status", ["pending", "processing", "failed"])
+          .gte("updated_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()),
       ]);
 
       if (!alive) return;

@@ -270,7 +270,7 @@ async function loadSectionCorpus(
     .select("question_html")
     .in("section_id", sectionIds)
     .order("created_at", { ascending: false })
-    .limit(2500);
+    .limit(800);
   for (const row of data || []) {
     const norm = normalizeForHash((row as any).question_html || "");
     if (snippets.length < 12 && norm.length > 40) snippets.push(norm.slice(0, 260));
