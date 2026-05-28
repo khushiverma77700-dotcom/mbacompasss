@@ -172,6 +172,7 @@ const HeroSection = () => {
                   onKeyDown={handleKeyDown}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   placeholder="Search by coaching name, city, or exam..."
+                  aria-label="Search coaching institutes"
                   className="h-11 md:h-12 pl-11 pr-28 md:pr-32 rounded-xl bg-transparent text-foreground text-sm md:text-base border-none shadow-none focus-visible:ring-0"
                 />
                 <Button

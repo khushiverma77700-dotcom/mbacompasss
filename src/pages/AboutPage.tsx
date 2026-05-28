@@ -8,7 +8,7 @@ const AboutPage = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
       title="About MBA Compass — MBA Admissions & Coaching Platform"
-      description="Learn about MBA Compass, India's leading platform connecting MBA aspirants to top B-schools and coaching institutes. Our mission to simplify management education."
+      description="Learn about MBA Compass, India's platform connecting MBA aspirants to top B-schools and coaching institutes."
       keywords={[
         "about MBA Compass", "MBA portal mission", "MBA education vision", "MBA Compass story",
         "India's leading platform for MBA aspirants", "connecting students to top MBA colleges in India",
