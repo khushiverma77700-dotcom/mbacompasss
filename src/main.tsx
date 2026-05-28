@@ -28,13 +28,46 @@ createRoot(document.getElementById("root")!).render(
   </ErrorBoundary>
 );
 
-// Hide the static LCP shell once React has committed the real hero.
-// Two rAFs guarantee the real hero has painted before we hide the shell — no flash.
-requestAnimationFrame(() => {
-  requestAnimationFrame(() => {
-    document.documentElement.classList.add("app-mounted");
-  });
-});
+// Hide the static HTML shell ONLY after React has actually rendered real
+// content into #root. On slow connections (especially the student dashboard
+// where StudentLayout is a lazy chunk), naively hiding on rAF leaves the
+// user staring at a blank white screen for several seconds while the chunk
+// downloads. We watch #root for the first painted child instead, and fall
+// back to a hard timeout so the shell never lingers indefinitely.
+(() => {
+  const root = document.getElementById("root");
+  if (!root) return;
+  let done = false;
+  const hide = () => {
+    if (done) return;
+    done = true;
+    // Two rAFs after content is mounted = guaranteed first paint of real UI
+    // before the shell disappears. Prevents flash-of-white.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.add("app-mounted");
+      });
+    });
+  };
+  const hasRealContent = () => {
+    const el = root.firstElementChild as HTMLElement | null;
+    return !!(el && el.getBoundingClientRect().height > 0);
+  };
+  if (hasRealContent()) {
+    hide();
+  } else {
+    const mo = new MutationObserver(() => {
+      if (hasRealContent()) {
+        mo.disconnect();
+        hide();
+      }
+    });
+    mo.observe(root, { childList: true, subtree: true });
+    // Safety net — never keep the shell up longer than 8s even if something
+    // is wrong; the user should at least see whatever error UI rendered.
+    setTimeout(() => { mo.disconnect(); hide(); }, 8000);
+  }
+})();
 
 // ─────────────────────────────────────────────────────────────
 // Service Worker registration — production only, never inside
