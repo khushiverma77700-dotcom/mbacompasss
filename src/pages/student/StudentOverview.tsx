@@ -710,6 +710,7 @@ export default function StudentOverview() {
 
       {/* Predictor + cumulative trend */}
       <LazyMount minHeight={300} fallback={<ChartRowSkeleton cols={3} height={220} />}>
+      <Suspense fallback={<ChartRowSkeleton cols={3} height={220} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -754,10 +755,12 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </Suspense>
       </LazyMount>
 
       {/* Cumulative score + Accuracy trend */}
       <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={2} height={260} />}>
+      <Suspense fallback={<ChartRowSkeleton cols={2} height={260} />}>
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -783,6 +786,7 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </Suspense>
       </LazyMount>
 
       {/* Sectional deep dive */}
@@ -833,6 +837,7 @@ export default function StudentOverview() {
 
       {/* Overall Performance + 35-day Activity Heatmap + XP Progress */}
       <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={3} height={240} />}>
+      <Suspense fallback={<ChartRowSkeleton cols={3} height={240} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5 border-sky-100/70 bg-gradient-to-br from-white via-sky-50/30 to-white">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -872,6 +877,7 @@ export default function StudentOverview() {
           />
         </Card>
       </div>
+      </Suspense>
       </LazyMount>
 
       {/* ── Advanced Analytics: deeper diagnostic charts ───────────────────── */}
