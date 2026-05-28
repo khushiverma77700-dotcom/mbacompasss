@@ -144,7 +144,7 @@ const CollegesPage = () => {
     else if (selectedState !== "all") parts.push(`in ${selectedState}`);
     else parts.push("in India");
     if (selectedExam !== "all") parts.push(`accepting ${selectedExam}`);
-    return `${parts.join(" ")} 2026 — Fees, Rankings, Placements | MBA Compass`;
+    return `${parts.join(" ")} 2026 | MBA Compass`;
   }, [activeTab, selectedState, selectedCity, selectedExam]);
 
   const dynamicDescription = useMemo(() => {
@@ -242,6 +242,7 @@ const CollegesPage = () => {
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Search colleges by name, city..."
+                  aria-label="Search colleges"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-13 pr-4 py-3 h-14 rounded-2xl bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-2xl text-base focus:ring-2 focus:ring-white/30"
@@ -283,7 +284,7 @@ const CollegesPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search by college name or city..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder="Search by college name or city..." aria-label="Search colleges by name or city" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="pl-9 rounded-xl" />
             </div>
             <Select value={selectedState} onValueChange={(v) => setFilter("state", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>

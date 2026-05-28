@@ -57,8 +57,8 @@ const BlogPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="MBA Blog — CAT Preparation Tips, Career Advice & B-School News | MBA Compass"
-        description="Read expert blogs on CAT preparation, XAT strategies, GD-PI tips, MBA vs PGDM analysis, salary insights, and the latest news from top management institutes in India."
+        title="MBA Blog — CAT Tips, Career Advice & B-School News"
+        description="Expert blogs on CAT prep, XAT strategies, GD-PI tips, MBA vs PGDM, salary insights, and news from top management institutes."
         keywords={[
           "MBA tips", "CAT strategy", "MBA blog", "B-school news", "career guidance",
           "how to prepare for CAT without coaching", "last minute tips for XAT exam",
@@ -120,6 +120,7 @@ const BlogPage = () => {
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder="Search articles, tips, guides..."
+                aria-label="Search articles"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-13 pr-4 py-3 h-14 rounded-2xl bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-2xl text-base focus:ring-2 focus:ring-white/30"
