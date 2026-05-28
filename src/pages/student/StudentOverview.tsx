@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } from "@/lib/studentModeNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,18 +18,21 @@ import {
   Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
   CalendarDays, GraduationCap, Rocket, ChevronRight, Star, Compass, Layers,
 } from "lucide-react";
-import {
-  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
-  ResponsiveContainer, ReferenceLine, RadarChart, PolarGrid, PolarAngleAxis,
-  PolarRadiusAxis, Radar, RadialBarChart, RadialBar, Legend, BarChart,
-  ScatterChart, Scatter, ZAxis, PieChart, Pie, Cell, AreaChart, Area,
-} from "recharts";
-
 
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 import { LazyMount } from "@/hooks/useInView";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy-load every recharts-touching component into a separate chunk so the
+// initial StudentOverview bundle stays small. Multiple lazy() pointing to
+// the same module share a single chunk — recharts (~150 KB) is downloaded
+// once, on demand, after the hero/stats have already painted.
+const MiniTrendChart = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.MiniTrendChart })));
+const MiniDistribution = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.MiniDistribution })));
+const OverallPerformanceRadar = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.OverallPerformanceRadar })));
+const XpProgress = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.XpProgress })));
+const OverviewMainCharts = lazy(() => import("./overview/OverviewMainCharts"));
 
 // Reusable skeleton placeholder shown while a chart section is still
 // below the fold or its chunk is hydrating. Keeps the page from looking
@@ -707,6 +710,7 @@ export default function StudentOverview() {
 
       {/* Predictor + cumulative trend */}
       <LazyMount minHeight={300} fallback={<ChartRowSkeleton cols={3} height={220} />}>
+      <Suspense fallback={<ChartRowSkeleton cols={3} height={220} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -751,10 +755,12 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </Suspense>
       </LazyMount>
 
       {/* Cumulative score + Accuracy trend */}
       <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={2} height={260} />}>
+      <Suspense fallback={<ChartRowSkeleton cols={2} height={260} />}>
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -780,6 +786,7 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </Suspense>
       </LazyMount>
 
       {/* Sectional deep dive */}
@@ -830,6 +837,7 @@ export default function StudentOverview() {
 
       {/* Overall Performance + 35-day Activity Heatmap + XP Progress */}
       <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={3} height={240} />}>
+      <Suspense fallback={<ChartRowSkeleton cols={3} height={240} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5 border-sky-100/70 bg-gradient-to-br from-white via-sky-50/30 to-white">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -869,259 +877,22 @@ export default function StudentOverview() {
           />
         </Card>
       </div>
+      </Suspense>
       </LazyMount>
 
       {/* ── Advanced Analytics: deeper diagnostic charts ───────────────────── */}
       {submitted.length > 0 && (
         <LazyMount minHeight={300} fallback={<ChartRowSkeleton cols={2} height={260} />}>
-        <div className="grid lg:grid-cols-2 gap-4">
-          {/* Strength / Weakness Quadrant */}
-          <Card className="p-5 border-sky-100/70">
-            <div className="flex items-start justify-between mb-1">
-              <h2 className="font-semibold flex items-center gap-2">
-                <Target className="h-4 w-4 text-sky-600" /> Strength vs Effort Matrix
-              </h2>
-              <Badge variant="secondary" className="text-[10px]">By section</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Top-right = mastered. Bottom-right = high effort, low accuracy — focus here.
-            </p>
-            {strengthMatrix.length === 0 ? (
-              <div className="h-56 grid place-items-center text-sm text-muted-foreground">No sectional data yet</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <ScatterChart margin={{ top: 10, right: 16, left: 0, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(210 30% 92%)" />
-                  <XAxis
-                    type="number" dataKey="x" name="Avg attempted"
-                    tick={{ fontSize: 11, fill: "hsl(215 16% 45%)" }}
-                  />
-                  <YAxis
-                    type="number" dataKey="y" name="Accuracy" domain={[0, 100]}
-                    tick={{ fontSize: 11, fill: "hsl(215 16% 45%)" }}
-                  />
-                  <ZAxis type="number" dataKey="z" range={[80, 400]} />
-                  <ReferenceLine y={60} stroke="hsl(160 60% 50%)" strokeDasharray="4 4" />
-                  <RTooltip
-                    cursor={{ strokeDasharray: "3 3" }}
-                    content={({ active, payload }: any) => {
-                      if (!active || !payload?.length) return null;
-                      const d = payload[0].payload;
-                      return (
-                        <div className="rounded-lg border bg-white shadow-md px-3 py-2 text-xs">
-                          <div className="font-semibold">{d.name}</div>
-                          <div>Accuracy: <b>{d.y}%</b></div>
-                          <div>Avg attempted: <b>{d.x}</b></div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Scatter data={strengthMatrix} fill="hsl(200 95% 50%)">
-                    {strengthMatrix.map((d, i) => (
-                      <Cell key={i} fill={d.y >= 60 ? "hsl(160 70% 45%)" : d.y >= 40 ? "hsl(40 95% 55%)" : "hsl(0 75% 60%)"} />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
-            )}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {strengthMatrix.slice(0, 6).map((s) => (
-                <span key={s.name} className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 border border-sky-100 text-slate-700">
-                  <b>{s.short}</b> · {s.name}
-                </span>
-              ))}
-            </div>
-          </Card>
-
-          {/* Question Outcome Donut */}
-          <Card className="p-5 border-sky-100/70">
-            <h2 className="font-semibold flex items-center gap-2 mb-1">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Question Outcome Mix
-            </h2>
-            <p className="text-xs text-muted-foreground mb-3">
-              Aggregate of every question you've attempted across submitted mocks.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={outcomeData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={55}
-                    outerRadius={88}
-                    paddingAngle={3}
-                    stroke="white"
-                    strokeWidth={2}
-                  >
-                    {outcomeData.map((d, i) => (
-                      <Cell key={i} fill={d.color} />
-                    ))}
-                  </Pie>
-                  <RTooltip
-                    content={({ active, payload }: any) => {
-                      if (!active || !payload?.length) return null;
-                      const d = payload[0].payload;
-                      const total = outcomeData.reduce((s, x) => s + x.value, 0) || 1;
-                      return (
-                        <div className="rounded-lg border bg-white shadow-md px-3 py-2 text-xs">
-                          <div className="font-semibold" style={{ color: d.color }}>{d.name}</div>
-                          <div>{d.value} questions · {Math.round((d.value / total) * 100)}%</div>
-                        </div>
-                      );
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2">
-                {outcomeData.map((d) => {
-                  const total = outcomeData.reduce((s, x) => s + x.value, 0) || 1;
-                  return (
-                    <div key={d.name} className="rounded-lg border border-slate-100 p-2.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="inline-flex items-center gap-2">
-                          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: d.color }} />
-                          <span className="font-medium">{d.name}</span>
-                        </span>
-                        <span className="font-semibold tabular-nums">{d.value}</span>
-                      </div>
-                      <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${(d.value / total) * 100}%`, background: d.color }} />
-                      </div>
-                    </div>
-                  );
-                })}
-                <div className="text-[11px] text-muted-foreground pt-1">
-                  Overall accuracy: <b className="text-slate-800">{stats.accuracy}%</b>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Day-of-week performance */}
-          <Card className="p-5 border-sky-100/70">
-            <h2 className="font-semibold flex items-center gap-2 mb-1">
-              <CalendarDays className="h-4 w-4 text-sky-600" /> Best Day to Attempt
-            </h2>
-            <p className="text-xs text-muted-foreground mb-3">Average score % and accuracy by weekday of submission.</p>
-            <ResponsiveContainer width="100%" height={240}>
-              <ComposedChart data={weekdayPerf} margin={{ top: 10, right: 8, left: -10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="weekdayFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(200 95% 55%)" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="hsl(200 95% 55%)" stopOpacity={0.35} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(210 30% 92%)" />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(215 16% 45%)" }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(215 16% 45%)" }} />
-                <RTooltip
-                  content={({ active, payload, label }: any) => {
-                    if (!active || !payload?.length) return null;
-                    const d = payload[0].payload;
-                    return (
-                      <div className="rounded-lg border bg-white shadow-md px-3 py-2 text-xs">
-                        <div className="font-semibold">{label}</div>
-                        <div>Score %: <b>{d.pct}</b></div>
-                        <div>Accuracy: <b>{d.accuracy}%</b></div>
-                        <div>Mocks: {d.count}</div>
-                      </div>
-                    );
-                  }}
-                />
-                <Bar dataKey="pct" name="Score %" fill="url(#weekdayFill)" radius={[6, 6, 0, 0]} barSize={22} />
-                <Line type="monotone" dataKey="accuracy" name="Accuracy" stroke="hsl(160 70% 42%)" strokeWidth={2} dot={{ r: 3 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </Card>
-
-          {/* Pace Trend */}
-          <Card className="p-5 border-sky-100/70">
-            <h2 className="font-semibold flex items-center gap-2 mb-1">
-              <Timer className="h-4 w-4 text-sky-600" /> Pace Trend (sec / question)
-            </h2>
-            <p className="text-xs text-muted-foreground mb-3">
-              Time spent per attempted question across your last 10 mocks. Lower with stable accuracy = sharper exam temperament.
-            </p>
-            {paceTrend.length === 0 ? (
-              <div className="h-48 grid place-items-center text-sm text-muted-foreground">No timed data yet</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={paceTrend} margin={{ top: 10, right: 8, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="paceFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(265 80% 60%)" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="hsl(265 80% 60%)" stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(210 30% 92%)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(215 16% 45%)" }} />
-                  <YAxis tick={{ fontSize: 11, fill: "hsl(215 16% 45%)" }} />
-                  <RTooltip
-                    content={({ active, payload, label }: any) => {
-                      if (!active || !payload?.length) return null;
-                      const d = payload[0].payload;
-                      return (
-                        <div className="rounded-lg border bg-white shadow-md px-3 py-2 text-xs">
-                          <div className="font-semibold">{label}</div>
-                          <div>Sec/Q: <b>{d.secPerQ}</b></div>
-                          <div>Accuracy: <b>{d.accuracy}%</b></div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Area type="monotone" dataKey="secPerQ" name="Sec / Q" stroke="hsl(265 80% 55%)" fill="url(#paceFill)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="accuracy" name="Accuracy %" stroke="hsl(160 70% 42%)" strokeWidth={2} dot={{ r: 2 }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </Card>
-
-          {/* Best vs Avg Percentile per section */}
-          {bestVsAvg.length > 0 && (
-            <Card className="p-5 border-sky-100/70 lg:col-span-2">
-              <div className="flex items-start justify-between mb-1">
-                <h2 className="font-semibold flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-600" /> Best vs Average Percentile
-                </h2>
-                <Badge variant="secondary" className="text-[10px]">Per section</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                The gap between your peak and average reveals how much headroom you still have in each section.
-              </p>
-              <ResponsiveContainer width="100%" height={Math.max(220, bestVsAvg.length * 44)}>
-                <ComposedChart layout="vertical" data={bestVsAvg} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(210 30% 92%)" />
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(215 16% 45%)" }} />
-                  <YAxis
-                    type="category" dataKey="short" width={48}
-                    tick={{ fontSize: 11, fill: "hsl(215 16% 35%)", fontWeight: 600 }}
-                  />
-                  <ReferenceLine x={90} stroke="hsl(160 70% 42%)" strokeDasharray="4 4" />
-                  <RTooltip
-                    content={({ active, payload }: any) => {
-                      if (!active || !payload?.length) return null;
-                      const d = payload[0].payload;
-                      return (
-                        <div className="rounded-lg border bg-white shadow-md px-3 py-2 text-xs">
-                          <div className="font-semibold">{d.name}</div>
-                          <div>Best percentile: <b>{d.best}</b></div>
-                          <div>Avg percentile: <b>{d.avg}</b></div>
-                          <div>Headroom: <b>{Math.max(0, d.best - d.avg)}</b></div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Bar dataKey="avg" name="Avg %ile" fill="hsl(200 95% 60%)" radius={[0, 6, 6, 0]} barSize={14} />
-                  <Bar dataKey="best" name="Best %ile" fill="hsl(265 80% 60%)" radius={[0, 6, 6, 0]} barSize={14} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </Card>
-          )}
-        </div>
+          <Suspense fallback={<ChartRowSkeleton cols={2} height={260} />}>
+            <OverviewMainCharts
+              strengthMatrix={strengthMatrix}
+              outcomeData={outcomeData}
+              accuracy={stats.accuracy}
+              weekdayPerf={weekdayPerf}
+              paceTrend={paceTrend}
+              bestVsAvg={bestVsAvg}
+            />
+          </Suspense>
         </LazyMount>
       )}
 
@@ -1130,6 +901,7 @@ export default function StudentOverview() {
 
       {/* Distribution + Today's plan + Heatmap */}
       <LazyMount minHeight={320} fallback={<ChartRowSkeleton cols={3} height={240} />}>
+      <Suspense fallback={<ChartRowSkeleton cols={3} height={240} />}>
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-3">
@@ -1208,6 +980,7 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+      </Suspense>
       </LazyMount>
 
       {/* Recent attempts */}
@@ -1302,48 +1075,6 @@ const PredictorGauge = memo(function PredictorGauge({ value }: { value: number }
   );
 });
 
-const MiniTrendChart = memo(function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; barKey: string; lineKey?: string; max?: number; target?: number }) {
-  const rows = data.slice(-12);
-  if (rows.length === 0) {
-    return (
-      <div className="h-[260px] w-full rounded-lg border border-border bg-card/60 grid place-items-center text-xs text-muted-foreground">
-        No data yet — submit a mock to see your trend
-      </div>
-    );
-  }
-  const isPct = max === 100;
-  const fmt = (v: any) => `${typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(1)) : v}${isPct ? "%" : ""}`;
-  const gradId = `g-${barKey}-${lineKey ?? "n"}`;
-  return (
-    <div className="h-[260px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={rows} margin={{ top: 16, right: 12, left: 0, bottom: 4 }}>
-          <defs>
-            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.85} />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 4" stroke="hsl(var(--border))" vertical={false} opacity={0.5} />
-          <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-          <YAxis domain={max ? [0, max] : ["auto", "auto"]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => `${v}${isPct ? "%" : ""}`} />
-          <RTooltip
-            contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12, boxShadow: "0 8px 24px -8px rgba(2,132,199,0.25)" }}
-            formatter={(v: any, n: any) => [fmt(v), n === barKey ? "This mock" : "Running average"]}
-            labelFormatter={(l) => `Mock ${l}`}
-          />
-          {target && target > 0 && (
-            <ReferenceLine y={target} stroke="hsl(var(--primary))" strokeDasharray="6 6" label={{ value: `Target ${target}${isPct ? "%" : ""}`, position: "insideTopRight", fontSize: 10, fill: "hsl(var(--primary))" }} />
-          )}
-          <Bar dataKey={barKey} fill={`url(#${gradId})`} radius={[6, 6, 0, 0]} maxBarSize={42} />
-          {lineKey && (
-            <Line type="monotone" dataKey={lineKey} stroke="hsl(190 90% 35%)" strokeWidth={2.5} dot={{ r: 3, fill: "hsl(190 90% 35%)" }} activeDot={{ r: 5 }} />
-          )}
-        </ComposedChart>
-      </ResponsiveContainer>
-    </div>
-  );
-});
 
 const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }: { data: any[] }) {
   const rows = data.slice().sort((a, b) => b.pctOfMax - a.pctOfMax);
@@ -1419,86 +1150,6 @@ const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }
   );
 });
 
-const MiniGroupedBars = memo(function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firstKey: string; secondKey: string; max?: number }) {
-
-  const rows = data.slice(0, 8);
-  const isPct = max === 100;
-  const firstLabel = firstKey === "avgScore" ? "Avg Score" : firstKey === "pctOfMax" ? "% of Max" : firstKey;
-  const secondLabel = secondKey === "avgMax" ? "Max Score" : secondKey === "avgAccuracy" ? "Accuracy" : secondKey;
-  const height = Math.max(220, rows.length * 52);
-  return (
-    <div style={{ height }} className="w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={rows} layout="vertical" margin={{ top: 8, right: 28, left: 8, bottom: 8 }} barCategoryGap={14}>
-          <defs>
-            <linearGradient id={`gA-${firstKey}`} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
-              <stop offset="100%" stopColor="hsl(190 90% 45%)" stopOpacity={0.85} />
-            </linearGradient>
-            <linearGradient id={`gB-${secondKey}`} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(160 70% 45%)" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="hsl(160 70% 60%)" stopOpacity={0.75} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 4" stroke="hsl(var(--border))" horizontal={false} opacity={0.4} />
-          <XAxis type="number" domain={max ? [0, max] : ["auto", "auto"]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}${isPct ? "%" : ""}`} />
-          <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--foreground))", fontWeight: 600 }} axisLine={false} tickLine={false} width={70} />
-          <RTooltip
-            contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12 }}
-            formatter={(v: any, n: any) => [`${v}${isPct ? "%" : ""}`, n === firstKey ? firstLabel : secondLabel]}
-          />
-          <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} formatter={(v) => (v === firstKey ? firstLabel : secondLabel)} />
-          <Bar dataKey={firstKey} fill={`url(#gA-${firstKey})`} radius={[0, 6, 6, 0]} barSize={14} />
-          <Bar dataKey={secondKey} fill={`url(#gB-${secondKey})`} radius={[0, 6, 6, 0]} barSize={14} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-});
-
-const MiniDistribution = memo(function MiniDistribution({ data }: { data: any[] }) {
-  return (
-    <div className="h-[200px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 4 }}>
-          <defs>
-            <linearGradient id="g-dist" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 4" stroke="hsl(var(--border))" vertical={false} opacity={0.4} />
-          <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-          <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} />
-          <RTooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12 }} formatter={(v: any) => [`${v} mock${Number(v) === 1 ? "" : "s"}`, "Count"]} />
-          <Bar dataKey="count" fill="url(#g-dist)" radius={[6, 6, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-});
-
-const OverallPerformanceRadar = memo(function OverallPerformanceRadar({ data }: { data: { metric: string; value: number }[] }) {
-  return (
-    <div className="h-[260px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={data} margin={{ top: 8, right: 18, bottom: 8, left: 18 }}>
-          <defs>
-            <linearGradient id="g-radar" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-              <stop offset="100%" stopColor="hsl(190 90% 45%)" stopOpacity={0.4} />
-            </linearGradient>
-          </defs>
-          <PolarGrid stroke="hsl(var(--border))" />
-          <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 600 }} />
-          <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
-          <Radar dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#g-radar)" fillOpacity={0.85} />
-          <RTooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", fontSize: 12 }} formatter={(v: any) => [`${v}/100`, "Score"]} />
-        </RadarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-});
 
 const ActivityHeatmap = memo(function ActivityHeatmap({ days, max }: { days: { date: Date; key: string; count: number }[]; max: number }) {
   // Render 5 columns × 7 rows (Mon-Sun) — like a GitHub contribution graph.
@@ -1552,48 +1203,6 @@ const ActivityHeatmap = memo(function ActivityHeatmap({ days, max }: { days: { d
   );
 });
 
-const XpProgress = memo(function XpProgress({ xp, level, streak, rank }: { xp: number; level: number; streak: number; rank: number | null }) {
-  // XP needed for next level grows by 250 per level (simple, predictable curve).
-  const needed = level * 250;
-  const current = xp % needed || (xp > 0 ? xp : 0);
-  const pct = needed > 0 ? Math.min(100, Math.round((current / needed) * 100)) : 0;
-  const ringData = [{ name: "xp", value: pct, fill: "hsl(38 95% 55%)" }];
-  return (
-    <div className="space-y-3">
-      <div className="h-[160px] w-full relative">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart innerRadius="70%" outerRadius="100%" data={ringData} startAngle={90} endAngle={-270}>
-            <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-            <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
-          </RadialBarChart>
-        </ResponsiveContainer>
-        <div className="absolute inset-0 grid place-items-center pointer-events-none">
-          <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Level</div>
-            <div className="text-3xl font-bold text-amber-600 leading-none">{level}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">{current}/{needed} XP</div>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-lg bg-amber-50 border border-amber-100 p-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total XP</div>
-          <div className="text-sm font-bold text-amber-700 tabular-nums">{xp.toLocaleString("en-IN")}</div>
-        </div>
-        <div className="rounded-lg bg-rose-50 border border-rose-100 p-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Streak</div>
-          <div className="text-sm font-bold text-rose-600 tabular-nums inline-flex items-center gap-1">
-            <Flame className="h-3 w-3" /> {streak}d
-          </div>
-        </div>
-        <div className="rounded-lg bg-sky-50 border border-sky-100 p-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank</div>
-          <div className="text-sm font-bold text-sky-700 tabular-nums">{rank ? `#${rank}` : "—"}</div>
-        </div>
-      </div>
-    </div>
-  );
-});
 
 
 const Kpi = memo(function Kpi({ label, value, icon }: any) {
