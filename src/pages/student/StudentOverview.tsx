@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } from "@/lib/studentModeNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,18 +18,21 @@ import {
   Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
   CalendarDays, GraduationCap, Rocket, ChevronRight, Star, Compass, Layers,
 } from "lucide-react";
-import {
-  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
-  ResponsiveContainer, ReferenceLine, RadarChart, PolarGrid, PolarAngleAxis,
-  PolarRadiusAxis, Radar, RadialBarChart, RadialBar, Legend, BarChart,
-  ScatterChart, Scatter, ZAxis, PieChart, Pie, Cell, AreaChart, Area,
-} from "recharts";
-
 
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 import { LazyMount } from "@/hooks/useInView";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy-load every recharts-touching component into a separate chunk so the
+// initial StudentOverview bundle stays small. Multiple lazy() pointing to
+// the same module share a single chunk — recharts (~150 KB) is downloaded
+// once, on demand, after the hero/stats have already painted.
+const MiniTrendChart = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.MiniTrendChart })));
+const MiniDistribution = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.MiniDistribution })));
+const OverallPerformanceRadar = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.OverallPerformanceRadar })));
+const XpProgress = lazy(() => import("./overview/OverviewChartWidgets").then(m => ({ default: m.XpProgress })));
+const OverviewMainCharts = lazy(() => import("./overview/OverviewMainCharts"));
 
 // Reusable skeleton placeholder shown while a chart section is still
 // below the fold or its chunk is hydrating. Keeps the page from looking
