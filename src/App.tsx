@@ -14,6 +14,7 @@ import { isStudentMode } from "@/lib/studentModeNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 import StudentShellFallback from "@/components/student/StudentShellFallback";
+import StudentContentSkeleton from "@/components/student/StudentContentSkeleton";
 
 type LazyWithPreload<T extends React.ComponentType<any>> = React.LazyExoticComponent<T> & {
   preload: () => Promise<{ default: T }>;
@@ -521,7 +522,7 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
 );
 
 const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={null}>{children}</Suspense>
+  <Suspense fallback={<StudentContentSkeleton />}>{children}</Suspense>
 );
 
 // Suspense wrapper used for the StudentLayout route. On a cold hit to
