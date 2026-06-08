@@ -334,10 +334,11 @@ function buildOpenAICompatPayload(body: ChatBody, model: string) {
     if (isOpenAINewGen) {
       // GPT-5 reasoning models spend tokens on internal reasoning before
       // producing visible output. If the caller's budget is too small the
-      // model returns an empty message. Give it generous headroom (at least
-      // 4× the visible-output budget, capped at 16k) so tool-calling/JSON
-      // generation actually completes.
-      const padded = Math.min(Math.max(maxTokens * 4, 4000), 16000);
+      // model returns an empty message with finish_reason="length".
+      // For tool-calling on long-form content (blog articles, multi-section
+      // generations) the cap was 16k which truncated the tool-call output
+      // and broke generation. Raise the ceiling to 64k and only floor at 4k.
+      const padded = Math.min(Math.max(maxTokens * 2, 4000), 64000);
       payload.max_completion_tokens = padded;
     } else {
       payload.max_tokens = maxTokens;
