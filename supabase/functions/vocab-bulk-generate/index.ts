@@ -254,12 +254,26 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   }
 
   const originalStartedAt = new Date().toISOString();
+  // Concurrency lock: bail if another worker has a fresh heartbeat for this job.
+  {
+    const { data: cur } = await supabase
+      .from("vocab_generation_jobs")
+      .select("worker_heartbeat, status")
+      .eq("id", jobId)
+      .maybeSingle();
+    const hb = cur?.worker_heartbeat ? new Date(cur.worker_heartbeat as any).getTime() : 0;
+    if (cur?.status === "running" && Date.now() - hb < 60_000) {
+      console.log(`[vocab] Skipping duplicate worker for job ${jobId} (heartbeat ${Date.now() - hb}ms old)`);
+      return;
+    }
+  }
   await supabase.from("vocab_generation_jobs").update({
     status: "running",
     provider,
     exam,
     batch_size: provider === "openai" ? 18 : 14,
     started_at: seed ? undefined : originalStartedAt,
+    worker_heartbeat: new Date().toISOString(),
     current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…`,
   }).eq("id", jobId);
 
@@ -267,9 +281,8 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   const BATCH = provider === "openai" ? 18 : 14;
   let consecutiveEmpty = 0;
   let consecutiveTimeouts = 0;
+  let consecutiveZeroAdds = 0; // batches returning words but ZERO survived gate/dedupe
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
-  // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
-  // Mark the job as `paused` so the UI can offer a Resume button.
   const startMs = Date.now();
   const MAX_RUN_MS = 85 * 1000; // short worker slices prevent edge shutdowns during long AI jobs
 
