@@ -7136,6 +7136,7 @@ export type Database = {
           started_at: string | null
           status: string
           updated_at: string
+          worker_heartbeat: string | null
         }
         Insert: {
           attempts?: number
@@ -7162,6 +7163,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           updated_at?: string
+          worker_heartbeat?: string | null
         }
         Update: {
           attempts?: number
@@ -7188,6 +7190,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           updated_at?: string
+          worker_heartbeat?: string | null
         }
         Relationships: []
       }
