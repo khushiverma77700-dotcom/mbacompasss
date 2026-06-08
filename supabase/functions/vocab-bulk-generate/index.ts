@@ -457,11 +457,20 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     const throughput = Math.round(generated / elapsedMinutes);
     const cpuProxy = Math.min(96, Math.max(18, Math.round(35 + (batchSeconds / 45) * 35 + (batch.length / Math.max(need, 1)) * 18)));
 
+    // Track "AI returned words but none survived" — common when hardness gate is too strict
+    // or AI keeps repeating already-in-library words. Pause cleanly instead of spinning forever.
+    if (batch.length > 0 && addedNow === 0) {
+      consecutiveZeroAdds++;
+    } else if (addedNow > 0) {
+      consecutiveZeroAdds = 0;
+    }
+
     await supabase.from("vocab_generation_jobs").update({
       generated, duplicates, failed, attempts, rejected,
       estimated_input_tokens: inputTokens,
       estimated_output_tokens: outputTokens,
       estimated_cost_usd: costUsd,
+      worker_heartbeat: new Date().toISOString(),
       progress_details: {
         phase: "dedupe_and_save",
         cpu_proxy: cpuProxy,
@@ -475,8 +484,17 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         input_tokens_last_batch: batchTokens.inputTokens,
         output_tokens_last_batch: batchTokens.outputTokens,
         target_words: targetWords.slice(0, 8),
+        consecutive_zero_adds: consecutiveZeroAdds,
       },
     }).eq("id", jobId);
+
+    if (consecutiveZeroAdds >= 5) {
+      await supabase.from("vocab_generation_jobs").update({
+        status: "paused",
+        current_activity: `Paused at ${generated}/${total}. The last 5 AI batches returned words that were all duplicates or failed quality gates. Try a different category/difficulty or click Resume to try again with a fresh target list.`,
+      }).eq("id", jobId);
+      return;
+    }
 
     if (generated < total && Date.now() - startMs > MAX_RUN_MS) {
       await supabase.from("vocab_generation_jobs").update({
