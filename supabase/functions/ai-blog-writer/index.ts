@@ -390,11 +390,32 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       }
     }
 
+    // ── Strip any external links / bare URLs the model may have leaked in.
+    // Keep ONLY relative <a href="/..."> internal links. Bare http(s)://… and www.… are removed.
+    const stripExternalLinks = (html: string) => {
+      if (!html) return html;
+      let out = html;
+      // Unwrap <a href="http..."> / <a href="//..."> / <a href="mailto:..."> / <a href="www...">
+      out = out.replace(
+        /<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi,
+        "$1"
+      );
+      // Remove bare URLs in text (http://, https://, www.)
+      out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
+      out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+      // Collapse any double-spaces left behind
+      out = out.replace(/[ \t]{2,}/g, " ");
+      return out;
+    };
+    article.intro = stripExternalLinks(article.intro || "");
+    article.content = stripExternalLinks(article.content || "");
+
     // Recompute final stats after possible expansion
     const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
     const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
     const finalOccurrences = (finalPlain.match(re) || []).length;
     const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+
 
     // ── Auto-extract FAQs from the FAQ section so the article snapshot can carry FAQ schema ──
     const extractFaqs = (html: string) => {
