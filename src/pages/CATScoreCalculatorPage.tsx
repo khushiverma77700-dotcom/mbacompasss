@@ -306,7 +306,7 @@ const CATScoreCalculatorPage: React.FC = () => {
         "@context": "https://schema.org",
         "@type": "WebApplication",
         "name": "CAT Score Calculator 2025",
-        "url": "https://coach-compass-finder.lovable.app/cat-score-calculator",
+        "url": "https://mbacompass.in/cat-score-calculator",
         "description": "Free CAT 2025 score calculator. Paste response sheet for instant score, percentile, accuracy, AI insights.",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "Web",
