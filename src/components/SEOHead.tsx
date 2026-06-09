@@ -181,12 +181,17 @@ export const generateOrganizationSchema = () => ({
 export const generateArticleSchema = (article: any) => ({
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: article.meta_title || article.title,
+  headline: (article.meta_title || article.title || "").slice(0, 110),
   description: article.meta_description || article.excerpt || "",
-  author: { "@type": "Person", name: article.author || "MBA Compass Team" },
+  author: {
+    "@type": "Person",
+    name: article.author || "MBA Compass Editorial",
+  },
   datePublished: article.created_at,
-  dateModified: article.updated_at,
-  image: article.image_url || article.banner_url,
+  dateModified: article.updated_at || article.created_at,
+  // Google requires a valid image URL for Article rich results — fall back to the
+  // sitewide OG image when the article has no banner/thumbnail of its own.
+  image: article.image_url || article.banner_url || `${SITE_URL}/og-image.png`,
   publisher: {
     "@type": "Organization",
     name: "MBA Compass",
@@ -196,6 +201,7 @@ export const generateArticleSchema = (article: any) => ({
   mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE_URL}/article/${article.slug}` },
   keywords: (article.keywords || []).join(", "),
 });
+
 
 export const generateCollegeSchema = (college: any) => ({
   "@context": "https://schema.org",

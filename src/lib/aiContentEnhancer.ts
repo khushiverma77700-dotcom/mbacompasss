@@ -117,16 +117,20 @@ const buildUrl = (source: string, year?: string, ctx?: CitationContext): string 
   return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
 };
 
-const buildPill = (source: string, year?: string, ctx?: CitationContext) => {
+const buildPill = (source: string, year?: string, _ctx?: CitationContext) => {
+  // Per site-wide policy (Google scaled-content + spam-link guidance): we do
+  // NOT emit external links from generated content. Citations render as plain
+  // text pills so users still see the source, but no outbound link is created.
   const label = year ? `${source} ${year}` : source;
-  const href = buildUrl(source, year, ctx);
-  return ` <a href="${href}" target="_blank" rel="noopener noreferrer nofollow" class="ai-citation" title="View ${label} source">${label} ↗</a>`;
+  return ` <span class="ai-citation" title="Source: ${label}">${label}</span>`;
 };
 
 const applyInlineMarkdown = (value: string) => value
   .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
   .replace(/__([^_]+)__/g, "<strong>$1</strong>")
-  .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer nofollow">$1</a>');
+  // Markdown links → strip URL, keep anchor text only (no external links policy).
+  .replace(/\[([^\]]+)\]\((?:https?:\/\/|\/\/|www\.)[^\s)]+\)/g, "$1");
+
 
 const plainOrMarkdownToHtml = (value: string) => {
   const lines = value.split(/\n+/).map((line) => line.trim()).filter(Boolean);
@@ -212,21 +216,29 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
       buildPill(src.trim().replace(/[,;:]+$/, ""), year, ctx),
   );
 
-  // 1c. Convert plain official exam names into hyperlinks when they appear in generated text.
-  out = out.replace(/\b(CAT|XAT|GMAT|GRE|CMAT|NMAT|SNAP|IIFT|MAT|ATMA|KMAT)\b(?![^<]*>)/g, (exam) => {
-    const href = GLOBAL_SOURCE_URLS[exam.toLowerCase()];
-    return href ? `<a href="${href}" target="_blank" rel="noopener noreferrer nofollow">${exam}</a>` : exam;
-  });
+  // 1c. (Removed) Exam-name auto-linking to external portals — violated the
+  //      "no external links" policy and inflated spam-score signals.
 
   // 1d. Strip any leaked source/citation parentheticals that DON'T match the pill formats above.
-  //     Examples seen in production: "(Source/NIRF 2026 Ranking)", "(Source: NIRF)", "(as per NIRF)",
-  //     "(Ref: Placement Report 2024-25)". These leak when the model ignores the no-citation rule.
   out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
   out = out.replace(/\(\s*as\s+per\s+[^)]{0,80}\)/gi, "");
   out = out.replace(/\(\s*ref\.?\s*[:\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
   // Strip leftover "Last updated:" stamps the model may have inserted.
   out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
   out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+
+  // 1e. RETROACTIVE LINK CLEANUP — Google spam-policy compliance.
+  //     Older articles already saved in DB may contain external anchors and
+  //     bare URLs from the previous prompt. Strip them on every render so
+  //     legacy content immediately complies with the no-external-links rule.
+  //     Internal <a href="/..."> links are preserved.
+  out = out.replace(
+    /<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi,
+    "$1",
+  );
+  out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
+  out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+
 
   // 2. Wrap raw <table> in a scrollable container so wide tables don't bust mobile.
   //    Only wrap tables that aren't already wrapped (idempotent).

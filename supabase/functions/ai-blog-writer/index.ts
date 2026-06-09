@@ -185,7 +185,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - Either a comparison <table> (where data lends itself) or a numbered checklist
    - 1-2 contextual internal links anchored to topic-relevant entities
    - Where useful, an <h3> subsection breaking the topic into a specific angle
-3. **Keyword density**: primary keyword "${targetKw}" must appear ~${targetOccurrences} times (~${density}%, Google-safe). Use exact match in title, H1, first 100 words, ≥3 H2s, meta title, meta description, slug, conclusion. Weave 20-30 LSI/semantic variants derived FROM this specific topic.
+3. **Keyword usage — NATURAL, NOT STUFFED** (Google spam policy compliance): primary keyword "${targetKw}" should appear roughly ${Math.max(3, Math.round(targetOccurrences * 0.6))} times across the full article (~${Math.max(0.5, +(density * 0.6).toFixed(2))}% density). Use exact match in title, H1, slug, meta title, meta description, the first 100 words, and the conclusion — that is enough. DO NOT force the exact keyword into multiple H2 headings; vary headings with synonyms, intent variations, and entity names. Weave 20-30 LSI/semantic variants naturally — never repeat the exact keyword in adjacent sentences.
 4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Quick Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMANIZED LANGUAGE — 8th grade level**. Contractions OK. BANNED: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further".
@@ -198,7 +198,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A** (Q in <h3> ending with "?", A in <p>, 60-120 words each). Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
-   - Primary keyword in: first 100 words, ≥3 <h2> headings, last paragraph, meta title, meta description, slug, excerpt.
+   - Primary keyword in: title, H1, slug, meta title, meta description, excerpt, first 100 words, and last paragraph. Vary H2 headings with synonyms — do not stuff the exact keyword into multiple headings.
    - **Semantic SEO**: cover the topic's full entity graph specific to THIS subject only.
    - **LSI/NLP keywords**: 20-30 semantically related terms derived from THIS topic.
    - **External authority mentions** (plain text, no fabricated URLs): cite the AUTHORITATIVE sources for THIS specific topic (e.g. for IIM-A placement → IIM Ahmedabad official PR ${currentYear - 1}-${String(currentYear).slice(-2)}; for CAT → IIM-conducting-institute CAT ${currentYear} notification; for NIRF data → NIRF ${currentYear}).
