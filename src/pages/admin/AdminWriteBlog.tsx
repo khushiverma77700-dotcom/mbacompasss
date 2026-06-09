@@ -176,8 +176,8 @@ const AdminWriteBlog = () => {
         h1_tag: a.h1Tag || a.title || title,
         author: a.author || "MBA Compass Editorial",
         category,
-        status: "draft",
-        published: false,
+        status: "published",
+        published: true,
         featured: false,
         priority: 0,
       };
