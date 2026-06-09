@@ -103,8 +103,17 @@ const SEOHead = ({
     syncMeta("twitter:description", twitterDescription || ogDescription || description);
     syncMeta("twitter:image", resolvedOgImage);
 
-    // Robots
-    syncMeta("robots", noIndex ? "noindex, nofollow" : "index, follow");
+    // Robots — force noindex when the page is served from a non-canonical
+    // host (preview / staging / dashboard subdomain). This prevents Google
+    // from indexing duplicate copies of every page on the lovable.app
+    // preview domain.
+    const currentHost =
+      typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+    const hostIsNonIndexable = currentHost !== "" && !INDEXABLE_HOSTS.has(currentHost);
+    syncMeta(
+      "robots",
+      noIndex || hostIsNonIndexable ? "noindex, nofollow" : "index, follow",
+    );
 
     // Canonical — always non-www
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
