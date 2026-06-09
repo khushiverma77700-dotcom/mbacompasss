@@ -1,21 +1,31 @@
 import { useEffect } from "react";
 
-const DEFAULT_SITE_URL = "https://mbacompass.in";
+// The ONLY canonical host for this site. All canonical / og:url / JSON-LD
+// URLs we emit always point at this host, regardless of which alias is
+// currently serving the page (www, dashboard subdomain, lovable preview,
+// etc). This prevents Google from indexing duplicate copies on the
+// preview / staging hosts.
+const CANONICAL_ORIGIN = "https://mbacompass.in";
+const SITE_URL = CANONICAL_ORIGIN;
 
-// Force the non-www apex as the canonical host. Even if the page is being
-// served from www.mbacompass.in (or any other host alias), every canonical /
-// og:url / JSON-LD URL we emit points at https://mbacompass.in.
-const stripWww = (origin: string) => origin.replace(/^https?:\/\/www\./i, "https://");
+// Hosts that should NEVER be indexed by search engines. The SPA shell
+// is reachable on multiple aliases; we add a runtime noindex on any host
+// other than the canonical apex (and its www alias which redirects).
+const INDEXABLE_HOSTS = new Set(["mbacompass.in", "www.mbacompass.in"]);
 
-const SITE_URL =
-  typeof window !== "undefined" ? stripWww(window.location.origin) : DEFAULT_SITE_URL;
-
-// Rewrite any absolute URL on www.mbacompass.in -> mbacompass.in. Leaves
-// other hosts (preview / dashboard subdomain) untouched.
+// Rewrite ANY absolute URL to use the canonical apex host. Accepts a
+// full URL or path; returns a fully-qualified canonical URL.
 const toCanonicalHost = (url?: string) => {
   if (!url) return url;
-  return url.replace(/^https?:\/\/www\.mbacompass\.in/i, "https://mbacompass.in");
+  try {
+    // If it's already a full URL, swap the origin to the canonical apex.
+    const u = new URL(url, CANONICAL_ORIGIN);
+    return `${CANONICAL_ORIGIN}${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return url;
+  }
 };
+
 
 interface SEOHeadProps {
   title?: string;
