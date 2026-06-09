@@ -260,8 +260,12 @@ NEVER reuse the same citation set across different blog topics.
     // Cap at 64K so very long articles (10K+ words) don't truncate.
     const dynamicMaxTokens = Math.min(64000, Math.max(16000, Math.round(wmax * 4) + 4000));
 
+    // gpt-5 full was timing out at the edge-function 150s wall-clock for long
+    // articles (previous runs measured 80-149s — right at the edge). gpt-5-mini
+    // is ~3x faster with comparable structured-output quality and finishes well
+    // within the timeout for 2.5K-5K word articles.
     const aiRes = await callAIGateway({
-        model: "openai/gpt-5",
+        model: "openai/gpt-5-mini",
         max_tokens: dynamicMaxTokens,
         messages: [
           { role: "system", content: systemPrompt },
