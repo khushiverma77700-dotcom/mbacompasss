@@ -167,12 +167,13 @@ Build 6-10 contextual internal links by INFERRING the most relevant URLs on mbac
 - Related blogs: <a href="/blog/<related-topic-slug>"> — invent 2-3 closely related blog slugs derived from THIS title only
 Anchor text MUST be descriptive and keyword-rich, varying per link, never "click here" or "read more". Each link must be CONTEXTUALLY relevant to the surrounding sentence — never bolt-on. Do NOT reuse the same set of links across different articles.
 
-# EXTERNAL REDIRECT / AUTHORITY REFERENCES — TOPIC-SPECIFIC ONLY
-Cite 3-6 plain-text authoritative sources that are SPECIFIC to this topic (no URLs, no fabricated links). Examples:
-- For an IIM-A placement blog → cite IIM Ahmedabad official placement report ${currentYear - 1}-${String(currentYear).slice(-2)}, NIRF ${currentYear} IIM-A profile.
-- For a CAT blog → cite the CAT ${currentYear} official notification by the IIM conducting the exam, IIM Common Admission Test bulletin.
-- For NIRF ranking content → cite NIRF ${currentYear} Management Rankings.
-NEVER reuse the same citation set across different blog topics.
+# EXTERNAL LINKS — STRICTLY FORBIDDEN
+- DO NOT output any external <a href="http..."> or <a href="https..."> links anywhere in the article. ZERO outbound links.
+- DO NOT output bare URLs (no "https://...", no "www....") inside paragraphs, tables, lists, citations or FAQs.
+- The ONLY allowed <a href="..."> values are RELATIVE internal URLs that start with "/" on mbacompass.in (e.g. /college/iim-ahmedabad, /exams/cat, /blog/...).
+- Authoritative sources must be cited as PLAIN TEXT only (e.g. "NIRF ${currentYear} Management Rankings", "IIM Ahmedabad official placement report ${currentYear - 1}-${String(currentYear).slice(-2)}") and/or as [src:Source Year] markers — never as clickable links, never with URLs.
+- Any external link found in your output will be stripped and the article rejected. Internal-only linking, always.
+
 
 # HARD RULES — WORD COUNT & SECTION DEPTH (NON-NEGOTIABLE)
 1. **WORD COUNT: ${wmin}-${wmax} words minimum** in (intro + content) plain text. Articles below ${wmin} words will be REJECTED. Count as you write; expand body sections rather than truncating. Never stop early. Long-form 5,000-10,000+ word articles are fully supported — write the full requested length.
