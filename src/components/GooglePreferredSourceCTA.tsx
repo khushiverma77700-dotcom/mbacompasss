@@ -35,7 +35,7 @@ const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) =
     <a
       href={PREFERRED_URL}
       target="_blank"
-      rel="noopener noreferrer"
+      rel="nofollow sponsored noopener noreferrer"
       title="Add MBA Compass as preferred source on Google"
       className={`group relative inline-flex items-center gap-2 rounded-full overflow-hidden
         bg-card border border-primary/25 
