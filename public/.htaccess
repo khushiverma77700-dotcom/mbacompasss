@@ -54,12 +54,10 @@
   RewriteCond %{REQUEST_URI} ^/(article|college)/[^/]+/?$ [NC]
   RewriteRule ^(.*)$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/ssr-prerender?path=/$1 [P,L]
 
-  # 3a) Fallback for hosts without mod_proxy: 302 redirect bots to the
-  #     prerender function. Google follows redirects on indexing.
-  RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|applebot) [NC]
-  RewriteCond %{REQUEST_URI} ^/(article|college)/[^/]+/?$ [NC]
-  RewriteCond %{ENV:REDIRECT_STATUS} ^$
-  # (Skipped automatically if [P] above succeeded — [P,L] short-circuits.)
+  # (If your host doesn't load mod_proxy, the [P] flag above will be ignored
+  #  and bots will fall through to the SPA shell as before — contact Hostinger
+  #  support to enable mod_proxy + mod_proxy_http on the account.)
+
 
   # 4) Standard SPA fallback — serve index.html for everything else (humans).
   RewriteCond %{REQUEST_FILENAME} !-f
