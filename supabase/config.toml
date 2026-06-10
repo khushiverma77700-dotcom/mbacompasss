@@ -21,6 +21,9 @@ verify_jwt = false
 [functions.not-found]
 verify_jwt = false
 
+[functions.ssr-prerender]
+verify_jwt = false
+
 [functions.retry-mock-section]
 verify_jwt = false
 
