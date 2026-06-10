@@ -44,7 +44,22 @@
   RewriteCond %{REQUEST_URI} \.(js|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|json|xml|txt|pdf)$
   RewriteRule .* https://mttoiqruzzxooveooldo.supabase.co/functions/v1/not-found?path=%{REQUEST_URI} [R=404,L]
 
-  # 3) Standard SPA fallback — serve index.html for everything else.
+  # 3) Crawler SSR prerender — fixes Google "Soft 404" on SPA article/college
+  #    pages. Bots get fully-rendered HTML (title, meta, content, JSON-LD) from
+  #    the ssr-prerender edge function. Real users keep the React SPA.
+  #    Uses mod_proxy [P] so the rendered HTML is served AT the original URL
+  #    (no redirect), preserving the canonical mbacompass.in/article/<slug> URL
+  #    in Google's index.
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|facebookexternalhit|twitterbot|linkedinbot|embedly|quora\ link\ preview|whatsapp|applebot|petalbot|ia_archiver|mj12bot|ahrefsbot|semrushbot) [NC]
+  RewriteCond %{REQUEST_URI} ^/(article|college)/[^/]+/?$ [NC]
+  RewriteRule ^(.*)$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/ssr-prerender?path=/$1 [P,L]
+
+  # (If your host doesn't load mod_proxy, the [P] flag above will be ignored
+  #  and bots will fall through to the SPA shell as before — contact Hostinger
+  #  support to enable mod_proxy + mod_proxy_http on the account.)
+
+
+  # 4) Standard SPA fallback — serve index.html for everything else (humans).
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
