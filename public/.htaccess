@@ -44,7 +44,24 @@
   RewriteCond %{REQUEST_URI} \.(js|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|json|xml|txt|pdf)$
   RewriteRule .* https://mttoiqruzzxooveooldo.supabase.co/functions/v1/not-found?path=%{REQUEST_URI} [R=404,L]
 
-  # 3) Standard SPA fallback — serve index.html for everything else.
+  # 3) Crawler SSR prerender — fixes Google "Soft 404" on SPA article/college
+  #    pages. Bots get fully-rendered HTML (title, meta, content, JSON-LD) from
+  #    the ssr-prerender edge function. Real users keep the React SPA.
+  #    Uses mod_proxy [P] so the rendered HTML is served AT the original URL
+  #    (no redirect), preserving the canonical mbacompass.in/article/<slug> URL
+  #    in Google's index.
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|facebookexternalhit|twitterbot|linkedinbot|embedly|quora\ link\ preview|whatsapp|applebot|petalbot|ia_archiver|mj12bot|ahrefsbot|semrushbot) [NC]
+  RewriteCond %{REQUEST_URI} ^/(article|college)/[^/]+/?$ [NC]
+  RewriteRule ^(.*)$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/ssr-prerender?path=/$1 [P,L]
+
+  # 3a) Fallback for hosts without mod_proxy: 302 redirect bots to the
+  #     prerender function. Google follows redirects on indexing.
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|applebot) [NC]
+  RewriteCond %{REQUEST_URI} ^/(article|college)/[^/]+/?$ [NC]
+  RewriteCond %{ENV:REDIRECT_STATUS} ^$
+  # (Skipped automatically if [P] above succeeded — [P,L] short-circuits.)
+
+  # 4) Standard SPA fallback — serve index.html for everything else (humans).
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
