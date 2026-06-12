@@ -178,25 +178,26 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
 # HARD RULES — WORD COUNT & SECTION DEPTH (NON-NEGOTIABLE)
 1. **WORD COUNT: ${wmin}-${wmax} words minimum** in (intro + content) plain text. Articles below ${wmin} words will be REJECTED. Count as you write; expand body sections rather than truncating. Never stop early. Long-form 5,000-10,000+ word articles are fully supported — write the full requested length.
-2. **Section depth — EVERY <h2> section MUST be ${minWordsPerSection}-600 words** of detailed, substantive content. NO section may be just 2-3 lines or a single short paragraph — sections that short will be REJECTED. Every <h2> section must include ALL of:
-   - A direct-answer opening paragraph (40-80 words) that names the topic entity
-   - 3-5 supporting paragraphs of detailed explanation
-   - At least one bullet or numbered list (4+ items)
-   - At least one concrete example, named entity, or data point specific to "${targetKw}"
-   - Either a comparison <table> (where data lends itself) or a numbered checklist
+2. **Section depth — EVERY <h2> section MUST be ${minWordsPerSection}-700 words** of detailed, substantive content. ONE-LINER ANSWERS ARE STRICTLY FORBIDDEN. NO section may be just 1-3 short sentences, a single short paragraph, or a "summary-style" reply. Every <h2> section must include ALL of:
+   - A direct-answer opening paragraph (60-100 words) that names the topic entity and gives the exact numeric/factual answer
+   - 4-6 supporting paragraphs of detailed explanation, breakdowns, context, and analysis (each paragraph 50-90 words)
+   - At least one bullet or numbered list (5+ items, each item a full sentence — NOT a 2-word fragment)
+   - At least one concrete example, named entity, recruiter, college, package figure, exam date, or data point specific to "${targetKw}"
+   - Either a comparison <table> with 5+ rows of real ${currentYear} numbers OR a numbered step-by-step checklist
    - 1-2 contextual internal links anchored to topic-relevant entities
-   - Where useful, an <h3> subsection breaking the topic into a specific angle
+   - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
+   - A short closing takeaway sentence in <strong> at the end of the section
 3. **Keyword usage — NATURAL, NOT STUFFED** (Google spam policy compliance): primary keyword "${targetKw}" should appear roughly ${Math.max(3, Math.round(targetOccurrences * 0.6))} times across the full article (~${Math.max(0.5, +(density * 0.6).toFixed(2))}% density). Use exact match in title, H1, slug, meta title, meta description, the first 100 words, and the conclusion — that is enough. DO NOT force the exact keyword into multiple H2 headings; vary headings with synonyms, intent variations, and entity names. Weave 20-30 LSI/semantic variants naturally — never repeat the exact keyword in adjacent sentences.
 4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Quick Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMANIZED LANGUAGE — 8th grade level**. Contractions OK. BANNED: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further".
-7. Short paragraphs (2-5 sentences). Use lists. **At least 4 HTML <table> blocks** (each 5+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, etc.).
+7. Short paragraphs (2-5 sentences). Use lists. **At least 5 HTML <table> blocks** (each 5+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article.
 8. **STRUCTURE — REQUIRED ORDER**:
    a. Quick Summary <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
-   c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-600 words, 1-2 <h3> subsections where useful). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — no shallow stubs.
-   d. <h2>Key Takeaways</h2> — 8-10 bullets, each starting with <strong>Bold lead phrase:</strong>
-   e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A** (Q in <h3> ending with "?", A in <p>, 60-120 words each). Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
+   c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
+   d. <h2>Key Takeaways</h2> — 8-10 bullets, each starting with <strong>Bold lead phrase:</strong> followed by 1-2 full sentences (15-30 words each).
+   e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer must give exact figures, named entities, dates and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
    - Primary keyword in: title, H1, slug, meta title, meta description, excerpt, first 100 words, and last paragraph. Vary H2 headings with synonyms — do not stuff the exact keyword into multiple headings.
