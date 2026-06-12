@@ -81,4 +81,30 @@ async function resolveCredential(name: string, required: boolean): Promise<strin
 /** Clear the in-memory cache (called by flush-credentials-cache function). */
 export function flushCredentialCache() {
   cache.clear();
+  slotCache = null;
 }
+
+// ── OpenAI slot switcher ─────────────────────────────────────────────────────
+let slotCache: { slot: 1 | 2; fetchedAt: number } | null = null;
+const SLOT_TTL_MS = 30 * 1000;
+
+async function getOpenAiActiveSlot(): Promise<1 | 2> {
+  const now = Date.now();
+  if (slotCache && now - slotCache.fetchedAt < SLOT_TTL_MS) return slotCache.slot;
+  let slot: 1 | 2 = 1;
+  try {
+    const sb = getServiceClient();
+    const { data } = await sb
+      .from("site_settings")
+      .select("value")
+      .eq("key", "openai_active_slot")
+      .maybeSingle();
+    const v = (data?.value as any)?.slot;
+    if (v === 2 || v === "2") slot = 2;
+  } catch (_) {
+    slot = 1;
+  }
+  slotCache = { slot, fetchedAt: now };
+  return slot;
+}
+
