@@ -259,14 +259,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       },
     };
 
-    // Scale tokens with target word count: ~2 tokens/word for output + generous reasoning overhead.
-    // Cap at 64K so very long articles (10K+ words) don't truncate.
-    const dynamicMaxTokens = Math.min(64000, Math.max(16000, Math.round(wmax * 4) + 4000));
+    // Scale tokens with target word count. Cap at 32K to stay within edge wall-clock limits.
+    const dynamicMaxTokens = Math.min(32000, Math.max(12000, Math.round(wmax * 3) + 3000));
 
-    // Use full gpt-5 — gpt-5-mini was producing shallow one-liner sections / FAQs.
-    // Full model handles deep multi-paragraph sections, tables and 120+ word FAQs reliably.
-    const aiRes = await callAIGateway({
-        model: "openai/gpt-5",
+    // Try full gpt-5 first; fall back to gpt-5-mini on timeout / 5xx so the user
+    // doesn't see "Edge Function returned a non-2xx status code".
+    const callModel = async (model: string) => callAIGateway({
+        model,
         max_tokens: dynamicMaxTokens,
         messages: [
           { role: "system", content: systemPrompt },
@@ -275,6 +274,18 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_blog_article" } },
       }, { feature: "ai-blog-writer" });
+
+    let aiRes: Response;
+    try {
+      aiRes = await callModel("openai/gpt-5");
+      if (!aiRes.ok && aiRes.status >= 500) {
+        console.warn("gpt-5 returned", aiRes.status, "— falling back to gpt-5-mini");
+        aiRes = await callModel("openai/gpt-5-mini");
+      }
+    } catch (e) {
+      console.warn("gpt-5 threw, falling back to gpt-5-mini:", e);
+      aiRes = await callModel("openai/gpt-5-mini");
+    }
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
