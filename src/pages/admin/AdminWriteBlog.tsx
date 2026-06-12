@@ -379,9 +379,6 @@ const AdminWriteBlog = () => {
         </Card>
       )}
 
-      <PrePublishReport seo={seoReport} html={htmlReport} cycle={cycleReport} title="Pre-publish checks" />
-
-
       <div className="flex gap-3 sticky bottom-0 bg-background py-3 border-t">
         <Button
           size="lg"
