@@ -140,7 +140,7 @@ const AdminWriteBlog = () => {
       let finalData = data;
       if (data?.jobId && !data?.insertedId) {
         setProgressCurrent("AI writing in background");
-        for (let attempt = 0; attempt < 240; attempt++) {
+        for (let attempt = 0; attempt < 900; attempt++) {
           await new Promise((resolve) => setTimeout(resolve, 3000));
           const { data: jobRes, error: jobErr } = await supabase.functions.invoke("ai-blog-writer", {
             body: { action: "status", jobId: data.jobId },
