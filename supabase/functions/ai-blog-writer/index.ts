@@ -418,6 +418,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 10, current_step: "Creating SEO outline and intro" }).eq("id", jobId);
     const draft = await createOutlineDraft(brief);
     await adminClient.from("ai_blog_generation_jobs").update({
+      status: "queued",
       progress: 18,
       current_step: `Writing section 1 of ${draft.sections.length}`,
       stats: { ...stats, phase: "sections", sectionIndex: 0, draft },
@@ -434,6 +435,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
       sections[idx] = { ...sections[idx], html: await createSectionHtml(brief, { ...draft, sections }, sections[idx], idx) };
       const nextIndex = idx + 1;
       await adminClient.from("ai_blog_generation_jobs").update({
+        status: "queued",
         progress: nextIndex >= sections.length ? 78 : Math.round(20 + (nextIndex / sections.length) * 55),
         current_step: nextIndex >= sections.length ? "Writing takeaways and FAQs" : `Writing section ${nextIndex + 1} of ${sections.length}`,
         stats: { ...stats, phase: nextIndex >= sections.length ? "closing" : "sections", sectionIndex: nextIndex, draft: { ...draft, sections } },
@@ -446,6 +448,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 82, current_step: "Writing takeaways, FAQs and CTA" }).eq("id", jobId);
     const closing = await createClosingHtml(brief, draft);
     await adminClient.from("ai_blog_generation_jobs").update({
+      status: "queued",
       progress: 90,
       current_step: "Saving article and FAQ schema",
       stats: { ...stats, phase: "finalize", draft: { ...draft, ...closing } },
