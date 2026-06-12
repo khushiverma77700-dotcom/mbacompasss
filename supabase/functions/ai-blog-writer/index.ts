@@ -95,7 +95,8 @@ Deno.serve(async (req) => {
     const targetOccurrences = Math.round((targetWords * density) / 100);
     // Dynamic structural targets — scale with article length
     const targetH2 = Math.max(10, Math.min(30, Math.round(targetWords / 260)));
-    const minWordsPerSection = 300;
+    const minWordsPerSection = 400;
+    const minWordsPerFaq = 120;
 
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
