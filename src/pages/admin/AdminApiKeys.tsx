@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Trash2, Pencil, KeyRound, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
+import OpenAiSlotSwitcher from "@/components/admin/OpenAiSlotSwitcher";
 
 type Credential = {
   id: string;
