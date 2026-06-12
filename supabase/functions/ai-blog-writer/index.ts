@@ -259,14 +259,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       },
     };
 
-    // Scale tokens with target word count: ~2 tokens/word for output + generous reasoning overhead.
-    // Cap at 64K so very long articles (10K+ words) don't truncate.
-    const dynamicMaxTokens = Math.min(64000, Math.max(16000, Math.round(wmax * 4) + 4000));
+    // Scale tokens with target word count. Cap at 32K to stay within edge wall-clock limits.
+    const dynamicMaxTokens = Math.min(32000, Math.max(12000, Math.round(wmax * 3) + 3000));
 
-    // Use full gpt-5 — gpt-5-mini was producing shallow one-liner sections / FAQs.
-    // Full model handles deep multi-paragraph sections, tables and 120+ word FAQs reliably.
-    const aiRes = await callAIGateway({
-        model: "openai/gpt-5",
+    // Try full gpt-5 first; fall back to gpt-5-mini on timeout / 5xx so the user
+    // doesn't see "Edge Function returned a non-2xx status code".
+    const callModel = async (model: string) => callAIGateway({
+        model,
         max_tokens: dynamicMaxTokens,
         messages: [
           { role: "system", content: systemPrompt },
@@ -275,6 +274,18 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_blog_article" } },
       }, { feature: "ai-blog-writer" });
+
+    let aiRes: Response;
+    try {
+      aiRes = await callModel("openai/gpt-5");
+      if (!aiRes.ok && aiRes.status >= 500) {
+        console.warn("gpt-5 returned", aiRes.status, "— falling back to gpt-5-mini");
+        aiRes = await callModel("openai/gpt-5-mini");
+      }
+    } catch (e) {
+      console.warn("gpt-5 threw, falling back to gpt-5-mini:", e);
+      aiRes = await callModel("openai/gpt-5-mini");
+    }
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
@@ -354,13 +365,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
     // ── EXPANSION LOOP: up to 5 passes to reach the word target for long-form articles (10K+ supported).
     let currentWords = actualWords;
-    for (let pass = 1; pass <= 5 && currentWords < wmin && currentWords > 200; pass++) {
+    for (let pass = 1; pass <= 2 && currentWords < wmin && currentWords > 200; pass++) {
       const wordsNeeded = wmin - currentWords + 300;
       console.log(`Expansion pass ${pass}: ${currentWords} < ${wmin}, asking for +${wordsNeeded} words`);
       try {
         const expandRes = await callAIGateway({
-          model: "openai/gpt-5",
-          max_tokens: Math.min(64000, Math.max(12000, Math.round(wmax * 4) + 4000)),
+          model: "openai/gpt-5-mini",
+          max_tokens: Math.min(32000, Math.max(10000, Math.round(wmax * 3) + 3000)),
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: `The current draft is ${currentWords} words but the brief requires ${wmin}-${wmax}. Expand it by adding ${wordsNeeded}+ words of NEW substance specific to "${targetKw}": 3-5 NEW <h2> sections (each ${minWordsPerSection}-500 words) covering angles not yet discussed (e.g. year-on-year trends specific to this topic, common mistakes specific to this topic, alumni stories, ROI math, regional breakdown, expert tips, alternatives, deep comparison tables) plus 3-4 additional FAQ Q&A. Every new section MUST contain topic-specific data, named entities, examples, and at least one new internal link relevant to "${targetKw}" only. Return the COMPLETE merged article (intro + content) re-rendered with new sections woven into logical places — do not just append at the end. Maintain ALL hard rules: ${density}% density, declarative headings, real ${currentYear} data, no banned phrases, no generic MBA filler unrelated to this topic.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
