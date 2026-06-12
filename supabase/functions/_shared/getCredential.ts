@@ -26,6 +26,18 @@ export async function getCredential(name: string, opts?: { required?: boolean })
   const required = opts?.required ?? true;
   const now = Date.now();
 
+  // Special case: OPENAI_API_KEY routes to slot 1 or slot 2 based on admin toggle.
+  if (name === "OPENAI_API_KEY") {
+    const slot = await getOpenAiActiveSlot();
+    const effective = slot === 2 ? "OPENAI_API_KEY_2" : "OPENAI_API_KEY";
+    return resolveCredential(effective, required);
+  }
+
+  return resolveCredential(name, required);
+}
+
+async function resolveCredential(name: string, required: boolean): Promise<string> {
+  const now = Date.now();
   // 1. Cache hit
   const cached = cache.get(name);
   if (cached && now - cached.fetchedAt < TTL_MS) {
@@ -69,4 +81,30 @@ export async function getCredential(name: string, opts?: { required?: boolean })
 /** Clear the in-memory cache (called by flush-credentials-cache function). */
 export function flushCredentialCache() {
   cache.clear();
+  slotCache = null;
 }
+
+// ── OpenAI slot switcher ─────────────────────────────────────────────────────
+let slotCache: { slot: 1 | 2; fetchedAt: number } | null = null;
+const SLOT_TTL_MS = 30 * 1000;
+
+async function getOpenAiActiveSlot(): Promise<1 | 2> {
+  const now = Date.now();
+  if (slotCache && now - slotCache.fetchedAt < SLOT_TTL_MS) return slotCache.slot;
+  let slot: 1 | 2 = 1;
+  try {
+    const sb = getServiceClient();
+    const { data } = await sb
+      .from("site_settings")
+      .select("value")
+      .eq("key", "openai_active_slot")
+      .maybeSingle();
+    const v = (data?.value as any)?.slot;
+    if (v === 2 || v === "2") slot = 2;
+  } catch (_) {
+    slot = 1;
+  }
+  slotCache = { slot, fetchedAt: now };
+  return slot;
+}
+

@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Trash2, Pencil, KeyRound, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
+import OpenAiSlotSwitcher from "@/components/admin/OpenAiSlotSwitcher";
 
 type Credential = {
   id: string;
@@ -179,6 +180,7 @@ export default function AdminApiKeys() {
         </TabsList>
 
         <TabsContent value="keys" className="space-y-6 mt-4">
+          <OpenAiSlotSwitcher />
           {loading && <p className="text-muted-foreground">Loading…</p>}
           {!loading && grouped.map((group) => (
             <Card key={group.value}>
