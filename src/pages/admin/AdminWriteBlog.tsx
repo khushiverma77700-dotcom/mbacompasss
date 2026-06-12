@@ -11,10 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
-import PrePublishReport from "@/components/admin/PrePublishReport";
-import { checkSeoCompleteness, type CompletenessReport } from "@/lib/seoCompletenessChecker";
-import { validateHtml, type HtmlValidationReport } from "@/lib/htmlValidator";
-import { checkLatestCycle, type CycleReport } from "@/lib/cycleChecker";
 
 const CATEGORIES = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
 
@@ -76,9 +72,6 @@ const AdminWriteBlog = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [progressCurrent, setProgressCurrent] = useState<string>("");
-  const [seoReport, setSeoReport] = useState<CompletenessReport | null>(null);
-  const [htmlReport, setHtmlReport] = useState<HtmlValidationReport | null>(null);
-  const [cycleReport, setCycleReport] = useState<CycleReport | null>(null);
 
   const setStep = (key: string, status: ProgressStep["status"], error?: string) =>
     setProgressSteps(prev => prev.map(s => s.key === key ? { ...s, status, error } : s));
@@ -116,16 +109,15 @@ const AdminWriteBlog = () => {
     setGenerating(true);
     setErrorMsg(null);
     setStats(null);
-    setSeoReport(null);
-    setHtmlReport(null);
-    setCycleReport(null);
     setProgressSteps(BLOG_STEPS.map(s => ({ ...s, status: "pending" })));
     setProgressCurrent(BLOG_STEPS[0].label);
     setStep("brief", "ok");
 
     try {
       setStep("research", "running");
-      setProgressCurrent("Researching topic");
+      setStep("draft", "running");
+      setStep("save", "running");
+      setProgressCurrent("Researching, writing, and saving article");
       const { data, error } = await supabase.functions.invoke("ai-blog-writer", {
         body: {
           title: title.trim(),
@@ -142,100 +134,23 @@ const AdminWriteBlog = () => {
         },
       });
 
-      if (error) { setStep("research", "fail", error.message); throw error; }
+      if (error) { setStep("draft", "fail", error.message); throw error; }
       if (data?.error) { setStep("research", "fail", data.error); throw new Error(data.error); }
-      if (!data?.article) { setStep("research", "fail", "Empty response"); throw new Error("AI returned an empty response"); }
+      if (!data?.insertedId) { setStep("save", "fail", "Article was not saved"); throw new Error("AI finished but the article was not saved"); }
       setStep("research", "ok");
       setStep("draft", "ok");
-      setProgressCurrent("Saving draft");
-
-      const a = data.article;
-      setStats(data.stats);
-
-      setStep("save", "running");
-      let finalSlug = a.slug || slug;
-      const { data: existing } = await supabase
-        .from("articles")
-        .select("id")
-        .eq("slug", finalSlug)
-        .maybeSingle();
-      if (existing?.id) {
-        finalSlug = `${finalSlug}-${Date.now().toString(36).slice(-4)}`;
-      }
-
-      const insertPayload = {
-        title: a.title || title,
-        slug: finalSlug,
-        excerpt: a.excerpt || "",
-        intro: a.intro || "",
-        content: a.content || "",
-        meta_title: a.metaTitle || metaTitle || a.title?.slice(0, 60) || title.slice(0, 60),
-        meta_description: a.metaDescription || metaDescription || a.excerpt?.slice(0, 160) || "",
-        keywords: Array.isArray(a.keywords) ? a.keywords : [],
-        primary_keyword: a.primaryKeyword || targetKeyword,
-        h1_tag: a.h1Tag || a.title || title,
-        author: a.author || "MBA Compass Editorial",
-        category,
-        status: "published",
-        published: true,
-        featured: false,
-        priority: 0,
-      };
-
-      const { data: inserted, error: insertErr } = await supabase
-        .from("articles")
-        .insert(insertPayload)
-        .select("id")
-        .single();
-
-      if (insertErr) { setStep("save", "fail", insertErr.message); throw insertErr; }
       setStep("save", "ok");
-
-      setStep("faqs", "running");
-      const extractedFaqs = Array.isArray(data?.faqs) ? data.faqs : [];
-      if (extractedFaqs.length > 0 && inserted?.id) {
-        try {
-          await supabase.functions.invoke("auto-seo-engine", {
-            body: { mode: "seed_faqs", contentType: "article", pageId: inserted.id, faqs: extractedFaqs },
-          });
-          setStep("faqs", "ok");
-        } catch (e) { console.warn("FAQ seed failed", e); setStep("faqs", "fail", "Schema injection failed"); }
-      } else {
-        setStep("faqs", "ok");
-      }
-
-      setStep("validate", "running");
-      setProgressCurrent("Running pre-publish checks");
-      const seoRep = checkSeoCompleteness({
-        metaTitle: insertPayload.meta_title,
-        metaDescription: insertPayload.meta_description,
-        slug: finalSlug,
-        primaryKeyword: insertPayload.primary_keyword,
-        secondaryKeywords: secondaryKws,
-        html: insertPayload.content,
-        faqs: extractedFaqs,
-        faqExpected: true,
-      });
-      const htmlRep = validateHtml(insertPayload.content, { context: "blog" });
-      const cycleRep = checkLatestCycle(insertPayload.content);
-      setSeoReport(seoRep);
-      setHtmlReport(htmlRep);
-      setCycleReport(cycleRep);
+      setStep("faqs", "ok");
       setStep("validate", "ok");
       setProgressCurrent("");
 
       try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
 
-      const issues: string[] = [];
-      if (seoRep.level !== "pass") issues.push(`SEO ${seoRep.summary.toLowerCase()}`);
-      if (!htmlRep.ok) issues.push(`${htmlRep.issues.filter(i => i.level === "error").length} HTML blocker(s)`);
-      if (!cycleRep.ok) issues.push("date mismatches found");
-
       toast({
         title: "Article generated!",
-        description: `${data.stats?.actualWords ?? "~"} words${extractedFaqs.length ? ` · ${extractedFaqs.length} FAQs` : ""}${issues.length ? ` · Review: ${issues.join(", ")}` : " · All checks passed"}. Review below before opening editor.`,
+        description: `${data.stats?.actualWords ?? "~"} words${data.faqCount ? ` · ${data.faqCount} FAQs` : ""}. Saved successfully — open it in editor to review.`,
       });
-      setStats((prev: any) => ({ ...(prev || {}), insertedId: inserted.id }));
+      setStats({ ...(data.stats || {}), insertedId: data.insertedId });
     } catch (e: any) {
       console.error("AI blog generation failed", e);
       setErrorMsg(e?.message || "Generation failed");
