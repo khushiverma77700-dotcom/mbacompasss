@@ -4,7 +4,6 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -25,9 +24,45 @@ interface BlogBrief {
   keywordDensityPct?: number;
 }
 
+const json = (status: number, body: unknown) => new Response(
+  JSON.stringify(body),
+  { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+);
+
+async function startBackgroundBlogJob(jobId: string, brief: BlogBrief, token: string) {
+  try {
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-blog-writer`;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: anonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...brief, runInline: true, jobId }),
+    });
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => "");
+      throw new Error(detail || `Background worker failed with HTTP ${resp.status}`);
+    }
+  } catch (e) {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    await admin.from("ai_blog_generation_jobs").update({
+      status: "failed",
+      progress: 100,
+      current_step: "Generation failed",
+      error_message: e instanceof Error ? e.message.slice(0, 1000) : String(e).slice(0, 1000),
+      finished_at: new Date().toISOString(),
+    }).eq("id", jobId);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  let activeJobId: string | null = null;
+  let adminForError: ReturnType<typeof createClient> | null = null;
   try {
     // --- Admin-only auth gate -------------------------------------------------
     const authHeader = req.headers.get("Authorization") || "";
@@ -66,15 +101,73 @@ Deno.serve(async (req) => {
     }
     // --------------------------------------------------------------------------
 
-    const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
-
     const brief = (await req.json()) as BlogBrief;
+    const action = (brief as any)?.action;
+    if (action === "status") {
+      const requestedJobId = String((brief as any)?.jobId || "");
+      if (!requestedJobId) return json(400, { error: "jobId is required" });
+      const { data: job, error: jobError } = await adminClient
+        .from("ai_blog_generation_jobs")
+        .select("id,status,progress,current_step,error_message,article_id,stats,brief,created_at,updated_at,finished_at")
+        .eq("id", requestedJobId)
+        .maybeSingle();
+      if (jobError) throw jobError;
+      if (!job) return json(404, { error: "Blog generation job not found" });
+
+      const updatedAt = job.updated_at ? new Date(job.updated_at).getTime() : 0;
+      const stalled = ["queued", "running"].includes(String(job.status)) && Date.now() - updatedAt > 120_000;
+      if (stalled) {
+        await adminClient.from("ai_blog_generation_jobs").update({
+          status: "queued",
+          current_step: "Recovering stalled generation worker",
+          progress: Math.max(10, Number(job.progress || 0)),
+        }).eq("id", requestedJobId);
+        EdgeRuntime.waitUntil(startBackgroundBlogJob(requestedJobId, job.brief as BlogBrief, token));
+      }
+
+      const { brief: _brief, ...safeJob } = job as any;
+      return json(200, { success: true, job: safeJob });
+    }
+
+    const runInline = (brief as any)?.runInline === true;
+    activeJobId = typeof (brief as any)?.jobId === "string" ? (brief as any).jobId : null;
+    adminForError = adminClient;
+
+    if (!runInline) {
+      const cleanBrief = { ...(brief as any) };
+      delete cleanBrief.action;
+      delete cleanBrief.runInline;
+      delete cleanBrief.jobId;
+      const { data: job, error: jobError } = await adminClient
+        .from("ai_blog_generation_jobs")
+        .insert({
+          user_id: userRes.user.id,
+          status: "queued",
+          progress: 5,
+          current_step: "Queued for AI writing",
+          brief: cleanBrief,
+        })
+        .select("id")
+        .single();
+      if (jobError) throw jobError;
+      EdgeRuntime.waitUntil(startBackgroundBlogJob(job.id, cleanBrief as BlogBrief, token));
+      return json(202, { success: true, jobId: job.id, status: "queued" });
+    }
+
     if (!brief?.title || !brief?.targetKeyword) {
       return new Response(
         JSON.stringify({ error: "title and targetKeyword are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+    if (activeJobId) {
+      await adminClient.from("ai_blog_generation_jobs").update({
+        status: "running",
+        progress: 15,
+        current_step: "Researching topic and drafting article",
+        started_at: new Date().toISOString(),
+        error_message: null,
+      }).eq("id", activeJobId);
     }
 
 
@@ -451,31 +544,122 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     };
     const extractedFaqs = extractFaqs(article.content || "");
 
+    const baseSlug = slug || String(brief.slug || targetKw)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 80);
+    let finalSlug = baseSlug;
+    const { data: existingSlug } = await adminClient
+      .from("articles")
+      .select("id")
+      .eq("slug", finalSlug)
+      .maybeSingle();
+    if (existingSlug?.id) finalSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
+
+    const insertPayload = {
+      title: article.title || brief.title,
+      slug: finalSlug,
+      excerpt: article.excerpt || "",
+      intro: article.intro || "",
+      content: article.content || "",
+      meta_title: article.metaTitle || brief.metaTitle || String(article.title || brief.title).slice(0, 60),
+      meta_description: article.metaDescription || brief.metaDescription || String(article.excerpt || "").slice(0, 160),
+      keywords: Array.isArray(article.keywords) ? article.keywords : [],
+      primary_keyword: targetKw,
+      h1_tag: article.h1Tag || article.title || brief.title,
+      author: article.author || "MBA Compass Editorial",
+      category: brief.category || "news",
+      status: "published",
+      published: true,
+      featured: false,
+      priority: 0,
+      faqs: extractedFaqs,
+      last_seo_refresh: new Date().toISOString(),
+    };
+
+    const { data: inserted, error: insertError } = await adminClient
+      .from("articles")
+      .insert(insertPayload)
+      .select("id, slug")
+      .single();
+    if (insertError) throw insertError;
+
+    if (extractedFaqs.length > 0 && inserted?.id) {
+      try {
+        const faqSchema = {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: extractedFaqs.map((f: any) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        };
+        const snapshotKey = `seo_page__article__${inserted.id}`;
+        const pagePath = `/article/${inserted.slug}`;
+        await adminClient.from("site_settings").upsert({
+          key: snapshotKey,
+          value: {
+            contentType: "article",
+            recordId: inserted.id,
+            slug: inserted.slug,
+            pagePath,
+            canonicalUrl: pagePath,
+            faqs: extractedFaqs,
+            schemaMarkup: [faqSchema],
+            generatedAt: new Date().toISOString(),
+          },
+        }, { onConflict: "key" });
+      } catch (faqError) {
+        console.warn("FAQ schema snapshot failed (non-fatal):", faqError);
+      }
+    }
+
+    const finalStats = {
+      targetWordsRange: [wmin, wmax],
+      actualWords: finalWords,
+      targetDensityPct: density,
+      actualDensityPct: finalDensity,
+      actualOccurrences: finalOccurrences,
+      targetOccurrences,
+      expanded: finalWords > actualWords,
+      firstPassWords: actualWords,
+      insertedId: inserted.id,
+    };
+
+    if (activeJobId) {
+      await adminClient.from("ai_blog_generation_jobs").update({
+        status: "completed",
+        progress: 100,
+        current_step: "Article saved successfully",
+        article_id: inserted.id,
+        stats: finalStats,
+        finished_at: new Date().toISOString(),
+      }).eq("id", activeJobId);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        article: {
-          ...article,
-          slug,
-          // never override target keyword
-          primaryKeyword: targetKw,
-        },
-        faqs: extractedFaqs,
-        stats: {
-          targetWordsRange: [wmin, wmax],
-          actualWords: finalWords,
-          targetDensityPct: density,
-          actualDensityPct: finalDensity,
-          actualOccurrences: finalOccurrences,
-          targetOccurrences,
-          expanded: finalWords > actualWords,
-          firstPassWords: actualWords,
-        },
+        insertedId: inserted.id,
+        slug: inserted.slug,
+        faqCount: extractedFaqs.length,
+        stats: finalStats,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("ai-blog-writer error:", e);
+    if (activeJobId && adminForError) {
+      await adminForError.from("ai_blog_generation_jobs").update({
+        status: "failed",
+        progress: 100,
+        current_step: "Generation failed",
+        error_message: e instanceof Error ? e.message.slice(0, 1000) : String(e).slice(0, 1000),
+        finished_at: new Date().toISOString(),
+      }).eq("id", activeJobId);
+    }
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
