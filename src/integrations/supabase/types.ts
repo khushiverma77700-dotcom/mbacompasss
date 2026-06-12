@@ -47,6 +47,62 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_blog_generation_jobs: {
+        Row: {
+          article_id: string | null
+          brief: Json
+          created_at: string
+          current_step: string | null
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          progress: number
+          started_at: string | null
+          stats: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          article_id?: string | null
+          brief?: Json
+          created_at?: string
+          current_step?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          progress?: number
+          started_at?: string | null
+          stats?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string | null
+          brief?: Json
+          created_at?: string
+          current_step?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          progress?: number
+          started_at?: string | null
+          stats?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_blog_generation_jobs_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_mock_generations: {
         Row: {
           ai_model: string | null
