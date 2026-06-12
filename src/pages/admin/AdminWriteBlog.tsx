@@ -134,9 +134,29 @@ const AdminWriteBlog = () => {
         },
       });
 
-      if (error) { setStep("draft", "fail", error.message); throw error; }
+      if (error) { setStep("research", "fail", error.message); throw error; }
       if (data?.error) { setStep("research", "fail", data.error); throw new Error(data.error); }
-      if (!data?.insertedId) { setStep("save", "fail", "Article was not saved"); throw new Error("AI finished but the article was not saved"); }
+
+      let finalData = data;
+      if (data?.jobId && !data?.insertedId) {
+        setProgressCurrent("AI writing in background");
+        for (let attempt = 0; attempt < 240; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          const { data: jobRes, error: jobErr } = await supabase.functions.invoke("ai-blog-writer", {
+            body: { action: "status", jobId: data.jobId },
+          });
+          if (jobErr) throw jobErr;
+          const job = jobRes?.job;
+          if (job?.current_step) setProgressCurrent(job.current_step);
+          if (job?.status === "completed") {
+            finalData = { insertedId: job.article_id, stats: job.stats || {} };
+            break;
+          }
+          if (job?.status === "failed") throw new Error(job.error_message || "Blog generation failed");
+        }
+      }
+
+      if (!finalData?.insertedId) { setStep("save", "fail", "Article was not saved"); throw new Error("Generation is taking longer than expected. It will continue in the background; refresh this page in a few minutes."); }
       setStep("research", "ok");
       setStep("draft", "ok");
       setStep("save", "ok");
@@ -148,9 +168,9 @@ const AdminWriteBlog = () => {
 
       toast({
         title: "Article generated!",
-        description: `${data.stats?.actualWords ?? "~"} words${data.faqCount ? ` · ${data.faqCount} FAQs` : ""}. Saved successfully — open it in editor to review.`,
+        description: `${finalData.stats?.actualWords ?? "~"} words. Saved successfully — open it in editor to review.`,
       });
-      setStats({ ...(data.stats || {}), insertedId: data.insertedId });
+      setStats({ ...(finalData.stats || {}), insertedId: finalData.insertedId });
     } catch (e: any) {
       console.error("AI blog generation failed", e);
       setErrorMsg(e?.message || "Generation failed");
