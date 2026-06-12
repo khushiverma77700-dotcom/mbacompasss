@@ -29,30 +29,439 @@ const json = (status: number, body: unknown) => new Response(
   { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
 );
 
-async function startBackgroundBlogJob(jobId: string, brief: BlogBrief, token: string) {
+const stripEscapeArtifacts = (s: string): string =>
+  String(s || "")
+    .replace(/\\+n/gi, " ")
+    .replace(/(^|[\s>])\/n(?=[\s<]|$)/gi, "$1 ")
+    .replace(/<p>\s*(?:\\n|\/n|\s)*\s*<\/p>/gi, "")
+    .replace(/<li>\s*(?:\\n|\/n|\s)*\s*<\/li>/gi, "")
+    .replace(/[ \t]{2,}/g, " ");
+
+const stripExternalLinks = (html: string) => {
+  let out = stripEscapeArtifacts(html || "");
+  out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
+  out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
+  out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+  return out.replace(/[ \t]{2,}/g, " ").trim();
+};
+
+const normalizeSlug = (s: string) =>
+  String(s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+
+const escapeHtml = (s: string) =>
+  String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const toPlainText = (html: string) => String(html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+const countWords = (html: string) => toPlainText(html).split(/\s+/).filter(Boolean).length;
+
+function getTargets(brief: BlogBrief) {
+  const wmin = Math.max(300, brief.wordCountMin ?? 2500);
+  const wmax = Math.max(wmin, brief.wordCountMax ?? 3500);
+  const targetWords = Math.round((wmin + wmax) / 2);
+  return {
+    wmin,
+    wmax,
+    targetWords,
+    sectionCount: Math.max(5, Math.min(16, Math.round(targetWords / 550))),
+    density: Math.min(brief.keywordDensityPct ?? 2, 3),
+    todayIso: new Date().toISOString().slice(0, 10),
+    currentYear: new Date().getFullYear(),
+  };
+}
+
+function fallbackSections(brief: BlogBrief, count: number) {
+  const kw = brief.targetKeyword || brief.title;
+  const base = [
+    `Complete overview of ${kw}`,
+    `Eligibility and admission timeline`,
+    `Fees, seats and ROI analysis`,
+    `Cutoffs, selection process and requirements`,
+    `Placements, recruiters and salary trends`,
+    `Best colleges and alternatives`,
+    `Preparation checklist and common mistakes`,
+    `Expert tips for final decisions`,
+    `Year-on-year trends and outlook`,
+    `Student fit and decision framework`,
+    `Documents and application strategy`,
+    `Comparison with nearby options`,
+    `Scholarships and financing options`,
+    `Career outcomes after completion`,
+    `Final shortlist strategy`,
+    `Action plan for applicants`,
+  ];
+  return base.slice(0, count).map((heading) => ({ heading, angle: `Explain ${heading.toLowerCase()} with current Indian MBA data, examples, tables and decision pointers.` }));
+}
+
+async function callStructuredAI(args: {
+  feature: string;
+  system: string;
+  user: string;
+  toolName: string;
+  description: string;
+  parameters: Record<string, unknown>;
+  maxTokens: number;
+}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 105_000);
   try {
-    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-blog-writer`;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        apikey: anonKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ...brief, runInline: true, jobId }),
-    });
-    if (!resp.ok) {
-      const detail = await resp.text().catch(() => "");
-      throw new Error(detail || `Background worker failed with HTTP ${resp.status}`);
+    const response = await callAIGateway({
+      model: "openai/gpt-5-mini",
+      max_tokens: args.maxTokens,
+      messages: [
+        { role: "system", content: args.system },
+        { role: "user", content: args.user },
+      ],
+      tools: [{
+        type: "function",
+        function: {
+          name: args.toolName,
+          description: args.description,
+          parameters: args.parameters,
+        },
+      }],
+      tool_choice: { type: "function", function: { name: args.toolName } },
+    }, { feature: args.feature, signal: controller.signal, maxRetries: 0, purpose: "long" });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error(`${args.feature} failed (${response.status}): ${detail.slice(0, 500)}`);
     }
+    const aiJson = await response.json();
+    const rawArgs = aiJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    if (!rawArgs) throw new Error(`${args.feature} returned no structured payload`);
+    return JSON.parse(rawArgs);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function writerSystemPrompt(brief: BlogBrief) {
+  const { currentYear, todayIso } = getTargets(brief);
+  return `You are an expert SEO content writer for Indian MBA, PGDM, PGP, Executive MBA and MiM topics. Write like a smart senior MBA advisor: clear, specific, professional and practical.
+
+Rules:
+- Stay strictly inside MBA / management education and MBA entrance exams.
+- Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context.
+- Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams, realistic INR figures and source markers like [src:NIRF ${currentYear}].
+- No external links and no bare URLs. Only relative internal links starting with / are allowed.
+- Return clean HTML only using h2,h3,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
+- Never use shallow one-line answers, generic filler or phrases like "delve into", "unlock your potential", "in today's fast-paced world".
+- Today is ${todayIso}.`; 
+}
+
+async function createOutlineDraft(brief: BlogBrief) {
+  const targets = getTargets(brief);
+  const targetKw = brief.targetKeyword.trim();
+  const fallback = fallbackSections(brief, targets.sectionCount);
+  try {
+    const outline = await callStructuredAI({
+      feature: "ai-blog-writer-outline",
+      system: writerSystemPrompt(brief),
+      maxTokens: 5000,
+      toolName: "plan_blog_article",
+      description: "Plan the SEO article and write only the introduction metadata.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          slug: { type: "string" },
+          metaTitle: { type: "string" },
+          metaDescription: { type: "string" },
+          excerpt: { type: "string" },
+          intro: { type: "string" },
+          h1Tag: { type: "string" },
+          keywords: { type: "array", items: { type: "string" } },
+          author: { type: "string" },
+          sections: { type: "array", items: { type: "object", properties: { heading: { type: "string" }, angle: { type: "string" } }, required: ["heading", "angle"], additionalProperties: false } },
+          faqs: { type: "array", items: { type: "string" } },
+        },
+        required: ["title", "slug", "metaTitle", "metaDescription", "excerpt", "intro", "h1Tag", "keywords", "author", "sections", "faqs"],
+        additionalProperties: false,
+      },
+      user: `Create a topic-specific SEO plan for "${brief.title}" targeting "${targetKw}".
+
+Return metadata and a 250-350 word intro only. The intro must start with <p><strong>Quick Summary:</strong> and give a direct answer. Then return ${targets.sectionCount} detailed H2 section plans. Each planned section must be unique, specific to this topic, and suitable for 450-650 words with a table/list. Also return 10 FAQ questions. Secondary keywords: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally"}. Category: ${brief.category || "news"}.`,
+    });
+    const sections = Array.isArray(outline.sections) && outline.sections.length ? outline.sections : fallback;
+    return {
+      title: String(outline.title || brief.title).slice(0, 90),
+      slug: normalizeSlug(outline.slug || brief.slug || targetKw),
+      metaTitle: String(outline.metaTitle || brief.metaTitle || brief.title).slice(0, 70),
+      metaDescription: String(outline.metaDescription || brief.metaDescription || outline.excerpt || "").slice(0, 170),
+      excerpt: String(outline.excerpt || ""),
+      intro: stripExternalLinks(outline.intro || `<p><strong>Quick Summary:</strong> ${escapeHtml(brief.title)} is explained below with updated MBA admissions, fees, placements and decision points for Indian applicants.</p>`),
+      h1Tag: String(outline.h1Tag || brief.title).slice(0, 90),
+      keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 20) : [targetKw],
+      primaryKeyword: targetKw,
+      author: outline.author || "MBA Compass Editorial",
+      sections: sections.slice(0, targets.sectionCount).map((s: any, i: number) => ({ heading: String(s.heading || fallback[i]?.heading || `Section ${i + 1}`), angle: String(s.angle || fallback[i]?.angle || "Detailed MBA analysis") })),
+      faqQuestions: Array.isArray(outline.faqs) ? outline.faqs.slice(0, 10) : [],
+    };
   } catch (e) {
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    await admin.from("ai_blog_generation_jobs").update({
-      status: "failed",
+    console.warn("Outline AI failed; using safe fallback:", e instanceof Error ? e.message : e);
+    return {
+      title: brief.title,
+      slug: normalizeSlug(brief.slug || targetKw),
+      metaTitle: (brief.metaTitle || `${targetKw} Guide ${targets.currentYear} | MBA Compass`).slice(0, 70),
+      metaDescription: (brief.metaDescription || `${targetKw} explained with latest MBA admissions, fees, cutoffs, placements, ROI, colleges and expert shortlisting advice.`).slice(0, 170),
+      excerpt: `${targetKw} guide with current MBA admissions, fees, cutoffs, placements, ROI and decision pointers.`,
+      intro: `<p><strong>Quick Summary:</strong> ${escapeHtml(targetKw)} needs a clear read on eligibility, fees, cutoffs, placements and ROI before students shortlist options. This guide breaks the topic into practical, data-led sections for Indian MBA applicants.</p>`,
+      h1Tag: brief.title,
+      keywords: [targetKw, ...(brief.secondaryKeywords || [])].slice(0, 20),
+      primaryKeyword: targetKw,
+      author: "MBA Compass Editorial",
+      sections: fallback,
+      faqQuestions: [],
+    };
+  }
+}
+
+function fallbackSectionHtml(brief: BlogBrief, heading: string) {
+  const kw = escapeHtml(brief.targetKeyword || brief.title);
+  const h = escapeHtml(heading);
+  const y = new Date().getFullYear();
+  return `<h2>${h}</h2><p><strong>Direct answer:</strong> For ${kw}, students should evaluate the latest admission cycle, total cost, cutoffs, placement strength and fit before making a decision. The safest approach is to compare official school data, exam requirements and recent salary outcomes together rather than relying on one metric.</p><p>The most useful way to read this topic is through ROI and selection probability. Applicants should check whether the programme accepts CAT, XAT, NMAT, SNAP, CMAT, MAT or GMAT scores, then compare fees, average package, median package and recruiter quality. A college with a slightly lower average package may still be better if fees are controlled and role quality is strong.</p><table><thead><tr><th>Metric</th><th>What to check</th><th>Good benchmark</th></tr></thead><tbody><tr><td>Fees</td><td>Total two-year MBA/PGDM cost</td><td>INR 8-28 lakh</td></tr><tr><td>Placements</td><td>Average and median CTC</td><td>INR 10-35 LPA</td></tr><tr><td>Cutoff</td><td>Entrance percentile range</td><td>75-99+ percentile</td></tr><tr><td>Recruiters</td><td>Consulting, BFSI, FMCG, tech roles</td><td>30-150+ recruiters</td></tr><tr><td>Batch profile</td><td>Freshers and work-ex students</td><td>Balanced cohort</td></tr></tbody></table><ul><li>Check official admission notices for ${y}-${y + 1} before applying.</li><li>Compare average package with median package to avoid inflated outcomes.</li><li>Use <a href="/college-shortlister">the college shortlister</a> to compare fit and ROI.</li><li>Prioritise programmes with consistent recruiter participation.</li><li>Keep backup options if your expected percentile is below the safe range.</li></ul><h3>Advisor view</h3><p>For most Indian MBA aspirants, ${kw} should be judged through a shortlist of reach, match and safe options. This keeps ambition high while protecting the application cycle from avoidable risk. <strong>The best decision is data-led, not brand-led alone.</strong></p>`;
+}
+
+async function createSectionHtml(brief: BlogBrief, draft: any, section: any, index: number) {
+  try {
+    const targets = getTargets(brief);
+    const result = await callStructuredAI({
+      feature: "ai-blog-writer-section",
+      system: writerSystemPrompt(brief),
+      maxTokens: 7000,
+      toolName: "write_blog_section",
+      description: "Write one detailed HTML article section.",
+      parameters: {
+        type: "object",
+        properties: { heading: { type: "string" }, html: { type: "string" } },
+        required: ["heading", "html"],
+        additionalProperties: false,
+      },
+      user: `Write section ${index + 1} for the article "${draft.title}" targeting "${brief.targetKeyword}".
+
+Section heading: ${section.heading}
+Section angle: ${section.angle}
+Existing article plan headings: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
+
+Requirements:
+- Output exactly one <h2>${section.heading}</h2> section, 450-650 words.
+- Include 4-6 detailed paragraphs, one <h3>, one 5+ row table, and one 5+ item bullet or numbered list.
+- Use current ${targets.currentYear} Indian MBA data, named colleges/recruiters/exams, realistic INR figures and [src:Source Year] markers.
+- Add 1-2 contextual internal relative links only.
+- Do not repeat content from other planned sections.`,
+    });
+    const html = stripExternalLinks(result.html || "");
+    return html && countWords(html) > 180 ? html : fallbackSectionHtml(brief, section.heading);
+  } catch (e) {
+    console.warn("Section AI failed; using safe fallback:", e instanceof Error ? e.message : e);
+    return fallbackSectionHtml(brief, section.heading);
+  }
+}
+
+function fallbackClosingHtml(brief: BlogBrief) {
+  const kw = escapeHtml(brief.targetKeyword || brief.title);
+  return {
+    keyTakeawaysHtml: `<h2>Key Takeaways</h2><ul><li><strong>Start with fit:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Check current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>Compare ROI:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Plan backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Review deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Use tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
+    faqHtml: `<h2>Frequently Asked Questions</h2><h3>How should students evaluate ${kw}?</h3><p>Students should evaluate ${kw} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit. The strongest shortlist balances brand value with realistic admission probability and return on investment.</p><h3>Is ${kw} worth it for MBA aspirants?</h3><p>${kw} can be worth it when the programme, city, fee level and placement outcomes align with your career target. Check current salary data, median outcomes and role quality before making the final call.</p>`,
+    ctaHtml: `<p><strong>Next step:</strong> Use <a href="/college-shortlister">the college shortlister</a>, <a href="/profile-analyzer">profile analyzer</a> and <a href="/mba-roi-calculator">MBA ROI calculator</a> to turn this ${kw} research into a practical shortlist.</p>`,
+    faqs: [
+      { question: `How should students evaluate ${brief.targetKeyword}?`, answer: `Students should evaluate ${brief.targetKeyword} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit.` },
+      { question: `Is ${brief.targetKeyword} worth it for MBA aspirants?`, answer: `${brief.targetKeyword} can be worth it when the programme, city, fee level and placement outcomes align with the student's career target.` },
+    ],
+  };
+}
+
+async function createClosingHtml(brief: BlogBrief, draft: any) {
+  try {
+    const result = await callStructuredAI({
+      feature: "ai-blog-writer-closing",
+      system: writerSystemPrompt(brief),
+      maxTokens: 8000,
+      toolName: "write_blog_closing",
+      description: "Write key takeaways, detailed FAQs and final CTA.",
+      parameters: {
+        type: "object",
+        properties: {
+          keyTakeawaysHtml: { type: "string" },
+          faqHtml: { type: "string" },
+          ctaHtml: { type: "string" },
+          faqs: { type: "array", items: { type: "object", properties: { question: { type: "string" }, answer: { type: "string" } }, required: ["question", "answer"], additionalProperties: false } },
+        },
+        required: ["keyTakeawaysHtml", "faqHtml", "ctaHtml", "faqs"],
+        additionalProperties: false,
+      },
+      user: `Finish the article "${draft.title}" targeting "${brief.targetKeyword}".
+
+Written sections: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
+FAQ question ideas: ${(draft.faqQuestions || []).join(" | ")}
+
+Return:
+1) <h2>Key Takeaways</h2> with 8-10 detailed bullets.
+2) <h2>Frequently Asked Questions</h2> with 10 detailed Q&A pairs. Each answer must be 80-140 words, with specific data or examples where possible.
+3) One final CTA paragraph with 2-3 internal relative links.`,
+    });
+    return {
+      keyTakeawaysHtml: stripExternalLinks(result.keyTakeawaysHtml || ""),
+      faqHtml: stripExternalLinks(result.faqHtml || ""),
+      ctaHtml: stripExternalLinks(result.ctaHtml || ""),
+      faqs: Array.isArray(result.faqs) ? result.faqs.slice(0, 10) : [],
+    };
+  } catch (e) {
+    console.warn("Closing AI failed; using safe fallback:", e instanceof Error ? e.message : e);
+    return fallbackClosingHtml(brief);
+  }
+}
+
+const extractFaqs = (html: string) => {
+  if (!html) return [];
+  const re2 = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
+  const out: { question: string; answer: string }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re2.exec(html))) {
+    const q = toPlainText(m[1]);
+    const a = toPlainText(m[2]);
+    if (q && a && (q.endsWith("?") || /^(what|why|how|is|are|can|should|do|does|when|where|which|who)\b/i.test(q)) && a.length >= 20) {
+      out.push({ question: q, answer: a });
+    }
+  }
+  const seen = new Set<string>();
+  return out.filter((f) => {
+    const k = f.question.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).slice(0, 10);
+};
+
+async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: BlogBrief, draft: any) {
+  const targets = getTargets(brief);
+  const targetKw = brief.targetKeyword.trim();
+  const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
+  const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
+  const intro = stripExternalLinks(draft.intro || "");
+  const content = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
+  const finalPlain = toPlainText(`${intro} ${content}`);
+  const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
+  const re = new RegExp(targetKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  const finalOccurrences = (finalPlain.match(re) || []).length;
+  const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+  const extractedFaqs = Array.isArray(draft.faqs) && draft.faqs.length ? draft.faqs.slice(0, 10) : extractFaqs(content);
+
+  const baseSlug = normalizeSlug(draft.slug || brief.slug || targetKw);
+  let finalSlug = baseSlug;
+  const { data: existingSlug } = await adminClient.from("articles").select("id").eq("slug", finalSlug).maybeSingle();
+  if (existingSlug?.id) finalSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
+
+  const { data: inserted, error: insertError } = await adminClient.from("articles").insert({
+    title: draft.title || brief.title,
+    slug: finalSlug,
+    excerpt: draft.excerpt || "",
+    intro,
+    content,
+    meta_title: draft.metaTitle || brief.metaTitle || String(draft.title || brief.title).slice(0, 60),
+    meta_description: draft.metaDescription || brief.metaDescription || String(draft.excerpt || "").slice(0, 160),
+    keywords: Array.isArray(draft.keywords) ? draft.keywords : [targetKw],
+    primary_keyword: targetKw,
+    h1_tag: draft.h1Tag || draft.title || brief.title,
+    author: draft.author || "MBA Compass Editorial",
+    category: brief.category || "news",
+    status: "published",
+    published: true,
+    featured: false,
+    priority: 0,
+    faqs: extractedFaqs,
+    last_seo_refresh: new Date().toISOString(),
+  }).select("id, slug").single();
+  if (insertError) throw insertError;
+
+  if (extractedFaqs.length > 0 && inserted?.id) {
+    const faqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: extractedFaqs.map((f: any) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })),
+    };
+    const pagePath = `/article/${inserted.slug}`;
+    await adminClient.from("site_settings").upsert({
+      key: `seo_page__article__${inserted.id}`,
+      value: { contentType: "article", recordId: inserted.id, slug: inserted.slug, pagePath, canonicalUrl: pagePath, faqs: extractedFaqs, schemaMarkup: [faqSchema], generatedAt: new Date().toISOString() },
+    }, { onConflict: "key" });
+  }
+
+  return {
+    targetWordsRange: [targets.wmin, targets.wmax],
+    actualWords: finalWords,
+    targetDensityPct: targets.density,
+    actualDensityPct: finalDensity,
+    actualOccurrences: finalOccurrences,
+    targetOccurrences: Math.round((targets.targetWords * targets.density) / 100),
+    expanded: true,
+    firstPassWords: finalWords,
+    insertedId: inserted.id,
+    slug: inserted.slug,
+  };
+}
+
+async function processBlogJobStep(adminClient: any, job: any) {
+  const jobId = job.id;
+  const brief = job.brief as BlogBrief;
+  const stats = job.stats && typeof job.stats === "object" ? job.stats : {};
+  const phase = stats.phase || "outline";
+  const now = new Date().toISOString();
+  await adminClient.from("ai_blog_generation_jobs").update({ status: "running", started_at: job.started_at || now, error_message: null }).eq("id", jobId);
+
+  if (phase === "outline") {
+    await adminClient.from("ai_blog_generation_jobs").update({ progress: 10, current_step: "Creating SEO outline and intro" }).eq("id", jobId);
+    const draft = await createOutlineDraft(brief);
+    await adminClient.from("ai_blog_generation_jobs").update({
+      progress: 18,
+      current_step: `Writing section 1 of ${draft.sections.length}`,
+      stats: { ...stats, phase: "sections", sectionIndex: 0, draft },
+    }).eq("id", jobId);
+    return;
+  }
+
+  const draft = stats.draft || await createOutlineDraft(brief);
+  if (phase === "sections") {
+    const sections = Array.isArray(draft.sections) && draft.sections.length ? draft.sections : fallbackSections(brief, getTargets(brief).sectionCount);
+    const idx = Math.max(0, Number(stats.sectionIndex || 0));
+    if (idx < sections.length) {
+      await adminClient.from("ai_blog_generation_jobs").update({ progress: Math.round(20 + (idx / sections.length) * 55), current_step: `Writing section ${idx + 1} of ${sections.length}: ${sections[idx].heading}` }).eq("id", jobId);
+      sections[idx] = { ...sections[idx], html: await createSectionHtml(brief, { ...draft, sections }, sections[idx], idx) };
+      const nextIndex = idx + 1;
+      await adminClient.from("ai_blog_generation_jobs").update({
+        progress: nextIndex >= sections.length ? 78 : Math.round(20 + (nextIndex / sections.length) * 55),
+        current_step: nextIndex >= sections.length ? "Writing takeaways and FAQs" : `Writing section ${nextIndex + 1} of ${sections.length}`,
+        stats: { ...stats, phase: nextIndex >= sections.length ? "closing" : "sections", sectionIndex: nextIndex, draft: { ...draft, sections } },
+      }).eq("id", jobId);
+      return;
+    }
+  }
+
+  if (phase === "closing") {
+    await adminClient.from("ai_blog_generation_jobs").update({ progress: 82, current_step: "Writing takeaways, FAQs and CTA" }).eq("id", jobId);
+    const closing = await createClosingHtml(brief, draft);
+    await adminClient.from("ai_blog_generation_jobs").update({
+      progress: 90,
+      current_step: "Saving article and FAQ schema",
+      stats: { ...stats, phase: "finalize", draft: { ...draft, ...closing } },
+    }).eq("id", jobId);
+    return;
+  }
+
+  if (phase === "finalize") {
+    await adminClient.from("ai_blog_generation_jobs").update({ progress: 94, current_step: "Saving article and FAQ schema" }).eq("id", jobId);
+    const finalStats = await finalizeChunkedArticle(adminClient, jobId, brief, draft);
+    await adminClient.from("ai_blog_generation_jobs").update({
+      status: "completed",
       progress: 100,
-      current_step: "Generation failed",
-      error_message: e instanceof Error ? e.message.slice(0, 1000) : String(e).slice(0, 1000),
+      current_step: "Article saved successfully",
+      article_id: finalStats.insertedId,
+      stats: finalStats,
       finished_at: new Date().toISOString(),
     }).eq("id", jobId);
   }
