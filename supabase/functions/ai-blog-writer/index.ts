@@ -66,9 +66,6 @@ Deno.serve(async (req) => {
     }
     // --------------------------------------------------------------------------
 
-    const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
-
     const brief = (await req.json()) as BlogBrief;
     if (!brief?.title || !brief?.targetKeyword) {
       return new Response(
@@ -451,16 +448,84 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     };
     const extractedFaqs = extractFaqs(article.content || "");
 
+    const baseSlug = slug || String(brief.slug || targetKw)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 80);
+    let finalSlug = baseSlug;
+    const { data: existingSlug } = await adminClient
+      .from("articles")
+      .select("id")
+      .eq("slug", finalSlug)
+      .maybeSingle();
+    if (existingSlug?.id) finalSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
+
+    const insertPayload = {
+      title: article.title || brief.title,
+      slug: finalSlug,
+      excerpt: article.excerpt || "",
+      intro: article.intro || "",
+      content: article.content || "",
+      meta_title: article.metaTitle || brief.metaTitle || String(article.title || brief.title).slice(0, 60),
+      meta_description: article.metaDescription || brief.metaDescription || String(article.excerpt || "").slice(0, 160),
+      keywords: Array.isArray(article.keywords) ? article.keywords : [],
+      primary_keyword: targetKw,
+      h1_tag: article.h1Tag || article.title || brief.title,
+      author: article.author || "MBA Compass Editorial",
+      category: brief.category || "news",
+      status: "published",
+      published: true,
+      featured: false,
+      priority: 0,
+      faqs: extractedFaqs,
+      last_seo_refresh: new Date().toISOString(),
+    };
+
+    const { data: inserted, error: insertError } = await adminClient
+      .from("articles")
+      .insert(insertPayload)
+      .select("id, slug")
+      .single();
+    if (insertError) throw insertError;
+
+    if (extractedFaqs.length > 0 && inserted?.id) {
+      try {
+        const faqSchema = {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: extractedFaqs.map((f: any) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        };
+        const snapshotKey = `seo_page__article__${inserted.id}`;
+        const pagePath = `/article/${inserted.slug}`;
+        await adminClient.from("site_settings").upsert({
+          key: snapshotKey,
+          value: {
+            contentType: "article",
+            recordId: inserted.id,
+            slug: inserted.slug,
+            pagePath,
+            canonicalUrl: pagePath,
+            faqs: extractedFaqs,
+            schemaMarkup: [faqSchema],
+            generatedAt: new Date().toISOString(),
+          },
+        }, { onConflict: "key" });
+      } catch (faqError) {
+        console.warn("FAQ schema snapshot failed (non-fatal):", faqError);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        article: {
-          ...article,
-          slug,
-          // never override target keyword
-          primaryKeyword: targetKw,
-        },
-        faqs: extractedFaqs,
+        insertedId: inserted.id,
+        slug: inserted.slug,
+        faqCount: extractedFaqs.length,
         stats: {
           targetWordsRange: [wmin, wmax],
           actualWords: finalWords,
@@ -470,6 +535,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
           targetOccurrences,
           expanded: finalWords > actualWords,
           firstPassWords: actualWords,
+          insertedId: inserted.id,
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
