@@ -525,13 +525,24 @@ Deno.serve(async (req) => {
 
       const updatedAt = job.updated_at ? new Date(job.updated_at).getTime() : 0;
       const stalled = ["queued", "running"].includes(String(job.status)) && Date.now() - updatedAt > 120_000;
-      if (stalled) {
+      const shouldRunNextStep = String(job.status) === "queued" || stalled;
+      if (shouldRunNextStep) {
         await adminClient.from("ai_blog_generation_jobs").update({
-          status: "queued",
-          current_step: "Recovering stalled generation worker",
+          status: "running",
+          current_step: stalled ? "Recovering stalled generation worker" : (job.current_step || "Continuing AI writing"),
           progress: Math.max(10, Number(job.progress || 0)),
         }).eq("id", requestedJobId);
-        EdgeRuntime.waitUntil(startBackgroundBlogJob(requestedJobId, job.brief as BlogBrief, token));
+        EdgeRuntime.waitUntil(
+          processBlogJobStep(adminClient, job).catch(async (e) => {
+            await adminClient.from("ai_blog_generation_jobs").update({
+              status: "failed",
+              progress: 100,
+              current_step: "Generation failed",
+              error_message: e instanceof Error ? e.message.slice(0, 1000) : String(e).slice(0, 1000),
+              finished_at: new Date().toISOString(),
+            }).eq("id", requestedJobId);
+          }),
+        );
       }
 
       const { brief: _brief, ...safeJob } = job as any;
@@ -559,7 +570,6 @@ Deno.serve(async (req) => {
         .select("id")
         .single();
       if (jobError) throw jobError;
-      EdgeRuntime.waitUntil(startBackgroundBlogJob(job.id, cleanBrief as BlogBrief, token));
       return json(202, { success: true, jobId: job.id, status: "queued" });
     }
 
