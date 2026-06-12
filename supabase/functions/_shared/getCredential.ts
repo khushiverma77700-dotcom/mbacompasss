@@ -26,6 +26,18 @@ export async function getCredential(name: string, opts?: { required?: boolean })
   const required = opts?.required ?? true;
   const now = Date.now();
 
+  // Special case: OPENAI_API_KEY routes to slot 1 or slot 2 based on admin toggle.
+  if (name === "OPENAI_API_KEY") {
+    const slot = await getOpenAiActiveSlot();
+    const effective = slot === 2 ? "OPENAI_API_KEY_2" : "OPENAI_API_KEY";
+    return resolveCredential(effective, required);
+  }
+
+  return resolveCredential(name, required);
+}
+
+async function resolveCredential(name: string, required: boolean): Promise<string> {
+  const now = Date.now();
   // 1. Cache hit
   const cached = cache.get(name);
   if (cached && now - cached.fetchedAt < TTL_MS) {
