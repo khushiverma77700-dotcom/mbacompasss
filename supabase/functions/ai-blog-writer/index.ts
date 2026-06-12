@@ -24,9 +24,45 @@ interface BlogBrief {
   keywordDensityPct?: number;
 }
 
+const json = (status: number, body: unknown) => new Response(
+  JSON.stringify(body),
+  { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+);
+
+async function startBackgroundBlogJob(jobId: string, brief: BlogBrief, token: string) {
+  try {
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-blog-writer`;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: anonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...brief, runInline: true, jobId }),
+    });
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => "");
+      throw new Error(detail || `Background worker failed with HTTP ${resp.status}`);
+    }
+  } catch (e) {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    await admin.from("ai_blog_generation_jobs").update({
+      status: "failed",
+      progress: 100,
+      current_step: "Generation failed",
+      error_message: e instanceof Error ? e.message.slice(0, 1000) : String(e).slice(0, 1000),
+      finished_at: new Date().toISOString(),
+    }).eq("id", jobId);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  let activeJobId: string | null = null;
+  let adminForError: ReturnType<typeof createClient> | null = null;
   try {
     // --- Admin-only auth gate -------------------------------------------------
     const authHeader = req.headers.get("Authorization") || "";
@@ -66,11 +102,72 @@ Deno.serve(async (req) => {
     // --------------------------------------------------------------------------
 
     const brief = (await req.json()) as BlogBrief;
+    const action = (brief as any)?.action;
+    if (action === "status") {
+      const requestedJobId = String((brief as any)?.jobId || "");
+      if (!requestedJobId) return json(400, { error: "jobId is required" });
+      const { data: job, error: jobError } = await adminClient
+        .from("ai_blog_generation_jobs")
+        .select("id,status,progress,current_step,error_message,article_id,stats,brief,created_at,updated_at,finished_at")
+        .eq("id", requestedJobId)
+        .maybeSingle();
+      if (jobError) throw jobError;
+      if (!job) return json(404, { error: "Blog generation job not found" });
+
+      const updatedAt = job.updated_at ? new Date(job.updated_at).getTime() : 0;
+      const stalled = ["queued", "running"].includes(String(job.status)) && Date.now() - updatedAt > 120_000;
+      if (stalled) {
+        await adminClient.from("ai_blog_generation_jobs").update({
+          status: "queued",
+          current_step: "Recovering stalled generation worker",
+          progress: Math.max(10, Number(job.progress || 0)),
+        }).eq("id", requestedJobId);
+        EdgeRuntime.waitUntil(startBackgroundBlogJob(requestedJobId, job.brief as BlogBrief, token));
+      }
+
+      const { brief: _brief, ...safeJob } = job as any;
+      return json(200, { success: true, job: safeJob });
+    }
+
+    const runInline = (brief as any)?.runInline === true;
+    activeJobId = typeof (brief as any)?.jobId === "string" ? (brief as any).jobId : null;
+    adminForError = adminClient;
+
+    if (!runInline) {
+      const cleanBrief = { ...(brief as any) };
+      delete cleanBrief.action;
+      delete cleanBrief.runInline;
+      delete cleanBrief.jobId;
+      const { data: job, error: jobError } = await adminClient
+        .from("ai_blog_generation_jobs")
+        .insert({
+          user_id: userRes.user.id,
+          status: "queued",
+          progress: 5,
+          current_step: "Queued for AI writing",
+          brief: cleanBrief,
+        })
+        .select("id")
+        .single();
+      if (jobError) throw jobError;
+      EdgeRuntime.waitUntil(startBackgroundBlogJob(job.id, cleanBrief as BlogBrief, token));
+      return json(202, { success: true, jobId: job.id, status: "queued" });
+    }
+
     if (!brief?.title || !brief?.targetKeyword) {
       return new Response(
         JSON.stringify({ error: "title and targetKeyword are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+    if (activeJobId) {
+      await adminClient.from("ai_blog_generation_jobs").update({
+        status: "running",
+        progress: 15,
+        current_step: "Researching topic and drafting article",
+        started_at: new Date().toISOString(),
+        error_message: null,
+      }).eq("id", activeJobId);
     }
 
 
