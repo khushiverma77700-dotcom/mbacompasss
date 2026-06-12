@@ -179,6 +179,7 @@ export default function AdminApiKeys() {
         </TabsList>
 
         <TabsContent value="keys" className="space-y-6 mt-4">
+          <OpenAiSlotSwitcher />
           {loading && <p className="text-muted-foreground">Loading…</p>}
           {!loading && grouped.map((group) => (
             <Card key={group.value}>
