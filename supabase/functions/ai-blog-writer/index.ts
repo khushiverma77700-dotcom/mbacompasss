@@ -616,28 +616,50 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       }
     }
 
+    const finalStats = {
+      targetWordsRange: [wmin, wmax],
+      actualWords: finalWords,
+      targetDensityPct: density,
+      actualDensityPct: finalDensity,
+      actualOccurrences: finalOccurrences,
+      targetOccurrences,
+      expanded: finalWords > actualWords,
+      firstPassWords: actualWords,
+      insertedId: inserted.id,
+    };
+
+    if (activeJobId) {
+      await adminClient.from("ai_blog_generation_jobs").update({
+        status: "completed",
+        progress: 100,
+        current_step: "Article saved successfully",
+        article_id: inserted.id,
+        stats: finalStats,
+        finished_at: new Date().toISOString(),
+      }).eq("id", activeJobId);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         insertedId: inserted.id,
         slug: inserted.slug,
         faqCount: extractedFaqs.length,
-        stats: {
-          targetWordsRange: [wmin, wmax],
-          actualWords: finalWords,
-          targetDensityPct: density,
-          actualDensityPct: finalDensity,
-          actualOccurrences: finalOccurrences,
-          targetOccurrences,
-          expanded: finalWords > actualWords,
-          firstPassWords: actualWords,
-          insertedId: inserted.id,
-        },
+        stats: finalStats,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("ai-blog-writer error:", e);
+    if (activeJobId && adminForError) {
+      await adminForError.from("ai_blog_generation_jobs").update({
+        status: "failed",
+        progress: 100,
+        current_step: "Generation failed",
+        error_message: e instanceof Error ? e.message.slice(0, 1000) : String(e).slice(0, 1000),
+        finished_at: new Date().toISOString(),
+      }).eq("id", activeJobId);
+    }
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
