@@ -156,7 +156,16 @@ Content rules:
 - No external links and no bare URLs. Only relative internal links starting with / are allowed.
 - Return clean HTML only using h2,h3,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
 - Never give shallow one-line answers or generic filler.
-- Today is ${todayIso}.`;
+- Today is ${todayIso}.
+
+SEO rules (MANDATORY — apply to every output):
+- Place the PRIMARY keyword naturally in: title, slug, H1, meta title (≤60 chars), meta description (140-160 chars), the first 100 words of the intro, at least one H2, and the closing paragraph. No keyword stuffing — exact-match density ~0.8-1.2%.
+- Weave 8-12 SECONDARY/LSI keywords naturally across H2s, H3s and body copy. Never force them; if a keyword doesn't fit a sentence, skip it.
+- Heading hierarchy: ONE H1 (handled by the page), then sequential H2s for main sections, H3s only as sub-points under an H2. Never skip levels, never use H4+.
+- Meta title: ≤60 chars, primary keyword near the front, ends with " | MBA Compass" when it fits, no question mark, no clickbait.
+- Meta description: 140-160 chars, primary keyword in the first 120 chars, one clear benefit + one action cue, declarative tone.
+- FAQs: 8-12 questions grounded in real search intent (People-Also-Ask style — "is", "how", "what", "which", "when", "vs", "fees", "cutoff", "salary", "eligibility"). Each answer 60-120 words, direct, with a concrete number/name where possible.
+- Keep it human-readable first, SEO-optimised second. If a sentence reads awkwardly because of a keyword, rewrite the sentence — never the other way around.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
