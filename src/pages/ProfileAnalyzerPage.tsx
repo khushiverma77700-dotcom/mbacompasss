@@ -34,6 +34,7 @@ import BenchmarkPanel from "@/components/profile-report/BenchmarkPanel";
 import ROIScatterCard from "@/components/profile-report/ROIScatterCard";
 import AdvancedCharts from "@/components/profile-report/AdvancedCharts";
 import PdfDownloadButton from "@/components/profile-report/PdfDownloadButton";
+import CollegePlaybooks from "@/components/profile-report/CollegePlaybooks";
 import ShareReportButton from "@/components/profile-report/ShareReportButton";
 import type { CollegeRow, ProfileInputLite, ScoreBreakdown } from "@/lib/profileScoring";
 import InternalLinksSection from "@/components/profile-analyzer/InternalLinksSection";
@@ -194,6 +195,15 @@ interface AnalysisResult {
     mock_score_target?: string;
     profile_score_target: number;
   }>;
+  college_playbooks?: import("@/components/profile-report/CollegePlaybooks").Playbook[];
+  tier_coverage_summary?: {
+    tier1_count?: number;
+    tier2_count?: number;
+    tier3_count?: number;
+    tier1_best_fit?: string;
+    tier2_best_fit?: string;
+    tier3_best_fit?: string;
+  };
 }
 
 interface FormData {
@@ -822,6 +832,8 @@ const ProfileAnalyzerPage = () => {
               roi_analysis: Array.isArray((analysisData.probability_scores as any)?.roi_analysis) ? (analysisData.probability_scores as any).roi_analysis : [],
               salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking || null,
               improvement_roadmap: Array.isArray((analysisData.probability_scores as any)?.improvement_roadmap) ? (analysisData.probability_scores as any).improvement_roadmap : [],
+              college_playbooks: Array.isArray((analysisData.probability_scores as any)?.college_playbooks) ? (analysisData.probability_scores as any).college_playbooks : [],
+              tier_coverage_summary: (analysisData.probability_scores as any)?.tier_coverage_summary || undefined,
               detailed_college_table: Array.isArray((analysisData.college_predictions as any)?.detailed_college_table) ? (analysisData.college_predictions as any).detailed_college_table : Array.isArray(analysisData.college_predictions) ? analysisData.college_predictions : [],
             };
             setResult(reconstructed);
@@ -2279,6 +2291,12 @@ const ProfileAnalyzerPage = () => {
 
             {/* ─── College Fit Heatmap ─── */}
             <CollegeFitHeatmap rows={result.detailed_college_table as unknown as CollegeRow[]} />
+
+            {/* ─── Per-college Strategy Playbooks (Tier 1 / 2 / 3 tabs) ─── */}
+            <CollegePlaybooks
+              playbooks={result.college_playbooks}
+              coverage={result.tier_coverage_summary}
+            />
 
             {/* ─── Scenario Simulator (CAT 90/95/99 + Work Ex toggle) ─── */}
             <ScenarioSimulator
