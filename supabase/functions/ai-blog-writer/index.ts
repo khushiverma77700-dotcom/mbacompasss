@@ -180,7 +180,16 @@ Internal linking rules (MANDATORY — every section must link out contextually):
 - Anchor text MUST be the actual entity or descriptive phrase ("IIM Ahmedabad PGP placement report", "CAT exam pattern", "MBA ROI calculator"). NEVER use generic anchors like "click here", "read more", "this page", "learn more", "here".
 - Every link must be CONTEXTUAL — the surrounding sentence must mention the entity being linked. No bolt-on link dumps.
 - Vary the link set per section; never repeat the same anchor twice in one section.
-- EXTERNAL links are NOT rendered as <a> tags. When citing an authoritative external source (NIRF, AICTE, IIM official placement report, RBI, exam-conducting body, Economic Times, Business Standard, etc.), name it in PLAIN TEXT and add a [src:Source Year] marker — e.g. "as per the IIM Ahmedabad PGP placement report 2024-25 [src:IIM-A Placement Report 2024-25]". Suggest the authority by name; do not output a URL.`;
+- EXTERNAL links are NOT rendered as <a> tags. When citing an authoritative external source (NIRF, AICTE, IIM official placement report, RBI, exam-conducting body, Economic Times, Business Standard, etc.), name it in PLAIN TEXT and add a [src:Source Year] marker — e.g. "as per the IIM Ahmedabad PGP placement report 2024-25 [src:IIM-A Placement Report 2024-25]". Suggest the authority by name; do not output a URL.
+
+Topic focus rules (MANDATORY — zero tolerance for drift):
+- The article title is the SCOPE FENCE. Every H2, H3, paragraph, list item, table row, and FAQ must directly answer the reader's search intent for THIS exact title — nothing else.
+- Before writing each paragraph, ask: "Does this directly help someone searching for the title?" If no, delete it.
+- BANNED filler patterns: history lessons unless asked, generic "What is an MBA?" intros when the topic is narrower, motivational pep-talks, definitions of well-known terms, repeated context, padding sentences ("As we've seen above…", "It is important to note…", "Many students wonder…").
+- No repetition across sections. Each H2 owns a unique angle; if two sections overlap, merge or drop one.
+- Every paragraph must carry at least one of: a specific number, a named entity (college/exam/recruiter/year), a concrete step, or a clear decision rule. Paragraphs that only re-state the heading are forbidden.
+- Keep sentences short and punchy. Cut adjectives that add no information. If a sentence can be removed without losing meaning, remove it.
+- Stay strictly on-topic: if the title is about IIM-A placements, do not pad with NMAT prep tips; if the title is "CAT 2025 syllabus", do not list IIM rankings. One topic, deeply covered.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
