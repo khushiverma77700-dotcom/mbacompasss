@@ -209,8 +209,8 @@ Data-driven content rules (MANDATORY — every section must carry real numbers):
 - The goal: a student should be able to scan the tables and lists alone and walk away with the decision-grade answer.
 
 Readability & formatting rules (MANDATORY — mobile-first, scannable):
-- NO wall-of-text paragraphs. Every <p> is 2-3 sentences max, roughly 40-60 words. Long paragraphs MUST be split.
-- The moment a paragraph would list 3+ items, comparisons, steps, or pros/cons → convert it into a <ul>, <ol>, or <table> instead.
+- HARD LIMIT: every <p> is MAX 3 sentences and UNDER 60 words. NO exceptions. If a thought runs longer → split it into two <p> blocks OR convert it into <ul>/<ol>/<table>. Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected.
+- The moment a paragraph would list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → convert it into a <ul>, <ol>, or <table> instead of prose.
 - Use sub-headings generously: an H2 over ~250 words MUST be broken with at least one H3. H4 is allowed when an H3 needs further breakdown.
 - Add a short <p><strong>Quick summary:</strong> …</p> at the top of every long H2 section (2 sentences, the core answer).
 - Use <strong> to bold the lead 2-4 words of important paragraphs and key numbers in tables so a scanner catches the point.
