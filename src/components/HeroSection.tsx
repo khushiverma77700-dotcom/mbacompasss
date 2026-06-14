@@ -139,7 +139,7 @@ const HeroSection = () => {
       <div className="relative container mx-auto px-4 pt-6 pb-16 md:pt-8 md:pb-20 z-10">
         <div className="text-center max-w-3xl mx-auto animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-4 py-1 mb-3 border border-white/20 shadow-lg shadow-black/5">
+          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1 mb-3 border border-white/25 shadow-lg shadow-black/5">
             <Award className="w-3.5 h-3.5 text-yellow-300" />
             <span className="text-xs md:text-sm font-semibold text-primary-foreground tracking-wide">
               India's #1 MBA Coaching Discovery Platform
