@@ -752,7 +752,7 @@ const ProfileAnalyzerPage = () => {
       const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}` });
+      toast({ title: "You'll receive a call shortly", description: `You will get an automated phone call on +91 ${phone} announcing your 6-digit OTP. Please pick up and note it down.` });
       setOtpStep(true);
       setResendTimer(30);
     } catch (e: any) {
