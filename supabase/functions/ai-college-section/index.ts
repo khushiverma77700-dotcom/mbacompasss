@@ -828,6 +828,8 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
     // ── Sanitize HTML in `content` field (kept rich) ──
     if (typeof payload.content === "string") {
       payload.content = sanitizeHtml(payload.content);
+      // Final quality gate — buzzword scrub + auto-inject MBA Compass section if missing
+      payload.content = runFinalQualityCheck(payload.content, { requireMbaCompass: true, minInternalLinks: 3 }).html;
       // Ensure "Last updated" stamp is present
       if (!/Last updated:/i.test(payload.content)) {
         payload.content += `\n<p><em>Last updated: ${todayIso}</em></p>`;
