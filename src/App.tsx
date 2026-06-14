@@ -459,9 +459,20 @@ const DeferredToasters = () => {
   );
 };
 
+const DeferredGlobalLoginDialog = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const activate = () => setShow(true);
+    window.addEventListener("open-login-dialog", activate, { once: true });
+    return () => window.removeEventListener("open-login-dialog", activate);
+  }, []);
+  if (!show) return null;
+  return <Suspense fallback={null}><GlobalLoginDialog /></Suspense>;
+};
+
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
-    <Suspense fallback={null}><Navbar /></Suspense>
+    <Suspense fallback={<div style={{ height: 64 }} aria-hidden="true" />}><Navbar /></Suspense>
     {children}
     <DeferredChrome />
   </>
@@ -584,6 +595,7 @@ const OnboardingGate = () => {
     OnboardingDialog.preload?.();
 
     const checkOnboarding = async (attempt = 0) => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
@@ -690,7 +702,7 @@ const App = () => (
         <AuthProvider>
           <OAuthRedirectHandler />
           <OnboardingGate />
-          <GlobalLoginDialog />
+          <DeferredGlobalLoginDialog />
           <DeferredRoutes>
             <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
