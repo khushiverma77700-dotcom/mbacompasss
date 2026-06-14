@@ -23,6 +23,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getOtpCallNotice, getOtpCallToastDescription } from "@/lib/otpCopy";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema, generateWebsiteSchema } from "@/components/SEOHead";
 import NarrativeBlock from "@/components/roi/NarrativeBlock";
@@ -233,7 +234,7 @@ const MBARoiCalculatorPage = () => {
       const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone: form.phone } });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      toast({ title: "OTP sent", description: `6-digit OTP sent to ${form.phone}` });
+      toast({ title: "OTP call incoming", description: getOtpCallToastDescription(form.phone) });
       setOtpStep(true);
       setResendTimer(30);
     } catch (e: any) {
@@ -1290,9 +1291,7 @@ const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSen
                 </div>
                 {otpStep && !form.phoneVerified && (
                   <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
-                    <p className="text-xs text-muted-foreground">
-                      You will receive an automated phone call on +91 {form.phone} reading out your 6-digit OTP. Please pick up the call and enter the code below.
-                    </p>
+                    <p className="text-xs text-muted-foreground">{getOtpCallNotice(form.phone)}</p>
                     <div className="flex justify-center">
                       <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
                         <InputOTPGroup>
