@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => ({
           source: JSON.stringify({ buildId: BUILD_ID, builtAt: new Date().toISOString() }),
         });
       },
-    },
+    } as Plugin,
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
