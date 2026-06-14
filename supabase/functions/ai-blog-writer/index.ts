@@ -474,8 +474,16 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
   const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.aboutCompassHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
-  const intro = stripExternalLinks(draft.intro || "");
-  const content = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
+  const introRaw = stripExternalLinks(draft.intro || "");
+  const contentRaw = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
+  // Final quality check — sanitises buzzwords, injects MBA Compass if missing, flags long paragraphs / weak links
+  const introQC = runFinalQualityCheck(introRaw, { requireMbaCompass: false, minInternalLinks: 0 });
+  const contentQC = runFinalQualityCheck(contentRaw, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+  const intro = introQC.html;
+  const content = contentQC.html;
+  if (contentQC.issues.length) {
+    console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
+  }
   const finalPlain = toPlainText(`${intro} ${content}`);
   const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
   const re = new RegExp(targetKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
