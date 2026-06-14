@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     let subscription: { unsubscribe: () => void } | undefined;
-    let idleHandle: number | undefined;
+    let cancelIdleStart: (() => void) | undefined;
     const shouldStartAuthNow = () => {
       const path = window.location.pathname;
       return path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/auth") ||
@@ -140,19 +140,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (shouldStartAuthNow()) {
       void startAuth();
-    } else if ("requestIdleCallback" in window) {
-      idleHandle = (window as any).requestIdleCallback(() => void startAuth(), { timeout: 2500 });
+    } else if (typeof (window as any).requestIdleCallback === "function") {
+      const handle = (window as any).requestIdleCallback(() => void startAuth(), { timeout: 2500 });
+      cancelIdleStart = () => (window as any).cancelIdleCallback?.(handle);
     } else {
-      idleHandle = window.setTimeout(() => void startAuth(), 1500);
+      const handle = globalThis.setTimeout(() => void startAuth(), 1500);
+      cancelIdleStart = () => globalThis.clearTimeout(handle);
     }
 
     return () => {
       cancelled = true;
       window.clearTimeout(bootTimeout);
-      if (idleHandle !== undefined) {
-        const cancel = "cancelIdleCallback" in window ? (window as any).cancelIdleCallback : window.clearTimeout;
-        try { cancel(idleHandle); } catch {}
-      }
+      try { cancelIdleStart?.(); } catch {}
       subscription?.unsubscribe();
     };
   }, []);
