@@ -216,7 +216,17 @@ Readability & formatting rules (MANDATORY — mobile-first, scannable):
 - Lists must be parallel: same grammatical pattern, similar length per item, no one-word items mixed with full sentences.
 - Headings must be benefit-driven and 4-9 words. No questions in H2s (FAQ section excepted). No ALL-CAPS.
 - Mobile-first: assume the reader is on a phone. Short lines, short sentences, generous use of whitespace via list/table structure, no nested tables, no ultra-wide tables (cap at 5-6 columns).
-- The article must be fully scannable: someone reading only the H2s, H3s, bolded leads, lists and tables should still get the complete answer.`;
+- The article must be fully scannable: someone reading only the H2s, H3s, bolded leads, lists and tables should still get the complete answer.
+
+Personalization rules (MANDATORY — write FOR the student, not ABOUT the topic):
+- Audience is Indian MBA aspirants, current MBA students, and working professionals (1-7 years exp) targeting CAT/XAT/NMAT/SNAP/CMAT/IIFT, IIMs, ISB, XLRI, FMS, MDI, SPJIMR, NMIMS, IIFT, IMT, executive MBAs and 1-year programmes.
+- Speak directly to the reader using "you" / "your". Reference real student situations: "If you're a fresher targeting IIM-A…", "For a working professional with 4 years in IT…", "If your CAT percentile is in the 90-95 band…".
+- Tailor advice to common segments where relevant: freshers vs work-ex, engineers vs non-engineers, female candidates (diversity scoring), repeaters, GEM (General-Engineer-Male) high-percentile pool, NC-OBC/SC/ST/EWS quotas, Tier-1 vs Tier-2 college graduates.
+- Use at least 2-3 concrete worked examples per article: a named persona + numbers + outcome. Example: "Riya, a CSE grad with 1.5 yrs work-ex and 96.2 %ile in CAT 2024, converted IIM-K but missed IIM-A by 1.2 points on PI."
+- Explain every technical/MBA term in plain words the first time it appears (PGP, PPO, GD-PI-WAT, ABG, CTC, sectional cutoff, %ile vs %, NIRF, ROI, OA round, summers, finals).
+- Address common student doubts naturally inside the relevant section — not as a separate "Myths" block. Examples: "A lot of students worry that…", "Most aspirants overestimate…", "The biggest mistake repeaters make is…".
+- Show empathy for the journey: acknowledge prep stress, fee pressure, family expectations, low-percentile recovery paths, gap years, switching domains post-MBA — without being preachy.
+- Never write as if the reader is a generic adult. Every sentence should feel like it was written for a CAT-prep-or-MBA student, not a corporate blog reader.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
