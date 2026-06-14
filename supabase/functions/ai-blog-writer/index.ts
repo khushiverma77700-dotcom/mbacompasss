@@ -42,6 +42,9 @@ const stripExternalLinks = (html: string) => {
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+  // Strip banned "Quick Summary" / TL;DR labels — only "Summary" is allowed
+  out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
+  out = out.replace(/\bTL;?DR\b/gi, "Summary");
   return out.replace(/[ \t]{2,}/g, " ").trim();
 };
 
@@ -168,20 +171,26 @@ SEO rules (MANDATORY — apply to every output):
 - FAQs: 8-12 questions grounded in real search intent (People-Also-Ask style — "is", "how", "what", "which", "when", "vs", "fees", "cutoff", "salary", "eligibility"). Each answer 60-120 words, direct, with a concrete number/name where possible.
 - Keep it human-readable first, SEO-optimised second. If a sentence reads awkwardly because of a keyword, rewrite the sentence — never the other way around.
 
-Internal linking rules (MANDATORY — every section must link out contextually):
-- Add 2-4 internal links inside EVERY <h2> section, woven into real sentences. Across the full article: 8-15 internal links total.
+Internal linking rules (MANDATORY — auto-link every relevant entity):
+- Scan your own draft. EVERY time you name a college, exam, city, tool, coaching brand, specialization, or related topic — convert the FIRST mention in each H2 section into a contextual internal <a href="/..."> link. This is automatic, not optional.
+- Minimums: 2-4 internal links inside EVERY <h2> section; 12-20 internal links across the full article; the FAQ section must contain at least 4 internal links; the conclusion/CTA must contain 2-3 internal links.
+- Distribute the link mix — don't cluster all links in one section. Aim for roughly: 40% college links, 25% exam links, 15% tool/resource links, 10% blog/related-article links, 10% category/city links.
 - Allowed URL patterns (relative, must start with "/"):
-  • Colleges: /college/<slug> (e.g. /college/iim-ahmedabad, /college/xlri-jamshedpur, /college/mdi-gurgaon)
+  • Colleges: /college/<slug> (e.g. /college/iim-ahmedabad, /college/xlri-jamshedpur, /college/mdi-gurgaon, /college/sp-jain, /college/iim-bangalore)
   • Exams: /exams/<slug> (e.g. /exams/cat, /exams/xat, /exams/nmat, /exams/snap, /exams/cmat, /exams/iift, /exams/mat, /exams/micat)
-  • Blogs / related articles: /blog/<related-slug>
+  • Blogs / related articles: /blog/<related-slug> — invent 2-3 closely related slugs derived from THIS topic
   • Categories: /category/<slug> (e.g. /category/placements, /category/exam-tips, /category/admissions)
-  • City pages: /colleges-in/<city-slug>
+  • City pages: /colleges-in/<city-slug> (e.g. /colleges-in/bangalore, /colleges-in/mumbai, /colleges-in/delhi)
   • Coaching: /coaching or /coaching/<slug>
   • Tools/resources: /college-shortlister, /profile-analyzer, /mba-roi-calculator, /mba-compass, /mocks, /compare, /ai-coaching-finder
-- Anchor text MUST be the actual entity or descriptive phrase ("IIM Ahmedabad PGP placement report", "CAT exam pattern", "MBA ROI calculator"). NEVER use generic anchors like "click here", "read more", "this page", "learn more", "here".
-- Every link must be CONTEXTUAL — the surrounding sentence must mention the entity being linked. No bolt-on link dumps.
-- Vary the link set per section; never repeat the same anchor twice in one section.
+- Anchor text MUST be the actual entity or a natural descriptive phrase woven into the sentence ("IIM Ahmedabad PGP placement report", "CAT exam pattern", "MBA ROI calculator", "top MBA colleges in Bangalore"). NEVER use generic anchors like "click here", "read more", "this page", "learn more", "here", "official site".
+- Every link must be CONTEXTUAL — the surrounding sentence must mention the entity being linked. No bolt-on link dumps, no parenthetical "(read more)".
+- Vary the link set per section; never repeat the same anchor twice in one section; never link the same URL more than 2 times in the whole article.
+- Inside tables: when a row names a college or exam, link the entity in the leftmost cell using a contextual anchor. At least 2 tables must contain linked entities.
 - EXTERNAL links are NOT rendered as <a> tags. When citing an authoritative external source (NIRF, AICTE, IIM official placement report, RBI, exam-conducting body, Economic Times, Business Standard, etc.), name it in PLAIN TEXT and add a [src:Source Year] marker — e.g. "as per the IIM Ahmedabad PGP placement report 2024-25 [src:IIM-A Placement Report 2024-25]". Suggest the authority by name; do not output a URL.
+
+Terminology rule (STRICT):
+- NEVER use the phrase "Quick Summary", "Quick summary", "TL;DR", "TLDR" or any variant anywhere in titles, headings, bold leads, or body copy. If a summary section is needed, the ONLY allowed label is "Summary" (e.g. <p><strong>Summary:</strong> …</p> or <h2>Summary</h2>). This applies to every content type and every field.
 
 Topic focus rules (MANDATORY — zero tolerance for drift):
 - The article title is the SCOPE FENCE. Every H2, H3, paragraph, list item, table row, and FAQ must directly answer the reader's search intent for THIS exact title — nothing else.
@@ -220,7 +229,7 @@ Readability & formatting rules (MANDATORY — mobile-first, scannable):
 - HARD LIMIT: every <p> is MAX 3 sentences and UNDER 60 words. NO exceptions. If a thought runs longer → split it into two <p> blocks OR convert it into <ul>/<ol>/<table>. Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected.
 - The moment a paragraph would list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → convert it into a <ul>, <ol>, or <table> instead of prose.
 - Use sub-headings generously: an H2 over ~250 words MUST be broken with at least one H3. H4 is allowed when an H3 needs further breakdown.
-- Add a short <p><strong>Quick summary:</strong> …</p> at the top of every long H2 section (2 sentences, the core answer).
+- Add a short <p><strong>Summary:</strong> …</p> at the top of every long H2 section (2 sentences, the core answer).
 - Use <strong> to bold the lead 2-4 words of important paragraphs and key numbers in tables so a scanner catches the point.
 - Lists must be parallel: same grammatical pattern, similar length per item, no one-word items mixed with full sentences.
 - Headings must be benefit-driven and 4-9 words. No questions in H2s (FAQ section excepted). No ALL-CAPS.
@@ -238,7 +247,7 @@ Personalization rules (MANDATORY — write FOR the student, not ABOUT the topic)
 - Never write as if the reader is a generic adult. Every sentence should feel like it was written for a CAT-prep-or-MBA student, not a corporate blog reader.
 
 Article structure rules (MANDATORY — every article must follow this skeleton):
-1. **Introduction (intro field)** — Quick Summary <p><strong>Quick Summary:</strong> …</p> (60-90 words, direct answer) + 2-3 short hook paragraphs naming the topic, the reader, and what they'll get.
+1. **Introduction (intro field)** — Summary <p><strong>Summary:</strong> …</p> (60-90 words, direct answer) + 2-3 short hook paragraphs naming the topic, the reader, and what they'll get.
 2. **Key Highlights** — first H2 inside content, titled "Key Highlights" or a topic-specific equivalent ("Snapshot", "At a Glance"). Use a <ul> of 6-10 bullets, each starting with <strong>Bold lead:</strong> followed by one concrete data point (rank, fee, package, date, cutoff, recruiter, eligibility, etc.).
 3. **Detailed Explanation** — the core 5-10 H2 sections that fully answer the title. Each section follows the topic-focus, data-driven and readability rules. Use H3/H4 sub-breakdowns wherever a section runs long.
 4. **Comparison Tables** — at least one dedicated H2 with a <table> when the topic involves more than one college/exam/course/programme. Tables can also be embedded inside detailed sections (per the data-driven rules) — but always include a clear comparison block when applicable.
@@ -301,7 +310,7 @@ async function createOutlineDraft(brief: BlogBrief) {
       },
       user: `Create a topic-specific SEO plan for "${brief.title}" targeting "${targetKw}".
 
-Return metadata and a 250-350 word intro only. The intro must start with <p><strong>Quick Summary:</strong> and give a direct answer. Then return ${targets.sectionCount} detailed H2 section plans. Each planned section must be unique, specific to this topic, and suitable for 450-650 words with a table/list. Also return 10 FAQ questions. Secondary keywords: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally"}. Category: ${brief.category || "news"}.`,
+Return metadata and a 250-350 word intro only. The intro must start with <p><strong>Summary:</strong> and give a direct answer. Then return ${targets.sectionCount} detailed H2 section plans. Each planned section must be unique, specific to this topic, and suitable for 450-650 words with a table/list. Also return 10 FAQ questions. Secondary keywords: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally"}. Category: ${brief.category || "news"}.`,
     });
     const sections = Array.isArray(outline.sections) && outline.sections.length ? outline.sections : fallback;
     return {
@@ -310,7 +319,7 @@ Return metadata and a 250-350 word intro only. The intro must start with <p><str
       metaTitle: String(outline.metaTitle || brief.metaTitle || brief.title).slice(0, 70),
       metaDescription: String(outline.metaDescription || brief.metaDescription || outline.excerpt || "").slice(0, 170),
       excerpt: String(outline.excerpt || ""),
-      intro: stripExternalLinks(outline.intro || `<p><strong>Quick Summary:</strong> ${escapeHtml(brief.title)} is explained below with updated MBA admissions, fees, placements and decision points for Indian applicants.</p>`),
+      intro: stripExternalLinks(outline.intro || `<p><strong>Summary:</strong> ${escapeHtml(brief.title)} is explained below with updated MBA admissions, fees, placements and decision points for Indian applicants.</p>`),
       h1Tag: String(outline.h1Tag || brief.title).slice(0, 90),
       keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 20) : [targetKw],
       primaryKeyword: targetKw,
@@ -326,7 +335,7 @@ Return metadata and a 250-350 word intro only. The intro must start with <p><str
       metaTitle: (brief.metaTitle || `${targetKw} Guide ${targets.currentYear} | MBA Compass`).slice(0, 70),
       metaDescription: (brief.metaDescription || `${targetKw} explained with latest MBA admissions, fees, cutoffs, placements, ROI, colleges and expert shortlisting advice.`).slice(0, 170),
       excerpt: `${targetKw} guide with current MBA admissions, fees, cutoffs, placements, ROI and decision pointers.`,
-      intro: `<p><strong>Quick Summary:</strong> ${escapeHtml(targetKw)} needs a clear read on eligibility, fees, cutoffs, placements and ROI before students shortlist options. This guide breaks the topic into practical, data-led sections for Indian MBA applicants.</p>`,
+      intro: `<p><strong>Summary:</strong> ${escapeHtml(targetKw)} needs a clear read on eligibility, fees, cutoffs, placements and ROI before students shortlist options. This guide breaks the topic into practical, data-led sections for Indian MBA applicants.</p>`,
       h1Tag: brief.title,
       keywords: [targetKw, ...(brief.secondaryKeywords || [])].slice(0, 20),
       primaryKeyword: targetKw,
@@ -829,7 +838,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
    - A short closing takeaway sentence in <strong> at the end of the section
 3. **Keyword usage — NATURAL, NOT STUFFED** (Google spam policy compliance): primary keyword "${targetKw}" should appear roughly ${Math.max(3, Math.round(targetOccurrences * 0.6))} times across the full article (~${Math.max(0.5, +(density * 0.6).toFixed(2))}% density). Use exact match in title, H1, slug, meta title, meta description, the first 100 words, and the conclusion — that is enough. DO NOT force the exact keyword into multiple H2 headings; vary headings with synonyms, intent variations, and entity names. Weave 20-30 LSI/semantic variants naturally — never repeat the exact keyword in adjacent sentences.
-4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Quick Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
+4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMAN MENTOR VOICE — 8th-grade English, conversational, NOT AI**. Write like a real senior advising a junior over coffee. Use contractions (you're, don't, it's, you'll). Vary sentence length and structure — never start 3 sentences in a row the same way. Use natural mentor openers like "Here's the thing —", "Quick reality check:", "If you're in this boat,", "Most students get this wrong because…", "A simple way to think about it —". Address the reader as "you". Drop a personal aside or worked mini-example every 2-3 sections.
    BANNED phrases (zero tolerance, will trigger rejection): "delve", "delve into", "navigate", "navigating", "landscape", "unlock", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further", "furthermore", "moreover", "dive into", "stay tuned", "unleash", "harness the power", "game-changer", "cutting-edge", "world-class", "robust", "leverage", "synergy", "paradigm", "seamless", "holistic", "in conclusion", "to sum up", "as we all know", "needless to say", "tapestry", "testament", "in essence", "at the end of the day", "when it comes to", "plays a pivotal role", "plays a crucial role", "in the world of", "a myriad of", "plethora", "first and foremost", "it is important to note", "it is worth mentioning", "in summary", "to conclude", "remember that", "rest assured".
@@ -838,7 +847,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - Convert it into a <ul>, <ol>, or <table>.
    Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected. Whenever you'd list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → use a list or table instead of prose. **At least 5 HTML <table> blocks** (each 5+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article. The finished article must be fully scannable on a phone — H2 → H3 → bold lead → list/table, with prose only as connective tissue.
 8. **STRUCTURE — REQUIRED ORDER**:
-   a. Quick Summary <p>
+   a. Summary <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
    c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
    d. <h2>Key Takeaways</h2> — 8-10 bullets, each starting with <strong>Bold lead phrase:</strong> followed by 1-2 full sentences (15-30 words each).
@@ -863,7 +872,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 - metaTitle: ≤ 60 chars, primary keyword near front, ends with "| MBA Compass" if it fits, no "?".
 - metaDescription: 145-160 chars, primary keyword in first 120 chars, declarative.
 - excerpt: 1-2 sentences, plain text, 160-220 chars, declarative, contains primary keyword.
-- intro: opening HTML — Quick Summary <p> first, then 2-3 hook paragraphs. No headings inside intro.
+- intro: opening HTML — Summary <p> first, then 2-3 hook paragraphs. No headings inside intro.
 - content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, Key Takeaways, FAQ, final CTA.
 - h1Tag: on-page H1 (declarative, ≤ 70 chars, contains primary keyword, no "?").
 - keywords: array of **15-20 keywords** UNIQUE to this topic — primary keyword first, then 6-8 short-tail (2-3 words), then 8-12 long-tail (4+ words, question/intent-driven). NEVER generic MBA terms unrelated to "${targetKw}".
