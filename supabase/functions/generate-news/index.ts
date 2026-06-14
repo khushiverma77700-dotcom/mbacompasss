@@ -1,6 +1,7 @@
 // News & Insights — AI-curated current affairs generator (OpenAI)
 // Generates one category at a time to avoid edge function timeouts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
