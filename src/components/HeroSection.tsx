@@ -236,10 +236,9 @@ const HeroSection = () => {
             return (
               <div
                 key={i}
-                className="group cursor-default animate-fade-in"
-                style={{ animationDelay: `${0.3 + i * 0.1}s` }}
+                className="group cursor-default"
               >
-                <div className="relative text-center bg-white/10 backdrop-blur-md rounded-xl p-3 md:p-4 border border-white/15 overflow-hidden transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/25 group-hover:shadow-lg group-hover:-translate-y-0.5">
+                <div className="relative text-center bg-white/15 rounded-xl p-3 md:p-4 border border-white/20 overflow-hidden transition-colors duration-200 group-hover:bg-white/20 group-hover:border-white/30">
                   <div className="relative z-10">
                     <div className="w-8 h-8 mx-auto rounded-lg bg-white/15 flex items-center justify-center mb-1.5 group-hover:bg-white/20 transition-colors">
                       <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
