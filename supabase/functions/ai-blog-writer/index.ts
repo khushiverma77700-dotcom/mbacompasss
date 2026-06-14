@@ -168,20 +168,26 @@ SEO rules (MANDATORY — apply to every output):
 - FAQs: 8-12 questions grounded in real search intent (People-Also-Ask style — "is", "how", "what", "which", "when", "vs", "fees", "cutoff", "salary", "eligibility"). Each answer 60-120 words, direct, with a concrete number/name where possible.
 - Keep it human-readable first, SEO-optimised second. If a sentence reads awkwardly because of a keyword, rewrite the sentence — never the other way around.
 
-Internal linking rules (MANDATORY — every section must link out contextually):
-- Add 2-4 internal links inside EVERY <h2> section, woven into real sentences. Across the full article: 8-15 internal links total.
+Internal linking rules (MANDATORY — auto-link every relevant entity):
+- Scan your own draft. EVERY time you name a college, exam, city, tool, coaching brand, specialization, or related topic — convert the FIRST mention in each H2 section into a contextual internal <a href="/..."> link. This is automatic, not optional.
+- Minimums: 2-4 internal links inside EVERY <h2> section; 12-20 internal links across the full article; the FAQ section must contain at least 4 internal links; the conclusion/CTA must contain 2-3 internal links.
+- Distribute the link mix — don't cluster all links in one section. Aim for roughly: 40% college links, 25% exam links, 15% tool/resource links, 10% blog/related-article links, 10% category/city links.
 - Allowed URL patterns (relative, must start with "/"):
-  • Colleges: /college/<slug> (e.g. /college/iim-ahmedabad, /college/xlri-jamshedpur, /college/mdi-gurgaon)
+  • Colleges: /college/<slug> (e.g. /college/iim-ahmedabad, /college/xlri-jamshedpur, /college/mdi-gurgaon, /college/sp-jain, /college/iim-bangalore)
   • Exams: /exams/<slug> (e.g. /exams/cat, /exams/xat, /exams/nmat, /exams/snap, /exams/cmat, /exams/iift, /exams/mat, /exams/micat)
-  • Blogs / related articles: /blog/<related-slug>
+  • Blogs / related articles: /blog/<related-slug> — invent 2-3 closely related slugs derived from THIS topic
   • Categories: /category/<slug> (e.g. /category/placements, /category/exam-tips, /category/admissions)
-  • City pages: /colleges-in/<city-slug>
+  • City pages: /colleges-in/<city-slug> (e.g. /colleges-in/bangalore, /colleges-in/mumbai, /colleges-in/delhi)
   • Coaching: /coaching or /coaching/<slug>
   • Tools/resources: /college-shortlister, /profile-analyzer, /mba-roi-calculator, /mba-compass, /mocks, /compare, /ai-coaching-finder
-- Anchor text MUST be the actual entity or descriptive phrase ("IIM Ahmedabad PGP placement report", "CAT exam pattern", "MBA ROI calculator"). NEVER use generic anchors like "click here", "read more", "this page", "learn more", "here".
-- Every link must be CONTEXTUAL — the surrounding sentence must mention the entity being linked. No bolt-on link dumps.
-- Vary the link set per section; never repeat the same anchor twice in one section.
+- Anchor text MUST be the actual entity or a natural descriptive phrase woven into the sentence ("IIM Ahmedabad PGP placement report", "CAT exam pattern", "MBA ROI calculator", "top MBA colleges in Bangalore"). NEVER use generic anchors like "click here", "read more", "this page", "learn more", "here", "official site".
+- Every link must be CONTEXTUAL — the surrounding sentence must mention the entity being linked. No bolt-on link dumps, no parenthetical "(read more)".
+- Vary the link set per section; never repeat the same anchor twice in one section; never link the same URL more than 2 times in the whole article.
+- Inside tables: when a row names a college or exam, link the entity in the leftmost cell using a contextual anchor. At least 2 tables must contain linked entities.
 - EXTERNAL links are NOT rendered as <a> tags. When citing an authoritative external source (NIRF, AICTE, IIM official placement report, RBI, exam-conducting body, Economic Times, Business Standard, etc.), name it in PLAIN TEXT and add a [src:Source Year] marker — e.g. "as per the IIM Ahmedabad PGP placement report 2024-25 [src:IIM-A Placement Report 2024-25]". Suggest the authority by name; do not output a URL.
+
+Terminology rule (STRICT):
+- NEVER use the phrase "Quick Summary", "Quick summary", "TL;DR", "TLDR" or any variant anywhere in titles, headings, bold leads, or body copy. If a summary section is needed, the ONLY allowed label is "Summary" (e.g. <p><strong>Summary:</strong> …</p> or <h2>Summary</h2>). This applies to every content type and every field.
 
 Topic focus rules (MANDATORY — zero tolerance for drift):
 - The article title is the SCOPE FENCE. Every H2, H3, paragraph, list item, table row, and FAQ must directly answer the reader's search intent for THIS exact title — nothing else.
