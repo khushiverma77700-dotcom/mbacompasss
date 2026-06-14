@@ -18,6 +18,17 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    {
+      name: "emit-version-json",
+      apply: "build",
+      generateBundle() {
+        this.emitFile({
+          type: "asset",
+          fileName: "version.json",
+          source: JSON.stringify({ buildId: BUILD_ID, builtAt: new Date().toISOString() }),
+        });
+      },
+    },
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
