@@ -395,8 +395,8 @@ const SettingsPrefetcher = () => {
     const path = window.location.pathname;
     if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt")) return;
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 3500));
-    const handle = schedule(() => setReady(true), { timeout: 6000 });
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 7000));
+    const handle = schedule(() => setReady(true), { timeout: 9000 });
     return () => {
       const cancel = w.cancelIdleCallback ?? window.clearTimeout;
       try { cancel(handle); } catch {}
@@ -420,8 +420,8 @@ const DeferredChrome = () => {
   useEffect(() => {
     setShow(false);
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-    const handle = schedule(() => setShow(true), { timeout: 3000 });
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 7000));
+    const handle = schedule(() => setShow(true), { timeout: 9000 });
     return () => {
       const cancel = w.cancelIdleCallback ?? window.clearTimeout;
       try { cancel(handle); } catch {}
