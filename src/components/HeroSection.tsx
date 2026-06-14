@@ -163,7 +163,7 @@ const HeroSection = () => {
           {/* Search bar */}
           <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-4">
             <div className="relative" ref={searchRef}>
-              <div className="absolute -inset-1 rounded-xl bg-white/20 blur-md opacity-20 pointer-events-none" />
+              {/* (removed extra blur glow — cost a full-screen composite pass for no real visual gain) */}
               <div className="relative flex items-center bg-card rounded-xl shadow-2xl shadow-black/10 overflow-hidden">
                 <Search className="absolute left-4 w-4 h-4 text-muted-foreground z-10" />
                 <Input
