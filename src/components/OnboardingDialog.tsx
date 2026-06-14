@@ -220,7 +220,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
           {otpStep && !phoneVerified && (
             <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/40">
               <p className="text-xs text-muted-foreground text-center">
-                Enter the 6-digit OTP sent to <span className="font-medium text-foreground">+91 {phone}</span>
+                📞 You will receive an <strong className="text-foreground">automated phone call</strong> on <span className="font-medium text-foreground">+91 {phone}</span> reading out your 6-digit OTP. Please pick up the call and enter the code below.
               </p>
               <div className="flex justify-center">
                 <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
