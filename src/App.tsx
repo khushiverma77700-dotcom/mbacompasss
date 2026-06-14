@@ -7,11 +7,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
-import GlobalLoginDialog from "@/components/GlobalLoginDialog";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
-import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 import StudentShellFallback from "@/components/student/StudentShellFallback";
 import StudentContentSkeleton from "@/components/student/StudentContentSkeleton";
@@ -33,6 +31,7 @@ const Navbar = lazyWithPreload(() => import("@/components/Navbar"));
 const Footer = lazyWithPreload(() => import("@/components/Footer"));
 const Toaster = lazyWithPreload(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 const Sonner = lazyWithPreload(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
+const GlobalLoginDialog = lazyWithPreload(() => import("@/components/GlobalLoginDialog"));
 
 // Pages are lazy so dashboard visits do not download public homepage/admin code first.
 const Index = lazyWithPreload(() => import("./pages/Index"));
@@ -396,11 +395,19 @@ const SettingsPrefetcher = () => {
     const path = window.location.pathname;
     if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt")) return;
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 3500));
-    const handle = schedule(() => setReady(true), { timeout: 6000 });
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(() => setReady(true), { timeout: 2500 });
+      } else {
+        setReady(true);
+      }
+    }, 7000);
     return () => {
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      try { cancel(handle); } catch {}
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) {
+        try { w.cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, []);
   return ready ? <SettingsPrefetcherInner /> : null;
@@ -421,19 +428,27 @@ const DeferredChrome = () => {
   useEffect(() => {
     setShow(false);
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-    const handle = schedule(() => setShow(true), { timeout: 3000 });
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(() => setShow(true), { timeout: 2500 });
+      } else {
+        setShow(true);
+      }
+    }, 7000);
     return () => {
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      try { cancel(handle); } catch {}
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) {
+        try { w.cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, [location.pathname]);
 
   // Reserve vertical space so the late-mounting Footer doesn't cause CLS jumps.
-  if (!show) return <div style={{ minHeight: 320 }} aria-hidden="true" />;
+  if (!show) return <div style={{ minHeight: 760 }} aria-hidden="true" />;
 
   return (
-    <Suspense fallback={<div style={{ minHeight: 320 }} aria-hidden="true" />}>
+    <Suspense fallback={<div style={{ minHeight: 760 }} aria-hidden="true" />}>
       <Footer />
     </Suspense>
   );
@@ -460,9 +475,20 @@ const DeferredToasters = () => {
   );
 };
 
+const DeferredGlobalLoginDialog = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const activate = () => setShow(true);
+    window.addEventListener("open-login-dialog", activate, { once: true });
+    return () => window.removeEventListener("open-login-dialog", activate);
+  }, []);
+  if (!show) return null;
+  return <Suspense fallback={null}><GlobalLoginDialog /></Suspense>;
+};
+
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
-    <Suspense fallback={null}><Navbar /></Suspense>
+    <Suspense fallback={<div style={{ height: 64 }} aria-hidden="true" />}><Navbar /></Suspense>
     {children}
     <DeferredChrome />
   </>
@@ -585,6 +611,7 @@ const OnboardingGate = () => {
     OnboardingDialog.preload?.();
 
     const checkOnboarding = async (attempt = 0) => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
@@ -691,7 +718,7 @@ const App = () => (
         <AuthProvider>
           <OAuthRedirectHandler />
           <OnboardingGate />
-          <GlobalLoginDialog />
+          <DeferredGlobalLoginDialog />
           <DeferredRoutes>
             <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />

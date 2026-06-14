@@ -102,7 +102,6 @@ export default defineConfig(({ mode }) => ({
             // Let Rollup keep charting libs together with their import graph.
             // Splitting recharts/d3 into a forced manual chunk can produce runtime
             // initialization-order errors in the published bundle.
-            if (id.includes("lucide")) return "icons";
             if (id.includes("date-fns")) return "date";
             if (id.includes("zod") || id.includes("react-hook-form")) return "forms";
           }
@@ -126,7 +125,7 @@ export default defineConfig(({ mode }) => ({
     modulePreload: {
       resolveDependencies: (_filename, deps) => {
         const ALLOW = new Set([
-          "react", "router", "query", "radix", "supabase", "icons", "forms",
+          "react", "router", "query", "radix", "supabase", "forms",
         ]);
         return deps.filter((dep) => {
           // Always keep the entry's own CSS preloads.

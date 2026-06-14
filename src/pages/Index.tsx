@@ -42,13 +42,22 @@ const Index = () => {
   const [showDeferredSections, setShowDeferredSections] = useState(false);
 
   useEffect(() => {
-    // Mount deferred sections right after first paint (next frame, idle if available)
+    // Mount near-fold sections after the critical hero is interactive; avoids
+    // downloading category data + extra chunks during LCP on slow mobile.
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 0));
-    const handle = schedule(() => setShowDeferredSections(true));
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(() => setShowDeferredSections(true), { timeout: 2500 });
+      } else {
+        setShowDeferredSections(true);
+      }
+    }, 2400);
     return () => {
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      cancel(handle);
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) {
+        try { w.cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, []);
 
@@ -103,24 +112,24 @@ const Index = () => {
       {/* Everything else: mount only when scrolled near. Each section gets its own
           IntersectionObserver so initial JS execution stays tiny. */}
       {/* Realistic minHeight per section eliminates CLS when content streams in */}
-      <LazyMount minHeight={320}><MocksBannerSection /></LazyMount>
-      <LazyMount minHeight={520}><AIToolsSection /></LazyMount>
-      <LazyMount minHeight={420}><AIStudyPlannerSection /></LazyMount>
-      <LazyMount minHeight={480}><CoachingOfWeekSection /></LazyMount>
-      <LazyMount minHeight={300}><OfferBanners /></LazyMount>
-      <LazyMount minHeight={560}><FeaturedInstitutes /></LazyMount>
-      <LazyMount minHeight={560}><TopRankedCollegesSection /></LazyMount>
-      <LazyMount minHeight={420}><BrowseByCitySection /></LazyMount>
-      <LazyMount minHeight={140}><ExamDeadlinesTicker /></LazyMount>
-      <LazyMount minHeight={520}><PopularExamsSection /></LazyMount>
-      <LazyMount minHeight={460}><HowItWorksSection /></LazyMount>
-      <LazyMount minHeight={520}><LearningResourcesSection /></LazyMount>
-      <LazyMount minHeight={360}><ProfileAnalyzerCTA /></LazyMount>
-      <LazyMount minHeight={560}><LatestArticlesSection /></LazyMount>
-      <LazyMount minHeight={520}><SuccessStoriesSection /></LazyMount>
-      <LazyMount minHeight={520}><WhyChooseUs /></LazyMount>
-      <LazyMount minHeight={520}><FAQSection /></LazyMount>
-      <LazyMount minHeight={360}><CTASection /></LazyMount>
+      <LazyMount minHeight={320} rootMargin="0px"><MocksBannerSection /></LazyMount>
+      <LazyMount minHeight={520} rootMargin="0px"><AIToolsSection /></LazyMount>
+      <LazyMount minHeight={420} rootMargin="0px"><AIStudyPlannerSection /></LazyMount>
+      <LazyMount minHeight={480} rootMargin="0px"><CoachingOfWeekSection /></LazyMount>
+      <LazyMount minHeight={300} rootMargin="0px"><OfferBanners /></LazyMount>
+      <LazyMount minHeight={560} rootMargin="0px"><FeaturedInstitutes /></LazyMount>
+      <LazyMount minHeight={560} rootMargin="0px"><TopRankedCollegesSection /></LazyMount>
+      <LazyMount minHeight={420} rootMargin="0px"><BrowseByCitySection /></LazyMount>
+      <LazyMount minHeight={140} rootMargin="0px"><ExamDeadlinesTicker /></LazyMount>
+      <LazyMount minHeight={520} rootMargin="0px"><PopularExamsSection /></LazyMount>
+      <LazyMount minHeight={460} rootMargin="0px"><HowItWorksSection /></LazyMount>
+      <LazyMount minHeight={520} rootMargin="0px"><LearningResourcesSection /></LazyMount>
+      <LazyMount minHeight={360} rootMargin="0px"><ProfileAnalyzerCTA /></LazyMount>
+      <LazyMount minHeight={560} rootMargin="0px"><LatestArticlesSection /></LazyMount>
+      <LazyMount minHeight={520} rootMargin="0px"><SuccessStoriesSection /></LazyMount>
+      <LazyMount minHeight={520} rootMargin="0px"><WhyChooseUs /></LazyMount>
+      <LazyMount minHeight={520} rootMargin="0px"><FAQSection /></LazyMount>
+      <LazyMount minHeight={360} rootMargin="0px"><CTASection /></LazyMount>
 
       <div className="container mx-auto px-4 pb-8">
         <LazyMount minHeight={120}>
