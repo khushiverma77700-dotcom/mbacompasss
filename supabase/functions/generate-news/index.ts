@@ -110,7 +110,7 @@ category (exactly "${category}"), tags (array of 2-5 strings).`;
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: sys },
+        { role: "system", content: sys + MBA_COMPASS_SECTION_RULES },
         { role: "user", content: user },
       ],
       response_format: {
