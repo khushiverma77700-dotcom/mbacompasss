@@ -4,6 +4,7 @@
 // Public endpoint (admin gate enforced by RLS on insert via service-role).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
