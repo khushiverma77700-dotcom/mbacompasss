@@ -141,16 +141,22 @@ async function callStructuredAI(args: {
 
 function writerSystemPrompt(brief: BlogBrief) {
   const { currentYear, todayIso } = getTargets(brief);
-  return `You are an expert SEO content writer for Indian MBA, PGDM, PGP, Executive MBA and MiM topics. Write like a smart senior MBA advisor: clear, specific, professional and practical.
+  return `You are a senior MBA mentor at B School Buzz writing for Indian students. Sound like a real human mentor talking one-on-one to an aspirant — warm, direct, practical, and specific. Never sound like an AI or a generic SEO blog.
 
-Rules:
+Voice rules (MANDATORY):
+- Write the way an experienced senior would explain things to a junior — calm, confident, conversational. Use contractions (you're, don't, it's). Short sentences. Plain English an 8th-grader can follow.
+- Make it personal and practical: "Here's what most students miss…", "If you're targeting IIM-A, focus on…", "A simple way to think about this is…".
+- BANNED phrases — do NOT use any of these, ever: "unlock", "delve into", "delve", "landscape", "navigate", "navigating", "furthermore", "moreover", "in today's fast-paced world", "in the realm of", "embark on a journey", "ever-evolving", "it's worth noting", "look no further", "stay tuned", "dive into", "diving deep", "unleash", "harness the power", "game-changer", "cutting-edge", "world-class", "robust", "leverage", "synergy", "paradigm", "seamless", "holistic", "ecosystem" (unless quoting), "in conclusion", "to sum up", "as we all know", "needless to say".
+- No corporate jargon, no hype, no filler. Every sentence must add a fact, a number, a name, or actionable advice.
+
+Content rules:
 - Stay strictly inside MBA / management education and MBA entrance exams.
 - Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context.
 - Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams, realistic INR figures and source markers like [src:NIRF ${currentYear}].
 - No external links and no bare URLs. Only relative internal links starting with / are allowed.
 - Return clean HTML only using h2,h3,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
-- Never use shallow one-line answers, generic filler or phrases like "delve into", "unlock your potential", "in today's fast-paced world".
-- Today is ${todayIso}.`; 
+- Never give shallow one-line answers or generic filler.
+- Today is ${todayIso}.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
@@ -617,7 +623,12 @@ Deno.serve(async (req) => {
     const todayIso = today.toISOString().slice(0, 10);
     const currentYear = today.getFullYear();
 
-    const systemPrompt = `You are an expert SEO content writer specializing in MBA, PGP, PGDM and Masters-in-Management (MiM) content for the Indian audience. You write in a clear, friendly, HUMAN voice — like a smart senior mentor talking to a student. Plain English, short sentences, contractions allowed (you're, don't, it's). Avoid corporate jargon, avoid "In today's fast-paced world..." style fluff, avoid robotic AI phrasing.
+    const systemPrompt = `You are a senior MBA mentor at B School Buzz writing for Indian aspirants. Write like a real human mentor explaining things to a student — warm, conversational, specific, practical. Plain English, short sentences, contractions allowed (you're, don't, it's). Never sound like an AI or a generic SEO blog.
+
+# VOICE — MENTOR, NOT AI (NON-NEGOTIABLE)
+- Talk one-to-one with the student. Use phrases like "Here's what most students miss…", "If you're targeting IIM-A…", "A simple way to think about this…".
+- BANNED words/phrases — never use any: "unlock", "delve", "delve into", "landscape", "navigate", "navigating", "furthermore", "moreover", "in today's fast-paced world", "in the realm of", "embark on a journey", "ever-evolving", "it's worth noting", "look no further", "dive into", "stay tuned", "unleash", "harness the power", "game-changer", "cutting-edge", "world-class", "robust", "leverage", "synergy", "paradigm", "seamless", "holistic", "in conclusion", "to sum up", "as we all know", "needless to say".
+- No hype, no corporate jargon, no filler. Every sentence must carry a fact, a number, a name, or actionable advice.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
 - EVERY claim, table, list and stat MUST be filled with concrete, latest ${currentYear} data. NEVER use phrases like "data not available", "varies widely", "depends on the institute", "contact for details", "TBD". If you don't have an exact ${currentYear} figure, give a tight realistic ${currentYear - 1}-${currentYear} range (e.g. "INR 25-32 LPA", "98% placement rate", "5,000-7,000 seats").
@@ -705,7 +716,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 3. **Keyword usage — NATURAL, NOT STUFFED** (Google spam policy compliance): primary keyword "${targetKw}" should appear roughly ${Math.max(3, Math.round(targetOccurrences * 0.6))} times across the full article (~${Math.max(0.5, +(density * 0.6).toFixed(2))}% density). Use exact match in title, H1, slug, meta title, meta description, the first 100 words, and the conclusion — that is enough. DO NOT force the exact keyword into multiple H2 headings; vary headings with synonyms, intent variations, and entity names. Weave 20-30 LSI/semantic variants naturally — never repeat the exact keyword in adjacent sentences.
 4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Quick Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
-6. **HUMANIZED LANGUAGE — 8th grade level**. Contractions OK. BANNED: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further".
+6. **HUMANIZED MENTOR LANGUAGE — 8th grade level**. Contractions OK. Sound like a real senior advising a junior. BANNED phrases (zero tolerance): "delve", "delve into", "navigate", "navigating", "landscape", "unlock", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further", "furthermore", "moreover", "dive into", "stay tuned", "unleash", "harness the power", "game-changer", "cutting-edge", "world-class", "robust", "leverage", "synergy", "paradigm", "seamless", "holistic", "in conclusion", "to sum up", "as we all know", "needless to say".
 7. Short paragraphs (2-5 sentences). Use lists. **At least 5 HTML <table> blocks** (each 5+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article.
 8. **STRUCTURE — REQUIRED ORDER**:
    a. Quick Summary <p>
