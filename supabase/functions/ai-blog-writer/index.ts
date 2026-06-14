@@ -1083,6 +1083,16 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     };
     article.intro = stripExternalLinks(article.intro || "");
     article.content = stripExternalLinks(article.content || "");
+    // Final quality check — auto-sanitise buzzwords, inject MBA Compass if missing, flag issues
+    {
+      const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
+      const contentQC = runFinalQualityCheck(article.content, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+      article.intro = introQC.html;
+      article.content = contentQC.html;
+      if (contentQC.issues.length) {
+        console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
+      }
+    }
 
     // Recompute final stats after possible expansion
     const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
