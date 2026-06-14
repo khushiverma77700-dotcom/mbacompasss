@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Target, Globe, BookOpen, Languages, BarChart3, Users, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -21,6 +20,7 @@ const CategoryCards = () => {
   const { data: categories, isLoading } = useQuery({
     queryKey: ["categories-homepage"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("categories")
         .select("id,name,slug,description,icon")
