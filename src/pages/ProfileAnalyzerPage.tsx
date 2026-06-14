@@ -39,6 +39,9 @@ import type { CollegeRow, ProfileInputLite, ScoreBreakdown } from "@/lib/profile
 import InternalLinksSection from "@/components/profile-analyzer/InternalLinksSection";
 import { buildAnalyzerCanonical, seoSlugify as urlSlugify } from "@/lib/seoUrlBuilder";
 import { buildProfileAnalyzerSchemas } from "@/lib/profileAnalyzerSchema";
+import LoginRequiredDialog from "@/components/LoginRequiredDialog";
+
+const ANALYZER_PENDING_KEY = "profile_analyzer_pending_submit";
 
 interface PremiumNarrative {
   one_line_summary?: string;
@@ -686,6 +689,7 @@ const ProfileAnalyzerPage = () => {
   const [narrativeLoading, setNarrativeLoading] = useState(false);
   // Admin: force a fresh re-test, bypassing existing analysis + cooldown + AI cache
   const [forceRetest, setForceRetest] = useState(false);
+  const [showAuthGate, setShowAuthGate] = useState(false);
 
   const handleAdminRetest = () => {
     setForceRetest(true);
@@ -837,6 +841,21 @@ const ProfileAnalyzerPage = () => {
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); }, [form]);
 
+  // After signup/login completes, auto-resume the analysis if user was mid-flow.
+  const autoSubmittedRef = useRef(false);
+  useEffect(() => {
+    if (!user || autoSubmittedRef.current) return;
+    const pending = (() => { try { return localStorage.getItem(ANALYZER_PENDING_KEY) === "1"; } catch { return false; } })();
+    if (!pending) return;
+    autoSubmittedRef.current = true;
+    try { localStorage.removeItem(ANALYZER_PENDING_KEY); } catch {}
+    setShowAuthGate(false);
+    // Jump back to step 5 (final step) and trigger submission once the form is hydrated.
+    setStep(5);
+    setTimeout(() => { handleSubmit(); }, 200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const updateField = (key: keyof FormData, value: any) => {
     setForm(prev => ({ ...prev, [key]: value }));
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
@@ -886,6 +905,14 @@ const ProfileAnalyzerPage = () => {
         description: `You can re-analyze after ${cooldownDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. View your existing report on the dashboard.`,
         variant: "destructive",
       });
+      return;
+    }
+    // AUTH GATE: profile is filled — require signup/login before generating & showing the report.
+    // Google sign-in users still get mobile OTP via the global OnboardingDialog.
+    if (!user) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); } catch {}
+      try { localStorage.setItem(ANALYZER_PENDING_KEY, "1"); } catch {}
+      setShowAuthGate(true);
       return;
     }
     setStep(6);
@@ -2825,6 +2852,18 @@ const ProfileAnalyzerPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AUTH GATE — required before generating & showing the report */}
+      <LoginRequiredDialog
+        open={showAuthGate}
+        onOpenChange={(open) => {
+          setShowAuthGate(open);
+          if (!open) {
+            try { localStorage.removeItem(ANALYZER_PENDING_KEY); } catch {}
+          }
+        }}
+        message="Create your free account or log in to view your personalised MBA profile report. Mobile OTP verification is required."
+      />
     </div>
   );
 };
