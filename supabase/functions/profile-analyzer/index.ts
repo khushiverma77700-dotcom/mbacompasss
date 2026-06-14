@@ -630,6 +630,8 @@ For improvement_roadmap, provide a month-by-month timeline with specific milesto
           roi_analysis: analysis.roi_analysis,
           salary_benchmarking: analysis.salary_benchmarking,
           improvement_roadmap: analysis.improvement_roadmap,
+          college_playbooks: analysis.college_playbooks,
+          tier_coverage_summary: analysis.tier_coverage_summary,
         },
         recommendations: analysis.recommendations,
         study_plan: analysis.study_plan,
