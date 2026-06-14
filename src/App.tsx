@@ -7,11 +7,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
-import GlobalLoginDialog from "@/components/GlobalLoginDialog";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
-import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 import StudentShellFallback from "@/components/student/StudentShellFallback";
 import StudentContentSkeleton from "@/components/student/StudentContentSkeleton";
@@ -33,6 +31,7 @@ const Navbar = lazyWithPreload(() => import("@/components/Navbar"));
 const Footer = lazyWithPreload(() => import("@/components/Footer"));
 const Toaster = lazyWithPreload(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 const Sonner = lazyWithPreload(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
+const GlobalLoginDialog = lazyWithPreload(() => import("@/components/GlobalLoginDialog"));
 
 // Pages are lazy so dashboard visits do not download public homepage/admin code first.
 const Index = lazyWithPreload(() => import("./pages/Index"));
