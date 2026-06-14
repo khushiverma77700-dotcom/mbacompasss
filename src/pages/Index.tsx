@@ -102,27 +102,28 @@ const Index = () => {
 
       {/* Everything else: mount only when scrolled near. Each section gets its own
           IntersectionObserver so initial JS execution stays tiny. */}
-      <LazyMount minHeight={80}><MocksBannerSection /></LazyMount>
-      <LazyMount minHeight={80}><AIToolsSection /></LazyMount>
-      <LazyMount minHeight={80}><AIStudyPlannerSection /></LazyMount>
-      <LazyMount minHeight={80}><CoachingOfWeekSection /></LazyMount>
-      <LazyMount minHeight={80}><OfferBanners /></LazyMount>
-      <LazyMount minHeight={80}><FeaturedInstitutes /></LazyMount>
-      <LazyMount minHeight={80}><TopRankedCollegesSection /></LazyMount>
-      <LazyMount minHeight={80}><BrowseByCitySection /></LazyMount>
-      <LazyMount minHeight={80}><ExamDeadlinesTicker /></LazyMount>
-      <LazyMount minHeight={80}><PopularExamsSection /></LazyMount>
-      <LazyMount minHeight={80}><HowItWorksSection /></LazyMount>
-      <LazyMount minHeight={80}><LearningResourcesSection /></LazyMount>
-      <LazyMount minHeight={80}><ProfileAnalyzerCTA /></LazyMount>
-      <LazyMount minHeight={80}><LatestArticlesSection /></LazyMount>
-      <LazyMount minHeight={80}><SuccessStoriesSection /></LazyMount>
-      <LazyMount minHeight={80}><WhyChooseUs /></LazyMount>
-      <LazyMount minHeight={80}><FAQSection /></LazyMount>
-      <LazyMount minHeight={80}><CTASection /></LazyMount>
+      {/* Realistic minHeight per section eliminates CLS when content streams in */}
+      <LazyMount minHeight={320}><MocksBannerSection /></LazyMount>
+      <LazyMount minHeight={520}><AIToolsSection /></LazyMount>
+      <LazyMount minHeight={420}><AIStudyPlannerSection /></LazyMount>
+      <LazyMount minHeight={480}><CoachingOfWeekSection /></LazyMount>
+      <LazyMount minHeight={300}><OfferBanners /></LazyMount>
+      <LazyMount minHeight={560}><FeaturedInstitutes /></LazyMount>
+      <LazyMount minHeight={560}><TopRankedCollegesSection /></LazyMount>
+      <LazyMount minHeight={420}><BrowseByCitySection /></LazyMount>
+      <LazyMount minHeight={140}><ExamDeadlinesTicker /></LazyMount>
+      <LazyMount minHeight={520}><PopularExamsSection /></LazyMount>
+      <LazyMount minHeight={460}><HowItWorksSection /></LazyMount>
+      <LazyMount minHeight={520}><LearningResourcesSection /></LazyMount>
+      <LazyMount minHeight={360}><ProfileAnalyzerCTA /></LazyMount>
+      <LazyMount minHeight={560}><LatestArticlesSection /></LazyMount>
+      <LazyMount minHeight={520}><SuccessStoriesSection /></LazyMount>
+      <LazyMount minHeight={520}><WhyChooseUs /></LazyMount>
+      <LazyMount minHeight={520}><FAQSection /></LazyMount>
+      <LazyMount minHeight={360}><CTASection /></LazyMount>
 
       <div className="container mx-auto px-4 pb-8">
-        <LazyMount minHeight={80}>
+        <LazyMount minHeight={120}>
           <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
         </LazyMount>
       </div>
