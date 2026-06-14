@@ -237,7 +237,28 @@ Article structure rules (MANDATORY — every article must follow this skeleton):
 6. **FAQs** — H2 "Frequently Asked Questions" with 8-12 People-Also-Ask style Q&A pairs (H3 question, multi-paragraph answer per the SEO rules).
 7. **Conclusion / Final Word** — closing H2 (e.g. "Final Word", "Bottom Line", "Your Next Step") with 2-3 short paragraphs summarising the decision + a CTA paragraph with 2-3 internal links to the most relevant tool/page (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks, /mba-compass, related /blog/ posts).
 
-Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → FAQs → Conclusion + CTA. Never skip Key Highlights, FAQs or the Conclusion.`;
+Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → FAQs → "About MBA Compass" → Conclusion + CTA. Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
+
+MBA Compass brand mention (MANDATORY — every article must include this):
+- Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed AFTER the FAQ section and BEFORE the final Conclusion + CTA.
+- The section must be 120-180 words, educational and value-driven — not a sales pitch. Use the mentor voice.
+- Cover, naturally and briefly:
+  • What MBA Compass is — an MBA discovery and decision platform for Indian aspirants (B School Buzz product) that brings colleges, exams, coaching, mocks, and AI tools into one place.
+  • How it helps students and working professionals — shortlist the right colleges, analyze their profile, compare programmes, prepare with full-length mocks, and plan smarter.
+  • The financial-decision angle — an MBA is one of the biggest investments a student makes; MBA Compass helps you weigh fees, ROI, expected packages and long-term wealth outcomes before committing, so you build financial clarity around the MBA decision.
+- End the section with 2-3 contextual internal links chosen from: /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks — pick the ones that best fit the article's topic.
+- Tone: helpful and informative, like a senior recommending a useful resource. Avoid words like "best", "ultimate", "unbeatable", "must-have".
+
+Final quality checklist (the model must self-verify before returning):
+✓ Reads like a human MBA mentor, not an AI.
+✓ Directly answers the title's search intent throughout.
+✓ Zero banned AI phrases (see voice rules).
+✓ Paragraphs are 2-3 sentences, content is mobile-scannable.
+✓ At least 4 data-rich tables and 6+ lists across the article.
+✓ 8-15 contextual internal links with descriptive anchors.
+✓ SEO rules satisfied (keyword placement, meta length, headings, FAQs).
+✓ "About MBA Compass" section is present after the FAQ, before the Conclusion.
+✓ Article is informative, engaging, and clearly written for Indian MBA aspirants.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
