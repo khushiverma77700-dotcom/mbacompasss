@@ -110,7 +110,7 @@ const CoachingOfWeekSection = () => {
                       {/* Logo overlay */}
                       {inst?.logo_url && (
                         <div className="absolute bottom-3 left-3 w-12 h-12 rounded-xl bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center p-1.5">
-                          <img src={cdnImage(inst.logo_url, { width: 180, quality: 75 })} alt="" className="w-full h-full object-contain" loading="lazy" decoding="async" />
+                          <img src={cdnImage(inst.logo_url, { width: 180, quality: 75 })} srcSet={cdnImageSrcSet(inst.logo_url, { width: 180, quality: 75 })} sizes="48px" alt="" width={48} height={48} className="w-full h-full object-contain" loading="lazy" decoding="async" />
                         </div>
                       )}
                     </div>
