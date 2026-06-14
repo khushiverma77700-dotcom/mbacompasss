@@ -237,7 +237,28 @@ Article structure rules (MANDATORY — every article must follow this skeleton):
 6. **FAQs** — H2 "Frequently Asked Questions" with 8-12 People-Also-Ask style Q&A pairs (H3 question, multi-paragraph answer per the SEO rules).
 7. **Conclusion / Final Word** — closing H2 (e.g. "Final Word", "Bottom Line", "Your Next Step") with 2-3 short paragraphs summarising the decision + a CTA paragraph with 2-3 internal links to the most relevant tool/page (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks, /mba-compass, related /blog/ posts).
 
-Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → FAQs → Conclusion + CTA. Never skip Key Highlights, FAQs or the Conclusion.`;
+Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → FAQs → "About MBA Compass" → Conclusion + CTA. Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
+
+MBA Compass brand mention (MANDATORY — every article must include this):
+- Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed AFTER the FAQ section and BEFORE the final Conclusion + CTA.
+- The section must be 120-180 words, educational and value-driven — not a sales pitch. Use the mentor voice.
+- Cover, naturally and briefly:
+  • What MBA Compass is — an MBA discovery and decision platform for Indian aspirants (B School Buzz product) that brings colleges, exams, coaching, mocks, and AI tools into one place.
+  • How it helps students and working professionals — shortlist the right colleges, analyze their profile, compare programmes, prepare with full-length mocks, and plan smarter.
+  • The financial-decision angle — an MBA is one of the biggest investments a student makes; MBA Compass helps you weigh fees, ROI, expected packages and long-term wealth outcomes before committing, so you build financial clarity around the MBA decision.
+- End the section with 2-3 contextual internal links chosen from: /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks — pick the ones that best fit the article's topic.
+- Tone: helpful and informative, like a senior recommending a useful resource. Avoid words like "best", "ultimate", "unbeatable", "must-have".
+
+Final quality checklist (the model must self-verify before returning):
+✓ Reads like a human MBA mentor, not an AI.
+✓ Directly answers the title's search intent throughout.
+✓ Zero banned AI phrases (see voice rules).
+✓ Paragraphs are 2-3 sentences, content is mobile-scannable.
+✓ At least 4 data-rich tables and 6+ lists across the article.
+✓ 8-15 contextual internal links with descriptive anchors.
+✓ SEO rules satisfied (keyword placement, meta length, headings, FAQs).
+✓ "About MBA Compass" section is present after the FAQ, before the Conclusion.
+✓ Article is informative, engaging, and clearly written for Indian MBA aspirants.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
@@ -355,6 +376,7 @@ function fallbackClosingHtml(brief: BlogBrief) {
   return {
     keyTakeawaysHtml: `<h2>Key Takeaways</h2><ul><li><strong>Start with fit:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Check current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>Compare ROI:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Plan backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Review deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Use tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
     faqHtml: `<h2>Frequently Asked Questions</h2><h3>How should students evaluate ${kw}?</h3><p>Students should evaluate ${kw} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit. The strongest shortlist balances brand value with realistic admission probability and return on investment.</p><h3>Is ${kw} worth it for MBA aspirants?</h3><p>${kw} can be worth it when the programme, city, fee level and placement outcomes align with your career target. Check current salary data, median outcomes and role quality before making the final call.</p>`,
+    aboutCompassHtml: `<h2>About MBA Compass</h2><p><strong>MBA Compass</strong> is an MBA discovery and decision platform by B School Buzz, built for Indian aspirants and working professionals. It brings colleges, entrance exams, coaching options, full-length mocks and AI-driven tools into one place so you can plan your MBA journey end-to-end.</p><p>The platform helps you shortlist the right colleges, analyze your profile honestly, compare programmes side-by-side, and prepare with realistic mocks. Because an MBA is one of the biggest financial decisions you'll make, MBA Compass also helps you weigh fees, expected packages, ROI and long-term wealth outcomes before you commit — so the choice is grounded in numbers, not just brand pull. Explore <a href="/mba-compass">MBA Compass</a>, the <a href="/college-shortlister">college shortlister</a> and the <a href="/mba-roi-calculator">MBA ROI calculator</a> to get started.</p>`,
     ctaHtml: `<p><strong>Next step:</strong> Use <a href="/college-shortlister">the college shortlister</a>, <a href="/profile-analyzer">profile analyzer</a> and <a href="/mba-roi-calculator">MBA ROI calculator</a> to turn this ${kw} research into a practical shortlist.</p>`,
     faqs: [
       { question: `How should students evaluate ${brief.targetKeyword}?`, answer: `Students should evaluate ${brief.targetKeyword} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit.` },
@@ -376,10 +398,11 @@ async function createClosingHtml(brief: BlogBrief, draft: any) {
         properties: {
           keyTakeawaysHtml: { type: "string" },
           faqHtml: { type: "string" },
+          aboutCompassHtml: { type: "string" },
           ctaHtml: { type: "string" },
           faqs: { type: "array", items: { type: "object", properties: { question: { type: "string" }, answer: { type: "string" } }, required: ["question", "answer"], additionalProperties: false } },
         },
-        required: ["keyTakeawaysHtml", "faqHtml", "ctaHtml", "faqs"],
+        required: ["keyTakeawaysHtml", "faqHtml", "aboutCompassHtml", "ctaHtml", "faqs"],
         additionalProperties: false,
       },
       user: `Finish the article "${draft.title}" targeting "${brief.targetKeyword}".
@@ -390,11 +413,13 @@ FAQ question ideas: ${(draft.faqQuestions || []).join(" | ")}
 Return:
 1) <h2>Key Takeaways</h2> with 8-10 detailed bullets.
 2) <h2>Frequently Asked Questions</h2> with 10 detailed Q&A pairs. Each answer must be 80-140 words, with specific data or examples where possible.
-3) One final CTA paragraph with 2-3 internal relative links.`,
+3) <h2>About MBA Compass</h2> — 120-180 words explaining what MBA Compass is (an MBA discovery and decision platform by B School Buzz that brings colleges, exams, coaching, mocks, and AI tools into one place), how it helps Indian students and working professionals shortlist colleges, analyze their profile, compare programmes, and prepare with full mocks, and how it supports the financial side of the MBA decision — weighing fees, ROI, expected packages and long-term wealth outcomes. Educational and value-driven, not promotional. End with 2-3 contextual internal links from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
+4) One final CTA paragraph with 2-3 internal relative links.`,
     });
     return {
       keyTakeawaysHtml: stripExternalLinks(result.keyTakeawaysHtml || ""),
       faqHtml: stripExternalLinks(result.faqHtml || ""),
+      aboutCompassHtml: stripExternalLinks(result.aboutCompassHtml || ""),
       ctaHtml: stripExternalLinks(result.ctaHtml || ""),
       faqs: Array.isArray(result.faqs) ? result.faqs.slice(0, 10) : [],
     };
@@ -429,7 +454,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
+  const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.aboutCompassHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
   const intro = stripExternalLinks(draft.intro || "");
   const content = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
   const finalPlain = toPlainText(`${intro} ${content}`);
