@@ -1,7 +1,7 @@
 // News & Insights — AI-curated current affairs generator (OpenAI)
 // Generates one category at a time to avoid edge function timeouts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -182,17 +182,19 @@ Deno.serve(async (req) => {
           return;
         }
         for (const a of r.value) {
+          // Buzzword scrub on every text field (no MBA Compass injection for news blurbs)
+          const scrub = (s: any) => typeof s === "string" && s ? runFinalQualityCheck(s, { requireMbaCompass: false, minInternalLinks: 0 }).html : s;
           rows.push({
-            headline: String(a.headline || "").slice(0, 500),
+            headline: scrub(String(a.headline || "").slice(0, 500)),
             category: String(a.category || cat),
             source_name: a.source_name || null,
             source_url: a.source_url || null,
-            one_liner: a.one_liner || null,
-            short_summary: a.short_summary || null,
+            one_liner: scrub(a.one_liner) || null,
+            short_summary: scrub(a.short_summary) || null,
             short_summary_hi: a.short_summary_hi || null,
             short_summary_hinglish: a.short_summary_hinglish || null,
-            detailed_summary: a.detailed_summary || null,
-            why_matters: a.why_matters || null,
+            detailed_summary: scrub(a.detailed_summary) || null,
+            why_matters: scrub(a.why_matters) || null,
             gdpi_points: a.gdpi_points || [],
             wat_topics: a.wat_topics || [],
             key_facts: a.key_facts || [],

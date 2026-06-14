@@ -9,7 +9,7 @@
 //  • Anchor-fact propagation so the same establishment year / ranking / fees are reused across every section
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -828,6 +828,8 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
     // ── Sanitize HTML in `content` field (kept rich) ──
     if (typeof payload.content === "string") {
       payload.content = sanitizeHtml(payload.content);
+      // Final quality gate — buzzword scrub + auto-inject MBA Compass section if missing
+      payload.content = runFinalQualityCheck(payload.content, { requireMbaCompass: true, minInternalLinks: 3 }).html;
       // Ensure "Last updated" stamp is present
       if (!/Last updated:/i.test(payload.content)) {
         payload.content += `\n<p><em>Last updated: ${todayIso}</em></p>`;

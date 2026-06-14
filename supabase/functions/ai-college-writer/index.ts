@@ -3,7 +3,7 @@
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -512,8 +512,8 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       out = out.replace(/[ \t]{2,}/g, " ");
       return out.trim();
     };
-    profile.description = scrubHtml(descriptionHtml);
-    profile.admission_process = scrubHtml(admissionHtml);
+profile.description = runFinalQualityCheck(scrubHtml(descriptionHtml), { requireMbaCompass: true, requireTable: true, minInternalLinks: 4 }).html;
+    profile.admission_process = runFinalQualityCheck(scrubHtml(admissionHtml), { requireMbaCompass: false, minInternalLinks: 2 }).html;
 
     if (!profile.description || !profile.admission_process) {
       return new Response(

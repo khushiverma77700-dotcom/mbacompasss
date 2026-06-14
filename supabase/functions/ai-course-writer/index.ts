@@ -9,7 +9,7 @@
 // Public endpoint — verify_jwt = false (project default). Calls Lovable AI Gateway via
 // tool-calling for strict structured output.
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
@@ -322,7 +322,14 @@ For EACH course return:
   const data = await res.json();
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
-  return { courses: args.courses || [] };
+  // Final quality gate — buzzword scrub + auto-inject MBA Compass on every course's long description
+  const courses = (args.courses || []).map((c: any) => {
+    if (c && typeof c.description === "string" && c.description.length > 200) {
+      c.description = runFinalQualityCheck(c.description, { requireMbaCompass: true, minInternalLinks: 2 }).html;
+    }
+    return c;
+  });
+  return { courses };
 }
 
 Deno.serve(async (req) => {

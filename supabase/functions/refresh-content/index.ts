@@ -4,6 +4,7 @@
 // Public endpoint (admin gate enforced by RLS on insert via service-role).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -142,7 +143,13 @@ function postProcessSnapshot(snapshot: Record<string, unknown>, fields: string[]
   for (const field of fields) {
     const value = snapshot[field];
     if (HTML_FIELDS.has(field) && typeof value === "string") {
-      next[field] = enrichHtml(value, field, ctx);
+      // Enrich → then run shared final quality check (buzzword scrub + auto MBA Compass)
+      const enriched = enrichHtml(value, field, ctx);
+      const isLongForm = enriched.length > 600;
+      next[field] = runFinalQualityCheck(enriched, {
+        requireMbaCompass: isLongForm,
+        minInternalLinks: 0,
+      }).html;
     } else if (SEO_FIELDS.has(field) && typeof value === "string") {
       next[field] = value.replace(/\[src:[^\]]+\]/gi, "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
     } else {

@@ -4,7 +4,7 @@
 // Public endpoint — keep verify_jwt = false (project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -273,6 +273,12 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Final quality gate — buzzword scrub + auto-inject "About MBA Compass" if missing
+    if (typeof profile.description === "string" && profile.description) {
+      profile.description = runFinalQualityCheck(profile.description, { requireMbaCompass: true, requireTable: true, minInternalLinks: 3 }).html;
+    }
+
 
     const slug = String(profile.slug || brief.slug || brief.name)
       .toLowerCase()
