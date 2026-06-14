@@ -185,28 +185,36 @@ Internal linking rules (MANDATORY — every section must link out contextually):
 
 Topic focus rules (MANDATORY — zero tolerance for drift):
 - The article title is the SCOPE FENCE. Every H2, H3, paragraph, list item, table row, and FAQ must directly answer the reader's search intent for THIS exact title — nothing else.
-- Before writing each paragraph, ask: "Does this directly help someone searching for the title?" If no, delete it.
-- BANNED filler patterns: history lessons unless asked, generic "What is an MBA?" intros when the topic is narrower, motivational pep-talks, definitions of well-known terms, repeated context, padding sentences ("As we've seen above…", "It is important to note…", "Many students wonder…").
+- INTENT-FIRST: Before drafting, write the reader's literal question in one line (e.g. "What are IIM-A 2025 placement numbers and top recruiters?"). Every section must directly help answer THAT question. Anything else is filler — cut it.
+- VALUE TEST per section: a section earns its place only if it gives the reader (a) a new number, (b) a named entity, (c) a decision rule, or (d) a concrete next step. If it does none of these, delete the section.
+- BANNED filler patterns: history lessons unless asked, generic "What is an MBA?" intros when the topic is narrower, motivational pep-talks, definitions of well-known terms, repeated context, "importance of…" sections, "benefits of pursuing MBA" sections, padding lines like "As we've seen above…", "It is important to note…", "Many students wonder…", "In the following sections we will discuss…".
+- NO TOPIC BLEED: if the title is about IIM-A placements, do not pad with NMAT prep tips; if the title is "CAT 2025 syllabus", do not list IIM rankings. One topic, deeply covered. A single contrast paragraph against a peer entity is OK only when the title explicitly invites comparison.
 - No repetition across sections. Each H2 owns a unique angle; if two sections overlap, merge or drop one.
 - Every paragraph must carry at least one of: a specific number, a named entity (college/exam/recruiter/year), a concrete step, or a clear decision rule. Paragraphs that only re-state the heading are forbidden.
 - Keep sentences short and punchy. Cut adjectives that add no information. If a sentence can be removed without losing meaning, remove it.
-- Stay strictly on-topic: if the title is about IIM-A placements, do not pad with NMAT prep tips; if the title is "CAT 2025 syllabus", do not list IIM rankings. One topic, deeply covered.
 
-Data-driven content rules (MANDATORY — every section must carry real numbers):
+Data-driven content rules (MANDATORY — tables FIRST, prose SECOND):
 - Every H2 section must include at least one concrete data point: NIRF rank, cutoff percentile, fee figure (INR), average/median package, placement %, recruiter count, batch size, seat count, exam date, attempt count, or year-on-year trend.
 - Use REAL, current ${currentYear}-${currentYear + 1} Indian MBA data. Never write "data not available", "varies", "depends", "contact for details", "N/A", "—". If an exact figure isn't known, give a tight realistic range (e.g. "INR 24-28 LPA", "92-96 percentile", "INR 23-25 lakh fees") and tag it with [src:Source Year].
-- Build at least 4 <table> blocks per article, more for long-form. Each table must have a clear caption-style first row (<thead>) and 5+ data rows. Use tables for:
-  • College comparisons (Name | NIRF Rank ${currentYear} | Fees | Avg CTC | Cutoff %ile | Top Recruiters)
-  • Exam comparisons (Exam | Pattern | Duration | Sections | Difficulty | Accepting Institutes)
-  • Fees & placement (College | Total Fees INR | Avg CTC | Median CTC | Highest CTC | Placement %)
+- TABLE-FIRST RULE (NON-NEGOTIABLE): if information can be expressed as rows × columns, it MUST be a <table>. Prefer tables over paragraphs for ALL of the following — even when only 2 entities are being compared:
+  • Fees breakdown (Year/Component | Amount INR | Notes)
+  • Placement stats (Year | Avg CTC | Median CTC | Highest CTC | Placement %)
+  • Cut-offs (Category | Overall %ile | Sectional %ile VARC/DILR/QA)
+  • Rankings (Publication | Year | Rank | Category)
   • Eligibility (Programme | Age | Graduation % | Work-Ex | Entrance Accepted)
+  • Exam patterns (Section | Questions | Marks | Duration | Negative Marking)
   • Important dates (Event | Date ${currentYear} | Window | Notes)
-  • Course details (Specialization | Duration | Core Subjects | Top Recruiters | Avg CTC)
+  • College comparisons (Name | NIRF Rank ${currentYear} | Fees | Avg CTC | Cutoff %ile | Top Recruiters)
+  • Course / specialization details (Specialization | Duration | Core Subjects | Top Recruiters | Avg CTC)
+  • Recruiter lists (Sector | Top Recruiters | Avg CTC | Roles)
   • Year-on-year trends (Year | Avg CTC | Median CTC | Placement % | Top Recruiter)
-- Tables must be scannable: short cell text, consistent units (INR LPA, INR lakh, percentile, %), no empty cells, no "—". Bold the leftmost column header.
+  Writing the above as prose paragraphs is REJECTED. Convert to a <table>.
+- Build at least 4 <table> blocks per article, more for long-form. Each table must have a clear caption-style first row (<thead>) and 5+ data rows.
+- Tables must be scannable: short cell text, consistent units (INR LPA, INR lakh, percentile, %), no empty cells, no "—". Bold the leftmost column header. Cap at 5-6 columns for mobile.
 - Use bullet/numbered lists for ranked items, eligibility checklists, step-by-step timelines, and pros/cons — never as a substitute for a table when a comparison is being made.
 - Present numbers consistently: INR (not Rs./₹ mixed), lakh / crore / LPA spelled out, percentiles as "98.5 %ile", years as "${currentYear}-${String(currentYear + 1).slice(-2)}".
 - The goal: a student should be able to scan the tables and lists alone and walk away with the decision-grade answer.
+
 
 Readability & formatting rules (MANDATORY — mobile-first, scannable):
 - HARD LIMIT: every <p> is MAX 3 sentences and UNDER 60 words. NO exceptions. If a thought runs longer → split it into two <p> blocks OR convert it into <ul>/<ol>/<table>. Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected.
