@@ -9,12 +9,12 @@
  */
 export function cdnImage(
   url: string | null | undefined,
-  opts: { width?: number; height?: number; quality?: number; dpr?: number } = {}
+  opts: { width?: number; height?: number; quality?: number; dpr?: number; version?: string | number | null } = {}
 ): string {
   if (!url) return "";
   // Only rewrite Supabase public object URLs
   if (!/\/storage\/v1\/object\/public\//.test(url)) return url;
-  const { width = 400, height, quality = 70, dpr = 1 } = opts;
+  const { width = 400, height, quality = 70, dpr = 1, version } = opts;
   const rendered = url.replace(
     "/storage/v1/object/public/",
     "/storage/v1/render/image/public/"
@@ -24,8 +24,17 @@ export function cdnImage(
   if (height) params.set("height", String(Math.round(height * dpr)));
   params.set("quality", String(quality));
   params.set("resize", "contain");
+  // Cache-busting key: when an image is replaced in storage its URL is the same,
+  // so we append a stable `v=` derived from the row's updated_at. CDN/browser
+  // can cache aggressively (1y immutable) keyed by this URL — bumped only when
+  // the underlying file actually changes.
+  if (version !== undefined && version !== null && version !== "") {
+    const v = typeof version === "string" ? version.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 24) : String(version);
+    if (v) params.set("v", v);
+  }
   return `${rendered}?${params.toString()}`;
 }
+
 
 /**
  * Returns a `srcset` string with 1x and 2x DPR variants so retina screens
@@ -40,7 +49,7 @@ export function cdnImage(
  */
 export function cdnImageSrcSet(
   url: string | null | undefined,
-  opts: { width?: number; height?: number; quality?: number } = {}
+  opts: { width?: number; height?: number; quality?: number; version?: string | number | null } = {}
 ): string {
   if (!url) return "";
   if (!/\/storage\/v1\/object\/public\//.test(url)) return "";

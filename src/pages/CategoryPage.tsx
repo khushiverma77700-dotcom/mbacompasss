@@ -13,6 +13,7 @@ import InstituteListingCard from "@/components/InstituteListingCard";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import LCPImagePreload from "@/components/LCPImagePreload";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import PageKeywords from "@/components/PageKeywords";
 import AIGistSection from "@/components/AIGistSection";
@@ -183,9 +184,15 @@ const CategoryPage = () => {
 
   const otherPages = allCityPages.filter((p: any) => p.slug !== cityPage?.slug);
 
+  const lcpHeroUrl = cityPage?.hero_image_url && !isGeneratedBanner(cityPage.hero_image_url)
+    ? cityPage.hero_image_url
+    : getLocationImage(queryCity !== "all" ? queryCity : cityPage?.name, queryState !== "all" ? queryState : cityPage?.state);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead {...resolvedSeo} />
+      <LCPImagePreload src={lcpHeroUrl} width={1280} quality={75} version={cityPage?.updated_at} />
+
 
       <div
         className="py-14 md:py-20 relative overflow-hidden"
