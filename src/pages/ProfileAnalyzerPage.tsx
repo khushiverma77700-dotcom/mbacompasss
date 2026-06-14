@@ -194,6 +194,15 @@ interface AnalysisResult {
     mock_score_target?: string;
     profile_score_target: number;
   }>;
+  college_playbooks?: import("@/components/profile-report/CollegePlaybooks").Playbook[];
+  tier_coverage_summary?: {
+    tier1_count?: number;
+    tier2_count?: number;
+    tier3_count?: number;
+    tier1_best_fit?: string;
+    tier2_best_fit?: string;
+    tier3_best_fit?: string;
+  };
 }
 
 interface FormData {
