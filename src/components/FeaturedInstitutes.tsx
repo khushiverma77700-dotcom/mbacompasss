@@ -72,7 +72,7 @@ const FeaturedInstitutes = () => {
                     />
                   ) : inst.logo_url ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/90 to-primary">
-                      <img src={cdnImage(inst.logo_url, { width: 240, quality: 75 })} alt={inst.name} className="h-16 w-auto object-contain drop-shadow-lg" loading="lazy" decoding="async" />
+                      <img src={cdnImage(inst.logo_url, { width: 240, quality: 75 })} srcSet={cdnImageSrcSet(inst.logo_url, { width: 240, quality: 75 })} sizes="240px" alt={inst.name} width={240} height={64} className="h-16 w-auto object-contain drop-shadow-lg" loading="lazy" decoding="async" />
                     </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
