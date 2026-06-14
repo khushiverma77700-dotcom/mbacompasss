@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { getOtpCallNotice, getOtpCallToastDescription } from "@/lib/otpCopy";
 
 /**
  * Institute-only auth panel.
@@ -134,7 +135,7 @@ const InlineAuthPanel = ({
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      toast.success(`OTP sent to ${signupForm.phone}`);
+      toast.success(getOtpCallToastDescription(signupForm.phone));
       setOtpStep(true);
       setResendTimer(30);
     } catch (e: any) {
@@ -382,9 +383,7 @@ const InlineAuthPanel = ({
               </div>
               {otpStep && !phoneVerified && (
                 <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
-                  <p className="text-xs text-muted-foreground">
-                    You will receive an automated phone call on +91 {signupForm.phone} reading out your 6-digit OTP. Please pick up the call and enter the code below.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{getOtpCallNotice(signupForm.phone)}</p>
                   <div className="flex justify-center">
                     <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
                       <InputOTPGroup>

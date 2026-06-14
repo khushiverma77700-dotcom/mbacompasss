@@ -24,6 +24,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getOtpCallNotice, getOtpCallToastDescription } from "@/lib/otpCopy";
 import SEOHead, { generateBreadcrumbSchema, generateWebsiteSchema } from "@/components/SEOHead";
 import ExecutiveSummary from "@/components/profile-report/ExecutiveSummary";
 import SummaryHighlights from "@/components/profile-report/SummaryHighlights";
@@ -762,7 +763,7 @@ const ProfileAnalyzerPage = () => {
       const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      toast({ title: "You'll receive a call shortly", description: `You will get an automated phone call on +91 ${phone} announcing your 6-digit OTP. Please pick up and note it down.` });
+      toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });
       setOtpStep(true);
       setResendTimer(30);
     } catch (e: any) {
@@ -1644,7 +1645,7 @@ const ProfileAnalyzerPage = () => {
                       {otpStep && !phoneVerified && (
                         <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
                           <p className="text-xs text-muted-foreground">
-                            You will receive an <strong>automated phone call</strong> on +91 {phone} reading out your 6-digit OTP. Please pick up the call and enter the code below.
+                            {getOtpCallNotice(phone)}
                           </p>
                           <div className="flex justify-center">
                             <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>

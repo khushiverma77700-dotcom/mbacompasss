@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getOtpCallNotice, getOtpCallToastDescription } from "@/lib/otpCopy";
 import { Phone, AlertCircle, ShieldCheck, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 
 interface OnboardingDialogProps {
@@ -117,7 +118,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
 
       if (otpRes.error) throw new Error(otpRes.error.message);
       if (otpRes.data?.error) throw new Error(otpRes.data.error);
-      toast({ title: "OTP sent", description: `6-digit code sent to +91 ${phone}.` });
+      toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });
       setOtpStep(true);
       setResendTimer(30);
     } catch (err: any) {
@@ -220,7 +221,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
           {otpStep && !phoneVerified && (
             <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/40">
               <p className="text-xs text-muted-foreground text-center">
-                You will receive an <strong className="text-foreground">automated phone call</strong> on <span className="font-medium text-foreground">+91 {phone}</span> reading out your 6-digit OTP. Please pick up the call and enter the code below.
+                {getOtpCallNotice(phone)}
               </p>
               <div className="flex justify-center">
                 <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>

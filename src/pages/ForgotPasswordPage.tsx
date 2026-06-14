@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getOtpCallNotice, getOtpCallToastDescription } from "@/lib/otpCopy";
 import mbahubLogo from "@/assets/brandLogo";
 
 /**
@@ -67,7 +68,7 @@ const ForgotPasswordPage = () => {
       if (otpRes.error) throw new Error(otpRes.error.message);
       if ((otpRes.data as any)?.error) throw new Error((otpRes.data as any).error);
 
-      toast({ title: "OTP sent", description: `A 6-digit code was sent to +91 ${phone}.` });
+      toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });
       setStep("otp");
       setResendTimer(30);
     } catch (err: any) {
@@ -146,7 +147,7 @@ const ForgotPasswordPage = () => {
           <CardTitle className="font-heading text-2xl">Reset your password</CardTitle>
           <CardDescription>
             {step === "request" && "Works for email, mobile-OTP, and Google sign-ups. Enter your registered mobile to begin."}
-            {step === "otp" && "Enter the 6-digit OTP — we'll verify it automatically."}
+            {step === "otp" && "Answer the OTP call and enter the 6-digit code — we'll verify it automatically."}
             {step === "reset" && "Set a new password for your account."}
           </CardDescription>
         </CardHeader>
@@ -179,7 +180,7 @@ const ForgotPasswordPage = () => {
           {step === "otp" && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground text-center">
-                Enter the OTP sent to <span className="font-medium text-foreground">+91 {phone}</span>
+                {getOtpCallNotice(phone)}
               </p>
               <div className="flex justify-center">
                 <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue} autoFocus>
