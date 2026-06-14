@@ -689,6 +689,7 @@ const ProfileAnalyzerPage = () => {
   const [narrativeLoading, setNarrativeLoading] = useState(false);
   // Admin: force a fresh re-test, bypassing existing analysis + cooldown + AI cache
   const [forceRetest, setForceRetest] = useState(false);
+  const [showAuthGate, setShowAuthGate] = useState(false);
 
   const handleAdminRetest = () => {
     setForceRetest(true);
