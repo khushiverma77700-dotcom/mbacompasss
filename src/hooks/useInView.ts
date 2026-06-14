@@ -44,13 +44,22 @@ interface LazyMountProps {
 
 export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fallback = null }: LazyMountProps) => {
   const { ref, inView } = useInView<HTMLDivElement>(rootMargin);
-  // Before the section enters the viewport we render `fallback` (typically a
-  // skeleton matching the section's shape) so users always see a loading UI
-  // — never a blank gap. Once in view we mount the real children inside a
-  // Suspense boundary that re-uses the same fallback while lazy chunks load.
+  // CRITICAL CLS fix: keep `min-height` reserved even AFTER `inView` flips true.
+  // Otherwise the wrapper collapses to 0 while the lazy chunk downloads, then
+  // snaps back to its real height — yanking the footer and everything below
+  // (CLS was 2.1 — mostly from this). `content-visibility:auto` lets the
+  // browser skip rendering work for off-screen sections while still reserving
+  // the correct intrinsic space.
   return createElement(
     "div",
-    { ref, style: inView ? undefined : { minHeight } },
+    {
+      ref,
+      style: {
+        minHeight,
+        contentVisibility: "auto" as any,
+        containIntrinsicSize: `1px ${minHeight}px`,
+      },
+    },
     inView ? createElement(Suspense, { fallback }, children) : fallback
   );
 };

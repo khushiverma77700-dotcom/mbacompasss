@@ -139,7 +139,7 @@ const HeroSection = () => {
       <div className="relative container mx-auto px-4 pt-6 pb-16 md:pt-8 md:pb-20 z-10">
         <div className="text-center max-w-3xl mx-auto animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-4 py-1 mb-3 border border-white/20 shadow-lg shadow-black/5">
+          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1 mb-3 border border-white/25 shadow-lg shadow-black/5">
             <Award className="w-3.5 h-3.5 text-yellow-300" />
             <span className="text-xs md:text-sm font-semibold text-primary-foreground tracking-wide">
               India's #1 MBA Coaching Discovery Platform
@@ -163,7 +163,7 @@ const HeroSection = () => {
           {/* Search bar */}
           <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-4">
             <div className="relative" ref={searchRef}>
-              <div className="absolute -inset-1 rounded-xl bg-white/20 blur-md opacity-20 pointer-events-none" />
+              {/* (removed extra blur glow — cost a full-screen composite pass for no real visual gain) */}
               <div className="relative flex items-center bg-card rounded-xl shadow-2xl shadow-black/10 overflow-hidden">
                 <Search className="absolute left-4 w-4 h-4 text-muted-foreground z-10" />
                 <Input
@@ -221,7 +221,7 @@ const HeroSection = () => {
               <button
                 key={term}
                 onClick={() => { setQuery(term); }}
-                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full transition-all duration-200 border border-white/10 hover:border-white/25 font-medium"
+                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/15 hover:border-white/30 font-medium"
               >
                 {term}
               </button>
@@ -236,10 +236,9 @@ const HeroSection = () => {
             return (
               <div
                 key={i}
-                className="group cursor-default animate-fade-in"
-                style={{ animationDelay: `${0.3 + i * 0.1}s` }}
+                className="group cursor-default"
               >
-                <div className="relative text-center bg-white/10 backdrop-blur-md rounded-xl p-3 md:p-4 border border-white/15 overflow-hidden transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/25 group-hover:shadow-lg group-hover:-translate-y-0.5">
+                <div className="relative text-center bg-white/15 rounded-xl p-3 md:p-4 border border-white/20 overflow-hidden transition-colors duration-200 group-hover:bg-white/20 group-hover:border-white/30">
                   <div className="relative z-10">
                     <div className="w-8 h-8 mx-auto rounded-lg bg-white/15 flex items-center justify-center mb-1.5 group-hover:bg-white/20 transition-colors">
                       <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
