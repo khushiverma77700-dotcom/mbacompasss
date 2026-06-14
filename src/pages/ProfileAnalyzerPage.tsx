@@ -841,6 +841,21 @@ const ProfileAnalyzerPage = () => {
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); }, [form]);
 
+  // After signup/login completes, auto-resume the analysis if user was mid-flow.
+  const autoSubmittedRef = useRef(false);
+  useEffect(() => {
+    if (!user || autoSubmittedRef.current) return;
+    const pending = (() => { try { return localStorage.getItem(ANALYZER_PENDING_KEY) === "1"; } catch { return false; } })();
+    if (!pending) return;
+    autoSubmittedRef.current = true;
+    try { localStorage.removeItem(ANALYZER_PENDING_KEY); } catch {}
+    setShowAuthGate(false);
+    // Jump back to step 5 (final step) and trigger submission once the form is hydrated.
+    setStep(5);
+    setTimeout(() => { handleSubmit(); }, 200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const updateField = (key: keyof FormData, value: any) => {
     setForm(prev => ({ ...prev, [key]: value }));
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
