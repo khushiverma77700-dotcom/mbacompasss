@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from "@/lib/authRedirect";
+import { getOtpCallNotice, getOtpCallToastDescription } from "@/lib/otpCopy";
 import mbahubLogo from "@/assets/brandLogo";
 
 /**
@@ -150,7 +151,7 @@ const AuthPage = () => {
       if (otpRes.error) throw new Error(otpRes.error.message);
       if ((otpRes.data as any)?.error) throw new Error((otpRes.data as any).error);
 
-      toast({ title: "OTP sent", description: `We sent a 6-digit code to +91 ${phone}.` });
+      toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });
       setOtpStep(true);
       setResendTimer(30);
     } catch (err: any) {
@@ -358,7 +359,7 @@ const AuthPage = () => {
                 <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/40">
                   <p className="text-sm text-foreground font-medium text-center">Verify your mobile number</p>
                   <p className="text-xs text-muted-foreground text-center">
-                    We sent a 6-digit OTP to <span className="font-medium text-foreground">+91 {phone}</span>
+                    {getOtpCallNotice(phone)}
                   </p>
                   <div className="flex justify-center">
                     <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
