@@ -2292,6 +2292,12 @@ const ProfileAnalyzerPage = () => {
             {/* ─── College Fit Heatmap ─── */}
             <CollegeFitHeatmap rows={result.detailed_college_table as unknown as CollegeRow[]} />
 
+            {/* ─── Per-college Strategy Playbooks (Tier 1 / 2 / 3 tabs) ─── */}
+            <CollegePlaybooks
+              playbooks={result.college_playbooks}
+              coverage={result.tier_coverage_summary}
+            />
+
             {/* ─── Scenario Simulator (CAT 90/95/99 + Work Ex toggle) ─── */}
             <ScenarioSimulator
               rows={result.detailed_college_table as unknown as CollegeRow[]}
