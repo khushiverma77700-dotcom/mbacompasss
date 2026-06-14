@@ -274,6 +274,12 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       );
     }
 
+    // Final quality gate — buzzword scrub + auto-inject "About MBA Compass" if missing
+    if (typeof profile.description === "string" && profile.description) {
+      profile.description = runFinalQualityCheck(profile.description, { requireMbaCompass: true, requireTable: true, minInternalLinks: 3 }).html;
+    }
+
+
     const slug = String(profile.slug || brief.slug || brief.name)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
