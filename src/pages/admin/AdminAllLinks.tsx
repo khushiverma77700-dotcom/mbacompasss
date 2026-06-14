@@ -36,42 +36,76 @@ const AdminAllLinks = () => {
     fetchLinks(true);
   }, []);
 
+  const inferType = (path: string): string => {
+    if (path.startsWith("/institute/")) return "Institute";
+    if (path.startsWith("/college/")) return "College";
+    if (path.startsWith("/exam/")) return "Exam";
+    if (path.startsWith("/category/")) return "Category";
+    if (path.startsWith("/article/") || path.startsWith("/blog/")) return "Article";
+    if (path.startsWith("/colleges/") || path.startsWith("/coaching/")) return "City/State";
+    if (path.startsWith("/courses/") || path.startsWith("/course/")) return "Course";
+    if (path.startsWith("/news/") || path.startsWith("/newsroom/")) return "News";
+    if (path.startsWith("/formula")) return "Formula";
+    return "Static";
+  };
+
   const fetchLinks = async (isInitial = false) => {
     setLoading(true);
     try {
+      const labelMap = new Map<string, string>();
+
+      // Static pages — labels first
+      STATIC_PAGES_CONFIG.forEach((sp) => labelMap.set(sp.path, sp.label));
+
+      // Pull labels from DB in parallel (best-effort; failures are non-fatal)
+      const [institutes, colleges, exams, categories, articles, cityPages] = await Promise.all([
+        supabase.from("institutes").select("slug, name").then((r) => r.data || []),
+        supabase.from("colleges").select("slug, name").then((r) => r.data || []),
+        supabase.from("exams").select("slug, name").then((r) => r.data || []),
+        supabase.from("categories").select("slug, name").then((r) => r.data || []),
+        supabase.from("articles").select("slug, title").eq("published", true).then((r) => r.data || []),
+        supabase.from("city_pages").select("slug, name").eq("active", true).then((r) => r.data || []),
+      ]);
+      institutes.forEach((i: any) => i.slug && labelMap.set(`/institute/${i.slug}`, i.name));
+      colleges.forEach((c: any) => c.slug && labelMap.set(`/college/${c.slug}`, c.name));
+      exams.forEach((e: any) => e.slug && labelMap.set(`/exam/${e.slug}`, e.name));
+      categories.forEach((c: any) => c.slug && labelMap.set(`/category/${c.slug}`, c.name));
+      articles.forEach((a: any) => a.slug && labelMap.set(`/article/${a.slug}`, a.title));
+      cityPages.forEach((cp: any) => cp.slug && labelMap.set(`/colleges/${cp.slug}`, cp.name));
+
+      // Source of truth: the live sitemap (matches Google Search Console).
+      const SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-sitemap`;
+      const seen = new Set<string>();
       const allLinks: LinkItem[] = [];
+      try {
+        const res = await fetch(`${SITEMAP_URL}?cb=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const xml = await res.text();
+          const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]);
+          for (const loc of locs) {
+            let path = loc;
+            try {
+              path = new URL(loc).pathname + new URL(loc).search;
+            } catch {}
+            if (!path.startsWith("/")) continue;
+            if (seen.has(path)) continue;
+            seen.add(path);
+            const type = inferType(path);
+            const label = labelMap.get(path) || decodeURIComponent(path.split("/").pop() || path) || path;
+            allLinks.push({ url: path, label, type });
+          }
+        }
+      } catch (e) {
+        console.warn("[AllLinks] sitemap fetch failed", e);
+      }
 
-      // Static pages — auto-detected from centralized config
-      const staticPages = STATIC_PAGES_CONFIG.map(sp => ({
-        url: sp.path,
-        label: sp.label,
-        type: "Static",
-      }));
-      allLinks.push(...staticPages);
-
-      // Institutes
-      const { data: institutes } = await supabase.from("institutes").select("slug, name");
-      institutes?.forEach((i) => allLinks.push({ url: `/institute/${i.slug}`, label: i.name, type: "Institute" }));
-
-      // Colleges
-      const { data: colleges } = await supabase.from("colleges").select("slug, name");
-      colleges?.forEach((c) => allLinks.push({ url: `/college/${c.slug}`, label: c.name, type: "College" }));
-
-      // Exams
-      const { data: exams } = await supabase.from("exams").select("slug, name");
-      exams?.forEach((e) => allLinks.push({ url: `/exam/${e.slug}`, label: e.name, type: "Exam" }));
-
-      // Categories
-      const { data: categories } = await supabase.from("categories").select("slug, name");
-      categories?.forEach((c) => allLinks.push({ url: `/category/${c.slug}`, label: c.name, type: "Category" }));
-
-      // Articles
-      const { data: articles } = await supabase.from("articles").select("slug, title").eq("published", true);
-      articles?.forEach((a) => allLinks.push({ url: `/article/${a.slug}`, label: a.title, type: "Article" }));
-
-      // City/State pages
-      const { data: cityPages } = await supabase.from("city_pages").select("slug, name").eq("active", true);
-      cityPages?.forEach((cp) => allLinks.push({ url: `/colleges/${cp.slug}`, label: cp.name, type: "City/State" }));
+      // Safety net: include static pages even if sitemap missed any
+      STATIC_PAGES_CONFIG.forEach((sp) => {
+        if (!seen.has(sp.path)) {
+          seen.add(sp.path);
+          allLinks.push({ url: sp.path, label: sp.label, type: "Static" });
+        }
+      });
 
       setLinks(allLinks);
 
