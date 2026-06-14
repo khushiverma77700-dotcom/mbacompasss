@@ -50,11 +50,19 @@ const HeroSection = () => {
 
   useEffect(() => {
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 3000));
-    const handle = schedule(() => setHydrateSettings(true), { timeout: 5500 });
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(() => setHydrateSettings(true), { timeout: 2500 });
+      } else {
+        setHydrateSettings(true);
+      }
+    }, 5000);
     return () => {
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      try { cancel(handle); } catch {}
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) {
+        try { w.cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, []);
 
