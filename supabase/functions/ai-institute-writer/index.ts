@@ -219,7 +219,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         // COST OPT: gemini-2.5-flash matches preview tier quality for tool-calling at ~30% lower cost.
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
           { role: "user", content: userPrompt },
         ],
         tools: [tool],

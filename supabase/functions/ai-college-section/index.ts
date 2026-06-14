@@ -735,7 +735,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
     const aiRes = await callAIGateway({
         model: "openai/gpt-5-mini",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
