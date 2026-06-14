@@ -892,6 +892,14 @@ const ProfileAnalyzerPage = () => {
       });
       return;
     }
+    // AUTH GATE: profile is filled — require signup/login before generating & showing the report.
+    // Google sign-in users still get mobile OTP via the global OnboardingDialog.
+    if (!user) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); } catch {}
+      try { localStorage.setItem(ANALYZER_PENDING_KEY, "1"); } catch {}
+      setShowAuthGate(true);
+      return;
+    }
     setStep(6);
     setLoadingProgress(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
