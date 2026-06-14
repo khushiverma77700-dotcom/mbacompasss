@@ -1644,7 +1644,7 @@ const ProfileAnalyzerPage = () => {
                       {otpStep && !phoneVerified && (
                         <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
                           <p className="text-xs text-muted-foreground">
-                            📞 You will receive an <strong>automated phone call</strong> on +91 {phone} reading out your 6-digit OTP. Please pick up the call and enter the code below.
+                            You will receive an <strong>automated phone call</strong> on +91 {phone} reading out your 6-digit OTP. Please pick up the call and enter the code below.
                           </p>
                           <div className="flex justify-center">
                             <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>

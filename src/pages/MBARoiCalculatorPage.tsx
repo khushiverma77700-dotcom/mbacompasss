@@ -1290,7 +1290,9 @@ const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSen
                 </div>
                 {otpStep && !form.phoneVerified && (
                   <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
-                    <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {form.phone}</p>
+                    <p className="text-xs text-muted-foreground">
+                      You will receive an automated phone call on +91 {form.phone} reading out your 6-digit OTP. Please pick up the call and enter the code below.
+                    </p>
                     <div className="flex justify-center">
                       <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
                         <InputOTPGroup>
