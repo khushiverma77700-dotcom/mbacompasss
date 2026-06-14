@@ -2852,6 +2852,18 @@ const ProfileAnalyzerPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AUTH GATE — required before generating & showing the report */}
+      <LoginRequiredDialog
+        open={showAuthGate}
+        onOpenChange={(open) => {
+          setShowAuthGate(open);
+          if (!open) {
+            try { localStorage.removeItem(ANALYZER_PENDING_KEY); } catch {}
+          }
+        }}
+        message="Create your free account or log in to view your personalised MBA profile report. Mobile OTP verification is required."
+      />
     </div>
   );
 };
