@@ -395,11 +395,19 @@ const SettingsPrefetcher = () => {
     const path = window.location.pathname;
     if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt")) return;
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 7000));
-    const handle = schedule(() => setReady(true), { timeout: 9000 });
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(() => setReady(true), { timeout: 2500 });
+      } else {
+        setReady(true);
+      }
+    }, 7000);
     return () => {
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      try { cancel(handle); } catch {}
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) {
+        try { w.cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, []);
   return ready ? <SettingsPrefetcherInner /> : null;
@@ -420,19 +428,27 @@ const DeferredChrome = () => {
   useEffect(() => {
     setShow(false);
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 7000));
-    const handle = schedule(() => setShow(true), { timeout: 9000 });
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(() => setShow(true), { timeout: 2500 });
+      } else {
+        setShow(true);
+      }
+    }, 7000);
     return () => {
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      try { cancel(handle); } catch {}
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) {
+        try { w.cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, [location.pathname]);
 
   // Reserve vertical space so the late-mounting Footer doesn't cause CLS jumps.
-  if (!show) return <div style={{ minHeight: 320 }} aria-hidden="true" />;
+  if (!show) return <div style={{ minHeight: 760 }} aria-hidden="true" />;
 
   return (
-    <Suspense fallback={<div style={{ minHeight: 320 }} aria-hidden="true" />}>
+    <Suspense fallback={<div style={{ minHeight: 760 }} aria-hidden="true" />}>
       <Footer />
     </Suspense>
   );
