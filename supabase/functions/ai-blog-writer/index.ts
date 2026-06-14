@@ -454,7 +454,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
+  const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.aboutCompassHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
   const intro = stripExternalLinks(draft.intro || "");
   const content = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
   const finalPlain = toPlainText(`${intro} ${content}`);
