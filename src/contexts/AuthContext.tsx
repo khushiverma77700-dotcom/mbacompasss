@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
 const ADMIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min — session-scoped, expires fast so a tampered cache cannot persistently fake admin
@@ -119,20 +118,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
-        applySession(nextSession);
-      }
-    );
+    let subscription: { unsubscribe: () => void } | undefined;
+    import("@/integrations/supabase/client")
+      .then(({ supabase }) => {
+        if (cancelled) return;
+        subscription = supabase.auth.onAuthStateChange((_event, nextSession) => {
+          applySession(nextSession);
+        }).data.subscription;
 
-    supabase.auth.getSession()
-      .then(({ data: { session: nextSession } }) => applySession(nextSession))
+        supabase.auth.getSession()
+          .then(({ data: { session: nextSession } }) => applySession(nextSession))
+          .catch(() => applySession(null));
+      })
       .catch(() => applySession(null));
 
     return () => {
       cancelled = true;
       window.clearTimeout(bootTimeout);
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -177,6 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
       try {
+        const { supabase } = await import("@/integrations/supabase/client");
         const [rolesRes, permRes] = await Promise.all([
           supabase
             .from("user_roles")
@@ -226,6 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     phone?: string,
     designation?: string
   ) => {
+    const { supabase } = await import("@/integrations/supabase/client");
     const signupPageUrl = window.location.pathname;
     const signupPageName = document.title || "Unknown";
     const { error } = await supabase.auth.signUp({
@@ -246,6 +251,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
+    const { supabase } = await import("@/integrations/supabase/client");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
@@ -259,6 +265,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAllowedSections(null);
 
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
       await supabase.auth.signOut({ scope: "local" });
     } catch (e) {
       console.warn("signOut error (non-blocking):", e);
