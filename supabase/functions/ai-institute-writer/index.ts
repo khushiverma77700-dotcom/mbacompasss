@@ -4,6 +4,7 @@
 // Public endpoint — keep verify_jwt = false (project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -218,7 +219,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         // COST OPT: gemini-2.5-flash matches preview tier quality for tool-calling at ~30% lower cost.
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
           { role: "user", content: userPrompt },
         ],
         tools: [tool],

@@ -9,6 +9,7 @@
 // Public endpoint — verify_jwt = false (project default). Calls Lovable AI Gateway via
 // tool-calling for strict structured output.
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
@@ -310,7 +311,7 @@ For EACH course return:
   const res = await callCourseAI({
     model: MODEL,
     messages: [
-      { role: "system", content: system },
+      { role: "system", content: system + MBA_COMPASS_SECTION_RULES },
       { role: "user", content: user },
     ],
     tools: [tool],

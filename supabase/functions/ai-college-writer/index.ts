@@ -3,6 +3,7 @@
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -430,7 +431,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       profile = await callToolModel({
         label: "college core fields",
         maxTokens: 3200,
-        system: `${systemPrompt}\n\nReturn compact structured data only through the function call. Do NOT include description or admission_process in this response. Keep every string concise to avoid truncation.`,
+        system: `${systemPrompt}${MBA_COMPASS_SECTION_RULES}\n\nReturn compact structured data only through the function call. Do NOT include description or admission_process in this response. Keep every string concise to avoid truncation.`,
         user: `${userPrompt}\n\nCall college_core_fields with ONLY the requested compact fields. Do not include HTML fields in this step.`,
         tool: coreFieldsTool,
       });
@@ -477,7 +478,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         callTextModel({
           label: "college description",
           maxTokens: bulkMode ? 2400 : 4200,
-          system: descriptionSystem,
+          system: descriptionSystem + MBA_COMPASS_SECTION_RULES,
           user: bulkMode
             ? `Using the structured profile below, write a concise ready-to-publish HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-650 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 4-5 <h2> sections\n- include 1 compact <table>\n- final FAQ section with 3 Q&A pairs\n- 3-5 internal-link anchors with descriptive multi-word anchor text\n- DO NOT include any "(source: ...)", "[src:...]", or "Last updated:" markers — state facts plainly with the year woven into the sentence`
             : `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- 5-8 internal-link anchors with descriptive multi-word anchor text\n- DO NOT include any "(source: ...)", "[src:...]", or "Last updated:" markers — state facts plainly with the year woven into the sentence`,
@@ -485,7 +486,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         callTextModel({
           label: "college admission process",
           maxTokens: bulkMode ? 1600 : 2600,
-          system: admissionSystem,
+          system: admissionSystem + MBA_COMPASS_SECTION_RULES,
           user: bulkMode
             ? `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 250-400 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet list, and 1 compact <table>\n- mention ${brief.name} naturally\n- end with a short freshness line for ${admissionCycle}`
             : `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-700 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet lists, and at least 2 <table>s\n- mention ${brief.name} at least 6 times naturally\n- end with a short freshness line for ${admissionCycle}`,

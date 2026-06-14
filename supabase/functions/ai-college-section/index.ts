@@ -9,6 +9,7 @@
 //  • Anchor-fact propagation so the same establishment year / ranking / fees are reused across every section
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -734,7 +735,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
     const aiRes = await callAIGateway({
         model: "openai/gpt-5-mini",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
