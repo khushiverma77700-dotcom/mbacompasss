@@ -180,19 +180,33 @@
       </div>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Google Analytics (GA4) — loaded after main content for faster FCP/LCP -->
+    <!-- Google Analytics (GA4) — deferred to first user interaction (or 8s
+         idle fallback) so it never competes with LCP/TTI on mobile. -->
     <script>
-      window.addEventListener('load', function () {
-        var s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-QV79FTE0XN';
-        document.head.appendChild(s);
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        window.gtag = gtag;
-        gtag('js', new Date());
-        gtag('config', 'G-QV79FTE0XN');
-      });
+      (function () {
+        var loaded = false;
+        function loadGA() {
+          if (loaded) return;
+          loaded = true;
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-QV79FTE0XN';
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', 'G-QV79FTE0XN');
+        }
+        var events = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'mousemove'];
+        function once() {
+          events.forEach(function (e) { window.removeEventListener(e, once, { passive: true, capture: true }); });
+          loadGA();
+        }
+        events.forEach(function (e) { window.addEventListener(e, once, { passive: true, capture: true }); });
+        // Safety net: load anyway after 8s so bounces from idle visits are still counted.
+        setTimeout(loadGA, 8000);
+      })();
     </script>
   </body>
 </html>
