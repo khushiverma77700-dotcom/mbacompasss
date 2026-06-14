@@ -98,7 +98,7 @@ const LatestArticlesSection = () => {
                 <Link to={`/article/${article.slug}`} className="group flex gap-4 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/20">
                   <div className="w-28 h-24 rounded-xl overflow-hidden flex-shrink-0">
                     {getImage(article) ? (
-                      <img src={cdnImage(getImage(article), { width: 240, quality: 70 })} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
+                      <img src={cdnImage(getImage(article), { width: 240, quality: 70 })} srcSet={cdnImageSrcSet(getImage(article), { width: 240, quality: 70 })} sizes="112px" alt={article.title} width={112} height={96} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
                         <BookOpen className="w-6 h-6 text-muted-foreground/30" />
