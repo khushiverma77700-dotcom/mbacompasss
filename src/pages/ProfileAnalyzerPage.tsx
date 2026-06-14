@@ -1644,9 +1644,6 @@ const ProfileAnalyzerPage = () => {
                       {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
                       {otpStep && !phoneVerified && (
                         <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
-                          <p className="text-xs text-muted-foreground">
-                            {getOtpCallNotice(phone)}
-                          </p>
                           <div className="flex justify-center">
                             <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
                               <InputOTPGroup>
@@ -1667,6 +1664,9 @@ const ProfileAnalyzerPage = () => {
                               {otpVerifying ? "Verifying..." : "Verify OTP"}
                             </Button>
                           </div>
+                          <p className="text-xs font-medium text-primary leading-relaxed">
+                            {getOtpCallNotice(phone)}
+                          </p>
                         </div>
                       )}
                     </div>
