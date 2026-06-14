@@ -45,11 +45,19 @@ const Index = () => {
     // Mount near-fold sections after the critical hero is interactive; avoids
     // downloading category data + extra chunks during LCP on slow mobile.
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2400));
-    const handle = schedule(() => setShowDeferredSections(true), { timeout: 4500 });
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(() => setShowDeferredSections(true), { timeout: 2500 });
+      } else {
+        setShowDeferredSections(true);
+      }
+    }, 2400);
     return () => {
-      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
-      cancel(handle);
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) {
+        try { w.cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, []);
 
