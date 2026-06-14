@@ -34,6 +34,7 @@ import BenchmarkPanel from "@/components/profile-report/BenchmarkPanel";
 import ROIScatterCard from "@/components/profile-report/ROIScatterCard";
 import AdvancedCharts from "@/components/profile-report/AdvancedCharts";
 import PdfDownloadButton from "@/components/profile-report/PdfDownloadButton";
+import CollegePlaybooks from "@/components/profile-report/CollegePlaybooks";
 import ShareReportButton from "@/components/profile-report/ShareReportButton";
 import type { CollegeRow, ProfileInputLite, ScoreBreakdown } from "@/lib/profileScoring";
 import InternalLinksSection from "@/components/profile-analyzer/InternalLinksSection";
