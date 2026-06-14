@@ -39,6 +39,9 @@ import type { CollegeRow, ProfileInputLite, ScoreBreakdown } from "@/lib/profile
 import InternalLinksSection from "@/components/profile-analyzer/InternalLinksSection";
 import { buildAnalyzerCanonical, seoSlugify as urlSlugify } from "@/lib/seoUrlBuilder";
 import { buildProfileAnalyzerSchemas } from "@/lib/profileAnalyzerSchema";
+import LoginRequiredDialog from "@/components/LoginRequiredDialog";
+
+const ANALYZER_PENDING_KEY = "profile_analyzer_pending_submit";
 
 interface PremiumNarrative {
   one_line_summary?: string;
