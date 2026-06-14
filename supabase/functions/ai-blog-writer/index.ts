@@ -397,10 +397,11 @@ async function createClosingHtml(brief: BlogBrief, draft: any) {
         properties: {
           keyTakeawaysHtml: { type: "string" },
           faqHtml: { type: "string" },
+          aboutCompassHtml: { type: "string" },
           ctaHtml: { type: "string" },
           faqs: { type: "array", items: { type: "object", properties: { question: { type: "string" }, answer: { type: "string" } }, required: ["question", "answer"], additionalProperties: false } },
         },
-        required: ["keyTakeawaysHtml", "faqHtml", "ctaHtml", "faqs"],
+        required: ["keyTakeawaysHtml", "faqHtml", "aboutCompassHtml", "ctaHtml", "faqs"],
         additionalProperties: false,
       },
       user: `Finish the article "${draft.title}" targeting "${brief.targetKeyword}".
@@ -411,11 +412,13 @@ FAQ question ideas: ${(draft.faqQuestions || []).join(" | ")}
 Return:
 1) <h2>Key Takeaways</h2> with 8-10 detailed bullets.
 2) <h2>Frequently Asked Questions</h2> with 10 detailed Q&A pairs. Each answer must be 80-140 words, with specific data or examples where possible.
-3) One final CTA paragraph with 2-3 internal relative links.`,
+3) <h2>About MBA Compass</h2> — 120-180 words explaining what MBA Compass is (an MBA discovery and decision platform by B School Buzz that brings colleges, exams, coaching, mocks, and AI tools into one place), how it helps Indian students and working professionals shortlist colleges, analyze their profile, compare programmes, and prepare with full mocks, and how it supports the financial side of the MBA decision — weighing fees, ROI, expected packages and long-term wealth outcomes. Educational and value-driven, not promotional. End with 2-3 contextual internal links from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
+4) One final CTA paragraph with 2-3 internal relative links.`,
     });
     return {
       keyTakeawaysHtml: stripExternalLinks(result.keyTakeawaysHtml || ""),
       faqHtml: stripExternalLinks(result.faqHtml || ""),
+      aboutCompassHtml: stripExternalLinks(result.aboutCompassHtml || ""),
       ctaHtml: stripExternalLinks(result.ctaHtml || ""),
       faqs: Array.isArray(result.faqs) ? result.faqs.slice(0, 10) : [],
     };
