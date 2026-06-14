@@ -49,7 +49,7 @@ export function cdnImage(
  */
 export function cdnImageSrcSet(
   url: string | null | undefined,
-  opts: { width?: number; height?: number; quality?: number } = {}
+  opts: { width?: number; height?: number; quality?: number; version?: string | number | null } = {}
 ): string {
   if (!url) return "";
   if (!/\/storage\/v1\/object\/public\//.test(url)) return "";
