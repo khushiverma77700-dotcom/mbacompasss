@@ -22,6 +22,45 @@ window.addEventListener("vite:preloadError", () => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// Auto cache-bust: poll /version.json and force a hard reload
+// (clearing SW + caches) whenever a newer build is detected.
+// ─────────────────────────────────────────────────────────────
+declare const __BUILD_ID__: string;
+(() => {
+  if (!import.meta.env.PROD) return;
+  const CURRENT = typeof __BUILD_ID__ !== "undefined" ? __BUILD_ID__ : "";
+  if (!CURRENT) return;
+  const KEY = "__version_reload_attempted__";
+
+  const checkVersion = async () => {
+    try {
+      const res = await fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const { buildId } = await res.json();
+      if (!buildId || buildId === CURRENT) return;
+      if (sessionStorage.getItem(KEY) === buildId) return;
+      sessionStorage.setItem(KEY, buildId);
+      // Nuke SW + caches so the next load is fully fresh
+      try {
+        const regs = await navigator.serviceWorker?.getRegistrations?.();
+        await Promise.all((regs || []).map((r) => r.unregister()));
+        const keys = await caches?.keys?.();
+        await Promise.all((keys || []).map((k) => caches.delete(k)));
+      } catch {}
+      window.location.reload();
+    } catch {}
+  };
+
+  // Check on load, on tab focus, and every 5 min.
+  checkVersion();
+  window.addEventListener("focus", checkVersion);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkVersion();
+  });
+  setInterval(checkVersion, 5 * 60 * 1000);
+})();
+
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <App />
