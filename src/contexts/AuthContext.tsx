@@ -119,7 +119,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     let subscription: { unsubscribe: () => void } | undefined;
-    import("@/integrations/supabase/client")
+    let idleHandle: number | undefined;
+    const shouldStartAuthNow = () => {
+      const path = window.location.pathname;
+      return path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/auth") ||
+        path.startsWith("/dashboard") || path.startsWith("/profile-analyzer") || path.startsWith("/mocks");
+    };
+    const startAuth = () => import("@/integrations/supabase/client")
       .then(({ supabase }) => {
         if (cancelled) return;
         subscription = supabase.auth.onAuthStateChange((_event, nextSession) => {
@@ -132,9 +138,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
       .catch(() => applySession(null));
 
+    if (shouldStartAuthNow()) {
+      void startAuth();
+    } else if ("requestIdleCallback" in window) {
+      idleHandle = (window as any).requestIdleCallback(() => void startAuth(), { timeout: 2500 });
+    } else {
+      idleHandle = window.setTimeout(() => void startAuth(), 1500);
+    }
+
     return () => {
       cancelled = true;
       window.clearTimeout(bootTimeout);
+      if (idleHandle !== undefined) {
+        const cancel = "cancelIdleCallback" in window ? (window as any).cancelIdleCallback : window.clearTimeout;
+        try { cancel(idleHandle); } catch {}
+      }
       subscription?.unsubscribe();
     };
   }, []);
