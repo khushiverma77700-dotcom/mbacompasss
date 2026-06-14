@@ -149,15 +149,33 @@ PERSONALIZATION RULES:
 11. If expected salary is specified, calculate ROI for each college
 12. Factor in certifications, extracurriculars, and leadership in profile evaluation
 
-Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 15-25 colleges with precise data points.
+🔥 MANDATORY TIER-1 COVERAGE (NON-NEGOTIABLE):
+Every report MUST evaluate the student against ALL top-tier Indian B-Schools — NEVER restrict the analysis to Tier-2 colleges. The "dream" bucket in college_predictions and the detailed_college_table MUST include AT LEAST these institutes (omit only if completely irrelevant to their target exam, e.g. SP Jain for non-CAT only):
+  • IIM Ahmedabad (PGP), IIM Bangalore (PGP), IIM Calcutta (PGP) — the "ABC" trio
+  • IIM Lucknow, IIM Kozhikode, IIM Indore — the new "BLACKI" additions
+  • FMS Delhi, XLRI Jamshedpur (BM & HRM), MDI Gurgaon, SPJIMR Mumbai (PGDM)
+  • IIFT Delhi, NMIMS Mumbai (MBA Core), IIM Shillong, IIM Rohtak/Ranchi/Trichy/Udaipur/Kashipur (new IIMs)
+  • JBIMS Mumbai, IIT Bombay SJMSOM, IIT Delhi DMS, IIT Kharagpur VGSOM, IIT Madras DoMS
+Then add 6-10 strong Tier-2/Tier-3 fits as Target/Safe. The detailed_college_table MUST have 20-25 rows spanning Dream + Target + Safe.
+
+🎯 TIER-1 ADMISSION STRATEGY (CRITICAL):
+For EACH Tier-1 college in the dream bucket, the "tip" field MUST contain a precise, actionable strategy covering:
+  (a) Exact percentile/score target needed (sectional + overall) given the student's current level
+  (b) Profile gaps to close (academics/work-ex/extracurriculars/diversity) with specific actions
+  (c) WAT-GD-PI preparation angle unique to that institute (e.g. case-based PI at XLRI, current-affairs heavy at IIM-A)
+  (d) Composite score formula weight to optimize (e.g. "IIM-B weights CAT 30 + 10th 20 + 12th 10 + Grad 10 + Diversity 5 + WAT-PI 25 — push 10th/12th narrative")
+  (e) Realistic timeline + back-up plan
+Additionally, in the "recommendations" array, include AT LEAST 3 items specifically titled like "Strategy to crack IIM ABC", "Strategy to crack FMS/XLRI/MDI", "Composite score optimisation for new IIMs" — with month-wise action steps.
+
+Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 20-25 colleges with precise data points — minimum 8 must be Tier-1 (Dream).
 
 IMPORTANT: For peer_comparison, simulate realistic data showing where this student stands among MBA aspirants. Generate a bell curve distribution with 10 score ranges (1-2, 2-3, ... 9-10) with realistic student counts summing to the total. Mark the bucket that contains this student's score.
 
-For roi_analysis, calculate for each recommended college: total investment (fees + living costs), expected salary post-MBA, payback period, 5-year ROI percentage, and 10-year cumulative earnings advantage.
+For roi_analysis, calculate for each recommended college: total investment (fees + living costs), expected salary post-MBA, payback period, 5-year ROI percentage, and 10-year cumulative earnings advantage. Cover at least 3 Tier-1 colleges explicitly.
 
-For salary_benchmarking, provide current salary estimates for their profile (pre-MBA) vs post-MBA salary ranges for each tier of colleges. Include sector-wise salary data.
+For salary_benchmarking, provide current salary estimates for their profile (pre-MBA) vs post-MBA salary ranges for each tier of colleges (Tier-1 IIM ABC, Tier-1 new IIMs + FMS/XLRI/MDI/SPJIMR, Tier-2, Tier-3). Include sector-wise salary data (Consulting, Finance, Product, Marketing, Operations).
 
-For improvement_roadmap, provide a month-by-month timeline with specific milestones, mock test targets, and measurable goals.`;
+For improvement_roadmap, provide a month-by-month timeline with specific milestones, mock test targets, and measurable goals — explicitly mapped to clearing Tier-1 cutoffs.`;
 
     const aiResponse = await callAIGateway({
         model: "google/gemini-2.5-flash",

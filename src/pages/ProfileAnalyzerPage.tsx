@@ -752,7 +752,7 @@ const ProfileAnalyzerPage = () => {
       const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}` });
+      toast({ title: "You'll receive a call shortly", description: `You will get an automated phone call on +91 ${phone} announcing your 6-digit OTP. Please pick up and note it down.` });
       setOtpStep(true);
       setResendTimer(30);
     } catch (e: any) {
@@ -1631,7 +1631,9 @@ const ProfileAnalyzerPage = () => {
                       {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
                       {otpStep && !phoneVerified && (
                         <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
-                          <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {phone}</p>
+                          <p className="text-xs text-muted-foreground">
+                            📞 You will receive an <strong>automated phone call</strong> on +91 {phone} reading out your 6-digit OTP. Please pick up the call and enter the code below.
+                          </p>
                           <div className="flex justify-center">
                             <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
                               <InputOTPGroup>
