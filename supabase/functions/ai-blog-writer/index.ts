@@ -42,6 +42,9 @@ const stripExternalLinks = (html: string) => {
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+  // Strip banned "Quick Summary" / TL;DR labels — only "Summary" is allowed
+  out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
+  out = out.replace(/\bTL;?DR\b/gi, "Summary");
   return out.replace(/[ \t]{2,}/g, " ").trim();
 };
 
