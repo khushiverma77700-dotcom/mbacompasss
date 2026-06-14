@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { cdnImage } from "@/lib/imageTransform";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 
 const LatestArticlesSection = () => {
   const { data: articles, isLoading } = useQuery({
@@ -67,7 +67,7 @@ const LatestArticlesSection = () => {
             <Link to={`/article/${featured.slug}`} className="group block bg-card rounded-2xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-all duration-300 h-full">
               <div className="h-56 overflow-hidden relative">
                 {getImage(featured) ? (
-                  <img src={cdnImage(getImage(featured), { width: 720, quality: 72 })} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" />
+                  <img src={cdnImage(getImage(featured), { width: 720, quality: 72 })} srcSet={cdnImageSrcSet(getImage(featured), { width: 720, quality: 72 })} sizes="(max-width: 768px) 100vw, 720px" alt={featured.title} width={720} height={405} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full h-full hero-gradient flex items-center justify-center">
                     <BookOpen className="w-16 h-16 text-primary-foreground/20" />
@@ -98,7 +98,7 @@ const LatestArticlesSection = () => {
                 <Link to={`/article/${article.slug}`} className="group flex gap-4 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/20">
                   <div className="w-28 h-24 rounded-xl overflow-hidden flex-shrink-0">
                     {getImage(article) ? (
-                      <img src={cdnImage(getImage(article), { width: 240, quality: 70 })} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
+                      <img src={cdnImage(getImage(article), { width: 240, quality: 70 })} srcSet={cdnImageSrcSet(getImage(article), { width: 240, quality: 70 })} sizes="112px" alt={article.title} width={112} height={96} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
                         <BookOpen className="w-6 h-6 text-muted-foreground/30" />

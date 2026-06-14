@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { cdnImage } from "@/lib/imageTransform";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 import { Link } from "react-router-dom";
 import {
   Star, Gift, CheckCircle, BookOpen,
@@ -96,7 +96,7 @@ const CoachingOfWeekSection = () => {
                     {/* Left: Banner — spans 2 cols */}
                     <div className="md:col-span-2 relative bg-muted">
                       {imageUrl ? (
-                        <img src={imageUrl} alt={inst?.name || ""} className="w-full h-48 md:h-full object-contain object-center" loading="lazy" />
+                        <img src={cdnImage(imageUrl, { width: 600, quality: 72 })} srcSet={cdnImageSrcSet(imageUrl, { width: 600, quality: 72 })} sizes="(max-width: 768px) 100vw, 600px" alt={inst?.name || ""} width={600} height={400} className="w-full h-48 md:h-full object-contain object-center" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-48 md:h-full hero-gradient flex items-center justify-center">
                           <span className="font-heading text-5xl font-extrabold text-primary-foreground/20">{inst?.name?.charAt(0)}</span>
@@ -110,7 +110,7 @@ const CoachingOfWeekSection = () => {
                       {/* Logo overlay */}
                       {inst?.logo_url && (
                         <div className="absolute bottom-3 left-3 w-12 h-12 rounded-xl bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center p-1.5">
-                          <img src={cdnImage(inst.logo_url, { width: 180, quality: 75 })} alt="" className="w-full h-full object-contain" loading="lazy" decoding="async" />
+                          <img src={cdnImage(inst.logo_url, { width: 180, quality: 75 })} srcSet={cdnImageSrcSet(inst.logo_url, { width: 180, quality: 75 })} sizes="48px" alt="" width={48} height={48} className="w-full h-full object-contain" loading="lazy" decoding="async" />
                         </div>
                       )}
                     </div>

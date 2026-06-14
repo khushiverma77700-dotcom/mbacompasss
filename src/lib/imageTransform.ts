@@ -9,20 +9,45 @@
  */
 export function cdnImage(
   url: string | null | undefined,
-  opts: { width?: number; height?: number; quality?: number } = {}
+  opts: { width?: number; height?: number; quality?: number; dpr?: number } = {}
 ): string {
   if (!url) return "";
   // Only rewrite Supabase public object URLs
   if (!/\/storage\/v1\/object\/public\//.test(url)) return url;
-  const { width = 400, height, quality = 70 } = opts;
+  const { width = 400, height, quality = 70, dpr = 1 } = opts;
   const rendered = url.replace(
     "/storage/v1/object/public/",
     "/storage/v1/render/image/public/"
   );
   const params = new URLSearchParams();
-  params.set("width", String(width));
-  if (height) params.set("height", String(height));
+  params.set("width", String(Math.round(width * dpr)));
+  if (height) params.set("height", String(Math.round(height * dpr)));
   params.set("quality", String(quality));
   params.set("resize", "contain");
   return `${rendered}?${params.toString()}`;
 }
+
+/**
+ * Returns a `srcset` string with 1x and 2x DPR variants so retina screens
+ * load sharper images without ballooning bytes on standard displays.
+ * Use together with `cdnImage(...)` as the `src` fallback and a `sizes` attr.
+ *
+ *   <img
+ *     src={cdnImage(url, { width: 400 })}
+ *     srcSet={cdnImageSrcSet(url, { width: 400 })}
+ *     sizes="(max-width: 768px) 100vw, 400px"
+ *   />
+ */
+export function cdnImageSrcSet(
+  url: string | null | undefined,
+  opts: { width?: number; height?: number; quality?: number } = {}
+): string {
+  if (!url) return "";
+  if (!/\/storage\/v1\/object\/public\//.test(url)) return "";
+  const { width = 400 } = opts;
+  return [
+    `${cdnImage(url, { ...opts, dpr: 1 })} ${width}w`,
+    `${cdnImage(url, { ...opts, dpr: 2 })} ${width * 2}w`,
+  ].join(", ");
+}
+
