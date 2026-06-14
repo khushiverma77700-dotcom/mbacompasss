@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import type { User, Session } from "@supabase/supabase-js";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
 const ADMIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min — session-scoped, expires fast so a tampered cache cannot persistently fake admin
