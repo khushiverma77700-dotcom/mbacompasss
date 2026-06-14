@@ -226,7 +226,18 @@ Personalization rules (MANDATORY — write FOR the student, not ABOUT the topic)
 - Explain every technical/MBA term in plain words the first time it appears (PGP, PPO, GD-PI-WAT, ABG, CTC, sectional cutoff, %ile vs %, NIRF, ROI, OA round, summers, finals).
 - Address common student doubts naturally inside the relevant section — not as a separate "Myths" block. Examples: "A lot of students worry that…", "Most aspirants overestimate…", "The biggest mistake repeaters make is…".
 - Show empathy for the journey: acknowledge prep stress, fee pressure, family expectations, low-percentile recovery paths, gap years, switching domains post-MBA — without being preachy.
-- Never write as if the reader is a generic adult. Every sentence should feel like it was written for a CAT-prep-or-MBA student, not a corporate blog reader.`;
+- Never write as if the reader is a generic adult. Every sentence should feel like it was written for a CAT-prep-or-MBA student, not a corporate blog reader.
+
+Article structure rules (MANDATORY — every article must follow this skeleton):
+1. **Introduction (intro field)** — Quick Summary <p><strong>Quick Summary:</strong> …</p> (60-90 words, direct answer) + 2-3 short hook paragraphs naming the topic, the reader, and what they'll get.
+2. **Key Highlights** — first H2 inside content, titled "Key Highlights" or a topic-specific equivalent ("Snapshot", "At a Glance"). Use a <ul> of 6-10 bullets, each starting with <strong>Bold lead:</strong> followed by one concrete data point (rank, fee, package, date, cutoff, recruiter, eligibility, etc.).
+3. **Detailed Explanation** — the core 5-10 H2 sections that fully answer the title. Each section follows the topic-focus, data-driven and readability rules. Use H3/H4 sub-breakdowns wherever a section runs long.
+4. **Comparison Tables** — at least one dedicated H2 with a <table> when the topic involves more than one college/exam/course/programme. Tables can also be embedded inside detailed sections (per the data-driven rules) — but always include a clear comparison block when applicable.
+5. **Important Data & Statistics** — an H2 (e.g. "Latest ${currentYear} Data", "Numbers You Should Know", "Trends to Watch") with 1-2 tables and 4-6 bullet stats — fee ranges, cutoff bands, placement %s, year-on-year trends, NIRF movements, recruiter counts.
+6. **FAQs** — H2 "Frequently Asked Questions" with 8-12 People-Also-Ask style Q&A pairs (H3 question, multi-paragraph answer per the SEO rules).
+7. **Conclusion / Final Word** — closing H2 (e.g. "Final Word", "Bottom Line", "Your Next Step") with 2-3 short paragraphs summarising the decision + a CTA paragraph with 2-3 internal links to the most relevant tool/page (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks, /mba-compass, related /blog/ posts).
+
+Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → FAQs → Conclusion + CTA. Never skip Key Highlights, FAQs or the Conclusion.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
