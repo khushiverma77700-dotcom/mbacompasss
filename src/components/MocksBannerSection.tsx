@@ -72,8 +72,8 @@ export default function MocksBannerSection() {
         <div className="mt-10 grid lg:grid-cols-5 gap-6 items-stretch">
           {/* Left: animated AI report mockup */}
           <div className="lg:col-span-3 relative rounded-2xl border border-sky-100 bg-white shadow-xl shadow-sky-100/60 p-5 md:p-7 overflow-hidden">
-            {/* Subtle moving sheen */}
-            <div aria-hidden className="pointer-events-none absolute -inset-x-10 top-0 h-32 bg-gradient-to-r from-transparent via-sky-100/60 to-transparent blur-2xl animate-[fade-in_2s_ease-in-out_infinite_alternate]" />
+            {/* Static sheen — was an infinite blur-2xl animation that pegged the GPU and caused continuous repaints */}
+            <div aria-hidden className="pointer-events-none absolute -inset-x-10 top-0 h-32 bg-gradient-to-r from-transparent via-sky-100/60 to-transparent blur-2xl opacity-70" />
 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
