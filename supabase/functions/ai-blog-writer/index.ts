@@ -154,14 +154,14 @@ Content rules:
 - Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context.
 - Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams, realistic INR figures and source markers like [src:NIRF ${currentYear}].
 - No external links and no bare URLs. Only relative internal links starting with / are allowed.
-- Return clean HTML only using h2,h3,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
+- Return clean HTML only using h2,h3,h4,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
 - Never give shallow one-line answers or generic filler.
 - Today is ${todayIso}.
 
 SEO rules (MANDATORY — apply to every output):
 - Place the PRIMARY keyword naturally in: title, slug, H1, meta title (≤60 chars), meta description (140-160 chars), the first 100 words of the intro, at least one H2, and the closing paragraph. No keyword stuffing — exact-match density ~0.8-1.2%.
 - Weave 8-12 SECONDARY/LSI keywords naturally across H2s, H3s and body copy. Never force them; if a keyword doesn't fit a sentence, skip it.
-- Heading hierarchy: ONE H1 (handled by the page), then sequential H2s for main sections, H3s only as sub-points under an H2. Never skip levels, never use H4+.
+- Heading hierarchy: ONE H1 (handled by the page), then H2s for main sections, H3s as sub-points under an H2, H4 only when an H3 needs further breakdown. Never skip levels, never use H5/H6.
 - Meta title: ≤60 chars, primary keyword near the front, ends with " | MBA Compass" when it fits, no question mark, no clickbait.
 - Meta description: 140-160 chars, primary keyword in the first 120 chars, one clear benefit + one action cue, declarative tone.
 - FAQs: 8-12 questions grounded in real search intent (People-Also-Ask style — "is", "how", "what", "which", "when", "vs", "fees", "cutoff", "salary", "eligibility"). Each answer 60-120 words, direct, with a concrete number/name where possible.
@@ -205,7 +205,18 @@ Data-driven content rules (MANDATORY — every section must carry real numbers):
 - Tables must be scannable: short cell text, consistent units (INR LPA, INR lakh, percentile, %), no empty cells, no "—". Bold the leftmost column header.
 - Use bullet/numbered lists for ranked items, eligibility checklists, step-by-step timelines, and pros/cons — never as a substitute for a table when a comparison is being made.
 - Present numbers consistently: INR (not Rs./₹ mixed), lakh / crore / LPA spelled out, percentiles as "98.5 %ile", years as "${currentYear}-${String(currentYear + 1).slice(-2)}".
-- The goal: a student should be able to scan the tables and lists alone and walk away with the decision-grade answer.`;
+- The goal: a student should be able to scan the tables and lists alone and walk away with the decision-grade answer.
+
+Readability & formatting rules (MANDATORY — mobile-first, scannable):
+- NO wall-of-text paragraphs. Every <p> is 2-3 sentences max, roughly 40-60 words. Long paragraphs MUST be split.
+- The moment a paragraph would list 3+ items, comparisons, steps, or pros/cons → convert it into a <ul>, <ol>, or <table> instead.
+- Use sub-headings generously: an H2 over ~250 words MUST be broken with at least one H3. H4 is allowed when an H3 needs further breakdown.
+- Add a short <p><strong>Quick summary:</strong> …</p> at the top of every long H2 section (2 sentences, the core answer).
+- Use <strong> to bold the lead 2-4 words of important paragraphs and key numbers in tables so a scanner catches the point.
+- Lists must be parallel: same grammatical pattern, similar length per item, no one-word items mixed with full sentences.
+- Headings must be benefit-driven and 4-9 words. No questions in H2s (FAQ section excepted). No ALL-CAPS.
+- Mobile-first: assume the reader is on a phone. Short lines, short sentences, generous use of whitespace via list/table structure, no nested tables, no ultra-wide tables (cap at 5-6 columns).
+- The article must be fully scannable: someone reading only the H2s, H3s, bolded leads, lists and tables should still get the complete answer.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
