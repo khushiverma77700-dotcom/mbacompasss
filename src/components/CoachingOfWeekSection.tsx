@@ -96,7 +96,7 @@ const CoachingOfWeekSection = () => {
                     {/* Left: Banner — spans 2 cols */}
                     <div className="md:col-span-2 relative bg-muted">
                       {imageUrl ? (
-                        <img src={imageUrl} alt={inst?.name || ""} className="w-full h-48 md:h-full object-contain object-center" loading="lazy" />
+                        <img src={cdnImage(imageUrl, { width: 600, quality: 72 })} srcSet={cdnImageSrcSet(imageUrl, { width: 600, quality: 72 })} sizes="(max-width: 768px) 100vw, 600px" alt={inst?.name || ""} width={600} height={400} className="w-full h-48 md:h-full object-contain object-center" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-48 md:h-full hero-gradient flex items-center justify-center">
                           <span className="font-heading text-5xl font-extrabold text-primary-foreground/20">{inst?.name?.charAt(0)}</span>
