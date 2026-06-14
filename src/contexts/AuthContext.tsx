@@ -140,12 +140,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (shouldStartAuthNow()) {
       void startAuth();
-    } else if (typeof (window as any).requestIdleCallback === "function") {
-      const handle = (window as any).requestIdleCallback(() => void startAuth(), { timeout: 2500 });
-      cancelIdleStart = () => (window as any).cancelIdleCallback?.(handle);
     } else {
-      const handle = globalThis.setTimeout(() => void startAuth(), 1500);
-      cancelIdleStart = () => globalThis.clearTimeout(handle);
+      const timer = globalThis.setTimeout(() => {
+        if (typeof (window as any).requestIdleCallback === "function") {
+          const handle = (window as any).requestIdleCallback(() => void startAuth(), { timeout: 2500 });
+          cancelIdleStart = () => (window as any).cancelIdleCallback?.(handle);
+        } else {
+          void startAuth();
+        }
+      }, 3500);
+      cancelIdleStart = () => globalThis.clearTimeout(timer);
     }
 
     return () => {
