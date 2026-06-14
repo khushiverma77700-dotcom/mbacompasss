@@ -221,7 +221,7 @@ const HeroSection = () => {
               <button
                 key={term}
                 onClick={() => { setQuery(term); }}
-                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full transition-all duration-200 border border-white/10 hover:border-white/25 font-medium"
+                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/15 hover:border-white/30 font-medium"
               >
                 {term}
               </button>
