@@ -211,7 +211,7 @@ const CategoryPage = () => {
       >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/55" />
-          <div className="absolute top-0 right-1/3 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-1/3 hidden w-96 h-96 bg-white/5 rounded-full blur-3xl md:block" />
           <div className="absolute bottom-10 left-10 w-20 h-20 border border-white/10 rounded-full" />
         </div>
 

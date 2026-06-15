@@ -146,8 +146,8 @@ function CoursesInner() {
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-12 pb-10 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 right-10 w-96 h-96 rounded-full bg-sky-200/30 blur-3xl" />
-          <div className="absolute bottom-0 -left-20 w-96 h-96 rounded-full bg-blue-200/30 blur-3xl" />
+          <div className="absolute -top-20 right-10 hidden w-96 h-96 rounded-full bg-sky-200/30 blur-3xl md:block" />
+          <div className="absolute bottom-0 -left-20 hidden w-96 h-96 rounded-full bg-blue-200/30 blur-3xl md:block" />
         </div>
         <div className="container mx-auto px-4 relative">
           <div className="max-w-3xl">

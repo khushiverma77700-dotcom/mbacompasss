@@ -203,8 +203,8 @@ const InstitutePage = () => {
       {/* HERO */}
       <section className="relative overflow-hidden border-b bg-gradient-to-br from-sky-50 via-white to-blue-50">
         {/* decorative blobs */}
-        <div className="pointer-events-none absolute -top-24 -right-24 w-[28rem] h-[28rem] rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 -right-24 hidden w-[28rem] h-[28rem] rounded-full bg-sky-200/40 blur-3xl md:block" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 hidden w-[28rem] h-[28rem] rounded-full bg-blue-200/30 blur-3xl md:block" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
         {institute.banner_url && (
           <div

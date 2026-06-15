@@ -111,13 +111,13 @@ const tools = [
 
 const AIToolsSection = () => {
   return (
-    <section className="py-16 md:py-24 relative overflow-hidden">
+    <section className="py-16 md:py-24 relative overflow-hidden max-w-full">
       {/* Layered premium background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-50/40 to-transparent dark:via-sky-950/10" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary/[0.05] rounded-full blur-[120px]" />
-        <div className="absolute top-10 right-10 w-72 h-72 bg-blue-400/[0.06] rounded-full blur-[90px]" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-violet-400/[0.05] rounded-full blur-[90px]" />
+        <div className="absolute top-1/3 left-1/2 hidden h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-primary/[0.05] blur-[120px] md:block" />
+        <div className="absolute top-10 right-10 hidden h-72 w-72 rounded-full bg-blue-400/[0.06] blur-[90px] md:block" />
+        <div className="absolute bottom-0 left-0 hidden h-72 w-72 rounded-full bg-violet-400/[0.05] blur-[90px] md:block" />
         {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.025]"
@@ -129,16 +129,16 @@ const AIToolsSection = () => {
         />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 min-w-0 max-w-full">
         {/* Header */}
         <motion.div
-          className="text-center mb-12 md:mb-14"
+          className="text-center mb-12 md:mb-14 min-w-0 max-w-full"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary/10 via-blue-500/10 to-violet-500/10 border border-primary/20 mb-4 backdrop-blur-sm">
+          <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary/10 via-blue-500/10 to-violet-500/10 border border-primary/20 mb-4 backdrop-blur-sm">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-semibold text-primary tracking-wider uppercase">
               AI-Powered Toolkit
@@ -146,7 +146,7 @@ const AIToolsSection = () => {
             <span className="w-1 h-1 rounded-full bg-primary/50" />
             <span className="text-[10px] font-medium text-primary/80">100% Free</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight break-words">
             Your{" "}
             <span className="bg-gradient-to-r from-primary via-blue-600 to-violet-600 bg-clip-text text-transparent">
               MBA Success Toolkit
@@ -159,7 +159,7 @@ const AIToolsSection = () => {
         </motion.div>
 
         {/* Premium grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 min-w-0">
           {tools.map((tool, i) => (
             <motion.div
               key={tool.title}
@@ -171,7 +171,7 @@ const AIToolsSection = () => {
               <Link
                 to={tool.path}
                 aria-label={`Open ${tool.title}`}
-                className="group relative block h-full rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="group relative block h-full min-w-0 max-w-full rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 style={{
                   boxShadow:
                     "0 1px 0 rgba(255,255,255,0.6) inset, 0 1px 2px rgba(15,23,42,0.04)",

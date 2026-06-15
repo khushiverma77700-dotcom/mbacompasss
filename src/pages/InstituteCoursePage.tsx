@@ -177,8 +177,8 @@ const InstituteCoursePage = () => {
 
       {/* HERO */}
       <section className="relative overflow-hidden border-b bg-gradient-to-br from-sky-50 via-white to-blue-50">
-        <div className="pointer-events-none absolute -top-32 -right-32 w-[34rem] h-[34rem] rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-32 w-[34rem] h-[34rem] rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -top-32 -right-32 hidden w-[34rem] h-[34rem] rounded-full bg-sky-200/40 blur-3xl md:block" />
+        <div className="pointer-events-none absolute -bottom-32 -left-32 hidden w-[34rem] h-[34rem] rounded-full bg-blue-200/30 blur-3xl md:block" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgb(15 23 42) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
 
         <div className="relative container mx-auto px-4 py-8 md:py-12 max-w-6xl">

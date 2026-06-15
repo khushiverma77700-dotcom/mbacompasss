@@ -226,11 +226,11 @@ const CoachingPage = () => {
           <img
             src={getLocationImage(selectedCity !== "all" ? selectedCity : null, selectedState !== "all" ? selectedState : null)}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover scale-105 opacity-80 transition-all duration-700"
+            className="absolute inset-0 w-full h-full object-cover opacity-80 transition-all duration-700 md:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
-          <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-1/3 hidden w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl md:block" />
+          <div className="absolute bottom-0 right-1/4 hidden w-96 h-96 bg-white/5 rounded-full blur-3xl md:block" />
           <div className="absolute top-10 right-10 w-32 h-32 border border-white/10 rounded-full" />
           <div className="absolute bottom-10 left-10 w-20 h-20 border border-white/10 rounded-full" />
         </div>

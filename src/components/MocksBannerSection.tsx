@@ -26,11 +26,11 @@ const DELIVERABLES = [
 
 export default function MocksBannerSection() {
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-b from-white via-sky-50/40 to-white">
+    <section className="relative py-16 md:py-24 overflow-hidden max-w-full bg-gradient-to-b from-white via-sky-50/40 to-white">
       {/* Decorative background — pointer-events-none so nothing blocks clicks */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-0">
-        <div className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="absolute -top-24 -left-20 hidden h-72 w-72 rounded-full bg-sky-200/40 blur-3xl md:block" />
+        <div className="absolute -bottom-24 -right-20 hidden h-80 w-80 rounded-full bg-blue-200/40 blur-3xl md:block" />
         <div
           className="absolute inset-0 opacity-[0.05]"
           style={{
@@ -41,7 +41,7 @@ export default function MocksBannerSection() {
         />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 min-w-0 max-w-full">
         {/* Eyebrow */}
         <div className="flex justify-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-sky-200 shadow-sm">
@@ -73,7 +73,7 @@ export default function MocksBannerSection() {
           {/* Left: animated AI report mockup */}
           <div className="lg:col-span-3 relative rounded-2xl border border-sky-100 bg-white shadow-xl shadow-sky-100/60 p-5 md:p-7 overflow-hidden">
             {/* Static sheen — was an infinite blur-2xl animation that pegged the GPU and caused continuous repaints */}
-            <div aria-hidden className="pointer-events-none absolute -inset-x-10 top-0 h-32 bg-gradient-to-r from-transparent via-sky-100/60 to-transparent blur-2xl opacity-70" />
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-transparent via-sky-100/60 to-transparent blur-2xl opacity-70" />
 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
