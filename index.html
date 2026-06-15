@@ -95,9 +95,11 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- High-priority web font: display=swap lets the H1 (LCP) paint immediately with the system fallback -->
-    <link rel="preload" as="style" fetchpriority="high" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" />
+    <!-- Non-blocking web fonts: swap-in via media="print" trick so the first
+         paint never waits on Google Fonts. Critical CSS already declares the
+         system fallback so the H1 (LCP) renders immediately. -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" /></noscript>
     <!-- Inline critical CSS for faster FP -->
     <style>
       body{margin:0;font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a;-webkit-font-smoothing:antialiased}
