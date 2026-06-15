@@ -40,7 +40,23 @@ declare const __BUILD_ID__: string;
     } catch {}
   };
 
-  clearBrowserCaches();
+  // One-time SW/caches cleanup — only run if a legacy service worker is still
+  // registered. Running this on every page load destroys HTTP cache benefits
+  // and adds noticeable latency on each navigation.
+  const ONCE_KEY = "__sw_cleanup_done__";
+  try {
+    if (!localStorage.getItem(ONCE_KEY) && "serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        if (regs && regs.length > 0) {
+          clearBrowserCaches().finally(() => {
+            try { localStorage.setItem(ONCE_KEY, "1"); } catch {}
+          });
+        } else {
+          try { localStorage.setItem(ONCE_KEY, "1"); } catch {}
+        }
+      }).catch(() => {});
+    }
+  } catch {}
 
   if (!import.meta.env.PROD) return;
   const CURRENT = typeof __BUILD_ID__ !== "undefined" ? __BUILD_ID__ : "";
@@ -60,13 +76,23 @@ declare const __BUILD_ID__: string;
     } catch {}
   };
 
-  // Check on load, on tab focus, and every 5 min.
-  checkVersion();
-  window.addEventListener("focus", checkVersion);
+  // Defer the first version check until the browser is idle so it doesn't
+  // compete with the initial render. Throttle focus checks to once per 2 min.
+  const w = window as any;
+  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 3000));
+  schedule(() => checkVersion(), { timeout: 5000 });
+
+  let lastCheck = Date.now();
+  const maybeCheck = () => {
+    if (Date.now() - lastCheck < 2 * 60 * 1000) return;
+    lastCheck = Date.now();
+    checkVersion();
+  };
+  window.addEventListener("focus", maybeCheck);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") checkVersion();
+    if (document.visibilityState === "visible") maybeCheck();
   });
-  setInterval(checkVersion, 5 * 60 * 1000);
+  setInterval(checkVersion, 10 * 60 * 1000);
 })();
 
 createRoot(document.getElementById("root")!).render(
