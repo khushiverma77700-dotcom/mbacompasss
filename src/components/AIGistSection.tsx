@@ -181,24 +181,24 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex min-w-0 flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl gap-1.5 text-xs border-blue-500/20 hover:bg-blue-500/5 hover:border-blue-500/30 transition-all"
+                  className="max-w-full whitespace-normal rounded-xl gap-1.5 text-xs border-blue-500/20 hover:bg-blue-500/5 hover:border-blue-500/30 transition-all"
                   onClick={() => onScrollToContent?.()}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  Still Confused 😵 — Read Full {pageLabel}
+                  Still Confused — Read Full {pageLabel}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl gap-1.5 text-xs border-purple-500/20 hover:bg-purple-500/5 hover:border-purple-500/30 transition-all"
+                  className="max-w-full whitespace-normal rounded-xl gap-1.5 text-xs border-purple-500/20 hover:bg-purple-500/5 hover:border-purple-500/30 transition-all"
                   onClick={() => setMode("ask")}
                 >
                   <MessageCircleQuestion className="w-3.5 h-3.5" />
-                  Tell Me More 👇 — Ask a Question
+                  Tell Me More — Ask a Question
                 </Button>
               </div>
             </motion.div>
@@ -215,11 +215,11 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
             >
               {summary && (
                 <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-2.5 border border-border/40 line-clamp-2">
-                  ✨ {summary.replace(/[*#_]/g, "").slice(0, 120)}...
+                  {summary.replace(/[*#_]/g, "").slice(0, 120)}...
                 </div>
               )}
-              <div className="flex gap-2">
-                <div className="relative flex-1 rounded-xl p-[1px] ai-gist-input-border focus-within:shadow-lg focus-within:shadow-purple-500/10 transition-shadow">
+              <div className="flex min-w-0 gap-2">
+                <div className="relative min-w-0 flex-1 rounded-xl p-[1px] ai-gist-input-border focus-within:shadow-lg focus-within:shadow-purple-500/10 transition-shadow">
                   <Input
                     placeholder="Ask anything about this page..."
                     value={question}
@@ -240,7 +240,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
               {askLoading && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Brain className="w-3.5 h-3.5 text-purple-500 animate-pulse" />
-                  Searching our database & AI<PulsingDots />
+                  Searching our database and AI<PulsingDots />
                 </motion.div>
               )}
               {answer && (
