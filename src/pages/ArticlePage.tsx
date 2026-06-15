@@ -238,7 +238,7 @@ const ArticlePage = () => {
               </div>
             )}
 
-            <div id="article-content" className="w-full min-w-0 bg-card rounded-2xl border border-border p-5 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
+            <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
@@ -313,7 +313,7 @@ const ArticlePage = () => {
             {/* CTA */}
             <div className="relative rounded-2xl overflow-hidden">
               <div className="absolute inset-0 hero-gradient" />
-              <div className="absolute top-0 right-0 hidden w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none sm:block" />
+              <div className="absolute top-0 right-0 hidden w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none lg:block" />
               <div className="relative p-6">
                 <h3 className="font-heading font-bold text-primary-foreground mb-2">Need MBA Guidance?</h3>
                 <p className="text-sm text-primary-foreground/75 mb-4">Get free expert counselling for your MBA journey</p>

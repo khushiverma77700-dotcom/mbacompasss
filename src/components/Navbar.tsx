@@ -82,7 +82,7 @@ const Navbar = () => {
           </div>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           <Link
             to="/"
             className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -120,7 +120,7 @@ const Navbar = () => {
           </Link>
         </nav>
 
-        <div className="hidden md:flex items-center gap-3 min-w-0">
+        <div className="hidden lg:flex items-center gap-3 min-w-0">
           <GooglePreferredSourceCTA size="compact" className="inline-flex shrink-0" />
           
           {user ? (
@@ -152,7 +152,7 @@ const Navbar = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 text-foreground"
+          className="lg:hidden p-2 text-foreground"
           aria-label="Toggle mobile menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -160,7 +160,7 @@ const Navbar = () => {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto animate-fade-in">
+        <div className="lg:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto animate-fade-in">
           <nav className="flex flex-col gap-1">
             <Link
               to="/"

@@ -79,11 +79,11 @@ const InlineAIToolCTA = ({ variant }: InlineAIToolCTAProps) => {
             {/* Background glow */}
             <div className="absolute inset-0 pointer-events-none">
               <div
-                className="absolute -top-20 -right-20 hidden w-60 h-60 rounded-full blur-[80px] opacity-20 sm:block"
+                className="absolute -top-20 -right-20 hidden w-60 h-60 rounded-full blur-[80px] opacity-20 lg:block"
                 style={{ background: `rgba(${tool.glowColor}, 0.5)` }}
               />
               <div
-                className="absolute -bottom-20 -left-20 hidden w-60 h-60 rounded-full blur-[80px] opacity-10 sm:block"
+                className="absolute -bottom-20 -left-20 hidden w-60 h-60 rounded-full blur-[80px] opacity-10 lg:block"
                 style={{ background: `rgba(${tool.glowColor}, 0.4)` }}
               />
             </div>

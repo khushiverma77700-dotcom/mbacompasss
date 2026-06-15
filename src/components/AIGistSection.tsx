@@ -113,8 +113,8 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
       <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[14px] bg-background p-4 sm:p-5 md:p-6">
         {/* Subtle internal glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.03] via-transparent to-purple-500/[0.03] pointer-events-none" />
-        <div className="absolute -top-16 -right-16 hidden w-40 h-40 rounded-full bg-blue-500/[0.04] blur-3xl pointer-events-none sm:block" />
-        <div className="absolute -bottom-12 -left-12 hidden w-32 h-32 rounded-full bg-purple-500/[0.04] blur-3xl pointer-events-none sm:block" />
+        <div className="absolute -top-16 -right-16 hidden w-40 h-40 rounded-full bg-blue-500/[0.04] blur-3xl pointer-events-none lg:block" />
+        <div className="absolute -bottom-12 -left-12 hidden w-32 h-32 rounded-full bg-purple-500/[0.04] blur-3xl pointer-events-none lg:block" />
 
         {/* Header */}
         <div className="relative flex min-w-0 items-start gap-3 mb-3">

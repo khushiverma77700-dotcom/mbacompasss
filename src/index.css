@@ -656,6 +656,37 @@
   max-width: none;
 }
 
+/* Article pages: show complete table content on phones instead of clipping the
+   right side behind a horizontal scroll area. */
+@media (max-width: 1023px) {
+  .article-content-shell .ai-table-wrap {
+    overflow-x: visible !important;
+    contain: none !important;
+  }
+
+  .article-content-shell .ai-content table,
+  .article-content-shell .ai-content .ai-table-wrap > table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  .article-content-shell .ai-content th,
+  .article-content-shell .ai-content td,
+  .article-content-shell .ai-content th *,
+  .article-content-shell .ai-content td * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 0.45rem 0.4rem !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    font-size: 0.82rem !important;
+    line-height: 1.35 !important;
+  }
+}
+
 /* Top progress bar shown during route chunk loading (see App.tsx TopProgressBar) */
 @keyframes lov-route-progress {
   0% { background-position: 200% 0; }
