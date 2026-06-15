@@ -242,9 +242,19 @@ const ArticlePage = () => {
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
-              {article.content ? renderContent(article.content) : (
-                <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
-              )}
+
+              {/* Mobile / inline auto Table of Contents */}
+              <AutoTOC
+                contentRef={contentRef}
+                className="mb-6 lg:hidden"
+                deps={[article.id, article.content]}
+              />
+
+              <div ref={contentRef}>
+                {article.content ? renderContent(article.content) : (
+                  <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
+                )}
+              </div>
             </div>
 
             <InlineAIToolCTA variant="profile-analyzer" />
