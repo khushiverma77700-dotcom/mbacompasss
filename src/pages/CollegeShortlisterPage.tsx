@@ -345,8 +345,8 @@ const CollegeShortlisterPage = () => {
         <section className="relative overflow-hidden min-h-[85vh] flex items-center">
           <div className="absolute inset-0 hero-gradient" />
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
-          <div className="absolute w-96 h-96 -top-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s' }} />
-          <div className="absolute w-64 h-64 bottom-20 -left-20 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
+          <div className="absolute -top-32 -right-32 hidden w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none md:block" style={{ animationDuration: '6s' }} />
+          <div className="absolute bottom-20 -left-20 hidden w-64 h-64 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none md:block" style={{ animationDuration: '8s' }} />
 
           <div className="relative container mx-auto px-4 py-16 md:py-20 z-10">
             <div className="max-w-6xl mx-auto">
