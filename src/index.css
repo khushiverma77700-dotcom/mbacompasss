@@ -771,15 +771,23 @@ html, body, #root {
     max-width: 100%;
   }
 
-  /* Tables become horizontally scrollable instead of breaking layout.
-     The wrapper (block table) scrolls; the page does not. */
+  /* Tables: keep their natural intrinsic width and let the BLOCK scroll
+     horizontally. Do NOT force width:100% — that compresses columns and
+     causes per-character vertical wrapping in narrow cells. */
   table {
     display: block;
     max-width: 100%;
-    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+  }
+  /* Inner table layout stays as a normal table so columns size to content */
+  table > thead,
+  table > tbody,
+  table > tfoot {
+    display: table;
+    width: max-content;
+    min-width: 100%;
   }
   pre {
     max-width: 100%;
@@ -787,6 +795,7 @@ html, body, #root {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
   }
+
 
   /* Tighten container padding on phones */
   .container {
