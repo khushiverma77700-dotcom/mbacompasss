@@ -279,7 +279,12 @@ const ArticlePage = () => {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="bg-card rounded-2xl p-6 border border-border shadow-md sticky top-20">
+            <AutoTOC
+              contentRef={contentRef}
+              className="hidden lg:block sticky top-20"
+              deps={[article.id, article.content]}
+            />
+            <div className="bg-card rounded-2xl p-6 border border-border shadow-md">
               <h3 className="font-heading font-bold text-foreground mb-5 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-primary" /> Related Articles
               </h3>
