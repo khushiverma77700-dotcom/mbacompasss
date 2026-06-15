@@ -23,11 +23,25 @@ window.addEventListener("vite:preloadError", () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Auto cache-bust: poll /version.json and force a hard reload
-// (clearing SW + caches) whenever a newer build is detected.
+// Cache rescue: older published builds registered a service worker that can
+// keep serving stale article CSS/JS on mobile. Always remove it so public
+// content pages render from the current network bundle.
 // ─────────────────────────────────────────────────────────────
 declare const __BUILD_ID__: string;
 (() => {
+  const clearBrowserCaches = async () => {
+    try {
+      const regs = await navigator.serviceWorker?.getRegistrations?.();
+      await Promise.all((regs || []).map((r) => r.unregister()));
+    } catch {}
+    try {
+      const keys = await caches?.keys?.();
+      await Promise.all((keys || []).map((k) => caches.delete(k)));
+    } catch {}
+  };
+
+  clearBrowserCaches();
+
   if (!import.meta.env.PROD) return;
   const CURRENT = typeof __BUILD_ID__ !== "undefined" ? __BUILD_ID__ : "";
   if (!CURRENT) return;
@@ -41,13 +55,7 @@ declare const __BUILD_ID__: string;
       if (!buildId || buildId === CURRENT) return;
       if (sessionStorage.getItem(KEY) === buildId) return;
       sessionStorage.setItem(KEY, buildId);
-      // Nuke SW + caches so the next load is fully fresh
-      try {
-        const regs = await navigator.serviceWorker?.getRegistrations?.();
-        await Promise.all((regs || []).map((r) => r.unregister()));
-        const keys = await caches?.keys?.();
-        await Promise.all((keys || []).map((k) => caches.delete(k)));
-      } catch {}
+      await clearBrowserCaches();
       window.location.reload();
     } catch {}
   };
@@ -108,58 +116,3 @@ createRoot(document.getElementById("root")!).render(
   }
 })();
 
-// ─────────────────────────────────────────────────────────────
-// Service Worker registration — production only, never inside
-// the Lovable editor preview or any iframe context.
-// ─────────────────────────────────────────────────────────────
-(() => {
-  const inIframe = (() => {
-    try { return window.self !== window.top; } catch { return true; }
-  })();
-  const host = window.location.hostname;
-  const isPreviewHost =
-    host.includes("id-preview--") ||
-    host.includes("preview--") ||
-    host.includes("lovableproject.com") ||
-    host.includes("lovableproject-dev.com") ||
-    host.endsWith(".lovable.app"); // includes editor preview
-
-  if (inIframe || isPreviewHost || !("serviceWorker" in navigator)) {
-    // Defensive cleanup: unregister any SW that might exist in preview
-    navigator.serviceWorker?.getRegistrations?.().then((regs) => {
-      regs.forEach((r) => r.unregister());
-    }).catch(() => {});
-    return;
-  }
-
-  if (import.meta.env.PROD) {
-    import("workbox-window").then(({ Workbox }) => {
-      const wb = new Workbox("/sw.js");
-
-      // When a new SW takes control, force a reload so the installed
-      // PWA picks up the latest build instead of showing the cached one.
-      let reloading = false;
-      wb.addEventListener("controlling", () => {
-        if (reloading) return;
-        reloading = true;
-        window.location.reload();
-      });
-
-      // As soon as a new SW is waiting, activate it immediately.
-      wb.addEventListener("waiting", () => wb.messageSkipWaiting());
-
-      wb.register({ immediate: true }).then((reg) => {
-        if (!reg) return;
-        // Check for updates on app focus / visibility (installed PWAs
-        // rarely fully close, so this is the main update trigger).
-        const checkForUpdate = () => reg.update().catch(() => {});
-        window.addEventListener("focus", checkForUpdate);
-        document.addEventListener("visibilitychange", () => {
-          if (document.visibilityState === "visible") checkForUpdate();
-        });
-        // And poll every 30 min as a safety net.
-        setInterval(checkForUpdate, 30 * 60 * 1000);
-      }).catch(() => {});
-    });
-  }
-})();
