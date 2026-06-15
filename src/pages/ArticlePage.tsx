@@ -313,7 +313,7 @@ const ArticlePage = () => {
             {/* CTA */}
             <div className="relative rounded-2xl overflow-hidden">
               <div className="absolute inset-0 hero-gradient" />
-              <div className="absolute top-0 right-0 hidden w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none sm:block" />
+              <div className="absolute top-0 right-0 hidden w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none lg:block" />
               <div className="relative p-6">
                 <h3 className="font-heading font-bold text-primary-foreground mb-2">Need MBA Guidance?</h3>
                 <p className="text-sm text-primary-foreground/75 mb-4">Get free expert counselling for your MBA journey</p>

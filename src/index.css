@@ -658,7 +658,7 @@
 
 /* Article pages: show complete table content on phones instead of clipping the
    right side behind a horizontal scroll area. */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .article-content-shell .ai-table-wrap {
     overflow-x: visible !important;
     contain: none !important;
