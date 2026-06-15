@@ -842,11 +842,15 @@ html, body, #root {
   }
 
   /* Long unbreakable strings (URLs, IDs) wrap instead of expanding parent.
-     Excludes td/th — character-wrapping inside narrow table cells creates
-     ugly vertical one-letter-per-line columns. */
+     Excludes anything inside table cells — character-wrapping inside narrow
+     table cells creates ugly vertical one-letter-per-line columns. */
   p, span, div, h1, h2, h3, h4, h5, h6, a, li {
     overflow-wrap: anywhere;
     word-break: normal;
+  }
+  td, th, td *, th * {
+    overflow-wrap: normal !important;
+    word-break: normal !important;
   }
 
 
