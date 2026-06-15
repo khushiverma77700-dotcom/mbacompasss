@@ -546,6 +546,22 @@
    only headings step up. `!important` locks typography against any inline
    style="" or class="" the model might emit. */
 .ai-content,
+.prose {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+.ai-content :where(p, blockquote, h1, h2, h3, h4, h5, h6, li, span, strong, em, a):not(td *):not(th *),
+.prose :where(p, blockquote, h1, h2, h3, h4, h5, h6, li, span, strong, em, a):not(td *):not(th *) {
+  max-width: 100%;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.ai-content,
 .ai-content p,
 .ai-content li,
 .ai-content td,
