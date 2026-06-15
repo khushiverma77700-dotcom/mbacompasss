@@ -169,9 +169,9 @@ const ArticlePage = () => {
           <div className="absolute inset-0 pointer-events-none" style={{
             background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
           }} />
-          <div className="absolute top-12 right-[12%] w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none" />
-          <div className="absolute bottom-16 right-[30%] w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none" />
-          <div className="absolute top-[30%] left-[8%] w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none" />
+          <div className="absolute top-12 right-[12%] hidden w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none sm:block" />
+          <div className="absolute bottom-16 right-[30%] hidden w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none sm:block" />
+          <div className="absolute top-[30%] left-[8%] hidden w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none sm:block" />
           <div className="absolute top-[20%] right-[25%] w-2 h-2 bg-white/20 rounded-full pointer-events-none" />
           <div className="absolute bottom-[35%] left-[25%] w-1.5 h-1.5 bg-white/15 rounded-full pointer-events-none" />
           <div className="absolute top-[55%] right-[10%] w-1 h-1 bg-white/25 rounded-full pointer-events-none" />
@@ -313,7 +313,7 @@ const ArticlePage = () => {
             {/* CTA */}
             <div className="relative rounded-2xl overflow-hidden">
               <div className="absolute inset-0 hero-gradient" />
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+              <div className="absolute top-0 right-0 hidden w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none sm:block" />
               <div className="relative p-6">
                 <h3 className="font-heading font-bold text-primary-foreground mb-2">Need MBA Guidance?</h3>
                 <p className="text-sm text-primary-foreground/75 mb-4">Get free expert counselling for your MBA journey</p>
