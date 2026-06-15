@@ -936,6 +936,17 @@ const ProfileAnalyzerPage = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(step)) return;
+    // Hard guard: never generate a report without a verified mobile number.
+    if (!/^[6-9]\d{9}$/.test(phone) || !phoneVerified) {
+      setStep(1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      toast({
+        title: "Mobile verification required",
+        description: "Please verify your mobile number with OTP before generating the report.",
+        variant: "destructive",
+      });
+      return;
+    }
     // Enforce 60-day cooldown for logged-in users (admins can bypass via Re-test)
     if (user && cooldownDate && cooldownDate > new Date() && !(isAdmin && forceRetest)) {
       toast({
