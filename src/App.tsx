@@ -1,7 +1,5 @@
 import React, { Suspense, useState, lazy, useEffect, useDeferredValue } from "react";
-import { QueryClient } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, matchPath, useLocation, useNavigate } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -225,15 +223,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Persist React Query cache to localStorage so repeat visits load instantly from cache
-const queryPersister = typeof window !== "undefined"
-  ? createSyncStoragePersister({
-      storage: window.localStorage,
-      key: "mbc-rq-cache-v1",
-      throttleTime: 1000,
-    })
-  : undefined;
 
 const ROUTE_PREFETCHERS = {
   "/blog": [BlogPage.preload],
@@ -677,36 +666,7 @@ const OAuthRedirectHandler = () => {
 };
 
 const App = () => (
-  <PersistQueryClientProvider
-    client={queryClient}
-    persistOptions={{
-      persister: queryPersister!,
-      maxAge: 24 * 60 * 60 * 1000,
-      buster: "v5-no-heavy-lists",
-      dehydrateOptions: {
-        // Persist successful public lookups so repeat visits paint instantly
-        // from cache while we revalidate in the background.
-        shouldDehydrateQuery: (q) => {
-          if (q.state.status !== "success") return false;
-          const key = Array.isArray(q.queryKey) ? String(q.queryKey[0]) : JSON.stringify(q.queryKey);
-          // Only persist SMALL lookup tables. Persisting big lists like
-          // "colleges" / "institutes" (600+ rows with HTML) locks up the
-          // main thread on every cache update and can blow the 5MB
-          // localStorage quota — causing 15-30s navigation hangs.
-          return [
-            "site_settings_all",
-            "site_settings",
-            "categories",
-            "categories-homepage",
-            "exam-deadlines",
-            "popular-exams",
-            "specializations",
-            "city-pages",
-          ].includes(key);
-        },
-      },
-    }}
-  >
+  <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <DeferredToasters />
       <SettingsPrefetcher />
@@ -934,7 +894,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
-  </PersistQueryClientProvider>
+  </QueryClientProvider>
 );
 
 export default App;

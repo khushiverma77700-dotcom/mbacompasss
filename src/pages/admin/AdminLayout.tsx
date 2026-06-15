@@ -1,12 +1,13 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { X, Menu, Lock, ChevronDown, Bell } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminThemeToggle, { applyAdminTheme, getInitialAdminTheme } from "@/components/admin/AdminThemeToggle";
 import { adminNavGroups, allAdminNavItems } from "./adminNav";
 import { MockGenDockProvider } from "@/contexts/MockGenDockContext";
-import MockGenDock from "@/components/admin/MockGenDock";
+
+const MockGenDock = lazy(() => import("@/components/admin/MockGenDock"));
 
 
 const AdminLayout = () => {
@@ -286,7 +287,9 @@ const AdminLayout = () => {
       </main>
 
       {/* Floating AI mock generation dock (right side) */}
-      <MockGenDock />
+      <Suspense fallback={null}>
+        <MockGenDock />
+      </Suspense>
     </div>
     </MockGenDockProvider>
   );

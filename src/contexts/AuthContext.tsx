@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import type { User, Session } from "@supabase/supabase-js";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
@@ -29,6 +30,12 @@ type AdminCacheEntry = {
 };
 
 const getAdminCacheKey = (userId: string) => `mbc-admin-status:${userId}`;
+
+const shouldResolveAdminForPath = (path: string) =>
+  path.startsWith("/admin") ||
+  path.startsWith("/profile-analyzer") ||
+  path.startsWith("/roi-calculator") ||
+  path.startsWith("/iim-waitlist-movement");
 
 const readAdminCache = (userId: string): AdminCacheEntry | null => {
   if (typeof window === "undefined") return null;
@@ -90,12 +97,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const location = useLocation();
   const initialSession = useRef<Session | null>(readStoredSession());
+  const initialNeedsAdmin = typeof window !== "undefined" && shouldResolveAdminForPath(window.location.pathname);
   const [user, setUser] = useState<User | null>(initialSession.current?.user ?? null);
   const [session, setSession] = useState<Session | null>(initialSession.current);
   const [loading, setLoading] = useState(!initialSession.current);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminLoading, setAdminLoading] = useState(!!initialSession.current);
+  const [adminLoading, setAdminLoading] = useState(!!initialSession.current && initialNeedsAdmin);
   const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
   const resolvedAdminUserIdRef = useRef<string | null>(null);
 
@@ -164,6 +173,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let cancelled = false;
 
     const loadAdminStatus = async () => {
+      if (!shouldResolveAdminForPath(location.pathname)) {
+        resolvedAdminUserIdRef.current = null;
+        setIsAdmin(false);
+        setAllowedSections(null);
+        setAdminLoading(false);
+        return;
+      }
+
       if (!user) {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
@@ -242,7 +259,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, user?.email]);
+  }, [user?.id, user?.email, location.pathname]);
 
   const signUp = async (
     email: string,
