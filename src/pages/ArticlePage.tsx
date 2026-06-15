@@ -221,9 +221,9 @@ const ArticlePage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-10">
-        <div className="grid lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 min-w-0">
           {/* Main Article */}
-          <article className="lg:col-span-2">
+          <article className="min-w-0 lg:col-span-2">
 
             <AIGistSection
               content={article.content || article.excerpt || ""}
@@ -238,7 +238,7 @@ const ArticlePage = () => {
               </div>
             )}
 
-            <div id="article-content" className="bg-card rounded-2xl border border-border p-5 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
+            <div id="article-content" className="w-full min-w-0 bg-card rounded-2xl border border-border p-5 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
@@ -278,7 +278,7 @@ const ArticlePage = () => {
           </article>
 
           {/* Sidebar */}
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-6">
             <AutoTOC
               contentRef={contentRef}
               className="hidden lg:block sticky top-20"
