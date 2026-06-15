@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import AutoTOC from "@/components/AutoTOC";
 import PageKeywords from "@/components/PageKeywords";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, CheckCircle, ArrowRight } from "lucide-react";
@@ -27,6 +28,7 @@ const htmlToList = (value?: string | null) =>
 const ExamDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const fallbackExam = useMemo(() => examDetails.find((entry) => entry.slug === slug), [slug]);
+  const examContentRef = useRef<HTMLDivElement>(null);
 
   const { data: dbExam, isLoading } = useQuery({
     queryKey: ["exam-page", slug],
@@ -180,11 +182,18 @@ const ExamDetailPage = () => {
             <Card id="exam-content">
               <CardHeader><CardTitle className="font-heading">About {exam.name}</CardTitle></CardHeader>
               <CardContent>
-                {exam.rawDescription?.includes("<") ? (
-                  <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(exam.rawDescription || "") }} />
-                ) : (
-                  <p className="text-muted-foreground leading-relaxed">{exam.description}</p>
-                )}
+                <AutoTOC
+                  contentRef={examContentRef}
+                  className="mb-6"
+                  deps={[exam.slug, exam.rawDescription]}
+                />
+                <div ref={examContentRef}>
+                  {exam.rawDescription?.includes("<") ? (
+                    <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(exam.rawDescription || "") }} />
+                  ) : (
+                    <p className="text-muted-foreground leading-relaxed">{exam.description}</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
             <Card>

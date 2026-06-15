@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import PageKeywords from "@/components/PageKeywords";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowLeft, Calendar, Clock, User, Tag, Share2, BookOpen, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +18,12 @@ import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import ReadingProgress from "@/components/mobile/ReadingProgress";
 import { Bookmark } from "lucide-react";
+import AutoTOC from "@/components/AutoTOC";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const { data: article, isLoading } = useQuery({
     queryKey: ["article", slug],
@@ -240,9 +242,19 @@ const ArticlePage = () => {
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
-              {article.content ? renderContent(article.content) : (
-                <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
-              )}
+
+              {/* Mobile / inline auto Table of Contents */}
+              <AutoTOC
+                contentRef={contentRef}
+                className="mb-6 lg:hidden"
+                deps={[article.id, article.content]}
+              />
+
+              <div ref={contentRef}>
+                {article.content ? renderContent(article.content) : (
+                  <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
+                )}
+              </div>
             </div>
 
             <InlineAIToolCTA variant="profile-analyzer" />
@@ -267,7 +279,12 @@ const ArticlePage = () => {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="bg-card rounded-2xl p-6 border border-border shadow-md sticky top-20">
+            <AutoTOC
+              contentRef={contentRef}
+              className="hidden lg:block sticky top-20"
+              deps={[article.id, article.content]}
+            />
+            <div className="bg-card rounded-2xl p-6 border border-border shadow-md">
               <h3 className="font-heading font-bold text-foreground mb-5 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-primary" /> Related Articles
               </h3>
