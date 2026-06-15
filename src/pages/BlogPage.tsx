@@ -392,7 +392,7 @@ const BlogPage = () => {
                   <div className="absolute inset-0 hero-gradient" />
                   <div className="absolute inset-0">
                     <div className="absolute top-0 right-0 hidden w-32 h-32 bg-white/10 rounded-full -translate-y-10 translate-x-10 md:block" />
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-6 -translate-x-6" />
+                    <div className="absolute bottom-0 left-0 hidden w-24 h-24 bg-white/5 rounded-full translate-y-6 -translate-x-6 md:block" />
                   </div>
                   <div className="relative p-6">
                     <h3 className="font-heading font-bold text-primary-foreground text-lg mb-2">Get Free MBA Guidance</h3>
