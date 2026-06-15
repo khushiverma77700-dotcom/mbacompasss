@@ -745,7 +745,7 @@ html, body, #root {
   overflow-x: hidden;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1023px) {
   /* Prevent any element from forcing a horizontal scroll */
   body, #root {
     overflow-x: hidden;
@@ -757,12 +757,35 @@ html, body, #root {
     height: auto;
   }
 
-  /* Tables become horizontally scrollable instead of breaking layout */
+  /* CRITICAL: grid/flex/block children default to min-width:auto which lets
+     a single wide descendant (table, pre, long string, absolute hero img)
+     inflate the whole page past the viewport. Force every layout-level
+     wrapper to be allowed to shrink to its parent. */
+  main, article, aside, section, header, footer, nav,
+  .container, .container > *,
+  [class*="grid-cols"], [class*="grid-cols"] > *,
+  [class*="flex"] > *,
+  .ai-content, .ai-content > *,
+  .prose, .prose > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Tables become horizontally scrollable instead of breaking layout.
+     The wrapper (block table) scrolls; the page does not. */
   table {
     display: block;
     max-width: 100%;
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   /* Tighten container padding on phones */
@@ -782,13 +805,15 @@ html, body, #root {
     word-break: normal;
   }
 
-  /* Headings shrink a notch on tight viewports */
-  h1 { font-size: clamp(1.5rem, 6vw, 2rem); line-height: 1.2; }
-  h2 { font-size: clamp(1.25rem, 5vw, 1.5rem); line-height: 1.25; }
-  h3 { font-size: clamp(1.05rem, 4.2vw, 1.25rem); line-height: 1.3; }
-
   /* shadcn Dialog / Sheet content: never exceed viewport width */
   [role="dialog"] {
     max-width: 100vw !important;
   }
+}
+
+@media (max-width: 640px) {
+  /* Headings shrink a notch on tight viewports */
+  h1 { font-size: clamp(1.5rem, 6vw, 2rem); line-height: 1.2; }
+  h2 { font-size: clamp(1.25rem, 5vw, 1.5rem); line-height: 1.25; }
+  h3 { font-size: clamp(1.05rem, 4.2vw, 1.25rem); line-height: 1.3; }
 }
