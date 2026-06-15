@@ -450,28 +450,30 @@ export const SectionDifficultyHeatmap: React.FC = () => {
     <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
       <h3 className="text-foreground font-bold mb-1 text-sm">Section Difficulty Heatmap</h3>
       <p className="text-xs text-muted-foreground mb-4">Accuracy % by section and difficulty level</p>
-      <table className="w-full text-sm">
-        <thead>
-          <tr>
-            <th className="text-left py-2 text-muted-foreground font-medium">Section</th>
-            {difficulties.map(d => <th key={d} className="text-center py-2 text-muted-foreground font-medium">{d}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {sections.map((sec, si) => (
-            <tr key={sec} className="border-t border-border/50">
-              <td className="py-3 font-semibold text-foreground">{sec}</td>
-              {difficulties.map((_, di) => (
-                <td key={di} className="text-center py-3">
-                  <span className={`inline-block px-3 py-1 rounded-lg text-sm font-bold ${getColor(heatData[si][di])}`}>
-                    {heatData[si][di]}%
-                  </span>
-                </td>
-              ))}
+      <div className="overflow-x-auto">
+        <table className="min-w-[360px] w-full text-sm">
+          <thead>
+            <tr>
+              <th className="text-left py-2 text-muted-foreground font-medium">Section</th>
+              {difficulties.map(d => <th key={d} className="text-center py-2 text-muted-foreground font-medium">{d}</th>)}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sections.map((sec, si) => (
+              <tr key={sec} className="border-t border-border/50">
+                <td className="py-3 font-semibold text-foreground">{sec}</td>
+                {difficulties.map((_, di) => (
+                  <td key={di} className="text-center py-3">
+                    <span className={`inline-block px-3 py-1 rounded-lg text-sm font-bold ${getColor(heatData[si][di])}`}>
+                      {heatData[si][di]}%
+                    </span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

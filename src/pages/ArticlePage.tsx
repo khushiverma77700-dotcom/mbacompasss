@@ -98,7 +98,7 @@ const ArticlePage = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="hero-gradient py-12">
-          <div className="container mx-auto px-4"><Skeleton className="h-8 w-64 mb-3 bg-white/20" /><Skeleton className="h-10 w-[500px] bg-white/20" /></div>
+          <div className="container mx-auto px-4"><Skeleton className="h-8 w-64 max-w-full mb-3 bg-white/20" /><Skeleton className="h-10 w-full max-w-[500px] bg-white/20" /></div>
         </div>
         <div className="container mx-auto px-4 py-8 max-w-4xl"><Skeleton className="h-[500px] rounded-2xl" /></div>
       </div>
