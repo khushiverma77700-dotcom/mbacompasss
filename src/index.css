@@ -362,22 +362,55 @@
     overflow-wrap: break-word;
     word-wrap: break-word;
   }
-  .ai-content *,
-  .prose * {
+  /* Constrain block-level descendants to parent width, but EXCLUDE table
+     internals — tables need their natural intrinsic width so columns size
+     to content and the table block scrolls horizontally on its own. */
+  .ai-content > *:not(table):not(figure),
+  .prose > *:not(table):not(figure) {
     max-width: 100%;
+  }
+  .ai-content img,
+  .prose img,
+  .ai-content video,
+  .prose video,
+  .ai-content iframe,
+  .prose iframe {
+    max-width: 100%;
+    height: auto;
   }
   .ai-content pre,
   .prose pre {
     overflow-x: auto;
     max-width: 100%;
   }
-  /* Bare tables inside ai-content (no wrapper) should scroll horizontally
-     instead of pushing the page width. */
-  .ai-content > table {
+  /* Tables inside article content: scroll horizontally as a block,
+     inner rows keep natural width so cells don't squeeze. */
+  .ai-content table,
+  .prose table {
     display: block;
-    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  .ai-content table > thead,
+  .ai-content table > tbody,
+  .ai-content table > tfoot,
+  .prose table > thead,
+  .prose table > tbody,
+  .prose table > tfoot {
+    display: table;
+    width: max-content;
+    min-width: 100%;
+  }
+  .ai-content td,
+  .ai-content th,
+  .prose td,
+  .prose th {
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: normal;
+    min-width: 8rem;
   }
 }
 
