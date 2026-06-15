@@ -107,17 +107,17 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="relative mb-6 rounded-2xl p-[2px] ai-gist-border"
+      className="relative mb-6 w-full max-w-full min-w-0 overflow-hidden rounded-2xl p-[2px] ai-gist-border"
     >
       {/* Inner card */}
-      <div className="relative overflow-hidden rounded-[14px] bg-background p-5 md:p-6">
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[14px] bg-background p-4 sm:p-5 md:p-6">
         {/* Subtle internal glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.03] via-transparent to-purple-500/[0.03] pointer-events-none" />
-        <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-blue-500/[0.04] blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-purple-500/[0.04] blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 -right-16 hidden w-40 h-40 rounded-full bg-blue-500/[0.04] blur-3xl pointer-events-none sm:block" />
+        <div className="absolute -bottom-12 -left-12 hidden w-32 h-32 rounded-full bg-purple-500/[0.04] blur-3xl pointer-events-none sm:block" />
 
         {/* Header */}
-        <div className="relative flex items-start gap-3 mb-3">
+        <div className="relative flex min-w-0 items-start gap-3 mb-3">
           <motion.div
             animate={{ rotate: [0, 8, -8, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -126,13 +126,13 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
             <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 animate-pulse pointer-events-none" />
           </motion.div>
-          <div>
-            <p className="text-sm font-bold text-foreground leading-snug flex items-center gap-1.5">
+          <div className="min-w-0 max-w-full flex-1">
+            <p className="text-sm font-bold text-foreground leading-snug flex min-w-0 flex-wrap items-center gap-1.5">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">B School Buzz AI</span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider border border-blue-500/15">Beta</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Get the gist fast — converts {pageLabel.toLowerCase()}s into crisp, actionable insights ✨
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-full break-words leading-relaxed">
+              Get the gist fast — converts {pageLabel.toLowerCase()}s into crisp, actionable insights
             </p>
           </div>
         </div>
@@ -144,7 +144,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
                 onClick={handleSummarize}
                 disabled={loading}
                 size="sm"
-                className="mt-1 gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/20 transition-all duration-300 border-0"
+                className="mt-1 max-w-full whitespace-normal break-words gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/20 transition-all duration-300 border-0"
               >
                 {loading ? (
                   <>
