@@ -18,6 +18,7 @@ import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import ReadingProgress from "@/components/mobile/ReadingProgress";
 import { Bookmark } from "lucide-react";
+import AutoTOC from "@/components/AutoTOC";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
