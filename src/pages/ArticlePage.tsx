@@ -23,6 +23,7 @@ import AutoTOC from "@/components/AutoTOC";
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const { data: article, isLoading } = useQuery({
     queryKey: ["article", slug],
