@@ -238,7 +238,7 @@ const ArticlePage = () => {
               </div>
             )}
 
-            <div id="article-content" className="w-full min-w-0 bg-card rounded-2xl border border-border p-5 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
+            <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
