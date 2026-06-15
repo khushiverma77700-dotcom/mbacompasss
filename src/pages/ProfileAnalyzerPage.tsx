@@ -863,9 +863,34 @@ const ProfileAnalyzerPage = () => {
     autoSubmittedRef.current = true;
     try { localStorage.removeItem(ANALYZER_PENDING_KEY); } catch {}
     setShowAuthGate(false);
-    // Jump back to step 5 (final step) and trigger submission once the form is hydrated.
-    setStep(5);
-    setTimeout(() => { handleSubmit(); }, 200);
+
+    // Hydrate phone from the signed-in user's profile so OTP isn't skipped silently.
+    // If no verified phone exists, send the user back to step 1 to verify — never
+    // auto-submit a report without a mobile number on file.
+    (async () => {
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("phone")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const profilePhone = ((prof as any)?.phone || "").replace(/\D/g, "").slice(-10);
+        if (/^[6-9]\d{9}$/.test(profilePhone)) {
+          setPhone(profilePhone);
+          setPhoneVerified(true);
+          setStep(5);
+          setTimeout(() => { handleSubmit(); }, 200);
+        } else {
+          setStep(1);
+          toast({
+            title: "Verify your mobile",
+            description: "Please verify your mobile number to generate your report.",
+          });
+        }
+      } catch {
+        setStep(1);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
