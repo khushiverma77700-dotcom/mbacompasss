@@ -7,8 +7,8 @@ const CTASection = () => (
   <section className="py-20 md:py-24 relative overflow-hidden">
     <div className="absolute inset-0 hero-gradient pointer-events-none" />
     <div className="absolute inset-0 opacity-10 pointer-events-none">
-      <div className="absolute top-10 left-10 w-72 h-72 bg-white/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+      <div className="absolute top-10 left-10 hidden w-72 h-72 bg-white/20 rounded-full blur-3xl md:block" />
+      <div className="absolute bottom-10 right-10 hidden w-96 h-96 bg-white/10 rounded-full blur-3xl md:block" />
     </div>
     <div className="container mx-auto px-4 relative z-10">
       <motion.div
