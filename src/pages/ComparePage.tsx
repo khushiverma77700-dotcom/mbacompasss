@@ -126,7 +126,7 @@ const ComparePage = () => {
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
           />
           {/* Radial glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary-foreground/[0.03] rounded-full blur-[100px]" />
+          <div className="absolute top-1/2 left-1/2 hidden w-[600px] h-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-foreground/[0.03] blur-[100px] md:block" />
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
