@@ -771,15 +771,23 @@ html, body, #root {
     max-width: 100%;
   }
 
-  /* Tables become horizontally scrollable instead of breaking layout.
-     The wrapper (block table) scrolls; the page does not. */
+  /* Tables: keep their natural intrinsic width and let the BLOCK scroll
+     horizontally. Do NOT force width:100% — that compresses columns and
+     causes per-character vertical wrapping in narrow cells. */
   table {
     display: block;
     max-width: 100%;
-    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+  }
+  /* Inner table layout stays as a normal table so columns size to content */
+  table > thead,
+  table > tbody,
+  table > tfoot {
+    display: table;
+    width: max-content;
+    min-width: 100%;
   }
   pre {
     max-width: 100%;
@@ -787,6 +795,7 @@ html, body, #root {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
   }
+
 
   /* Tighten container padding on phones */
   .container {
@@ -799,11 +808,14 @@ html, body, #root {
     padding: 0.75rem !important;
   }
 
-  /* Long unbreakable strings (URLs, IDs) wrap instead of expanding parent */
-  p, span, div, h1, h2, h3, h4, h5, h6, a, li, td, th {
+  /* Long unbreakable strings (URLs, IDs) wrap instead of expanding parent.
+     Excludes td/th — character-wrapping inside narrow table cells creates
+     ugly vertical one-letter-per-line columns. */
+  p, span, div, h1, h2, h3, h4, h5, h6, a, li {
     overflow-wrap: anywhere;
     word-break: normal;
   }
+
 
   /* shadcn Dialog / Sheet content: never exceed viewport width */
   [role="dialog"] {
