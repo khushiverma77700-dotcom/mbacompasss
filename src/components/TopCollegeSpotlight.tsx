@@ -18,7 +18,7 @@ const TopCollegeSpotlight = () => {
 
   return (
     <section className="py-16 bg-background relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/3 rounded-full blur-3xl -translate-y-1/2" />
+      <div className="absolute top-0 right-0 hidden w-96 h-96 -translate-y-1/2 rounded-full bg-primary/3 blur-3xl md:block" />
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
