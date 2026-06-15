@@ -302,8 +302,8 @@ function DetailInner() {
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-8 pb-12">
         <div className="absolute inset-0 pointer-events-none opacity-60" aria-hidden>
-          <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
-          <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
+          <div className="absolute -top-24 -right-24 hidden h-80 w-80 rounded-full bg-sky-200/40 blur-3xl sm:block" />
+          <div className="absolute -bottom-32 -left-20 hidden h-80 w-80 rounded-full bg-blue-200/40 blur-3xl sm:block" />
         </div>
         <div className="container mx-auto px-4 relative">
           <Button asChild variant="ghost" size="sm" className="mb-4">
@@ -360,7 +360,7 @@ function DetailInner() {
                 )}
 
               {/* Hero highlight strip */}
-              <div className="mt-6 grid grid-cols-3 gap-3">
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="violet" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
