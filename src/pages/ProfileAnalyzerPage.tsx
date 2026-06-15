@@ -937,12 +937,35 @@ const ProfileAnalyzerPage = () => {
   const handleSubmit = async () => {
     if (!validateStep(step)) return;
     // Hard guard: never generate a report without a verified mobile number.
+    // Logged-out users get the auth gate; logged-in but unverified users get
+    // bounced back to Step 1 with a clear message and the phone field focused.
     if (!/^[6-9]\d{9}$/.test(phone) || !phoneVerified) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); } catch {}
+      if (!user) {
+        try { localStorage.setItem(ANALYZER_PENDING_KEY, "1"); } catch {}
+        setShowAuthGate(true);
+        toast({
+          title: "Sign in to continue",
+          description: "Create a free account so we can verify your mobile and generate your report.",
+        });
+        return;
+      }
       setStep(1);
+      setErrors((prev) => ({
+        ...prev,
+        phone: !/^[6-9]\d{9}$/.test(phone)
+          ? "Enter a valid 10-digit Indian mobile number to continue"
+          : "Tap 'Send OTP' and verify your mobile to generate the report",
+      }));
       window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        const el = document.querySelector<HTMLInputElement>('input[type="tel"]');
+        el?.focus();
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 250);
       toast({
-        title: "Mobile verification required",
-        description: "Please verify your mobile number with OTP before generating the report.",
+        title: "Phone verification required",
+        description: "We need a verified mobile number before generating your AI report. You've been taken back to Step 1.",
         variant: "destructive",
       });
       return;
