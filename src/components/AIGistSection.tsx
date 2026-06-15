@@ -107,17 +107,17 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="relative mb-6 rounded-2xl p-[2px] ai-gist-border"
+      className="relative mb-6 w-full max-w-full min-w-0 overflow-hidden rounded-2xl p-[2px] ai-gist-border"
     >
       {/* Inner card */}
-      <div className="relative overflow-hidden rounded-[14px] bg-background p-5 md:p-6">
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[14px] bg-background p-4 sm:p-5 md:p-6">
         {/* Subtle internal glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.03] via-transparent to-purple-500/[0.03] pointer-events-none" />
-        <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-blue-500/[0.04] blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-purple-500/[0.04] blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 -right-16 hidden w-40 h-40 rounded-full bg-blue-500/[0.04] blur-3xl pointer-events-none sm:block" />
+        <div className="absolute -bottom-12 -left-12 hidden w-32 h-32 rounded-full bg-purple-500/[0.04] blur-3xl pointer-events-none sm:block" />
 
         {/* Header */}
-        <div className="relative flex items-start gap-3 mb-3">
+        <div className="relative flex min-w-0 items-start gap-3 mb-3">
           <motion.div
             animate={{ rotate: [0, 8, -8, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -126,13 +126,13 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
             <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 animate-pulse pointer-events-none" />
           </motion.div>
-          <div>
-            <p className="text-sm font-bold text-foreground leading-snug flex items-center gap-1.5">
+          <div className="min-w-0 max-w-full flex-1">
+            <p className="text-sm font-bold text-foreground leading-snug flex min-w-0 flex-wrap items-center gap-1.5">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">B School Buzz AI</span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider border border-blue-500/15">Beta</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Get the gist fast — converts {pageLabel.toLowerCase()}s into crisp, actionable insights ✨
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-full break-words leading-relaxed">
+              Get the gist fast — converts {pageLabel.toLowerCase()}s into crisp, actionable insights
             </p>
           </div>
         </div>
@@ -144,7 +144,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
                 onClick={handleSummarize}
                 disabled={loading}
                 size="sm"
-                className="mt-1 gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/20 transition-all duration-300 border-0"
+                className="mt-1 max-w-full whitespace-normal break-words gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/20 transition-all duration-300 border-0"
               >
                 {loading ? (
                   <>
@@ -181,24 +181,24 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex min-w-0 flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl gap-1.5 text-xs border-blue-500/20 hover:bg-blue-500/5 hover:border-blue-500/30 transition-all"
+                  className="max-w-full whitespace-normal rounded-xl gap-1.5 text-xs border-blue-500/20 hover:bg-blue-500/5 hover:border-blue-500/30 transition-all"
                   onClick={() => onScrollToContent?.()}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  Still Confused 😵 — Read Full {pageLabel}
+                  Still Confused — Read Full {pageLabel}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl gap-1.5 text-xs border-purple-500/20 hover:bg-purple-500/5 hover:border-purple-500/30 transition-all"
+                  className="max-w-full whitespace-normal rounded-xl gap-1.5 text-xs border-purple-500/20 hover:bg-purple-500/5 hover:border-purple-500/30 transition-all"
                   onClick={() => setMode("ask")}
                 >
                   <MessageCircleQuestion className="w-3.5 h-3.5" />
-                  Tell Me More 👇 — Ask a Question
+                  Tell Me More — Ask a Question
                 </Button>
               </div>
             </motion.div>
@@ -215,11 +215,11 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
             >
               {summary && (
                 <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-2.5 border border-border/40 line-clamp-2">
-                  ✨ {summary.replace(/[*#_]/g, "").slice(0, 120)}...
+                  {summary.replace(/[*#_]/g, "").slice(0, 120)}...
                 </div>
               )}
-              <div className="flex gap-2">
-                <div className="relative flex-1 rounded-xl p-[1px] ai-gist-input-border focus-within:shadow-lg focus-within:shadow-purple-500/10 transition-shadow">
+              <div className="flex min-w-0 gap-2">
+                <div className="relative min-w-0 flex-1 rounded-xl p-[1px] ai-gist-input-border focus-within:shadow-lg focus-within:shadow-purple-500/10 transition-shadow">
                   <Input
                     placeholder="Ask anything about this page..."
                     value={question}
@@ -240,7 +240,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
               {askLoading && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Brain className="w-3.5 h-3.5 text-purple-500 animate-pulse" />
-                  Searching our database & AI<PulsingDots />
+                  Searching our database and AI<PulsingDots />
                 </motion.div>
               )}
               {answer && (
