@@ -182,11 +182,18 @@ const ExamDetailPage = () => {
             <Card id="exam-content">
               <CardHeader><CardTitle className="font-heading">About {exam.name}</CardTitle></CardHeader>
               <CardContent>
-                {exam.rawDescription?.includes("<") ? (
-                  <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(exam.rawDescription || "") }} />
-                ) : (
-                  <p className="text-muted-foreground leading-relaxed">{exam.description}</p>
-                )}
+                <AutoTOC
+                  contentRef={examContentRef}
+                  className="mb-6"
+                  deps={[exam.slug, exam.rawDescription]}
+                />
+                <div ref={examContentRef}>
+                  {exam.rawDescription?.includes("<") ? (
+                    <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(exam.rawDescription || "") }} />
+                  ) : (
+                    <p className="text-muted-foreground leading-relaxed">{exam.description}</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
             <Card>
