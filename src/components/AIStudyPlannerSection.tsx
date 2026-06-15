@@ -27,13 +27,13 @@ const todayPlan = [
 
 export default function AIStudyPlannerSection() {
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50/40">
+    <section className="relative py-16 md:py-24 overflow-hidden max-w-full bg-gradient-to-br from-sky-50 via-white to-blue-50/40">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 -right-20 w-[480px] h-[480px] rounded-full bg-sky-200/30 blur-3xl" />
-        <div className="absolute -bottom-32 -left-20 w-[480px] h-[480px] rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute -top-32 -right-20 hidden w-[480px] h-[480px] rounded-full bg-sky-200/30 blur-3xl md:block" />
+        <div className="absolute -bottom-32 -left-20 hidden w-[480px] h-[480px] rounded-full bg-blue-200/30 blur-3xl md:block" />
       </div>
 
-      <div className="container mx-auto px-4 relative">
+      <div className="container mx-auto px-4 relative min-w-0 max-w-full">
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow-sm border border-sky-100 text-xs text-sky-700 font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" /> AI-Powered • Built into MBA Compass paid courses
@@ -47,7 +47,7 @@ export default function AIStudyPlannerSection() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-6">
+        <div className="grid lg:grid-cols-12 gap-6 min-w-0">
           {/* Left — percentile trajectory chart */}
           <Card className="lg:col-span-7 p-5 bg-white/90 backdrop-blur border-sky-100 shadow-sm">
             <div className="flex items-start justify-between mb-3">
