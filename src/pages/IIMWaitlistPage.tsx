@@ -384,12 +384,12 @@ export default function IIMWaitlistPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,white_0%,transparent_60%)] opacity-10" />
         {/* Animated floating orbs */}
         <motion.div
-          className="absolute top-10 left-10 w-72 h-72 rounded-full bg-white/5 blur-3xl"
+          className="absolute top-10 left-10 hidden w-72 h-72 rounded-full bg-white/5 blur-3xl md:block"
           animate={{ x: [0, 40, 0], y: [0, 20, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-blue-300/10 blur-3xl"
+          className="absolute bottom-10 right-10 hidden w-96 h-96 rounded-full bg-blue-300/10 blur-3xl md:block"
           animate={{ x: [0, -50, 0], y: [0, -30, 0] }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -802,7 +802,7 @@ export default function IIMWaitlistPage() {
             {/* LEFT: Inputs */}
             <div className="lg:col-span-2 p-8 bg-gradient-to-br from-violet-600 via-blue-600 to-blue-700 text-white relative overflow-hidden">
               <motion.div
-                className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-white/10 blur-3xl"
+                className="absolute -top-20 -right-20 hidden w-60 h-60 rounded-full bg-white/10 blur-3xl md:block"
                 animate={{ scale: [1, 1.3, 1], rotate: [0, 90, 0] }}
                 transition={{ duration: 12, repeat: Infinity }}
               />
