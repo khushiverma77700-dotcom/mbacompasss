@@ -393,25 +393,25 @@
     overflow-x: auto;
     max-width: 100%;
   }
-  /* Tables inside article content: scroll horizontally as a block,
-     inner rows keep natural width so cells don't squeeze. */
-  .ai-content table,
-  .prose table {
-    display: block;
+  /* Tables inside article content: the wrapper is the scroll container.
+     Keep wide table internals clipped to that wrapper so they never paint
+     over normal paragraphs/headings on mobile. */
+  .ai-content .ai-table-wrap,
+  .prose .ai-table-wrap {
     max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    contain: inline-size paint;
   }
-  .ai-content table > thead,
-  .ai-content table > tbody,
-  .ai-content table > tfoot,
-  .prose table > thead,
-  .prose table > tbody,
-  .prose table > tfoot {
+  .ai-content table,
+  .prose table {
     display: table;
     width: max-content;
     min-width: 100%;
+    max-width: none;
   }
   .ai-content td,
   .ai-content th,
@@ -624,14 +624,20 @@
 .ai-content .ai-table-wrap {
   width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  contain: inline-size paint;
   margin: 0.75rem 0;
   border-radius: 0.5rem;
   border: 1px solid hsl(var(--border));
 }
 .ai-content .ai-table-wrap > table {
+  display: table;
   margin: 0 !important;
+  width: max-content;
   min-width: 100%;
+  max-width: none;
 }
 
 /* Top progress bar shown during route chunk loading (see App.tsx TopProgressBar) */
@@ -818,19 +824,20 @@ html, body, #root {
      horizontally. Do NOT force width:100% — that compresses columns and
      causes per-character vertical wrapping in narrow cells. */
   table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-  }
-  /* Inner table layout stays as a normal table so columns size to content */
-  table > thead,
-  table > tbody,
-  table > tfoot {
     display: table;
     width: max-content;
     min-width: 100%;
+    max-width: 100%;
+  }
+  .ai-table-wrap,
+  .overflow-table {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    contain: inline-size paint;
   }
   pre {
     max-width: 100%;
