@@ -656,11 +656,27 @@
   max-width: none;
 }
 
-/* Article pages: show complete table content on phones instead of clipping the
-   right side behind a horizontal scroll area. */
+/* Article pages: wide HTML from TipTap/AI must stay inside the article card on
+   phones and tablets. Tables are compacted first, then safely contained so they
+   never push or paint outside the viewport. */
 @media (max-width: 1023px) {
+  .article-content-shell,
+  .article-content-shell .ai-content,
+  .article-content-shell .prose,
+  .article-content-shell .ai-content > *,
+  .article-content-shell .prose > * {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
   .article-content-shell .ai-table-wrap {
-    overflow-x: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
     contain: none !important;
   }
 
@@ -684,6 +700,24 @@
     word-break: normal !important;
     font-size: 0.82rem !important;
     line-height: 1.35 !important;
+  }
+
+  .article-content-shell .ai-content img,
+  .article-content-shell .ai-content video,
+  .article-content-shell .ai-content iframe,
+  .article-content-shell .ai-content pre,
+  .article-content-shell .prose img,
+  .article-content-shell .prose video,
+  .article-content-shell .prose iframe,
+  .article-content-shell .prose pre {
+    max-width: 100% !important;
+  }
+
+  .article-content-shell .ai-content pre,
+  .article-content-shell .prose pre {
+    overflow-x: auto !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
   }
 }
 
