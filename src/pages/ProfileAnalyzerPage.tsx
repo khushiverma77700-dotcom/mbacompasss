@@ -265,7 +265,7 @@ const GlowOrb = ({ className = "" }: { className?: string }) => (
   <motion.div
     animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
     transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-    className={`absolute rounded-full blur-3xl ${className}`}
+    className={`absolute rounded-full blur-3xl pointer-events-none ${className}`}
   />
 );
 
@@ -389,8 +389,8 @@ const SampleReportPreview = () => {
           </div>
 
           {/* College table */}
-          <div className="overflow-hidden rounded-xl border border-border/50">
-            <table className="w-full text-xs">
+          <div className="overflow-x-auto rounded-xl border border-border/50">
+            <table className="min-w-[520px] w-full text-xs">
               <thead>
                 <tr className="bg-muted/50 text-muted-foreground">
                   <th className="text-left p-2.5 font-medium">College</th>
@@ -1181,9 +1181,9 @@ const ProfileAnalyzerPage = () => {
             {/* ──── HERO with 3D Elements ──── */}
             <section className="min-h-[90vh] flex items-center justify-center px-4 relative overflow-hidden">
               {/* Background glow orbs */}
-              <GlowOrb className="w-72 h-72 bg-primary/20 top-[-5%] left-[-5%]" />
-              <GlowOrb className="w-96 h-96 bg-primary/10 bottom-[-10%] right-[-8%]" />
-              <GlowOrb className="w-48 h-48 bg-primary/15 top-[40%] right-[20%]" />
+              <GlowOrb className="hidden sm:block w-72 h-72 bg-primary/20 top-[-5%] left-[-5%]" />
+              <GlowOrb className="hidden sm:block w-96 h-96 bg-primary/10 bottom-[-10%] right-[-8%]" />
+              <GlowOrb className="hidden sm:block w-48 h-48 bg-primary/15 top-[40%] right-[20%]" />
 
               {/* Animated dot grid */}
               <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px" }} />

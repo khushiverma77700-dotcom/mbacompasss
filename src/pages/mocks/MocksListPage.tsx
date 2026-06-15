@@ -223,9 +223,9 @@ export default function MocksListPage() {
       <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
         {/* 3D animated background blobs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-gradient-to-br from-sky-300/40 to-blue-400/30 blur-3xl animate-blob" />
-          <div className="absolute top-20 -right-20 w-[24rem] h-[24rem] rounded-full bg-gradient-to-br from-cyan-300/40 to-sky-200/30 blur-3xl animate-blob [animation-delay:3s]" />
-          <div className="absolute bottom-0 left-1/3 w-[22rem] h-[22rem] rounded-full bg-gradient-to-br from-indigo-200/30 to-sky-300/30 blur-3xl animate-blob [animation-delay:6s]" />
+          <div className="absolute -top-32 -left-24 hidden w-[28rem] h-[28rem] rounded-full bg-gradient-to-br from-sky-300/40 to-blue-400/30 blur-3xl animate-blob sm:block" />
+          <div className="absolute top-20 -right-20 hidden w-[24rem] h-[24rem] rounded-full bg-gradient-to-br from-cyan-300/40 to-sky-200/30 blur-3xl animate-blob [animation-delay:3s] sm:block" />
+          <div className="absolute bottom-0 left-1/3 hidden w-[22rem] h-[22rem] rounded-full bg-gradient-to-br from-indigo-200/30 to-sky-300/30 blur-3xl animate-blob [animation-delay:6s] sm:block" />
           <div className="absolute inset-0 [background-image:linear-gradient(to_right,hsl(var(--primary)/0.06)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary)/0.06)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
         </div>
 
