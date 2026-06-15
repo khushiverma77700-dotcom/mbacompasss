@@ -28,6 +28,7 @@ const htmlToList = (value?: string | null) =>
 const ExamDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const fallbackExam = useMemo(() => examDetails.find((entry) => entry.slug === slug), [slug]);
+  const examContentRef = useRef<HTMLDivElement>(null);
 
   const { data: dbExam, isLoading } = useQuery({
     queryKey: ["exam-page", slug],
