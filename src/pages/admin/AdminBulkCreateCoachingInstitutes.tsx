@@ -97,15 +97,44 @@ const AdminBulkCreateCoachingInstitutes = () => {
     return input.split("\n").map(parseLine).filter(Boolean) as { name: string; city?: string; state?: string }[];
   }, [input]);
 
-  const buildQueue = () => {
+  const buildQueue = async (): Promise<Row[] | undefined> => {
     const items = parsedPreview;
     if (!items.length) return;
+
+    // Pre-fetch all existing institutes once to detect duplicates by name (case/punct-insensitive).
+    const existingMap = new Map<string, { id: string; slug: string; name: string }>();
+    try {
+      const { data: existing } = await supabase
+        .from("institutes")
+        .select("id, slug, name")
+        .limit(10000);
+      (existing || []).forEach((e: any) => {
+        if (e?.name) existingMap.set(normalizeName(e.name), { id: e.id, slug: e.slug, name: e.name });
+      });
+    } catch (err) {
+      console.warn("[bulk-coaching] existing fetch failed", err);
+    }
+
     const seen = new Set<string>();
     const queue: Row[] = [];
     items.forEach((it, i) => {
-      const k = it.name.toLowerCase();
+      const k = normalizeName(it.name);
       if (seen.has(k)) return;
       seen.add(k);
+      const dup = existingMap.get(k);
+      if (dup) {
+        queue.push({
+          index: i,
+          name: it.name,
+          city: it.city || defaultCity || undefined,
+          state: it.state || defaultState || undefined,
+          status: "skipped",
+          step: `already exists — "${dup.name}"`,
+          instituteId: dup.id,
+          slug: dup.slug,
+        });
+        return;
+      }
       queue.push({
         index: i,
         name: it.name,
