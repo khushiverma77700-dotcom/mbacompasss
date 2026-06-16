@@ -212,37 +212,44 @@ const AdminBulkCreateCoachingInstitutes = () => {
       const basic = (data as any).basic || {};
       const sections = (data as any).sections || {};
 
-      updateRow({ step: "saving institute" });
+      updateRow({ step: row.isUpdate ? "refreshing existing institute" : "saving institute" });
 
-      let baseSlug = (basic.slug || slugify(basic.name || row.name)).slice(0, 80);
-      // Avoid slug collision
-      const { data: existing } = await supabase.from("institutes").select("id").eq("slug", baseSlug).maybeSingle();
-      const finalSlug = existing?.id ? `${baseSlug}-${Date.now().toString(36).slice(-4)}` : baseSlug;
+      const payload: any = {
+        name: basic.name || row.name,
+        institute_type: brief.instituteType,
+        city: basic.city || row.city || null,
+        state: basic.state || row.state || null,
+        description: basic.description || null,
+        website: basic.website || null,
+        phone: basic.phone || null,
+        email: basic.email || null,
+        meta_title: basic.meta_title || null,
+        meta_description: basic.meta_description || null,
+        rating: basic.rating || 0,
+        students_count: basic.students_count || 0,
+        success_rate: basic.success_rate || 0,
+        sections,
+      };
 
-      const { data: ins, error: insErr } = await supabase
-        .from("institutes")
-        .insert({
-          name: basic.name || row.name,
-          slug: finalSlug,
-          institute_type: brief.instituteType,
-          city: basic.city || row.city || null,
-          state: basic.state || row.state || null,
-          description: basic.description || null,
-          website: basic.website || null,
-          phone: basic.phone || null,
-          email: basic.email || null,
-          meta_title: basic.meta_title || null,
-          meta_description: basic.meta_description || null,
-          rating: basic.rating || 0,
-          students_count: basic.students_count || 0,
-          success_rate: basic.success_rate || 0,
-          sections,
-        })
-        .select("id")
-        .single();
-      if (insErr) throw new Error(insErr.message);
-
-      updateRow({ status: "succeeded", step: "done", instituteId: ins.id, slug: finalSlug, error: undefined });
+      if (row.isUpdate && row.instituteId) {
+        const { error: upErr } = await supabase
+          .from("institutes")
+          .update(payload)
+          .eq("id", row.instituteId);
+        if (upErr) throw new Error(upErr.message);
+        updateRow({ status: "succeeded", step: "refreshed", error: undefined });
+      } else {
+        let baseSlug = (basic.slug || slugify(basic.name || row.name)).slice(0, 80);
+        const { data: existing } = await supabase.from("institutes").select("id").eq("slug", baseSlug).maybeSingle();
+        const finalSlug = existing?.id ? `${baseSlug}-${Date.now().toString(36).slice(-4)}` : baseSlug;
+        const { data: ins, error: insErr } = await supabase
+          .from("institutes")
+          .insert({ ...payload, slug: finalSlug })
+          .select("id")
+          .single();
+        if (insErr) throw new Error(insErr.message);
+        updateRow({ status: "succeeded", step: "done", instituteId: ins.id, slug: finalSlug, error: undefined });
+      }
     } catch (e: any) {
       updateRow({ status: "failed", step: "error", error: e?.message || String(e) });
     }
