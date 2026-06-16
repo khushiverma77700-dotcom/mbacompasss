@@ -1096,6 +1096,52 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     };
     article.intro = stripExternalLinks(article.intro || "");
     article.content = stripExternalLinks(article.content || "");
+    // ── DENSITY BOOST: if keyword count is well below target, ask the model to weave more in.
+    {
+      const postPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
+      const postStats = computeDensity(postPlain, targetKw);
+      const minAcceptable = Math.max(3, Math.floor(targetOccurrences * 0.8));
+      if (postStats.occurrences < minAcceptable) {
+        const need = targetOccurrences - postStats.occurrences;
+        console.log(`Density boost: ${postStats.occurrences} occurrences (${postStats.density}%) < ${minAcceptable}, need +${need}`);
+        try {
+          const boostRes = await callAIGateway({
+            model: "openai/gpt-5-mini",
+            max_tokens: Math.min(32000, Math.max(10000, Math.round(wmax * 3) + 3000)),
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: `The current draft uses the exact phrase "${targetKw}" only ${postStats.occurrences} times (~${postStats.density}% density). The editor requires ~${targetOccurrences} exact-match occurrences (~${density}% density). Rewrite the article to naturally include the phrase "${targetKw}" approximately ${need} MORE times, distributed evenly across the body (roughly once per 200-300 words). Replace some pronouns ("it", "this programme", "the course") and generic noun phrases ("the programme", "this exam") with the exact phrase "${targetKw}" where it reads naturally. Do NOT shorten the article. Do NOT remove sections, FAQs, tables, or internal links. Keep the same intro/H1/title/meta/slug/keywords. Return the COMPLETE article with intro and content updated.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
+            ],
+            tools: [tool],
+            tool_choice: { type: "function", function: { name: "publish_blog_article" } },
+          }, { feature: "ai-blog-writer-density-boost" });
+          if (boostRes.ok) {
+            const bj = await boostRes.json();
+            const ba = bj?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+            if (ba) {
+              const boosted = JSON.parse(ba);
+              for (const k of ["intro", "content"]) {
+                if (typeof boosted[k] === "string") boosted[k] = stripEscapeArtifacts(boosted[k]);
+              }
+              const bPlain = `${boosted.intro || ""} ${boosted.content || ""}`.replace(/<[^>]*>/g, " ");
+              const bStats = computeDensity(bPlain, targetKw);
+              // Only accept if it actually improved AND didn't shrink content meaningfully.
+              const bWords = bPlain.split(/\s+/).filter(Boolean).length;
+              if (bStats.occurrences > postStats.occurrences && bWords >= postStats.words * 0.9) {
+                article.intro = boosted.intro || article.intro;
+                article.content = boosted.content || article.content;
+                console.log(`Density boost OK: ${postStats.occurrences} → ${bStats.occurrences} occurrences (${bStats.density}%)`);
+              } else {
+                console.log(`Density boost rejected (no improvement or shrank): ${bStats.occurrences} occurrences, ${bWords} words`);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Density boost failed (non-fatal):", e);
+        }
+      }
+    }
+
     // Final quality check — auto-sanitise buzzwords, inject MBA Compass if missing, flag issues
     {
       const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
