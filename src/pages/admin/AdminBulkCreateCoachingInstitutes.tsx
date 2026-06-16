@@ -238,12 +238,17 @@ const AdminBulkCreateCoachingInstitutes = () => {
   };
 
   const start = async () => {
-    const q = buildQueue();
+    const q = await buildQueue();
     if (!q || !q.length) {
       toast({ title: "Add at least one institute name", variant: "destructive" });
       return;
     }
-    toast({ title: "Bulk generation started", description: `Generating ${q.length} institutes…` });
+    const toRun = q.filter(r => r.status === "pending").length;
+    const skipped = q.filter(r => r.status === "skipped").length;
+    toast({
+      title: "Bulk generation started",
+      description: `${toRun} new · ${skipped} already exist (skipped)`,
+    });
     await runQueue(q);
     toast({ title: "Bulk generation finished" });
   };
