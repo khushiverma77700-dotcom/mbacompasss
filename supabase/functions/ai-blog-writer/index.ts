@@ -448,6 +448,25 @@ Return:
   }
 }
 
+// Flexible keyword matcher — handles plural "s", flexible whitespace, word boundaries.
+// Prevents "0 occurrences" false-negatives when the AI writes minor variations
+// (e.g. "IIM placements" vs "IIM placement").
+const buildKeywordRegex = (kw: string): RegExp => {
+  const tokens = kw.trim().split(/\s+/).filter(Boolean)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "s?");
+  if (!tokens.length) return /a^/;
+  return new RegExp(`\\b${tokens.join("\\s+")}\\b`, "gi");
+};
+const countKeyword = (plain: string, kw: string): number =>
+  (plain.match(buildKeywordRegex(kw)) || []).length;
+const computeDensity = (plain: string, kw: string): { occurrences: number; words: number; density: number } => {
+  const words = plain.split(/\s+/).filter(Boolean).length;
+  const occurrences = countKeyword(plain, kw);
+  const kwLen = kw.trim().split(/\s+/).filter(Boolean).length || 1;
+  const density = words ? +((occurrences * kwLen) / words * 100).toFixed(2) : 0;
+  return { occurrences, words, density };
+};
+
 const extractFaqs = (html: string) => {
   if (!html) return [];
   const re2 = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
