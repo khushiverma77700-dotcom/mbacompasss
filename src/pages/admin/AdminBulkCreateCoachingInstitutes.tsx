@@ -405,6 +405,27 @@ const AdminBulkCreateCoachingInstitutes = () => {
             </div>
           </div>
 
+          <div className="flex items-start justify-between gap-3 flex-wrap rounded-md border bg-muted/30 p-3">
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={refreshExisting}
+                disabled={running}
+                onChange={(e) => setRefreshExisting(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                <span className="font-medium">Also refresh existing institutes</span>
+                <span className="block text-xs text-muted-foreground">
+                  When ON, institutes already in the database are regenerated and updated instead of skipped.
+                </span>
+              </span>
+            </label>
+            <Button variant="outline" size="sm" onClick={loadAllExisting} disabled={running}>
+              Load all existing institutes
+            </Button>
+          </div>
+
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="text-xs text-muted-foreground">
               {parsedPreview.length} institute{parsedPreview.length === 1 ? "" : "s"} parsed from input.
