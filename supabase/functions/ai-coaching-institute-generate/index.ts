@@ -396,10 +396,26 @@ Deno.serve(async (req) => {
                 fees: longBody("Fee structure — realistic INR ranges per programme/format, EMI options, payment milestones, refund policy"),
                 scholarships: longBody("Scholarships & discounts — merit-based (CAT/XAT/AIMCAT percentile slabs), early-bird, referral, need-based, sibling"),
                 demo_classes: richBody("Demo classes — free demo formats, what's covered, how to book, duration", 180, 280),
+                online_vs_offline: richBody("Online vs Offline — compare classroom, live online, recorded and hybrid value for MBA aspirants", 180, 280),
                 doubt_solving: richBody("Doubt-solving support — WhatsApp groups, live doubt sessions, faculty access, response SLA", 180, 280),
                 mentorship: richBody("Mentorship programs — 1:1 mentor mapping, strategy calls, profile review, B-school selection", 200, 320),
                 infrastructure: richBody("Infrastructure & facilities — classrooms, library, study lounges, AV setup, hygiene, Wi-Fi", 180, 280),
                 tech_platform: richBody("Technology & learning platform — LMS, dashboard, attempt analytics, mobile app, recorded library", 200, 320),
+                mobile_app: richBody("Mobile app access — app features, recorded classes, tests, analytics and notifications", 140, 220),
+                internship_placement: richBody("Admission and placement-linked support — profile building, interview readiness and career orientation", 160, 240),
+                tieups: richBody("College tie-ups and partnerships — knowledge partnerships, workshops and admissions ecosystem", 140, 220),
+                locations: {
+                  type: "object",
+                  properties: {
+                    items: { type: "array", minItems: 3, items: { type: "object", properties: { city: { type: "string" }, area: { type: "string" }, map_url: { type: "string" } }, required: ["city", "area", "map_url"] } },
+                  },
+                  required: ["items"],
+                },
+                social: {
+                  type: "object",
+                  properties: { links: { type: "object", properties: { website: { type: "string" }, youtube: { type: "string" }, instagram: { type: "string" }, linkedin: { type: "string" }, facebook: { type: "string" }, twitter: { type: "string" } }, required: ["website", "youtube", "instagram", "linkedin", "facebook", "twitter"] } },
+                  required: ["links"],
+                },
                 why_choose: bullets("Why choose this institute — sharp differentiators with proof points", 6),
                 pros_cons: {
                   type: "object",
@@ -445,6 +461,26 @@ Deno.serve(async (req) => {
                   },
                   required: ["items"],
                 },
+                updates: {
+                  type: "object",
+                  properties: { items: { type: "array", minItems: 3, items: { type: "object", properties: { date: { type: "string" }, title: { type: "string" }, body: { type: "string" } }, required: ["date", "title", "body"] } } },
+                  required: ["items"],
+                },
+                events: {
+                  type: "object",
+                  properties: { items: { type: "array", minItems: 3, items: { type: "object", properties: { date: { type: "string" }, title: { type: "string" }, body: { type: "string" }, link: { type: "string" } }, required: ["date", "title", "body", "link"] } } },
+                  required: ["items"],
+                },
+                blog_resources: {
+                  type: "object",
+                  properties: { items: { type: "array", minItems: 3, items: { type: "object", properties: { label: { type: "string" }, url: { type: "string" } }, required: ["label", "url"] } } },
+                  required: ["items"],
+                },
+                brochure: {
+                  type: "object",
+                  properties: { url: { type: "string" }, headline: { type: "string" } },
+                  required: ["url", "headline"],
+                },
                 ctas: {
                   type: "object",
                   properties: {
@@ -464,8 +500,9 @@ Deno.serve(async (req) => {
                 "overview", "key_highlights", "courses_offered", "course_formats", "batch_details",
                 "teaching_methodology", "faculty", "study_material", "mock_tests", "results",
                 "topper_testimonials", "student_reviews", "admission_process", "eligibility",
-                "fees", "scholarships", "demo_classes", "doubt_solving", "mentorship",
-                "infrastructure", "tech_platform", "why_choose", "pros_cons", "comparison", "faqs", "ctas",
+                "fees", "scholarships", "demo_classes", "online_vs_offline", "doubt_solving", "mentorship",
+                "infrastructure", "tech_platform", "mobile_app", "internship_placement", "tieups", "locations", "social",
+                "why_choose", "pros_cons", "comparison", "faqs", "updates", "events", "blog_resources", "brochure", "ctas",
               ],
             },
           },
