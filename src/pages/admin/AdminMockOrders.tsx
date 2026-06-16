@@ -262,7 +262,12 @@ export default function AdminMockOrders() {
                       <div className="text-xs text-muted-foreground">{r.user_email}</div>
                       {r.user_phone && <div className="text-xs text-muted-foreground">+91 {r.user_phone}</div>}
                     </td>
-                    <td className="p-3">{r.bundle_name}</td>
+                    <td className="p-3">
+                      <div>{r.bundle_name}</div>
+                      <Badge variant="outline" className="mt-1 text-[10px] uppercase tracking-wide">
+                        {r.product_kind === "course" ? "Course" : "Bundle"}
+                      </Badge>
+                    </td>
                     <td className="p-3 text-right font-medium">₹{Number(r.amount).toLocaleString()}</td>
                     <td className="p-3">
                       <Badge variant="outline" className={cfg.tone}>
