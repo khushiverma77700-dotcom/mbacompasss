@@ -173,14 +173,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let cancelled = false;
 
     const loadAdminStatus = async () => {
-      if (!shouldResolveAdminForPath(location.pathname)) {
-        resolvedAdminUserIdRef.current = null;
-        setIsAdmin(false);
-        setAllowedSections(null);
-        setAdminLoading(false);
-        return;
-      }
-
       if (!user) {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
