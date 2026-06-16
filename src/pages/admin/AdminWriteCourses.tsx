@@ -130,6 +130,7 @@ const AdminWriteCourses = () => {
   // Step 4: save
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [courseCategories, setCourseCategories] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     supabase
@@ -137,6 +138,11 @@ const AdminWriteCourses = () => {
       .select("id, name, city, state, mode, website")
       .order("name")
       .then(({ data }) => setInstitutes(data || []));
+    supabase
+      .from("course_categories")
+      .select("id, name")
+      .eq("active", true)
+      .then(({ data }) => setCourseCategories(data || []));
   }, []);
 
   const filteredInst = useMemo(() => {
