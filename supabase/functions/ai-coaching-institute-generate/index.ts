@@ -5,22 +5,12 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
-// Default to Lovable AI Gateway (no user key needed). Falls back to OpenAI if explicitly configured.
-const LOVABLE_MODEL = "google/gemini-2.5-flash";
+// Use OpenAI directly with the user's configured API key.
 const OPENAI_MODEL = "gpt-4o";
 
-async function callAI(body: Record<string, unknown>): Promise<{ res: Response; model: string; provider: "lovable" | "openai" }> {
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  if (lovableKey) {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, model: LOVABLE_MODEL }),
-    });
-    return { res, model: LOVABLE_MODEL, provider: "lovable" };
-  }
-  const openaiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!openaiKey) throw new Error("No AI provider configured (set LOVABLE_API_KEY or OPENAI_API_KEY)");
+async function callAI(body: Record<string, unknown>): Promise<{ res: Response; model: string; provider: "openai" }> {
+  const openaiKey = Deno.env.get("OPENAI_API_KEY") || Deno.env.get("OPENAI_API_KEY_2");
+  if (!openaiKey) throw new Error("OPENAI_API_KEY is not configured");
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
