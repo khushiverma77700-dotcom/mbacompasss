@@ -326,6 +326,25 @@ const AdminBulkCreateCoachingInstitutes = () => {
     setInput("");
   };
 
+  const loadAllExisting = async () => {
+    if (running) return;
+    const { data, error } = await supabase
+      .from("institutes")
+      .select("name, city, state")
+      .order("name")
+      .limit(10000);
+    if (error) {
+      toast({ title: "Failed to load institutes", description: error.message, variant: "destructive" });
+      return;
+    }
+    const lines = (data || [])
+      .filter((r: any) => r?.name)
+      .map((r: any) => [r.name, r.city, r.state].filter(Boolean).join(" | "));
+    setInput(lines.join("\n"));
+    setRefreshExisting(true);
+    toast({ title: `Loaded ${lines.length} existing institutes`, description: "Refresh-existing is ON. Click Start to fill them all." });
+  };
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div className="flex items-center justify-between gap-4 flex-wrap">
