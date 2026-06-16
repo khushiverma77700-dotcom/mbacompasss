@@ -153,8 +153,11 @@ function DetailInner() {
   const handlePay = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
-      if (courseRequiresLogin) { openLoginDialog("Sign in with mobile OTP to enroll in this course."); return; }
-      toast.error("Please sign in to enroll"); window.location.href = "/auth"; return;
+      if (courseRequiresLogin) { openLoginDialog("Create a free account to enroll in this course."); return; }
+      toast.message("Please create a free account to enroll.");
+      const redirect = encodeURIComponent(window.location.pathname);
+      window.location.href = `/auth?mode=signup&redirect=${redirect}`;
+      return;
     }
     // Mobile OTP verification gate — required before any course purchase.
     const { data: prof } = await supabase

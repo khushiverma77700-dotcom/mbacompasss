@@ -24,7 +24,10 @@ import mbahubLogo from "@/assets/brandLogo";
  *    - Email OR 10-digit mobile + password (auto-detected).
  */
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const initialMode = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("mode")
+    : null;
+  const [isLogin, setIsLogin] = useState(initialMode !== "signup");
 
   // Login: identifier can be email OR 10-digit phone.
   const [loginId, setLoginId] = useState("");
@@ -54,7 +57,9 @@ const AuthPage = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  const redirectTo = (location.state as any)?.from || "/";
+  const redirectTo = (location.state as any)?.from
+    || (typeof window !== "undefined" ? normalizeRedirectPath(new URLSearchParams(window.location.search).get("redirect")) : null)
+    || "/";
 
   useEffect(() => {
     if (resendTimer <= 0) return;

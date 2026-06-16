@@ -136,10 +136,10 @@ export default function MockBundleDetailPage() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
       if (bundleRequiresLogin) {
-        openLoginDialog("Sign in with mobile OTP to purchase this bundle.");
+        openLoginDialog("Create a free account to purchase this bundle.");
       } else {
-        toast.error("Please sign in to purchase");
-        window.location.href = `/auth?redirect=/courses/${slug}`;
+        toast.message("Please create a free account to purchase.");
+        window.location.href = `/auth?mode=signup&redirect=${encodeURIComponent(`/courses/${slug}`)}`;
       }
       return;
     }

@@ -13,7 +13,8 @@ import { toast } from "sonner";
 type OrderRow = {
   id: string;
   user_id: string;
-  bundle_id: string;
+  bundle_id: string; // also used as course_id for course orders (unique key for filter)
+  product_kind: "bundle" | "course";
   amount: number;
   currency: string;
   status: string;
@@ -52,19 +53,45 @@ export default function AdminMockOrders() {
 
   const load = async () => {
     setLoading(true);
-    const { data: orders, error } = await supabase
-      .from("mock_bundle_orders")
-      .select("id, user_id, bundle_id, amount, currency, status, razorpay_order_id, razorpay_payment_id, created_at")
-      .order("created_at", { ascending: false })
-      .limit(1000);
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    const [bundleRes, courseRes] = await Promise.all([
+      supabase
+        .from("mock_bundle_orders")
+        .select("id, user_id, bundle_id, amount, currency, status, razorpay_order_id, razorpay_payment_id, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000),
+      supabase
+        .from("course_orders")
+        .select("id, user_id, course_id, amount, currency, status, razorpay_order_id, razorpay_payment_id, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000),
+    ]);
+    if (bundleRes.error) { toast.error(bundleRes.error.message); setLoading(false); return; }
+    if (courseRes.error) { toast.error(courseRes.error.message); setLoading(false); return; }
 
-    const userIds = [...new Set((orders ?? []).map((o) => o.user_id).filter(Boolean))];
-    const bundleIds = [...new Set((orders ?? []).map((o) => o.bundle_id).filter(Boolean))];
+    const bundleOrders = (bundleRes.data ?? []).map((o: any) => ({ ...o, product_kind: "bundle" as const }));
+    const courseOrders = (courseRes.data ?? []).map((o: any) => ({
+      id: o.id, user_id: o.user_id, bundle_id: o.course_id,
+      amount: Number(o.amount) / 100, // course_orders stores paise
+      currency: o.currency, status: o.status,
+      razorpay_order_id: o.razorpay_order_id, razorpay_payment_id: o.razorpay_payment_id,
+      created_at: o.created_at, product_kind: "course" as const,
+    }));
+    const orders = [...bundleOrders, ...courseOrders].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
-    const [{ data: profiles }, { data: bundles }] = await Promise.all([
+    const userIds = [...new Set(orders.map((o) => o.user_id).filter(Boolean))];
+    const bundleIds = [...new Set(bundleOrders.map((o) => o.bundle_id).filter(Boolean))];
+    const courseIds = [...new Set(courseOrders.map((o) => o.bundle_id).filter(Boolean))];
+
+    const [{ data: profiles }, { data: bundles }, { data: courses }] = await Promise.all([
       supabase.from("profiles").select("user_id, display_name, phone").in("user_id", userIds),
-      supabase.from("mock_bundles").select("id, name").in("id", bundleIds),
+      bundleIds.length
+        ? supabase.from("mock_bundles").select("id, name").in("id", bundleIds)
+        : Promise.resolve({ data: [] as any[] }),
+      courseIds.length
+        ? supabase.from("mba_compass_courses").select("id, title").in("id", courseIds)
+        : Promise.resolve({ data: [] as any[] }),
     ]);
 
     // Fetch emails via admin function (best-effort)
@@ -78,10 +105,12 @@ export default function AdminMockOrders() {
 
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
     const bundleMap = new Map((bundles ?? []).map((b: any) => [b.id, b.name]));
+    const courseMap = new Map((courses ?? []).map((c: any) => [c.id, c.title]));
 
-    setRows((orders ?? []).map((o: any) => ({
+    setRows(orders.map((o: any) => ({
       ...o,
-      bundle_name: bundleMap.get(o.bundle_id) || "—",
+      bundle_name:
+        (o.product_kind === "course" ? courseMap.get(o.bundle_id) : bundleMap.get(o.bundle_id)) || "—",
       user_name: profileMap.get(o.user_id)?.display_name || "—",
       user_email: emailMap[o.user_id] || "",
       user_phone: profileMap.get(o.user_id)?.phone || "",
@@ -233,7 +262,12 @@ export default function AdminMockOrders() {
                       <div className="text-xs text-muted-foreground">{r.user_email}</div>
                       {r.user_phone && <div className="text-xs text-muted-foreground">+91 {r.user_phone}</div>}
                     </td>
-                    <td className="p-3">{r.bundle_name}</td>
+                    <td className="p-3">
+                      <div>{r.bundle_name}</div>
+                      <Badge variant="outline" className="mt-1 text-[10px] uppercase tracking-wide">
+                        {r.product_kind === "course" ? "Course" : "Bundle"}
+                      </Badge>
+                    </td>
                     <td className="p-3 text-right font-medium">₹{Number(r.amount).toLocaleString()}</td>
                     <td className="p-3">
                       <Badge variant="outline" className={cfg.tone}>
