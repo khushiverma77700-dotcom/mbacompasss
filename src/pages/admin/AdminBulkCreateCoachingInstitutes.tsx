@@ -82,6 +82,7 @@ const AdminBulkCreateCoachingInstitutes = () => {
   const [defaultCity, setDefaultCity] = useState("");
   const [defaultState, setDefaultState] = useState("");
   const [instituteType, setInstituteType] = useState<"city" | "hybrid">("hybrid");
+  const [refreshExisting, setRefreshExisting] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
   const [running, setRunning] = useState(false);
   const pauseRef = useRef(false);
