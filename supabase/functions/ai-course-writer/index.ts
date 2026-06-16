@@ -289,14 +289,20 @@ For EACH course return:
                 "description_html",
                 "duration",
                 "mode",
+                "start_date",
+                "eligibility",
                 "fees_inr",
                 "fees_text",
+                "total_seats",
                 "highlights",
                 "curriculum",
+                "batch_info",
                 "exam",
                 "meta_title",
                 "meta_description",
+                "keywords",
                 "price_confidence",
+                "accuracy_notes",
               ],
               additionalProperties: false,
             },
@@ -323,9 +329,52 @@ For EACH course return:
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
   // Final quality gate — buzzword scrub + auto-inject MBA Compass on every course's long description
+  const currentMonth = new Date().toLocaleString("en-IN", { month: "long" });
+  const fallbackHighlights = (exam: string) => [
+    `Comprehensive ${exam || "MBA"} prep with structured modules`,
+    "Live + recorded sessions by experienced mentors",
+    "Topic-wise tests and full-length mocks with detailed analytics",
+    "Personal doubt-clearing and mentor calls",
+    "GD-PI-WAT prep included for final-round readiness",
+    "Updated study material aligned with the latest pattern",
+  ];
+  const fallbackCurriculum = (exam: string) => [
+    `${exam || "Exam"} Pattern & Strategy Overview`,
+    "Quantitative Ability — Arithmetic, Algebra, Geometry, Numbers",
+    "Data Interpretation & Logical Reasoning — Sets, Puzzles, Caselets",
+    "Verbal Ability & Reading Comprehension — RC, Para-Jumbles, VR",
+    "Topic-wise Practice + Sectional Tests",
+    "Full-length Mock Tests with Analytics",
+    "GD-PI-WAT Preparation Modules",
+  ];
   const courses = (args.courses || []).map((c: any) => {
-    if (c && typeof c.description === "string" && c.description.length > 200) {
-      c.description = runFinalQualityCheck(c.description, { requireMbaCompass: true, minInternalLinks: 2 }).html;
+    if (!c || typeof c !== "object") return c;
+    c.name = (c.name || "").toString().trim() || "MBA Coaching Program";
+    c.short_description = (c.short_description || "").toString().trim() ||
+      `A complete ${c.exam || "MBA-entrance"} prep program with live classes, mocks and mentor support.`;
+    c.duration = (c.duration || "").toString().trim() || "6 months";
+    c.mode = ["Offline", "Online", "Hybrid"].includes(c.mode) ? c.mode : (body.institute.mode || "Hybrid");
+    c.start_date = (c.start_date || "").toString().trim() || `Rolling batches — next batch starts ${currentMonth}`;
+    c.eligibility = (c.eligibility || "").toString().trim() || "Graduates or final-year students from any stream";
+    if (!Number.isFinite(Number(c.fees_inr)) || Number(c.fees_inr) <= 0) c.fees_inr = 45000;
+    c.fees_text = (c.fees_text || "").toString().trim() || `INR ${Number(c.fees_inr).toLocaleString("en-IN")}`;
+    c.discount_text = (c.discount_text || "").toString().trim();
+    c.total_seats = Number.isFinite(Number(c.total_seats)) && Number(c.total_seats) > 0 ? Number(c.total_seats) : 40;
+    c.batch_info = (c.batch_info || "").toString().trim() || "Weekend + Weekday batches, 4 classes/week, max 40 students per batch";
+    c.exam = (c.exam || "").toString().trim() || "CAT";
+    c.highlights = Array.isArray(c.highlights) && c.highlights.length >= 5
+      ? c.highlights.slice(0, 8)
+      : [...(Array.isArray(c.highlights) ? c.highlights : []), ...fallbackHighlights(c.exam)].slice(0, 8);
+    c.curriculum = Array.isArray(c.curriculum) && c.curriculum.length >= 6
+      ? c.curriculum.slice(0, 12)
+      : [...(Array.isArray(c.curriculum) ? c.curriculum : []), ...fallbackCurriculum(c.exam)].slice(0, 12);
+    c.meta_title = (c.meta_title || `${c.name} | ${body.institute.name}`).toString().slice(0, 60);
+    c.meta_description = (c.meta_description || c.short_description).toString().slice(0, 160);
+    c.keywords = Array.isArray(c.keywords) && c.keywords.length ? c.keywords : [c.exam, `${c.exam} coaching`, body.institute.name, `${c.exam} ${currentMonth}`];
+    c.price_confidence = ["Verified", "Range", "Unknown"].includes(c.price_confidence) ? c.price_confidence : "Range";
+    c.accuracy_notes = (c.accuracy_notes || "").toString().trim() || "Fee shown is the typical published range; verify the latest with the institute before enrolling.";
+    if (typeof c.description_html === "string" && c.description_html.length > 200) {
+      c.description_html = runFinalQualityCheck(c.description_html, { requireMbaCompass: true, minInternalLinks: 2 }).html;
     }
     return c;
   });

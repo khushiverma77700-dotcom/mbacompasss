@@ -25,6 +25,7 @@ interface Row {
   instituteId?: string;
   slug?: string;
   error?: string;
+  isUpdate?: boolean;
 }
 
 const LS_KEY = "admin_bulk_coaching_state_v1";
@@ -81,6 +82,7 @@ const AdminBulkCreateCoachingInstitutes = () => {
   const [defaultCity, setDefaultCity] = useState("");
   const [defaultState, setDefaultState] = useState("");
   const [instituteType, setInstituteType] = useState<"city" | "hybrid">("hybrid");
+  const [refreshExisting, setRefreshExisting] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
   const [running, setRunning] = useState(false);
   const pauseRef = useRef(false);
@@ -144,16 +146,30 @@ const AdminBulkCreateCoachingInstitutes = () => {
       seen.add(k);
       const dup = existingMap.get(k);
       if (dup) {
-        queue.push({
-          index: i,
-          name: it.name,
-          city: it.city || defaultCity || undefined,
-          state: it.state || defaultState || undefined,
-          status: "skipped",
-          step: `already exists — "${dup.name}"`,
-          instituteId: dup.id,
-          slug: dup.slug,
-        });
+        if (refreshExisting) {
+          queue.push({
+            index: i,
+            name: dup.name,
+            city: it.city || defaultCity || undefined,
+            state: it.state || defaultState || undefined,
+            status: "pending",
+            step: "queued — will refresh existing",
+            instituteId: dup.id,
+            slug: dup.slug,
+            isUpdate: true,
+          });
+        } else {
+          queue.push({
+            index: i,
+            name: it.name,
+            city: it.city || defaultCity || undefined,
+            state: it.state || defaultState || undefined,
+            status: "skipped",
+            step: `already exists — "${dup.name}"`,
+            instituteId: dup.id,
+            slug: dup.slug,
+          });
+        }
         return;
       }
       queue.push({
@@ -196,37 +212,44 @@ const AdminBulkCreateCoachingInstitutes = () => {
       const basic = (data as any).basic || {};
       const sections = (data as any).sections || {};
 
-      updateRow({ step: "saving institute" });
+      updateRow({ step: row.isUpdate ? "refreshing existing institute" : "saving institute" });
 
-      let baseSlug = (basic.slug || slugify(basic.name || row.name)).slice(0, 80);
-      // Avoid slug collision
-      const { data: existing } = await supabase.from("institutes").select("id").eq("slug", baseSlug).maybeSingle();
-      const finalSlug = existing?.id ? `${baseSlug}-${Date.now().toString(36).slice(-4)}` : baseSlug;
+      const payload: any = {
+        name: basic.name || row.name,
+        institute_type: brief.instituteType,
+        city: basic.city || row.city || null,
+        state: basic.state || row.state || null,
+        description: basic.description || null,
+        website: basic.website || null,
+        phone: basic.phone || null,
+        email: basic.email || null,
+        meta_title: basic.meta_title || null,
+        meta_description: basic.meta_description || null,
+        rating: basic.rating || 0,
+        students_count: basic.students_count || 0,
+        success_rate: basic.success_rate || 0,
+        sections,
+      };
 
-      const { data: ins, error: insErr } = await supabase
-        .from("institutes")
-        .insert({
-          name: basic.name || row.name,
-          slug: finalSlug,
-          institute_type: brief.instituteType,
-          city: basic.city || row.city || null,
-          state: basic.state || row.state || null,
-          description: basic.description || null,
-          website: basic.website || null,
-          phone: basic.phone || null,
-          email: basic.email || null,
-          meta_title: basic.meta_title || null,
-          meta_description: basic.meta_description || null,
-          rating: basic.rating || 0,
-          students_count: basic.students_count || 0,
-          success_rate: basic.success_rate || 0,
-          sections,
-        })
-        .select("id")
-        .single();
-      if (insErr) throw new Error(insErr.message);
-
-      updateRow({ status: "succeeded", step: "done", instituteId: ins.id, slug: finalSlug, error: undefined });
+      if (row.isUpdate && row.instituteId) {
+        const { error: upErr } = await supabase
+          .from("institutes")
+          .update(payload)
+          .eq("id", row.instituteId);
+        if (upErr) throw new Error(upErr.message);
+        updateRow({ status: "succeeded", step: "refreshed", error: undefined });
+      } else {
+        let baseSlug = (basic.slug || slugify(basic.name || row.name)).slice(0, 80);
+        const { data: existing } = await supabase.from("institutes").select("id").eq("slug", baseSlug).maybeSingle();
+        const finalSlug = existing?.id ? `${baseSlug}-${Date.now().toString(36).slice(-4)}` : baseSlug;
+        const { data: ins, error: insErr } = await supabase
+          .from("institutes")
+          .insert({ ...payload, slug: finalSlug })
+          .select("id")
+          .single();
+        if (insErr) throw new Error(insErr.message);
+        updateRow({ status: "succeeded", step: "done", instituteId: ins.id, slug: finalSlug, error: undefined });
+      }
     } catch (e: any) {
       updateRow({ status: "failed", step: "error", error: e?.message || String(e) });
     }
@@ -303,6 +326,25 @@ const AdminBulkCreateCoachingInstitutes = () => {
     setInput("");
   };
 
+  const loadAllExisting = async () => {
+    if (running) return;
+    const { data, error } = await supabase
+      .from("institutes")
+      .select("name, city, state")
+      .order("name")
+      .limit(10000);
+    if (error) {
+      toast({ title: "Failed to load institutes", description: error.message, variant: "destructive" });
+      return;
+    }
+    const lines = (data || [])
+      .filter((r: any) => r?.name)
+      .map((r: any) => [r.name, r.city, r.state].filter(Boolean).join(" | "));
+    setInput(lines.join("\n"));
+    setRefreshExisting(true);
+    toast({ title: `Loaded ${lines.length} existing institutes`, description: "Refresh-existing is ON. Click Start to fill them all." });
+  };
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -361,6 +403,27 @@ const AdminBulkCreateCoachingInstitutes = () => {
                 ))}
               </div>
             </div>
+          </div>
+
+          <div className="flex items-start justify-between gap-3 flex-wrap rounded-md border bg-muted/30 p-3">
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={refreshExisting}
+                disabled={running}
+                onChange={(e) => setRefreshExisting(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                <span className="font-medium">Also refresh existing institutes</span>
+                <span className="block text-xs text-muted-foreground">
+                  When ON, institutes already in the database are regenerated and updated instead of skipped.
+                </span>
+              </span>
+            </label>
+            <Button variant="outline" size="sm" onClick={loadAllExisting} disabled={running}>
+              Load all existing institutes
+            </Button>
           </div>
 
           <div className="flex items-center justify-between gap-3 flex-wrap">

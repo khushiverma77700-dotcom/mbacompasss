@@ -130,6 +130,7 @@ const AdminWriteCourses = () => {
   // Step 4: save
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [courseCategories, setCourseCategories] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     supabase
@@ -137,6 +138,11 @@ const AdminWriteCourses = () => {
       .select("id, name, city, state, mode, website")
       .order("name")
       .then(({ data }) => setInstitutes(data || []));
+    supabase
+      .from("course_categories")
+      .select("id, name")
+      .eq("active", true)
+      .then(({ data }) => setCourseCategories(data || []));
   }, []);
 
   const filteredInst = useMemo(() => {
@@ -273,8 +279,16 @@ const AdminWriteCourses = () => {
     }
     setSaving(true);
     try {
+      const findCategoryId = (exam?: string, name?: string) => {
+        if (!courseCategories.length) return null;
+        const hay = `${exam || ""} ${name || ""}`.toLowerCase();
+        const match = courseCategories.find((cc) => hay.includes((cc.name || "").toLowerCase().split(/\s|-/)[0] || "___"))
+          || courseCategories.find((cc) => (cc.name || "").toLowerCase().includes((exam || "").toLowerCase()));
+        return match?.id || null;
+      };
       const rows = toSave.map((g) => ({
         institute_id: selectedInstId,
+        course_category_id: findCategoryId(g.exam, g.name),
         name: g.name,
         description: g.description_html, // rich HTML
         duration: g.duration || null,
