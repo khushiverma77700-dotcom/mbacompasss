@@ -25,6 +25,7 @@ interface Row {
   instituteId?: string;
   slug?: string;
   error?: string;
+  isUpdate?: boolean;
 }
 
 const LS_KEY = "admin_bulk_coaching_state_v1";
