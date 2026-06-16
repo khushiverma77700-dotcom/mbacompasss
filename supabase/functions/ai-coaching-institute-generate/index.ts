@@ -6,7 +6,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
 // Use OpenAI directly with the user's configured API key.
-const OPENAI_MODEL = "gpt-4o";
+// gpt-4o-mini = ~20x cheaper than gpt-4o, still excellent with strict tool-calling schema.
+const OPENAI_MODEL = "gpt-4o-mini";
 
 async function callAI(body: Record<string, unknown>): Promise<{ res: Response; model: string; provider: "openai" }> {
   const openaiKey = Deno.env.get("OPENAI_API_KEY") || Deno.env.get("OPENAI_API_KEY_2");
@@ -14,7 +15,7 @@ async function callAI(body: Record<string, unknown>): Promise<{ res: Response; m
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, model: OPENAI_MODEL }),
+    body: JSON.stringify({ ...body, model: OPENAI_MODEL, temperature: 0.7 }),
   });
   return { res, model: OPENAI_MODEL, provider: "openai" };
 }
