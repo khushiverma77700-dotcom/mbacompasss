@@ -5,19 +5,28 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
+// Default to Lovable AI Gateway (no user key needed). Falls back to OpenAI if explicitly configured.
+const LOVABLE_MODEL = "google/gemini-2.5-flash";
 const OPENAI_MODEL = "gpt-4o";
 
-async function callOpenAI(body: Record<string, unknown>) {
-  const key = Deno.env.get("OPENAI_API_KEY");
-  if (!key) throw new Error("OPENAI_API_KEY not configured");
-  return await fetch("https://api.openai.com/v1/chat/completions", {
+async function callAI(body: Record<string, unknown>): Promise<{ res: Response; model: string; provider: "lovable" | "openai" }> {
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (lovableKey) {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, model: LOVABLE_MODEL }),
+    });
+    return { res, model: LOVABLE_MODEL, provider: "lovable" };
+  }
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiKey) throw new Error("No AI provider configured (set LOVABLE_API_KEY or OPENAI_API_KEY)");
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+    headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, model: OPENAI_MODEL }),
   });
+  return { res, model: OPENAI_MODEL, provider: "openai" };
 }
 
 const corsHeaders = {
@@ -347,8 +356,7 @@ Deno.serve(async (req) => {
       },
     };
 
-    const aiRes = await callOpenAI({
-      model: OPENAI_MODEL,
+    const { res: aiRes, model: usedModel, provider } = await callAI({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -360,18 +368,18 @@ Deno.serve(async (req) => {
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
-      console.error("OpenAI error", aiRes.status, txt);
+      console.error(`${provider} error`, aiRes.status, txt);
       const status = aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 500;
-      const msg = aiRes.status === 429 ? "Rate limit reached. Please try again in a minute."
-        : aiRes.status === 402 ? "OpenAI credits exhausted. Add funds to your OpenAI account."
-        : "AI generation failed";
+      const msg = aiRes.status === 429 ? "AI rate limit reached. Please try again in a minute."
+        : aiRes.status === 402 ? "AI credits exhausted. Please add credits to continue."
+        : `AI generation failed (${provider} ${aiRes.status})`;
       return new Response(JSON.stringify({ error: msg, detail: txt.slice(0, 400) }), {
         status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const aiJson = await aiRes.json();
-    await logAIUsage("ai-coaching-institute-generate", OPENAI_MODEL, aiJson);
+    await logAIUsage("ai-coaching-institute-generate", usedModel, aiJson);
 
 
     const rawArgs = aiJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
