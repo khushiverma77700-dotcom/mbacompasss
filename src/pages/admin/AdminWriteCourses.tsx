@@ -279,8 +279,16 @@ const AdminWriteCourses = () => {
     }
     setSaving(true);
     try {
+      const findCategoryId = (exam?: string, name?: string) => {
+        if (!courseCategories.length) return null;
+        const hay = `${exam || ""} ${name || ""}`.toLowerCase();
+        const match = courseCategories.find((cc) => hay.includes((cc.name || "").toLowerCase().split(/\s|-/)[0] || "___"))
+          || courseCategories.find((cc) => (cc.name || "").toLowerCase().includes((exam || "").toLowerCase()));
+        return match?.id || null;
+      };
       const rows = toSave.map((g) => ({
         institute_id: selectedInstId,
+        course_category_id: findCategoryId(g.exam, g.name),
         name: g.name,
         description: g.description_html, // rich HTML
         duration: g.duration || null,
