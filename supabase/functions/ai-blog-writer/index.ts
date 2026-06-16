@@ -1037,10 +1037,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
     // Compute actual density on server side as a quality metric
     const plain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
-    const actualWords = plain.split(/\s+/).filter(Boolean).length;
-    const re = new RegExp(targetKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-    const actualOccurrences = (plain.match(re) || []).length;
-    const actualDensity = actualWords ? +((actualOccurrences * targetKw.split(/\s+/).length) / actualWords * 100).toFixed(2) : 0;
+    const { words: actualWords, occurrences: actualOccurrences, density: actualDensity } = computeDensity(plain, targetKw);
 
     // ── EXPANSION LOOP: up to 5 passes to reach the word target for long-form articles (10K+ supported).
     let currentWords = actualWords;
