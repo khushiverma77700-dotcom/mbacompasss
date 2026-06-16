@@ -1109,9 +1109,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
     // Recompute final stats after possible expansion
     const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
-    const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
-    const finalOccurrences = (finalPlain.match(re) || []).length;
-    const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+    const { words: finalWords, occurrences: finalOccurrences, density: finalDensity } = computeDensity(finalPlain, targetKw);
 
 
     // ── Auto-extract FAQs from the FAQ section so the article snapshot can carry FAQ schema ──
