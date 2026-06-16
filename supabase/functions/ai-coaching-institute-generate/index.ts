@@ -360,12 +360,16 @@ Deno.serve(async (req) => {
     if (!aiRes.ok) {
       const txt = await aiRes.text();
       console.error(`${provider} error`, aiRes.status, txt);
-      const status = aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 500;
-      const msg = aiRes.status === 429 ? "AI rate limit reached. Please try again in a minute."
-        : aiRes.status === 402 ? "AI credits exhausted. Please add credits to continue."
-        : `AI generation failed (${provider} ${aiRes.status})`;
-      return new Response(JSON.stringify({ error: msg, detail: txt.slice(0, 400) }), {
-        status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const lower = txt.toLowerCase();
+      const msg = lower.includes("insufficient_quota") || lower.includes("exceeded your current quota")
+        ? "OpenAI quota exhausted for the configured API key. Add billing/credits or switch to a funded key before continuing."
+        : aiRes.status === 429
+          ? "OpenAI rate limit reached. Pause for a minute, then retry the failed rows."
+          : aiRes.status === 402
+            ? "OpenAI credits exhausted. Add credits to continue."
+            : `AI generation failed (${provider} ${aiRes.status})`;
+      return new Response(JSON.stringify({ error: msg, code: lower.includes("insufficient_quota") ? "insufficient_quota" : `openai_${aiRes.status}`, detail: txt.slice(0, 400) }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
