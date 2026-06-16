@@ -685,6 +685,7 @@ const App = () => (
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
               <Route path="institutes" element={<LazyPage><AdminInstitutes /></LazyPage>} />
               <Route path="coaching-institutes" element={<LazyPage><AdminCoachingInstitutes /></LazyPage>} />
+              <Route path="coaching-institutes/bulk-create" element={<LazyPage><AdminBulkCreateCoachingInstitutes /></LazyPage>} />
               <Route path="coaching-institutes/:id" element={<LazyPage><AdminCoachingInstituteDetail /></LazyPage>} />
               <Route path="coaching-refresh-hub" element={<LazyPage><AdminCoachingRefreshHub /></LazyPage>} />
               <Route path="coaching-seo-reports" element={<LazyPage><AdminCoachingSEOReports /></LazyPage>} />
