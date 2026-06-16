@@ -57,7 +57,9 @@ const AuthPage = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  const redirectTo = (location.state as any)?.from || "/";
+  const redirectTo = (location.state as any)?.from
+    || (typeof window !== "undefined" ? normalizeRedirectPath(new URLSearchParams(window.location.search).get("redirect")) : null)
+    || "/";
 
   useEffect(() => {
     if (resendTimer <= 0) return;
