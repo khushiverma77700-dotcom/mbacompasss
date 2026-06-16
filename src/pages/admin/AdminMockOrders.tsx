@@ -13,7 +13,8 @@ import { toast } from "sonner";
 type OrderRow = {
   id: string;
   user_id: string;
-  bundle_id: string;
+  bundle_id: string; // also used as course_id for course orders (unique key for filter)
+  product_kind: "bundle" | "course";
   amount: number;
   currency: string;
   status: string;
