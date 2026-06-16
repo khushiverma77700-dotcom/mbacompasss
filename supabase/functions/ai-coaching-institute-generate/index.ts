@@ -557,15 +557,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    const completed = completeProfile(parsed, brief, targetKw);
+
     // Wrap each section in { enabled: true, data: <payload> } to match
     // src/lib/instituteSections.ts storage shape.
     const wrapped: Record<string, { enabled: boolean; data: any }> = {};
-    for (const [k, v] of Object.entries(parsed.sections || {})) {
+    for (const [k, v] of Object.entries(completed.sections || {})) {
       wrapped[k] = { enabled: true, data: v as any };
     }
 
     return new Response(JSON.stringify({
-      basic: parsed.basic || {},
+      basic: completed.basic || {},
       sections: wrapped,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
