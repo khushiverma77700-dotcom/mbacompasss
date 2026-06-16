@@ -375,7 +375,7 @@ const AdminBulkCreateCoachingInstitutes = () => {
                   {running ? "Generating…" : "Queue"}
                 </CardTitle>
                 <CardDescription>
-                  {metrics.completed} / {metrics.total} processed · ✓ {metrics.succeeded} · ✕ {metrics.failed}
+                  {metrics.completed} / {metrics.total} processed · ✓ {metrics.succeeded} · ⤼ {metrics.skipped} skipped · ✕ {metrics.failed}
                   {metrics.processing > 0 && <> · ⟳ {metrics.processing} active</>}
                 </CardDescription>
               </div>
