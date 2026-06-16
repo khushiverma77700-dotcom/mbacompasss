@@ -84,12 +84,13 @@ const AdminBulkCreateCoachingInstitutes = () => {
   const metrics = useMemo(() => {
     const succeeded = rows.filter(r => r.status === "succeeded").length;
     const failed = rows.filter(r => r.status === "failed").length;
+    const skipped = rows.filter(r => r.status === "skipped").length;
     const processing = rows.filter(r => r.status === "processing").length;
     const pending = rows.filter(r => r.status === "pending").length;
     const total = rows.length;
-    const completed = succeeded + failed;
+    const completed = succeeded + failed + skipped;
     const pct = total ? Math.round((completed / total) * 100) : 0;
-    return { succeeded, failed, processing, pending, total, completed, pct };
+    return { succeeded, failed, skipped, processing, pending, total, completed, pct };
   }, [rows]);
 
   const parsedPreview = useMemo(() => {
