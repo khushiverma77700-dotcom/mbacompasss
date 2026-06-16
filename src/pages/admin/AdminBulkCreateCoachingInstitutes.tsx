@@ -28,7 +28,7 @@ interface Row {
 }
 
 const LS_KEY = "admin_bulk_coaching_state_v1";
-const CONCURRENCY = 2;
+const CONCURRENCY = 1;
 
 const normalizeName = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
@@ -161,7 +161,13 @@ const AdminBulkCreateCoachingInstitutes = () => {
       };
       const { data, error } = await supabase.functions.invoke("ai-coaching-institute-generate", { body: brief });
       if (error) throw new Error(error.message || "AI generation failed");
-      if ((data as any)?.error) throw new Error((data as any).error);
+      if ((data as any)?.error) {
+        const message = (data as any).error;
+        if ((data as any)?.code === "insufficient_quota") {
+          cancelRef.current = true;
+        }
+        throw new Error(message);
+      }
       const basic = (data as any).basic || {};
       const sections = (data as any).sections || {};
 
