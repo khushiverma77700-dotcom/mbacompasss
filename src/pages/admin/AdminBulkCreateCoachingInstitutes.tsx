@@ -14,7 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/slugify";
 
-type RowStatus = "pending" | "processing" | "succeeded" | "failed";
+type RowStatus = "pending" | "processing" | "succeeded" | "failed" | "skipped";
 interface Row {
   index: number;
   name: string;
@@ -29,6 +29,9 @@ interface Row {
 
 const LS_KEY = "admin_bulk_coaching_state_v1";
 const CONCURRENCY = 2;
+
+const normalizeName = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 
 const parseLine = (raw: string): { name: string; city?: string; state?: string } | null => {
   const line = raw.trim();
@@ -46,6 +49,7 @@ const statusBadge = (s: RowStatus) =>
     processing: "bg-blue-100 text-blue-800 border-blue-300",
     succeeded: "bg-emerald-100 text-emerald-800 border-emerald-300",
     failed: "bg-red-100 text-red-800 border-red-300",
+    skipped: "bg-amber-100 text-amber-800 border-amber-300",
   }[s]);
 
 const AdminBulkCreateCoachingInstitutes = () => {
