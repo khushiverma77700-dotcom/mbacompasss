@@ -504,10 +504,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
   }
   const finalPlain = toPlainText(`${intro} ${content}`);
-  const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
-  const re = new RegExp(targetKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-  const finalOccurrences = (finalPlain.match(re) || []).length;
-  const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+  const { occurrences: finalOccurrences, words: finalWords, density: finalDensity } = computeDensity(finalPlain, targetKw);
   const extractedFaqs = Array.isArray(draft.faqs) && draft.faqs.length ? draft.faqs.slice(0, 10) : extractFaqs(content);
 
   const baseSlug = normalizeSlug(draft.slug || brief.slug || targetKw);
