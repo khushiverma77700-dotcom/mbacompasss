@@ -448,6 +448,25 @@ Return:
   }
 }
 
+// Flexible keyword matcher — handles plural "s", flexible whitespace, word boundaries.
+// Prevents "0 occurrences" false-negatives when the AI writes minor variations
+// (e.g. "IIM placements" vs "IIM placement").
+const buildKeywordRegex = (kw: string): RegExp => {
+  const tokens = kw.trim().split(/\s+/).filter(Boolean)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "s?");
+  if (!tokens.length) return /a^/;
+  return new RegExp(`\\b${tokens.join("\\s+")}\\b`, "gi");
+};
+const countKeyword = (plain: string, kw: string): number =>
+  (plain.match(buildKeywordRegex(kw)) || []).length;
+const computeDensity = (plain: string, kw: string): { occurrences: number; words: number; density: number } => {
+  const words = plain.split(/\s+/).filter(Boolean).length;
+  const occurrences = countKeyword(plain, kw);
+  const kwLen = kw.trim().split(/\s+/).filter(Boolean).length || 1;
+  const density = words ? +((occurrences * kwLen) / words * 100).toFixed(2) : 0;
+  return { occurrences, words, density };
+};
+
 const extractFaqs = (html: string) => {
   if (!html) return [];
   const re2 = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
@@ -485,10 +504,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
   }
   const finalPlain = toPlainText(`${intro} ${content}`);
-  const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
-  const re = new RegExp(targetKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-  const finalOccurrences = (finalPlain.match(re) || []).length;
-  const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+  const { occurrences: finalOccurrences, words: finalWords, density: finalDensity } = computeDensity(finalPlain, targetKw);
   const extractedFaqs = Array.isArray(draft.faqs) && draft.faqs.length ? draft.faqs.slice(0, 10) : extractFaqs(content);
 
   const baseSlug = normalizeSlug(draft.slug || brief.slug || targetKw);
@@ -1021,10 +1037,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
     // Compute actual density on server side as a quality metric
     const plain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
-    const actualWords = plain.split(/\s+/).filter(Boolean).length;
-    const re = new RegExp(targetKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-    const actualOccurrences = (plain.match(re) || []).length;
-    const actualDensity = actualWords ? +((actualOccurrences * targetKw.split(/\s+/).length) / actualWords * 100).toFixed(2) : 0;
+    const { words: actualWords, occurrences: actualOccurrences, density: actualDensity } = computeDensity(plain, targetKw);
 
     // ── EXPANSION LOOP: up to 5 passes to reach the word target for long-form articles (10K+ supported).
     let currentWords = actualWords;
@@ -1096,9 +1109,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
     // Recompute final stats after possible expansion
     const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
-    const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
-    const finalOccurrences = (finalPlain.match(re) || []).length;
-    const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+    const { words: finalWords, occurrences: finalOccurrences, density: finalDensity } = computeDensity(finalPlain, targetKw);
 
 
     // ── Auto-extract FAQs from the FAQ section so the article snapshot can carry FAQ schema ──
