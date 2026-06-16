@@ -71,7 +71,7 @@ function getTargets(brief: BlogBrief) {
     wmax,
     targetWords,
     sectionCount: Math.max(5, Math.min(16, Math.round(targetWords / 550))),
-    density: Math.min(brief.keywordDensityPct ?? 2, 3),
+    density: Math.max(0.5, Math.min(brief.keywordDensityPct ?? 2, 8)),
     todayIso: new Date().toISOString().slice(0, 10),
     currentYear: new Date().getFullYear(),
   };
@@ -751,8 +751,8 @@ Deno.serve(async (req) => {
     // NO upper cap on word count — long-form (10K+) is fully supported via expansion loop.
     const wmin = Math.max(300, brief.wordCountMin ?? 2500);
     const wmax = Math.max(wmin, brief.wordCountMax ?? 3500);
-    // 10% literal density is keyword-stuffing and hurts SEO. Cap at 3% (Google-safe natural range).
-    const density = Math.min(brief.keywordDensityPct ?? 2, 3);
+    // Respect admin-chosen density. Cap at 8% (anything higher is pure stuffing).
+    const density = Math.max(0.5, Math.min(brief.keywordDensityPct ?? 2, 8));
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
@@ -862,7 +862,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - 1-2 contextual internal links anchored to topic-relevant entities
    - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
    - A short closing takeaway sentence in <strong> at the end of the section
-3. **Keyword usage — NATURAL, NOT STUFFED** (Google spam policy compliance): primary keyword "${targetKw}" should appear roughly ${Math.max(3, Math.round(targetOccurrences * 0.6))} times across the full article (~${Math.max(0.5, +(density * 0.6).toFixed(2))}% density). Use exact match in title, H1, slug, meta title, meta description, the first 100 words, and the conclusion — that is enough. DO NOT force the exact keyword into multiple H2 headings; vary headings with synonyms, intent variations, and entity names. Weave 20-30 LSI/semantic variants naturally — never repeat the exact keyword in adjacent sentences.
+3. **Keyword usage — HIT THE TARGET DENSITY**: primary keyword "${targetKw}" MUST appear EXACTLY ${targetOccurrences} times (±10%) across the full article to hit ~${density}% density over ${targetWords} words. This is a HARD requirement set by the editor — do NOT under-deliver. Place exact-match in title, H1, slug, meta title, meta description, first 100 words, every H2 cluster (~once per 200-300 words of body), and the conclusion. Distribute evenly across sections — never cluster all occurrences in one paragraph. Also weave 20-30 LSI/semantic variants for natural readability, but those are IN ADDITION to the ${targetOccurrences} exact-match occurrences, not a substitute. Count as you write.
 4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMAN MENTOR VOICE — 8th-grade English, conversational, NOT AI**. Write like a real senior advising a junior over coffee. Use contractions (you're, don't, it's, you'll). Vary sentence length and structure — never start 3 sentences in a row the same way. Use natural mentor openers like "Here's the thing —", "Quick reality check:", "If you're in this boat,", "Most students get this wrong because…", "A simple way to think about it —". Address the reader as "you". Drop a personal aside or worked mini-example every 2-3 sections.
@@ -1096,6 +1096,52 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     };
     article.intro = stripExternalLinks(article.intro || "");
     article.content = stripExternalLinks(article.content || "");
+    // ── DENSITY BOOST: if keyword count is well below target, ask the model to weave more in.
+    {
+      const postPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
+      const postStats = computeDensity(postPlain, targetKw);
+      const minAcceptable = Math.max(3, Math.floor(targetOccurrences * 0.8));
+      if (postStats.occurrences < minAcceptable) {
+        const need = targetOccurrences - postStats.occurrences;
+        console.log(`Density boost: ${postStats.occurrences} occurrences (${postStats.density}%) < ${minAcceptable}, need +${need}`);
+        try {
+          const boostRes = await callAIGateway({
+            model: "openai/gpt-5-mini",
+            max_tokens: Math.min(32000, Math.max(10000, Math.round(wmax * 3) + 3000)),
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: `The current draft uses the exact phrase "${targetKw}" only ${postStats.occurrences} times (~${postStats.density}% density). The editor requires ~${targetOccurrences} exact-match occurrences (~${density}% density). Rewrite the article to naturally include the phrase "${targetKw}" approximately ${need} MORE times, distributed evenly across the body (roughly once per 200-300 words). Replace some pronouns ("it", "this programme", "the course") and generic noun phrases ("the programme", "this exam") with the exact phrase "${targetKw}" where it reads naturally. Do NOT shorten the article. Do NOT remove sections, FAQs, tables, or internal links. Keep the same intro/H1/title/meta/slug/keywords. Return the COMPLETE article with intro and content updated.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
+            ],
+            tools: [tool],
+            tool_choice: { type: "function", function: { name: "publish_blog_article" } },
+          }, { feature: "ai-blog-writer-density-boost" });
+          if (boostRes.ok) {
+            const bj = await boostRes.json();
+            const ba = bj?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+            if (ba) {
+              const boosted = JSON.parse(ba);
+              for (const k of ["intro", "content"]) {
+                if (typeof boosted[k] === "string") boosted[k] = stripEscapeArtifacts(boosted[k]);
+              }
+              const bPlain = `${boosted.intro || ""} ${boosted.content || ""}`.replace(/<[^>]*>/g, " ");
+              const bStats = computeDensity(bPlain, targetKw);
+              // Only accept if it actually improved AND didn't shrink content meaningfully.
+              const bWords = bPlain.split(/\s+/).filter(Boolean).length;
+              if (bStats.occurrences > postStats.occurrences && bWords >= postStats.words * 0.9) {
+                article.intro = boosted.intro || article.intro;
+                article.content = boosted.content || article.content;
+                console.log(`Density boost OK: ${postStats.occurrences} → ${bStats.occurrences} occurrences (${bStats.density}%)`);
+              } else {
+                console.log(`Density boost rejected (no improvement or shrank): ${bStats.occurrences} occurrences, ${bWords} words`);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Density boost failed (non-fatal):", e);
+        }
+      }
+    }
+
     // Final quality check — auto-sanitise buzzwords, inject MBA Compass if missing, flag issues
     {
       const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
