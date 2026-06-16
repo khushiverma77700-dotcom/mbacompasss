@@ -33,6 +33,27 @@ const CONCURRENCY = 1;
 const normalizeName = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 
+const QUOTA_ERROR = "OpenAI quota exhausted for the configured API key. Add billing/credits or switch to a funded key before continuing.";
+
+const normalizeErrorMessage = (message?: string) =>
+  message?.includes("Edge Function returned a non-2xx status code") ? QUOTA_ERROR : (message || "AI generation failed");
+
+const extractFunctionError = async (error: any) => {
+  const response = error?.context;
+  if (response && typeof response.clone === "function") {
+    try {
+      const payload = await response.clone().json();
+      return { message: normalizeErrorMessage(payload?.error || payload?.message), code: payload?.code };
+    } catch {
+      try {
+        const text = await response.clone().text();
+        return { message: normalizeErrorMessage(text || error?.message), code: text.includes("insufficient_quota") ? "insufficient_quota" : undefined };
+      } catch {}
+    }
+  }
+  return { message: normalizeErrorMessage(error?.message), code: undefined };
+};
+
 const parseLine = (raw: string): { name: string; city?: string; state?: string } | null => {
   const line = raw.trim();
   if (!line) return null;
@@ -71,7 +92,7 @@ const AdminBulkCreateCoachingInstitutes = () => {
       const raw = localStorage.getItem(LS_KEY);
       if (raw) {
         const s = JSON.parse(raw);
-        if (Array.isArray(s.rows)) setRows(s.rows);
+        if (Array.isArray(s.rows)) setRows(s.rows.map((r: Row) => ({ ...r, error: r.error ? normalizeErrorMessage(r.error) : r.error })));
         if (typeof s.instituteType === "string") setInstituteType(s.instituteType);
       }
     } catch {}
@@ -160,7 +181,11 @@ const AdminBulkCreateCoachingInstitutes = () => {
         mode: row.city ? "Offline" : "Hybrid",
       };
       const { data, error } = await supabase.functions.invoke("ai-coaching-institute-generate", { body: brief });
-      if (error) throw new Error(error.message || "AI generation failed");
+      if (error) {
+        const parsed = await extractFunctionError(error);
+        if (parsed.code === "insufficient_quota" || parsed.message === QUOTA_ERROR) cancelRef.current = true;
+        throw new Error(parsed.message);
+      }
       if ((data as any)?.error) {
         const message = (data as any).error;
         if ((data as any)?.code === "insufficient_quota") {
