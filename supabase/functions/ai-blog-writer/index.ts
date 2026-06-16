@@ -751,8 +751,8 @@ Deno.serve(async (req) => {
     // NO upper cap on word count — long-form (10K+) is fully supported via expansion loop.
     const wmin = Math.max(300, brief.wordCountMin ?? 2500);
     const wmax = Math.max(wmin, brief.wordCountMax ?? 3500);
-    // 10% literal density is keyword-stuffing and hurts SEO. Cap at 3% (Google-safe natural range).
-    const density = Math.min(brief.keywordDensityPct ?? 2, 3);
+    // Respect admin-chosen density. Cap at 8% (anything higher is pure stuffing).
+    const density = Math.max(0.5, Math.min(brief.keywordDensityPct ?? 2, 8));
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
