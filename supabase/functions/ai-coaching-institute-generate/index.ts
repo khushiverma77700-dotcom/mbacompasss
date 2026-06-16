@@ -545,7 +545,7 @@ Deno.serve(async (req) => {
     const rawArgs = aiJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
     if (!rawArgs) {
       return new Response(JSON.stringify({ error: "AI did not return structured output" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -553,7 +553,7 @@ Deno.serve(async (req) => {
     try { parsed = JSON.parse(rawArgs); }
     catch (e) {
       return new Response(JSON.stringify({ error: "AI output malformed", detail: String(e).slice(0, 200) }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -573,7 +573,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("ai-coaching-institute-generate error", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
