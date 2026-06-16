@@ -146,16 +146,30 @@ const AdminBulkCreateCoachingInstitutes = () => {
       seen.add(k);
       const dup = existingMap.get(k);
       if (dup) {
-        queue.push({
-          index: i,
-          name: it.name,
-          city: it.city || defaultCity || undefined,
-          state: it.state || defaultState || undefined,
-          status: "skipped",
-          step: `already exists — "${dup.name}"`,
-          instituteId: dup.id,
-          slug: dup.slug,
-        });
+        if (refreshExisting) {
+          queue.push({
+            index: i,
+            name: dup.name,
+            city: it.city || defaultCity || undefined,
+            state: it.state || defaultState || undefined,
+            status: "pending",
+            step: "queued — will refresh existing",
+            instituteId: dup.id,
+            slug: dup.slug,
+            isUpdate: true,
+          });
+        } else {
+          queue.push({
+            index: i,
+            name: it.name,
+            city: it.city || defaultCity || undefined,
+            state: it.state || defaultState || undefined,
+            status: "skipped",
+            step: `already exists — "${dup.name}"`,
+            instituteId: dup.id,
+            slug: dup.slug,
+          });
+        }
         return;
       }
       queue.push({
