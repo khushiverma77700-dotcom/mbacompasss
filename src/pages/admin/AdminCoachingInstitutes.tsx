@@ -100,6 +100,9 @@ const AdminCoachingInstitutes = () => {
           <Button variant="outline" onClick={() => setShowAI(true)}>
             <Sparkles className="w-4 h-4 mr-1" /> Generate via AI
           </Button>
+          <Link to="/admin/coaching-institutes/bulk-create">
+            <Button variant="outline"><Sparkles className="w-4 h-4 mr-1" /> Bulk Generate via AI</Button>
+          </Link>
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="w-4 h-4 mr-1" /> New Institute
           </Button>
