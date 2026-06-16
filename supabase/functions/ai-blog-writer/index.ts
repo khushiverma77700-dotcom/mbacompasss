@@ -71,7 +71,7 @@ function getTargets(brief: BlogBrief) {
     wmax,
     targetWords,
     sectionCount: Math.max(5, Math.min(16, Math.round(targetWords / 550))),
-    density: Math.min(brief.keywordDensityPct ?? 2, 3),
+    density: Math.max(0.5, Math.min(brief.keywordDensityPct ?? 2, 8)),
     todayIso: new Date().toISOString().slice(0, 10),
     currentYear: new Date().getFullYear(),
   };
