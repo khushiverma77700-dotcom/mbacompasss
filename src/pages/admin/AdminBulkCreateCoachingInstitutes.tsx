@@ -14,7 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/slugify";
 
-type RowStatus = "pending" | "processing" | "succeeded" | "failed";
+type RowStatus = "pending" | "processing" | "succeeded" | "failed" | "skipped";
 interface Row {
   index: number;
   name: string;
@@ -29,6 +29,9 @@ interface Row {
 
 const LS_KEY = "admin_bulk_coaching_state_v1";
 const CONCURRENCY = 2;
+
+const normalizeName = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 
 const parseLine = (raw: string): { name: string; city?: string; state?: string } | null => {
   const line = raw.trim();
@@ -46,6 +49,7 @@ const statusBadge = (s: RowStatus) =>
     processing: "bg-blue-100 text-blue-800 border-blue-300",
     succeeded: "bg-emerald-100 text-emerald-800 border-emerald-300",
     failed: "bg-red-100 text-red-800 border-red-300",
+    skipped: "bg-amber-100 text-amber-800 border-amber-300",
   }[s]);
 
 const AdminBulkCreateCoachingInstitutes = () => {
@@ -80,27 +84,57 @@ const AdminBulkCreateCoachingInstitutes = () => {
   const metrics = useMemo(() => {
     const succeeded = rows.filter(r => r.status === "succeeded").length;
     const failed = rows.filter(r => r.status === "failed").length;
+    const skipped = rows.filter(r => r.status === "skipped").length;
     const processing = rows.filter(r => r.status === "processing").length;
     const pending = rows.filter(r => r.status === "pending").length;
     const total = rows.length;
-    const completed = succeeded + failed;
+    const completed = succeeded + failed + skipped;
     const pct = total ? Math.round((completed / total) * 100) : 0;
-    return { succeeded, failed, processing, pending, total, completed, pct };
+    return { succeeded, failed, skipped, processing, pending, total, completed, pct };
   }, [rows]);
 
   const parsedPreview = useMemo(() => {
     return input.split("\n").map(parseLine).filter(Boolean) as { name: string; city?: string; state?: string }[];
   }, [input]);
 
-  const buildQueue = () => {
+  const buildQueue = async (): Promise<Row[] | undefined> => {
     const items = parsedPreview;
     if (!items.length) return;
+
+    // Pre-fetch all existing institutes once to detect duplicates by name (case/punct-insensitive).
+    const existingMap = new Map<string, { id: string; slug: string; name: string }>();
+    try {
+      const { data: existing } = await supabase
+        .from("institutes")
+        .select("id, slug, name")
+        .limit(10000);
+      (existing || []).forEach((e: any) => {
+        if (e?.name) existingMap.set(normalizeName(e.name), { id: e.id, slug: e.slug, name: e.name });
+      });
+    } catch (err) {
+      console.warn("[bulk-coaching] existing fetch failed", err);
+    }
+
     const seen = new Set<string>();
     const queue: Row[] = [];
     items.forEach((it, i) => {
-      const k = it.name.toLowerCase();
+      const k = normalizeName(it.name);
       if (seen.has(k)) return;
       seen.add(k);
+      const dup = existingMap.get(k);
+      if (dup) {
+        queue.push({
+          index: i,
+          name: it.name,
+          city: it.city || defaultCity || undefined,
+          state: it.state || defaultState || undefined,
+          status: "skipped",
+          step: `already exists — "${dup.name}"`,
+          instituteId: dup.id,
+          slug: dup.slug,
+        });
+        return;
+      }
       queue.push({
         index: i,
         name: it.name,
@@ -204,12 +238,17 @@ const AdminBulkCreateCoachingInstitutes = () => {
   };
 
   const start = async () => {
-    const q = buildQueue();
+    const q = await buildQueue();
     if (!q || !q.length) {
       toast({ title: "Add at least one institute name", variant: "destructive" });
       return;
     }
-    toast({ title: "Bulk generation started", description: `Generating ${q.length} institutes…` });
+    const toRun = q.filter(r => r.status === "pending").length;
+    const skipped = q.filter(r => r.status === "skipped").length;
+    toast({
+      title: "Bulk generation started",
+      description: `${toRun} new · ${skipped} already exist (skipped)`,
+    });
     await runQueue(q);
     toast({ title: "Bulk generation finished" });
   };
@@ -336,7 +375,7 @@ const AdminBulkCreateCoachingInstitutes = () => {
                   {running ? "Generating…" : "Queue"}
                 </CardTitle>
                 <CardDescription>
-                  {metrics.completed} / {metrics.total} processed · ✓ {metrics.succeeded} · ✕ {metrics.failed}
+                  {metrics.completed} / {metrics.total} processed · ✓ {metrics.succeeded} · ⤼ {metrics.skipped} skipped · ✕ {metrics.failed}
                   {metrics.processing > 0 && <> · ⟳ {metrics.processing} active</>}
                 </CardDescription>
               </div>
