@@ -282,6 +282,20 @@ const AdminCourses = () => {
           >
             <Sparkles className="w-4 h-4 mr-2" /> Generate via AI
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/courses/bulk-generate")}
+            className="border-primary/40 text-primary hover:bg-primary/5"
+          >
+            <Sparkles className="w-4 h-4 mr-2" /> Bulk AI Courses
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/bulk-seo?type=course")}
+            className="border-primary/40 text-primary hover:bg-primary/5"
+          >
+            <Sparkles className="w-4 h-4 mr-2" /> Bulk SEO (Advanced)
+          </Button>
           <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Course</Button>
         </div>
       </div>
