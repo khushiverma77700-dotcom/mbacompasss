@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.bulk-course-worker]
 verify_jwt = false
+
+[functions.bulk-seo-worker]
+verify_jwt = false

@@ -956,6 +956,113 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_seo_items: {
+        Row: {
+          cost_credits: number | null
+          created_at: string
+          error_message: string | null
+          fields_filled: number | null
+          finished_at: string | null
+          id: string
+          job_id: string
+          progress_step: string | null
+          retry_count: number
+          seo_score: number | null
+          started_at: string | null
+          status: string
+          target_id: string
+          target_name: string | null
+          target_type: string
+          tokens_used: number | null
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        Insert: {
+          cost_credits?: number | null
+          created_at?: string
+          error_message?: string | null
+          fields_filled?: number | null
+          finished_at?: string | null
+          id?: string
+          job_id: string
+          progress_step?: string | null
+          retry_count?: number
+          seo_score?: number | null
+          started_at?: string | null
+          status?: string
+          target_id: string
+          target_name?: string | null
+          target_type: string
+          tokens_used?: number | null
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Update: {
+          cost_credits?: number | null
+          created_at?: string
+          error_message?: string | null
+          fields_filled?: number | null
+          finished_at?: string | null
+          id?: string
+          job_id?: string
+          progress_step?: string | null
+          retry_count?: number
+          seo_score?: number | null
+          started_at?: string | null
+          status?: string
+          target_id?: string
+          target_name?: string | null
+          target_type?: string
+          tokens_used?: number | null
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_seo_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_seo_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_seo_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string | null
+          options: Json
+          status: string
+          target_type: string
+          total_items: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          options?: Json
+          status?: string
+          target_type: string
+          total_items?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          options?: Json
+          status?: string
+          target_type?: string
+          total_items?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_inquiries: {
         Row: {
           contact_number: string
@@ -1925,6 +2032,7 @@ export type Database = {
         Row: {
           batch_info: string | null
           brochure_url: string | null
+          canonical_url: string | null
           course_category_id: string | null
           created_at: string
           curriculum: string[] | null
@@ -1934,21 +2042,39 @@ export type Database = {
           duration: string | null
           eligibility: string | null
           enrolled_count: number | null
+          faqs: Json | null
           fees: number | null
+          h1_tag: string | null
           highlights: string[] | null
           id: string
           institute_id: string
+          keywords: string[] | null
+          last_seo_refresh: string | null
+          long_tail_keywords: string[] | null
+          meta_description: string | null
+          meta_title: string | null
           mode: string | null
           name: string
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          primary_keyword: string | null
           rating: number | null
+          schema_jsonld: Json | null
+          seo_score: number | null
+          slug: string | null
           start_date: string | null
           syllabus_url: string | null
           total_seats: number | null
+          twitter_description: string | null
+          twitter_image: string | null
+          twitter_title: string | null
           updated_at: string
         }
         Insert: {
           batch_info?: string | null
           brochure_url?: string | null
+          canonical_url?: string | null
           course_category_id?: string | null
           created_at?: string
           curriculum?: string[] | null
@@ -1958,21 +2084,39 @@ export type Database = {
           duration?: string | null
           eligibility?: string | null
           enrolled_count?: number | null
+          faqs?: Json | null
           fees?: number | null
+          h1_tag?: string | null
           highlights?: string[] | null
           id?: string
           institute_id: string
+          keywords?: string[] | null
+          last_seo_refresh?: string | null
+          long_tail_keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
           mode?: string | null
           name: string
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          primary_keyword?: string | null
           rating?: number | null
+          schema_jsonld?: Json | null
+          seo_score?: number | null
+          slug?: string | null
           start_date?: string | null
           syllabus_url?: string | null
           total_seats?: number | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
           updated_at?: string
         }
         Update: {
           batch_info?: string | null
           brochure_url?: string | null
+          canonical_url?: string | null
           course_category_id?: string | null
           created_at?: string
           curriculum?: string[] | null
@@ -1982,16 +2126,33 @@ export type Database = {
           duration?: string | null
           eligibility?: string | null
           enrolled_count?: number | null
+          faqs?: Json | null
           fees?: number | null
+          h1_tag?: string | null
           highlights?: string[] | null
           id?: string
           institute_id?: string
+          keywords?: string[] | null
+          last_seo_refresh?: string | null
+          long_tail_keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
           mode?: string | null
           name?: string
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          primary_keyword?: string | null
           rating?: number | null
+          schema_jsonld?: Json | null
+          seo_score?: number | null
+          slug?: string | null
           start_date?: string | null
           syllabus_url?: string | null
           total_seats?: number | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2822,6 +2983,7 @@ export type Database = {
         Row: {
           address: string | null
           banner_url: string | null
+          canonical_url: string | null
           category_id: string | null
           city: string | null
           cluster_id: string | null
@@ -2844,16 +3006,22 @@ export type Database = {
           last_updated_by: string | null
           latitude: number | null
           logo_url: string | null
+          long_tail_keywords: string[] | null
           longitude: number | null
           meta_description: string | null
           meta_title: string | null
           mode: string | null
           name: string
           offer: string | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
           phone: string | null
           primary_keyword: string | null
           rating: number | null
+          schema_jsonld: Json | null
           sections: Json
+          seo_score: number | null
           slug: string
           source: string | null
           specializations: string[] | null
@@ -2862,6 +3030,9 @@ export type Database = {
           submitted_by_user_id: string | null
           success_rate: number | null
           total_reviews: number | null
+          twitter_description: string | null
+          twitter_image: string | null
+          twitter_title: string | null
           updated_at: string
           website: string | null
           whatsapp: string | null
@@ -2869,6 +3040,7 @@ export type Database = {
         Insert: {
           address?: string | null
           banner_url?: string | null
+          canonical_url?: string | null
           category_id?: string | null
           city?: string | null
           cluster_id?: string | null
@@ -2891,16 +3063,22 @@ export type Database = {
           last_updated_by?: string | null
           latitude?: number | null
           logo_url?: string | null
+          long_tail_keywords?: string[] | null
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
           mode?: string | null
           name: string
           offer?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
           phone?: string | null
           primary_keyword?: string | null
           rating?: number | null
+          schema_jsonld?: Json | null
           sections?: Json
+          seo_score?: number | null
           slug: string
           source?: string | null
           specializations?: string[] | null
@@ -2909,6 +3087,9 @@ export type Database = {
           submitted_by_user_id?: string | null
           success_rate?: number | null
           total_reviews?: number | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
           updated_at?: string
           website?: string | null
           whatsapp?: string | null
@@ -2916,6 +3097,7 @@ export type Database = {
         Update: {
           address?: string | null
           banner_url?: string | null
+          canonical_url?: string | null
           category_id?: string | null
           city?: string | null
           cluster_id?: string | null
@@ -2938,16 +3120,22 @@ export type Database = {
           last_updated_by?: string | null
           latitude?: number | null
           logo_url?: string | null
+          long_tail_keywords?: string[] | null
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
           mode?: string | null
           name?: string
           offer?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
           phone?: string | null
           primary_keyword?: string | null
           rating?: number | null
+          schema_jsonld?: Json | null
           sections?: Json
+          seo_score?: number | null
           slug?: string
           source?: string | null
           specializations?: string[] | null
@@ -2956,6 +3144,9 @@ export type Database = {
           submitted_by_user_id?: string | null
           success_rate?: number | null
           total_reviews?: number | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
           updated_at?: string
           website?: string | null
           whatsapp?: string | null
