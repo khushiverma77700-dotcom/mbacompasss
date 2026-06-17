@@ -326,13 +326,18 @@ const AdminWriteCourses = () => {
         <Button variant="ghost" onClick={() => navigate("/admin/courses")}>
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Courses
         </Button>
-        <div className="mt-3">
-          <h1 className="font-heading text-3xl font-bold flex items-center gap-2">
-            <Sparkles className="w-7 h-7 text-primary" /> AI Course Generator
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Pick an institute → discover its real MBA / Masters-in-Management courses → edit the list → deep-research and auto-generate accurate, ready-to-publish content with verified pricing.
-          </p>
+        <div className="mt-3 flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="font-heading text-3xl font-bold flex items-center gap-2">
+              <Sparkles className="w-7 h-7 text-primary" /> AI Course Generator
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Pick an institute → discover its real MBA / Masters-in-Management courses → edit the list → deep-research and auto-generate accurate, ready-to-publish content with verified pricing.
+            </p>
+          </div>
+          <Button onClick={() => navigate("/admin/courses/bulk-generate")} variant="default" className="shrink-0">
+            <Sparkles className="w-4 h-4 mr-2" /> Switch to Bulk mode →
+          </Button>
         </div>
       </div>
 

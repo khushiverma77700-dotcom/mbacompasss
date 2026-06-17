@@ -667,6 +667,107 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_course_items: {
+        Row: {
+          course_names: Json
+          courses_failed: number
+          courses_found: number
+          courses_saved: number
+          created_at: string
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          institute_id: string
+          institute_name: string
+          job_id: string
+          progress_step: string | null
+          retry_count: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        Insert: {
+          course_names?: Json
+          courses_failed?: number
+          courses_found?: number
+          courses_saved?: number
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          institute_id: string
+          institute_name: string
+          job_id: string
+          progress_step?: string | null
+          retry_count?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Update: {
+          course_names?: Json
+          courses_failed?: number
+          courses_found?: number
+          courses_saved?: number
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          institute_id?: string
+          institute_name?: string
+          job_id?: string
+          progress_step?: string | null
+          retry_count?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_course_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_course_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_course_jobs: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          label: string | null
+          options: Json
+          status: string
+          total_institutes: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          label?: string | null
+          options?: Json
+          status?: string
+          total_institutes?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string | null
+          options?: Json
+          status?: string
+          total_institutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bulk_mock_request_items: {
         Row: {
           category: string

@@ -131,6 +131,7 @@ const AdminBulkCreateColleges = lazyWithPreload(() => import("./pages/admin/Admi
 const AdminBulkCreateCoachingInstitutes = lazyWithPreload(() => import("./pages/admin/AdminBulkCreateCoachingInstitutes"));
 const AdminWriteInstitute = lazyWithPreload(() => import("./pages/admin/AdminWriteInstitute"));
 const AdminWriteCourses = lazyWithPreload(() => import("./pages/admin/AdminWriteCourses"));
+const AdminBulkGenerateCourses = lazyWithPreload(() => import("./pages/admin/AdminBulkGenerateCourses"));
 const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminWebsiteOptimizer"));
 const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
 const AdminMockBundles = lazyWithPreload(() => import("./pages/admin/AdminMockBundles"));
@@ -745,6 +746,7 @@ const App = () => (
               <Route path="colleges/bulk-create" element={<LazyPage><AdminBulkCreateColleges /></LazyPage>} />
               <Route path="institutes/generate-ai" element={<LazyPage><AdminWriteInstitute /></LazyPage>} />
               <Route path="courses/generate-ai" element={<LazyPage><AdminWriteCourses /></LazyPage>} />
+              <Route path="courses/bulk-generate" element={<LazyPage><AdminBulkGenerateCourses /></LazyPage>} />
               <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
               <Route path="mock-tests" element={<LazyPage><AdminMockTests /></LazyPage>} />
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />

@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.personalized-bulk-worker]
 verify_jwt = false
+
+[functions.bulk-course-worker]
+verify_jwt = false
