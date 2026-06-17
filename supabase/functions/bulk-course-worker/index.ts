@@ -291,6 +291,19 @@ async function reclaimStale(admin: any) {
     })
     .in("status", ["discovering", "generating"])
     .lt("worker_lock_until", nowIso());
+
+  // Belt-and-braces: anything that hasn't received a progress update in
+  // 4 minutes is considered abandoned (worker instance was killed mid-flight).
+  const staleIso = new Date(Date.now() - 4 * 60_000).toISOString();
+  await admin
+    .from("bulk_course_items")
+    .update({
+      status: "pending",
+      worker_lock_until: null,
+      progress_step: "Recovered — worker stalled, re-queued",
+    })
+    .in("status", ["discovering", "generating"])
+    .lt("updated_at", staleIso);
 }
 
 async function pump(admin: any, limit = MAX_PARALLEL) {
