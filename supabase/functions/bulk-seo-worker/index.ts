@@ -97,26 +97,28 @@ Return ONLY valid JSON, no commentary, with this exact shape:
 }
 
 async function callAI(prompt: string) {
-  const resp = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const openaiKey = await getCredential("OPENAI_API_KEY", { required: true });
+  const resp = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${openaiKey}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: OPENAI_MODEL,
       messages: [
         { role: "system", content: "You are an expert SEO strategist for Indian MBA coaching directories. Always return strict JSON." },
         { role: "user", content: prompt },
       ],
       response_format: { type: "json_object" },
+      temperature: 0.7,
     }),
   }, 90_000);
   const data = await resp.json();
   if (!resp.ok) {
-    if (resp.status === 429) throw new Error("Rate limit (429) — will retry");
-    if (resp.status === 402) throw new Error("AI credits exhausted (402) — top up Lovable AI");
-    throw new Error(`AI gateway HTTP ${resp.status}: ${data?.error?.message || JSON.stringify(data).slice(0,200)}`);
+    if (resp.status === 429) throw new Error("OpenAI rate limit (429) — will retry");
+    if (resp.status === 401) throw new Error("OpenAI auth failed (401) — check active API slot in Admin");
+    throw new Error(`OpenAI HTTP ${resp.status}: ${data?.error?.message || JSON.stringify(data).slice(0,200)}`);
   }
   const content = data?.choices?.[0]?.message?.content || "{}";
   const usage = data?.usage || {};
