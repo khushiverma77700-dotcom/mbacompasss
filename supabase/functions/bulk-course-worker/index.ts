@@ -71,7 +71,6 @@ async function processItem(admin: any, itemId: string) {
       worker_lock_until: lockUntil,
       error_message: null,
       progress_step: "Claimed — preparing to discover courses",
-      retry_count: undefined as any, // keep
     })
     .eq("id", itemId)
     .in("status", ["pending", "failed"])
