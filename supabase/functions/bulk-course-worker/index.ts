@@ -87,12 +87,14 @@ async function processItem(admin: any, itemId: string) {
 
   try {
     // Load institute context.
-    const { data: inst } = await admin
+    const { data: inst, error: instErr } = await admin
       .from("institutes")
-      .select("id,name,city,state,mode,website,established")
+      .select("id,name,city,state,mode,website")
       .eq("id", claimed.institute_id)
       .maybeSingle();
+    if (instErr) throw new Error(`Institute lookup failed: ${instErr.message}`);
     if (!inst) throw new Error("Institute not found");
+    (inst as any).established = null;
 
     if (skipIfHasCourses) {
       const { count } = await admin
