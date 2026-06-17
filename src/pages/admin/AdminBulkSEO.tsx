@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,9 +35,15 @@ const STATUS_TONE: Record<string, string> = {
 
 const AdminBulkSEO = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
 
-  const [targetType, setTargetType] = useState<TargetType>("institute");
+  const initialType = (searchParams.get("type") as TargetType) === "course" ? "course" : "institute";
+  const [targetType, setTargetTypeState] = useState<TargetType>(initialType);
+  const setTargetType = (t: TargetType) => {
+    setTargetTypeState(t);
+    setSearchParams((prev) => { const n = new URLSearchParams(prev); n.set("type", t); return n; }, { replace: true });
+  };
   const [rows, setRows] = useState<Row[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);
   const [search, setSearch] = useState("");

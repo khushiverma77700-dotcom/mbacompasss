@@ -103,6 +103,11 @@ const AdminCoachingInstitutes = () => {
           <Link to="/admin/coaching-institutes/bulk-create">
             <Button variant="outline"><Sparkles className="w-4 h-4 mr-1" /> Bulk Generate via AI</Button>
           </Link>
+          <Link to="/admin/bulk-seo?type=institute">
+            <Button variant="outline" className="border-primary/40 text-primary hover:bg-primary/5">
+              <Sparkles className="w-4 h-4 mr-1" /> Bulk SEO (Advanced)
+            </Button>
+          </Link>
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="w-4 h-4 mr-1" /> New Institute
           </Button>
