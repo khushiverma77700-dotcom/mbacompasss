@@ -131,6 +131,7 @@ const AdminBulkCreateColleges = lazyWithPreload(() => import("./pages/admin/Admi
 const AdminBulkCreateCoachingInstitutes = lazyWithPreload(() => import("./pages/admin/AdminBulkCreateCoachingInstitutes"));
 const AdminWriteInstitute = lazyWithPreload(() => import("./pages/admin/AdminWriteInstitute"));
 const AdminWriteCourses = lazyWithPreload(() => import("./pages/admin/AdminWriteCourses"));
+const AdminBulkGenerateCourses = lazyWithPreload(() => import("./pages/admin/AdminBulkGenerateCourses"));
 const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminWebsiteOptimizer"));
 const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
 const AdminMockBundles = lazyWithPreload(() => import("./pages/admin/AdminMockBundles"));
