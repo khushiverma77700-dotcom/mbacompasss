@@ -8,6 +8,7 @@
 //   POST {} / cron pump → reclaim stale, dispatch next batch.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,15 +23,15 @@ const json = (status: number, body: unknown) =>
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const MAX_PARALLEL = 3;
 const ITEM_LOCK_MS = 5 * 60_000;
 const SITE_ORIGIN = "https://mbacompass.in";
+const OPENAI_MODEL = "gpt-4o-mini";
 
-// Approx credit pricing for google/gemini-2.5-flash (rough estimate for display).
-const CREDIT_PER_1K_IN = 0.000075;
-const CREDIT_PER_1K_OUT = 0.0003;
+// Approx OpenAI gpt-4o-mini pricing (USD per 1K tokens) for display.
+const CREDIT_PER_1K_IN = 0.00015;
+const CREDIT_PER_1K_OUT = 0.0006;
 
 function nowIso() { return new Date().toISOString(); }
 function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
@@ -96,26 +97,28 @@ Return ONLY valid JSON, no commentary, with this exact shape:
 }
 
 async function callAI(prompt: string) {
-  const resp = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const openaiKey = await getCredential("OPENAI_API_KEY", { required: true });
+  const resp = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${openaiKey}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: OPENAI_MODEL,
       messages: [
         { role: "system", content: "You are an expert SEO strategist for Indian MBA coaching directories. Always return strict JSON." },
         { role: "user", content: prompt },
       ],
       response_format: { type: "json_object" },
+      temperature: 0.7,
     }),
   }, 90_000);
   const data = await resp.json();
   if (!resp.ok) {
-    if (resp.status === 429) throw new Error("Rate limit (429) — will retry");
-    if (resp.status === 402) throw new Error("AI credits exhausted (402) — top up Lovable AI");
-    throw new Error(`AI gateway HTTP ${resp.status}: ${data?.error?.message || JSON.stringify(data).slice(0,200)}`);
+    if (resp.status === 429) throw new Error("OpenAI rate limit (429) — will retry");
+    if (resp.status === 401) throw new Error("OpenAI auth failed (401) — check active API slot in Admin");
+    throw new Error(`OpenAI HTTP ${resp.status}: ${data?.error?.message || JSON.stringify(data).slice(0,200)}`);
   }
   const content = data?.choices?.[0]?.message?.content || "{}";
   const usage = data?.usage || {};
