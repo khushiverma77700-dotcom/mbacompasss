@@ -44,6 +44,14 @@ const stripExternalLinks = (html: string) => {
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+  // Remove ALL <img> tags — blog should be text-only for uniform typography
+  out = out.replace(/<img\b[^>]*\/?>/gi, "");
+  out = out.replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, "");
+  // Strip <font> tags
+  out = out.replace(/<\/?font\b[^>]*>/gi, "");
+  // Strip inline style="", class="", id="", face="", color="" on any tag — uniform typography
+  out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*'[^']*'/gi, "");
   // Strip banned "Quick Summary" / TL;DR labels — only "Summary" is allowed
   out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
   out = out.replace(/\bTL;?DR\b/gi, "Summary");
