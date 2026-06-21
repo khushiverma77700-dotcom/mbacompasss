@@ -49,12 +49,15 @@ const stripExternalLinks = (html: string) => {
   return out.replace(/[ \t]{2,}/g, " ").trim();
 };
 
-const normalizeSlug = (s: string) =>
-  String(s || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80);
+const SLUG_FILLER = new Set(["the","a","an","of","for","to","and","or","in","on","with","best","top","complete","ultimate","guide","tips","how","what","why","is","are","your","you","my","our","2024","2025","2026","2027"]);
+const normalizeSlug = (s: string) => {
+  const cleaned = String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  if (!cleaned) return "";
+  const parts = cleaned.split("-").filter(Boolean);
+  const meaningful = parts.filter((p) => !SLUG_FILLER.has(p));
+  const picked = (meaningful.length >= 2 ? meaningful : parts).slice(0, 5);
+  return picked.join("-").slice(0, 60);
+};
 
 const escapeHtml = (s: string) =>
   String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
