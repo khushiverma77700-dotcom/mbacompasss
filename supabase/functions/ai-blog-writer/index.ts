@@ -268,7 +268,7 @@ Article structure rules (MANDATORY — every article must follow this skeleton):
 6. **FAQs** — H2 "Frequently Asked Questions" with 8-12 People-Also-Ask style Q&A pairs (H3 question, multi-paragraph answer per the SEO rules).
 7. **Conclusion / Final Word** — closing H2 (e.g. "Final Word", "Bottom Line", "Your Next Step") with 2-3 short paragraphs summarising the decision + a CTA paragraph with 2-3 internal links to the most relevant tool/page (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks, /mba-compass, related /blog/ posts).
 
-Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → FAQs → "About MBA Compass" → Conclusion + CTA. Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
+Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → Key Takeaways → FAQs → Conclusion + Final CTA → "About MBA Compass" (LAST). Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
 
 MBA Compass brand mention (MANDATORY — every article must include this):
 - Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed AFTER the FAQ section and BEFORE the final Conclusion + CTA.
