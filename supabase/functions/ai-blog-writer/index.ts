@@ -23,6 +23,7 @@ interface BlogBrief {
   wordCountMin?: number;
   wordCountMax?: number;
   keywordDensityPct?: number;
+  allowedInternalUrls?: { url: string; label?: string }[];
 }
 
 const json = (status: number, body: unknown) => new Response(
@@ -43,6 +44,14 @@ const stripExternalLinks = (html: string) => {
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+  // Remove ALL <img> tags — blog should be text-only for uniform typography
+  out = out.replace(/<img\b[^>]*\/?>/gi, "");
+  out = out.replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, "");
+  // Strip <font> tags
+  out = out.replace(/<\/?font\b[^>]*>/gi, "");
+  // Strip inline style="", class="", id="", face="", color="" on any tag — uniform typography
+  out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*'[^']*'/gi, "");
   // Strip banned "Quick Summary" / TL;DR labels — only "Summary" is allowed
   out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
   out = out.replace(/\bTL;?DR\b/gi, "Summary");
@@ -148,7 +157,11 @@ async function callStructuredAI(args: {
 
 function writerSystemPrompt(brief: BlogBrief) {
   const { currentYear, todayIso } = getTargets(brief);
-  return `You are a senior MBA mentor at B School Buzz writing for Indian students. Sound like a real human mentor talking one-on-one to an aspirant — warm, direct, practical, and specific. Never sound like an AI or a generic SEO blog.
+  const allowed = Array.isArray(brief.allowedInternalUrls) ? brief.allowedInternalUrls.filter(u => u && u.url && u.url.startsWith("/")) : [];
+  const allowedBlock = allowed.length
+    ? `\n\nCURATED INTERNAL LINK POOL (USE ONLY THESE URLs — DO NOT INVENT NEW URLs):\n${allowed.map(u => `- ${u.url}${u.label ? `  (suggested anchor: ${u.label})` : ""}`).join("\n")}\nRules: every internal <a href="/..."> MUST resolve to one of the URLs above. Distribute links naturally. Use each URL 1-2 times max. If no URL in the pool fits a sentence, do NOT add a link there.`
+    : "";
+  return `You are a senior MBA mentor at B School Buzz writing for Indian students. Sound like a real human mentor talking one-on-one to an aspirant — warm, direct, practical, and specific. Never sound like an AI or a generic SEO blog.${allowedBlock}
 
 Voice rules (MANDATORY):
 - Write the way a senior MBA mentor explains things to a junior over coffee — calm, confident, conversational, never lecture-y. Use contractions (you're, don't, it's, you'll). Short sentences. Plain 8th-grade English.
@@ -259,10 +272,10 @@ Article structure rules (MANDATORY — every article must follow this skeleton):
 6. **FAQs** — H2 "Frequently Asked Questions" with 8-12 People-Also-Ask style Q&A pairs (H3 question, multi-paragraph answer per the SEO rules).
 7. **Conclusion / Final Word** — closing H2 (e.g. "Final Word", "Bottom Line", "Your Next Step") with 2-3 short paragraphs summarising the decision + a CTA paragraph with 2-3 internal links to the most relevant tool/page (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks, /mba-compass, related /blog/ posts).
 
-Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → FAQs → "About MBA Compass" → Conclusion + CTA. Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
+Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → Key Takeaways → FAQs → Conclusion + Final CTA → "About MBA Compass" (LAST). Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
 
 MBA Compass brand mention (MANDATORY — every article must include this):
-- Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed AFTER the FAQ section and BEFORE the final Conclusion + CTA.
+- Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed at the VERY END of the article (after the Conclusion + Final CTA).
 - The section must be 120-180 words, educational and value-driven — not a sales pitch. Use the mentor voice.
 - Cover, naturally and briefly:
   • What MBA Compass is — an MBA discovery and decision platform for Indian aspirants (B School Buzz product) that brings colleges, exams, coaching, mocks, and AI tools into one place.
@@ -290,13 +303,13 @@ STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule b
 16. Entity SEO: name real, relevant entities throughout — colleges (IIM Ahmedabad, IIM Bangalore, FMS Delhi, XLRI, MDI, SPJIMR, NMIMS, IIFT, IMT), exams (CAT, XAT, NMAT, SNAP, CMAT, MAT, IIFT, MICAT), bodies (AICTE, UGC, NIRF, MoE), recruiters (McKinsey, BCG, Bain, Accenture, TAS, ABG, HUL, ITC, Goldman Sachs).
 17. Internal linking: 1 contextual internal link every 300-500 words. Mandatory placements: at least one after the intro, one mid-article, one before the conclusion. Total 12-20 internal links. Anchor must be the entity name or a natural descriptive phrase — never "click here", "read more".
 18. External "citations": 3-5 authoritative source MENTIONS (gov sites, NIRF, AICTE, UGC, official college websites, recent research/industry reports, Economic Times, Business Standard). Cite them by NAME in plain text using [src:Source Year] markers — NEVER render bare URLs or <a> tags to external domains.
-19. Images: include 3-5 <img> placeholders across the article with keyword-based filenames and descriptive alt text. Format: <img src="/images/<keyword-slug>-<n>.jpg" alt="<descriptive alt with primary or secondary keyword>" />. Place near top, middle, and lower-third of the article.
+19. Images: DO NOT include any <img> tags or image placeholders. The blog is text-only — typography must stay uniform end-to-end.
 20. CTAs at 3 FIXED positions: (a) after the introduction, (b) middle of the article, (c) just before the conclusion. Use the mentor voice (e.g. "Want expert guidance for MBA admissions? Connect with our mentors today.", "Need help selecting the right MBA college? Explore our MBA counseling.", "Start your MBA journey today by exploring top colleges and admission opportunities."). Each CTA paragraph contains 1-2 internal links.
 21. Key Takeaways section: REQUIRED, placed JUST BEFORE the Conclusion. <h2>Key Takeaways</h2> with 4-6 bullets, each starting with <strong>Bold lead:</strong>.
 22. Conclusion: 100-150 words. Summarises the article. Primary keyword appears EXACTLY ONCE. Ends with a final CTA paragraph that links to 2-3 most relevant tools.
 23. FAQs: 5-10 questions (target 8). Each answer 40-80 words. People-Also-Ask style. Direct answer first sentence, then 1-2 supporting lines with a concrete number/name.
 24. EEAT: demonstrate Experience, Expertise, Authority, Trust. Use phrases like "Based on placement reports published by leading MBA institutes…", "According to official admission data…", "Industry experts suggest…", "As per the latest NIRF ranking…".
-25. Fixed structural order (NEVER skip / NEVER reorder): Title → Meta Title → Meta Description → Intro (50-80w first para) → Quick Summary Table (H2 "At a Glance" / "Snapshot" / "Key Highlights" with table or bullets of core data points) → Main H2/H3 sections (with stats, images, internal links, comparison tables, expert insights interleaved) → CTA 1 (after intro) → CTA 2 (mid-article) → Important Data & Statistics block → "About MBA Compass" H2 → Key Takeaways H2 → CTA 3 (before conclusion) → FAQs H2 → Conclusion H2 → Final CTA paragraph.
+25. Fixed structural order (NEVER skip / NEVER reorder): Title → Meta Title → Meta Description → Intro (50-80w first para) → Quick Summary Table (H2 "At a Glance" / "Snapshot" / "Key Highlights" with table or bullets of core data points) → Main H2/H3 sections (with stats, internal links, comparison tables, expert insights interleaved) → CTA 1 (after intro) → CTA 2 (mid-article) → Important Data & Statistics block → Key Takeaways H2 → CTA 3 (before conclusion) → FAQs H2 → Conclusion H2 → Final CTA paragraph → "About MBA Compass" H2 (LAST, with 2-3 contextual internal links to MBA Compass tools).
 
 Final quality checklist (self-verify before returning):
 ✓ All 25 rules above satisfied.
@@ -422,9 +435,7 @@ async function createSectionHtml(brief: BlogBrief, draft: any, section: any, ind
           : isMiddle
           ? 'INCLUDE CTA #2 (mid-article position): end this section with a <p><strong>Need help?</strong> ...</p> CTA paragraph in the tone "Need help selecting the right MBA college? Explore our MBA counseling services." containing 1-2 internal links (e.g. /college-shortlister, /mba-roi-calculator).'
           : '';
-        const imgNote = (isFirst || isMiddle || isLast)
-          ? `INCLUDE one <img src="/images/${normalizeSlug(brief.targetKeyword)}-${index + 1}.jpg" alt="<descriptive alt containing primary or secondary keyword>" /> placed after the first paragraph.`
-          : '';
+        const imgNote = '';
         return `Write section ${index + 1} of ${totalSections} for the article "${draft.title}" targeting primary keyword "${brief.targetKeyword}".
 
 Section heading: ${section.heading}
@@ -576,13 +587,13 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  // Fixed structural order: sections → About MBA Compass → Key Takeaways → CTA #3 → FAQs → Conclusion → updated stamp
+  // Fixed structural order: sections → Key Takeaways → CTA #3 → FAQs → Conclusion → About MBA Compass (LAST) → updated stamp
   const closingHtml = [
-    draft.aboutCompassHtml || "",
     draft.keyTakeawaysHtml || "",
     draft.ctaHtml || "",
     draft.faqHtml || "",
     draft.conclusionHtml || "",
+    draft.aboutCompassHtml || "",
     `<p><em>Last updated: ${targets.todayIso}</em></p>`,
   ].filter(Boolean).join("\n");
   const introRaw = stripExternalLinks(draft.intro || "");
@@ -634,7 +645,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (introFirstParaWords < 50 || introFirstParaWords > 80) warnings.push(`intro_first_para_words=${introFirstParaWords}`);
   if (validation.tableCount < 4) warnings.push(`tables=${validation.tableCount}`);
   if (validation.listCount < 6) warnings.push(`lists=${validation.listCount}`);
-  if (validation.imgCount < 3) warnings.push(`images=${validation.imgCount}`);
+  // images intentionally not validated — text-only blog
   if (validation.internalLinkCount < 12) warnings.push(`internal_links=${validation.internalLinkCount}`);
   if (validation.faqCount < 5 || validation.faqCount > 10) warnings.push(`faqs=${validation.faqCount}`);
   if (conclusionWords && (conclusionWords < 100 || conclusionWords > 150)) warnings.push(`conclusion_words=${conclusionWords}`);
