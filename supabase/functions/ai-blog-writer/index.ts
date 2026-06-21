@@ -435,9 +435,7 @@ async function createSectionHtml(brief: BlogBrief, draft: any, section: any, ind
           : isMiddle
           ? 'INCLUDE CTA #2 (mid-article position): end this section with a <p><strong>Need help?</strong> ...</p> CTA paragraph in the tone "Need help selecting the right MBA college? Explore our MBA counseling services." containing 1-2 internal links (e.g. /college-shortlister, /mba-roi-calculator).'
           : '';
-        const imgNote = (isFirst || isMiddle || isLast)
-          ? `INCLUDE one <img src="/images/${normalizeSlug(brief.targetKeyword)}-${index + 1}.jpg" alt="<descriptive alt containing primary or secondary keyword>" /> placed after the first paragraph.`
-          : '';
+        const imgNote = '';
         return `Write section ${index + 1} of ${totalSections} for the article "${draft.title}" targeting primary keyword "${brief.targetKeyword}".
 
 Section heading: ${section.heading}
