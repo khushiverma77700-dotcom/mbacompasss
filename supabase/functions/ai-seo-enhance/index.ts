@@ -626,20 +626,20 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     const pageName = data.title || data.name || data.full_name || "Untitled";
     const slugBase = data.slug || pageName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
-    suggestions.meta_title = safeStr(suggestions.meta_title, `${pageName} | MBA Compass`).slice(0, 60);
-    suggestions.meta_description = safeStr(
-      suggestions.meta_description,
-      `Explore ${pageName} on MBA Compass. Find detailed information, fees, placements and admission insights for Indian MBA aspirants.`,
-    ).slice(0, 165);
+    const fallbackKeywords = buildFallbackKeywordBuckets(contentType, data, contentText);
+    const primaryForMeta = uniqueKeywords([suggestions.keywords?.primary, fallbackKeywords.primary, pageName])[0] || pageName;
+
+    suggestions.meta_title = fitMetaTitle(safeStr(suggestions.meta_title), primaryForMeta, pageName);
+    suggestions.meta_description = fitMetaDescription(safeStr(suggestions.meta_description), primaryForMeta, pageName);
     suggestions.h1_tag = safeStr(suggestions.h1_tag, pageName);
 
     suggestions.keywords = {
-      primary: safeArr(suggestions.keywords?.primary),
-      shortTail: safeArr(suggestions.keywords?.shortTail),
-      longTail: safeArr(suggestions.keywords?.longTail),
-      faq: safeArr(suggestions.keywords?.faq),
-      trending: safeArr(suggestions.keywords?.trending),
-      lsi: safeArr(suggestions.keywords?.lsi),
+      primary: uniqueKeywords([suggestions.keywords?.primary, fallbackKeywords.primary]).slice(0, 3),
+      shortTail: uniqueKeywords([suggestions.keywords?.shortTail, fallbackKeywords.shortTail]).slice(0, 10),
+      longTail: uniqueKeywords([suggestions.keywords?.longTail, fallbackKeywords.longTail]).slice(0, 15),
+      faq: uniqueKeywords([suggestions.keywords?.faq, fallbackKeywords.faq]).slice(0, 12),
+      trending: uniqueKeywords([suggestions.keywords?.trending, fallbackKeywords.trending]).slice(0, 10),
+      lsi: uniqueKeywords([suggestions.keywords?.lsi, fallbackKeywords.lsi]).slice(0, 12),
     };
     suggestions.onPageTips = safeArr(suggestions.onPageTips);
     suggestions.contentSuggestions = safeArr(suggestions.contentSuggestions);
