@@ -481,27 +481,37 @@ async function createClosingHtml(brief: BlogBrief, draft: any) {
           keyTakeawaysHtml: { type: "string" },
           faqHtml: { type: "string" },
           aboutCompassHtml: { type: "string" },
+          conclusionHtml: { type: "string" },
           ctaHtml: { type: "string" },
           faqs: { type: "array", items: { type: "object", properties: { question: { type: "string" }, answer: { type: "string" } }, required: ["question", "answer"], additionalProperties: false } },
         },
-        required: ["keyTakeawaysHtml", "faqHtml", "aboutCompassHtml", "ctaHtml", "faqs"],
+        required: ["keyTakeawaysHtml", "faqHtml", "aboutCompassHtml", "conclusionHtml", "ctaHtml", "faqs"],
         additionalProperties: false,
       },
-      user: `Finish the article "${draft.title}" targeting "${brief.targetKeyword}".
+      user: `Finish the article "${draft.title}" targeting primary keyword "${brief.targetKeyword}".
 
 Written sections: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
 FAQ question ideas: ${(draft.faqQuestions || []).join(" | ")}
 
-Return:
-1) <h2>Key Takeaways</h2> with 8-10 detailed bullets.
-2) <h2>Frequently Asked Questions</h2> with 10 detailed Q&A pairs. Each answer must be 80-140 words, with specific data or examples where possible.
-3) <h2>About MBA Compass</h2> — 120-180 words explaining what MBA Compass is (an MBA discovery and decision platform by B School Buzz that brings colleges, exams, coaching, mocks, and AI tools into one place), how it helps Indian students and working professionals shortlist colleges, analyze their profile, compare programmes, and prepare with full mocks, and how it supports the financial side of the MBA decision — weighing fees, ROI, expected packages and long-term wealth outcomes. Educational and value-driven, not promotional. End with 2-3 contextual internal links from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
-4) One final CTA paragraph with 2-3 internal relative links.`,
+Return EXACTLY these blocks, in this order, each as standalone HTML strings:
+
+1) aboutCompassHtml — <h2>About MBA Compass</h2> + 120-180 words: what MBA Compass is (MBA discovery + decision platform by B School Buzz), how it helps Indian students and working professionals (shortlist colleges, analyze profile, compare programmes, full mocks), the financial-decision angle (fees, ROI, expected packages, long-term wealth). Educational, not promotional. End with 2-3 contextual internal links chosen from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
+
+2) keyTakeawaysHtml — <h2>Key Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with <strong>Bold lead:</strong> followed by one concrete data point or decision rule.
+
+3) ctaHtml — CTA #3 (before conclusion). One <p><strong>Take the next step:</strong> …</p> paragraph in the tone "Start your MBA journey today by exploring top colleges and admission opportunities." with 2-3 contextual internal links (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks).
+
+4) faqHtml — <h2>Frequently Asked Questions</h2> + 8 (between 5 and 10) Q&A pairs as <h3>Question?</h3><p>Answer</p>. Each answer MUST be 40-80 words, direct answer first sentence, then 1-2 supporting lines with a concrete number/name. People-Also-Ask style ("is", "how", "what", "which", "when", "vs", "fees", "cutoff", "salary", "eligibility").
+
+5) conclusionHtml — <h2>Conclusion</h2> + ONE paragraph of 100-150 words. Summarises the article. MUST contain "${brief.targetKeyword}" exactly ONCE. Ends with one closing line that points to the next action and includes 1-2 internal links.
+
+6) faqs — structured array mirroring the FAQ HTML (question + answer, plain text answer, 40-80 words).`,
     });
     return {
       keyTakeawaysHtml: stripExternalLinks(result.keyTakeawaysHtml || ""),
       faqHtml: stripExternalLinks(result.faqHtml || ""),
       aboutCompassHtml: stripExternalLinks(result.aboutCompassHtml || ""),
+      conclusionHtml: stripExternalLinks(result.conclusionHtml || ""),
       ctaHtml: stripExternalLinks(result.ctaHtml || ""),
       faqs: Array.isArray(result.faqs) ? result.faqs.slice(0, 10) : [],
     };
