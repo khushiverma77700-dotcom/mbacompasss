@@ -23,6 +23,7 @@ interface BlogBrief {
   wordCountMin?: number;
   wordCountMax?: number;
   keywordDensityPct?: number;
+  allowedInternalUrls?: { url: string; label?: string }[];
 }
 
 const json = (status: number, body: unknown) => new Response(
