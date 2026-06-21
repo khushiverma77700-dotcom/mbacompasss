@@ -49,12 +49,15 @@ const stripExternalLinks = (html: string) => {
   return out.replace(/[ \t]{2,}/g, " ").trim();
 };
 
-const normalizeSlug = (s: string) =>
-  String(s || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80);
+const SLUG_FILLER = new Set(["the","a","an","of","for","to","and","or","in","on","with","best","top","complete","ultimate","guide","tips","how","what","why","is","are","your","you","my","our","2024","2025","2026","2027"]);
+const normalizeSlug = (s: string) => {
+  const cleaned = String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  if (!cleaned) return "";
+  const parts = cleaned.split("-").filter(Boolean);
+  const meaningful = parts.filter((p) => !SLUG_FILLER.has(p));
+  const picked = (meaningful.length >= 2 ? meaningful : parts).slice(0, 5);
+  return picked.join("-").slice(0, 60);
+};
 
 const escapeHtml = (s: string) =>
   String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -268,16 +271,42 @@ MBA Compass brand mention (MANDATORY — every article must include this):
 - End the section with 2-3 contextual internal links chosen from: /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks — pick the ones that best fit the article's topic.
 - Tone: helpful and informative, like a senior recommending a useful resource. Avoid words like "best", "ultimate", "unbeatable", "must-have".
 
-Final quality checklist (the model must self-verify before returning):
-✓ Reads like a human MBA mentor, not an AI.
-✓ Directly answers the title's search intent throughout.
-✓ Zero banned AI phrases (see voice rules).
-✓ Paragraphs are 2-3 sentences, content is mobile-scannable.
-✓ At least 4 data-rich tables and 6+ lists across the article.
-✓ 8-15 contextual internal links with descriptive anchors.
-✓ SEO rules satisfied (keyword placement, meta length, headings, FAQs).
-✓ "About MBA Compass" section is present after the FAQ, before the Conclusion.
-✓ Article is informative, engaging, and clearly written for Indian MBA aspirants.`;
+STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule below is non-negotiable):
+1. Title (H1): 50-60 chars. Primary keyword appears naturally. Benefit-driven. Use a number/year/comparison/guide/question form when relevant.
+2. Meta Title: MAX 60 chars. Primary keyword near the START. Different wording from H1 but closely related. No question mark.
+3. Meta Description: 150-160 chars (target 155). Primary keyword exactly ONCE. State one clear benefit + an action cue. Declarative.
+4. URL Slug: short and keyword-focused, MAX 5 words, hyphenated, lowercase, no filler words ("top", "best", "complete", "guide", "for", "the").
+5. Introduction: FIRST paragraph 50-80 words. Primary keyword in the first 100 words. State what the article covers + directly address the search intent. Open with a <p><strong>Summary:</strong> ...</p> answer block, then 1-2 hook paragraphs.
+6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. Bold ONLY for important info. Consistent style throughout. Never wall-of-text.
+7. Headings: strict hierarchy H1 → H2 → H3 → H4. Never skip a level. Never use H5/H6.
+8. Keyword Placement Matrix — primary keyword MUST appear in ALL of: Title, Meta Title, Meta Description, URL slug, first 100 words of intro, at least one H2 heading, the Conclusion paragraph.
+9. Keyword Density: primary keyword 1-2% (~15-25 mentions per 2,000 words). Distribute evenly. Never force it.
+10. Headings as user queries: every H2 should answer a real search intent for the topic (questions worded as benefit-driven statements; FAQ section H3s may be literal questions).
+11. Data cadence: a concrete data point (number, %, INR figure, rank, date, recruiter, percentile) every 300-500 words. Bold important numbers. Only recent ${currentYear}-${currentYear + 1} / verified data.
+12. Tables: REQUIRED whenever 2+ entities are being compared or any rows × columns information exists. Minimum 4 tables per article. 5+ rows each.
+13. Lists: REQUIRED whenever 3+ items, steps, factors, pros/cons, features appear. Minimum 6 lists per article.
+14. Featured-snippet optimization: directly under any question-shaped H2 (and inside every FAQ), give a 1-2 sentence direct answer FIRST, then expand.
+15. GEO (ChatGPT / Gemini / Claude / Perplexity / Google AI Overviews): use clear definitions, direct answers, FAQ format, expert insights, comparisons, and statistics so generative engines can quote you cleanly.
+16. Entity SEO: name real, relevant entities throughout — colleges (IIM Ahmedabad, IIM Bangalore, FMS Delhi, XLRI, MDI, SPJIMR, NMIMS, IIFT, IMT), exams (CAT, XAT, NMAT, SNAP, CMAT, MAT, IIFT, MICAT), bodies (AICTE, UGC, NIRF, MoE), recruiters (McKinsey, BCG, Bain, Accenture, TAS, ABG, HUL, ITC, Goldman Sachs).
+17. Internal linking: 1 contextual internal link every 300-500 words. Mandatory placements: at least one after the intro, one mid-article, one before the conclusion. Total 12-20 internal links. Anchor must be the entity name or a natural descriptive phrase — never "click here", "read more".
+18. External "citations": 3-5 authoritative source MENTIONS (gov sites, NIRF, AICTE, UGC, official college websites, recent research/industry reports, Economic Times, Business Standard). Cite them by NAME in plain text using [src:Source Year] markers — NEVER render bare URLs or <a> tags to external domains.
+19. Images: include 3-5 <img> placeholders across the article with keyword-based filenames and descriptive alt text. Format: <img src="/images/<keyword-slug>-<n>.jpg" alt="<descriptive alt with primary or secondary keyword>" />. Place near top, middle, and lower-third of the article.
+20. CTAs at 3 FIXED positions: (a) after the introduction, (b) middle of the article, (c) just before the conclusion. Use the mentor voice (e.g. "Want expert guidance for MBA admissions? Connect with our mentors today.", "Need help selecting the right MBA college? Explore our MBA counseling.", "Start your MBA journey today by exploring top colleges and admission opportunities."). Each CTA paragraph contains 1-2 internal links.
+21. Key Takeaways section: REQUIRED, placed JUST BEFORE the Conclusion. <h2>Key Takeaways</h2> with 4-6 bullets, each starting with <strong>Bold lead:</strong>.
+22. Conclusion: 100-150 words. Summarises the article. Primary keyword appears EXACTLY ONCE. Ends with a final CTA paragraph that links to 2-3 most relevant tools.
+23. FAQs: 5-10 questions (target 8). Each answer 40-80 words. People-Also-Ask style. Direct answer first sentence, then 1-2 supporting lines with a concrete number/name.
+24. EEAT: demonstrate Experience, Expertise, Authority, Trust. Use phrases like "Based on placement reports published by leading MBA institutes…", "According to official admission data…", "Industry experts suggest…", "As per the latest NIRF ranking…".
+25. Fixed structural order (NEVER skip / NEVER reorder): Title → Meta Title → Meta Description → Intro (50-80w first para) → Quick Summary Table (H2 "At a Glance" / "Snapshot" / "Key Highlights" with table or bullets of core data points) → Main H2/H3 sections (with stats, images, internal links, comparison tables, expert insights interleaved) → CTA 1 (after intro) → CTA 2 (mid-article) → Important Data & Statistics block → "About MBA Compass" H2 → Key Takeaways H2 → CTA 3 (before conclusion) → FAQs H2 → Conclusion H2 → Final CTA paragraph.
+
+Final quality checklist (self-verify before returning):
+✓ All 25 rules above satisfied.
+✓ Meta title ≤60 chars, meta description 150-160 chars.
+✓ First intro paragraph is 50-80 words and contains the primary keyword.
+✓ At least 4 tables, 6 lists, 3-5 image tags, 12-20 internal links, 3 CTAs at fixed positions.
+✓ 5-10 FAQs, each answer 40-80 words.
+✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
+✓ "About MBA Compass" present after Data & Statistics, before Key Takeaways.
+✓ Zero banned AI phrases. Reads like a human MBA mentor.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
@@ -309,19 +338,33 @@ async function createOutlineDraft(brief: BlogBrief) {
         required: ["title", "slug", "metaTitle", "metaDescription", "excerpt", "intro", "h1Tag", "keywords", "author", "sections", "faqs"],
         additionalProperties: false,
       },
-      user: `Create a topic-specific SEO plan for "${brief.title}" targeting "${targetKw}".
+      user: `Create a topic-specific SEO plan for "${brief.title}" targeting primary keyword "${targetKw}".
 
-Return metadata and a 250-350 word intro only. The intro must start with <p><strong>Summary:</strong> and give a direct answer. Then return ${targets.sectionCount} detailed H2 section plans. Each planned section must be unique, specific to this topic, and suitable for 450-650 words with a table/list. Also return 10 FAQ questions. Secondary keywords: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally"}. Category: ${brief.category || "news"}.`,
+Return:
+- title: 50-60 chars, benefit-driven, contains "${targetKw}" naturally, may include the year ${targets.currentYear}.
+- slug: short keyword-focused, MAX 5 hyphenated words, lowercase, no filler words (no "top", "best", "complete", "guide", "for", "the").
+- metaTitle: MAX 60 chars, "${targetKw}" near the start, different wording from title.
+- metaDescription: 150-160 chars (target 155), contains "${targetKw}" exactly once, one clear benefit + action cue.
+- h1Tag: same intent as title, 50-60 chars.
+- excerpt: 1-2 sentences (≤ 200 chars).
+- intro: 250-350 word HTML block. The FIRST <p> must be 50-80 words, must include "${targetKw}" within the first 100 words, and must start with <p><strong>Summary:</strong> giving a direct answer. Follow with 1-2 hook paragraphs (≤ 60 words each).
+- sections: ${targets.sectionCount} unique H2 section plans (heading + angle), each suitable for 450-650 words with a table/list. The FIRST planned section MUST be "Key Highlights" / "At a Glance" (Quick Summary Table). Include later sections explicitly covering: comparison tables, important data & statistics, expert insights.
+- faqs: 8 People-Also-Ask style questions (between 5 and 10).
+
+Secondary keywords to weave naturally: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally from topic"}.
+Category: ${brief.category || "news"}.`,
     });
     const sections = Array.isArray(outline.sections) && outline.sections.length ? outline.sections : fallback;
+    const metaTitleRaw = String(outline.metaTitle || brief.metaTitle || brief.title);
+    const metaDescRaw = String(outline.metaDescription || brief.metaDescription || outline.excerpt || "");
     return {
-      title: String(outline.title || brief.title).slice(0, 90),
+      title: String(outline.title || brief.title).slice(0, 65),
       slug: normalizeSlug(outline.slug || brief.slug || targetKw),
-      metaTitle: String(outline.metaTitle || brief.metaTitle || brief.title).slice(0, 70),
-      metaDescription: String(outline.metaDescription || brief.metaDescription || outline.excerpt || "").slice(0, 170),
+      metaTitle: metaTitleRaw.slice(0, 60),
+      metaDescription: metaDescRaw.length > 160 ? metaDescRaw.slice(0, 160) : metaDescRaw,
       excerpt: String(outline.excerpt || ""),
       intro: stripExternalLinks(outline.intro || `<p><strong>Summary:</strong> ${escapeHtml(brief.title)} is explained below with updated MBA admissions, fees, placements and decision points for Indian applicants.</p>`),
-      h1Tag: String(outline.h1Tag || brief.title).slice(0, 90),
+      h1Tag: String(outline.h1Tag || brief.title).slice(0, 65),
       keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 20) : [targetKw],
       primaryKeyword: targetKw,
       author: outline.author || "MBA Compass Editorial",
@@ -369,18 +412,38 @@ async function createSectionHtml(brief: BlogBrief, draft: any, section: any, ind
         required: ["heading", "html"],
         additionalProperties: false,
       },
-      user: `Write section ${index + 1} for the article "${draft.title}" targeting "${brief.targetKeyword}".
+      user: (() => {
+        const totalSections = (draft.sections || []).length || 6;
+        const isFirst = index === 0;
+        const isMiddle = index === Math.floor(totalSections / 2);
+        const isLast = index === totalSections - 1;
+        const ctaNote = isFirst
+          ? 'INCLUDE CTA #1 (after-intro position): end this section with a <p><strong>Mentor tip:</strong> ...</p> CTA paragraph in the tone "Want expert guidance for MBA admissions? Connect with our mentors today." containing 1-2 internal links (e.g. /profile-analyzer, /college-shortlister).'
+          : isMiddle
+          ? 'INCLUDE CTA #2 (mid-article position): end this section with a <p><strong>Need help?</strong> ...</p> CTA paragraph in the tone "Need help selecting the right MBA college? Explore our MBA counseling services." containing 1-2 internal links (e.g. /college-shortlister, /mba-roi-calculator).'
+          : '';
+        const imgNote = (isFirst || isMiddle || isLast)
+          ? `INCLUDE one <img src="/images/${normalizeSlug(brief.targetKeyword)}-${index + 1}.jpg" alt="<descriptive alt containing primary or secondary keyword>" /> placed after the first paragraph.`
+          : '';
+        return `Write section ${index + 1} of ${totalSections} for the article "${draft.title}" targeting primary keyword "${brief.targetKeyword}".
 
 Section heading: ${section.heading}
 Section angle: ${section.angle}
-Existing article plan headings: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
+All planned headings: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
 
-Requirements:
-- Output exactly one <h2>${section.heading}</h2> section, 450-650 words.
-- Include 4-6 detailed paragraphs, one <h3>, one 5+ row table, and one 5+ item bullet or numbered list.
-- Use current ${targets.currentYear} Indian MBA data, named colleges/recruiters/exams, realistic INR figures and [src:Source Year] markers.
-- Add 1-2 contextual internal relative links only.
-- Do not repeat content from other planned sections.`,
+HARD requirements:
+- Output exactly one <h2>${section.heading}</h2> block, 450-650 words.
+- 4-6 short paragraphs (each ≤ 60 words, max 3-4 lines, one idea each). One <h3> sub-section. One 5+ row <table>. One 5+ item <ul> or <ol>.
+- At least one concrete data point (number / INR figure / %ile / rank / date) per ~300-500 words. Bold important numbers with <strong>.
+- 2-4 contextual internal relative links inside this section (anchor = entity name or descriptive phrase; never "click here").
+- If this section answers a "what/why/how" style question, the FIRST sentence after the H2 must be a direct 1-2 sentence answer (featured-snippet style).
+- Use current ${targets.currentYear}-${targets.currentYear + 1} Indian MBA data with named colleges/recruiters/exams and [src:Source Year] markers (no bare URLs, no external <a>).
+- Name relevant entities (IIMs, XLRI, FMS, MDI, SPJIMR, NMIMS, CAT, XAT, NMAT, SNAP, CMAT, AICTE, UGC, NIRF) where it fits.
+- Demonstrate EEAT with at least one phrase like "Based on placement reports…", "According to official admission data…", "Industry experts suggest…", "As per NIRF ${targets.currentYear}…".
+- Do NOT repeat content from other planned sections.
+${imgNote}
+${ctaNote}`;
+      })(),
     });
     const html = stripExternalLinks(result.html || "");
     return html && countWords(html) > 180 ? html : fallbackSectionHtml(brief, section.heading);
@@ -396,7 +459,8 @@ function fallbackClosingHtml(brief: BlogBrief) {
     keyTakeawaysHtml: `<h2>Key Takeaways</h2><ul><li><strong>Start with fit:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Check current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>Compare ROI:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Plan backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Review deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Use tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
     faqHtml: `<h2>Frequently Asked Questions</h2><h3>How should students evaluate ${kw}?</h3><p>Students should evaluate ${kw} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit. The strongest shortlist balances brand value with realistic admission probability and return on investment.</p><h3>Is ${kw} worth it for MBA aspirants?</h3><p>${kw} can be worth it when the programme, city, fee level and placement outcomes align with your career target. Check current salary data, median outcomes and role quality before making the final call.</p>`,
     aboutCompassHtml: `<h2>About MBA Compass</h2><p><strong>MBA Compass</strong> is an MBA discovery and decision platform by B School Buzz, built for Indian aspirants and working professionals. It brings colleges, entrance exams, coaching options, full-length mocks and AI-driven tools into one place so you can plan your MBA journey end-to-end.</p><p>The platform helps you shortlist the right colleges, analyze your profile honestly, compare programmes side-by-side, and prepare with realistic mocks. Because an MBA is one of the biggest financial decisions you'll make, MBA Compass also helps you weigh fees, expected packages, ROI and long-term wealth outcomes before you commit — so the choice is grounded in numbers, not just brand pull. Explore <a href="/mba-compass">MBA Compass</a>, the <a href="/college-shortlister">college shortlister</a> and the <a href="/mba-roi-calculator">MBA ROI calculator</a> to get started.</p>`,
-    ctaHtml: `<p><strong>Next step:</strong> Use <a href="/college-shortlister">the college shortlister</a>, <a href="/profile-analyzer">profile analyzer</a> and <a href="/mba-roi-calculator">MBA ROI calculator</a> to turn this ${kw} research into a practical shortlist.</p>`,
+    ctaHtml: `<p><strong>Take the next step:</strong> Start your MBA journey by exploring top colleges and admission opportunities — use <a href="/college-shortlister">the college shortlister</a>, <a href="/profile-analyzer">profile analyzer</a> and <a href="/mba-roi-calculator">MBA ROI calculator</a> to turn this ${kw} research into a practical shortlist.</p>`,
+    conclusionHtml: `<h2>Conclusion</h2><p>Choosing the right path around ${kw} comes down to a clear read on eligibility, fees, cutoffs, placements and personal fit. Indian MBA aspirants who weigh ROI, recruiter mix and admission probability together — instead of chasing brand alone — consistently land stronger outcomes. Use the data above as your starting checklist, then layer in your own percentile band, budget and target roles. The market changes every cycle, so verify the latest numbers from official sources before you commit. Ready to act? Explore <a href="/mba-compass">MBA Compass</a> and the <a href="/college-shortlister">college shortlister</a> to convert this research into a real shortlist.</p>`,
     faqs: [
       { question: `How should students evaluate ${brief.targetKeyword}?`, answer: `Students should evaluate ${brief.targetKeyword} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit.` },
       { question: `Is ${brief.targetKeyword} worth it for MBA aspirants?`, answer: `${brief.targetKeyword} can be worth it when the programme, city, fee level and placement outcomes align with the student's career target.` },
@@ -418,27 +482,37 @@ async function createClosingHtml(brief: BlogBrief, draft: any) {
           keyTakeawaysHtml: { type: "string" },
           faqHtml: { type: "string" },
           aboutCompassHtml: { type: "string" },
+          conclusionHtml: { type: "string" },
           ctaHtml: { type: "string" },
           faqs: { type: "array", items: { type: "object", properties: { question: { type: "string" }, answer: { type: "string" } }, required: ["question", "answer"], additionalProperties: false } },
         },
-        required: ["keyTakeawaysHtml", "faqHtml", "aboutCompassHtml", "ctaHtml", "faqs"],
+        required: ["keyTakeawaysHtml", "faqHtml", "aboutCompassHtml", "conclusionHtml", "ctaHtml", "faqs"],
         additionalProperties: false,
       },
-      user: `Finish the article "${draft.title}" targeting "${brief.targetKeyword}".
+      user: `Finish the article "${draft.title}" targeting primary keyword "${brief.targetKeyword}".
 
 Written sections: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
 FAQ question ideas: ${(draft.faqQuestions || []).join(" | ")}
 
-Return:
-1) <h2>Key Takeaways</h2> with 8-10 detailed bullets.
-2) <h2>Frequently Asked Questions</h2> with 10 detailed Q&A pairs. Each answer must be 80-140 words, with specific data or examples where possible.
-3) <h2>About MBA Compass</h2> — 120-180 words explaining what MBA Compass is (an MBA discovery and decision platform by B School Buzz that brings colleges, exams, coaching, mocks, and AI tools into one place), how it helps Indian students and working professionals shortlist colleges, analyze their profile, compare programmes, and prepare with full mocks, and how it supports the financial side of the MBA decision — weighing fees, ROI, expected packages and long-term wealth outcomes. Educational and value-driven, not promotional. End with 2-3 contextual internal links from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
-4) One final CTA paragraph with 2-3 internal relative links.`,
+Return EXACTLY these blocks, in this order, each as standalone HTML strings:
+
+1) aboutCompassHtml — <h2>About MBA Compass</h2> + 120-180 words: what MBA Compass is (MBA discovery + decision platform by B School Buzz), how it helps Indian students and working professionals (shortlist colleges, analyze profile, compare programmes, full mocks), the financial-decision angle (fees, ROI, expected packages, long-term wealth). Educational, not promotional. End with 2-3 contextual internal links chosen from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
+
+2) keyTakeawaysHtml — <h2>Key Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with <strong>Bold lead:</strong> followed by one concrete data point or decision rule.
+
+3) ctaHtml — CTA #3 (before conclusion). One <p><strong>Take the next step:</strong> …</p> paragraph in the tone "Start your MBA journey today by exploring top colleges and admission opportunities." with 2-3 contextual internal links (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks).
+
+4) faqHtml — <h2>Frequently Asked Questions</h2> + 8 (between 5 and 10) Q&A pairs as <h3>Question?</h3><p>Answer</p>. Each answer MUST be 40-80 words, direct answer first sentence, then 1-2 supporting lines with a concrete number/name. People-Also-Ask style ("is", "how", "what", "which", "when", "vs", "fees", "cutoff", "salary", "eligibility").
+
+5) conclusionHtml — <h2>Conclusion</h2> + ONE paragraph of 100-150 words. Summarises the article. MUST contain "${brief.targetKeyword}" exactly ONCE. Ends with one closing line that points to the next action and includes 1-2 internal links.
+
+6) faqs — structured array mirroring the FAQ HTML (question + answer, plain text answer, 40-80 words).`,
     });
     return {
       keyTakeawaysHtml: stripExternalLinks(result.keyTakeawaysHtml || ""),
       faqHtml: stripExternalLinks(result.faqHtml || ""),
       aboutCompassHtml: stripExternalLinks(result.aboutCompassHtml || ""),
+      conclusionHtml: stripExternalLinks(result.conclusionHtml || ""),
       ctaHtml: stripExternalLinks(result.ctaHtml || ""),
       faqs: Array.isArray(result.faqs) ? result.faqs.slice(0, 10) : [],
     };
@@ -488,14 +562,31 @@ const extractFaqs = (html: string) => {
   }).slice(0, 10);
 };
 
+function clampMeta(s: string, min: number, max: number, fallback: string): string {
+  let v = String(s || "").replace(/\s+/g, " ").trim();
+  if (!v) v = fallback;
+  if (v.length > max) v = v.slice(0, max).replace(/\s+\S*$/, "").trim();
+  if (v.length < min && fallback && fallback.length > v.length) {
+    v = (v + " — " + fallback).slice(0, max).replace(/\s+\S*$/, "").trim();
+  }
+  return v;
+}
+
 async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: BlogBrief, draft: any) {
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.aboutCompassHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
+  // Fixed structural order: sections → About MBA Compass → Key Takeaways → CTA #3 → FAQs → Conclusion → updated stamp
+  const closingHtml = [
+    draft.aboutCompassHtml || "",
+    draft.keyTakeawaysHtml || "",
+    draft.ctaHtml || "",
+    draft.faqHtml || "",
+    draft.conclusionHtml || "",
+    `<p><em>Last updated: ${targets.todayIso}</em></p>`,
+  ].filter(Boolean).join("\n");
   const introRaw = stripExternalLinks(draft.intro || "");
   const contentRaw = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
-  // Final quality check — sanitises buzzwords, injects MBA Compass if missing, flags long paragraphs / weak links
   const introQC = runFinalQualityCheck(introRaw, { requireMbaCompass: false, minInternalLinks: 0 });
   const contentQC = runFinalQualityCheck(contentRaw, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
   const intro = introQC.html;
@@ -507,22 +598,67 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const { occurrences: finalOccurrences, words: finalWords, density: finalDensity } = computeDensity(finalPlain, targetKw);
   const extractedFaqs = Array.isArray(draft.faqs) && draft.faqs.length ? draft.faqs.slice(0, 10) : extractFaqs(content);
 
+  // 25-rule validators (logged for visibility; non-blocking)
+  const fullHtml = `${intro}\n${content}`;
+  const introFirstPara = (introRaw.match(/<p[^>]*>([\s\S]*?)<\/p>/i)?.[1] || "");
+  const introFirstParaWords = toPlainText(introFirstPara).split(/\s+/).filter(Boolean).length;
+  const h2Count = (fullHtml.match(/<h2\b/gi) || []).length;
+  const tableCount = (fullHtml.match(/<table\b/gi) || []).length;
+  const listCount = (fullHtml.match(/<(ul|ol)\b/gi) || []).length;
+  const imgCount = (fullHtml.match(/<img\b/gi) || []).length;
+  const internalLinkCount = (fullHtml.match(/<a\s+[^>]*href="\/[^"]*"/gi) || []).length;
+  const externalCitationCount = (fullHtml.match(/\[src:[^\]]+\]/gi) || []).length;
+  const conclusionWords = toPlainText(draft.conclusionHtml || "").split(/\s+/).filter(Boolean).length;
+  const baseMetaTitle = String(draft.metaTitle || brief.metaTitle || draft.title || brief.title);
+  const baseMetaDesc = String(draft.metaDescription || brief.metaDescription || draft.excerpt || "");
+  const metaTitleFinal = clampMeta(baseMetaTitle, 30, 60, `${targetKw} ${targets.currentYear} | MBA Compass`);
+  const metaDescFinal = clampMeta(baseMetaDesc, 150, 160, `${targetKw} explained with ${targets.currentYear} MBA admissions, fees, cutoffs, placements and ROI for Indian aspirants.`);
+
+  const validation = {
+    metaTitleLen: metaTitleFinal.length,
+    metaDescLen: metaDescFinal.length,
+    introFirstParaWords,
+    h2Count, tableCount, listCount, imgCount,
+    internalLinkCount, externalCitationCount,
+    faqCount: extractedFaqs.length,
+    conclusionWords,
+    keywordOccurrences: finalOccurrences,
+    keywordDensityPct: finalDensity,
+    hasKeyTakeaways: /<h2[^>]*>\s*Key Takeaways/i.test(content),
+    hasAboutCompass: /<h2[^>]*>\s*About MBA Compass/i.test(content),
+    hasConclusion: /<h2[^>]*>\s*(Conclusion|Final Word|Bottom Line)/i.test(content),
+  };
+  const warnings: string[] = [];
+  if (validation.metaTitleLen > 60) warnings.push("meta_title>60");
+  if (validation.metaDescLen < 150 || validation.metaDescLen > 160) warnings.push(`meta_desc_len=${validation.metaDescLen}`);
+  if (introFirstParaWords < 50 || introFirstParaWords > 80) warnings.push(`intro_first_para_words=${introFirstParaWords}`);
+  if (validation.tableCount < 4) warnings.push(`tables=${validation.tableCount}`);
+  if (validation.listCount < 6) warnings.push(`lists=${validation.listCount}`);
+  if (validation.imgCount < 3) warnings.push(`images=${validation.imgCount}`);
+  if (validation.internalLinkCount < 12) warnings.push(`internal_links=${validation.internalLinkCount}`);
+  if (validation.faqCount < 5 || validation.faqCount > 10) warnings.push(`faqs=${validation.faqCount}`);
+  if (conclusionWords && (conclusionWords < 100 || conclusionWords > 150)) warnings.push(`conclusion_words=${conclusionWords}`);
+  if (!validation.hasKeyTakeaways) warnings.push("missing_key_takeaways");
+  if (!validation.hasAboutCompass) warnings.push("missing_about_mba_compass");
+  if (!validation.hasConclusion) warnings.push("missing_conclusion");
+  if (warnings.length) console.log(`[ai-blog-writer] 25-rule warnings for "${targetKw}":`, warnings.join(" | "));
+
   const baseSlug = normalizeSlug(draft.slug || brief.slug || targetKw);
   let finalSlug = baseSlug;
   const { data: existingSlug } = await adminClient.from("articles").select("id").eq("slug", finalSlug).maybeSingle();
   if (existingSlug?.id) finalSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
 
   const { data: inserted, error: insertError } = await adminClient.from("articles").insert({
-    title: draft.title || brief.title,
+    title: String(draft.title || brief.title).slice(0, 65),
     slug: finalSlug,
     excerpt: draft.excerpt || "",
     intro,
     content,
-    meta_title: draft.metaTitle || brief.metaTitle || String(draft.title || brief.title).slice(0, 60),
-    meta_description: draft.metaDescription || brief.metaDescription || String(draft.excerpt || "").slice(0, 160),
+    meta_title: metaTitleFinal,
+    meta_description: metaDescFinal,
     keywords: Array.isArray(draft.keywords) ? draft.keywords : [targetKw],
     primary_keyword: targetKw,
-    h1_tag: draft.h1Tag || draft.title || brief.title,
+    h1_tag: String(draft.h1Tag || draft.title || brief.title).slice(0, 65),
     author: draft.author || "MBA Compass Editorial",
     category: brief.category || "news",
     status: "published",
@@ -558,6 +694,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     firstPassWords: finalWords,
     insertedId: inserted.id,
     slug: inserted.slug,
+    seo25: { ...validation, warnings },
   };
 }
 
