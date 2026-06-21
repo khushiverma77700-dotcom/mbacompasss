@@ -104,7 +104,7 @@ const AdminWriteBlog = () => {
       setLoadingLinks(true);
       try {
         const [collRes, examRes, artRes, coachRes] = await Promise.all([
-          supabase.from("institutes").select("name,slug").not("slug", "is", null).order("name").limit(150),
+          supabase.from("institutes").select("name,slug,institute_type").neq("institute_type", "coaching").not("slug", "is", null).order("name").limit(150),
           supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").limit(80),
           supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).limit(60),
           supabase.from("institutes").select("name,slug").eq("institute_type", "coaching").not("slug", "is", null).order("name").limit(80),
