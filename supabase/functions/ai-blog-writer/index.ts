@@ -1059,8 +1059,9 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - **External authority mentions** (plain text, no fabricated URLs): cite the AUTHORITATIVE sources for THIS specific topic (e.g. for IIM-A placement → IIM Ahmedabad official PR ${currentYear - 1}-${String(currentYear).slice(-2)}; for CAT → IIM-conducting-institute CAT ${currentYear} notification; for NIRF data → NIRF ${currentYear}).
    - **Featured-snippet bait**: ≥2 direct-answer <p> right under an <h2>, ≥1 numbered <ol> step-by-step list, ≥2 comparison <table>.
    - **E-E-A-T signals**: cite specific [src:Source Year] markers; name REAL recruiters & B-schools relevant to THIS topic only.
-   - <strong> on 12-20 high-value phrases. <em> sparingly.
-10. **FORMATTING POLISH**: Bold lead 2-4 words of important paragraphs. <h2> 4-9 words, benefit-driven. No ALL-CAPS.
+    - <strong> on 12-20 SHORT high-value fragments only (data points, numbers, named entities, 2-4 word lead phrases). Each <strong> ≤ 12 words. NEVER bold full sentences, paragraphs, list items, table cells, or headings. <em> sparingly.
+    - ABSOLUTELY NO IMAGES: do NOT emit any <img>, <picture>, <figure>, <svg>, image URLs, or "Image:" / "Infographic:" placeholders. The blog is strictly text-only.
+10. **FORMATTING POLISH**: Bold ONLY a 2-4 word lead of important paragraphs (not the whole paragraph). <h2> 4-9 words, benefit-driven. No ALL-CAPS.
 11. Real, current Indian MBA ecosystem data: CAT ${currentYear} dates, NIRF ${currentYear} rankings, ${currentYear - 1}-${String(currentYear).slice(-2)} placement averages. Use only figures relevant to THIS topic.
 12. NEVER fabricate implausible numbers. Realistic ${currentYear - 1}-${currentYear} ranges only.
 13. NO <h1> — title rendered separately.
