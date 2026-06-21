@@ -39,22 +39,47 @@ const stripEscapeArtifacts = (s: string): string =>
     .replace(/<li>\s*(?:\\n|\/n|\s)*\s*<\/li>/gi, "")
     .replace(/[ \t]{2,}/g, " ");
 
+const tameBold = (html: string): string => {
+  let out = String(html || "");
+  // Normalize <b> to <strong>
+  out = out.replace(/<b(\s[^>]*)?>/gi, "<strong>").replace(/<\/b>/gi, "</strong>");
+  // Drop empty strongs
+  out = out.replace(/<strong>\s*<\/strong>/gi, "");
+  // Unwrap <strong> that wraps an entire block-level tag
+  out = out.replace(/<strong>\s*(<(?:p|li|h[2-6]|td|th|tr|ul|ol|table|thead|tbody|blockquote|div)\b[\s\S]*?<\/(?:p|li|h[2-6]|td|th|tr|ul|ol|table|thead|tbody|blockquote|div)>)\s*<\/strong>/gi, "$1");
+  // Unwrap overly long <strong> spans (>12 words = whole sentence, not a highlight)
+  out = out.replace(/<strong>([\s\S]*?)<\/strong>/gi, (_m, inner) => {
+    const text = String(inner).replace(/<[^>]+>/g, " ").trim();
+    const words = text.split(/\s+/).filter(Boolean).length;
+    return words > 12 ? inner : `<strong>${inner}</strong>`;
+  });
+  return out;
+};
+
 const stripExternalLinks = (html: string) => {
   let out = stripEscapeArtifacts(html || "");
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
-  // Remove ALL <img> tags — blog should be text-only for uniform typography
+  // Remove ALL images / figures / svg — text-only blog
   out = out.replace(/<img\b[^>]*\/?>/gi, "");
+  out = out.replace(/<picture\b[^>]*>[\s\S]*?<\/picture>/gi, "");
   out = out.replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, "");
+  out = out.replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, "");
+  // Strip markdown image syntax ![alt](url)
+  out = out.replace(/!\[[^\]]*\]\([^)]*\)/g, "");
+  // Strip paragraphs that are just image placeholders
+  out = out.replace(/<p>\s*(?:image|img|figure|photo|illustration|infographic)\s*[:\-—\u2013\u2014][\s\S]*?<\/p>/gi, "");
   // Strip <font> tags
   out = out.replace(/<\/?font\b[^>]*>/gi, "");
-  // Strip inline style="", class="", id="", face="", color="" on any tag — uniform typography
+  // Strip inline attributes for uniform typography
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*"[^"]*"/gi, "");
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*'[^']*'/gi, "");
-  // Strip banned "Quick Summary" / TL;DR labels — only "Summary" is allowed
+  // Strip banned summary labels
   out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
   out = out.replace(/\bTL;?DR\b/gi, "Summary");
+  // Tame runaway bold so only short highlights stay bold
+  out = tameBold(out);
   return out.replace(/[ \t]{2,}/g, " ").trim();
 };
 
