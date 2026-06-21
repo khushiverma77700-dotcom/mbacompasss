@@ -1132,7 +1132,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 - metaDescription: 145-160 chars, primary keyword in first 120 chars, declarative.
 - excerpt: 1-2 sentences, plain text, 160-220 chars, declarative, contains primary keyword.
 - intro: opening HTML — Summary <p> first, then 2-3 hook paragraphs. No headings inside intro.
-- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, Key Takeaways, FAQ, final CTA.
+- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, a "Takeaways" H2 (never "Key Takeaways"), FAQ, final CTA. NEVER use AI-flavoured words: "Key", "Highlights", "At a Glance", "delve", "leverage", "seamless", "robust", "cutting-edge", "game-changer", "pivotal", "tapestry", "in the realm of", "moreover", "furthermore", "in conclusion".
 - h1Tag: on-page H1 (declarative, ≤ 70 chars, contains primary keyword, no "?").
 - keywords: array of **15-20 keywords** UNIQUE to this topic — primary keyword first, then 6-8 short-tail (2-3 words), then 8-12 long-tail (4+ words, question/intent-driven). NEVER generic MBA terms unrelated to "${targetKw}".
 - primaryKeyword: echo "${targetKw}".
