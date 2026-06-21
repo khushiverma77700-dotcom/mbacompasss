@@ -56,6 +56,57 @@ const tameBold = (html: string): string => {
   return out;
 };
 
+// Strip AI-flavoured filler words/phrases that scream "ChatGPT wrote this".
+// Used inside stripExternalLinks so EVERY piece of generated HTML is sanitized.
+const deAiify = (html: string): string => {
+  let out = String(html || "");
+
+  // --- Section/heading rename: drop generic "Key" / "Highlights" labels ---
+  out = out.replace(/\bKey\s+Highlights\b/gi, "Snapshot");
+  out = out.replace(/\bKey\s+Highlight\b/gi, "Snapshot");
+  out = out.replace(/\bKey\s+Takeaways\b/gi, "Takeaways");
+  out = out.replace(/\bKey\s+Takeaway\b/gi, "Takeaway");
+  out = out.replace(/\bKey\s+Insights?\b/gi, "Insights");
+  out = out.replace(/\bKey\s+Points?\b/gi, "Points");
+  out = out.replace(/\bKey\s+Highlights?\s*&\s*Snapshot\b/gi, "Snapshot");
+  out = out.replace(/\bAt\s+a\s+Glance\b/gi, "Snapshot");
+
+  // --- Strip leading AI labels inside bold lead phrases:
+  //     <strong>Key: …</strong>, <strong>Highlight: …</strong> etc.
+  const banLeadWords = "Key|Keys|Highlight|Highlights|Pro\\s*Tip|Tip|Note|Important|Important\\s*Note|Insight|Insights|Quick\\s*Tip|Bold\\s*lead|Lead|Heads\\s*up|Takeaway|Bonus";
+  const leadRe = new RegExp(`<strong>\\s*(?:${banLeadWords})\\s*[:\\-\u2013\u2014]\\s*`, "gi");
+  out = out.replace(leadRe, "<strong>");
+  // Same labels when written as plain prefix at start of a list item / paragraph
+  const plainLeadRe = new RegExp(`(<(?:li|p)>\\s*)(?:${banLeadWords})\\s*[:\\-\u2013\u2014]\\s*`, "gi");
+  out = out.replace(plainLeadRe, "$1");
+
+  // --- Banned generic AI cliché words anywhere in copy ---
+  const banWordList = [
+    "delve into", "delves into", "dive deep", "deep dive",
+    "in today's fast-paced world", "in today's digital age", "in this ever-evolving",
+    "ever-evolving", "ever-changing landscape", "rapidly evolving",
+    "unlock the secrets", "unlock the power", "unlock the potential",
+    "embark on", "embarking on", "navigate the complexities", "navigate through",
+    "elevate your", "leverage", "leverages", "leveraging",
+    "seamless", "seamlessly", "robust", "cutting-edge", "state-of-the-art",
+    "game-changer", "game changer", "game-changing",
+    "pivotal", "paramount", "quintessential", "tapestry", "in the realm of",
+    "moreover", "furthermore", "in conclusion", "it is worth noting that",
+    "it's important to note", "needless to say", "rest assured",
+    "a testament to", "harness the power",
+  ];
+  for (const phrase of banWordList) {
+    const re = new RegExp(`\\b${phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b[,.:;]?\\s*`, "gi");
+    out = out.replace(re, "");
+  }
+
+  // Collapse any double spaces / orphan punctuation left by the strips
+  out = out.replace(/\s+([,.;:!?])/g, "$1");
+  out = out.replace(/<strong>\s*[:\-\u2013\u2014]\s*/gi, "<strong>");
+  out = out.replace(/<strong>\s*<\/strong>/gi, "");
+  return out;
+};
+
 const stripExternalLinks = (html: string) => {
   let out = stripEscapeArtifacts(html || "");
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
@@ -78,6 +129,8 @@ const stripExternalLinks = (html: string) => {
   // Strip banned summary labels
   out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
   out = out.replace(/\bTL;?DR\b/gi, "Summary");
+  // Strip generic AI words / labels (Key, Highlight, Pro Tip, etc.)
+  out = deAiify(out);
   // Tame runaway bold so only short highlights stay bold
   out = tameBold(out);
   return out.replace(/[ \t]{2,}/g, " ").trim();
@@ -290,14 +343,14 @@ Personalization rules (MANDATORY — write FOR the student, not ABOUT the topic)
 
 Article structure rules (MANDATORY — every article must follow this skeleton):
 1. **Introduction (intro field)** — Summary <p><strong>Summary:</strong> …</p> (60-90 words, direct answer) + 2-3 short hook paragraphs naming the topic, the reader, and what they'll get.
-2. **Key Highlights** — first H2 inside content, titled "Key Highlights" or a topic-specific equivalent ("Snapshot", "At a Glance"). Use a <ul> of 6-10 bullets, each starting with <strong>Bold lead:</strong> followed by one concrete data point (rank, fee, package, date, cutoff, recruiter, eligibility, etc.).
+2. **Snapshot** — first H2 inside content, titled EXACTLY "Snapshot" (a topic-specific equivalent like "MBA Fees Snapshot" is allowed). NEVER use the words "Key", "Key Highlights", "Highlights", "At a Glance" or "Quick Summary" anywhere in the article. Use a <ul> of 6-10 bullets, each starting with a SHORT <strong>2-4 word lead</strong> followed by one concrete data point (rank, fee, package, date, cutoff, recruiter, eligibility). The bold lead must be a real noun phrase from the topic (e.g. <strong>IIM-A fee</strong>, <strong>CAT cutoff</strong>) — NEVER "Key:", "Highlight:", "Important:", "Pro Tip:", "Note:", "Bold lead:".
 3. **Detailed Explanation** — the core 5-10 H2 sections that fully answer the title. Each section follows the topic-focus, data-driven and readability rules. Use H3/H4 sub-breakdowns wherever a section runs long.
 4. **Comparison Tables** — at least one dedicated H2 with a <table> when the topic involves more than one college/exam/course/programme. Tables can also be embedded inside detailed sections (per the data-driven rules) — but always include a clear comparison block when applicable.
 5. **Important Data & Statistics** — an H2 (e.g. "Latest ${currentYear} Data", "Numbers You Should Know", "Trends to Watch") with 1-2 tables and 4-6 bullet stats — fee ranges, cutoff bands, placement %s, year-on-year trends, NIRF movements, recruiter counts.
 6. **FAQs** — H2 "Frequently Asked Questions" with 8-12 People-Also-Ask style Q&A pairs (H3 question, multi-paragraph answer per the SEO rules).
 7. **Conclusion / Final Word** — closing H2 (e.g. "Final Word", "Bottom Line", "Your Next Step") with 2-3 short paragraphs summarising the decision + a CTA paragraph with 2-3 internal links to the most relevant tool/page (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks, /mba-compass, related /blog/ posts).
 
-Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → Key Takeaways → FAQs → Conclusion + Final CTA → "About MBA Compass" (LAST). Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
+Order is fixed: Intro → Snapshot → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → Takeaways → FAQs → Conclusion + Final CTA → "About MBA Compass" (LAST). Never skip Snapshot, FAQs, the About MBA Compass section, or the Conclusion.
 
 MBA Compass brand mention (MANDATORY — every article must include this):
 - Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed at the VERY END of the article (after the Conclusion + Final CTA).
@@ -309,17 +362,22 @@ MBA Compass brand mention (MANDATORY — every article must include this):
 - End the section with 2-3 contextual internal links chosen from: /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks — pick the ones that best fit the article's topic.
 - Tone: helpful and informative, like a senior recommending a useful resource. Avoid words like "best", "ultimate", "unbeatable", "must-have".
 
+BANNED AI-SOUNDING WORDS & PHRASES (NEVER USE — strict, no exceptions):
+- Generic labels in headings, bullets or bold leads: "Key", "Key Highlights", "Highlights", "Highlight", "Pro Tip", "Tip", "Important", "Important Note", "Note", "Insight", "Insights", "Quick Tip", "Bold lead", "Heads up", "Bonus", "At a Glance", "Quick Summary", "TL;DR".
+- Generic AI clichés anywhere: delve, delve into, dive deep, deep dive, in today's fast-paced world, in today's digital age, ever-evolving, ever-changing landscape, rapidly evolving, unlock the secrets/power/potential, embark on, navigate the complexities, elevate your, leverage, seamless(ly), robust, cutting-edge, state-of-the-art, game-changer, game-changing, pivotal, paramount, quintessential, tapestry, in the realm of, moreover, furthermore, in conclusion, it is worth noting, it's important to note, needless to say, rest assured, a testament to, harness the power.
+- Bullet leads must be REAL nouns from the topic ("<strong>IIM-A fee</strong>", "<strong>CAT cutoff</strong>", "<strong>Median CTC</strong>") — never a generic label.
+
 STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule below is non-negotiable):
 1. Title (H1): 50-60 chars. Primary keyword appears naturally. Benefit-driven. Use a number/year/comparison/guide/question form when relevant.
 2. Meta Title: MAX 60 chars. Primary keyword near the START. Different wording from H1 but closely related. No question mark.
 3. Meta Description: 150-160 chars (target 155). Primary keyword exactly ONCE. State one clear benefit + an action cue. Declarative.
 4. URL Slug: short and keyword-focused, MAX 5 words, hyphenated, lowercase, no filler words ("top", "best", "complete", "guide", "for", "the").
 5. Introduction: FIRST paragraph 50-80 words. Primary keyword in the first 100 words. State what the article covers + directly address the search intent. Open with a <p><strong>Summary:</strong> ...</p> answer block, then 1-2 hook paragraphs.
-6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. BOLD RULES (STRICT): use <strong> ONLY on short fragments — a single data point (number/INR figure/%/date/rank), a 2-4 word lead phrase at the start of a bullet, a key entity name, or one short emphasis phrase. NEVER wrap an entire sentence, paragraph, list item, table cell, or heading in <strong>. A <strong> span must always be ≤ 12 words. The article must NOT read as mostly-bold text.
+6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. BOLD RULES (STRICT): use <strong> ONLY on short fragments — a single data point (number/INR figure/%/date/rank), a 2-4 word lead phrase at the start of a bullet, a key entity name, or one short emphasis phrase. NEVER wrap an entire sentence, paragraph, list item, table cell, or heading in <strong>. A <strong> span must always be ≤ 12 words. The article must NOT read as mostly-bold text. The <strong> lead MUST be a topic noun ("<strong>IIM-A fee</strong>"), NEVER a generic label like "Key:" / "Highlight:" / "Note:".
 7. Headings: strict hierarchy H1 → H2 → H3 → H4. Never skip a level. Never use H5/H6.
 8. Keyword Placement Matrix — primary keyword MUST appear in ALL of: Title, Meta Title, Meta Description, URL slug, first 100 words of intro, at least one H2 heading, the Conclusion paragraph.
 9. Keyword Density: primary keyword 1-2% (~15-25 mentions per 2,000 words). Distribute evenly. Never force it.
-10. Headings as user queries: every H2 should answer a real search intent for the topic (questions worded as benefit-driven statements; FAQ section H3s may be literal questions).
+10. Headings as user queries: every H2 should answer a real search intent for the topic (questions worded as benefit-driven statements; FAQ section H3s may be literal questions). NEVER use "Key Highlights" / "At a Glance" / "Quick Summary" as an H2 — use "Snapshot" or a topic-specific noun phrase.
 11. Data cadence: a concrete data point (number, %, INR figure, rank, date, recruiter, percentile) every 300-500 words. Bold important numbers. Only recent ${currentYear}-${currentYear + 1} / verified data.
 12. Tables: REQUIRED whenever 2+ entities are being compared or any rows × columns information exists. Minimum 4 tables per article. 5+ rows each.
 13. Lists: REQUIRED whenever 3+ items, steps, factors, pros/cons, features appear. Minimum 6 lists per article.
@@ -330,22 +388,23 @@ STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule b
 18. External "citations": 3-5 authoritative source MENTIONS (gov sites, NIRF, AICTE, UGC, official college websites, recent research/industry reports, Economic Times, Business Standard). Cite them by NAME in plain text using [src:Source Year] markers — NEVER render bare URLs or <a> tags to external domains.
 19. Images: DO NOT include any <img> tags or image placeholders. The blog is text-only — typography must stay uniform end-to-end.
 20. CTAs at 3 FIXED positions: (a) after the introduction, (b) middle of the article, (c) just before the conclusion. Use the mentor voice (e.g. "Want expert guidance for MBA admissions? Connect with our mentors today.", "Need help selecting the right MBA college? Explore our MBA counseling.", "Start your MBA journey today by exploring top colleges and admission opportunities."). Each CTA paragraph contains 1-2 internal links.
-21. Key Takeaways section: REQUIRED, placed JUST BEFORE the Conclusion. <h2>Key Takeaways</h2> with 4-6 bullets, each starting with <strong>Bold lead:</strong>.
+21. Takeaways section: REQUIRED, placed JUST BEFORE the Conclusion. H2 titled exactly "Takeaways" (NEVER "Key Takeaways"). 4-6 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. "<strong>Fee gap</strong>", "<strong>Cutoff trend</strong>") — never "Bold lead:" / "Key:" / "Note:".
 22. Conclusion: 100-150 words. Summarises the article. Primary keyword appears EXACTLY ONCE. Ends with a final CTA paragraph that links to 2-3 most relevant tools.
 23. FAQs: 5-10 questions (target 8). Each answer 40-80 words. People-Also-Ask style. Direct answer first sentence, then 1-2 supporting lines with a concrete number/name.
 24. EEAT: demonstrate Experience, Expertise, Authority, Trust. Use phrases like "Based on placement reports published by leading MBA institutes…", "According to official admission data…", "Industry experts suggest…", "As per the latest NIRF ranking…".
-25. Fixed structural order (NEVER skip / NEVER reorder): Title → Meta Title → Meta Description → Intro (50-80w first para) → Quick Summary Table (H2 "At a Glance" / "Snapshot" / "Key Highlights" with table or bullets of core data points) → Main H2/H3 sections (with stats, internal links, comparison tables, expert insights interleaved) → CTA 1 (after intro) → CTA 2 (mid-article) → Important Data & Statistics block → Key Takeaways H2 → CTA 3 (before conclusion) → FAQs H2 → Conclusion H2 → Final CTA paragraph → "About MBA Compass" H2 (LAST, with 2-3 contextual internal links to MBA Compass tools).
+25. Fixed structural order (NEVER skip / NEVER reorder): Title → Meta Title → Meta Description → Intro (50-80w first para) → Snapshot H2 (table or bullets of core data points) → Main H2/H3 sections (with stats, internal links, comparison tables, expert insights interleaved) → CTA 1 (after intro) → CTA 2 (mid-article) → Important Data & Statistics block → Takeaways H2 → CTA 3 (before conclusion) → FAQs H2 → Conclusion H2 → Final CTA paragraph → "About MBA Compass" H2 (LAST, with 2-3 contextual internal links to MBA Compass tools).
 
 Final quality checklist (self-verify before returning):
 ✓ All 25 rules above satisfied.
 ✓ Meta title ≤60 chars, meta description 150-160 chars.
 ✓ First intro paragraph is 50-80 words and contains the primary keyword.
 ✓ At least 4 tables, 6 lists, 12-20 internal links, 3 CTAs at fixed positions. NO images / NO <img> / NO figure / NO image placeholders anywhere.
-✓ <strong> used sparingly on short highlights only — NEVER on full sentences, paragraphs, list items, or table cells.
+✓ <strong> used sparingly on short topic-noun highlights only — NEVER on full sentences, paragraphs, list items, or table cells, and NEVER as a generic label ("Key:", "Highlight:", "Note:", "Pro Tip:", "Bold lead:").
+✓ Zero use of banned AI words (Key, Highlights, At a Glance, delve, leverage, seamless, robust, cutting-edge, game-changer, pivotal, tapestry, in the realm of, moreover, furthermore, in conclusion, etc.).
 ✓ 5-10 FAQs, each answer 40-80 words.
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
-✓ "About MBA Compass" present after Data & Statistics, before Key Takeaways.
-✓ Zero banned AI phrases. Reads like a human MBA mentor.`;
+✓ "About MBA Compass" present after the Conclusion (LAST H2).
+✓ Reads like a human MBA mentor.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
@@ -387,7 +446,7 @@ Return:
 - h1Tag: same intent as title, 50-60 chars.
 - excerpt: 1-2 sentences (≤ 200 chars).
 - intro: 250-350 word HTML block. The FIRST <p> must be 50-80 words, must include "${targetKw}" within the first 100 words, and must start with <p><strong>Summary:</strong> giving a direct answer. Follow with 1-2 hook paragraphs (≤ 60 words each).
-- sections: ${targets.sectionCount} unique H2 section plans (heading + angle), each suitable for 450-650 words with a table/list. The FIRST planned section MUST be "Key Highlights" / "At a Glance" (Quick Summary Table). Include later sections explicitly covering: comparison tables, important data & statistics, expert insights.
+- sections: ${targets.sectionCount} unique H2 section plans (heading + angle), each suitable for 450-650 words with a table/list. The FIRST planned section MUST be titled "Snapshot" (a topic-specific noun phrase like "MBA Fees Snapshot" is allowed) — NEVER "Key Highlights", "Highlights", "At a Glance" or "Quick Summary". Include later sections explicitly covering: comparison tables, important data & statistics, expert insights.
 - faqs: 8 People-Also-Ask style questions (between 5 and 10).
 
 Secondary keywords to weave naturally: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally from topic"}.
@@ -493,7 +552,7 @@ ${ctaNote}`;
 function fallbackClosingHtml(brief: BlogBrief) {
   const kw = escapeHtml(brief.targetKeyword || brief.title);
   return {
-    keyTakeawaysHtml: `<h2>Key Takeaways</h2><ul><li><strong>Start with fit:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Check current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>Compare ROI:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Plan backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Review deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Use tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
+    keyTakeawaysHtml: `<h2>Takeaways</h2><ul><li><strong>Fit first:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>ROI lens:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
     faqHtml: `<h2>Frequently Asked Questions</h2><h3>How should students evaluate ${kw}?</h3><p>Students should evaluate ${kw} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit. The strongest shortlist balances brand value with realistic admission probability and return on investment.</p><h3>Is ${kw} worth it for MBA aspirants?</h3><p>${kw} can be worth it when the programme, city, fee level and placement outcomes align with your career target. Check current salary data, median outcomes and role quality before making the final call.</p>`,
     aboutCompassHtml: `<h2>About MBA Compass</h2><p><strong>MBA Compass</strong> is an MBA discovery and decision platform by B School Buzz, built for Indian aspirants and working professionals. It brings colleges, entrance exams, coaching options, full-length mocks and AI-driven tools into one place so you can plan your MBA journey end-to-end.</p><p>The platform helps you shortlist the right colleges, analyze your profile honestly, compare programmes side-by-side, and prepare with realistic mocks. Because an MBA is one of the biggest financial decisions you'll make, MBA Compass also helps you weigh fees, expected packages, ROI and long-term wealth outcomes before you commit — so the choice is grounded in numbers, not just brand pull. Explore <a href="/mba-compass">MBA Compass</a>, the <a href="/college-shortlister">college shortlister</a> and the <a href="/mba-roi-calculator">MBA ROI calculator</a> to get started.</p>`,
     ctaHtml: `<p><strong>Take the next step:</strong> Start your MBA journey by exploring top colleges and admission opportunities — use <a href="/college-shortlister">the college shortlister</a>, <a href="/profile-analyzer">profile analyzer</a> and <a href="/mba-roi-calculator">MBA ROI calculator</a> to turn this ${kw} research into a practical shortlist.</p>`,
@@ -535,7 +594,7 @@ Return EXACTLY these blocks, in this order, each as standalone HTML strings:
 
 1) aboutCompassHtml — <h2>About MBA Compass</h2> + 120-180 words: what MBA Compass is (MBA discovery + decision platform by B School Buzz), how it helps Indian students and working professionals (shortlist colleges, analyze profile, compare programmes, full mocks), the financial-decision angle (fees, ROI, expected packages, long-term wealth). Educational, not promotional. End with 2-3 contextual internal links chosen from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
 
-2) keyTakeawaysHtml — <h2>Key Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with <strong>Bold lead:</strong> followed by one concrete data point or decision rule.
+2) keyTakeawaysHtml — <h2>Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>) followed by one concrete data point or decision rule. NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:".
 
 3) ctaHtml — CTA #3 (before conclusion). One <p><strong>Take the next step:</strong> …</p> paragraph in the tone "Start your MBA journey today by exploring top colleges and admission opportunities." with 2-3 contextual internal links (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks).
 
@@ -661,7 +720,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     conclusionWords,
     keywordOccurrences: finalOccurrences,
     keywordDensityPct: finalDensity,
-    hasKeyTakeaways: /<h2[^>]*>\s*Key Takeaways/i.test(content),
+    hasKeyTakeaways: /<h2[^>]*>\s*(?:Key\s+)?Takeaways/i.test(content),
     hasAboutCompass: /<h2[^>]*>\s*About MBA Compass/i.test(content),
     hasConclusion: /<h2[^>]*>\s*(Conclusion|Final Word|Bottom Line)/i.test(content),
   };
@@ -1049,7 +1108,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    a. Summary <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
    c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
-   d. <h2>Key Takeaways</h2> — 8-10 bullets, each starting with <strong>Bold lead phrase:</strong> followed by 1-2 full sentences (15-30 words each).
+   d. <h2>Takeaways</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:", or the heading "Key Takeaways".
    e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer must give exact figures, named entities, dates and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
@@ -1073,7 +1132,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 - metaDescription: 145-160 chars, primary keyword in first 120 chars, declarative.
 - excerpt: 1-2 sentences, plain text, 160-220 chars, declarative, contains primary keyword.
 - intro: opening HTML — Summary <p> first, then 2-3 hook paragraphs. No headings inside intro.
-- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, Key Takeaways, FAQ, final CTA.
+- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, a "Takeaways" H2 (never "Key Takeaways"), FAQ, final CTA. NEVER use AI-flavoured words: "Key", "Highlights", "At a Glance", "delve", "leverage", "seamless", "robust", "cutting-edge", "game-changer", "pivotal", "tapestry", "in the realm of", "moreover", "furthermore", "in conclusion".
 - h1Tag: on-page H1 (declarative, ≤ 70 chars, contains primary keyword, no "?").
 - keywords: array of **15-20 keywords** UNIQUE to this topic — primary keyword first, then 6-8 short-tail (2-3 words), then 8-12 long-tail (4+ words, question/intent-driven). NEVER generic MBA terms unrelated to "${targetKw}".
 - primaryKeyword: echo "${targetKw}".
