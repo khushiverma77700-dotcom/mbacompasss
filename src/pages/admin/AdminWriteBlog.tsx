@@ -107,7 +107,7 @@ const AdminWriteBlog = () => {
           supabase.from("institutes").select("name,slug").not("slug", "is", null).order("name").limit(150),
           supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").limit(80),
           supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).limit(60),
-          supabase.from("coaching_institutes").select("name,slug").not("slug", "is", null).order("name").limit(80),
+          supabase.from("institutes").select("name,slug").eq("institute_type", "coaching").not("slug", "is", null).order("name").limit(80),
         ]);
         setColleges((collRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name })));
         setExams((examRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name })));
