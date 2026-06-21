@@ -157,7 +157,11 @@ async function callStructuredAI(args: {
 
 function writerSystemPrompt(brief: BlogBrief) {
   const { currentYear, todayIso } = getTargets(brief);
-  return `You are a senior MBA mentor at B School Buzz writing for Indian students. Sound like a real human mentor talking one-on-one to an aspirant — warm, direct, practical, and specific. Never sound like an AI or a generic SEO blog.
+  const allowed = Array.isArray(brief.allowedInternalUrls) ? brief.allowedInternalUrls.filter(u => u && u.url && u.url.startsWith("/")) : [];
+  const allowedBlock = allowed.length
+    ? `\n\nCURATED INTERNAL LINK POOL (USE ONLY THESE URLs — DO NOT INVENT NEW URLs):\n${allowed.map(u => `- ${u.url}${u.label ? `  (suggested anchor: ${u.label})` : ""}`).join("\n")}\nRules: every internal <a href="/..."> MUST resolve to one of the URLs above. Distribute links naturally. Use each URL 1-2 times max. If no URL in the pool fits a sentence, do NOT add a link there.`
+    : "";
+  return `You are a senior MBA mentor at B School Buzz writing for Indian students. Sound like a real human mentor talking one-on-one to an aspirant — warm, direct, practical, and specific. Never sound like an AI or a generic SEO blog.${allowedBlock}
 
 Voice rules (MANDATORY):
 - Write the way a senior MBA mentor explains things to a junior over coffee — calm, confident, conversational, never lecture-y. Use contractions (you're, don't, it's, you'll). Short sentences. Plain 8th-grade English.
