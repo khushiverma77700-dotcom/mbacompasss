@@ -375,16 +375,21 @@ CRITICAL SCORING RULES (score the CURRENT state BEFORE your fixes):
 - No proper header hierarchy → contentStructure reduced by 20
 - Technical issues (no canonical, no alt tags, etc.) → technicalSEO: 20-40
 
-KEYWORD RESEARCH GUIDELINES:
-- primary: 2-3 exact-match high-volume keywords specific to THIS page
-- shortTail: 8-10 2-3 word competitive keywords students actually search
-- longTail: 12-15 specific 4-7 word phrases with search intent (e.g., "best MBA coaching in Mumbai for working professionals 2025")
-- faq: 10-12 question-format keywords starting with What/How/Which/Is/Can/Does (e.g., "What is the fee structure of IIM Ahmedabad MBA?")
-- trending: 8-10 current year keywords with "2025", "2026", "latest", "new" (e.g., "CAT 2025 preparation strategy")
-- lsi: 10-12 semantically related terms and synonyms (e.g., for "MBA coaching" → "management entrance preparation", "B-school test prep")
+KEYWORD RESEARCH GUIDELINES — NEVER RETURN EMPTY ARRAYS:
+- primary: EXACTLY 3 page-specific high-intent keywords. For blogs/articles, include the article's core topic as keyword #1.
+- shortTail: EXACTLY 10 competitive 2-3 word keywords students actually search.
+- longTail: EXACTLY 15 specific 4-7 word phrases with admission/search intent.
+- faq: EXACTLY 12 question-format keywords starting with What/How/Which/Is/Can/Does/When/Why.
+- trending: EXACTLY 10 current-year keywords with "${new Date().getFullYear()}", "${new Date().getFullYear() + 1}", "latest", "new", "cutoff", "fees", "dates" or "placement".
+- lsi: EXACTLY 12 semantically related terms and synonyms.
 
-META TITLE RULES: Under 60 chars. Primary keyword at/near start. Include brand or location qualifier. Power words: Best, Top, Guide, Review, Compare.
-META DESCRIPTION RULES: 150-160 chars. Include primary + secondary keyword. End with CTA (Apply Now, Check Details, Compare, etc.).
+ARTICLE/BLOG SEO RULES:
+- Blog meta title must be 50-60 chars, benefit-driven, natural, with the primary keyword near the front and "MBA Compass" only if it fits.
+- Blog meta description must be 150-160 chars, primary keyword in first 120 chars, one clear benefit, and one soft action cue. No keyword stuffing.
+- Blog keywords must not be generic one-word terms; each keyword must be useful for MBA search demand.
+
+META TITLE RULES: 50-60 chars for articles/blogs; otherwise under 60 chars. Primary keyword at/near start. Include brand or location qualifier only when it fits. Use Guide, Fees, Cutoff, Dates, Compare naturally.
+META DESCRIPTION RULES: 150-160 chars. Include primary + one secondary keyword. End with a student-focused action cue (Compare, Check details, Shortlist, Plan next step).
 H1 TAG: Must be unique from meta_title. Include primary keyword naturally. Should be the main heading a student sees.
 
 TECHNICAL SEO — analyze deeply:
