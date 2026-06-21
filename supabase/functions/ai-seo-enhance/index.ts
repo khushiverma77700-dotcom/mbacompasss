@@ -265,7 +265,8 @@ function fitMetaDescription(candidate: string, primaryKeyword: string, pageName:
     desc = `${titleCaseKeyword(primary)} explained with latest fees, cutoffs, dates, placements and admission steps. Compare options and plan your MBA shortlist.`;
   }
   while (desc.length < 145) desc = `${desc} Use MBA Compass to decide faster.`;
-  return wordBoundarySlice(desc, 160).replace(/[,:;\-–—]+$/, ".").replace(/[^.!?]$/, "$&.");
+  const fitted = wordBoundarySlice(desc, 159).replace(/[,:;\-–—]+$/, "").trim();
+  return /[.!?]$/.test(fitted) ? fitted : `${fitted}.`;
 }
 
 async function requireAdmin(req: Request): Promise<Response | null> {
