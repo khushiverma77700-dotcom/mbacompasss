@@ -315,7 +315,7 @@ STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule b
 3. Meta Description: 150-160 chars (target 155). Primary keyword exactly ONCE. State one clear benefit + an action cue. Declarative.
 4. URL Slug: short and keyword-focused, MAX 5 words, hyphenated, lowercase, no filler words ("top", "best", "complete", "guide", "for", "the").
 5. Introduction: FIRST paragraph 50-80 words. Primary keyword in the first 100 words. State what the article covers + directly address the search intent. Open with a <p><strong>Summary:</strong> ...</p> answer block, then 1-2 hook paragraphs.
-6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. Bold ONLY for important info. Consistent style throughout. Never wall-of-text.
+6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. BOLD RULES (STRICT): use <strong> ONLY on short fragments — a single data point (number/INR figure/%/date/rank), a 2-4 word lead phrase at the start of a bullet, a key entity name, or one short emphasis phrase. NEVER wrap an entire sentence, paragraph, list item, table cell, or heading in <strong>. A <strong> span must always be ≤ 12 words. The article must NOT read as mostly-bold text.
 7. Headings: strict hierarchy H1 → H2 → H3 → H4. Never skip a level. Never use H5/H6.
 8. Keyword Placement Matrix — primary keyword MUST appear in ALL of: Title, Meta Title, Meta Description, URL slug, first 100 words of intro, at least one H2 heading, the Conclusion paragraph.
 9. Keyword Density: primary keyword 1-2% (~15-25 mentions per 2,000 words). Distribute evenly. Never force it.
