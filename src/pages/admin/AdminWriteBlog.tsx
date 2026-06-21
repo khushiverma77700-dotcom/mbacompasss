@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText, Link2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
 
@@ -28,13 +31,25 @@ const slugify = (s: string) =>
 
 const STORAGE_KEY = "ai_blog_brief_draft";
 
+const TOOL_URLS: { url: string; label: string }[] = [
+  { url: "/mba-compass", label: "MBA Compass" },
+  { url: "/college-shortlister", label: "College Shortlister" },
+  { url: "/profile-analyzer", label: "Profile Analyzer" },
+  { url: "/mba-roi-calculator", label: "MBA ROI Calculator" },
+  { url: "/compare", label: "Compare Colleges" },
+  { url: "/mocks", label: "Mock Tests" },
+  { url: "/ai-coaching-finder", label: "AI Coaching Finder" },
+  { url: "/courses", label: "Courses" },
+];
+
+type LinkOption = { url: string; label: string };
+
 const AdminWriteBlog = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const seed = useMemo(() => {
-    // Try sessionStorage first, then query params
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) return JSON.parse(raw);
@@ -73,10 +88,43 @@ const AdminWriteBlog = () => {
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [progressCurrent, setProgressCurrent] = useState<string>("");
 
+  // Internal-link pool
+  const [colleges, setColleges] = useState<LinkOption[]>([]);
+  const [exams, setExams] = useState<LinkOption[]>([]);
+  const [articles, setArticles] = useState<LinkOption[]>([]);
+  const [coachings, setCoachings] = useState<LinkOption[]>([]);
+  const [selectedUrls, setSelectedUrls] = useState<Record<string, LinkOption>>(
+    () => Object.fromEntries(TOOL_URLS.slice(0, 4).map(t => [t.url, t]))
+  );
+  const [linkSearch, setLinkSearch] = useState("");
+  const [loadingLinks, setLoadingLinks] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoadingLinks(true);
+      try {
+        const [collRes, examRes, artRes, coachRes] = await Promise.all([
+          supabase.from("institutes").select("name,slug").not("slug", "is", null).order("name").limit(150),
+          supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").limit(80),
+          supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).limit(60),
+          supabase.from("coaching_institutes").select("name,slug").not("slug", "is", null).order("name").limit(80),
+        ]);
+        setColleges((collRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name })));
+        setExams((examRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name })));
+        setArticles((artRes.data || []).filter((r: any) => r.slug && r.title).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title })));
+        setCoachings((coachRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/coaching/${r.slug}`, label: r.name })));
+      } catch (e) {
+        console.warn("Could not load link pool", e);
+      } finally {
+        setLoadingLinks(false);
+      }
+    };
+    load();
+  }, []);
+
   const setStep = (key: string, status: ProgressStep["status"], error?: string) =>
     setProgressSteps(prev => prev.map(s => s.key === key ? { ...s, status, error } : s));
 
-  // Auto-sync slug from title until user edits slug manually
   const [slugTouched, setSlugTouched] = useState<boolean>(Boolean(seed.slug));
   useEffect(() => {
     if (!slugTouched) setSlug(slugify(title));
@@ -88,6 +136,28 @@ const AdminWriteBlog = () => {
     setSecInput("");
   };
   const removeSecKw = (k: string) => setSecondaryKws(secondaryKws.filter(x => x !== k));
+
+  const toggleUrl = (opt: LinkOption) => {
+    setSelectedUrls(prev => {
+      const next = { ...prev };
+      if (next[opt.url]) delete next[opt.url];
+      else next[opt.url] = opt;
+      return next;
+    });
+  };
+
+  const selectedCount = Object.keys(selectedUrls).length;
+
+  const filterByQuery = (list: LinkOption[]) =>
+    !linkSearch.trim() ? list : list.filter(o => o.label.toLowerCase().includes(linkSearch.toLowerCase()) || o.url.toLowerCase().includes(linkSearch.toLowerCase()));
+
+  const selectAllVisible = (list: LinkOption[]) => {
+    setSelectedUrls(prev => {
+      const next = { ...prev };
+      filterByQuery(list).forEach(o => { next[o.url] = o; });
+      return next;
+    });
+  };
 
   const validate = () => {
     if (!title.trim()) return "Title is required";
@@ -131,6 +201,7 @@ const AdminWriteBlog = () => {
           wordCountMin: wordMin,
           wordCountMax: wordMax,
           keywordDensityPct: densityPct,
+          allowedInternalUrls: Object.values(selectedUrls),
         },
       });
 
@@ -180,28 +251,59 @@ const AdminWriteBlog = () => {
     }
   };
 
+  const renderLinkList = (list: LinkOption[], emptyMsg: string) => {
+    const filtered = filterByQuery(list);
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-muted-foreground">{filtered.length} options · {Object.values(selectedUrls).filter(s => list.some(l => l.url === s.url)).length} selected</span>
+          <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => selectAllVisible(list)}>
+            Select all visible
+          </Button>
+        </div>
+        <ScrollArea className="h-64 rounded-md border bg-background">
+          <div className="p-2 space-y-1">
+            {filtered.length === 0 && <p className="text-xs text-muted-foreground p-3">{emptyMsg}</p>}
+            {filtered.map(opt => (
+              <label key={opt.url} className="flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer text-sm">
+                <Checkbox checked={!!selectedUrls[opt.url]} onCheckedChange={() => toggleUrl(opt)} className="mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{opt.label}</p>
+                  <p className="truncate text-[11px] text-muted-foreground font-mono">{opt.url}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back
-        </Button>
-        <div className="text-right">
-          <h1 className="text-2xl font-bold flex items-center gap-2 justify-end">
-            <Sparkles className="h-6 w-6 text-primary" /> Write Blog via AI
-          </h1>
-          <p className="text-sm text-muted-foreground">Review the brief, then generate a full SEO article with GPT-5</p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-24">
+      {/* Hero header */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-6">
+        <div className="flex items-start justify-between gap-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
+          <div className="text-right">
+            <h1 className="text-3xl font-bold flex items-center gap-2 justify-end tracking-tight">
+              <Sparkles className="h-7 w-7 text-primary" /> Write Blog via AI
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">SEO + GEO + AI-Search optimized · {wordMin}–{wordMax} words · text-only, uniform typography</p>
+          </div>
         </div>
       </div>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="h-4 w-4" /> Article Brief
           </CardTitle>
           <CardDescription>
-            Edit anything below before generation. The AI will write a {wordMin}-{wordMax} word article with
-            ~{densityPct}% keyword density and the latest dates.
+            The AI will write a {wordMin}-{wordMax} word article with ~{densityPct}% keyword density.
+            <strong className="block mt-0.5 text-foreground/80">No images will be inserted — typography stays uniform.</strong>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -242,9 +344,6 @@ const AdminWriteBlog = () => {
               onChange={(e) => setTargetKeyword(e.target.value)}
               placeholder="e.g. MBA colleges in Bangalore"
             />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              The AI will aim for ~{densityPct}% density of this exact phrase across the article.
-            </p>
           </div>
 
           <div>
@@ -293,70 +392,97 @@ const AdminWriteBlog = () => {
                 className="h-7 text-xs gap-1"
                 onClick={() => {
                   setContentDateContext(buildLatestDateContext());
-                  toast({ title: "Reset to latest dates", description: `Refreshed to ${new Date().getFullYear()}-${new Date().getFullYear() + 1} cycle. Click Generate to regenerate.` });
+                  toast({ title: "Reset to latest dates" });
                 }}
               >
-                <Sparkles className="h-3 w-3" /> Regenerate with latest dates
+                <Sparkles className="h-3 w-3" /> Refresh
               </Button>
             </div>
             <Textarea
               value={contentDateContext}
               onChange={(e) => setContentDateContext(e.target.value)}
               rows={2}
-              placeholder="Tell the AI which years/dates to use"
             />
           </div>
 
           <div className="grid md:grid-cols-3 gap-4 pt-2 border-t">
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Min Words</Label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={300}
-                step={100}
-                value={wordMin}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  setWordMin(Number.isFinite(v) ? v : 0);
-                }}
-                placeholder="e.g. 2500"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">Type any value (2000, 5000, 10000…)</p>
+              <Input type="number" min={300} step={100} value={wordMin}
+                onChange={(e) => setWordMin(parseInt(e.target.value, 10) || 0)} />
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Max Words</Label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={300}
-                step={100}
-                value={wordMax}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  setWordMax(Number.isFinite(v) ? v : 0);
-                }}
-                placeholder="e.g. 3500"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">No upper cap — long-form supported</p>
+              <Input type="number" min={300} step={100} value={wordMax}
+                onChange={(e) => setWordMax(parseInt(e.target.value, 10) || 0)} />
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Keyword Density %</Label>
-              <Input
-                type="number"
-                inputMode="decimal"
-                min={0.5}
-                max={5}
-                step={0.1}
-                value={densityPct}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  setDensityPct(Number.isFinite(v) ? v : 2);
-                }}
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">Google-safe: 1–3% recommended</p>
+              <Input type="number" min={0.5} max={5} step={0.1} value={densityPct}
+                onChange={(e) => setDensityPct(parseFloat(e.target.value) || 2)} />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Internal Linking Pool */}
+      <Card className="shadow-sm border-primary/20">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-primary" /> Internal Linking Pool
+              </CardTitle>
+              <CardDescription>
+                Pick the URLs the AI is allowed to link to. Links are inserted automatically in the right positions.
+              </CardDescription>
+            </div>
+            <Badge variant="secondary" className="text-xs">{selectedCount} selected</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={linkSearch}
+              onChange={(e) => setLinkSearch(e.target.value)}
+              placeholder="Search across colleges, exams, articles, coaching, tools…"
+              className="pl-9"
+            />
+          </div>
+
+          <Tabs defaultValue="tools" className="w-full">
+            <TabsList className="grid grid-cols-5 w-full">
+              <TabsTrigger value="tools">Tools</TabsTrigger>
+              <TabsTrigger value="colleges">Colleges ({colleges.length})</TabsTrigger>
+              <TabsTrigger value="exams">Exams ({exams.length})</TabsTrigger>
+              <TabsTrigger value="articles">Blogs ({articles.length})</TabsTrigger>
+              <TabsTrigger value="coaching">Coaching ({coachings.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="tools" className="mt-3">{renderLinkList(TOOL_URLS, "No tools")}</TabsContent>
+            <TabsContent value="colleges" className="mt-3">{renderLinkList(colleges, loadingLinks ? "Loading…" : "No colleges found")}</TabsContent>
+            <TabsContent value="exams" className="mt-3">{renderLinkList(exams, loadingLinks ? "Loading…" : "No exams")}</TabsContent>
+            <TabsContent value="articles" className="mt-3">{renderLinkList(articles, loadingLinks ? "Loading…" : "No articles")}</TabsContent>
+            <TabsContent value="coaching" className="mt-3">{renderLinkList(coachings, loadingLinks ? "Loading…" : "No coaching institutes")}</TabsContent>
+          </Tabs>
+
+          {selectedCount > 0 && (
+            <div className="rounded-md border bg-muted/30 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold">Selected URLs ({selectedCount})</p>
+                <Button type="button" size="sm" variant="ghost" className="h-6 text-xs"
+                  onClick={() => setSelectedUrls({})}>Clear all</Button>
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                {Object.values(selectedUrls).map(opt => (
+                  <Badge key={opt.url} variant="outline" className="gap-1 text-[11px] font-normal">
+                    {opt.label}
+                    <button onClick={() => toggleUrl(opt)}><X className="h-3 w-3" /></button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -399,21 +525,18 @@ const AdminWriteBlog = () => {
         </Card>
       )}
 
-      <div className="flex gap-3 sticky bottom-0 bg-background py-3 border-t">
+      <div className="flex gap-3 sticky bottom-0 bg-background/95 backdrop-blur py-3 border-t -mx-1 px-1">
         <Button
           size="lg"
           onClick={handleGenerate}
           disabled={generating}
-          className="flex-1"
+          className="flex-1 gap-2"
         >
           {generating ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Researching & writing... (45-90s)</>
+            <><Loader2 className="h-4 w-4 animate-spin" /> Researching & writing... (45-90s)</>
           ) : (
-            <><Sparkles className="h-4 w-4 mr-2" /> Approve & Generate Article</>
+            <><Sparkles className="h-4 w-4" /> Approve & Generate Article ({selectedCount} internal links)</>
           )}
-        </Button>
-        <Button variant="outline" size="lg" onClick={() => navigate(-1)} disabled={generating}>
-          Cancel
         </Button>
       </div>
     </div>
