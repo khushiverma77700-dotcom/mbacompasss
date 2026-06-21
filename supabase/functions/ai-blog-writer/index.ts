@@ -562,14 +562,31 @@ const extractFaqs = (html: string) => {
   }).slice(0, 10);
 };
 
+function clampMeta(s: string, min: number, max: number, fallback: string): string {
+  let v = String(s || "").replace(/\s+/g, " ").trim();
+  if (!v) v = fallback;
+  if (v.length > max) v = v.slice(0, max).replace(/\s+\S*$/, "").trim();
+  if (v.length < min && fallback && fallback.length > v.length) {
+    v = (v + " — " + fallback).slice(0, max).replace(/\s+\S*$/, "").trim();
+  }
+  return v;
+}
+
 async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: BlogBrief, draft: any) {
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  const closingHtml = `${draft.keyTakeawaysHtml || ""}\n${draft.faqHtml || ""}\n${draft.aboutCompassHtml || ""}\n${draft.ctaHtml || ""}\n<p><em>Last updated: ${targets.todayIso}</em></p>`;
+  // Fixed structural order: sections → About MBA Compass → Key Takeaways → CTA #3 → FAQs → Conclusion → updated stamp
+  const closingHtml = [
+    draft.aboutCompassHtml || "",
+    draft.keyTakeawaysHtml || "",
+    draft.ctaHtml || "",
+    draft.faqHtml || "",
+    draft.conclusionHtml || "",
+    `<p><em>Last updated: ${targets.todayIso}</em></p>`,
+  ].filter(Boolean).join("\n");
   const introRaw = stripExternalLinks(draft.intro || "");
   const contentRaw = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
-  // Final quality check — sanitises buzzwords, injects MBA Compass if missing, flags long paragraphs / weak links
   const introQC = runFinalQualityCheck(introRaw, { requireMbaCompass: false, minInternalLinks: 0 });
   const contentQC = runFinalQualityCheck(contentRaw, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
   const intro = introQC.html;
@@ -581,22 +598,67 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const { occurrences: finalOccurrences, words: finalWords, density: finalDensity } = computeDensity(finalPlain, targetKw);
   const extractedFaqs = Array.isArray(draft.faqs) && draft.faqs.length ? draft.faqs.slice(0, 10) : extractFaqs(content);
 
+  // 25-rule validators (logged for visibility; non-blocking)
+  const fullHtml = `${intro}\n${content}`;
+  const introFirstPara = (introRaw.match(/<p[^>]*>([\s\S]*?)<\/p>/i)?.[1] || "");
+  const introFirstParaWords = toPlainText(introFirstPara).split(/\s+/).filter(Boolean).length;
+  const h2Count = (fullHtml.match(/<h2\b/gi) || []).length;
+  const tableCount = (fullHtml.match(/<table\b/gi) || []).length;
+  const listCount = (fullHtml.match(/<(ul|ol)\b/gi) || []).length;
+  const imgCount = (fullHtml.match(/<img\b/gi) || []).length;
+  const internalLinkCount = (fullHtml.match(/<a\s+[^>]*href="\/[^"]*"/gi) || []).length;
+  const externalCitationCount = (fullHtml.match(/\[src:[^\]]+\]/gi) || []).length;
+  const conclusionWords = toPlainText(draft.conclusionHtml || "").split(/\s+/).filter(Boolean).length;
+  const baseMetaTitle = String(draft.metaTitle || brief.metaTitle || draft.title || brief.title);
+  const baseMetaDesc = String(draft.metaDescription || brief.metaDescription || draft.excerpt || "");
+  const metaTitleFinal = clampMeta(baseMetaTitle, 30, 60, `${targetKw} ${targets.currentYear} | MBA Compass`);
+  const metaDescFinal = clampMeta(baseMetaDesc, 150, 160, `${targetKw} explained with ${targets.currentYear} MBA admissions, fees, cutoffs, placements and ROI for Indian aspirants.`);
+
+  const validation = {
+    metaTitleLen: metaTitleFinal.length,
+    metaDescLen: metaDescFinal.length,
+    introFirstParaWords,
+    h2Count, tableCount, listCount, imgCount,
+    internalLinkCount, externalCitationCount,
+    faqCount: extractedFaqs.length,
+    conclusionWords,
+    keywordOccurrences: finalOccurrences,
+    keywordDensityPct: finalDensity,
+    hasKeyTakeaways: /<h2[^>]*>\s*Key Takeaways/i.test(content),
+    hasAboutCompass: /<h2[^>]*>\s*About MBA Compass/i.test(content),
+    hasConclusion: /<h2[^>]*>\s*(Conclusion|Final Word|Bottom Line)/i.test(content),
+  };
+  const warnings: string[] = [];
+  if (validation.metaTitleLen > 60) warnings.push("meta_title>60");
+  if (validation.metaDescLen < 150 || validation.metaDescLen > 160) warnings.push(`meta_desc_len=${validation.metaDescLen}`);
+  if (introFirstParaWords < 50 || introFirstParaWords > 80) warnings.push(`intro_first_para_words=${introFirstParaWords}`);
+  if (validation.tableCount < 4) warnings.push(`tables=${validation.tableCount}`);
+  if (validation.listCount < 6) warnings.push(`lists=${validation.listCount}`);
+  if (validation.imgCount < 3) warnings.push(`images=${validation.imgCount}`);
+  if (validation.internalLinkCount < 12) warnings.push(`internal_links=${validation.internalLinkCount}`);
+  if (validation.faqCount < 5 || validation.faqCount > 10) warnings.push(`faqs=${validation.faqCount}`);
+  if (conclusionWords && (conclusionWords < 100 || conclusionWords > 150)) warnings.push(`conclusion_words=${conclusionWords}`);
+  if (!validation.hasKeyTakeaways) warnings.push("missing_key_takeaways");
+  if (!validation.hasAboutCompass) warnings.push("missing_about_mba_compass");
+  if (!validation.hasConclusion) warnings.push("missing_conclusion");
+  if (warnings.length) console.log(`[ai-blog-writer] 25-rule warnings for "${targetKw}":`, warnings.join(" | "));
+
   const baseSlug = normalizeSlug(draft.slug || brief.slug || targetKw);
   let finalSlug = baseSlug;
   const { data: existingSlug } = await adminClient.from("articles").select("id").eq("slug", finalSlug).maybeSingle();
   if (existingSlug?.id) finalSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
 
   const { data: inserted, error: insertError } = await adminClient.from("articles").insert({
-    title: draft.title || brief.title,
+    title: String(draft.title || brief.title).slice(0, 65),
     slug: finalSlug,
     excerpt: draft.excerpt || "",
     intro,
     content,
-    meta_title: draft.metaTitle || brief.metaTitle || String(draft.title || brief.title).slice(0, 60),
-    meta_description: draft.metaDescription || brief.metaDescription || String(draft.excerpt || "").slice(0, 160),
+    meta_title: metaTitleFinal,
+    meta_description: metaDescFinal,
     keywords: Array.isArray(draft.keywords) ? draft.keywords : [targetKw],
     primary_keyword: targetKw,
-    h1_tag: draft.h1Tag || draft.title || brief.title,
+    h1_tag: String(draft.h1Tag || draft.title || brief.title).slice(0, 65),
     author: draft.author || "MBA Compass Editorial",
     category: brief.category || "news",
     status: "published",
@@ -632,6 +694,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     firstPassWords: finalWords,
     insertedId: inserted.id,
     slug: inserted.slug,
+    seo25: { ...validation, warnings },
   };
 }
 
