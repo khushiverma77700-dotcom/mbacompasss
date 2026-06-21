@@ -446,7 +446,7 @@ Return:
 - h1Tag: same intent as title, 50-60 chars.
 - excerpt: 1-2 sentences (≤ 200 chars).
 - intro: 250-350 word HTML block. The FIRST <p> must be 50-80 words, must include "${targetKw}" within the first 100 words, and must start with <p><strong>Summary:</strong> giving a direct answer. Follow with 1-2 hook paragraphs (≤ 60 words each).
-- sections: ${targets.sectionCount} unique H2 section plans (heading + angle), each suitable for 450-650 words with a table/list. The FIRST planned section MUST be "Key Highlights" / "At a Glance" (Quick Summary Table). Include later sections explicitly covering: comparison tables, important data & statistics, expert insights.
+- sections: ${targets.sectionCount} unique H2 section plans (heading + angle), each suitable for 450-650 words with a table/list. The FIRST planned section MUST be titled "Snapshot" (a topic-specific noun phrase like "MBA Fees Snapshot" is allowed) — NEVER "Key Highlights", "Highlights", "At a Glance" or "Quick Summary". Include later sections explicitly covering: comparison tables, important data & statistics, expert insights.
 - faqs: 8 People-Also-Ask style questions (between 5 and 10).
 
 Secondary keywords to weave naturally: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally from topic"}.
