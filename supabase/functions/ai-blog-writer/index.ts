@@ -340,7 +340,8 @@ Final quality checklist (self-verify before returning):
 ✓ All 25 rules above satisfied.
 ✓ Meta title ≤60 chars, meta description 150-160 chars.
 ✓ First intro paragraph is 50-80 words and contains the primary keyword.
-✓ At least 4 tables, 6 lists, 3-5 image tags, 12-20 internal links, 3 CTAs at fixed positions.
+✓ At least 4 tables, 6 lists, 12-20 internal links, 3 CTAs at fixed positions. NO images / NO <img> / NO figure / NO image placeholders anywhere.
+✓ <strong> used sparingly on short highlights only — NEVER on full sentences, paragraphs, list items, or table cells.
 ✓ 5-10 FAQs, each answer 40-80 words.
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
 ✓ "About MBA Compass" present after Data & Statistics, before Key Takeaways.
