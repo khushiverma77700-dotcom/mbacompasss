@@ -594,7 +594,7 @@ Return EXACTLY these blocks, in this order, each as standalone HTML strings:
 
 1) aboutCompassHtml — <h2>About MBA Compass</h2> + 120-180 words: what MBA Compass is (MBA discovery + decision platform by B School Buzz), how it helps Indian students and working professionals (shortlist colleges, analyze profile, compare programmes, full mocks), the financial-decision angle (fees, ROI, expected packages, long-term wealth). Educational, not promotional. End with 2-3 contextual internal links chosen from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
 
-2) keyTakeawaysHtml — <h2>Key Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with <strong>Bold lead:</strong> followed by one concrete data point or decision rule.
+2) keyTakeawaysHtml — <h2>Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>) followed by one concrete data point or decision rule. NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:".
 
 3) ctaHtml — CTA #3 (before conclusion). One <p><strong>Take the next step:</strong> …</p> paragraph in the tone "Start your MBA journey today by exploring top colleges and admission opportunities." with 2-3 contextual internal links (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks).
 
