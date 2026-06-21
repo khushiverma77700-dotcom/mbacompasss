@@ -1035,7 +1035,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - Either a comparison <table> with 5+ rows of real ${currentYear} numbers OR a numbered step-by-step checklist
    - 1-2 contextual internal links anchored to topic-relevant entities
    - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
-   - A short closing takeaway sentence in <strong> at the end of the section
+   - A short closing takeaway sentence; you may bold ONLY a 2-4 word fragment of it with <strong>. NEVER wrap the whole sentence in <strong>.
 3. **Keyword usage — HIT THE TARGET DENSITY**: primary keyword "${targetKw}" MUST appear EXACTLY ${targetOccurrences} times (±10%) across the full article to hit ~${density}% density over ${targetWords} words. This is a HARD requirement set by the editor — do NOT under-deliver. Place exact-match in title, H1, slug, meta title, meta description, first 100 words, every H2 cluster (~once per 200-300 words of body), and the conclusion. Distribute evenly across sections — never cluster all occurrences in one paragraph. Also weave 20-30 LSI/semantic variants for natural readability, but those are IN ADDITION to the ${targetOccurrences} exact-match occurrences, not a substitute. Count as you write.
 4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
