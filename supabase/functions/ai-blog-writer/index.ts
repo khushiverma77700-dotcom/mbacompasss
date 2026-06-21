@@ -645,7 +645,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (introFirstParaWords < 50 || introFirstParaWords > 80) warnings.push(`intro_first_para_words=${introFirstParaWords}`);
   if (validation.tableCount < 4) warnings.push(`tables=${validation.tableCount}`);
   if (validation.listCount < 6) warnings.push(`lists=${validation.listCount}`);
-  if (validation.imgCount < 3) warnings.push(`images=${validation.imgCount}`);
+  // images intentionally not validated — text-only blog
   if (validation.internalLinkCount < 12) warnings.push(`internal_links=${validation.internalLinkCount}`);
   if (validation.faqCount < 5 || validation.faqCount > 10) warnings.push(`faqs=${validation.faqCount}`);
   if (conclusionWords && (conclusionWords < 100 || conclusionWords > 150)) warnings.push(`conclusion_words=${conclusionWords}`);
