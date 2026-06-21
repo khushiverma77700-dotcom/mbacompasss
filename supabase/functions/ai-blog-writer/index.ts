@@ -271,7 +271,7 @@ Article structure rules (MANDATORY — every article must follow this skeleton):
 Order is fixed: Intro → Key Highlights → Detailed sections → (Comparison tables block, if applicable) → Important Data & Statistics → Key Takeaways → FAQs → Conclusion + Final CTA → "About MBA Compass" (LAST). Never skip Key Highlights, FAQs, the About MBA Compass section, or the Conclusion.
 
 MBA Compass brand mention (MANDATORY — every article must include this):
-- Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed AFTER the FAQ section and BEFORE the final Conclusion + CTA.
+- Add a dedicated H2 titled exactly "About MBA Compass" (or "How MBA Compass Helps You") placed at the VERY END of the article (after the Conclusion + Final CTA).
 - The section must be 120-180 words, educational and value-driven — not a sales pitch. Use the mentor voice.
 - Cover, naturally and briefly:
   • What MBA Compass is — an MBA discovery and decision platform for Indian aspirants (B School Buzz product) that brings colleges, exams, coaching, mocks, and AI tools into one place.
