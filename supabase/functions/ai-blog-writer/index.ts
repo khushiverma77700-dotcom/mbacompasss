@@ -1108,7 +1108,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    a. Summary <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
    c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
-   d. <h2>Key Takeaways</h2> — 8-10 bullets, each starting with <strong>Bold lead phrase:</strong> followed by 1-2 full sentences (15-30 words each).
+   d. <h2>Takeaways</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:", or the heading "Key Takeaways".
    e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer must give exact figures, named entities, dates and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
