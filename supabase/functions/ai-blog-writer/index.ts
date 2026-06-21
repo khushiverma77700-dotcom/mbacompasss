@@ -412,18 +412,38 @@ async function createSectionHtml(brief: BlogBrief, draft: any, section: any, ind
         required: ["heading", "html"],
         additionalProperties: false,
       },
-      user: `Write section ${index + 1} for the article "${draft.title}" targeting "${brief.targetKeyword}".
+      user: (() => {
+        const totalSections = (draft.sections || []).length || 6;
+        const isFirst = index === 0;
+        const isMiddle = index === Math.floor(totalSections / 2);
+        const isLast = index === totalSections - 1;
+        const ctaNote = isFirst
+          ? 'INCLUDE CTA #1 (after-intro position): end this section with a <p><strong>Mentor tip:</strong> ...</p> CTA paragraph in the tone "Want expert guidance for MBA admissions? Connect with our mentors today." containing 1-2 internal links (e.g. /profile-analyzer, /college-shortlister).'
+          : isMiddle
+          ? 'INCLUDE CTA #2 (mid-article position): end this section with a <p><strong>Need help?</strong> ...</p> CTA paragraph in the tone "Need help selecting the right MBA college? Explore our MBA counseling services." containing 1-2 internal links (e.g. /college-shortlister, /mba-roi-calculator).'
+          : '';
+        const imgNote = (isFirst || isMiddle || isLast)
+          ? `INCLUDE one <img src="/images/${normalizeSlug(brief.targetKeyword)}-${index + 1}.jpg" alt="<descriptive alt containing primary or secondary keyword>" /> placed after the first paragraph.`
+          : '';
+        return `Write section ${index + 1} of ${totalSections} for the article "${draft.title}" targeting primary keyword "${brief.targetKeyword}".
 
 Section heading: ${section.heading}
 Section angle: ${section.angle}
-Existing article plan headings: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
+All planned headings: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
 
-Requirements:
-- Output exactly one <h2>${section.heading}</h2> section, 450-650 words.
-- Include 4-6 detailed paragraphs, one <h3>, one 5+ row table, and one 5+ item bullet or numbered list.
-- Use current ${targets.currentYear} Indian MBA data, named colleges/recruiters/exams, realistic INR figures and [src:Source Year] markers.
-- Add 1-2 contextual internal relative links only.
-- Do not repeat content from other planned sections.`,
+HARD requirements:
+- Output exactly one <h2>${section.heading}</h2> block, 450-650 words.
+- 4-6 short paragraphs (each ≤ 60 words, max 3-4 lines, one idea each). One <h3> sub-section. One 5+ row <table>. One 5+ item <ul> or <ol>.
+- At least one concrete data point (number / INR figure / %ile / rank / date) per ~300-500 words. Bold important numbers with <strong>.
+- 2-4 contextual internal relative links inside this section (anchor = entity name or descriptive phrase; never "click here").
+- If this section answers a "what/why/how" style question, the FIRST sentence after the H2 must be a direct 1-2 sentence answer (featured-snippet style).
+- Use current ${targets.currentYear}-${targets.currentYear + 1} Indian MBA data with named colleges/recruiters/exams and [src:Source Year] markers (no bare URLs, no external <a>).
+- Name relevant entities (IIMs, XLRI, FMS, MDI, SPJIMR, NMIMS, CAT, XAT, NMAT, SNAP, CMAT, AICTE, UGC, NIRF) where it fits.
+- Demonstrate EEAT with at least one phrase like "Based on placement reports…", "According to official admission data…", "Industry experts suggest…", "As per NIRF ${targets.currentYear}…".
+- Do NOT repeat content from other planned sections.
+${imgNote}
+${ctaNote}`;
+      })(),
     });
     const html = stripExternalLinks(result.html || "");
     return html && countWords(html) > 180 ? html : fallbackSectionHtml(brief, section.heading);
