@@ -268,16 +268,42 @@ MBA Compass brand mention (MANDATORY — every article must include this):
 - End the section with 2-3 contextual internal links chosen from: /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks — pick the ones that best fit the article's topic.
 - Tone: helpful and informative, like a senior recommending a useful resource. Avoid words like "best", "ultimate", "unbeatable", "must-have".
 
-Final quality checklist (the model must self-verify before returning):
-✓ Reads like a human MBA mentor, not an AI.
-✓ Directly answers the title's search intent throughout.
-✓ Zero banned AI phrases (see voice rules).
-✓ Paragraphs are 2-3 sentences, content is mobile-scannable.
-✓ At least 4 data-rich tables and 6+ lists across the article.
-✓ 8-15 contextual internal links with descriptive anchors.
-✓ SEO rules satisfied (keyword placement, meta length, headings, FAQs).
-✓ "About MBA Compass" section is present after the FAQ, before the Conclusion.
-✓ Article is informative, engaging, and clearly written for Indian MBA aspirants.`;
+STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule below is non-negotiable):
+1. Title (H1): 50-60 chars. Primary keyword appears naturally. Benefit-driven. Use a number/year/comparison/guide/question form when relevant.
+2. Meta Title: MAX 60 chars. Primary keyword near the START. Different wording from H1 but closely related. No question mark.
+3. Meta Description: 150-160 chars (target 155). Primary keyword exactly ONCE. State one clear benefit + an action cue. Declarative.
+4. URL Slug: short and keyword-focused, MAX 5 words, hyphenated, lowercase, no filler words ("top", "best", "complete", "guide", "for", "the").
+5. Introduction: FIRST paragraph 50-80 words. Primary keyword in the first 100 words. State what the article covers + directly address the search intent. Open with a <p><strong>Summary:</strong> ...</p> answer block, then 1-2 hook paragraphs.
+6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. Bold ONLY for important info. Consistent style throughout. Never wall-of-text.
+7. Headings: strict hierarchy H1 → H2 → H3 → H4. Never skip a level. Never use H5/H6.
+8. Keyword Placement Matrix — primary keyword MUST appear in ALL of: Title, Meta Title, Meta Description, URL slug, first 100 words of intro, at least one H2 heading, the Conclusion paragraph.
+9. Keyword Density: primary keyword 1-2% (~15-25 mentions per 2,000 words). Distribute evenly. Never force it.
+10. Headings as user queries: every H2 should answer a real search intent for the topic (questions worded as benefit-driven statements; FAQ section H3s may be literal questions).
+11. Data cadence: a concrete data point (number, %, INR figure, rank, date, recruiter, percentile) every 300-500 words. Bold important numbers. Only recent ${currentYear}-${currentYear + 1} / verified data.
+12. Tables: REQUIRED whenever 2+ entities are being compared or any rows × columns information exists. Minimum 4 tables per article. 5+ rows each.
+13. Lists: REQUIRED whenever 3+ items, steps, factors, pros/cons, features appear. Minimum 6 lists per article.
+14. Featured-snippet optimization: directly under any question-shaped H2 (and inside every FAQ), give a 1-2 sentence direct answer FIRST, then expand.
+15. GEO (ChatGPT / Gemini / Claude / Perplexity / Google AI Overviews): use clear definitions, direct answers, FAQ format, expert insights, comparisons, and statistics so generative engines can quote you cleanly.
+16. Entity SEO: name real, relevant entities throughout — colleges (IIM Ahmedabad, IIM Bangalore, FMS Delhi, XLRI, MDI, SPJIMR, NMIMS, IIFT, IMT), exams (CAT, XAT, NMAT, SNAP, CMAT, MAT, IIFT, MICAT), bodies (AICTE, UGC, NIRF, MoE), recruiters (McKinsey, BCG, Bain, Accenture, TAS, ABG, HUL, ITC, Goldman Sachs).
+17. Internal linking: 1 contextual internal link every 300-500 words. Mandatory placements: at least one after the intro, one mid-article, one before the conclusion. Total 12-20 internal links. Anchor must be the entity name or a natural descriptive phrase — never "click here", "read more".
+18. External "citations": 3-5 authoritative source MENTIONS (gov sites, NIRF, AICTE, UGC, official college websites, recent research/industry reports, Economic Times, Business Standard). Cite them by NAME in plain text using [src:Source Year] markers — NEVER render bare URLs or <a> tags to external domains.
+19. Images: include 3-5 <img> placeholders across the article with keyword-based filenames and descriptive alt text. Format: <img src="/images/<keyword-slug>-<n>.jpg" alt="<descriptive alt with primary or secondary keyword>" />. Place near top, middle, and lower-third of the article.
+20. CTAs at 3 FIXED positions: (a) after the introduction, (b) middle of the article, (c) just before the conclusion. Use the mentor voice (e.g. "Want expert guidance for MBA admissions? Connect with our mentors today.", "Need help selecting the right MBA college? Explore our MBA counseling.", "Start your MBA journey today by exploring top colleges and admission opportunities."). Each CTA paragraph contains 1-2 internal links.
+21. Key Takeaways section: REQUIRED, placed JUST BEFORE the Conclusion. <h2>Key Takeaways</h2> with 4-6 bullets, each starting with <strong>Bold lead:</strong>.
+22. Conclusion: 100-150 words. Summarises the article. Primary keyword appears EXACTLY ONCE. Ends with a final CTA paragraph that links to 2-3 most relevant tools.
+23. FAQs: 5-10 questions (target 8). Each answer 40-80 words. People-Also-Ask style. Direct answer first sentence, then 1-2 supporting lines with a concrete number/name.
+24. EEAT: demonstrate Experience, Expertise, Authority, Trust. Use phrases like "Based on placement reports published by leading MBA institutes…", "According to official admission data…", "Industry experts suggest…", "As per the latest NIRF ranking…".
+25. Fixed structural order (NEVER skip / NEVER reorder): Title → Meta Title → Meta Description → Intro (50-80w first para) → Quick Summary Table (H2 "At a Glance" / "Snapshot" / "Key Highlights" with table or bullets of core data points) → Main H2/H3 sections (with stats, images, internal links, comparison tables, expert insights interleaved) → CTA 1 (after intro) → CTA 2 (mid-article) → Important Data & Statistics block → "About MBA Compass" H2 → Key Takeaways H2 → CTA 3 (before conclusion) → FAQs H2 → Conclusion H2 → Final CTA paragraph.
+
+Final quality checklist (self-verify before returning):
+✓ All 25 rules above satisfied.
+✓ Meta title ≤60 chars, meta description 150-160 chars.
+✓ First intro paragraph is 50-80 words and contains the primary keyword.
+✓ At least 4 tables, 6 lists, 3-5 image tags, 12-20 internal links, 3 CTAs at fixed positions.
+✓ 5-10 FAQs, each answer 40-80 words.
+✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
+✓ "About MBA Compass" present after Data & Statistics, before Key Takeaways.
+✓ Zero banned AI phrases. Reads like a human MBA mentor.`;
 }
 
 async function createOutlineDraft(brief: BlogBrief) {
