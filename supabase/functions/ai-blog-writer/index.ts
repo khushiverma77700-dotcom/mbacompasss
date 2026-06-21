@@ -39,22 +39,47 @@ const stripEscapeArtifacts = (s: string): string =>
     .replace(/<li>\s*(?:\\n|\/n|\s)*\s*<\/li>/gi, "")
     .replace(/[ \t]{2,}/g, " ");
 
+const tameBold = (html: string): string => {
+  let out = String(html || "");
+  // Normalize <b> to <strong>
+  out = out.replace(/<b(\s[^>]*)?>/gi, "<strong>").replace(/<\/b>/gi, "</strong>");
+  // Drop empty strongs
+  out = out.replace(/<strong>\s*<\/strong>/gi, "");
+  // Unwrap <strong> that wraps an entire block-level tag
+  out = out.replace(/<strong>\s*(<(?:p|li|h[2-6]|td|th|tr|ul|ol|table|thead|tbody|blockquote|div)\b[\s\S]*?<\/(?:p|li|h[2-6]|td|th|tr|ul|ol|table|thead|tbody|blockquote|div)>)\s*<\/strong>/gi, "$1");
+  // Unwrap overly long <strong> spans (>12 words = whole sentence, not a highlight)
+  out = out.replace(/<strong>([\s\S]*?)<\/strong>/gi, (_m, inner) => {
+    const text = String(inner).replace(/<[^>]+>/g, " ").trim();
+    const words = text.split(/\s+/).filter(Boolean).length;
+    return words > 12 ? inner : `<strong>${inner}</strong>`;
+  });
+  return out;
+};
+
 const stripExternalLinks = (html: string) => {
   let out = stripEscapeArtifacts(html || "");
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
-  // Remove ALL <img> tags — blog should be text-only for uniform typography
+  // Remove ALL images / figures / svg — text-only blog
   out = out.replace(/<img\b[^>]*\/?>/gi, "");
+  out = out.replace(/<picture\b[^>]*>[\s\S]*?<\/picture>/gi, "");
   out = out.replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, "");
+  out = out.replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, "");
+  // Strip markdown image syntax ![alt](url)
+  out = out.replace(/!\[[^\]]*\]\([^)]*\)/g, "");
+  // Strip paragraphs that are just image placeholders
+  out = out.replace(/<p>\s*(?:image|img|figure|photo|illustration|infographic)\s*[:\-—\u2013\u2014][\s\S]*?<\/p>/gi, "");
   // Strip <font> tags
   out = out.replace(/<\/?font\b[^>]*>/gi, "");
-  // Strip inline style="", class="", id="", face="", color="" on any tag — uniform typography
+  // Strip inline attributes for uniform typography
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*"[^"]*"/gi, "");
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*'[^']*'/gi, "");
-  // Strip banned "Quick Summary" / TL;DR labels — only "Summary" is allowed
+  // Strip banned summary labels
   out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
   out = out.replace(/\bTL;?DR\b/gi, "Summary");
+  // Tame runaway bold so only short highlights stay bold
+  out = tameBold(out);
   return out.replace(/[ \t]{2,}/g, " ").trim();
 };
 
@@ -290,7 +315,7 @@ STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule b
 3. Meta Description: 150-160 chars (target 155). Primary keyword exactly ONCE. State one clear benefit + an action cue. Declarative.
 4. URL Slug: short and keyword-focused, MAX 5 words, hyphenated, lowercase, no filler words ("top", "best", "complete", "guide", "for", "the").
 5. Introduction: FIRST paragraph 50-80 words. Primary keyword in the first 100 words. State what the article covers + directly address the search intent. Open with a <p><strong>Summary:</strong> ...</p> answer block, then 1-2 hook paragraphs.
-6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. Bold ONLY for important info. Consistent style throughout. Never wall-of-text.
+6. Paragraphs: MAX 3-4 lines (≤ 60 words). One idea per paragraph. BOLD RULES (STRICT): use <strong> ONLY on short fragments — a single data point (number/INR figure/%/date/rank), a 2-4 word lead phrase at the start of a bullet, a key entity name, or one short emphasis phrase. NEVER wrap an entire sentence, paragraph, list item, table cell, or heading in <strong>. A <strong> span must always be ≤ 12 words. The article must NOT read as mostly-bold text.
 7. Headings: strict hierarchy H1 → H2 → H3 → H4. Never skip a level. Never use H5/H6.
 8. Keyword Placement Matrix — primary keyword MUST appear in ALL of: Title, Meta Title, Meta Description, URL slug, first 100 words of intro, at least one H2 heading, the Conclusion paragraph.
 9. Keyword Density: primary keyword 1-2% (~15-25 mentions per 2,000 words). Distribute evenly. Never force it.
@@ -315,7 +340,8 @@ Final quality checklist (self-verify before returning):
 ✓ All 25 rules above satisfied.
 ✓ Meta title ≤60 chars, meta description 150-160 chars.
 ✓ First intro paragraph is 50-80 words and contains the primary keyword.
-✓ At least 4 tables, 6 lists, 3-5 image tags, 12-20 internal links, 3 CTAs at fixed positions.
+✓ At least 4 tables, 6 lists, 12-20 internal links, 3 CTAs at fixed positions. NO images / NO <img> / NO figure / NO image placeholders anywhere.
+✓ <strong> used sparingly on short highlights only — NEVER on full sentences, paragraphs, list items, or table cells.
 ✓ 5-10 FAQs, each answer 40-80 words.
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
 ✓ "About MBA Compass" present after Data & Statistics, before Key Takeaways.
@@ -1009,7 +1035,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - Either a comparison <table> with 5+ rows of real ${currentYear} numbers OR a numbered step-by-step checklist
    - 1-2 contextual internal links anchored to topic-relevant entities
    - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
-   - A short closing takeaway sentence in <strong> at the end of the section
+   - A short closing takeaway sentence; you may bold ONLY a 2-4 word fragment of it with <strong>. NEVER wrap the whole sentence in <strong>.
 3. **Keyword usage — HIT THE TARGET DENSITY**: primary keyword "${targetKw}" MUST appear EXACTLY ${targetOccurrences} times (±10%) across the full article to hit ~${density}% density over ${targetWords} words. This is a HARD requirement set by the editor — do NOT under-deliver. Place exact-match in title, H1, slug, meta title, meta description, first 100 words, every H2 cluster (~once per 200-300 words of body), and the conclusion. Distribute evenly across sections — never cluster all occurrences in one paragraph. Also weave 20-30 LSI/semantic variants for natural readability, but those are IN ADDITION to the ${targetOccurrences} exact-match occurrences, not a substitute. Count as you write.
 4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
@@ -1033,8 +1059,9 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - **External authority mentions** (plain text, no fabricated URLs): cite the AUTHORITATIVE sources for THIS specific topic (e.g. for IIM-A placement → IIM Ahmedabad official PR ${currentYear - 1}-${String(currentYear).slice(-2)}; for CAT → IIM-conducting-institute CAT ${currentYear} notification; for NIRF data → NIRF ${currentYear}).
    - **Featured-snippet bait**: ≥2 direct-answer <p> right under an <h2>, ≥1 numbered <ol> step-by-step list, ≥2 comparison <table>.
    - **E-E-A-T signals**: cite specific [src:Source Year] markers; name REAL recruiters & B-schools relevant to THIS topic only.
-   - <strong> on 12-20 high-value phrases. <em> sparingly.
-10. **FORMATTING POLISH**: Bold lead 2-4 words of important paragraphs. <h2> 4-9 words, benefit-driven. No ALL-CAPS.
+    - <strong> on 12-20 SHORT high-value fragments only (data points, numbers, named entities, 2-4 word lead phrases). Each <strong> ≤ 12 words. NEVER bold full sentences, paragraphs, list items, table cells, or headings. <em> sparingly.
+    - ABSOLUTELY NO IMAGES: do NOT emit any <img>, <picture>, <figure>, <svg>, image URLs, or "Image:" / "Infographic:" placeholders. The blog is strictly text-only.
+10. **FORMATTING POLISH**: Bold ONLY a 2-4 word lead of important paragraphs (not the whole paragraph). <h2> 4-9 words, benefit-driven. No ALL-CAPS.
 11. Real, current Indian MBA ecosystem data: CAT ${currentYear} dates, NIRF ${currentYear} rankings, ${currentYear - 1}-${String(currentYear).slice(-2)} placement averages. Use only figures relevant to THIS topic.
 12. NEVER fabricate implausible numbers. Realistic ${currentYear - 1}-${currentYear} ranges only.
 13. NO <h1> — title rendered separately.
