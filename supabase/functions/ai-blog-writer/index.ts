@@ -338,19 +338,33 @@ async function createOutlineDraft(brief: BlogBrief) {
         required: ["title", "slug", "metaTitle", "metaDescription", "excerpt", "intro", "h1Tag", "keywords", "author", "sections", "faqs"],
         additionalProperties: false,
       },
-      user: `Create a topic-specific SEO plan for "${brief.title}" targeting "${targetKw}".
+      user: `Create a topic-specific SEO plan for "${brief.title}" targeting primary keyword "${targetKw}".
 
-Return metadata and a 250-350 word intro only. The intro must start with <p><strong>Summary:</strong> and give a direct answer. Then return ${targets.sectionCount} detailed H2 section plans. Each planned section must be unique, specific to this topic, and suitable for 450-650 words with a table/list. Also return 10 FAQ questions. Secondary keywords: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally"}. Category: ${brief.category || "news"}.`,
+Return:
+- title: 50-60 chars, benefit-driven, contains "${targetKw}" naturally, may include the year ${targets.currentYear}.
+- slug: short keyword-focused, MAX 5 hyphenated words, lowercase, no filler words (no "top", "best", "complete", "guide", "for", "the").
+- metaTitle: MAX 60 chars, "${targetKw}" near the start, different wording from title.
+- metaDescription: 150-160 chars (target 155), contains "${targetKw}" exactly once, one clear benefit + action cue.
+- h1Tag: same intent as title, 50-60 chars.
+- excerpt: 1-2 sentences (≤ 200 chars).
+- intro: 250-350 word HTML block. The FIRST <p> must be 50-80 words, must include "${targetKw}" within the first 100 words, and must start with <p><strong>Summary:</strong> giving a direct answer. Follow with 1-2 hook paragraphs (≤ 60 words each).
+- sections: ${targets.sectionCount} unique H2 section plans (heading + angle), each suitable for 450-650 words with a table/list. The FIRST planned section MUST be "Key Highlights" / "At a Glance" (Quick Summary Table). Include later sections explicitly covering: comparison tables, important data & statistics, expert insights.
+- faqs: 8 People-Also-Ask style questions (between 5 and 10).
+
+Secondary keywords to weave naturally: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally from topic"}.
+Category: ${brief.category || "news"}.`,
     });
     const sections = Array.isArray(outline.sections) && outline.sections.length ? outline.sections : fallback;
+    const metaTitleRaw = String(outline.metaTitle || brief.metaTitle || brief.title);
+    const metaDescRaw = String(outline.metaDescription || brief.metaDescription || outline.excerpt || "");
     return {
-      title: String(outline.title || brief.title).slice(0, 90),
+      title: String(outline.title || brief.title).slice(0, 65),
       slug: normalizeSlug(outline.slug || brief.slug || targetKw),
-      metaTitle: String(outline.metaTitle || brief.metaTitle || brief.title).slice(0, 70),
-      metaDescription: String(outline.metaDescription || brief.metaDescription || outline.excerpt || "").slice(0, 170),
+      metaTitle: metaTitleRaw.slice(0, 60),
+      metaDescription: metaDescRaw.length > 160 ? metaDescRaw.slice(0, 160) : metaDescRaw,
       excerpt: String(outline.excerpt || ""),
       intro: stripExternalLinks(outline.intro || `<p><strong>Summary:</strong> ${escapeHtml(brief.title)} is explained below with updated MBA admissions, fees, placements and decision points for Indian applicants.</p>`),
-      h1Tag: String(outline.h1Tag || brief.title).slice(0, 90),
+      h1Tag: String(outline.h1Tag || brief.title).slice(0, 65),
       keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 20) : [targetKw],
       primaryKeyword: targetKw,
       author: outline.author || "MBA Compass Editorial",
