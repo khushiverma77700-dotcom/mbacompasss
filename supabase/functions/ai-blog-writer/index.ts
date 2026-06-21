@@ -56,6 +56,57 @@ const tameBold = (html: string): string => {
   return out;
 };
 
+// Strip AI-flavoured filler words/phrases that scream "ChatGPT wrote this".
+// Used inside stripExternalLinks so EVERY piece of generated HTML is sanitized.
+const deAiify = (html: string): string => {
+  let out = String(html || "");
+
+  // --- Section/heading rename: drop generic "Key" / "Highlights" labels ---
+  out = out.replace(/\bKey\s+Highlights\b/gi, "Snapshot");
+  out = out.replace(/\bKey\s+Highlight\b/gi, "Snapshot");
+  out = out.replace(/\bKey\s+Takeaways\b/gi, "Takeaways");
+  out = out.replace(/\bKey\s+Takeaway\b/gi, "Takeaway");
+  out = out.replace(/\bKey\s+Insights?\b/gi, "Insights");
+  out = out.replace(/\bKey\s+Points?\b/gi, "Points");
+  out = out.replace(/\bKey\s+Highlights?\s*&\s*Snapshot\b/gi, "Snapshot");
+  out = out.replace(/\bAt\s+a\s+Glance\b/gi, "Snapshot");
+
+  // --- Strip leading AI labels inside bold lead phrases:
+  //     <strong>Key: …</strong>, <strong>Highlight: …</strong> etc.
+  const banLeadWords = "Key|Keys|Highlight|Highlights|Pro\\s*Tip|Tip|Note|Important|Important\\s*Note|Insight|Insights|Quick\\s*Tip|Bold\\s*lead|Lead|Heads\\s*up|Takeaway|Bonus";
+  const leadRe = new RegExp(`<strong>\\s*(?:${banLeadWords})\\s*[:\\-\u2013\u2014]\\s*`, "gi");
+  out = out.replace(leadRe, "<strong>");
+  // Same labels when written as plain prefix at start of a list item / paragraph
+  const plainLeadRe = new RegExp(`(<(?:li|p)>\\s*)(?:${banLeadWords})\\s*[:\\-\u2013\u2014]\\s*`, "gi");
+  out = out.replace(plainLeadRe, "$1");
+
+  // --- Banned generic AI cliché words anywhere in copy ---
+  const banWordList = [
+    "delve into", "delves into", "dive deep", "deep dive",
+    "in today's fast-paced world", "in today's digital age", "in this ever-evolving",
+    "ever-evolving", "ever-changing landscape", "rapidly evolving",
+    "unlock the secrets", "unlock the power", "unlock the potential",
+    "embark on", "embarking on", "navigate the complexities", "navigate through",
+    "elevate your", "leverage", "leverages", "leveraging",
+    "seamless", "seamlessly", "robust", "cutting-edge", "state-of-the-art",
+    "game-changer", "game changer", "game-changing",
+    "pivotal", "paramount", "quintessential", "tapestry", "in the realm of",
+    "moreover", "furthermore", "in conclusion", "it is worth noting that",
+    "it's important to note", "needless to say", "rest assured",
+    "a testament to", "harness the power",
+  ];
+  for (const phrase of banWordList) {
+    const re = new RegExp(`\\b${phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b[,.:;]?\\s*`, "gi");
+    out = out.replace(re, "");
+  }
+
+  // Collapse any double spaces / orphan punctuation left by the strips
+  out = out.replace(/\s+([,.;:!?])/g, "$1");
+  out = out.replace(/<strong>\s*[:\-\u2013\u2014]\s*/gi, "<strong>");
+  out = out.replace(/<strong>\s*<\/strong>/gi, "");
+  return out;
+};
+
 const stripExternalLinks = (html: string) => {
   let out = stripEscapeArtifacts(html || "");
   out = out.replace(/<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1");
@@ -78,6 +129,8 @@ const stripExternalLinks = (html: string) => {
   // Strip banned summary labels
   out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
   out = out.replace(/\bTL;?DR\b/gi, "Summary");
+  // Strip generic AI words / labels (Key, Highlight, Pro Tip, etc.)
+  out = deAiify(out);
   // Tame runaway bold so only short highlights stay bold
   out = tameBold(out);
   return out.replace(/[ \t]{2,}/g, " ").trim();
