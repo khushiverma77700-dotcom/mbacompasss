@@ -587,13 +587,13 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  // Fixed structural order: sections → About MBA Compass → Key Takeaways → CTA #3 → FAQs → Conclusion → updated stamp
+  // Fixed structural order: sections → Key Takeaways → CTA #3 → FAQs → Conclusion → About MBA Compass (LAST) → updated stamp
   const closingHtml = [
-    draft.aboutCompassHtml || "",
     draft.keyTakeawaysHtml || "",
     draft.ctaHtml || "",
     draft.faqHtml || "",
     draft.conclusionHtml || "",
+    draft.aboutCompassHtml || "",
     `<p><em>Last updated: ${targets.todayIso}</em></p>`,
   ].filter(Boolean).join("\n");
   const introRaw = stripExternalLinks(draft.intro || "");
