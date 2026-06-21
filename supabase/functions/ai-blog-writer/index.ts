@@ -720,7 +720,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     conclusionWords,
     keywordOccurrences: finalOccurrences,
     keywordDensityPct: finalDensity,
-    hasKeyTakeaways: /<h2[^>]*>\s*Key Takeaways/i.test(content),
+    hasKeyTakeaways: /<h2[^>]*>\s*(?:Key\s+)?Takeaways/i.test(content),
     hasAboutCompass: /<h2[^>]*>\s*About MBA Compass/i.test(content),
     hasConclusion: /<h2[^>]*>\s*(Conclusion|Final Word|Bottom Line)/i.test(content),
   };
