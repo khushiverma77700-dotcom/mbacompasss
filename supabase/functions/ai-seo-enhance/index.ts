@@ -175,6 +175,100 @@ function getDefaultSchemas(contentType: string, data: Record<string, any>, siteU
   return [{ "@context": "https://schema.org", "@type": "WebPage", name: `MBA Coaching in ${name}`, description, url: `${siteUrl}/colleges/${slug}` }, breadcrumb, org];
 }
 
+const STOP_WORDS = new Set(["a","an","and","are","as","at","be","best","by","can","for","from","guide","how","in","into","is","latest","new","of","on","or","the","to","top","vs","with","year","your"]);
+
+const cleanKeyword = (value: any): string => String(value || "")
+  .replace(/<[^>]*>/g, " ")
+  .replace(/[|–—:;()[\]{}]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const titleCaseKeyword = (value: string): string => cleanKeyword(value)
+  .split(" ")
+  .map((word) => (/^(MBA|CAT|XAT|NMAT|SNAP|CMAT|MAT|IIFT|GMAT|GRE|IIM|XLRI|MDI|SPJIMR)$/i.test(word) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+  .join(" ");
+
+const uniqueKeywords = (items: any[]): string[] => Array.from(new Set(
+  items
+    .flatMap((item) => Array.isArray(item) ? item : [item])
+    .map((item) => typeof item === "string" ? item : item?.keyword || item?.query || item?.name || item?.term || "")
+    .map(cleanKeyword)
+    .filter((kw) => kw.length >= 3 && kw.length <= 90)
+));
+
+const wordBoundarySlice = (value: string, max: number): string => {
+  const clean = cleanKeyword(value);
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max + 1).replace(/\s+\S*$/, "").trim();
+  return (cut || clean.slice(0, max)).replace(/[,.\-–—:;]+$/, "").trim();
+};
+
+function buildFallbackKeywordBuckets(contentType: string, data: Record<string, any>, contentText: string) {
+  const pageName = cleanKeyword(data.title || data.name || data.full_name || "MBA guide");
+  const year = new Date().getFullYear();
+  const base = cleanKeyword(data.primary_keyword || data.targetKeyword || pageName).toLowerCase();
+  const sourceWords = uniqueKeywords(
+    `${pageName} ${data.category || ""} ${data.city || ""} ${data.state || ""} ${contentText.slice(0, 1200)}`
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
+  ).slice(0, 10);
+  const entity = sourceWords.slice(0, 3).join(" ") || base;
+  const mbaCore = ["MBA admission", "MBA colleges", "MBA fees", "MBA placements", "MBA cutoff", "MBA entrance exams", "CAT preparation", "MBA application", "B school shortlist", "MBA ROI"];
+  const articleCore = contentType === "article" ? ["MBA blog", "MBA guide", "MBA admission guide", "MBA career planning"] : [];
+  return {
+    primary: uniqueKeywords([base, `${base} ${year}`, `${base} guide`]).slice(0, 3),
+    shortTail: uniqueKeywords([`${entity} MBA`, `${entity} admission`, `${entity} fees`, `${entity} cutoff`, `${entity} placements`, ...mbaCore, ...articleCore]).slice(0, 10),
+    longTail: uniqueKeywords([
+      `${base} complete guide ${year}`,
+      `${base} eligibility fees cutoffs placements`,
+      `${base} admission process step by step`,
+      `${base} for Indian MBA aspirants`,
+      `${base} colleges exams and selection process`,
+      `how to choose ${base} for MBA`,
+      `best strategy for ${base}`,
+      `${base} latest updates ${year}`,
+      `${base} comparison and shortlist tips`,
+      `${base} ROI fees salary analysis`,
+      `${base} important dates and deadlines`,
+      `${base} mistakes to avoid`,
+      `${base} expert tips for students`,
+      `${base} application checklist`,
+      `${base} admission chances calculator`,
+    ]).slice(0, 15),
+    faq: uniqueKeywords([
+      `What is ${base}?`, `How to apply for ${base}?`, `Which colleges are best for ${base}?`, `Is ${base} worth it?`,
+      `What are the fees for ${base}?`, `What cutoff is needed for ${base}?`, `How to prepare for ${base}?`, `When should I start ${base}?`,
+      `Can working professionals choose ${base}?`, `Does ${base} need CAT score?`, `What salary can I expect after ${base}?`, `How does MBA Compass help with ${base}?`,
+    ]).slice(0, 12),
+    trending: uniqueKeywords([`${base} ${year}`, `${base} ${year + 1}`, `${base} latest updates`, `${base} new rules`, `${base} admission ${year}`, `${base} cutoff ${year}`, `${base} fees ${year}`, `${base} placement report ${year}`, `${base} application deadline ${year}`, `${base} ranking ${year}`]).slice(0, 10),
+    lsi: uniqueKeywords(["management education", "business school admission", "MBA entrance preparation", "PGDM admission", "B school selection", "admission counselling", "placement report", "cutoff percentile", "fee structure", "return on investment", "campus placements", "student profile evaluation"]).slice(0, 12),
+  };
+}
+
+function fitMetaTitle(candidate: string, primaryKeyword: string, pageName: string): string {
+  const primary = titleCaseKeyword(primaryKeyword || pageName);
+  let title = cleanKeyword(candidate).replace(/\?+/g, "");
+  if (!title || !title.toLowerCase().includes(primary.toLowerCase().slice(0, Math.min(18, primary.length)))) {
+    title = `${primary} Guide ${new Date().getFullYear()} | MBA Compass`;
+  }
+  if (title.length > 60) title = `${wordBoundarySlice(primary, 43)} | MBA Compass`;
+  if (title.length > 60) title = wordBoundarySlice(primary, 60);
+  if (title.length < 45 && !/MBA Compass/i.test(title)) title = wordBoundarySlice(`${title} | MBA Compass`, 60);
+  return title;
+}
+
+function fitMetaDescription(candidate: string, primaryKeyword: string, pageName: string): string {
+  const primary = cleanKeyword(primaryKeyword || pageName);
+  let desc = cleanKeyword(candidate);
+  if (!desc || !desc.toLowerCase().includes(primary.toLowerCase().slice(0, Math.min(18, primary.length)))) {
+    desc = `${titleCaseKeyword(primary)} explained with latest fees, cutoffs, dates, placements and admission steps. Compare options and plan your MBA shortlist.`;
+  }
+  while (desc.length < 145) desc = `${desc} Use MBA Compass to decide faster.`;
+  const fitted = wordBoundarySlice(desc, 159).replace(/[,:;\-–—]+$/, "").trim();
+  return /[.!?]$/.test(fitted) ? fitted : `${fitted}.`;
+}
+
 async function requireAdmin(req: Request): Promise<Response | null> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -282,16 +376,21 @@ CRITICAL SCORING RULES (score the CURRENT state BEFORE your fixes):
 - No proper header hierarchy → contentStructure reduced by 20
 - Technical issues (no canonical, no alt tags, etc.) → technicalSEO: 20-40
 
-KEYWORD RESEARCH GUIDELINES:
-- primary: 2-3 exact-match high-volume keywords specific to THIS page
-- shortTail: 8-10 2-3 word competitive keywords students actually search
-- longTail: 12-15 specific 4-7 word phrases with search intent (e.g., "best MBA coaching in Mumbai for working professionals 2025")
-- faq: 10-12 question-format keywords starting with What/How/Which/Is/Can/Does (e.g., "What is the fee structure of IIM Ahmedabad MBA?")
-- trending: 8-10 current year keywords with "2025", "2026", "latest", "new" (e.g., "CAT 2025 preparation strategy")
-- lsi: 10-12 semantically related terms and synonyms (e.g., for "MBA coaching" → "management entrance preparation", "B-school test prep")
+KEYWORD RESEARCH GUIDELINES — NEVER RETURN EMPTY ARRAYS:
+- primary: EXACTLY 3 page-specific high-intent keywords. For blogs/articles, include the article's core topic as keyword #1.
+- shortTail: EXACTLY 10 competitive 2-3 word keywords students actually search.
+- longTail: EXACTLY 15 specific 4-7 word phrases with admission/search intent.
+- faq: EXACTLY 12 question-format keywords starting with What/How/Which/Is/Can/Does/When/Why.
+- trending: EXACTLY 10 current-year keywords with "${new Date().getFullYear()}", "${new Date().getFullYear() + 1}", "latest", "new", "cutoff", "fees", "dates" or "placement".
+- lsi: EXACTLY 12 semantically related terms and synonyms.
 
-META TITLE RULES: Under 60 chars. Primary keyword at/near start. Include brand or location qualifier. Power words: Best, Top, Guide, Review, Compare.
-META DESCRIPTION RULES: 150-160 chars. Include primary + secondary keyword. End with CTA (Apply Now, Check Details, Compare, etc.).
+ARTICLE/BLOG SEO RULES:
+- Blog meta title must be 50-60 chars, benefit-driven, natural, with the primary keyword near the front and "MBA Compass" only if it fits.
+- Blog meta description must be 150-160 chars, primary keyword in first 120 chars, one clear benefit, and one soft action cue. No keyword stuffing.
+- Blog keywords must not be generic one-word terms; each keyword must be useful for MBA search demand.
+
+META TITLE RULES: 50-60 chars for articles/blogs; otherwise under 60 chars. Primary keyword at/near start. Include brand or location qualifier only when it fits. Use Guide, Fees, Cutoff, Dates, Compare naturally.
+META DESCRIPTION RULES: 150-160 chars. Include primary + one secondary keyword. End with a student-focused action cue (Compare, Check details, Shortlist, Plan next step).
 H1 TAG: Must be unique from meta_title. Include primary keyword naturally. Should be the main heading a student sees.
 
 TECHNICAL SEO — analyze deeply:
@@ -528,20 +627,20 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     const pageName = data.title || data.name || data.full_name || "Untitled";
     const slugBase = data.slug || pageName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
-    suggestions.meta_title = safeStr(suggestions.meta_title, `${pageName} | MBA Compass`).slice(0, 60);
-    suggestions.meta_description = safeStr(
-      suggestions.meta_description,
-      `Explore ${pageName} on MBA Compass. Find detailed information, fees, placements and admission insights for Indian MBA aspirants.`,
-    ).slice(0, 165);
+    const fallbackKeywords = buildFallbackKeywordBuckets(contentType, data, contentText);
+    const primaryForMeta = uniqueKeywords([suggestions.keywords?.primary, fallbackKeywords.primary, pageName])[0] || pageName;
+
+    suggestions.meta_title = fitMetaTitle(safeStr(suggestions.meta_title), primaryForMeta, pageName);
+    suggestions.meta_description = fitMetaDescription(safeStr(suggestions.meta_description), primaryForMeta, pageName);
     suggestions.h1_tag = safeStr(suggestions.h1_tag, pageName);
 
     suggestions.keywords = {
-      primary: safeArr(suggestions.keywords?.primary),
-      shortTail: safeArr(suggestions.keywords?.shortTail),
-      longTail: safeArr(suggestions.keywords?.longTail),
-      faq: safeArr(suggestions.keywords?.faq),
-      trending: safeArr(suggestions.keywords?.trending),
-      lsi: safeArr(suggestions.keywords?.lsi),
+      primary: uniqueKeywords([suggestions.keywords?.primary, fallbackKeywords.primary]).slice(0, 3),
+      shortTail: uniqueKeywords([suggestions.keywords?.shortTail, fallbackKeywords.shortTail]).slice(0, 10),
+      longTail: uniqueKeywords([suggestions.keywords?.longTail, fallbackKeywords.longTail]).slice(0, 15),
+      faq: uniqueKeywords([suggestions.keywords?.faq, fallbackKeywords.faq]).slice(0, 12),
+      trending: uniqueKeywords([suggestions.keywords?.trending, fallbackKeywords.trending]).slice(0, 10),
+      lsi: uniqueKeywords([suggestions.keywords?.lsi, fallbackKeywords.lsi]).slice(0, 12),
     };
     suggestions.onPageTips = safeArr(suggestions.onPageTips);
     suggestions.contentSuggestions = safeArr(suggestions.contentSuggestions);
