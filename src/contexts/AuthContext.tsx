@@ -131,6 +131,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let cancelIdleStart: (() => void) | undefined;
     const shouldStartAuthNow = () => {
       const path = window.location.pathname;
+      const host = window.location.hostname;
+      // dashboard.mbacompass.in lives at "/" — auth must start immediately
+      // or the LMS shell sits in a skeleton state for ~3.5s.
+      if (host === "dashboard.mbacompass.in") return true;
       return path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/auth") ||
         path.startsWith("/dashboard") || path.startsWith("/profile-analyzer") || path.startsWith("/mocks");
     };

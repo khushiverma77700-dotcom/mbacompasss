@@ -3,6 +3,24 @@ import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
 import "./index.css";
 
+// Kick off the Supabase client chunk download in parallel with App.tsx
+// evaluation on auth-heavy entry routes (LMS, admin, mocks, dashboard
+// subdomain). Without this, the first auth call is gated behind a serial
+// dynamic import that adds noticeable latency on slow connections.
+try {
+  const host = window.location.hostname;
+  const path = window.location.pathname;
+  if (
+    host === "dashboard.mbacompass.in" ||
+    path.startsWith("/student") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/mocks") ||
+    path.startsWith("/auth")
+  ) {
+    import("@/integrations/supabase/client");
+  }
+} catch {}
+
 // Clear the stale-chunk reload guard once the new build has loaded successfully,
 // so any future deploy can self-heal again.
 try { sessionStorage.removeItem("__chunk_reload_attempted__"); } catch {}
