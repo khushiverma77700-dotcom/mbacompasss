@@ -150,6 +150,31 @@ const SEOHead = ({
       link?.remove();
     }
 
+    // L1: hreflang — India-focused site. Emit en-IN + x-default both
+    // pointing to the same canonical URL so Google treats India as the
+    // primary region and serves it to other English locales by default.
+    document.querySelectorAll('link[rel="alternate"][data-seo-hreflang]').forEach(n => n.remove());
+    if (canonicalHref && !shouldNoIndex) {
+      (["en-IN", "x-default"] as const).forEach((hl) => {
+        const a = document.createElement("link");
+        a.setAttribute("rel", "alternate");
+        a.setAttribute("hreflang", hl);
+        a.setAttribute("href", canonicalHref);
+        a.setAttribute("data-seo-hreflang", "1");
+        document.head.appendChild(a);
+      });
+    }
+
+    // L7: RSS feed auto-discovery for /articles
+    if (!document.querySelector('link[rel="alternate"][type="application/rss+xml"]')) {
+      const rss = document.createElement("link");
+      rss.setAttribute("rel", "alternate");
+      rss.setAttribute("type", "application/rss+xml");
+      rss.setAttribute("title", "MBA Compass — Articles");
+      rss.setAttribute("href", `${CANONICAL_ORIGIN}/feed.xml`);
+      document.head.appendChild(rss);
+    }
+
     // JSON-LD — support single or array of schemas
     const existingScripts = document.querySelectorAll('script[data-seo-jsonld]');
     existingScripts.forEach((s) => s.remove());
