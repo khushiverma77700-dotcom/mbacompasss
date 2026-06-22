@@ -140,12 +140,7 @@ const InstitutePage = () => {
   }
 
   if (!institute) {
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold">Institute not found</h1>
-        <Link to="/coaching" className="text-primary hover:underline">← Browse all coaching institutes</Link>
-      </div>
-    );
+    return <NotFound />;
   }
 
   const inst = institute as any;

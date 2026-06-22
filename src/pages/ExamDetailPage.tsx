@@ -120,11 +120,7 @@ const ExamDetailPage = () => {
     );
   }
 
-  if (!exam) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center"><h1 className="font-heading text-2xl font-bold text-foreground mb-4">Exam not found</h1><Link to="/"><Button>Go Home</Button></Link></div>
-    </div>
-  );
+  if (!exam) return <NotFound />;
 
   const { data: relatedInstitutes = [] } = useQuery({
     queryKey: ["exam-related-institutes", slug],

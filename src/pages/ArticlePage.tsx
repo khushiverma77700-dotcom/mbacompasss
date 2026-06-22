@@ -106,16 +106,7 @@ const ArticlePage = () => {
   }
 
   if (!article) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-          <h1 className="font-heading text-2xl font-bold text-foreground mb-2">Article Not Found</h1>
-          <p className="text-muted-foreground mb-4">This article may not be published yet, or the URL may be incorrect.</p>
-          <Link to="/blog"><Button>Back to Blog</Button></Link>
-        </div>
-      </div>
-    );
+    return <NotFound />;
   }
 
   const renderContent = (content: string) => {
