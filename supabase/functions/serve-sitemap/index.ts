@@ -179,15 +179,19 @@ Deno.serve(async (req) => {
     const compassEntries: Entry[] = (mbaCompass ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/mba-compass/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
 
+    // C1: /mocks/* slugs removed — auth-gated, paywalled, near-duplicate test templates.
+    //     Keep only the /mocks hub (already in STATIC_PAGES).
+    // C2: /institute/{slug}/course/{slug} removed — thin/duplicate templates;
+    //     pages now self-canonical to the parent institute, so they shouldn't be in the sitemap.
     const segments: Record<string, Entry[]> = {
       pages: [...STATIC_PAGES, ...cityEntries],
       blogs,
       categories: cats,
       colleges: collegeEntries,
-      institutes: [...instEntries, ...coachingCourseEntries],
+      institutes: instEntries,
       exams: examEntries,
       courses: [...courseEntries, ...compassEntries],
-      mocks: mockEntries,
+      mocks: [],
     };
 
     const headers = {
