@@ -42,6 +42,15 @@ const ArticlePage = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    placeholderData: () => {
+      // Seed from blog list / suggested lists so the page paints instantly
+      // while the full article fetch resolves.
+      const blog = qc.getQueryData<any[]>(["blog-articles"]);
+      const hit = blog?.find((a) => a?.slug === slug);
+      if (hit) return hit;
+      const news = qc.getQueryData<any[]>(["homepage-news"]);
+      return news?.find((a) => a?.slug === slug);
+    },
   });
 
   const { data: suggestedArticles } = useQuery({
