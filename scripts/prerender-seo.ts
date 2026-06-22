@@ -410,6 +410,148 @@ async function prerenderCategories(): Promise<number> {
   return n;
 }
 
+// ── hub pages: /colleges/type/*, /colleges/by-exam/* ────────────────────
+// These mirror the titles/intros in src/pages/CollegeHubPage.tsx. Keep in sync
+// when copy changes there.
+const TYPE_HUB_META: Record<string, { title: string; intro: string }> = {
+  iim: {
+    title: "IIM Colleges in India 2026 — Full List, CAT Cut-offs, Fees & Placements | MBA Compass",
+    intro: "Complete list of all 21 IIMs with CAT cut-offs, fees, average and highest placement packages, sectional weightages and category-wise admission criteria. Compare older, new and baby IIMs side by side.",
+  },
+  private: {
+    title: "Top Private MBA Colleges in India 2026 — Fees, Placements & Admissions | MBA Compass",
+    intro: "Top private B-schools accepting CAT, XAT, NMAT, SNAP, CMAT, IIFT and MAT — XLRI, SPJIMR, MDI, IMI, IMT, NMIMS, Symbiosis, Great Lakes, TAPMI and more. Total fees, placement records and last-year cut-offs.",
+  },
+  "top-mba": {
+    title: "Top 100 MBA Colleges in India 2026 — NIRF Ranking, Average Package & Cut-offs",
+    intro: "Top 100 MBA colleges in India ranked by NIRF Management, recruiter perception and 3-year placement consistency. Compare average package, sectoral hiring split, percentile cut-offs and total fees.",
+  },
+  pgdm: {
+    title: "Top PGDM Colleges in India 2026 — AICTE-Approved Institutes, Fees & Placements | MBA Compass",
+    intro: "Every notable AICTE-approved PGDM institute — MDI, IMT, IMI, Great Lakes, TAPMI, IFMR, Welingkar, KJ Somaiya, BIMTECH — with fees, accepted exams, NBA accreditation status and median placement.",
+  },
+  university: {
+    title: "University MBA Programmes in India 2026 — UGC-Recognised, NAAC-Accredited | MBA Compass",
+    intro: "UGC-recognised university MBA programmes including DU FMS, JNU, BHU, Pondicherry University, AMU, Jamia Millia, DTU and Anna University. NAAC grade, total fees, entrance exam and last-year cut-off.",
+  },
+  government: {
+    title: "Government MBA Colleges in India 2026 — Low Fees, Top Placements | MBA Compass",
+    intro: "Government-funded MBA colleges with the best ROI in Indian management education. IIMs, IIT B-schools, NIT management depts, FMS Delhi, JBIMS, DFS DU — with cut-offs, fees, average package and recruiter mix.",
+  },
+};
+
+const EXAM_HUB_META: Record<string, { label: string; intro: string }> = {
+  cat: { label: "CAT", intro: "Every MBA college accepting CAT scores — 21 IIMs and 1,200+ other Indian B-schools. Compare percentile cut-offs, fees, average package and accepted alternative exams." },
+  xat: { label: "XAT", intro: "MBA colleges accepting XAT scores — XLRI, XIMB, IMT, TAPMI, Great Lakes, MICA and SPJIMR. Compare XAT cut-offs, sectional importance, fees and placement track records." },
+  cmat: { label: "CMAT", intro: "AICTE-approved MBA/PGDM colleges accepting CMAT scores — JBIMS, SIMSREE, KJ Somaiya, Welingkar, Great Lakes, BIMTECH. Cut-offs, fees and placement data." },
+  mat: { label: "MAT", intro: "MAT-accepting B-schools across India with fees, cut-off percentiles and accepted CAT/XAT alternatives. Build a realistic mid-percentile shortlist." },
+  nmat: { label: "NMAT", intro: "MBA colleges accepting NMAT by GMAC scores — NMIMS Mumbai, ISB CBA, SPJIMR PGMPW, VIT, Woxsen and ICFAI. Score cut-offs (out of 360), fees and placement record." },
+  snap: { label: "SNAP", intro: "All 15 Symbiosis institutes accepting SNAP — SIBM Pune, SCMHRD, SIIB, SIBM Bengaluru, SIBM Hyderabad, SIOM Nashik and more. Cut-offs, fees and placement data." },
+  iift: { label: "IIFT", intro: "IIFT Delhi/Kolkata/Kakinada plus other B-schools accepting IIFT scores. Cut-off pattern, fees and placement-by-sector breakdowns." },
+  gmat: { label: "GMAT", intro: "Indian B-schools accepting GMAT scores — ISB, IIM 1-year programmes, SPJIMR PGMPW, Great Lakes One-Year. Typical score band, eligible programmes and average package." },
+  atma: { label: "ATMA", intro: "AIMS-member B-schools accepting ATMA scores. Cut-offs, programme fees and placement profile across South and West India." },
+};
+
+async function prerenderHubs(): Promise<number> {
+  let n = 0;
+  for (const [slug, meta] of Object.entries(TYPE_HUB_META)) {
+    const path = `/colleges/type/${slug}`;
+    const canonical = `${SITE}${path}`;
+    writeRoute(
+      path,
+      buildHtml({
+        title: clip(meta.title, 65),
+        description: clip(meta.intro, 160),
+        canonical,
+        jsonLd: {
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: meta.title,
+          url: canonical,
+          description: meta.intro,
+        },
+      }),
+    );
+    n++;
+  }
+  for (const [slug, meta] of Object.entries(EXAM_HUB_META)) {
+    const path = `/colleges/by-exam/${slug}`;
+    const canonical = `${SITE}${path}`;
+    const title = `MBA Colleges Accepting ${meta.label} Score 2026 — Cut-offs, Fees & Placements | MBA Compass`;
+    writeRoute(
+      path,
+      buildHtml({
+        title: clip(title, 65),
+        description: clip(meta.intro, 160),
+        canonical,
+        jsonLd: {
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: title,
+          url: canonical,
+          description: meta.intro,
+        },
+      }),
+    );
+    n++;
+  }
+  return n;
+}
+
+// ── static / marketing pages ────────────────────────────────────────────
+const STATIC_PAGE_META: Array<{ path: string; title: string; description: string }> = [
+  { path: "/", title: "MBA Compass — Find & Compare Top MBA Colleges & Coaching in India", description: "India's trusted platform to find, compare and review the best MBA colleges and coaching institutes for CAT, GMAT, XAT, SNAP and GRE. Fees, rankings, placements and student reviews." },
+  { path: "/colleges", title: "MBA Colleges in India 2026 — Directory of Top 1,200+ B-Schools | MBA Compass", description: "Browse 1,200+ MBA, PGDM and management colleges in India. Filter by city, tier, accepted exam, fees and placement. Compare rankings, cut-offs and student reviews in one place." },
+  { path: "/coaching", title: "Top MBA Coaching Institutes in India 2026 — Reviews, Fees & Batches | MBA Compass", description: "Compare top CAT, XAT, GMAT and SNAP coaching institutes across India — TIME, IMS, Career Launcher, Endeavor, 2IIM, iQuanta. Batch fees, faculty, mock tests and verified student reviews." },
+  { path: "/compare", title: "Compare MBA Coaching Institutes — Side-by-Side Fees, Faculty & Results | MBA Compass", description: "Compare any two MBA coaching institutes across fees, batch size, faculty, mock tests, study material, online vs offline mode and 3-year selection record. Make data-driven decisions in seconds." },
+  { path: "/college-finder", title: "AI MBA College Finder & Predictor 2026 — Personalised Shortlist | MBA Compass", description: "Input your profile and CAT/XAT/NMAT/SNAP score into our AI College Finder. Get a curated list of MBA colleges matched to your percentile, budget, location and target package." },
+  { path: "/profile-analyzer", title: "MBA Profile Analyzer 2026 — Free AI Profile Strength Score | MBA Compass", description: "Free AI Profile Analyzer rates your academics, work experience, extracurriculars and diversity against IIM and top B-school admission criteria. Get a score, a verdict and a 90-day improvement plan." },
+  { path: "/college-shortlister", title: "AI College Shortlister 2026 — Realistic IIM & B-School Apply List | MBA Compass", description: "AI College Shortlister builds a balanced 8–12 college apply-list across moonshot, target and safety schools based on your CAT percentile, profile and budget. 100-point match score per college." },
+  { path: "/cat-score-calculator", title: "CAT Score Calculator 2025 — Raw to Scaled to Percentile in Seconds | MBA Compass", description: "Free CAT 2025 Score Calculator: convert raw marks to scaled score and percentile by section (VARC, DILR, QA) using IIM normalisation. Predict your IIM call chances instantly." },
+  { path: "/mba-roi-calculator", title: "MBA ROI Calculator — Calculate Payback Period & 5-Year Earnings Delta | MBA Compass", description: "Free MBA ROI Calculator computes payback period, NPV and 5-year earnings delta from your CTC, fees, loan interest and opportunity cost. Compare any two MBA programmes financially." },
+  { path: "/about", title: "About MBA Compass — India's Independent MBA Discovery Platform | Our Team", description: "MBA Compass (by B-School Buzz) is an independent platform helping Indian MBA aspirants make informed choices. Meet the founders, editorial team and our research methodology." },
+  { path: "/contact", title: "Contact MBA Compass — Reach Our Editorial & Partnerships Team | Email & Phone", description: "Contact MBA Compass for editorial inquiries, partnerships, listing requests or feedback. Email, phone and registered office details for Akaniya Ventures Private Limited." },
+  { path: "/business-inquiry", title: "Business Inquiry — Advertise, Partner or List with MBA Compass | India", description: "Coaching institute or B-school looking to feature on MBA Compass? Submit a business inquiry for verified listing, lead generation, branded content and aspirant outreach." },
+  { path: "/list-your-business", title: "List Your MBA Coaching Institute Free on MBA Compass — Get Verified Leads", description: "List your MBA coaching institute, B-school or test prep business on MBA Compass — India's fastest-growing MBA discovery platform. Free verified listing, lead capture and analytics." },
+  { path: "/mocks", title: "Free CAT Mocks & Sectional Tests 2025 — IIM-Level Difficulty | MBA Compass", description: "Free and paid CAT mock tests calibrated to IIM CAT difficulty — full-length, sectional (VARC/DILR/QA) and topic-wise practice with detailed analytics, percentile and AI deep analysis." },
+  { path: "/courses", title: "MBA Compass Courses — AI-Generated CAT Mock Bundles & Topic Drills", description: "Buy AI-generated CAT, XAT, NMAT, SNAP, IIFT, CMAT and MAT mock bundles. Unlimited practice with adaptive difficulty, detailed solutions, percentile prediction and 24/7 access." },
+  { path: "/iim-waitlist-movement", title: "IIM Waitlist Movement 2026 — Live Tracker, RTI Data & Result Dates | MBA Compass", description: "Live IIM 2026 result tracker, expected release calendar, category-wise waitlist movement (2021–2026), RTI insights, AI-powered conversion predictions and apply-now B-school list." },
+  { path: "/mba-compass", title: "MBA Compass Courses Catalog — Paid Test-Prep, Mentoring & Mock Bundles", description: "Browse paid MBA Compass courses — CAT/XAT comprehensive prep, sectional crash courses, IIM interview mentoring and one-on-one profile review programmes from top mentors." },
+  { path: "/mba-compass/compare", title: "Compare MBA Compass Courses — Pick the Right Test-Prep Programme", description: "Side-by-side comparison of MBA Compass test-prep courses — duration, syllabus coverage, mock count, live classes, mentor access and price — to pick the right programme for your prep stage." },
+  { path: "/blog", title: "MBA Blog — Latest CAT Strategy, B-School News & Admission Insights | MBA Compass", description: "MBA blog with expert articles on CAT strategy, B-school news, IIM admissions, MBA placements, GD-PI tips, salary trends and career advice — written by ex-IIM students and admission consultants." },
+];
+
+async function prerenderStatics(): Promise<number> {
+  let n = 0;
+  for (const p of STATIC_PAGE_META) {
+    const canonical = `${SITE}${p.path === "/" ? "" : p.path}`;
+    writeRoute(
+      p.path === "/" ? "/index-prerender" : p.path,
+      buildHtml({
+        title: clip(p.title, 65),
+        description: clip(p.description, 160),
+        canonical,
+      }),
+    );
+    // Special-case "/" → write to dist/index.html directly so the SPA shell
+    // ALSO gets the homepage-specific meta baked in (overwrites the template
+    // with the homepage variant; route resolves to dist/index.html anyway).
+    if (p.path === "/") {
+      writeFileSync(
+        resolve(DIST, "index.html"),
+        buildHtml({
+          title: clip(p.title, 65),
+          description: clip(p.description, 160),
+          canonical,
+        }),
+        "utf8",
+      );
+    }
+    n++;
+  }
+  return n;
+}
+
 // ── run ─────────────────────────────────────────────────────────────────
 (async () => {
   const t0 = Date.now();
@@ -420,6 +562,8 @@ async function prerenderCategories(): Promise<number> {
     ["exams", prerenderExams],
     ["city_pages", prerenderCityPages],
     ["categories", prerenderCategories],
+    ["hubs", prerenderHubs],
+    ["statics", prerenderStatics],
   ];
 
   let total = 0;
@@ -439,3 +583,4 @@ async function prerenderCategories(): Promise<number> {
     ).toFixed(1)}s`,
   );
 })();
+
