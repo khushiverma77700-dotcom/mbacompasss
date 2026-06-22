@@ -166,10 +166,10 @@ const InstituteCoursePage = () => {
 
   return (
     <>
+      {/* C2: course pages are thin/duplicate templates — consolidate signals onto the parent institute page until each course has unique long-form content. */}
       <SEOHead
         title={seo.title}
         description={seo.description}
-        {/* C2: course pages are thin/duplicate templates — consolidate signals onto the parent institute page until each course has unique long-form content. */}
         canonical={`/institute/${inst.slug}`}
         jsonLd={combinedJsonLd}
         ogImage={seo.ogImage}
