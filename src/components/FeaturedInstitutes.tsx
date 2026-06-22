@@ -67,8 +67,11 @@ const FeaturedInstitutes = () => {
                     <img
                       src={inst.banner_url}
                       alt={inst.name}
+                      width={400}
+                      height={160}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       loading="lazy"
+                      decoding="async"
                     />
                   ) : inst.logo_url ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/90 to-primary">

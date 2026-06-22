@@ -125,11 +125,20 @@
          system fallback so the H1 (LCP) renders immediately. -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" /></noscript>
-    <!-- Inline critical CSS for faster FP -->
+    <!-- Inline critical CSS for faster FP + mobile CLS hardening.
+         The @font-face fallbacks below use Chrome's size-adjust + override
+         metrics so the system fallback matches Plus Jakarta / DM Sans
+         dimensions. This eliminates the layout shift when the real web
+         font swaps in (one of the biggest mobile CLS sources). -->
     <style>
-      body{margin:0;font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a;-webkit-font-smoothing:antialiased}
+      @font-face{font-family:"Plus Jakarta Fallback";src:local("Arial");size-adjust:104%;ascent-override:94%;descent-override:24%;line-gap-override:0%}
+      @font-face{font-family:"DM Sans Fallback";src:local("Arial");size-adjust:100%;ascent-override:96%;descent-override:24%;line-gap-override:0%}
+      body{margin:0;font-family:'DM Sans','DM Sans Fallback',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a;-webkit-font-smoothing:antialiased;text-rendering:optimizeSpeed}
       #root{min-height:100vh}
-      h1,h2,h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0}
+      h1,h2,h3{font-family:'Plus Jakarta Sans','Plus Jakarta Fallback',system-ui,sans-serif;margin:0}
+      /* Reserve hero space so the gradient block paints at the right height before JS hydrates. */
+      main>section:first-of-type{min-height:520px}
+      @media (min-width:768px){main>section:first-of-type{min-height:600px}}
       /* Minimal neutral loader painted before React mounts — disappears the moment the app mounts. */
       #app-shell{position:fixed;inset:0;z-index:1;background:#ffffff;display:flex;align-items:center;justify-content:center;pointer-events:none}
       #app-shell .shell-inner{display:flex;flex-direction:column;align-items:center;gap:14px;color:#475569;font-family:'DM Sans',system-ui,sans-serif}
