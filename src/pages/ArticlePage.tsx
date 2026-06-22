@@ -25,6 +25,7 @@ const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
 
   const { data: article, isLoading } = useQuery({
     queryKey: ["article", slug],
