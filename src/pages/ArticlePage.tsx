@@ -285,7 +285,7 @@ const ArticlePage = () => {
                   <Link key={r.id} to={`/article/${r.slug}`} className="group block p-3 rounded-xl hover:bg-muted/60 transition-colors border border-transparent hover:border-border">
                     <div className="flex gap-3">
                       {(r.image_url || r.banner_url) ? (
-                        <img src={(r.image_url || r.banner_url)!} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0"  loading="lazy" decoding="async" />
+                        <img src={(r.image_url || r.banner_url)!} alt="" width={64} height={48} className="w-16 h-12 rounded-lg object-cover flex-shrink-0" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-16 h-12 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center">
                           <BookOpen className="w-4 h-4 text-muted-foreground/30" />
@@ -328,7 +328,7 @@ const ArticlePage = () => {
                 <Link key={r.id} to={`/article/${r.slug}`} className="group block bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border hover:-translate-y-1">
                   <div className="aspect-[16/9] overflow-hidden relative bg-muted">
                     {(r.image_url || r.banner_url) ? (
-                      <img src={(r.image_url || r.banner_url)!} alt={r.title} className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
+                      <img src={(r.image_url || r.banner_url)!} alt={r.title} width={640} height={360} className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full hero-gradient flex items-center justify-center">
                         <span className="font-heading font-bold text-primary-foreground/30 text-sm">{r.category}</span>

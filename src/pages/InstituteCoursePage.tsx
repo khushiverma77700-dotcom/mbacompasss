@@ -202,7 +202,7 @@ const InstituteCoursePage = () => {
                   className="inline-flex items-center gap-2 text-[12px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-sky-100 rounded-full px-3 py-1.5 shadow-sm transition"
                 >
                   {inst.logo_url ? (
-                    <img src={inst.logo_url} alt={inst.name} className="w-5 h-5 rounded object-contain"  loading="lazy" decoding="async" />
+                    <img src={inst.logo_url} alt={inst.name} width={20} height={20} className="w-5 h-5 rounded object-contain" loading="lazy" decoding="async" />
                   ) : (
                     <Building2 className="w-3.5 h-3.5" />
                   )}
