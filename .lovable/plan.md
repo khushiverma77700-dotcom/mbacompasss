@@ -1,75 +1,71 @@
-## Goal
-Upgrade the AI Blog Writer (Admin → SEO & AI Tools → AI SEO Dashboard → Blog Titles → Write Blog via AI) so every generated article strictly follows your 25-point SEO + GEO + AI Search ruleset.
 
-## Where the change happens
-Single file: `supabase/functions/ai-blog-writer/index.ts`
+# SEO Audit & Fix Plan — mbacompass.in
 
-This edge function already has a multi-step pipeline (plan → write sections → takeaways/FAQs → save). The prompts are good but don't enforce all 25 rules. The fix is prompt + validation upgrades — no schema or UI changes needed.
+Your prompt covers ~30 distinct workstreams across 200+ files. Trying to do it all in one shot guarantees regressions, blown context, and unverifiable changes. I'll do it as 4 focused passes — each is reviewable, deployable, and builds on the last. Tell me which to start with (or say "all, in order") and I'll execute.
 
-## What I'll change
+## Current state (already in place from prior work)
 
-### 1. Rewrite the master system prompt (`writerSystemPrompt`) into a strict 25-rule charter
-Restructured into the exact sections from your spec:
-- **Title (H1)** — 50–60 chars, primary keyword, benefit-driven, year/number/comparison
-- **Meta Title** — ≤60 chars, keyword near start, different from H1
-- **Meta Description** — 150–160 chars, keyword once, clear benefit
-- **URL slug** — short, keyword-only, no filler words (max 5 words)
-- **Intro** — first paragraph 50–80 words, primary keyword in first 100 words, states what article covers + addresses intent
-- **Paragraph rules** — max 3–4 lines, one idea per paragraph, bold only for key info
-- **Heading hierarchy** — H1 → H2 → H3 → H4, never skip
-- **Keyword placement matrix** — Title / Meta Title / Meta Desc / URL / first 100 words / one H2 / conclusion (explicit checklist)
-- **Keyword density** — 1–2% primary (15–25 mentions per 2000 words), never forced
-- **Headings as user queries** — H2s phrased to answer real search questions
-- **Data cadence** — a stat every 300–500 words, important numbers bolded, only recent/verified data
-- **Tables** — required wherever comparing things
-- **Lists** — required for any 3+ items
-- **Featured-snippet blocks** — direct 1-line answer immediately under question-style H2s
-- **GEO (ChatGPT / Gemini / Claude / Perplexity / AI Overviews)** — definitions, FAQ format, expert insights, comparisons, statistics
-- **Entity SEO** — name relevant entities (IIM Ahmedabad, CAT, NMAT, AICTE, UGC, etc.) naturally
-- **Internal linking** — 1 link per 300–500 words; placed after intro, mid-content, before conclusion
-- **External linking** — 3–5 authoritative links (gov sites, official college sites, research/industry reports)
-- **Images** — 3–5 images with keyword-based filenames + descriptive alt text
-- **CTAs at 3 fixed positions** — after intro, mid-article, before conclusion (with the exact tone from your examples)
-- **Key Takeaways section** — required just before conclusion
-- **Conclusion** — 100–150 words, summary + primary keyword once + final CTA
-- **FAQs** — 5–10 questions, each answer 40–80 words
-- **EEAT** — phrases like "Based on placement reports…", "According to official admission data…", "Industry experts suggest…"
-- **Fixed structural order** — Title → Meta → Intro → Quick Summary Table → Main H2/H3 → Stats → Images → Internal Links → Comparison Tables → Expert Insights → Key Takeaways → FAQs → Conclusion → Final CTA
+- Prerender pipeline (`scripts/prerender-seo.ts`) + Cloudflare Worker bot-routing (`cloudflare/worker.js`) → Googlebot gets fully-rendered HTML.
+- Per-route `<Helmet>` via `useResolvedSeo` + `seoAutomation` (DB-driven titles/descriptions/canonicals/JSON-LD).
+- `public/robots.txt` clean, sitemap referenced, admin/auth disallowed.
+- Sitemap kept fresh by admin + 6h cron.
+- CWV: CLS audit complete, LazyMount + font-display fallbacks, dashboard auth cold-start fixed.
 
-### 2. Tighten the planner prompt
-Force the section plan returned by the planner to mirror the fixed structural order above (Quick Summary Table, Key Takeaways, Expert Insights, About MBA Compass, Conclusion + CTA) so per-section writing can't drift.
+So the foundations are solid. What's left is **enforcement, dedupe, and gap-filling**.
 
-### 3. Tighten the per-section writer prompt
-- Enforce paragraph length (3–4 lines), one-idea-per-paragraph
-- Require at least one stat per 300–500 words
-- Require lists/tables whenever 3+ items appear
-- Require 1 internal link per 300–500 words inside each section
-- Require explicit `<img alt="..." src="...">` slots with keyword-based filenames at the 3 image positions
-- Require the 3 CTAs at the fixed positions
+## Pass 1 — Metadata correctness (Critical/High)
 
-### 4. Tighten the FAQ + closing prompt
-- 5–10 FAQs, each answer 40–80 words (currently 8–12 / 60–120)
-- Conclusion 100–150 words with primary keyword + closing CTA
-- Key Takeaways block (4–6 bullets) before conclusion
+Goal: every public route ships a unique, length-correct title + description + self-referencing canonical in source HTML.
 
-### 5. Lightweight post-generation validators (server-side, non-blocking warnings)
-After the article is assembled, compute and log:
-- meta_title length (≤60), meta_description length (150–160)
-- intro first paragraph word count (50–80)
-- primary keyword count + density
-- H2 count, table count, list count, image count, internal-link count, external-link count, FAQ count
-- presence of Key Takeaways + Conclusion + About MBA Compass
+- Add a validator script `scripts/audit-seo-metadata.ts` that:
+  - Crawls sitemap, fetches each URL with `?_prerender=1`, parses `<head>`.
+  - Reports: missing/duplicate titles, missing/duplicate descriptions, title <50 or >60 chars, description <150 or >160 chars, missing/wrong canonical, canonical loops, missing OG, missing JSON-LD.
+  - Writes `reports/seo-metadata-audit.json` + a markdown summary.
+- Fix the top offenders surfaced by the report (template-level fixes in `seoAutomation.ts` defaults + per-route Helmet where DB rows are blank).
+- Enforce length bounds at write time in `AdminBulkSEO` / `AdminMetaValidator` (already partly there — wire warnings into save flow).
 
-Store these counts in the existing `ai_blog_generation_jobs.progress`/log fields so they show up in the dashboard. If any hard rule fails (e.g. meta_title > 60, FAQ count < 5), auto-trigger a single corrective re-prompt on just that piece instead of failing the whole job.
+## Pass 2 — Structured data & E-E-A-T (High)
 
-## What I will NOT change
-- No DB migrations
-- No changes to `AdminWriteBlog.tsx` UI
-- No model swap (keeps your current OpenAI-shared-key setup)
-- No new edge functions
+- Sitewide `Organization` + `WebSite` (with `SearchAction`) JSON-LD in `index.html`.
+- `BreadcrumbList` on every detail page (College, Article, Exam, Institute, Coaching, Course).
+- `Article` schema on `ArticlePage` with `author` (Person), `publisher` (Organization w/ logo), `datePublished`, `dateModified`, `image` (≥1200×630).
+- `CollegeOrUniversity` / `EducationalOrganization` schema on college pages.
+- `Course` schema on MBA Compass courses.
+- `FAQPage` only when FAQs actually exist (dedupe already handled in `useResolvedSeo`).
+- Add `author` pages (`/author/[slug]`) with `Person` schema — needed for E-E-A-T + Discover eligibility.
 
-## Risk
-Prompts get longer → slightly higher token cost per blog (~10–15%). Worth it for the quality jump you described.
+## Pass 3 — Indexing, crawlability, internal linking (High/Medium)
 
-## After implementation
-Generate one blog and we verify it satisfies all 25 rules; iterate prompt thresholds if anything misses.
+- Sitemap split: index file + per-type sub-sitemaps (colleges, articles, exams, institutes, coaching, courses, static) — already partly done; verify gzipped & <50k URLs each.
+- `lastmod` from real `updated_at`, not build time.
+- `hreflang="en-IN"` + `x-default` on canonical pages.
+- Internal-link audit: every detail page links to ≥3 related pages; category hubs link to children; orphan-page detector script.
+- `robots.txt`: add `Disallow: /*?utm_*`, `/*?fbclid=`, `/*?gclid=` to avoid param-duplicate indexing.
+- 404 vs soft-404: ensure `NotFound.tsx` sets `<meta name="robots" content="noindex">` and prerender writes 404 status.
+
+## Pass 4 — GEO / AI Search & Discover (Medium)
+
+- `public/llms.txt` exists — refresh with current top pages + descriptions.
+- `Speakable` schema on news/article pages (Discover signal).
+- `NewsArticle` schema on `NewsSection`/Newsroom items with `dateline` (Discover eligibility).
+- AI-citation friendliness:
+  - Add "Last updated" + "Reviewed by {author}" visible on Article/College pages (E-E-A-T).
+  - Add "Key takeaways" / TL;DR block to articles (renders as `Speakable` selector).
+  - Add `<meta name="article:author">`, `<meta name="article:published_time">`, `<meta name="article:modified_time">` (Helmet).
+- Open Graph image fallback per content type (already partly there) — ensure all ≥1200×630.
+- Verify Bingbot, GPTBot, PerplexityBot, Google-Extended in `robots.txt` (opt-in for AI training/citation).
+
+## Deliverables per pass
+
+1. List of files modified + diff summary.
+2. The audit report JSON/MD (Pass 1).
+3. Before/after sample for 3 routes (homepage, an article, a college).
+4. What's deferred to the next pass.
+
+## Tell me how to proceed
+
+Reply with one of:
+- **"Pass 1"** — start with the metadata audit + fixes (recommended first).
+- **"All, in order"** — I'll do Pass 1 fully, report, then continue. Each pass ends with a checkpoint so you can review before the next.
+- **"Skip to Pass N"** — if you've already handled the earlier passes elsewhere.
+- **Custom scope** — e.g. "just structured data on article + college pages".

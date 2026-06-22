@@ -164,9 +164,18 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "MBA Compass",
-      "alternateName": ["MBA Compass.com", "MBA Compass"],
+      "alternateName": ["MBACompass", "MBA Compass India"],
       "url": "https://mbacompass.in",
       "description": "India's trusted platform to find and compare the best MBA colleges and coaching institutes.",
+      "inLanguage": "en-IN",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://mbacompass.in/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      },
       "publisher": {
         "@type": "Organization",
         "name": "MBA Compass",
@@ -179,10 +188,22 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "MBA Compass",
+      "legalName": "MBA Compass by B School Buzz",
       "url": "https://mbacompass.in",
-      "logo": "https://mbacompass.in/og-image.png",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://mbacompass.in/og-image.png",
+        "width": 512,
+        "height": 512
+      },
       "description": "MBA Compass helps Indian MBA aspirants find, compare and review the best MBA colleges and coaching institutes for CAT, GMAT, XAT, SNAP & GRE.",
-      "sameAs": []
+      "areaServed": "IN",
+      "knowsAbout": ["CAT", "GMAT", "XAT", "SNAP", "NMAT", "CMAT", "IIFT", "MAT", "MBA Admissions", "B-School Rankings"],
+      "sameAs": [
+        "https://www.linkedin.com/company/mba-compass",
+        "https://www.instagram.com/mbacompass.in",
+        "https://twitter.com/mbacompass"
+      ]
     }
     </script>
     <meta property="og:title" content="MBA Compass — Find &amp; Compare Top MBA Colleges &amp; Coaching in India">
