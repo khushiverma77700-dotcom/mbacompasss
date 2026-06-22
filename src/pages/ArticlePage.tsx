@@ -20,6 +20,8 @@ import ReadingProgress from "@/components/mobile/ReadingProgress";
 import { Bookmark } from "lucide-react";
 import NotFound from "@/pages/NotFound";
 import AutoTOC from "@/components/AutoTOC";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
+import TopicClusterLinks, { DEFAULT_MBA_CLUSTER } from "@/components/TopicClusterLinks";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -223,6 +225,13 @@ const ArticlePage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-10">
+        <SiteBreadcrumbs
+          items={[
+            { name: "Blog", url: "/blog" },
+            { name: article.title, url: `/article/${article.slug}` },
+          ]}
+          className="mb-6"
+        />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 min-w-0">
           {/* Main Article */}
           <article className="min-w-0 lg:col-span-2">
