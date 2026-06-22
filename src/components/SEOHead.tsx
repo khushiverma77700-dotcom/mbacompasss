@@ -222,28 +222,38 @@ export const generateArticleSchema = (article: any) => ({
 });
 
 
-export const generateCollegeSchema = (college: any) => ({
-  "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  name: college.name,
-  description: college.meta_description || college.description || `${college.name} is a premier MBA college in ${college.city}`,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: college.city,
-    addressRegion: college.state,
-    addressCountry: "IN",
-  },
-  url: college.website || `${SITE_URL}/college/${college.slug}`,
-  foundingDate: college.established ? String(college.established) : undefined,
-  aggregateRating: college.ranking
-    ? {
-        "@type": "AggregateRating",
-        ratingValue: "4.5",
-        bestRating: "5",
-        ratingCount: college.total_students || 100,
-      }
-    : undefined,
-});
+export const generateCollegeSchema = (college: any) => {
+  // C3: Only emit aggregateRating when a REAL rating + review count exist.
+  // Previously this hardcoded ratingValue: "4.5" with total_students as the count,
+  // which Google treats as structured-data spam.
+  const hasRealRating =
+    typeof college.avg_rating === "number" &&
+    typeof college.review_count === "number" &&
+    college.review_count > 0;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: college.name,
+    description: college.meta_description || college.description || `${college.name} is a premier MBA college in ${college.city}`,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: college.city,
+      addressRegion: college.state,
+      addressCountry: "IN",
+    },
+    url: college.website || `${SITE_URL}/college/${college.slug}`,
+    foundingDate: college.established ? String(college.established) : undefined,
+    aggregateRating: hasRealRating
+      ? {
+          "@type": "AggregateRating",
+          ratingValue: String(college.avg_rating),
+          bestRating: "5",
+          ratingCount: String(college.review_count),
+        }
+      : undefined,
+  };
+};
 
 export const generateInstituteSchema = (institute: any) => ({
   "@context": "https://schema.org",
@@ -258,14 +268,19 @@ export const generateInstituteSchema = (institute: any) => ({
   },
   url: institute.website || `${SITE_URL}/institute/${institute.slug}`,
   telephone: institute.phone,
-  aggregateRating: institute.rating
-    ? {
-        "@type": "AggregateRating",
-        ratingValue: String(institute.rating),
-        bestRating: "5",
-        ratingCount: String(institute.total_reviews || 10),
-      }
-    : undefined,
+  // C3: Only emit aggregateRating with a REAL rating AND a real review count.
+  // Previously fell back to "|| 10" reviews which Google flags as fake.
+  aggregateRating:
+    typeof institute.rating === "number" &&
+    typeof institute.total_reviews === "number" &&
+    institute.total_reviews > 0
+      ? {
+          "@type": "AggregateRating",
+          ratingValue: String(institute.rating),
+          bestRating: "5",
+          ratingCount: String(institute.total_reviews),
+        }
+      : undefined,
   hasOfferCatalog: {
     "@type": "OfferCatalog",
     name: "Courses",
