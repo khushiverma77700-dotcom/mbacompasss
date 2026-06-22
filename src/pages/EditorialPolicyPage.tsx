@@ -1,10 +1,19 @@
 import PolicyLayout from "@/components/PolicyLayout";
 
+const faqs = [
+  { q: "Is MBA Compass content written by humans or AI?", a: "Every page on MBA Compass is reviewed and approved by a human editor. AI tools assist with research summarisation and drafting outlines, but no article is published without human editorial review." },
+  { q: "Does MBA Compass take payment for editorial coverage?", a: "No. MBA Compass does not accept payment, gifts, or any consideration in exchange for editorial coverage, favourable ratings, or improved rankings. Sponsored listings and ads are clearly labelled and visually separated from editorial content." },
+  { q: "How often are pages updated?", a: "Time-sensitive pages — exam dates, cut-offs, fees, and placement data — are refreshed at least once per admission cycle. Every page carries a 'Last updated' date." },
+  { q: "Who writes for MBA Compass?", a: "Content is researched and written by the MBA Compass Editorial Team, a group of full-time researchers tracking the Indian B-school ecosystem. Author credentials are listed on each article and on individual author profile pages at /authors." },
+  { q: "How can I report an error?", a: "Email suyash@bschoolbuzz.in with the page URL, the statement you believe is incorrect, and your source. We acknowledge receipt within two working days and follow our Fact-Check & Corrections Policy." },
+];
+
 const EditorialPolicyPage = () => (
   <PolicyLayout
     title="Editorial Policy"
     description="How the MBA Compass editorial team researches, writes, reviews, and publishes content for Indian MBA aspirants."
     canonical="https://mbacompass.in/editorial-policy"
+    faqs={faqs}
   >
     <p>
       MBA Compass (operated by <strong>Akaniya Ventures Private Limited</strong>) publishes

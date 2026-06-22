@@ -1,10 +1,19 @@
 import PolicyLayout from "@/components/PolicyLayout";
 
+const faqs = [
+  { q: "Who operates MBA Compass and is responsible for my data?", a: "MBA Compass is operated by Akaniya Ventures Private Limited, a company registered in Uttar Pradesh, India. The company is the data fiduciary for personal data collected through mbacompass.in." },
+  { q: "Does MBA Compass sell my personal data?", a: "No. We do not sell personal data. We share data with service providers (Supabase, Razorpay, Cloudflare, Google, Resend, OpenAI/Google AI) that process data on our instructions, and with institutes only when you explicitly request a brochure, callback, or coupon from that institute." },
+  { q: "How do I delete my MBA Compass account?", a: "Email suyash@bschoolbuzz.in from your registered email address requesting account deletion. We respond within 30 days as required by the Digital Personal Data Protection Act, 2023." },
+  { q: "Is my payment data stored on MBA Compass servers?", a: "No. Payments are processed by Razorpay. We do not store card or UPI credentials on our servers — only the transaction reference and the products you purchased." },
+  { q: "Who is the Grievance Officer for privacy concerns?", a: "You can contact our Grievance Officer at suyash@bschoolbuzz.in or +91 76681 29226 for any privacy-related concerns." },
+];
+
 const PrivacyPolicyPage = () => (
   <PolicyLayout
     title="Privacy Policy"
     description="How MBA Compass (Akaniya Ventures Private Limited) collects, uses, stores, and protects personal information."
     canonical="https://mbacompass.in/privacy-policy"
+    faqs={faqs}
   >
     <p>
       This Privacy Policy explains how <strong>Akaniya Ventures Private Limited</strong>{" "}

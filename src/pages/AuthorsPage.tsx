@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { Mail, BookOpen, Award } from "lucide-react";
 
 export const AUTHORS = [
@@ -16,19 +16,27 @@ export const AUTHORS = [
 const AuthorsPage = () => {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: "Authors at MBA Compass",
-    url: "https://mbacompass.in/authors",
-    description:
-      "Meet the editorial team behind MBA Compass — researchers and editors covering Indian MBA admissions, exams, and placements.",
-    hasPart: AUTHORS.map((a) => ({
-      "@type": "Person",
-      name: a.name,
-      url: `https://mbacompass.in/authors/${a.slug}`,
-      jobTitle: a.role,
-      worksFor: { "@type": "Organization", name: "MBA Compass" },
-      knowsAbout: a.expertise,
-    })),
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        name: "Authors at MBA Compass",
+        url: "https://mbacompass.in/authors",
+        description:
+          "Meet the editorial team behind MBA Compass — researchers and editors covering Indian MBA admissions, exams, and placements.",
+        hasPart: AUTHORS.map((a) => ({
+          "@type": "Person",
+          name: a.name,
+          url: `https://mbacompass.in/authors/${a.slug}`,
+          jobTitle: a.role,
+          worksFor: { "@type": "Organization", name: "MBA Compass" },
+          knowsAbout: a.expertise,
+        })),
+      },
+      generateBreadcrumbSchema([
+        { name: "Home", url: "https://mbacompass.in" },
+        { name: "Authors", url: "https://mbacompass.in/authors" },
+      ]),
+    ],
   };
 
   return (

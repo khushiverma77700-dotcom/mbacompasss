@@ -1,10 +1,19 @@
 import PolicyLayout from "@/components/PolicyLayout";
 
+const faqs = [
+  { q: "Who can post a review on MBA Compass?", a: "Anyone with first-hand experience of the institute, programme, course, or coaching they are reviewing — current students, alumni, faculty, parents, or paid candidates. We require a verified email and, for most categories, a verified mobile via OTP." },
+  { q: "Are MBA Compass reviews moderated?", a: "Yes. Every submitted review enters a moderation queue and is screened for personal attacks, defamation, hate speech, paid coordination, and spam before being published. We do not edit the substance of approved reviews — only formatting, typos, and redaction of personal data." },
+  { q: "Can an institute remove a negative review?", a: "Institutes cannot directly remove reviews. They can publicly respond to any review and can flag a review for re-moderation by writing to suyash@bschoolbuzz.in. A flagged review is re-examined by our team but is not automatically taken down." },
+  { q: "How is the aggregate rating calculated?", a: "A listing's aggregate rating is the simple average of all approved user ratings. We do not weight by recency, sentiment, or paid status. Listings with fewer than five reviews do not show an aggregate score." },
+  { q: "Do paid placements influence reviews?", a: "No. Paid placements and sponsored listings are visually labelled and have no influence on user reviews or aggregate ratings." },
+];
+
 const ReviewPolicyPage = () => (
   <PolicyLayout
     title="Review Policy"
     description="How MBA Compass collects, moderates, and publishes reviews and ratings for B-schools, coaching institutes, and courses."
     canonical="https://mbacompass.in/review-policy"
+    faqs={faqs}
   >
     <p>
       User reviews on MBA Compass help future aspirants understand what life inside a B-school or

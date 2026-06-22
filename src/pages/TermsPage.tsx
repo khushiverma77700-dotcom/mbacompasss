@@ -1,10 +1,19 @@
 import PolicyLayout from "@/components/PolicyLayout";
 
+const faqs = [
+  { q: "Who owns and operates MBA Compass?", a: "MBA Compass is a brand of Akaniya Ventures Private Limited, a company registered in Uttar Pradesh, India. The Terms of Use are governed by Indian law with exclusive jurisdiction in Uttar Pradesh." },
+  { q: "What is the refund policy for MBA Compass paid products?", a: "Mock tests, bundles, and MBA Compass courses are delivered digitally and consumed on access, so all purchases are final and non-refundable unless otherwise stated on the product page. If a technical issue blocks access, email suyash@bschoolbuzz.in within seven days of purchase." },
+  { q: "Can I share my MBA Compass account with others?", a: "No. Accounts are personal and non-transferable. Sharing credentials or accessing the platform through another person's account is a breach of these Terms and may result in suspension." },
+  { q: "Can I republish MBA Compass content on another site?", a: "Substantial copying or republishing requires written permission. Short, properly-attributed quotations with a link back to the source page are allowed under fair use." },
+  { q: "Where can I read the full Terms of Use?", a: "The full Terms of Use are published on this page (/terms). Material changes are notified on the site or by email at least seven days before they take effect." },
+];
+
 const TermsPage = () => (
   <PolicyLayout
     title="Terms of Use"
     description="The terms that govern your use of MBA Compass, operated by Akaniya Ventures Private Limited."
     canonical="https://mbacompass.in/terms"
+    faqs={faqs}
   >
     <p>
       These Terms of Use ("Terms") govern your access to and use of{" "}
