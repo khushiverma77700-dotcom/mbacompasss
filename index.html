@@ -49,6 +49,31 @@
         } catch (e) { /* noop */ }
       })();
     </script>
+    <script>
+      // ── Non-canonical host noindex ──
+      // Any host other than the canonical apex (mbacompass.in / www) must NOT
+      // be indexed by search engines: Lovable preview (*.lovable.app),
+      // dashboard.mbacompass.in, and any future alias all serve the SAME
+      // SPA bundle, which would otherwise create duplicate-content noise in
+      // Google Search Console. We inject a hard noindex,nofollow meta into
+      // the head BEFORE React mounts so crawlers that don't execute JS still
+      // see the directive.
+      (function () {
+        try {
+          var h = window.location.hostname;
+          var canonical = (h === "mbacompass.in" || h === "www.mbacompass.in");
+          if (canonical) return;
+          var m = document.createElement("meta");
+          m.setAttribute("name", "robots");
+          m.setAttribute("content", "noindex, nofollow");
+          document.head.appendChild(m);
+          var g = document.createElement("meta");
+          g.setAttribute("name", "googlebot");
+          g.setAttribute("content", "noindex, nofollow");
+          document.head.appendChild(g);
+        } catch (e) { /* noop */ }
+      })();
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 

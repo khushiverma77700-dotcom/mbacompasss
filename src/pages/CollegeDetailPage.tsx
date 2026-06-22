@@ -18,6 +18,7 @@ import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
+import NotFound from "@/pages/NotFound";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import CitationLink from "@/components/CitationLink";
@@ -164,14 +165,7 @@ const CollegeDetailPage = () => {
   }
 
   if (!college) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="font-heading text-2xl font-bold text-foreground mb-4">College not found</h1>
-          <Link to="/colleges"><Button>Browse All Colleges</Button></Link>
-        </div>
-      </div>
-    );
+    return <NotFound />;
   }
 
   const exams = college.exams_accepted || [];
