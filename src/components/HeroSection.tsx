@@ -37,6 +37,9 @@ const HeroSection = () => {
   const [suggestions, setSuggestions] = useState<HeroSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
+  // Mobile-perf: settings hydration is deferred 8s so it can never race the
+  // initial paint or the CLS measurement window (which extends ~5s past last
+  // input). Heading/subheading/stats render from constant fallbacks first.
   const [hydrateSettings, setHydrateSettings] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -49,15 +52,18 @@ const HeroSection = () => {
   const stats = statsSettings?.items || fallbackStats;
 
   useEffect(() => {
+    // Mobile-perf: wait until well after LCP + CLS window before fetching
+    // optional site-settings overrides. Use rIC so we never compete with
+    // user interaction either.
     const w = window as any;
     let idleHandle: number | undefined;
     const timer = window.setTimeout(() => {
       if (typeof w.requestIdleCallback === "function") {
-        idleHandle = w.requestIdleCallback(() => setHydrateSettings(true), { timeout: 2500 });
+        idleHandle = w.requestIdleCallback(() => setHydrateSettings(true), { timeout: 3000 });
       } else {
         setHydrateSettings(true);
       }
-    }, 5000);
+    }, 8000);
     return () => {
       window.clearTimeout(timer);
       if (idleHandle !== undefined) {
@@ -155,16 +161,17 @@ const HeroSection = () => {
             <ChevronRight className="w-3 h-3 text-primary-foreground/60" />
           </div>
 
-          {/* Heading */}
-          <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-primary-foreground mb-1.5 leading-[1.15] tracking-tight">
+          {/* Heading — reserved heights prevent CLS when font swaps from system fallback
+              to Plus Jakarta Sans, and when optional settings hydrate at t≈8s. */}
+          <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-primary-foreground mb-1.5 leading-[1.15] tracking-tight min-h-[2.6rem] sm:min-h-[2.9rem] md:min-h-[3.4rem] lg:min-h-[4rem]">
             {heading}
           </h1>
 
-          <p className="font-heading text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-foreground/85 mb-2 leading-tight">
+          <p className="font-heading text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-foreground/85 mb-2 leading-tight min-h-[1.5rem] sm:min-h-[1.75rem] md:min-h-[2rem]">
             for Your Dream B-School
           </p>
 
-          <p className="text-primary-foreground/75 text-xs md:text-sm mb-4 max-w-xl mx-auto leading-relaxed">
+          <p className="text-primary-foreground/75 text-xs md:text-sm mb-4 max-w-xl mx-auto leading-relaxed min-h-[2.5rem] md:min-h-[2.75rem]">
             {subheading}
           </p>
 
@@ -222,8 +229,8 @@ const HeroSection = () => {
             </div>
           </form>
 
-          {/* Popular searches */}
-          <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 mb-4 text-xs md:text-sm">
+          {/* Popular searches — fixed-height row eliminates CLS when settings hydrate */}
+          <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 mb-4 text-xs md:text-sm min-h-[2rem]">
             <span className="text-primary-foreground/50 font-medium self-center">Popular:</span>
             {popularSearches.map((term: string) => (
               <button
