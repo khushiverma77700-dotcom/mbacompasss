@@ -230,11 +230,6 @@ export const generateWebsiteSchema = () => ({
   "@type": "WebSite",
   name: "MBA Compass",
   url: SITE_URL,
-  potentialAction: {
-    "@type": "SearchAction",
-    target: `${SITE_URL}/?q={search_term_string}`,
-    "query-input": "required name=search_term_string",
-  },
 });
 
 export const generateOrganizationSchema = () => ({
@@ -309,55 +304,76 @@ export const generateCollegeSchema = (college: any) => {
   };
 };
 
-export const generateInstituteSchema = (institute: any) => ({
-  "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  name: institute.name,
-  description: institute.meta_description || institute.description || `${institute.name} - MBA coaching in ${institute.city}`,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: institute.city,
-    addressRegion: institute.state,
-    addressCountry: "IN",
-  },
-  url: institute.website || `${SITE_URL}/institute/${institute.slug}`,
-  telephone: institute.phone,
-  // C3: Only emit aggregateRating with a REAL rating AND a real review count.
-  // Previously fell back to "|| 10" reviews which Google flags as fake.
-  aggregateRating:
-    typeof institute.rating === "number" &&
-    typeof institute.total_reviews === "number" &&
-    institute.total_reviews > 0
+export const generateInstituteSchema = (institute: any) => {
+  const courses = Array.isArray(institute.courses) ? institute.courses.filter(Boolean) : [];
+  return {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: institute.name,
+    description: institute.meta_description || institute.description || `${institute.name} - MBA coaching in ${institute.city}`,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: institute.city,
+      addressRegion: institute.state,
+      addressCountry: "IN",
+    },
+    url: institute.website || `${SITE_URL}/institute/${institute.slug}`,
+    telephone: institute.phone,
+    // C3: Only emit aggregateRating with a REAL rating AND a real review count.
+    aggregateRating:
+      typeof institute.rating === "number" &&
+      typeof institute.total_reviews === "number" &&
+      institute.total_reviews > 0
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: String(institute.rating),
+            bestRating: "5",
+            ratingCount: String(institute.total_reviews),
+          }
+        : undefined,
+    // Omit hasOfferCatalog entirely when there are no courses — Google flags
+    // an OfferCatalog with an empty itemListElement as an invalid item.
+    hasOfferCatalog: courses.length
       ? {
-          "@type": "AggregateRating",
-          ratingValue: String(institute.rating),
-          bestRating: "5",
-          ratingCount: String(institute.total_reviews),
+          "@type": "OfferCatalog",
+          name: "Courses",
+          itemListElement: courses.map((c: any) => ({
+            "@type": "Course",
+            name: c.name,
+            description: c.description,
+            provider: { "@type": "Organization", name: institute.name },
+            offers: c.fees ? { "@type": "Offer", price: String(c.fees), priceCurrency: "INR" } : undefined,
+          })),
         }
       : undefined,
-  hasOfferCatalog: {
-    "@type": "OfferCatalog",
-    name: "Courses",
-    itemListElement: (institute.courses || []).map((c: any) => ({
-      "@type": "Course",
-      name: c.name,
-      description: c.description,
-      provider: { "@type": "Organization", name: institute.name },
-      offers: c.fees ? { "@type": "Offer", price: String(c.fees), priceCurrency: "INR" } : undefined,
-    })),
-  },
-});
+  };
+};
 
-export const generateExamSchema = (exam: any) => ({
-  "@context": "https://schema.org",
-  "@type": "Event",
-  name: exam.full_name || exam.name,
-  description: exam.meta_description || exam.description,
-  organizer: { "@type": "Organization", name: exam.conducting_body || "Unknown" },
-  startDate: exam.exam_date,
-  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-  location: { "@type": "Place", name: "India", address: { "@type": "PostalAddress", addressCountry: "IN" } },
-});
+export const generateExamSchema = (exam: any) => {
+  // Event requires a valid startDate per schema.org/Google. When the exam
+  // has no scheduled date, downgrade to a WebPage describing the exam so
+  // the Rich Results test doesn't fail validation.
+  if (!exam?.exam_date) {
+    return {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: exam?.full_name || exam?.name,
+      description: exam?.meta_description || exam?.description,
+    };
+  }
+  return {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: exam.full_name || exam.name,
+    description: exam.meta_description || exam.description,
+    organizer: { "@type": "Organization", name: exam.conducting_body || "MBA Compass" },
+    startDate: exam.exam_date,
+    endDate: exam.exam_end_date || exam.exam_date,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: { "@type": "Place", name: "India", address: { "@type": "PostalAddress", addressCountry: "IN" } },
+  };
+};
 
 export const generateListingSchema = (title: string, items: any[], type = "college") => ({
   "@context": "https://schema.org",
