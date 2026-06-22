@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { Mail, BookOpen, Award } from "lucide-react";
 
 export const AUTHORS = [
