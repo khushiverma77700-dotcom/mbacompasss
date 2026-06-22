@@ -138,8 +138,12 @@ const HeroSection = () => {
       <div className="absolute inset-0 hero-gradient pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none" />
 
-      {/* Dot pattern overlay */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
+      {/* Lightweight CSS dot pattern — replaces a 600-byte base64 SVG to
+          shrink the initial style payload (desktop-perf) */}
+      <div
+        className="absolute inset-0 opacity-40 pointer-events-none"
+        style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }}
+      />
 
       {/* Lightweight static decorative elements (no animation, no blur — keeps LCP fast) */}
       <div className="absolute w-12 h-12 md:w-20 md:h-20 top-[8%] left-[5%] opacity-10 pointer-events-none">
