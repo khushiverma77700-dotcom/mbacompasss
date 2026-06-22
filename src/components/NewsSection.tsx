@@ -13,7 +13,7 @@ const NewsSection = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("articles")
-        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,content")
+        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,content,author")
         .eq("published", true)
         .order("created_at", { ascending: false })
         .limit(6);
