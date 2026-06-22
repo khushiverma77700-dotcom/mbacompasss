@@ -173,7 +173,7 @@ RULES:
 - Organization name: "MBA Compass by MBA Compass", logo: "${siteUrl}/logo.png"
 - FAQPage schemas must have real, useful Q&As that students would actually search for
 - Include ALL relevant schema types for the page (aim for 4-6 schemas)
-- NEVER include "itemReviewed" inside a nested AggregateRating, Review, or Rating — Google flags this as invalid. AggregateRating embedded under a parent (Organization, Product, CollegeOrUniversity, etc.) must NOT have itemReviewed.
+- AggregateRating and Review: NEST inside the parent entity (Organization, Product, CollegeOrUniversity, EducationalOrganization, Course, etc.) as a property — DO NOT emit them as separate top-level array items. When nested, OMIT itemReviewed (the parent IS the reviewed item). Only emit a standalone Review/AggregateRating if no parent exists in the same array, and in that case itemReviewed is REQUIRED with @type + name + url.
 - Return ONLY the JSON array, no markdown, no explanation`,
           },
           { role: "user", content: prompt },
@@ -191,7 +191,10 @@ RULES:
 
     if (detectTruncation(content)) return getDefaultSchemas(contentType, data, siteUrl);
     const parsed = extractJsonFromResponse(content);
-    const sanitized = sanitizeSchema(parsed);
+    const sanitized = normalizeReviewSchemas(parsed, {
+      contentType, url: pageUrl, name: String(data.title || data.name || data.full_name || ""),
+      image: String(data.banner_url || data.image_url || data.image || ""),
+    });
     if (Array.isArray(sanitized) && sanitized.length > 0 && sanitized[0]?.["@type"]) return sanitized;
     if (typeof sanitized === "object" && (sanitized as any)["@type"]) return [sanitized];
     return getDefaultSchemas(contentType, data, siteUrl);
