@@ -14,8 +14,11 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Plus Jakarta Sans', 'sans-serif'],
-        body: ['DM Sans', 'sans-serif'],
+        // Mobile-perf: include metric-matched fallback fonts (declared in
+        // index.html critical CSS) so the system font renders at the same
+        // dimensions as the web font — eliminates font-swap CLS.
+        heading: ['Plus Jakarta Sans', 'Plus Jakarta Fallback', 'system-ui', 'sans-serif'],
+        body: ['DM Sans', 'DM Sans Fallback', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
