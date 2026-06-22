@@ -74,7 +74,16 @@ const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
       </nav>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        // Escape closing-tag and JS-line-terminator sequences so a CMS-supplied
+        // breadcrumb name can never break out of the inline JSON-LD block.
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema)
+            .replace(/</g, "\\u003c")
+            .replace(/>/g, "\\u003e")
+            .replace(/&/g, "\\u0026")
+            .replace(/\u2028/g, "\\u2028")
+            .replace(/\u2029/g, "\\u2029"),
+        }}
       />
     </>
   );
