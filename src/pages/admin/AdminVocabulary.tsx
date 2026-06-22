@@ -495,9 +495,9 @@ export default function AdminVocabulary() {
                       <p className="text-sm text-muted-foreground line-clamp-1 mt-1">{w.meaning}</p>
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => aiEnrich(w)} title="Enrich with AI"><Sparkles className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing({ ...w, synonyms: w.synonyms?.join(", "), antonyms: w.antonyms?.join(", ") }); setOpenForm(true); }}><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => remove(w.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => aiEnrich(w)} title="Enrich with AI" aria-label="Enrich with AI"><Sparkles className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditing({ ...w, synonyms: w.synonyms?.join(", "), antonyms: w.antonyms?.join(", ") }); setOpenForm(true); }} aria-label="Edit word"><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => remove(w.id)} className="text-destructive" aria-label="Delete word"><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </div>
                 ))}

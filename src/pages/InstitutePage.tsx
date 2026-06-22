@@ -619,8 +619,10 @@ const InstitutePage = () => {
           <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600">Book Free Demo</Button>
         </a>
         {institute.phone && (
-          <a href={`tel:${institute.phone}`}>
-            <Button variant="outline" size="icon"><Phone className="w-4 h-4" /></Button>
+          <a href={`tel:${institute.phone}`} aria-label={`Call ${institute.name}`}>
+            <Button variant="outline" size="icon" aria-label={`Call ${institute.name}`}>
+              <Phone className="w-4 h-4" />
+            </Button>
           </a>
         )}
       </div>
