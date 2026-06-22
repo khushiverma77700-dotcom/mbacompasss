@@ -104,15 +104,19 @@ const AdminWriteBlog = () => {
       setLoadingLinks(true);
       try {
         const [collRes, examRes, artRes, coachRes] = await Promise.all([
-          supabase.from("institutes").select("name,slug,institute_type").neq("institute_type", "coaching").not("slug", "is", null).order("name").limit(150),
+          supabase.from("colleges").select("name,slug").not("slug", "is", null).order("name").limit(300),
           supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").limit(80),
           supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).limit(60),
-          supabase.from("institutes").select("name,slug").eq("institute_type", "coaching").not("slug", "is", null).order("name").limit(80),
+          supabase.from("institutes").select("name,slug,institute_type").not("slug", "is", null).order("name").limit(200),
         ]);
         setColleges((collRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name })));
         setExams((examRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name })));
         setArticles((artRes.data || []).filter((r: any) => r.slug && r.title).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title })));
-        setCoachings((coachRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/coaching/${r.slug}`, label: r.name })));
+        setCoachings(
+          (coachRes.data || [])
+            .filter((r: any) => r.slug && r.name && (r.institute_type === "coaching" || /coaching/i.test(r.slug)))
+            .map((r: any) => ({ url: `/coaching/${r.slug}`, label: r.name }))
+        );
       } catch (e) {
         console.warn("Could not load link pool", e);
       } finally {
