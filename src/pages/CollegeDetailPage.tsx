@@ -18,6 +18,7 @@ import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
+import NotFound from "@/pages/NotFound";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import CitationLink from "@/components/CitationLink";
