@@ -42,7 +42,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             <div className="flex items-start gap-3 mb-4">
               <div className="w-14 h-14 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {college.logo_url ? (
-                  <img src={college.logo_url} alt={college.name} loading="lazy" className="w-12 h-12 object-contain" />
+                  <img src={college.logo_url} alt={college.name} width={48} height={48} loading="lazy" decoding="async" className="w-12 h-12 object-contain" />
                 ) : (
                   <GraduationCap className="w-7 h-7 text-primary" />
                 )}
