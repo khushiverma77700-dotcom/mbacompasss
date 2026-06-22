@@ -33,22 +33,87 @@ function extractJsonFromResponse(response: string): unknown {
   }
 }
 
-// Strip fields Google flags as invalid when nested. Specifically:
-// "A nested object can't contain the 'itemReviewed' field" — itemReviewed must
-// only appear on a top-level Review, never inside an AggregateRating embedded
-// in a parent (Organization/Product/etc).
-export function sanitizeSchema(node: any, depth = 0): any {
-  if (Array.isArray(node)) return node.map((n) => sanitizeSchema(n, depth));
-  if (!node || typeof node !== "object") return node;
-  const t = node["@type"];
-  const types = Array.isArray(t) ? t : [t];
-  // Drop itemReviewed from any AggregateRating, and from any Review/Rating
-  // when it is nested inside another schema (depth > 0 means it has a parent).
-  if (types.includes("AggregateRating") || ((types.includes("Review") || types.includes("Rating")) && depth > 0)) {
-    if ("itemReviewed" in node) delete node.itemReviewed;
+// Normalize Review / AggregateRating per Google Rich Results rules.
+// Top-level Review/AggregateRating MUST have itemReviewed; nested ones MUST NOT.
+// Mirrors src/lib/normalizeReviewSchema.ts on the client.
+const REVIEWABLE_PARENT_TYPES = new Set([
+  "Product","Course","CollegeOrUniversity","EducationalOrganization","LocalBusiness",
+  "Organization","Book","Movie","Recipe","SoftwareApplication","WebApplication",
+  "MobileApplication","Service","Event",
+]);
+const CT_TO_SCHEMA: Record<string, string> = {
+  article: "Article", institute: "EducationalOrganization", college: "CollegeOrUniversity",
+  exam: "Course", course: "Course", product: "Product", cityPage: "WebPage", category: "WebPage",
+};
+const typesOf = (n: any): string[] => {
+  const t = n?.["@type"]; if (!t) return [];
+  return Array.isArray(t) ? t.map(String) : [String(t)];
+};
+const isAR = (n: any) => typesOf(n).includes("AggregateRating");
+const isRv = (n: any) => typesOf(n).includes("Review");
+const isRt = (n: any) => typesOf(n).includes("Rating");
+const isParent = (n: any) => typesOf(n).some((t) => REVIEWABLE_PARENT_TYPES.has(t)) && !isAR(n) && !isRv(n);
+const toNum = (v: any) => { const n = typeof v === "number" ? v : parseFloat(String(v ?? "")); return isFinite(n) ? n : null; };
+const validAR = (n: any) => {
+  const rv = toNum(n?.ratingValue); if (rv === null || rv < 0 || rv > 5) return false;
+  const rc = toNum(n?.reviewCount ?? n?.ratingCount); return rc !== null && rc >= 1;
+};
+const validRv = (n: any) => {
+  const rv = toNum(n?.reviewRating?.ratingValue); if (rv === null || rv < 0 || rv > 5) return false;
+  return Boolean(n?.author);
+};
+const stripNested = (n: any, depth = 0): any => {
+  if (Array.isArray(n)) return n.map((x) => stripNested(x, depth));
+  if (!n || typeof n !== "object") return n;
+  const c: any = { ...n };
+  if (depth > 0 && (isAR(c) || isRv(c) || isRt(c))) delete c.itemReviewed;
+  for (const k of Object.keys(c)) c[k] = stripNested(c[k], depth + 1);
+  return c;
+};
+export function normalizeReviewSchemas(
+  input: any, ctx: { contentType?: string; url?: string; name?: string; image?: string } = {},
+): any[] {
+  if (!input) return [];
+  const arr: any[] = (Array.isArray(input) ? input : [input]).filter(Boolean).map((n) => stripNested(n, 0));
+  const parents = arr.filter(isParent);
+  const out: any[] = [];
+  for (const node of arr) {
+    const tlAR = isAR(node) && !isRv(node);
+    const tlRv = isRv(node);
+    if (!tlAR && !tlRv) { out.push(node); continue; }
+    const block: any = { ...node };
+    if (tlAR && !validAR(block)) continue;
+    if (tlRv && !validRv(block)) continue;
+    const parent = parents[0];
+    if (parent) {
+      const sib = { ...block }; delete sib["@context"]; delete sib.itemReviewed;
+      if (tlAR) parent.aggregateRating = sib;
+      else parent.review = [...(Array.isArray(parent.review) ? parent.review : []), sib];
+      continue;
+    }
+    if (!block.itemReviewed || typeof block.itemReviewed !== "object") {
+      if (!ctx.name && !ctx.url) continue;
+      const ir: any = { "@type": CT_TO_SCHEMA[String(ctx.contentType || "")] || "WebPage" };
+      if (ctx.name) ir.name = ctx.name;
+      if (ctx.url) ir.url = ctx.url;
+      if (ctx.image) ir.image = ctx.image;
+      block.itemReviewed = ir;
+    } else {
+      const ir: any = { ...block.itemReviewed };
+      if (!ir["@type"]) ir["@type"] = CT_TO_SCHEMA[String(ctx.contentType || "")] || "WebPage";
+      if (!ir.name && ctx.name) ir.name = ctx.name;
+      if (!ir.url && ctx.url) ir.url = ctx.url;
+      block.itemReviewed = ir;
+    }
+    if (!block["@context"]) block["@context"] = "https://schema.org";
+    out.push(block);
   }
-  for (const k of Object.keys(node)) node[k] = sanitizeSchema(node[k], depth + 1);
-  return node;
+  return out;
+}
+// Legacy helper retained for callers; now delegates to normalizer with no ctx
+// (which folds standalone ratings into parents and drops invalid blocks).
+export function sanitizeSchema(node: any): any {
+  return normalizeReviewSchemas(node, {});
 }
 
 function detectTruncation(response: string): boolean {
