@@ -152,7 +152,7 @@ const Navbar = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden inline-flex items-center justify-center min-h-11 min-w-11 rounded-md text-foreground hover:bg-muted/60"
+          className="lg:hidden inline-flex items-center justify-center h-11 w-11 shrink-0 rounded-md text-foreground hover:bg-muted/60"
           aria-label="Toggle mobile menu"
           aria-expanded={mobileOpen}
         >
