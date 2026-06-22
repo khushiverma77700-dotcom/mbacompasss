@@ -366,6 +366,10 @@ const ArticlePage = () => {
           </div>
         )}
         {article?.id && <PageKeywords contentType="article" recordId={article.id} fallbackKeywords={article.keywords || []} />}
+
+        <div className="mt-12">
+          <TopicClusterLinks links={DEFAULT_MBA_CLUSTER} />
+        </div>
       </div>
 
       {/* Mobile sticky action bar */}
