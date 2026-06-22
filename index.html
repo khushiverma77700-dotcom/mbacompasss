@@ -89,6 +89,13 @@
     <meta name="application-name" content="MBA Compass" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5" />
+
+    <!-- Security headers (the ones meta tags can actually set).
+         HSTS, X-Frame-Options and a full CSP must be sent as HTTP headers and
+         are handled at the Lovable hosting / CDN layer. -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(self), interest-cohort=()" />
     <title>MBA Compass — Find &amp; Compare Top MBA Colleges &amp; Coaching in India</title>
     <meta name="description" content="MBA Compass is India's trusted platform to find, compare & review the best MBA colleges and coaching institutes for CAT, GMAT, XAT, SNAP & GRE. Fees, rankings, placements & student reviews.">
     <meta name="author" content="MBA Compass" />
