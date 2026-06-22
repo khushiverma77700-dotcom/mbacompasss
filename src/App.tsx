@@ -45,6 +45,13 @@ const ArticlePage = lazyWithPreload(() => import("./pages/ArticlePage"));
 const ExamDetailPage = lazyWithPreload(() => import("./pages/ExamDetailPage"));
 const AboutPage = lazyWithPreload(() => import("./pages/AboutPage"));
 const ContactPage = lazyWithPreload(() => import("./pages/ContactPage"));
+const EditorialPolicyPage = lazyWithPreload(() => import("./pages/EditorialPolicyPage"));
+const ReviewPolicyPage = lazyWithPreload(() => import("./pages/ReviewPolicyPage"));
+const FactCheckPolicyPage = lazyWithPreload(() => import("./pages/FactCheckPolicyPage"));
+const PrivacyPolicyPage = lazyWithPreload(() => import("./pages/PrivacyPolicyPage"));
+const TermsPage = lazyWithPreload(() => import("./pages/TermsPage"));
+const AuthorsPage = lazyWithPreload(() => import("./pages/AuthorsPage"));
+const AuthorDetailPage = lazyWithPreload(() => import("./pages/AuthorDetailPage"));
 const DashboardPage = lazyWithPreload(() => import("./pages/DashboardPage"));
 const CollegeDetailPage = lazyWithPreload(() => import("./pages/CollegeDetailPage"));
 const CollegeFilterPage = lazyWithPreload(() => import("./pages/CollegeFilterPage"));
@@ -806,6 +813,13 @@ const App = () => (
             <Route path="/college-shortlister" element={<PublicLayout><LazyPage><CollegeShortlisterPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
+            <Route path="/editorial-policy" element={<PublicLayout><LazyPage><EditorialPolicyPage /></LazyPage></PublicLayout>} />
+            <Route path="/review-policy" element={<PublicLayout><LazyPage><ReviewPolicyPage /></LazyPage></PublicLayout>} />
+            <Route path="/fact-check-policy" element={<PublicLayout><LazyPage><FactCheckPolicyPage /></LazyPage></PublicLayout>} />
+            <Route path="/privacy-policy" element={<PublicLayout><LazyPage><PrivacyPolicyPage /></LazyPage></PublicLayout>} />
+            <Route path="/terms" element={<PublicLayout><LazyPage><TermsPage /></LazyPage></PublicLayout>} />
+            <Route path="/authors" element={<PublicLayout><LazyPage><AuthorsPage /></LazyPage></PublicLayout>} />
+            <Route path="/authors/:slug" element={<PublicLayout><LazyPage><AuthorDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/cat-score-calculator" element={<PublicLayout><LazyPage><CATScoreCalculatorPage /></LazyPage></PublicLayout>} />
             <Route path="/roi-calculator" element={<PublicLayout><LazyPage><MBARoiCalculatorPage /></LazyPage></PublicLayout>} />
             <Route path="/business-inquiries" element={<PublicLayout><LazyPage><BusinessInquiryPage /></LazyPage></PublicLayout>} />

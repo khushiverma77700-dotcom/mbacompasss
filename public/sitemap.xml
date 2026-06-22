@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://mbacompass.in/about</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://mbacompass.in/contact</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://mbacompass.in/authors</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mbacompass.in/authors/mba-compass-editorial-team</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mbacompass.in/editorial-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://mbacompass.in/review-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://mbacompass.in/fact-check-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://mbacompass.in/privacy-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://mbacompass.in/terms</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
   <url>
     <loc>https://mbacompass.in/</loc>
     <lastmod>2026-06-22</lastmod>
