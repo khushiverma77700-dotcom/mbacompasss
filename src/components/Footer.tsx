@@ -74,8 +74,20 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/40">
-          &copy; {copyright}
+        <div className="border-t border-primary-foreground/10 pt-6">
+          <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-primary-foreground/60 mb-4">
+            <li><Link to="/about" className="hover:text-primary-foreground transition-colors">About Us</Link></li>
+            <li><Link to="/authors" className="hover:text-primary-foreground transition-colors">Authors</Link></li>
+            <li><Link to="/editorial-policy" className="hover:text-primary-foreground transition-colors">Editorial Policy</Link></li>
+            <li><Link to="/review-policy" className="hover:text-primary-foreground transition-colors">Review Policy</Link></li>
+            <li><Link to="/fact-check-policy" className="hover:text-primary-foreground transition-colors">Fact-Check Policy</Link></li>
+            <li><Link to="/privacy-policy" className="hover:text-primary-foreground transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/terms" className="hover:text-primary-foreground transition-colors">Terms</Link></li>
+            <li><Link to="/contact" className="hover:text-primary-foreground transition-colors">Contact</Link></li>
+          </ul>
+          <div className="text-center text-xs text-primary-foreground/40">
+            &copy; {copyright}
+          </div>
         </div>
       </div>
     </footer>
