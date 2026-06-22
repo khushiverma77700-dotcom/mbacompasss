@@ -215,7 +215,14 @@ const CoachingPage = () => {
           "weekend CAT coaching for working professionals", "free trial classes for MBA entrance coaching",
           "online study material for MBA entrance exams", "cheap MBA coaching classes online",
         ]}
-        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://mbacompass.in/coaching"}
+        canonical={(() => {
+          if (typeof window === "undefined") return "https://mbacompass.in/coaching";
+          // M4: self-canonical paginated pages — keep `page` only.
+          const sp = new URLSearchParams(window.location.search);
+          const page = sp.get("page");
+          const tail = page && page !== "1" ? `?page=${page}` : "";
+          return `${window.location.origin}${window.location.pathname}${tail}`;
+        })()}
       />
 
 
