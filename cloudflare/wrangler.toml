@@ -1,0 +1,10 @@
+name = "mbacompass-edge"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Bind to both the apex and www hosts. Sitewide — the worker filters
+# by request type internally (bot vs human, HTML vs asset).
+routes = [
+  { pattern = "mbacompass.in/*", zone_name = "mbacompass.in" },
+  { pattern = "www.mbacompass.in/*", zone_name = "mbacompass.in" },
+]
