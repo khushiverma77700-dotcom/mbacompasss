@@ -245,7 +245,7 @@ const AuthPage = () => {
     <div className="min-h-[80vh] flex items-center justify-center bg-background px-4 py-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <img src={mbahubLogo} alt="MBA Compass Logo" className="mx-auto w-14 h-14 rounded-xl object-contain mb-3"  loading="lazy" decoding="async" />
+          <img src={mbahubLogo} alt="MBA Compass Logo" width={56} height={56} className="mx-auto w-14 h-14 rounded-xl object-contain mb-3" loading="eager" fetchPriority="high" decoding="async" />
           <CardTitle className="font-heading text-2xl">
             {isLogin ? "Welcome back" : "Create your account"}
           </CardTitle>
