@@ -36,6 +36,12 @@ const buildUrlset = (entries: Entry[]) => {
   for (const e of entries) {
     if (!e.loc) continue;
     const path = normalizePath(e.loc);
+    // L1: drop entries that normalize to bare "/" coming from a blank slug
+    // (e.g. `/college/` with no slug). The homepage "/" is added explicitly
+    // elsewhere; skip any other empty-segment URL here.
+    if (!path || path === "/" || /\/$/.test(path) || /\/\//.test(path)) {
+      if (path !== "/") continue;
+    }
     const full = `${SITE_URL}${path}`;
     if (!seen.has(full)) seen.set(full, { ...e, loc: full });
   }
