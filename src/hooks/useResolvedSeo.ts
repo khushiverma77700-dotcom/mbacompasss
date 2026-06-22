@@ -1,4 +1,5 @@
 import { useSeoSnapshot, type SEOContentType } from "@/lib/seoAutomation";
+import { normalizeReviewSchemas } from "@/lib/normalizeReviewSchema";
 
 interface ResolvedSeoInput {
   title?: string;
@@ -58,8 +59,23 @@ export const useResolvedSeo = (
     });
   }
 
+  // Normalize Review / AggregateRating: nest into sibling parent or attach
+  // itemReviewed pointing at this page. Fixes GSC "Missing field itemReviewed".
+  const pageUrl =
+    snapshot?.canonicalUrl ||
+    (snapshot?.technicalSEO as Record<string, any> | undefined)?.canonicalUrl ||
+    baseSeo.canonical;
+  const pageName = snapshot?.meta_title || baseSeo.title;
+  const normalized = normalizeReviewSchemas(dedupedBase, {
+    contentType,
+    url: pageUrl,
+    name: pageName,
+    image: baseSeo.ogImage,
+  });
+
   const mergedJsonLd =
-    dedupedBase.length === 0 ? undefined : dedupedBase.length === 1 ? dedupedBase[0] : dedupedBase;
+    normalized.length === 0 ? undefined : normalized.length === 1 ? normalized[0] : normalized;
+
 
   return {
     snapshot,
