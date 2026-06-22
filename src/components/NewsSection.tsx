@@ -13,14 +13,15 @@ const NewsSection = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("articles")
-        .select("*")
+        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,content,author")
         .eq("published", true)
         .order("created_at", { ascending: false })
         .limit(6);
       return data || [];
     },
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const getReadTime = (content: string | null) => {

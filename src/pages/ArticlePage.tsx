@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
@@ -25,6 +25,7 @@ const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
 
   const { data: article, isLoading } = useQuery({
     queryKey: ["article", slug],
@@ -38,10 +39,18 @@ const ArticlePage = () => {
       return data;
     },
     enabled: !!slug,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    placeholderData: () => {
+      // Seed from blog list / suggested lists so the page paints instantly
+      // while the full article fetch resolves.
+      const blog = qc.getQueryData<any[]>(["blog-articles"]);
+      const hit = blog?.find((a) => a?.slug === slug);
+      if (hit) return hit;
+      const news = qc.getQueryData<any[]>(["homepage-news"]);
+      return news?.find((a) => a?.slug === slug);
+    },
   });
 
   const { data: suggestedArticles } = useQuery({
@@ -49,7 +58,7 @@ const ArticlePage = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("articles")
-        .select("*")
+        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at")
         .eq("published", true)
         .neq("slug", slug!)
         .order("created_at", { ascending: false })
@@ -57,8 +66,9 @@ const ArticlePage = () => {
       return data || [];
     },
     enabled: !!article,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const articleKeywords = ((article as any)?.keywords || []) as string[];
