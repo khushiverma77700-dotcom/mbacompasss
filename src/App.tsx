@@ -48,6 +48,7 @@ const ContactPage = lazyWithPreload(() => import("./pages/ContactPage"));
 const DashboardPage = lazyWithPreload(() => import("./pages/DashboardPage"));
 const CollegeDetailPage = lazyWithPreload(() => import("./pages/CollegeDetailPage"));
 const CollegeFilterPage = lazyWithPreload(() => import("./pages/CollegeFilterPage"));
+const CollegeHubPage = lazyWithPreload(() => import("./pages/CollegeHubPage"));
 const CoachingFilterPage = lazyWithPreload(() => import("./pages/CoachingFilterPage"));
 const ProfileAnalyzerPage = lazyWithPreload(() => import("./pages/ProfileAnalyzerPage"));
 const SharedReportPage = lazyWithPreload(() => import("./pages/SharedReportPage"));
@@ -791,6 +792,10 @@ const App = () => (
             <Route path="/compare" element={<PublicLayout><LazyPage><ComparePage /></LazyPage></PublicLayout>} />
             <Route path="/article/:slug" element={<PublicLayout><LazyPage><ArticlePage /></LazyPage></PublicLayout>} />
             <Route path="/college/:slug" element={<PublicLayout><LazyPage><CollegeDetailPage /></LazyPage></PublicLayout>} />
+            {/* H5: SEO hub pages — must be registered before the generic /colleges/:region catch-all */}
+            <Route path="/colleges/type/:typeSlug" element={<PublicLayout><LazyPage><CollegeHubPage kind="type" /></LazyPage></PublicLayout>} />
+            <Route path="/colleges/by-city/:citySlug" element={<PublicLayout><LazyPage><CollegeHubPage kind="city" /></LazyPage></PublicLayout>} />
+            <Route path="/colleges/by-exam/:examSlug" element={<PublicLayout><LazyPage><CollegeHubPage kind="exam" /></LazyPage></PublicLayout>} />
             <Route path="/colleges/:region" element={<PublicLayout><LazyPage><CollegeFilterPage /></LazyPage></PublicLayout>} />
             <Route path="/coaching/:region" element={<PublicLayout><LazyPage><CoachingFilterPage /></LazyPage></PublicLayout>} />
             <Route path="/exam/:slug" element={<PublicLayout><LazyPage><ExamDetailPage /></LazyPage></PublicLayout>} />
