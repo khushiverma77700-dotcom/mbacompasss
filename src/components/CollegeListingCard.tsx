@@ -1,4 +1,6 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
+
 
 import {
   MapPin, Star, Award, Users, GraduationCap, TrendingUp, ChevronRight,
@@ -238,4 +240,8 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
   );
 };
 
-export default CollegeListingCard;
+// Desktop-perf: 600+ college cards on /colleges. Memoize so filter/sort state
+// changes only re-render the cards whose props actually changed.
+export default memo(CollegeListingCard, (prev, next) =>
+  prev.college?.id === next.college?.id && prev.rank === next.rank && prev.index === next.index
+);
