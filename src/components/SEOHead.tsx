@@ -182,6 +182,25 @@ const SEOHead = ({
 
     if (jsonLd) {
       const rawSchemas = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+      // Route every Review/AggregateRating block through the central normalizer
+      // so we never ship a top-level rating without `itemReviewed` (Google
+      // Rich Results error "Missing field itemReviewed"). The normalizer also
+      // strips itemReviewed from correctly-nested ratings, folds standalone
+      // ratings into sibling reviewable parents, and drops invalid blocks.
+      const pageName = (ogTitle || title || document.title || "").trim();
+      const pageUrl = toCanonicalHost(canonical) || (typeof window !== "undefined" ? window.location.href : "");
+      const contentType =
+        ogType === "article" ? "article" :
+        pageUrl.includes("/college/") ? "college" :
+        pageUrl.includes("/institute/") ? "institute" :
+        pageUrl.includes("/exam/") ? "exam" :
+        "webpage";
+      const normalized = normalizeReviewSchemas(rawSchemas, {
+        contentType,
+        name: pageName,
+        url: pageUrl,
+        image: ogImage,
+      });
       // M2: WebSite + Organization ship sitewide in index.html — never re-emit
       // them per-route (Google flags duplicates). Other singleton types must
       // also appear only once per page.
@@ -190,7 +209,7 @@ const SEOHead = ({
       ]);
       const skipAlways = new Set(["Organization", "WebSite"]);
       const seen = new Set<string>();
-      const schemas = rawSchemas.filter((s) => {
+      const schemas = normalized.filter((s) => {
         if (!s) return false;
         const t = (s as any)["@type"];
         const key = Array.isArray(t) ? t.join("|") : String(t || "");
