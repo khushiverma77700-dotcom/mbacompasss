@@ -234,7 +234,7 @@ const SEOHead = ({
       const scripts = document.querySelectorAll('script[data-seo-jsonld]');
       scripts.forEach((s) => s.remove());
     };
-  }, [title, description, keywords, canonical, jsonLd, ogImage, ogTitle, ogDescription, ogType, twitterTitle, twitterDescription, twitterCard, noIndex]);
+  }, [title, description, JSON.stringify(keywords), canonical, JSON.stringify(jsonLd), ogImage, ogTitle, ogDescription, ogType, twitterTitle, twitterDescription, twitterCard, noIndex]);
 
   return null;
 };
