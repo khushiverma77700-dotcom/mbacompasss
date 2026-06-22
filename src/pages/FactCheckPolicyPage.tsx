@@ -1,10 +1,19 @@
 import PolicyLayout from "@/components/PolicyLayout";
 
+const faqs = [
+  { q: "How does MBA Compass verify cut-offs, fees, and exam dates?", a: "Numerical and date-based claims are cross-checked against at least one primary source — the institute's official website, an official placement report, an exam conducting body notification, or a government dataset (NIRF, AICTE) — before publication, and re-verified at every refresh." },
+  { q: "How does MBA Compass handle corrections?", a: "Minor edits (typos, formatting) are silent. Material corrections (wrong number, date, eligibility, or quote) are fixed in-line and tagged with a 'Correction' note describing what changed and when. Significant errors trigger social-channel updates and direct user notification where appropriate." },
+  { q: "How long does it take to fix a reported error?", a: "We acknowledge every error report within two working days. Verified corrections are typically published within seven working days, depending on the severity and the source verification needed." },
+  { q: "Does MBA Compass publish raw AI-generated content?", a: "No. AI tools assist with research and drafting outlines, but every published page passes through a human editor who is accountable for the accuracy of every factual claim." },
+  { q: "How do I report inaccurate content?", a: "Email suyash@bschoolbuzz.in with the page URL, the exact statement you believe is incorrect, and your source (link, screenshot, or document) for the correct information." },
+];
+
 const FactCheckPolicyPage = () => (
   <PolicyLayout
     title="Fact-Check & Corrections Policy"
     description="How MBA Compass verifies claims before publishing and how we issue corrections when we get something wrong."
     canonical="https://mbacompass.in/fact-check-policy"
+    faqs={faqs}
   >
     <p>
       MBA admissions decisions cost lakhs of rupees and shape entire careers. Getting a number,
