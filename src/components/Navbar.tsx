@@ -152,10 +152,11 @@ const Navbar = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden p-2 text-foreground"
+          className="lg:hidden inline-flex items-center justify-center h-11 w-11 shrink-0 rounded-md text-foreground hover:bg-muted/60"
           aria-label="Toggle mobile menu"
+          aria-expanded={mobileOpen}
         >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
@@ -165,14 +166,15 @@ const Navbar = () => {
             <Link
               to="/"
               onClick={closeMobile}
-              className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
             >
               Home
             </Link>
 
             <button
               onClick={() => setMobileCollegeOpen(!mobileCollegeOpen)}
-              className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex items-center justify-between min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              aria-expanded={mobileCollegeOpen}
             >
               Colleges
               <ChevronDown className={`w-4 h-4 transition-transform ${mobileCollegeOpen ? "rotate-180" : ""}`} />
@@ -181,7 +183,8 @@ const Navbar = () => {
 
             <button
               onClick={() => setMobileCoachingOpen(!mobileCoachingOpen)}
-              className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex items-center justify-between min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              aria-expanded={mobileCoachingOpen}
             >
               Coaching
               <ChevronDown className={`w-4 h-4 transition-transform ${mobileCoachingOpen ? "rotate-180" : ""}`} />
@@ -191,14 +194,14 @@ const Navbar = () => {
             <Link
               to="/blog"
               onClick={closeMobile}
-              className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
             >
               Blogs
             </Link>
             <Link
               to="/compare"
               onClick={closeMobile}
-              className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
             >
               Compare
             </Link>
