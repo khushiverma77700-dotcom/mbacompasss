@@ -28,6 +28,48 @@ Disallow: /auth
 Disallow: /dashboard
 Disallow: /*?*sort=
 Disallow: /*?*q=
+Disallow: /*?*utm_
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
+Disallow: /*?*ref=
+
+# AI / GEO crawlers — explicitly allowed so MBA Compass content is eligible
+# to be cited in ChatGPT, Perplexity, Gemini, Claude and other AI answers.
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /dashboard
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
 
 # Same-domain sitemap (kept fresh by Admin → Sitemap Manager and a 6-hour cron)
 Sitemap: https://mbacompass.in/sitemap.xml
