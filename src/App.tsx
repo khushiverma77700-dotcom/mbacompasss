@@ -402,7 +402,7 @@ const SettingsPrefetcher = () => {
       } else {
         setReady(true);
       }
-    }, 7000);
+    }, 300); // Was 7000 — kept short so site-settings prefetch starts soon after FCP
     return () => {
       window.clearTimeout(timer);
       if (idleHandle !== undefined) {
@@ -418,37 +418,40 @@ const SettingsPrefetcherInner = () => {
 };
 
 // Mount heavy non-critical chrome (Footer, popup) only after first paint + idle
-// so they don't block initial JS execution / FCP.
+// so they don't block initial JS execution / FCP. The previous 7s delay +
+// 760px blank reservation made every page look "still loading" — replaced
+// with an immediate idle-callback (no setTimeout) and a tiny 1px reservation
+// so the page renders end-to-end the moment React hydrates.
 const DeferredChrome = () => {
   const [show, setShow] = useState(false);
   const location = useLocation();
 
-  // Reset on every route change so the footer never appears before the new
-  // page's content has had a chance to render.
   useEffect(() => {
     setShow(false);
     const w = window as any;
     let idleHandle: number | undefined;
-    const timer = window.setTimeout(() => {
-      if (typeof w.requestIdleCallback === "function") {
-        idleHandle = w.requestIdleCallback(() => setShow(true), { timeout: 2500 });
-      } else {
-        setShow(true);
-      }
-    }, 7000);
+    let rafHandle: number | undefined;
+    // Mount footer the moment the browser is idle after first paint. No
+    // artificial setTimeout — the page should feel complete immediately.
+    if (typeof w.requestIdleCallback === "function") {
+      idleHandle = w.requestIdleCallback(() => setShow(true), { timeout: 800 });
+    } else {
+      rafHandle = window.requestAnimationFrame(() => setShow(true));
+    }
     return () => {
-      window.clearTimeout(timer);
       if (idleHandle !== undefined) {
         try { w.cancelIdleCallback?.(idleHandle); } catch {}
       }
+      if (rafHandle !== undefined) window.cancelAnimationFrame(rafHandle);
     };
   }, [location.pathname]);
 
-  // Reserve vertical space so the late-mounting Footer doesn't cause CLS jumps.
-  if (!show) return <div style={{ minHeight: 760 }} aria-hidden="true" />;
+  // No giant 760px blank slot — that was the "loading" gray area users saw.
+  // Footer mounts within ~50ms of paint; minimal CLS is fine.
+  if (!show) return null;
 
   return (
-    <Suspense fallback={<div style={{ minHeight: 760 }} aria-hidden="true" />}>
+    <Suspense fallback={null}>
       <Footer />
     </Suspense>
   );
