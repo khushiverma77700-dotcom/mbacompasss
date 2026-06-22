@@ -83,7 +83,13 @@ const SEOHead = ({
     };
 
     syncMeta("description", description);
-    syncMeta("keywords", keywords?.length ? keywords.join(", ") : undefined);
+    // M5: keywords meta — cap at 10 terms; drop if empty. Google itself ignores
+    // this tag, but bloated values look low-quality to other crawlers.
+    const cappedKeywords = (keywords || [])
+      .map((k) => (k || "").trim())
+      .filter(Boolean)
+      .slice(0, 10);
+    syncMeta("keywords", cappedKeywords.length ? cappedKeywords.join(", ") : undefined);
 
     // Always force the non-www apex on canonical / og:url, regardless of
     // whether the page is currently being viewed on www.mbacompass.in.
@@ -103,17 +109,33 @@ const SEOHead = ({
     syncMeta("twitter:description", twitterDescription || ogDescription || description);
     syncMeta("twitter:image", resolvedOgImage);
 
-    // Robots — force noindex when the page is served from a non-canonical
-    // host (preview / staging / dashboard subdomain). This prevents Google
-    // from indexing duplicate copies of every page on the lovable.app
-    // preview domain.
+    // Robots — force noindex when:
+    //   1. The caller explicitly asks (noIndex prop), OR
+    //   2. The page is served from a non-canonical host (preview / staging /
+    //      dashboard subdomain) — prevents Google indexing duplicate copies
+    //      on the lovable.app preview domain.
+    //   3. M6: The URL has any query-string filter params other than `page`
+    //      (?city=, ?sort=, ?q= etc) — these create infinite parameterized
+    //      duplicates of every listing page. We emit `noindex, follow` so
+    //      crawlers still walk the links but don't index the filtered URL.
     const currentHost =
       typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
     const hostIsNonIndexable = currentHost !== "" && !INDEXABLE_HOSTS.has(currentHost);
+    let hasFilterParams = false;
+    if (typeof window !== "undefined" && window.location.search) {
+      const sp = new URLSearchParams(window.location.search);
+      for (const key of sp.keys()) {
+        if (key !== "page") { hasFilterParams = true; break; }
+      }
+    }
+    const shouldNoIndex = noIndex || hostIsNonIndexable || hasFilterParams;
     syncMeta(
       "robots",
-      noIndex || hostIsNonIndexable ? "noindex, nofollow" : "index, follow",
+      shouldNoIndex
+        ? "noindex, follow"
+        : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
     );
+
 
     // Canonical — always non-www
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
@@ -134,13 +156,19 @@ const SEOHead = ({
 
     if (jsonLd) {
       const rawSchemas = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
-      // Defensive dedupe: Google flags duplicate FAQPage / BreadcrumbList as critical errors
-      const singletonTypes = new Set(["FAQPage", "BreadcrumbList", "WebPage", "Organization"]);
+      // M2: WebSite + Organization ship sitewide in index.html — never re-emit
+      // them per-route (Google flags duplicates). Other singleton types must
+      // also appear only once per page.
+      const singletonTypes = new Set([
+        "FAQPage", "BreadcrumbList", "WebPage", "Organization", "WebSite",
+      ]);
+      const skipAlways = new Set(["Organization", "WebSite"]);
       const seen = new Set<string>();
       const schemas = rawSchemas.filter((s) => {
         if (!s) return false;
         const t = (s as any)["@type"];
         const key = Array.isArray(t) ? t.join("|") : String(t || "");
+        if (skipAlways.has(key)) return false;
         if (key && singletonTypes.has(key)) {
           if (seen.has(key)) return false;
           seen.add(key);
@@ -155,6 +183,7 @@ const SEOHead = ({
         document.head.appendChild(script);
       });
     }
+
 
     return () => {
       const scripts = document.querySelectorAll('script[data-seo-jsonld]');

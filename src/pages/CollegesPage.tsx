@@ -190,7 +190,17 @@ const CollegesPage = () => {
           "private MBA colleges with guaranteed placements", "top 100 MBA colleges in India rankings",
           "MBA colleges without entrance exams in India", "distance MBA colleges with best placement support",
         ]}
-        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://mbacompass.in/colleges"}
+        canonical={(() => {
+          if (typeof window === "undefined") return "https://mbacompass.in/colleges";
+          // M4: self-canonical paginated pages — preserve `page` param so
+          // /colleges?page=2 canonicals to itself, NOT to /colleges. Strip
+          // every other filter param (city, state, q, sort, …) so the
+          // canonical doesn't multiply.
+          const sp = new URLSearchParams(window.location.search);
+          const page = sp.get("page");
+          const tail = page && page !== "1" ? `?page=${page}` : "";
+          return `${window.location.origin}${window.location.pathname}${tail}`;
+        })()}
         jsonLd={jsonLd}
       />
 

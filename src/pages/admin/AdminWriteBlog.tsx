@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText, Link2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
+import SeoLengthHint from "@/components/admin/SeoLengthHint";
 
 const CATEGORIES = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
 
@@ -377,12 +378,12 @@ const AdminWriteBlog = () => {
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Meta Title (auto if blank)</Label>
               <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} maxLength={70} />
-              <span className="text-[10px] text-muted-foreground">{metaTitle.length}/60</span>
+              <SeoLengthHint kind="title" value={metaTitle} />
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Meta Description (auto if blank)</Label>
               <Input value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} maxLength={170} />
-              <span className="text-[10px] text-muted-foreground">{metaDescription.length}/160</span>
+              <SeoLengthHint kind="description" value={metaDescription} />
             </div>
           </div>
 
