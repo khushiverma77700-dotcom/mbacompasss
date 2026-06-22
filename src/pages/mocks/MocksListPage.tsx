@@ -35,6 +35,7 @@ import {
   Award,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
 
 // Lazy-load all heavy below-the-fold widgets so the hero paints instantly.
@@ -230,6 +231,7 @@ export default function MocksListPage() {
         </div>
 
         <div className="container mx-auto px-4 py-14 md:py-24 relative">
+          <SiteBreadcrumbs items={[{ name: "Mocks", url: "/mocks" }]} className="mb-6" />
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
               <Badge className="mb-4 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200 backdrop-blur">

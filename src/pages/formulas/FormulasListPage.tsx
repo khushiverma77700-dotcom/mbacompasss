@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, Search, ChevronRight, Star, Sigma, BookOpen, Brain, Repeat, Sparkles, Zap } from "lucide-react";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 
 export default function FormulasListPage() {
   const [formulas, setFormulas] = useState<any[]>([]);
@@ -41,6 +42,7 @@ export default function FormulasListPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 pb-20 md:p-6">
+      <SiteBreadcrumbs items={[{ name: "Formulas", url: "/formulas" }]} />
       <header className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-6 md:p-10">
         <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-sky-200/30 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />

@@ -18,6 +18,7 @@ import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import PageKeywords from "@/components/PageKeywords";
 import AIGistSection from "@/components/AIGistSection";
 import { FEE_BUCKETS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches, locationMatches } from "@/lib/filterHelpers";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 
 const modes = ["Online", "Offline", "Hybrid"];
 
@@ -216,6 +217,13 @@ const CategoryPage = () => {
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
+          <SiteBreadcrumbs
+            items={[
+              { name: "Cities", url: "/colleges" },
+              { name: cityPage?.name || "Region", url: `/category/${cityPage?.slug || ""}` },
+            ]}
+            className="mb-4 text-primary-foreground/80 [&_a:hover]:text-white"
+          />
           <div className="flex items-center justify-between mb-8">
             <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
               <ArrowLeft className="w-4 h-4" /> Back
