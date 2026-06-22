@@ -323,7 +323,7 @@ const CollegeDetailPage = () => {
         {/* Layered background */}
         <div className="absolute inset-0 pointer-events-none">
           {college.banner_url && (
-            <img src={college.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 md:scale-105"  loading="lazy" decoding="async" />
+            <img src={college.banner_url} alt="" width={1920} height={600} className="absolute inset-0 w-full h-full object-cover opacity-40 md:scale-105" loading="eager" fetchPriority="high" decoding="async" />
           )}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-primary/70 to-primary/90" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(0_0%_100%/0.18),transparent_55%)]" />
@@ -358,7 +358,7 @@ const CollegeDetailPage = () => {
               <div className="relative flex-shrink-0">
                 <div className="absolute -inset-1.5 bg-gradient-to-br from-amber-300 via-white/60 to-amber-200 rounded-3xl blur-md opacity-70" />
                 {college.logo_url ? (
-                  <img src={college.logo_url} alt={college.name} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50"  loading="lazy" decoding="async" />
+                  <img src={college.logo_url} alt={college.name} width={96} height={96} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50" loading="eager" decoding="async" />
                 ) : (
                   <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white shadow-2xl ring-2 ring-white/50 flex items-center justify-center text-primary font-extrabold text-3xl">
                     {college.ranking ? `#${college.ranking}` : college.name.charAt(0)}
@@ -885,7 +885,7 @@ const CollegeDetailPage = () => {
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {galleryImages.map((img: string, i: number) => (
                       <button key={i} onClick={() => setGalleryIdx(i)} className={`rounded-lg overflow-hidden aspect-square border-2 transition-all ${i === galleryIdx ? "border-primary" : "border-transparent hover:border-primary/50"}`}>
-                        <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        <img src={img} alt="" width={120} height={120} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       </button>
                     ))}
                   </div>
@@ -928,7 +928,7 @@ const CollegeDetailPage = () => {
                     {facultyList.map((f: any, i: number) => (
                       <div key={i} className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border">
                         {f.photo_url ? (
-                          <img src={f.photo_url} alt={f.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0"  loading="lazy" decoding="async" />
+                          <img src={f.photo_url} alt={f.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover flex-shrink-0" loading="lazy" decoding="async" />
                         ) : (
                           <div className="w-12 h-12 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm flex-shrink-0">
                             {f.name.split(" ").slice(-1).map((n: string) => n[0]).join("")}
