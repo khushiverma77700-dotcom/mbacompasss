@@ -47,7 +47,7 @@ const AuthorsPage = () => {
         canonical="https://mbacompass.in/authors"
         jsonLd={jsonLd}
       />
-      <main className="bg-white">
+      <div className="bg-white">
         <header className="bg-gradient-to-b from-sky-50 to-white border-b border-sky-100">
           <div className="max-w-4xl mx-auto px-4 py-12 md:py-16">
             <p className="text-xs font-semibold tracking-wider text-sky-700 uppercase mb-3">
@@ -124,7 +124,7 @@ const AuthorsPage = () => {
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </>
   );
 };

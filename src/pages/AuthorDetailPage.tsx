@@ -59,7 +59,7 @@ const AuthorDetailPage = () => {
         jsonLd={jsonLd}
         ogType="profile"
       />
-      <main className="bg-white">
+      <div className="bg-white">
         <header className="bg-gradient-to-b from-sky-50 to-white border-b border-sky-100">
           <div className="max-w-3xl mx-auto px-4 py-12 md:py-16">
             <Link to="/authors" className="text-xs font-semibold text-sky-700 uppercase tracking-wider hover:underline">
@@ -144,7 +144,7 @@ const AuthorDetailPage = () => {
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </>
   );
 };
