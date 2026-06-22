@@ -488,8 +488,14 @@ const DeferredGlobalLoginDialog = () => {
 
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg focus:ring-2 focus:ring-primary"
+    >
+      Skip to main content
+    </a>
     <Suspense fallback={<div style={{ height: 64 }} aria-hidden="true" />}><Navbar /></Suspense>
-    {children}
+    <main id="main-content">{children}</main>
     <DeferredChrome />
   </>
 );

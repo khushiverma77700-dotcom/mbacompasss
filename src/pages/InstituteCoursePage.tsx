@@ -678,8 +678,10 @@ const InstituteCoursePage = () => {
           <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600 font-semibold">Enquire Now</Button>
         </a>
         {inst.phone && (
-          <a href={`tel:${inst.phone}`}>
-            <Button variant="outline" size="icon"><Phone className="w-4 h-4" /></Button>
+          <a href={`tel:${inst.phone}`} aria-label={`Call ${inst.name}`}>
+            <Button variant="outline" size="icon" aria-label={`Call ${inst.name}`}>
+              <Phone className="w-4 h-4" />
+            </Button>
           </a>
         )}
       </div>
