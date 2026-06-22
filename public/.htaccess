@@ -29,6 +29,9 @@
   #      URL in Search Console. Googlebot follows redirects on sitemap fetches.
   RewriteRule ^sitemap\.xml$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap [R=302,L,NC]
 
+  # 0.6) L7: RSS feed for /articles, served by the serve-feed edge function.
+  RewriteRule ^feed\.xml$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-feed [R=302,L,NC]
+
   # 1) Send obvious "this can never be a page" requests to a real 404.
   #    - Files with non-web extensions commonly probed by scanners
   #    - WordPress / phpMyAdmin paths we don't host

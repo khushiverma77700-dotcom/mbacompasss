@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.bulk-seo-worker]
 verify_jwt = false
+
+[functions.serve-feed]
+verify_jwt = false
