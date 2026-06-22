@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Clock, AlertTriangle, Layers, ShieldAlert } from "lucide-react";
 import { isStudentMode, mockAttemptPath, studentBackToMocksPath } from "@/lib/studentModeNav";
+import SEOHead from "@/components/SEOHead";
 
 
 export default function MockTestIntroPage() {
@@ -92,6 +93,9 @@ export default function MockTestIntroPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Mock attempt pages are auth-gated, paywalled and near-duplicate by template — keep them out of the index. */}
+      <SEOHead noIndex title={test?.name ? `${test.name} — MBA Compass` : "Mock Test — MBA Compass"} />
+      
       
       <Card className="p-6 md:p-8">
         <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
