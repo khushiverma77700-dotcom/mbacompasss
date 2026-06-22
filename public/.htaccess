@@ -1,7 +1,8 @@
 # Hostinger / Apache routing for the MBA Compass SPA.
 #
 # Behavior:
-#   0. Canonical host: 301-redirect www.mbacompass.in -> mbacompass.in.
+#   0a. Canonical scheme: 301-redirect http:// -> https:// (fixes GSC redirect-error reports).
+#   0b. Canonical host:   301-redirect www.mbacompass.in -> mbacompass.in.
 #   1. Real files & directories are served as-is.
 #   2. Known SPA paths fall through to index.html (HTTP 200) so React Router
 #      can render them.
@@ -17,9 +18,17 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # 0) Canonical host: permanent 301 from www.mbacompass.in -> mbacompass.in.
-  #    Non-www is the only version submitted to Google Search Console and the
-  #    only host emitted in <link rel="canonical"> tags + sitemap.xml.
+  # 0a) H4: Force HTTPS. Cloudflare usually handles this, but if a bot reaches
+  #     the origin over plain HTTP we 301 it to https so GSC stops reporting
+  #     "Redirect error" on http:// URLs that previously chained through
+  #     Cloudflare -> .htaccess host redirect -> SPA.
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+  # 0b) Canonical host: permanent 301 from www.mbacompass.in -> mbacompass.in.
+  #     Non-www is the only version submitted to Google Search Console and the
+  #     only host emitted in <link rel="canonical"> tags + sitemap.xml.
   RewriteCond %{HTTP_HOST} ^www\.mbacompass\.in$ [NC]
   RewriteRule ^(.*)$ https://mbacompass.in/$1 [R=301,L]
 
@@ -50,22 +59,52 @@
   # 3) Crawler SSR prerender — fixes Google "Soft 404" on SPA article/college
   #    pages. Bots get fully-rendered HTML (title, meta, content, JSON-LD) from
   #    the ssr-prerender edge function. Real users keep the React SPA.
-  #    Uses mod_proxy [P] so the rendered HTML is served AT the original URL
-  #    (no redirect), preserving the canonical mbacompass.in/article/<slug> URL
-  #    in Google's index.
   RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|facebookexternalhit|twitterbot|linkedinbot|embedly|quora\ link\ preview|whatsapp|applebot|petalbot|ia_archiver|mj12bot|ahrefsbot|semrushbot) [NC]
   RewriteCond %{REQUEST_URI} ^/(article|college)/[^/]+/?$ [NC]
   RewriteRule ^(.*)$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/ssr-prerender?path=/$1 [P,L]
-
-  # (If your host doesn't load mod_proxy, the [P] flag above will be ignored
-  #  and bots will fall through to the SPA shell as before — contact Hostinger
-  #  support to enable mod_proxy + mod_proxy_http on the account.)
-
 
   # 4) Standard SPA fallback — serve index.html for everything else (humans).
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
+</IfModule>
+
+# L2: Browser + CDN caching headers. Long cache for fingerprinted static
+# assets, short cache for HTML so SPA updates roll out fast.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  # 1 year — Vite-fingerprinted assets (filename hash changes on update)
+  ExpiresByType text/css                       "access plus 1 year"
+  ExpiresByType application/javascript         "access plus 1 year"
+  ExpiresByType text/javascript                "access plus 1 year"
+  ExpiresByType image/png                      "access plus 1 year"
+  ExpiresByType image/jpeg                     "access plus 1 year"
+  ExpiresByType image/webp                     "access plus 1 year"
+  ExpiresByType image/svg+xml                  "access plus 1 year"
+  ExpiresByType image/x-icon                   "access plus 1 year"
+  ExpiresByType font/woff                      "access plus 1 year"
+  ExpiresByType font/woff2                     "access plus 1 year"
+  ExpiresByType application/font-woff2         "access plus 1 year"
+  # Short — HTML shell must revalidate so deploys propagate
+  ExpiresByType text/html                      "access plus 0 seconds"
+  ExpiresByType application/xml                "access plus 1 hour"
+  ExpiresByType text/xml                       "access plus 1 hour"
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Immutable cache for fingerprinted assets under /assets/ (Vite output dir)
+  <FilesMatch "\.(css|js|woff2?|ttf|png|jpe?g|gif|svg|webp|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # SPA shell — never stale-cache index.html
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# L2: Compression for text assets (reduces transfer size 60-80%)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json application/xml image/svg+xml
 </IfModule>
 
 # As a final safety net, point Apache's built-in 404 at the edge function.

@@ -184,12 +184,23 @@ Deno.serve(async (req) => {
     const compassEntries: Entry[] = (mbaCompass ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/mba-compass/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
 
+    // H5: SEO hub pages — by type, city, and exam. Static lists, high priority
+    //     because each is a topical landing that feeds /college/:slug detail pages.
+    const TYPE_HUBS = ["iim", "private", "top-mba", "pgdm", "university", "government"];
+    const EXAM_HUBS = ["cat", "xat", "cmat", "mat", "nmat", "snap", "iift", "gmat", "atma"];
+    const CITY_HUBS = ["mumbai", "delhi", "bangalore", "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "gurgaon", "noida", "jaipur", "indore", "lucknow", "chandigarh"];
+    const hubEntries: Entry[] = [
+      ...TYPE_HUBS.map((s) => ({ loc: `/colleges/type/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
+      ...EXAM_HUBS.map((s) => ({ loc: `/colleges/by-exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
+      ...CITY_HUBS.map((s) => ({ loc: `/colleges/by-city/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+    ];
+
     // C1: /mocks/* slugs removed — auth-gated, paywalled, near-duplicate test templates.
     //     Keep only the /mocks hub (already in STATIC_PAGES).
     // C2: /institute/{slug}/course/{slug} removed — thin/duplicate templates;
     //     pages now self-canonical to the parent institute, so they shouldn't be in the sitemap.
     const segments: Record<string, Entry[]> = {
-      pages: [...STATIC_PAGES, ...cityEntries],
+      pages: [...STATIC_PAGES, ...cityEntries, ...hubEntries],
       blogs,
       categories: cats,
       colleges: collegeEntries,
