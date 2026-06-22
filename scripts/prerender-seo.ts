@@ -253,10 +253,18 @@ async function prerenderArticles(): Promise<number> {
         jsonLd: {
           "@context": "https://schema.org",
           "@type": "Article",
-          headline: r.title,
+          headline: clip(r.title, 110),
+          description,
           url: canonical,
-          ...(r.image_url ? { image: r.image_url } : {}),
-          ...(r.author ? { author: { "@type": "Person", name: r.author } } : {}),
+          // Google Rich Results REQUIRES image for Article. Always fall back
+          // to the sitewide OG image so we never ship Article JSON-LD without
+          // an image (the previous spread-only shape omitted the field when
+          // image_url was null and triggered "Missing field image" in GSC).
+          image: r.image_url || DEFAULT_OG,
+          author: {
+            "@type": "Person",
+            name: r.author || "MBA Compass Editorial",
+          },
           datePublished: r.created_at,
           dateModified: r.updated_at || r.created_at,
           publisher: {
@@ -264,6 +272,7 @@ async function prerenderArticles(): Promise<number> {
             name: "MBA Compass",
             logo: { "@type": "ImageObject", url: `${SITE}/og-image.png` },
           },
+          mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
         },
       }),
     );
