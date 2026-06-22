@@ -38,10 +38,9 @@ const ArticlePage = () => {
       return data;
     },
     enabled: !!slug,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: suggestedArticles } = useQuery({
@@ -49,7 +48,7 @@ const ArticlePage = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("articles")
-        .select("*")
+        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at")
         .eq("published", true)
         .neq("slug", slug!)
         .order("created_at", { ascending: false })
@@ -57,8 +56,9 @@ const ArticlePage = () => {
       return data || [];
     },
     enabled: !!article,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const articleKeywords = ((article as any)?.keywords || []) as string[];
