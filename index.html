@@ -251,12 +251,17 @@
       </div>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Google Analytics (GA4) — deferred to first user interaction (or 8s
-         idle fallback) so it never competes with LCP/TTI on mobile. -->
+    <!-- Google Analytics (GA4) — deferred to first meaningful user interaction
+         (or idle fallback) so it never competes with LCP/INP on mobile.
+         `mousemove` is intentionally excluded: it fires immediately when a
+         desktop visitor's cursor is anywhere over the document, defeating
+         the deferral. We also wrap the actual injection in
+         requestIdleCallback so the third-party script never lands in the
+         critical-path browser task. -->
     <script>
       (function () {
         var loaded = false;
-        function loadGA() {
+        function injectGA() {
           if (loaded) return;
           loaded = true;
           var s = document.createElement('script');
@@ -267,16 +272,20 @@
           function gtag(){dataLayer.push(arguments);}
           window.gtag = gtag;
           gtag('js', new Date());
-          gtag('config', 'G-QV79FTE0XN');
+          gtag('config', 'G-QV79FTE0XN', { transport_type: 'beacon' });
         }
-        var events = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'mousemove'];
+        function loadGA() {
+          var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1); };
+          idle(injectGA, { timeout: 2000 });
+        }
+        var events = ['pointerdown', 'touchstart', 'keydown', 'scroll'];
         function once() {
           events.forEach(function (e) { window.removeEventListener(e, once, { passive: true, capture: true }); });
           loadGA();
         }
         events.forEach(function (e) { window.addEventListener(e, once, { passive: true, capture: true }); });
-        // Safety net: load anyway after 8s so bounces from idle visits are still counted.
-        setTimeout(loadGA, 8000);
+        // Safety net: load anyway after 10s so bounces from idle visits are still counted.
+        setTimeout(loadGA, 10000);
       })();
     </script>
   </body>
