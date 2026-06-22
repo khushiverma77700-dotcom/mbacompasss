@@ -9,6 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
+import TopicClusterLinks, { DEFAULT_MBA_CLUSTER } from "@/components/TopicClusterLinks";
 
 const BlogPage = () => {
   const navigate = useNavigate();
@@ -142,6 +144,7 @@ const BlogPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-10">
+        <SiteBreadcrumbs items={[{ name: "Blog", url: "/blog" }]} className="mb-6" />
         {/* Category Filter Bar */}
         <div className="flex gap-2 flex-wrap mb-10 -mt-6 relative z-10">
           <div className="w-full bg-card rounded-2xl p-4 shadow-lg border border-border flex gap-2 flex-wrap items-center">
