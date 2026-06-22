@@ -17,6 +17,7 @@ import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import DOMPurify from "isomorphic-dompurify";
 import NotFound from "@/pages/NotFound";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 
 const stripHtml = (value?: string | null) => (value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
@@ -169,6 +170,13 @@ const ExamDetailPage = () => {
         </div>
       </div>
       <div className="container mx-auto px-4 py-8">
+        <SiteBreadcrumbs
+          items={[
+            { name: "MBA Exams", url: "/colleges" },
+            { name: exam.fullName || exam.name, url: `/exam/${exam.slug || ""}` },
+          ]}
+          className="mb-6"
+        />
         <div className="grid lg:grid-cols-3 gap-6 min-w-0">
           <div className="lg:col-span-2 space-y-6 min-w-0">
             <AIGistSection

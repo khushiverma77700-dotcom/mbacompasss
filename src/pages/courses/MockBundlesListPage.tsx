@@ -14,6 +14,7 @@ import {
   Crown, ListChecks,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import { FEATURE_DEFINITIONS, type FeatureKey, type FeatureMap } from "@/lib/courseFeatures";
 import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 
@@ -171,6 +172,7 @@ export default function MockBundlesListPage() {
 
         <div className="container mx-auto px-4 pt-12 pb-6 md:pt-16 md:pb-8 relative">
           <div className="max-w-3xl">
+            <SiteBreadcrumbs items={[{ name: "Courses", url: "/courses" }]} className="mb-4" />
             <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">
               <ShoppingBag className="h-3.5 w-3.5 mr-1" /> MBA Compass Course Catalog
             </Badge>
