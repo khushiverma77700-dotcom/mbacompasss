@@ -1,5 +1,5 @@
 import { useParams, Link, Navigate } from "react-router-dom";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { AUTHORS } from "./AuthorsPage";
 import { Mail, Linkedin } from "lucide-react";
 
@@ -14,23 +14,39 @@ const AuthorDetailPage = () => {
   const url = `https://mbacompass.in/authors/${author.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Person",
-    name: author.name,
-    url,
-    image: "https://mbacompass.in/og-image.png",
-    jobTitle: author.role,
-    description: author.short,
-    knowsAbout: author.expertise,
-    email: "suyash@bschoolbuzz.in",
-    worksFor: {
-      "@type": "Organization",
-      name: "MBA Compass",
-      url: "https://mbacompass.in",
-    },
-    sameAs: [
-      "https://www.linkedin.com/company/mba-compass",
-      "https://www.instagram.com/mbacompass.in",
-      "https://twitter.com/mbacompass",
+    "@graph": [
+      {
+        "@type": "ProfilePage",
+        "@id": url,
+        url,
+        name: author.name,
+        description: author.short,
+        mainEntity: {
+          "@type": "Person",
+          name: author.name,
+          url,
+          image: "https://mbacompass.in/og-image.png",
+          jobTitle: author.role,
+          description: author.short,
+          knowsAbout: author.expertise,
+          email: "suyash@bschoolbuzz.in",
+          worksFor: {
+            "@type": "Organization",
+            name: "MBA Compass",
+            url: "https://mbacompass.in",
+          },
+          sameAs: [
+            "https://www.linkedin.com/company/mba-compass",
+            "https://www.instagram.com/mbacompass.in",
+            "https://twitter.com/mbacompass",
+          ],
+        },
+      },
+      generateBreadcrumbSchema([
+        { name: "Home", url: "https://mbacompass.in" },
+        { name: "Authors", url: "https://mbacompass.in/authors" },
+        { name: author.name, url },
+      ]),
     ],
   };
 
