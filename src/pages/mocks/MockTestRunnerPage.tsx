@@ -492,6 +492,8 @@ export default function MockTestRunnerPage() {
 
   return (
     <div className="fixed inset-0 bg-white text-slate-900 flex flex-col select-none">
+      {/* Screen-reader-only H1 so the page has a heading landmark for a11y / crawlers. */}
+      <h1 className="sr-only">{test?.name ? `${test.name} — Mock Test` : "CAT Mock Test"}</h1>
       {/* Top bar */}
       <header className="bg-slate-900 text-white px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
         <div className="font-semibold text-xs sm:text-sm truncate">CAT Mock Test</div>
