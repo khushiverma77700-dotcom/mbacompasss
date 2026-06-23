@@ -239,14 +239,14 @@ const HeroSection = () => {
             </div>
           </form>
 
-          {/* Popular searches — fixed-height row eliminates CLS when settings hydrate */}
-          <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 mb-4 text-xs md:text-sm min-h-[2rem]">
-            <span className="text-primary-foreground/50 font-medium self-center">Popular:</span>
-            {popularSearches.map((term: string) => (
+          {/* Popular searches */}
+          <div className="flex flex-wrap justify-center items-center gap-1.5 md:gap-2 mb-6 text-xs md:text-sm">
+            <span className="text-primary-foreground/60 font-medium">Popular:</span>
+            {popularSearches.slice(0, 4).map((term: string) => (
               <button
                 key={term}
                 onClick={() => { setQuery(term); }}
-                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/15 hover:border-white/30 font-medium"
+                className="text-primary-foreground/95 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/20 hover:border-white/40 font-medium backdrop-blur-sm"
               >
                 {term}
               </button>
@@ -255,7 +255,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4 max-w-3xl mx-auto">
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || BookOpen;
             return (
@@ -263,15 +263,15 @@ const HeroSection = () => {
                 key={i}
                 className="group cursor-default"
               >
-                <div className="relative text-center bg-white/15 rounded-xl p-3 md:p-4 border border-white/20 overflow-hidden transition-colors duration-200 group-hover:bg-white/20 group-hover:border-white/30">
-                  <div className="relative z-10">
-                    <div className="w-8 h-8 mx-auto rounded-lg bg-white/15 flex items-center justify-center mb-1.5 group-hover:bg-white/20 transition-colors">
+                <div className="relative text-center bg-white/15 backdrop-blur-sm rounded-2xl p-3.5 md:p-5 border border-white/25 overflow-hidden transition-all duration-200 group-hover:bg-white/25 group-hover:border-white/40 group-hover:-translate-y-0.5 shadow-lg shadow-black/5">
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-white/20 flex items-center justify-center mb-2 group-hover:bg-white/30 transition-colors ring-1 ring-white/30">
                       <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-lg md:text-xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
+                    <div className="text-xl md:text-2xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
                       {stat.value}
                     </div>
-                    <div className="text-[10px] md:text-xs text-primary-foreground/65 font-medium">
+                    <div className="text-[10px] md:text-xs text-primary-foreground/75 font-medium leading-tight">
                       {stat.label}
                     </div>
                   </div>
