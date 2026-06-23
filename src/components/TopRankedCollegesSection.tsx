@@ -52,7 +52,7 @@ const TopRankedCollegesSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
           {items.map((college: any, i: number) => (
             <motion.div
               key={college.slug || i}
@@ -60,10 +60,11 @@ const TopRankedCollegesSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: Math.min(i * 0.05, 0.25) }}
+              className="h-full"
             >
               <Link
                 to={`/colleges/${college.slug}`}
-                className="group relative block bg-card rounded-2xl border border-border/70 p-6 hover:border-primary/40 hover:shadow-[0_18px_50px_-20px_hsl(207_90%_54%_/_0.25)] transition-all duration-300 overflow-hidden"
+                className="group relative flex flex-col h-full bg-card rounded-2xl border border-border/70 p-6 hover:border-primary/40 hover:shadow-[0_18px_50px_-20px_hsl(207_90%_54%_/_0.25)] transition-all duration-300 overflow-hidden"
               >
                 <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -79,12 +80,12 @@ const TopRankedCollegesSection = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-heading font-bold text-lg text-foreground group-hover:text-primary transition-colors leading-tight">
+                    <h3 className="font-heading font-bold text-lg text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
                       {college.name}
                     </h3>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                      <MapPin className="w-3 h-3" />
-                      {college.city}{college.state ? `, ${college.state}` : ""}
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{college.city}{college.state ? `, ${college.state}` : ""}</span>
                     </div>
                     {college.type && (
                       <span className="inline-block mt-2 text-[10px] font-semibold uppercase tracking-wider bg-accent text-accent-foreground px-2 py-0.5 rounded-full">
@@ -94,20 +95,24 @@ const TopRankedCollegesSection = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-5 pt-5 border-t border-border/60">
+                <div className="grid grid-cols-2 gap-4 mt-auto pt-5 border-t border-border/60">
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Fees</p>
-                    <p className="text-sm font-semibold text-foreground flex items-center gap-1">
-                      <IndianRupee className="w-3.5 h-3.5 text-primary/70" />
-                      {college.fees || "N/A"}
-                    </p>
+                    <div className="min-h-[2.5rem]">
+                      <p className="text-sm font-semibold text-foreground flex items-start gap-1 line-clamp-2">
+                        <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
+                        <span className="break-words">{college.fees || "N/A"}</span>
+                      </p>
+                    </div>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Avg Package</p>
-                    <p className="text-sm font-semibold text-foreground flex items-center gap-1">
-                      <TrendingUp className="w-3.5 h-3.5 text-primary/70" />
-                      {college.placement_avg || "N/A"}
-                    </p>
+                    <div className="min-h-[2.5rem]">
+                      <p className="text-sm font-semibold text-foreground flex items-start gap-1 line-clamp-2">
+                        <TrendingUp className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
+                        <span className="break-words">{college.placement_avg || "N/A"}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </Link>
