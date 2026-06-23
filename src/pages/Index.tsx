@@ -21,6 +21,12 @@ const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedColleg
 const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
 const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
+const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
+const AICoachingFinder = lazy(() => import("@/components/AICoachingFinder"));
+const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
+const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
+const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -84,22 +90,52 @@ const Index = () => {
         {/* 1. Hero */}
         <HeroSection />
 
-        {/* 2. Top Colleges Strip */}
+        {/* 2. Exam Deadlines Ticker */}
+        <Suspense fallback={<SectionFallback height={80} />}>
+          <ExamDeadlinesTicker />
+        </Suspense>
+
+        {/* 3. Top Colleges Strip */}
         <Suspense fallback={<SectionFallback height={520} />}>
           <TopRankedCollegesSection />
         </Suspense>
 
-        {/* 3. Key Features */}
+        {/* 4. Stats Counter */}
+        <Suspense fallback={<SectionFallback height={200} />}>
+          <StatsCounterSection />
+        </Suspense>
+
+        {/* 5. Popular Exams */}
+        <Suspense fallback={<SectionFallback height={360} />}>
+          <PopularExamsSection />
+        </Suspense>
+
+        {/* 6. Key Features */}
         <Suspense fallback={<SectionFallback height={420} />}>
           <WhyChooseUs />
         </Suspense>
 
-        {/* 4. How It Works */}
+        {/* 7. AI Coaching Finder */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <AICoachingFinder />
+        </Suspense>
+
+        {/* 8. How It Works */}
         <Suspense fallback={<SectionFallback height={360} />}>
           <HowItWorksSection />
         </Suspense>
 
-        {/* 5. CTA */}
+        {/* 9. Testimonials */}
+        <Suspense fallback={<SectionFallback height={360} />}>
+          <TestimonialsSection />
+        </Suspense>
+
+        {/* 10. Latest Articles */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <LatestArticlesSection />
+        </Suspense>
+
+        {/* 11. CTA */}
         <Suspense fallback={<SectionFallback height={280} />}>
           <CTASection />
         </Suspense>
