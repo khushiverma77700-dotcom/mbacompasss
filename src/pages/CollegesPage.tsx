@@ -235,14 +235,27 @@ const CollegesPage = () => {
 
           <div className="text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-5 border border-white/10">
-                <Award className="w-3.5 h-3.5 text-primary-foreground" />
-                <span className="text-sm font-medium text-primary-foreground">Updated for 2026 Admissions</span>
+              <div className="inline-flex items-center gap-3 mb-5">
+                <span className="h-px w-8 bg-primary-foreground/40" />
+                <span className="font-editorial italic text-primary-foreground/90 text-sm tracking-wide">The College Directory</span>
+                <span className="h-px w-8 bg-primary-foreground/40" />
               </div>
-              <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-tight">
-                {dynamicH1}
+              <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-[1.05]">
+                {(() => {
+                  const words = dynamicH1.split(" ");
+                  if (words.length < 2) return dynamicH1;
+                  const tail = words.slice(-2).join(" ");
+                  const head = words.slice(0, -2).join(" ");
+                  return (
+                    <>
+                      {head}{" "}
+                      <span className="font-editorial italic font-normal text-yellow-100/95">{tail}</span>
+                    </>
+                  );
+                })()}
               </h1>
-              <p className="text-primary-foreground/75 mb-6 max-w-2xl mx-auto text-base md:text-lg">
+              <div className="mx-auto h-px w-12 bg-primary-foreground/30 mb-4" />
+              <p className="text-primary-foreground/80 mb-6 max-w-2xl mx-auto text-base md:text-lg">
                 Compare {totalColleges}+ colleges including {iimCount} IIMs — rankings, fees, placements & admission details
               </p>
             </motion.div>
