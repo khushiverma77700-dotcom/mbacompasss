@@ -1199,6 +1199,7 @@ const CollegeDetailPage = () => {
                   </CardContent>
                 </Card>
               </div>
+            </div>
           </aside>
         </div>
       </div>
