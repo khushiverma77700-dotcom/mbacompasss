@@ -984,3 +984,88 @@ html, body, #root {
   h2 { font-size: clamp(1.25rem, 5vw, 1.5rem); line-height: 1.25; }
   h3 { font-size: clamp(1.05rem, 4.2vw, 1.25rem); line-height: 1.3; }
 }
+
+/* ===========================================================================
+ * Mobile optimizations (≤ 768px) — universal across every page.
+ *   - Tap targets ≥ 44×44 px so all buttons/links pass WCAG 2.5.5.
+ *   - Hover-only visual effects (translate, scale, color shifts) are disabled
+ *     on touch devices where `:hover` fires sticky after a tap.
+ *   - Horizontal-overflow guard for screens narrower than 375 px.
+ * =========================================================================== */
+
+@media (max-width: 768px) {
+  /* WCAG 2.5.5 — interactive controls must be at least 44×44 CSS px on touch.
+     Excludes inline links inside flowing paragraphs and tiny utility chips
+     that intentionally render smaller (e.g. badges, table-row toggles). */
+  button:not([data-no-min-tap]),
+  a[href]:not([data-no-min-tap]):not(.inline-link),
+  [role="button"]:not([data-no-min-tap]),
+  [role="tab"]:not([data-no-min-tap]),
+  [role="menuitem"]:not([data-no-min-tap]),
+  input[type="checkbox"]:not([data-no-min-tap]),
+  input[type="radio"]:not([data-no-min-tap]),
+  input[type="button"]:not([data-no-min-tap]),
+  input[type="submit"]:not([data-no-min-tap]) {
+    min-height: 44px;
+  }
+
+  /* Don't blow up icon-only buttons inside table rows / dense toolbars where
+     the parent explicitly opts out. The selector above respects that. */
+}
+
+/* Touch devices: kill hover-only motion/scale that gets "stuck" after tap. */
+@media (hover: none) and (pointer: coarse) {
+  /* Tailwind hover-scale & hover-translate utilities become no-ops on touch */
+  .hover-scale,
+  [class*="hover:scale-"],
+  [class*="hover:-translate-"],
+  [class*="hover:translate-"],
+  [class*="group-hover:scale-"],
+  [class*="group-hover:-translate-"],
+  [class*="group-hover:translate-"] {
+    transform: none !important;
+  }
+
+  /* Hover shadow lifts that look broken when stuck on after tap */
+  [class*="hover:shadow-"]:hover,
+  [class*="group-hover:shadow-"]:hover {
+    box-shadow: revert !important;
+  }
+
+  /* The shimmer underline (.story-link) is a hover effect — disable on touch */
+  .story-link::after {
+    display: none !important;
+  }
+}
+
+/* Narrow phones (< 375 px) — Pixel-class / iPhone SE 1st-gen / small Androids.
+   Prevent the page from ever scrolling horizontally regardless of internal
+   content (long unbroken titles, oversized hero numbers, etc.). */
+@media (max-width: 374px) {
+  html, body {
+    overflow-x: hidden !important;
+  }
+  /* Generic horizontal-overflow guard for layout wrappers */
+  #root, main {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  /* Headings that use big clamp() values can still overflow on 320 px screens */
+  h1, h2, h3 {
+    word-break: break-word;
+    hyphens: auto;
+  }
+  /* Tighten side gutter further */
+  .container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  /* Tables: allow horizontal scroll within their wrapper rather than pushing
+     the whole page wide. Most tables already live in an overflow wrapper;
+     this catches stragglers. */
+  table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}
