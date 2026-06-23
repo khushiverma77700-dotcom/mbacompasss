@@ -117,32 +117,67 @@ const Index = () => {
           <PopularExamsSection />
         </Suspense>
 
-        {/* 6. Key Features */}
+        {/* 6. Browse by Category */}
+        <Suspense fallback={<SectionFallback height={320} />}>
+          <CategoryCards />
+        </Suspense>
+
+        {/* 7. Top Cities */}
+        <Suspense fallback={<SectionFallback height={320} />}>
+          <TopCitiesSection />
+        </Suspense>
+
+        {/* 8. Exam Comparison */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <TopExamComparisonSection />
+        </Suspense>
+
+        {/* 9. Key Features */}
         <Suspense fallback={<SectionFallback height={420} />}>
           <WhyChooseUs />
         </Suspense>
 
-        {/* 7. AI Coaching Finder */}
+        {/* 10. AI Coaching Finder */}
         <Suspense fallback={<SectionFallback height={420} />}>
           <AICoachingFinder />
         </Suspense>
 
-        {/* 8. How It Works */}
+        {/* 11. How It Works */}
         <Suspense fallback={<SectionFallback height={360} />}>
           <HowItWorksSection />
         </Suspense>
 
-        {/* 9. Testimonials */}
+        {/* 12. Success Stories */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <SuccessStoriesSection />
+        </Suspense>
+
+        {/* 13. Testimonials */}
         <Suspense fallback={<SectionFallback height={360} />}>
           <TestimonialsSection />
         </Suspense>
 
-        {/* 10. Latest Articles */}
+        {/* 14. Learning Resources */}
+        <Suspense fallback={<SectionFallback height={360} />}>
+          <LearningResourcesSection />
+        </Suspense>
+
+        {/* 15. Latest Articles */}
         <Suspense fallback={<SectionFallback height={420} />}>
           <LatestArticlesSection />
         </Suspense>
 
-        {/* 11. CTA */}
+        {/* 16. News */}
+        <Suspense fallback={<SectionFallback height={360} />}>
+          <NewsSection />
+        </Suspense>
+
+        {/* 17. FAQ */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <FAQSection />
+        </Suspense>
+
+        {/* 18. CTA */}
         <Suspense fallback={<SectionFallback height={280} />}>
           <CTASection />
         </Suspense>
