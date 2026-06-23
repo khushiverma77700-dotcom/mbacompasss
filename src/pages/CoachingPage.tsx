@@ -230,7 +230,7 @@ const CoachingPage = () => {
       <div className="relative py-10 md:py-16 overflow-hidden" style={{ background: 'hsl(207 90% 54%)' }}>
         {/* Dynamic blurred background image */}
         <div className="absolute inset-0 pointer-events-none">
-          <img
+          <img loading="lazy" decoding="async"
             src={getLocationImage(selectedCity !== "all" ? selectedCity : null, selectedState !== "all" ? selectedState : null)}
             alt=""
             className="absolute inset-0 w-full h-full object-cover opacity-80 transition-all duration-700 md:scale-105"

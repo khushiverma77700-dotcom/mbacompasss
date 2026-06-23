@@ -42,11 +42,11 @@ const countWords = (text: string) => stripHtml(text).split(/\s+/).filter(Boolean
 const hasH2H3 = (content: string) => /<h[23][^>]*>/i.test(content);
 
 const hasImagesWithoutAlt = (content: string) => {
-  const imgs = content.match(/<img[^>]*>/gi) || [];
+  const imgs = content.match(/<img loading="lazy" decoding="async"[^>]*>/gi) || [];
   return imgs.some((img) => !img.includes("alt=") || /alt=["']\s*["']/i.test(img));
 };
 
-const hasImages = (content: string) => /<img[^>]*>/i.test(content);
+const hasImages = (content: string) => /<img loading="lazy" decoding="async"[^>]*>/i.test(content);
 
 const isSlugSeoFriendly = (slug: string) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 75;
 
