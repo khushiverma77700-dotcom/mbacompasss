@@ -222,9 +222,16 @@ const InstituteCoursePage = () => {
                 </span>
               </div>
 
-              <h1 className="font-heading text-[28px] md:text-[40px] leading-[1.05] font-extrabold mt-4 tracking-tight text-slate-900">
-                {c.name}
+              <h1 className="font-heading text-[28px] md:text-[44px] leading-[1.05] font-extrabold mt-4 tracking-tight text-slate-900">
+                {(() => {
+                  const words = (c.name || "").split(" ");
+                  if (words.length < 2) return c.name;
+                  const tail = words.slice(-2).join(" ");
+                  const head = words.slice(0, -2).join(" ");
+                  return (<>{head} <span className="font-editorial italic font-normal text-sky-700">{tail}</span></>);
+                })()}
               </h1>
+              <div className="h-px w-12 bg-sky-300 mt-3" />
               <p className="mt-2 text-[15px] text-slate-600">
                 Offered by <Link to={`/institute/${inst.slug}`} className="font-semibold text-slate-800 hover:text-sky-700">{inst.name}</Link>
                 {inst.city ? <> · <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{inst.city}</span></> : ""}
