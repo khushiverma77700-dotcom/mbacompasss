@@ -96,13 +96,60 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+      <CardContent className="px-0 sm:px-6">
+        {/* Mobile: stacked cards (no squeezing). md+: full table with horizontal scroll. */}
+        <div className="sm:hidden divide-y divide-border">
+          {programmes.map((p) => {
+            const exams = acceptedExamLabels(p);
+            const specs = p.specializations || [];
+            return (
+              <div key={p.id} className="px-4 py-4 space-y-2">
+                <div>
+                  <div className="font-semibold text-foreground leading-snug">{p.name}</div>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5">{p.programme_type}</Badge>
+                    {p.mode && <span className="text-[10px] text-muted-foreground">{p.mode}</span>}
+                    {p.duration && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Clock className="w-3 h-3" /> {p.duration}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {exams.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {exams.slice(0, 6).map((e) => (
+                      <Badge key={e} variant="secondary" className="text-[10px] py-0 px-1.5">{e}</Badge>
+                    ))}
+                  </div>
+                )}
+                {specs.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {specs.slice(0, 4).map((s) => (
+                      <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{s}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-end justify-between gap-3 pt-1">
+                  <div className="text-[11px] text-muted-foreground leading-snug">{eligibilitySummary(p)}</div>
+                  <div className="text-right shrink-0">
+                    <div className="font-heading font-bold text-primary text-sm">
+                      {p.fees_total_lakhs ? `₹${p.fees_total_lakhs} L` : "—"}
+                    </div>
+                    {p.intake_seats && <div className="text-[10px] text-muted-foreground">{p.intake_seats} seats</div>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full text-sm border-collapse" style={{ minWidth: 900 }}>
             <thead>
               <tr className="bg-muted/50">
                 <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[200px]">Programme</th>
-                <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Duration</th>
+                <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border whitespace-nowrap">Duration</th>
                 <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[140px]">Exams</th>
                 <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[180px]">Specialisations</th>
                 <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[200px]">Eligibility</th>
@@ -130,7 +177,7 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                         {p.mode && <span className="text-[10px] text-muted-foreground">{p.mode}</span>}
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-muted-foreground">
+                    <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
                         {p.duration || "—"}
@@ -168,6 +215,7 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
             </tbody>
           </table>
         </div>
+
       </CardContent>
     </Card>
   );
