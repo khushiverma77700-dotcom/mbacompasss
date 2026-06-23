@@ -1053,8 +1053,8 @@ const CollegeDetailPage = () => {
                 <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
                 <CardContent className="pt-6 relative z-10">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md">
+                  <div className="flex flex-col gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md self-start">
                       ★ Featured
                     </span>
                     <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
