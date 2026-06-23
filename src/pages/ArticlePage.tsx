@@ -15,6 +15,7 @@ import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { enhanceAIContent } from "@/lib/aiContentEnhancer";
+import { canonicalUrl } from "@/lib/canonical";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import ReadingProgress from "@/components/mobile/ReadingProgress";
 import { Bookmark } from "lucide-react";
