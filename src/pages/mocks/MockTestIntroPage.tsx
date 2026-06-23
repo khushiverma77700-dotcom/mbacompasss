@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Clock, AlertTriangle, Layers, ShieldAlert } from "lucide-react";
 import { isStudentMode, mockAttemptPath, studentBackToMocksPath } from "@/lib/studentModeNav";
 import SEOHead from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 
 
 export default function MockTestIntroPage() {
