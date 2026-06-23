@@ -1,33 +1,26 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
-import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
-import { LazyMount } from "@/hooks/useInView";
+import SEOHead, {
+  generateWebsiteSchema,
+  generateOrganizationSchema,
+  generateFAQSchema,
+  generateBreadcrumbSchema,
+} from "@/components/SEOHead";
 
-// Lazy load — these pull framer-motion which would bloat the initial bundle
-const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
-
-const CategoryCards = lazy(() => import("@/components/CategoryCards"));
-
-// Lazy load below-the-fold sections
-const CoachingOfWeekSection = lazy(() => import("@/components/CoachingOfWeekSection"));
-const FeaturedInstitutes = lazy(() => import("@/components/FeaturedInstitutes"));
-const OfferBanners = lazy(() => import("@/components/OfferBanners"));
+// Homepage is intentionally minimal: 5 sections only, no scroll/entrance
+// animations, no intersection-observer mounting. Sections render immediately
+// after Hero so the page feels static and complete on first paint.
+//   1. Hero
+//   2. Top Colleges Strip
+//   3. Key Features (Why Choose Us)
+//   4. How It Works
+//   5. CTA
+// Heavier marketing sections (testimonials, stats, blog preview, etc.)
+// have been moved to inner pages to keep the homepage light.
 const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedCollegesSection"));
-const BrowseByCitySection = lazy(() => import("@/components/BrowseByCitySection"));
-const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
-const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
-const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
-const LearningResourcesSection = lazy(() => import("@/components/LearningResourcesSection"));
-const ProfileAnalyzerCTA = lazy(() => import("@/components/ProfileAnalyzerCTA"));
-const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
-const SuccessStoriesSection = lazy(() => import("@/components/SuccessStoriesSection"));
 const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
-const FAQSection = lazy(() => import("@/components/FAQSection"));
+const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
-const PageKeywords = lazy(() => import("@/components/PageKeywords"));
-const AIToolsSection = lazy(() => import("@/components/AIToolsSection"));
-const MocksBannerSection = lazy(() => import("@/components/MocksBannerSection"));
-const AIStudyPlannerSection = lazy(() => import("@/components/AIStudyPlannerSection"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -38,41 +31,34 @@ const homepageFAQs = [
   { q: "What are the top MBA colleges in India?", a: "Top MBA colleges include IIM Ahmedabad, IIM Bangalore, IIM Calcutta, XLRI Jamshedpur, FMS Delhi, ISB Hyderabad, and MDI Gurgaon. Browse our rankings for the complete list." },
 ];
 
+const jsonLdSchemas = [
+  generateWebsiteSchema(),
+  generateOrganizationSchema(),
+  generateFAQSchema(homepageFAQs),
+  generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "MBA Coaching", url: "/category/cat" },
+    { name: "Top Colleges", url: "/colleges" },
+    { name: "Blog", url: "/blog" },
+  ]),
+];
+
+const SectionFallback = ({ height = 320 }: { height?: number }) => (
+  <div
+    style={{ minHeight: height }}
+    className="container mx-auto px-4 py-8"
+    aria-hidden="true"
+  >
+    <div className="h-6 w-48 rounded bg-muted/40 animate-pulse mb-4" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="h-40 rounded-xl bg-muted/30 animate-pulse" />
+      ))}
+    </div>
+  </div>
+);
+
 const Index = () => {
-  const [showDeferredSections, setShowDeferredSections] = useState(false);
-
-  useEffect(() => {
-    // Mount near-fold sections after the critical hero is interactive; avoids
-    // downloading category data + extra chunks during LCP on slow mobile.
-    const w = window as any;
-    let idleHandle: number | undefined;
-    const timer = window.setTimeout(() => {
-      if (typeof w.requestIdleCallback === "function") {
-        idleHandle = w.requestIdleCallback(() => setShowDeferredSections(true), { timeout: 2500 });
-      } else {
-        setShowDeferredSections(true);
-      }
-    }, 2400);
-    return () => {
-      window.clearTimeout(timer);
-      if (idleHandle !== undefined) {
-        try { w.cancelIdleCallback?.(idleHandle); } catch {}
-      }
-    };
-  }, []);
-
-  const jsonLdSchemas = [
-    generateWebsiteSchema(),
-    generateOrganizationSchema(),
-    generateFAQSchema(homepageFAQs),
-    generateBreadcrumbSchema([
-      { name: "Home", url: "/" },
-      { name: "MBA Coaching", url: "/category/cat" },
-      { name: "Top Colleges", url: "/colleges" },
-      { name: "Blog", url: "/blog" },
-    ]),
-  ];
-
   return (
     <>
       <SEOHead
@@ -84,9 +70,6 @@ const Index = () => {
           "XAT coaching", "MBA entrance exam coaching", "IIM preparation coaching", "best CAT coaching",
           "MBA coaching fees comparison", "top MBA coaching centres", "MBA coaching near me",
           "online MBA coaching", "CAT preparation 2026", "MBA coaching reviews",
-          "top ranked MBA colleges in India for placement", "how to prepare for MBA admissions in India",
-          "MBA specializations with highest salary in India", "latest MBA admission notifications 2026",
-          "upcoming MBA entrance exam dates 2026", "comprehensive guide for MBA aspirants in India",
         ]}
         canonical="https://mbacompass.in"
         ogType="website"
@@ -96,46 +79,30 @@ const Index = () => {
         twitterDescription="India's most trusted MBA coaching & college comparison. Compare fees, reviews, placements of 2000+ institutes."
         jsonLd={jsonLdSchemas}
       />
-      
-      {/* Above-the-fold: only Hero loads eagerly for fastest LCP */}
+
       <div>
-      <HeroSection />
+        {/* 1. Hero */}
+        <HeroSection />
 
-      {/* Just below the fold — mount as soon as browser is idle (no scroll needed) */}
-      {showDeferredSections && (
-        <Suspense fallback={null}>
-          <StatsCounterSection />
-          <CategoryCards />
+        {/* 2. Top Colleges Strip */}
+        <Suspense fallback={<SectionFallback height={520} />}>
+          <TopRankedCollegesSection />
         </Suspense>
-      )}
 
-      {/* Everything else: mount only when scrolled near. Each section gets its own
-          IntersectionObserver so initial JS execution stays tiny. */}
-      {/* Realistic minHeight per section eliminates CLS when content streams in */}
-      <LazyMount minHeight={320} rootMargin="0px"><MocksBannerSection /></LazyMount>
-      <LazyMount minHeight={520} rootMargin="0px"><AIToolsSection /></LazyMount>
-      <LazyMount minHeight={420} rootMargin="0px"><AIStudyPlannerSection /></LazyMount>
-      <LazyMount minHeight={480} rootMargin="0px"><CoachingOfWeekSection /></LazyMount>
-      <LazyMount minHeight={300} rootMargin="0px"><OfferBanners /></LazyMount>
-      <LazyMount minHeight={560} rootMargin="0px"><FeaturedInstitutes /></LazyMount>
-      <LazyMount minHeight={560} rootMargin="0px"><TopRankedCollegesSection /></LazyMount>
-      <LazyMount minHeight={420} rootMargin="0px"><BrowseByCitySection /></LazyMount>
-      <LazyMount minHeight={140} rootMargin="0px"><ExamDeadlinesTicker /></LazyMount>
-      <LazyMount minHeight={520} rootMargin="0px"><PopularExamsSection /></LazyMount>
-      <LazyMount minHeight={460} rootMargin="0px"><HowItWorksSection /></LazyMount>
-      <LazyMount minHeight={520} rootMargin="0px"><LearningResourcesSection /></LazyMount>
-      <LazyMount minHeight={360} rootMargin="0px"><ProfileAnalyzerCTA /></LazyMount>
-      <LazyMount minHeight={560} rootMargin="0px"><LatestArticlesSection /></LazyMount>
-      <LazyMount minHeight={520} rootMargin="0px"><SuccessStoriesSection /></LazyMount>
-      <LazyMount minHeight={520} rootMargin="0px"><WhyChooseUs /></LazyMount>
-      <LazyMount minHeight={520} rootMargin="0px"><FAQSection /></LazyMount>
-      <LazyMount minHeight={360} rootMargin="0px"><CTASection /></LazyMount>
+        {/* 3. Key Features */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <WhyChooseUs />
+        </Suspense>
 
-      <div className="container mx-auto px-4 pb-8">
-        <LazyMount minHeight={120}>
-          <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
-        </LazyMount>
-      </div>
+        {/* 4. How It Works */}
+        <Suspense fallback={<SectionFallback height={360} />}>
+          <HowItWorksSection />
+        </Suspense>
+
+        {/* 5. CTA */}
+        <Suspense fallback={<SectionFallback height={280} />}>
+          <CTASection />
+        </Suspense>
       </div>
     </>
   );

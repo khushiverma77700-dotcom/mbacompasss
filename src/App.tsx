@@ -11,6 +11,7 @@ import { isStudentMode } from "@/lib/studentModeNav";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 import StudentShellFallback from "@/components/student/StudentShellFallback";
 import StudentContentSkeleton from "@/components/student/StudentContentSkeleton";
+import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 
 type LazyWithPreload<T extends React.ComponentType<any>> = React.LazyExoticComponent<T> & {
   preload: () => Promise<{ default: T }>;
@@ -548,12 +549,12 @@ const TopProgressBar = () => (
   />
 );
 
-// Suspense fallback for a lazy page. We render NOTHING visible (no 100vh
-// placeholder) so the previous page remains on screen while the new chunk
-// downloads — eliminating the white flash. A top progress bar is shown
-// globally via DeferredRoutes whenever the deferred location is stale.
+// Suspense fallback for a lazy page. On in-app navigation the previous page
+// stays visible (DeferredRoutes keeps it mounted while the next chunk loads),
+// so this fallback is mostly seen on a cold direct hit. Render a shimmer
+// skeleton instead of `null` so users never see a blank white screen.
 const LazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={null}>{children}</Suspense>
+  <Suspense fallback={<PublicPageSkeleton />}>{children}</Suspense>
 );
 
 const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
