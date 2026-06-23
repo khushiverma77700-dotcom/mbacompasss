@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MathExpression } from "@/components/formulas/MathExpression";
 import { MathInlineText } from "@/components/formulas/MathInlineText";
 import DOMPurify from "isomorphic-dompurify";
+import { canonicalUrl } from "@/lib/canonical";
 
 export default function FormulaDetailPage() {
   const { slug } = useParams();
