@@ -227,14 +227,18 @@ const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDi
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      // 30 min — most public content (colleges, exams, articles) rarely changes
+      // intra-session; this turns repeat navigations into instant cache hits.
+      staleTime: 30 * 60 * 1000,
       gcTime: 24 * 60 * 60 * 1000, // 24h — kept for persistence
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
+      refetchOnMount: false,
       retry: 1,
     },
   },
 });
+
 
 const ROUTE_PREFETCHERS = {
   "/blog": [BlogPage.preload],
@@ -303,6 +307,18 @@ const prefetchRoute = (href?: string | null) => {
   });
 };
 
+// Common public pages worth prefetching at idle so the first hover/tap
+// inside the site lands on an already-downloaded chunk (no network wait,
+// no Suspense fallback). Admin/student bundles are deliberately excluded.
+const IDLE_PREFETCH_TARGETS: Array<() => Promise<unknown>> = [
+  CollegesPage.preload,
+  CoachingPage.preload,
+  BlogPage.preload,
+  ComparePage.preload,
+  AboutPage.preload,
+  ContactPage.preload,
+];
+
 const GlobalNavigationPrefetch = () => {
   useEffect(() => {
     const schedulePrefetch = (href?: string | null) => {
@@ -330,16 +346,35 @@ const GlobalNavigationPrefetch = () => {
     document.addEventListener("touchstart", handlePointer, { capture: true, passive: true });
     document.addEventListener("focusin", handlePointer, true);
 
+    // Warm up the most-visited public chunks at idle so the first navigation
+    // is instant. Skip on admin/student to avoid wasting bandwidth.
+    const path = window.location.pathname;
+    const skipIdleWarm = path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt");
+    let idleHandle: number | undefined;
+    if (!skipIdleWarm) {
+      const w = window as any;
+      const warm = () => IDLE_PREFETCH_TARGETS.forEach((p) => { void p?.(); });
+      if (typeof w.requestIdleCallback === "function") {
+        idleHandle = w.requestIdleCallback(warm, { timeout: 4000 });
+      } else {
+        setTimeout(warm, 1500);
+      }
+    }
+
     return () => {
       document.removeEventListener("pointerenter", handlePointer, true);
       document.removeEventListener("pointerdown", handlePointer, true);
       document.removeEventListener("touchstart", handlePointer, { capture: true } as any);
       document.removeEventListener("focusin", handlePointer, true);
+      if (idleHandle !== undefined) {
+        try { (window as any).cancelIdleCallback?.(idleHandle); } catch {}
+      }
     };
   }, []);
 
   return null;
 };
+
 
 /**
  * Runtime guard for SPA navigations across the dashboard ↔ marketing split.
