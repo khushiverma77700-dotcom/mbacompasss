@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useRef } from "react";
+
 
 const fallbackComparisons = [
   { title: "CAT vs XAT", description: "Difficulty level, pattern, and acceptance — which is right for you?", link: "/blog" },
@@ -49,6 +51,16 @@ const TopExamComparisonSection = () => {
 
   const items = comparisons && comparisons.length > 0 ? comparisons : fallbackComparisons;
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const cardWidth = 320;
+    const gap = 16;
+    const delta = direction === "left" ? -(cardWidth + gap) : cardWidth + gap;
+    scrollRef.current.scrollBy({ left: delta, behavior: "smooth" });
+  };
+
   return (
     <section className="py-14 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -56,16 +68,44 @@ const TopExamComparisonSection = () => {
           <h2 className="font-heading text-3xl font-bold text-foreground mb-2">Popular Comparisons</h2>
           <p className="text-muted-foreground">Head-to-head analysis to help you make the right choice</p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item: any, i: number) => (
-            <motion.div key={item.title} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-              <Link to={item.link} className="block p-5 bg-card border border-border rounded-xl hover:border-primary/40 hover:shadow-md transition-all group">
-                <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors mb-1">{item.title}</h3>
-                <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
-                <span className="text-xs font-medium text-primary flex items-center gap-1">Read Comparison <ArrowRight className="w-3 h-3" /></span>
-              </Link>
-            </motion.div>
-          ))}
+
+        <div className="relative lg:px-12 max-w-6xl mx-auto">
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-2 lg:-left-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-sm text-foreground hover:bg-muted transition-colors"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-2 lg:-right-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-sm text-foreground hover:bg-muted transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-5 -mx-4 px-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/30 hover:[&::-webkit-scrollbar-thumb]:bg-primary/50"
+          >
+            {items.map((item: any, i: number) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="snap-start shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
+              >
+                <Link to={item.link} className="block h-full p-5 bg-card border border-border rounded-xl hover:border-primary/40 hover:shadow-md transition-all group">
+                  <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors mb-1 line-clamp-1">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
+                  <span className="text-xs font-medium text-primary flex items-center gap-1">Read Comparison <ArrowRight className="w-3 h-3" /></span>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
