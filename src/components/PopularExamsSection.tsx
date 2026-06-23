@@ -90,7 +90,7 @@ const PopularExamsSection = () => {
         </motion.div>
 
         {/* Exam Cards — 2x2 visual grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 auto-rows-fr max-w-5xl mx-auto">
           {exams.slice(0, 4).map((exam, i) => {
             const examDate = parseExamDate(exam.exam_date);
             const daysLeft = examDate ? differenceInDays(examDate, today) : null;
