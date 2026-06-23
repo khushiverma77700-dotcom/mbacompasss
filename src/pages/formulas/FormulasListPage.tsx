@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, Search, ChevronRight, Star, Sigma, BookOpen, Brain, Repeat, Sparkles, Zap } from "lucide-react";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
+import { canonicalUrl } from "@/lib/canonical";
 
 export default function FormulasListPage() {
   const [formulas, setFormulas] = useState<any[]>([]);
