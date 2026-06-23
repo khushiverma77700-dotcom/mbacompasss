@@ -94,7 +94,7 @@ const ExamDetailPage = () => {
       : undefined,
     description: dbExam?.meta_description || exam?.description || undefined,
     keywords: (dbExam?.keywords || []) as string[],
-    canonical: exam?.slug ? `${window.location.origin}/exam/${exam.slug}` : undefined,
+    canonical: exam?.slug ? canonicalUrl(`/exam/${exam.slug}`) : undefined,
     jsonLd: baseJsonLd,
   });
 
