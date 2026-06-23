@@ -116,82 +116,86 @@ const PopularExamsSection = () => {
                   {/* Top accent bar */}
                   <div className={`absolute inset-x-0 top-0 h-1 ${accent.bar}`} />
 
-                  {/* Header row */}
-                  <div className="flex items-start justify-between gap-4 mb-5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl ${accent.iconBg} ${accent.text} flex items-center justify-center flex-shrink-0`}>
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-heading font-bold text-lg md:text-xl text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
-                          {exam.name}
-                        </h3>
-                        {exam.conducting_body && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
-                            <Award className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{exam.conducting_body}</span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {daysLeft !== null && daysLeft >= 0 && (
-                      <div className="text-center flex-shrink-0">
-                        <div className={`text-2xl md:text-3xl font-extrabold ${isUrgent ? "text-destructive" : accent.text} leading-none`}>
-                          {daysLeft}
+                  <div className="flex-1 min-h-0">
+                    {/* Header row */}
+                    <div className="flex items-start justify-between gap-4 mb-5">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl ${accent.iconBg} ${accent.text} flex items-center justify-center flex-shrink-0`}>
+                          <FileText className="w-5 h-5" />
                         </div>
-                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">days left</div>
+                        <div className="min-w-0">
+                          <h3 className="font-heading font-bold text-lg md:text-xl text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+                            {exam.name}
+                          </h3>
+                          {exam.conducting_body && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
+                              <Award className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{exam.conducting_body}</span>
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Full name */}
-                  {exam.full_name && (
-                    <p className="text-sm text-muted-foreground line-clamp-1 mb-4">
-                      {exam.full_name}
-                    </p>
-                  )}
-
-                  {/* Date + deadline row */}
-                  <div className="space-y-2.5 mb-5">
-                    {exam.exam_date && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className={`w-4 h-4 ${accent.text} flex-shrink-0`} />
-                        <span className="text-foreground font-medium">{exam.exam_date}</span>
-                      </div>
-                    )}
-                    {exam.registration_deadline && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className={`w-4 h-4 ${isUrgent ? "text-destructive" : accent.text} flex-shrink-0`} />
-                        <span className="text-foreground font-medium">Reg. by {exam.registration_deadline}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Progress bar */}
-                  {daysLeft !== null && daysLeft >= 0 && (
-                    <div className="mt-auto mb-5">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Exam countdown</span>
-                        <span className={`text-[10px] font-bold ${isUrgent ? "text-destructive" : accent.text}`}>
-                          {daysLeft === 0 ? "Today" : `${daysLeft} days remaining`}
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-background/70 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${accent.bar} rounded-full transition-all duration-1000`}
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
+                      {daysLeft !== null && daysLeft >= 0 && (
+                        <div className="text-center flex-shrink-0">
+                          <div className={`text-2xl md:text-3xl font-extrabold ${isUrgent ? "text-destructive" : accent.text} leading-none`}>
+                            {daysLeft}
+                          </div>
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">days left</div>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {/* CTA */}
-                  <div className="mt-auto pt-4 border-t border-border/40 flex items-center justify-between">
-                    <span className={`text-sm font-semibold ${accent.text}`}>View details</span>
-                    <span className={`w-8 h-8 rounded-full ${accent.iconBg} ${accent.text} flex items-center justify-center group-hover:translate-x-1 transition-transform`}>
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
+                    {/* Full name */}
+                    {exam.full_name && (
+                      <p className="text-sm text-muted-foreground line-clamp-1 mb-4">
+                        {exam.full_name}
+                      </p>
+                    )}
+
+                    {/* Date + deadline row */}
+                    <div className="space-y-2.5 mb-5">
+                      {exam.exam_date && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className={`w-4 h-4 ${accent.text} flex-shrink-0`} />
+                          <span className="text-foreground font-medium">{exam.exam_date}</span>
+                        </div>
+                      )}
+                      {exam.registration_deadline && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className={`w-4 h-4 ${isUrgent ? "text-destructive" : accent.text} flex-shrink-0`} />
+                          <span className="text-foreground font-medium">Reg. by {exam.registration_deadline}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bottom section: progress + CTA */}
+                  <div>
+                    {daysLeft !== null && daysLeft >= 0 && (
+                      <div className="mb-5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Exam countdown</span>
+                          <span className={`text-[10px] font-bold ${isUrgent ? "text-destructive" : accent.text}`}>
+                            {daysLeft === 0 ? "Today" : `${daysLeft} days remaining`}
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-background/70 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${accent.bar} rounded-full transition-all duration-1000`}
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* CTA */}
+                    <div className="pt-4 border-t border-border/40 flex items-center justify-between">
+                      <span className={`text-sm font-semibold ${accent.text}`}>View details</span>
+                      <span className={`w-8 h-8 rounded-full ${accent.iconBg} ${accent.text} flex items-center justify-center group-hover:translate-x-1 transition-transform`}>
+                        <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
