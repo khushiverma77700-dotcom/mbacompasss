@@ -68,7 +68,7 @@ const TopRankedCollegesSection = () => {
               >
                 <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 flex-1">
                   <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex items-center justify-center">
                     {college.ranking ? (
                       <div className="text-center leading-none">
@@ -95,7 +95,7 @@ const TopRankedCollegesSection = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-auto pt-5 border-t border-border/60">
+                <div className="grid grid-cols-2 gap-4 pt-5 border-t border-border/60">
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Fees</p>
                     <div className="min-h-[2.5rem]">
