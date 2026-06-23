@@ -334,7 +334,7 @@ const CollegeDetailPage = () => {
           <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10 pt-6 pb-12 md:pt-8 md:pb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6 pb-12 md:pt-8 md:pb-16">
           {/* Breadcrumb / Back row */}
           <div className="flex items-center justify-between mb-6">
             <Link to="/colleges" className="inline-flex items-center gap-1.5 text-primary-foreground/85 hover:text-primary-foreground text-sm font-medium transition-colors group">
@@ -501,7 +501,8 @@ const CollegeDetailPage = () => {
 
       {/* Sticky Tab Nav — Premium pill style */}
       <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+
           <div className="flex overflow-x-auto gap-1.5 py-2.5 scrollbar-hide">
             {tabItems.map(t => (
               <button
@@ -516,7 +517,7 @@ const CollegeDetailPage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AIGistSection
           content={college.description || college.name}
           pageType="college"
