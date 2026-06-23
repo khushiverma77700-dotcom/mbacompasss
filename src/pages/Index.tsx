@@ -6,6 +6,7 @@ import SEOHead, {
   generateFAQSchema,
   generateBreadcrumbSchema,
 } from "@/components/SEOHead";
+import { LazyMount } from "@/hooks/useInView";
 
 // Homepage is intentionally minimal: 5 sections only, no scroll/entrance
 // animations, no intersection-observer mounting. Sections render immediately
