@@ -26,9 +26,9 @@ const HowItWorksSection = () => {
   const steps = settings?.steps || fallbackSteps;
 
   return (
-    <section className="py-16 md:py-24 bg-muted/20">
+    <section className="py-6 md:py-10 bg-muted/20">
       <div className="container mx-auto px-4">
-        <motion.div className="text-center mb-14" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+        <motion.div className="text-center mb-8" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4">
             <Search className="w-3.5 h-3.5" /> Simple Process
           </span>

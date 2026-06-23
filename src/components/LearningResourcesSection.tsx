@@ -14,13 +14,13 @@ const resources = [
 
 const LearningResourcesSection = () => {
   return (
-    <section className="py-16 md:py-20 bg-card">
+    <section className="py-6 md:py-10 bg-card">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4">
             <BookOpen className="w-3.5 h-3.5" /> Free Resources

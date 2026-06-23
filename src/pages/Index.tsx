@@ -114,7 +114,7 @@ const Index = () => {
           <WhyChooseUs />
         </LazyMount>
 
-        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
+        <LazyMount minHeight={160} fallback={<SectionPlaceholder height={160} />}>
           <AICoachingFinder />
         </LazyMount>
 
