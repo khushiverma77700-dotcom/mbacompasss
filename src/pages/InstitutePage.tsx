@@ -251,11 +251,18 @@ const InstitutePage = () => {
                     <Badge variant="outline" className="gap-1 bg-white text-[12px] py-0.5">{inst.category.name}</Badge>
                   )}
                 </div>
-                <h1 className="font-heading text-[30px] md:text-[40px] leading-[1.1] font-extrabold mt-3 tracking-tight text-slate-900">
-                  {institute.name}
+                <h1 className="font-heading text-[30px] md:text-[44px] leading-[1.05] font-extrabold mt-3 tracking-tight text-slate-900">
+                  {(() => {
+                    const words = (institute.name || "").split(" ");
+                    if (words.length < 2) return institute.name;
+                    const tail = words.slice(-1)[0];
+                    const head = words.slice(0, -1).join(" ");
+                    return (<>{head} <span className="font-editorial italic font-normal text-sky-700">{tail}</span></>);
+                  })()}
                 </h1>
-                <p className="mt-2 text-[15px] text-slate-600 font-medium">
-                  {isHybrid ? "Online + Offline MBA Coaching" : "MBA Entrance Coaching Institute"}
+                <div className="h-px w-12 bg-sky-300 mt-3 mb-3" />
+                <p className="text-[15px] text-slate-600 font-medium">
+                  <span className="font-editorial italic text-slate-700">{isHybrid ? "Online + Offline MBA Coaching" : "MBA Entrance Coaching Institute"}</span>
                   {institute.city ? ` · ${institute.city}` : ""}{institute.state ? `, ${institute.state}` : ""}
                 </p>
                 <div className="flex items-center gap-x-4 gap-y-1.5 mt-3 text-[13px] text-slate-600 flex-wrap">
