@@ -334,7 +334,7 @@ const CollegeDetailPage = () => {
           <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10 pt-6 pb-12 md:pt-8 md:pb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6 pb-12 md:pt-8 md:pb-16">
           {/* Breadcrumb / Back row */}
           <div className="flex items-center justify-between mb-6">
             <Link to="/colleges" className="inline-flex items-center gap-1.5 text-primary-foreground/85 hover:text-primary-foreground text-sm font-medium transition-colors group">
