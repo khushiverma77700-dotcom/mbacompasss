@@ -12,6 +12,7 @@ import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 import PageKeywords from "@/components/PageKeywords";
 import CollegeListingCard from "@/components/CollegeListingCard";
 import { getLocationImage } from "@/data/cityImages";
@@ -199,7 +200,7 @@ const CollegesPage = () => {
           const sp = new URLSearchParams(window.location.search);
           const page = sp.get("page");
           const tail = page && page !== "1" ? `?page=${page}` : "";
-          return `${window.location.origin}${window.location.pathname}${tail}`;
+          return canonicalUrl(`${window.location.pathname}${tail}`);
         })()}
         jsonLd={jsonLd}
       />

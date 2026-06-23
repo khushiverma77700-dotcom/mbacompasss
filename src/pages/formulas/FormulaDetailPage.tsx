@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MathExpression } from "@/components/formulas/MathExpression";
 import { MathInlineText } from "@/components/formulas/MathInlineText";
 import DOMPurify from "isomorphic-dompurify";
+import { canonicalUrl } from "@/lib/canonical";
 
 export default function FormulaDetailPage() {
   const { slug } = useParams();
@@ -57,7 +58,7 @@ export default function FormulaDetailPage() {
     setMeta("og:title", formula.seo_title || formula.name, true);
     setMeta("og:description", desc, true);
     setMeta("og:type", "article", true);
-    const url = `${window.location.origin}/formula/${formula.slug}`;
+    const url = canonicalUrl(`/formula/${formula.slug}`);
     setLinkRel("canonical", url);
 
     // JSON-LD HowTo + FAQPage

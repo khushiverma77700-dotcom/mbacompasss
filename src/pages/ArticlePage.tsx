@@ -15,6 +15,7 @@ import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { enhanceAIContent } from "@/lib/aiContentEnhancer";
+import { canonicalUrl } from "@/lib/canonical";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import ReadingProgress from "@/components/mobile/ReadingProgress";
 import { Bookmark } from "lucide-react";
@@ -85,7 +86,7 @@ const ArticlePage = () => {
           title: `${(article as any).meta_title || article.title} | MBA Compass Blog`,
           description: (article as any).meta_description || article.excerpt || undefined,
           keywords: articleKeywords,
-          canonical: `${window.location.origin}/article/${article.slug}`,
+          canonical: canonicalUrl(`/article/${article.slug}`),
           jsonLd,
           ogImage: article.image_url || article.banner_url || (article as any).mobile_banner_url || undefined,
         }

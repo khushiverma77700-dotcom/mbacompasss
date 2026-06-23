@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateInstituteSchema, generateBreadcrumbSchema, generateFAQSchema } from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 import {
   ArrowLeft, MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
   ChevronRight, Users, Award, Sparkles, CheckCircle2, ShieldCheck, TrendingUp,
@@ -191,7 +192,7 @@ const InstitutePage = () => {
       <SEOHead
         title={institute.meta_title || `${institute.name} — Coaching Institute${institute.city ? ` in ${institute.city}` : ""} | MBA Compass`}
         description={institute.meta_description || institute.description || `${institute.name} offers MBA coaching with comprehensive programs.`}
-        canonical={`${window.location.origin}/institute/${institute.slug}`}
+        canonical={canonicalUrl(`/institute/${institute.slug}`)}
         jsonLd={combinedJsonLd}
         ogImage={institute.banner_url || institute.logo_url || undefined}
       />

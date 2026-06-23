@@ -15,6 +15,7 @@ import { useCtaGate } from "@/hooks/useCtaGate";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import SEOHead, { generateCollegeSchema, generateFAQSchema } from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
@@ -145,7 +146,7 @@ const CollegeDetailPage = () => {
             (college as any).meta_description ||
             `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
           keywords: ((college as any).keywords || [college.name, college.city || "", "MBA"]).filter(Boolean),
-          canonical: `${window.location.origin}/college/${college.slug}`,
+          canonical: canonicalUrl(`/college/${college.slug}`),
           jsonLd: collegeJsonLd,
           ogImage: college.banner_url || college.logo_url || undefined,
         }

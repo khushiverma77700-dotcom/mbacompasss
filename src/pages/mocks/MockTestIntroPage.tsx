@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Clock, AlertTriangle, Layers, ShieldAlert } from "lucide-react";
 import { isStudentMode, mockAttemptPath, studentBackToMocksPath } from "@/lib/studentModeNav";
 import SEOHead from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 
 
 export default function MockTestIntroPage() {
@@ -94,7 +95,7 @@ export default function MockTestIntroPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Mock attempt pages are auth-gated, paywalled and near-duplicate by template — keep them out of the index. */}
-      <SEOHead noIndex title={test?.name ? `${test.name} — MBA Compass` : "Mock Test — MBA Compass"} />
+      <SEOHead noIndex title={test?.name ? `${test.name} — MBA Compass` : "Mock Test — MBA Compass"} canonical={slug ? canonicalUrl(`/mocks/${slug}`) : undefined} />
       
       
       <Card className="p-6 md:p-8">

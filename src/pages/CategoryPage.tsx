@@ -13,6 +13,7 @@ import InstituteListingCard from "@/components/InstituteListingCard";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 import LCPImagePreload from "@/components/LCPImagePreload";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import PageKeywords from "@/components/PageKeywords";
@@ -168,7 +169,7 @@ const CategoryPage = () => {
       title: metaTitle,
       description: metaDesc,
       keywords,
-      canonical: typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : undefined,
+      canonical: typeof window !== "undefined" ? canonicalUrl(`${window.location.pathname}${window.location.search}`) : undefined,
       jsonLd,
       ogImage: cityPage?.hero_image_url || undefined,
     }

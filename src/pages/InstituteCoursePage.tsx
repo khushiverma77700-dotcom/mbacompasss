@@ -10,6 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Progress } from "@/components/ui/progress";
 import SEOHead, { generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
+import { canonicalUrl } from "@/lib/canonical";
 import {
   ChevronRight, ArrowLeft, GraduationCap, BookOpen, Clock, Calendar,
   CheckCircle2, Phone, MessageCircle, Mail, Trophy, Sparkles, ShieldCheck, Building2,
@@ -74,7 +75,7 @@ const InstituteCoursePage = () => {
     provider: {
       "@type": "Organization",
       name: inst.name,
-      url: typeof window !== "undefined" ? `${window.location.origin}/institute/${inst.slug}` : undefined,
+      url: canonicalUrl(`/institute/${inst.slug}`),
     },
     ...(c.fees && {
       offers: {
@@ -88,7 +89,7 @@ const InstituteCoursePage = () => {
   const { seo } = useResolvedSeo("course", c.id || "", {
     title,
     description,
-    canonical: typeof window !== "undefined" && course ? `${window.location.origin}/institute/${inst.slug}/course/${courseSlug}` : undefined,
+    canonical: course ? canonicalUrl(`/institute/${inst.slug}/course/${courseSlug}`) : undefined,
     jsonLd: courseSchema,
     ogImage: inst.banner_url || inst.logo_url || undefined,
   });
