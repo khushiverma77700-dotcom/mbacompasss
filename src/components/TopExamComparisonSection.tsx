@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useRef } from "react";
+
 
 const fallbackComparisons = [
   { title: "CAT vs XAT", description: "Difficulty level, pattern, and acceptance — which is right for you?", link: "/blog" },
