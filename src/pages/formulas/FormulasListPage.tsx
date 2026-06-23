@@ -18,7 +18,7 @@ export default function FormulasListPage() {
   useEffect(() => {
     document.title = "MBA Quant Formula Book — Free CAT, XAT, NMAT Formulas | MBA Compass";
     setMeta("description", "Browse free, AI-explained MBA quant formulas. CAT, XAT, NMAT shortcuts, derivations, examples and practice — search 500+ formulas in one place.");
-    setLinkRel("canonical", `${window.location.origin}/formulas`);
+    setLinkRel("canonical", canonicalUrl("/formulas"));
   }, []);
 
   useEffect(() => {
