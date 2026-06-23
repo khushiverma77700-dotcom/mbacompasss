@@ -96,9 +96,17 @@
   <FilesMatch "\.(css|js|woff2?|ttf|png|jpe?g|gif|svg|webp|ico)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
-  # SPA shell — never stale-cache index.html
+  # SPA shell — browsers must revalidate every visit so deploys propagate
+  # instantly, but Cloudflare / any CDN in front is allowed to serve the
+  # cached HTML for up to 5 minutes (s-maxage) before re-fetching from
+  # the Hostinger origin. This collapses TTFB from ~3s (shared-host I/O)
+  # to ~50ms (edge POP) for the vast majority of visitors. The
+  # `stale-while-revalidate` lets the edge keep serving the slightly-old
+  # copy while it asynchronously refreshes from origin — no user ever
+  # waits on the slow path. `must-revalidate` on the browser side keeps
+  # client caches honest.
   <FilesMatch "\.html$">
-    Header set Cache-Control "public, max-age=0, must-revalidate"
+    Header set Cache-Control "public, max-age=0, s-maxage=300, stale-while-revalidate=600, must-revalidate"
   </FilesMatch>
 </IfModule>
 
