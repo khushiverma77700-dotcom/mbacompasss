@@ -31,77 +31,83 @@ const TopRankedCollegesSection = () => {
   const items = colleges || fallbackColleges;
 
   return (
-    <section className="py-16 bg-muted/30">
+    <section className="py-20 md:py-24 bg-background border-y border-border/60">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-10"
+          className="text-center mb-14 max-w-2xl mx-auto"
         >
-          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-1.5 mb-4">
-            <Trophy className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">Top Rankings 2025</span>
+          <div className="inline-flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-primary font-semibold mb-4">
+            <span className="h-px w-8 bg-primary/40" />
+            Top Rankings 2025
+            <span className="h-px w-8 bg-primary/40" />
           </div>
-          <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-3">
-            India's Top Ranked MBA Colleges
+          <h2 className="font-heading text-3xl md:text-5xl font-extrabold text-foreground mb-4 tracking-[-0.02em] leading-[1.1]">
+            India's <span className="font-editorial italic font-normal text-primary">top-ranked</span> MBA colleges
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Explore the highest-ranked B-Schools in India based on NIRF, placement records, and industry reputation.
+          <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+            Hand-picked B-schools curated from NIRF rankings, placement records and verified student feedback.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((college: any, i: number) => (
             <motion.div
               key={college.slug || i}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
+              transition={{ delay: Math.min(i * 0.05, 0.25) }}
             >
               <Link
                 to={`/colleges/${college.slug}`}
-                className="block bg-card rounded-xl border border-border p-5 hover:shadow-lg transition-all group"
+                className="group relative block bg-card rounded-2xl border border-border/70 p-6 hover:border-primary/40 hover:shadow-[0_18px_50px_-20px_hsl(207_90%_54%_/_0.25)] transition-all duration-300 overflow-hidden"
               >
+                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex items-center justify-center">
                     {college.ranking ? (
-                      <span className="text-lg font-bold text-primary">#{college.ranking}</span>
+                      <div className="text-center leading-none">
+                        <div className="text-[9px] uppercase tracking-wider text-primary/60 font-semibold">Rank</div>
+                        <div className="text-xl font-editorial italic text-primary mt-0.5">#{college.ranking}</div>
+                      </div>
                     ) : (
                       <GraduationCap className="w-6 h-6 text-primary" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                    <h3 className="font-heading font-bold text-lg text-foreground group-hover:text-primary transition-colors leading-tight">
                       {college.name}
                     </h3>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                       <MapPin className="w-3 h-3" />
-                      {college.city}, {college.state}
+                      {college.city}{college.state ? `, ${college.state}` : ""}
                     </div>
                     {college.type && (
-                      <span className="inline-block mt-1.5 text-xs font-medium bg-accent/50 text-accent-foreground px-2 py-0.5 rounded-full">
+                      <span className="inline-block mt-2 text-[10px] font-semibold uppercase tracking-wider bg-accent text-accent-foreground px-2 py-0.5 rounded-full">
                         {college.type}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
-                  <div className="flex items-center gap-1.5">
-                    <IndianRupee className="w-3.5 h-3.5 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Total Fees</p>
-                      <p className="text-sm font-semibold text-foreground">{college.fees || "N/A"}</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-4 mt-5 pt-5 border-t border-border/60">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Fees</p>
+                    <p className="text-sm font-semibold text-foreground flex items-center gap-1">
+                      <IndianRupee className="w-3.5 h-3.5 text-primary/70" />
+                      {college.fees || "N/A"}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Avg Package</p>
-                      <p className="text-sm font-semibold text-foreground">{college.placement_avg || "N/A"}</p>
-                    </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Avg Package</p>
+                    <p className="text-sm font-semibold text-foreground flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary/70" />
+                      {college.placement_avg || "N/A"}
+                    </p>
                   </div>
                 </div>
               </Link>
@@ -109,10 +115,10 @@ const TopRankedCollegesSection = () => {
           ))}
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-12">
           <Link to="/colleges">
-            <Button variant="outline" size="lg" className="gap-2">
-              View All Colleges <ChevronRight className="w-4 h-4" />
+            <Button variant="outline" size="lg" className="gap-2 rounded-full px-8 border-primary/30 hover:border-primary hover:bg-primary/5">
+              Explore all colleges <ChevronRight className="w-4 h-4" />
             </Button>
           </Link>
         </div>
@@ -120,5 +126,6 @@ const TopRankedCollegesSection = () => {
     </section>
   );
 };
+
 
 export default TopRankedCollegesSection;
