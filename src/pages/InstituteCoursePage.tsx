@@ -75,7 +75,7 @@ const InstituteCoursePage = () => {
     provider: {
       "@type": "Organization",
       name: inst.name,
-      url: typeof window !== "undefined" ? `${window.location.origin}/institute/${inst.slug}` : undefined,
+      url: canonicalUrl(`/institute/${inst.slug}`),
     },
     ...(c.fees && {
       offers: {
