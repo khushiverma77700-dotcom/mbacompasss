@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCtaGate } from "@/hooks/useCtaGate";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
+import SEOHead, { generateCollegeSchema, generateFAQSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
