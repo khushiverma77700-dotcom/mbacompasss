@@ -136,67 +136,73 @@ const HeroSection = () => {
     <section className="relative overflow-hidden">
       {/* Multi-layer gradient background */}
       <div className="absolute inset-0 hero-gradient pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15 pointer-events-none" />
 
-      {/* Lightweight CSS dot pattern — replaces a 600-byte base64 SVG to
-          shrink the initial style payload (desktop-perf) */}
+      {/* Soft light orbs for depth (no animation, no blur on mobile) */}
+      <div className="hidden md:block absolute -top-24 -right-24 w-[28rem] h-[28rem] rounded-full bg-white/10 blur-3xl pointer-events-none" />
+      <div className="hidden md:block absolute -bottom-32 -left-24 w-[24rem] h-[24rem] rounded-full bg-cyan-200/15 blur-3xl pointer-events-none" />
+
+      {/* Lightweight CSS dot pattern */}
       <div
-        className="absolute inset-0 opacity-40 pointer-events-none"
-        style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }}
+        className="absolute inset-0 opacity-30 pointer-events-none"
+        style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px)", backgroundSize: "36px 36px" }}
       />
 
-      {/* Lightweight static decorative elements (no animation, no blur — keeps LCP fast) */}
-      <div className="absolute w-12 h-12 md:w-20 md:h-20 top-[8%] left-[5%] opacity-10 pointer-events-none">
+      {/* Subtle decorative icons — desktop only to keep mobile clean */}
+      <div className="hidden md:block absolute w-16 h-16 top-[10%] left-[6%] opacity-10 pointer-events-none">
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-10 h-10 md:w-14 md:h-14 bottom-[25%] right-[15%] opacity-10 pointer-events-none">
+      <div className="hidden md:block absolute w-12 h-12 bottom-[28%] right-[12%] opacity-10 pointer-events-none">
         <BookOpen className="w-full h-full text-primary-foreground" />
       </div>
 
       {/* Main content */}
-      <div className="relative container mx-auto px-4 pt-6 pb-16 md:pt-8 md:pb-20 z-10">
+      <div className="relative container mx-auto px-4 pt-8 pb-20 md:pt-12 md:pb-24 z-10">
         <div className="text-center max-w-3xl mx-auto animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1 mb-3 border border-white/25 shadow-lg shadow-black/5">
-            <Award className="w-3.5 h-3.5 text-yellow-300" />
-            <span className="text-xs md:text-sm font-semibold text-primary-foreground tracking-wide">
-              India's #1 MBA Coaching Discovery Platform
+          <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full pl-2 pr-3 py-1 mb-4 border border-white/25 shadow-lg shadow-black/5">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-300/90">
+              <Award className="w-3 h-3 text-amber-900" />
             </span>
-            <ChevronRight className="w-3 h-3 text-primary-foreground/60" />
+            <span className="text-[11px] md:text-xs font-semibold text-primary-foreground tracking-wide">
+              India's #1 MBA Discovery Platform
+            </span>
           </div>
 
-          {/* Heading — reserved heights prevent CLS when font swaps from system fallback
-              to Plus Jakarta Sans, and when optional settings hydrate at t≈8s. */}
-          <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-primary-foreground mb-1.5 leading-[1.15] tracking-tight min-h-[2.6rem] sm:min-h-[2.9rem] md:min-h-[3.4rem] lg:min-h-[4rem]">
-            {heading}
+          {/* Heading */}
+          <h1 className="font-heading text-[1.7rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-2 tracking-tight">
+            Find the Best{" "}
+            <span className="relative inline-block">
+              <span className="relative z-10 bg-gradient-to-r from-yellow-200 via-amber-100 to-yellow-200 bg-clip-text text-transparent">
+                MBA Coaching
+              </span>
+            </span>
+            <span className="block text-base sm:text-xl md:text-2xl lg:text-3xl font-semibold text-primary-foreground/85 mt-1.5">
+              for Your Dream B-School
+            </span>
           </h1>
 
-          <p className="font-heading text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-foreground/85 mb-2 leading-tight min-h-[1.5rem] sm:min-h-[1.75rem] md:min-h-[2rem]">
-            for Your Dream B-School
-          </p>
-
-          <p className="text-primary-foreground/75 text-xs md:text-sm mb-4 max-w-xl mx-auto leading-relaxed min-h-[2.5rem] md:min-h-[2.75rem]">
+          <p className="text-primary-foreground/80 text-sm md:text-base mb-5 max-w-xl mx-auto leading-relaxed">
             {subheading}
           </p>
 
           {/* Search bar */}
           <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-4">
             <div className="relative" ref={searchRef}>
-              {/* (removed extra blur glow — cost a full-screen composite pass for no real visual gain) */}
-              <div className="relative flex items-center bg-card rounded-xl shadow-2xl shadow-black/10 overflow-hidden">
-                <Search className="absolute left-4 w-4 h-4 text-muted-foreground z-10" />
+              <div className="relative flex items-center bg-card rounded-2xl shadow-2xl shadow-black/20 overflow-hidden ring-1 ring-white/40">
+                <Search className="absolute left-4 w-4 h-4 md:w-5 md:h-5 text-primary z-10" />
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  placeholder="Search by coaching name, city, or exam..."
+                  placeholder="Search coaching, college, exam..."
                   aria-label="Search coaching institutes"
-                  className="h-11 md:h-12 pl-11 pr-28 md:pr-32 rounded-xl bg-transparent text-foreground text-sm md:text-base border-none shadow-none focus-visible:ring-0"
+                  className="h-12 md:h-14 pl-11 md:pl-12 pr-24 md:pr-32 rounded-2xl bg-transparent text-foreground text-sm md:text-base border-none shadow-none focus-visible:ring-0"
                 />
                 <Button
                   type="submit"
-                  className="absolute right-2 h-8 md:h-9 px-5 md:px-6 rounded-lg text-sm font-semibold shadow-md"
+                  className="absolute right-1.5 md:right-2 h-9 md:h-10 px-4 md:px-6 rounded-xl text-sm font-semibold shadow-md"
                 >
                   Search
                 </Button>
@@ -233,14 +239,14 @@ const HeroSection = () => {
             </div>
           </form>
 
-          {/* Popular searches — fixed-height row eliminates CLS when settings hydrate */}
-          <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 mb-4 text-xs md:text-sm min-h-[2rem]">
-            <span className="text-primary-foreground/50 font-medium self-center">Popular:</span>
-            {popularSearches.map((term: string) => (
+          {/* Popular searches */}
+          <div className="flex flex-wrap justify-center items-center gap-1.5 md:gap-2 mb-6 text-xs md:text-sm">
+            <span className="text-primary-foreground/60 font-medium">Popular:</span>
+            {popularSearches.slice(0, 4).map((term: string) => (
               <button
                 key={term}
                 onClick={() => { setQuery(term); }}
-                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/15 hover:border-white/30 font-medium"
+                className="text-primary-foreground/95 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/20 hover:border-white/40 font-medium backdrop-blur-sm"
               >
                 {term}
               </button>
@@ -249,7 +255,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4 max-w-3xl mx-auto">
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || BookOpen;
             return (
@@ -257,15 +263,15 @@ const HeroSection = () => {
                 key={i}
                 className="group cursor-default"
               >
-                <div className="relative text-center bg-white/15 rounded-xl p-3 md:p-4 border border-white/20 overflow-hidden transition-colors duration-200 group-hover:bg-white/20 group-hover:border-white/30">
-                  <div className="relative z-10">
-                    <div className="w-8 h-8 mx-auto rounded-lg bg-white/15 flex items-center justify-center mb-1.5 group-hover:bg-white/20 transition-colors">
+                <div className="relative text-center bg-white/15 backdrop-blur-sm rounded-2xl p-3.5 md:p-5 border border-white/25 overflow-hidden transition-all duration-200 group-hover:bg-white/25 group-hover:border-white/40 group-hover:-translate-y-0.5 shadow-lg shadow-black/5">
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-white/20 flex items-center justify-center mb-2 group-hover:bg-white/30 transition-colors ring-1 ring-white/30">
                       <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-lg md:text-xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
+                    <div className="text-xl md:text-2xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
                       {stat.value}
                     </div>
-                    <div className="text-[10px] md:text-xs text-primary-foreground/65 font-medium">
+                    <div className="text-[10px] md:text-xs text-primary-foreground/75 font-medium leading-tight">
                       {stat.label}
                     </div>
                   </div>
