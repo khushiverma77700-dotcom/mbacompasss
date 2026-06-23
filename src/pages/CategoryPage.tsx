@@ -169,7 +169,7 @@ const CategoryPage = () => {
       title: metaTitle,
       description: metaDesc,
       keywords,
-      canonical: typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : undefined,
+      canonical: typeof window !== "undefined" ? canonicalUrl(`${window.location.pathname}${window.location.search}`) : undefined,
       jsonLd,
       ogImage: cityPage?.hero_image_url || undefined,
     }
