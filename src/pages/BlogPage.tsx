@@ -236,13 +236,16 @@ const BlogPage = () => {
             <div className="grid lg:grid-cols-3 gap-10">
               {/* Articles */}
               <div className="lg:col-span-2">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-heading text-xl font-bold text-foreground flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-primary" />
-                    {selectedCategory === "all" ? "Latest Articles" : selectedCategory}
-                    <span className="text-sm font-normal text-muted-foreground">({filtered.length})</span>
-                  </h2>
+                <div className="flex items-end justify-between mb-8 pb-4 border-b border-border/70">
+                  <div>
+                    <div className="text-[10px] tracking-[0.2em] uppercase text-primary font-semibold mb-1.5">The Reading List</div>
+                    <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-foreground tracking-[-0.02em]">
+                      {selectedCategory === "all" ? <>Latest <span className="font-editorial italic font-normal text-primary">articles</span></> : selectedCategory}
+                    </h2>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium">{filtered.length} {filtered.length === 1 ? "story" : "stories"}</span>
                 </div>
+
 
                 <div className="grid sm:grid-cols-2 gap-6">
                   {(selectedCategory === "all" && !searchQuery ? regularArticles : filtered).map((item, i) => (
