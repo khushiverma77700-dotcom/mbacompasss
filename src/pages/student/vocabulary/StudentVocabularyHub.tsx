@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -144,7 +144,7 @@ export default function StudentVocabularyHub() {
 
       {/* Word of the Day */}
       {wotd && (
-        <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        <section className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           <Card className="relative overflow-hidden border-sky-100 bg-white shadow-sm">
             <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
             <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-sky-100/70 blur-3xl" />
@@ -194,7 +194,7 @@ export default function StudentVocabularyHub() {
               </div>
             </CardContent>
           </Card>
-        </motion.section>
+        </section>
       )}
 
       {/* Quick toolkit */}
