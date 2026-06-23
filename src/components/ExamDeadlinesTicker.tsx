@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Clock, CalendarDays, AlertTriangle, ChevronRight, Bell } from "lucide-react";
+import { Clock, CalendarDays, AlertTriangle, ChevronRight, Bell, ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useRef } from "react";
 
 const fallbackDeadlines = [
   { name: "CAT 2025", slug: "cat", registration_deadline: "2025-09-20", exam_date: "2025-11-24", conducting_body: "IIM" },
@@ -29,6 +30,16 @@ const getUrgencyStyle = (days: number | null) => {
 };
 
 const ExamDeadlinesTicker = () => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const cardWidth = 320;
+    const gap = 16;
+    const delta = direction === "left" ? -(cardWidth + gap) : cardWidth + gap;
+    scrollRef.current.scrollBy({ left: delta, behavior: "smooth" });
+  };
+
   const { data: exams } = useQuery({
     queryKey: ["exam-deadlines-ticker"],
     queryFn: async () => {
@@ -66,86 +77,107 @@ const ExamDeadlinesTicker = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-          {items.map((exam: any, i: number) => {
-            const regDays = getDaysLeft(exam.registration_deadline);
-            const examDays = getDaysLeft(exam.exam_date);
-            const style = getUrgencyStyle(regDays);
+        <div className="relative lg:px-12 max-w-6xl mx-auto">
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-2 lg:-left-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-sm text-foreground hover:bg-muted transition-colors"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-2 lg:-right-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-sm text-foreground hover:bg-muted transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
 
-            return (
-              <motion.div
-                key={exam.slug || i}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.07 }}
-              >
-                <Link
-                  to={`/exams/${exam.slug}`}
-                  className={`block bg-background rounded-2xl border ${style.border} p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group h-full`}
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-5 -mx-4 px-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/30 hover:[&::-webkit-scrollbar-thumb]:bg-primary/50"
+          >
+            {items.map((exam: any, i: number) => {
+              const regDays = getDaysLeft(exam.registration_deadline);
+              const examDays = getDaysLeft(exam.exam_date);
+              const style = getUrgencyStyle(regDays);
+
+              return (
+                <motion.div
+                  key={exam.slug || i}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.07 }}
+                  className="snap-start shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-heading font-bold text-foreground text-base group-hover:text-primary transition-colors">
-                      {exam.name}
-                    </h3>
-                    {regDays !== null && regDays >= 0 && regDays <= 7 && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full animate-pulse">
-                        <AlertTriangle className="w-3 h-3" /> Urgent
-                      </span>
+                  <Link
+                    to={`/exams/${exam.slug}`}
+                    className={`block bg-background rounded-2xl border ${style.border} p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group h-full`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-heading font-bold text-foreground text-base group-hover:text-primary transition-colors">
+                        {exam.name}
+                      </h3>
+                      {regDays !== null && regDays >= 0 && regDays <= 7 && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full animate-pulse">
+                          <AlertTriangle className="w-3 h-3" /> Urgent
+                        </span>
+                      )}
+                    </div>
+
+                    {exam.conducting_body && (
+                      <p className="text-xs text-muted-foreground mb-4">By {exam.conducting_body}</p>
                     )}
-                  </div>
 
-                  {exam.conducting_body && (
-                    <p className="text-xs text-muted-foreground mb-4">By {exam.conducting_body}</p>
-                  )}
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm">
-                        <CalendarDays className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Registration</span>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm">
+                          <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">Registration</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-foreground">{exam.registration_deadline || "TBA"}</p>
+                          {regDays !== null && regDays >= 0 && (
+                            <p className={`text-xs font-bold ${style.text}`}>
+                              {regDays === 0 ? "Today!" : `${regDays} days left`}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">{exam.registration_deadline || "TBA"}</p>
-                        {regDays !== null && regDays >= 0 && (
-                          <p className={`text-xs font-bold ${style.text}`}>
-                            {regDays === 0 ? "Today!" : `${regDays} days left`}
-                          </p>
-                        )}
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">Exam Date</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-foreground">{exam.exam_date || "TBA"}</p>
+                          {examDays !== null && examDays >= 0 && (
+                            <p className="text-xs text-muted-foreground">{examDays} days to go</p>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Exam Date</span>
+                    {regDays !== null && regDays >= 0 && (
+                      <div className="mt-4">
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                          <motion.div
+                            className={`h-full rounded-full ${style.bar}`}
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${Math.max(5, Math.min(100, ((90 - regDays) / 90) * 100))}%` }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1, delay: i * 0.1 }}
+                          />
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">{exam.exam_date || "TBA"}</p>
-                        {examDays !== null && examDays >= 0 && (
-                          <p className="text-xs text-muted-foreground">{examDays} days to go</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {regDays !== null && regDays >= 0 && (
-                    <div className="mt-4">
-                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                        <motion.div
-                          className={`h-full rounded-full ${style.bar}`}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${Math.max(5, Math.min(100, ((90 - regDays) / 90) * 100))}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1, delay: i * 0.1 }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              </motion.div>
-            );
-          })}
+                    )}
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="text-center mt-10">
