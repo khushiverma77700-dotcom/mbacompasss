@@ -89,7 +89,7 @@ const InstituteCoursePage = () => {
   const { seo } = useResolvedSeo("course", c.id || "", {
     title,
     description,
-    canonical: typeof window !== "undefined" && course ? `${window.location.origin}/institute/${inst.slug}/course/${courseSlug}` : undefined,
+    canonical: course ? canonicalUrl(`/institute/${inst.slug}/course/${courseSlug}`) : undefined,
     jsonLd: courseSchema,
     ogImage: inst.banner_url || inst.logo_url || undefined,
   });
