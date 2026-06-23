@@ -1069,3 +1069,43 @@ html, body, #root {
     max-width: 100%;
   }
 }
+
+/* ===========================================================================
+ * Visual weight reduction (site-wide)
+ *   - Lighter, single-tier box shadows on cards (smaller blur, less spread).
+ *   - One canonical border-radius (`--radius`, 0.75 rem) — every shadcn
+ *     component already inherits this. The overrides below normalize ad-hoc
+ *     `rounded-xl` / `rounded-2xl` / `rounded-3xl` on common surface elements
+ *     so the page reads as one consistent radius family.
+ *   - The 3-color-per-section guideline is enforced by sticking to semantic
+ *     tokens (--background, --foreground, --primary, --muted) — already the
+ *     project convention; no per-component override needed.
+ * =========================================================================== */
+
+:root {
+  /* Lighter card shadow: drop the secondary blur layer, tighter radius. */
+  --card-shadow: 0 1px 2px 0 hsl(215 25% 15% / 0.04);
+  --card-shadow-hover: 0 4px 10px -4px hsl(207 90% 54% / 0.10);
+}
+.dark {
+  --card-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.25);
+  --card-shadow-hover: 0 4px 10px -4px hsl(207 90% 54% / 0.20);
+}
+
+/* Trim oversized Tailwind shadow utilities to the lighter card-shadow scale.
+   Keeps the visual hierarchy but removes the heavy "lifted" look. */
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+  box-shadow: 0 2px 6px -2px hsl(215 25% 15% / 0.08) !important;
+}
+.shadow-md {
+  box-shadow: 0 1px 3px 0 hsl(215 25% 15% / 0.05) !important;
+}
+
+/* Normalize ad-hoc large radii on common surface containers to the single
+   --radius value so the page reads as one consistent shape language. */
+.rounded-2xl,
+.rounded-3xl {
+  border-radius: var(--radius) !important;
+}
