@@ -199,8 +199,15 @@ const ArticlePage = () => {
               </span>
 
               {/* Title */}
-              <h1 className="font-heading text-[1.65rem] md:text-[2.25rem] lg:text-[2.7rem] font-extrabold text-white mb-6 max-w-3xl leading-[1.12] tracking-[-0.015em]" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.3)' }}>
-                {(article as any).h1_tag || article.title}
+              <h1 className="font-heading text-[1.85rem] md:text-[2.6rem] lg:text-[3.2rem] font-extrabold text-white mb-6 max-w-4xl leading-[1.08] tracking-[-0.025em]" style={{ textShadow: '0 2px 18px rgba(0,0,0,0.35)' }}>
+                {(() => {
+                  const text = (article as any).h1_tag || article.title || "";
+                  const parts = text.trim().split(/\s+/);
+                  if (parts.length < 3) return text;
+                  const tail = parts.slice(-2).join(" ");
+                  const head = parts.slice(0, -2).join(" ");
+                  return <>{head} <span className="font-editorial italic font-normal text-amber-100/95">{tail}</span></>;
+                })()}
               </h1>
 
               {/* Meta bar - frosted glass */}

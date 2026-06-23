@@ -79,69 +79,69 @@ const BlogPage = () => {
       />
 
 
-      {/* Hero */}
-      <div className="relative py-10 md:py-16 overflow-hidden" style={{ background: 'hsl(207 90% 54%)' }}>
+      {/* Hero — Editorial & Premium */}
+      <div className="relative py-14 md:py-24 overflow-hidden bg-gradient-to-b from-secondary/40 via-background to-background border-b border-border/60">
         <div className="absolute inset-0 pointer-events-none">
-          <img loading="lazy" decoding="async"
-            src="https://images.unsplash.com/photo-1562979314-bee7453e911c?w=1200&h=600&fit=crop&q=80"
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover opacity-80 md:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
-          <div className="absolute top-0 left-1/4 hidden w-96 h-96 bg-white/5 rounded-full blur-3xl md:block" />
-          <div className="absolute bottom-0 right-1/4 hidden w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl md:block" />
-          <div className="absolute top-10 right-10 w-32 h-32 border border-white/10 rounded-full" />
-          <div className="absolute bottom-10 left-10 w-20 h-20 border border-white/10 rounded-full" />
+          <div className="absolute -top-32 -right-32 w-[36rem] h-[36rem] bg-primary/8 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 -left-32 w-[28rem] h-[28rem] bg-accent/40 rounded-full blur-3xl" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           {/* Top bar: Back + Share */}
-          <div className="flex items-center justify-between mb-8">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
+          <div className="flex items-center justify-between mb-10">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
-            <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+            <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-foreground/80 hover:text-foreground text-sm font-medium transition-colors bg-card border border-border/70 px-3 py-1.5 rounded-full">
               <Share2 className="w-3.5 h-3.5" /> Share
             </button>
           </div>
 
-          <div className="text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-5 border border-white/10">
-              <BookOpen className="w-3.5 h-3.5 text-primary-foreground" />
-              <span className="text-sm font-medium text-primary-foreground">{totalArticles}+ Expert Articles & Guides</span>
-            </div>
-            <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-tight">
-              MBA Insights & <br className="hidden md:block" />Expert Strategies
-            </h1>
-            <p className="text-primary-foreground/75 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-              Preparation strategies, coaching reviews, career advice, and the latest updates on CAT, GMAT, XAT & more
-            </p>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mt-8 max-w-2xl mx-auto">
-            <div className="relative group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Search articles, tips, guides..."
-                aria-label="Search articles"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-13 pr-4 py-3 h-14 rounded-2xl bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-2xl text-base focus:ring-2 focus:ring-white/30"
-              />
-            </div>
-          </motion.div>
+          <div className="text-center max-w-3xl mx-auto">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-primary font-semibold mb-5">
+                <span className="h-px w-8 bg-primary/40" />
+                The Journal
+                <span className="h-px w-8 bg-primary/40" />
+              </div>
+              <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-5 tracking-[-0.025em] leading-[1.05]">
+                MBA insights, <span className="font-editorial italic font-normal text-primary">told well.</span>
+              </h1>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+                Preparation strategies, coaching reviews, career advice and the latest from CAT, GMAT, XAT and the B-school world — written by people who've been there.
+              </p>
+              <div className="inline-flex items-center gap-2 mt-6 text-xs text-muted-foreground">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                <span className="font-medium">{totalArticles}+ expert articles & guides</span>
+              </div>
+            </motion.div>
 
-          {/* Quick stats */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex flex-wrap justify-center gap-6 mt-8 text-primary-foreground/70 text-sm">
-            {blogCategories.filter(c => c !== "all").slice(0, 5).map(cat => (
-              <button key={cat} onClick={() => setSelectedCategory(cat)} className="hover:text-primary-foreground transition-colors flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/40" />
-                {cat}
-              </button>
-            ))}
-          </motion.div>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mt-10 max-w-2xl mx-auto">
+              <div className="relative group">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Search articles, tips, guides..."
+                  aria-label="Search articles"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-13 pr-4 py-3 h-14 rounded-2xl bg-card border border-border/70 text-foreground shadow-[0_18px_50px_-25px_hsl(207_90%_54%_/_0.35)] text-base focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+            </motion.div>
+
+            {blogCategories.length > 1 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="flex flex-wrap justify-center gap-x-5 gap-y-2 mt-7 text-muted-foreground text-sm">
+                {blogCategories.filter(c => c !== "all").slice(0, 6).map(cat => (
+                  <button key={cat} onClick={() => setSelectedCategory(cat)} className="hover:text-primary transition-colors flex items-center gap-1.5 font-medium">
+                    <span className="w-1 h-1 rounded-full bg-primary/50" />
+                    {cat}
+                  </button>
+                ))}
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
+
 
       <div className="container mx-auto px-4 py-10">
         <SiteBreadcrumbs items={[{ name: "Blog", url: "/blog" }]} className="mb-6" />
@@ -236,13 +236,16 @@ const BlogPage = () => {
             <div className="grid lg:grid-cols-3 gap-10">
               {/* Articles */}
               <div className="lg:col-span-2">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-heading text-xl font-bold text-foreground flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-primary" />
-                    {selectedCategory === "all" ? "Latest Articles" : selectedCategory}
-                    <span className="text-sm font-normal text-muted-foreground">({filtered.length})</span>
-                  </h2>
+                <div className="flex items-end justify-between mb-8 pb-4 border-b border-border/70">
+                  <div>
+                    <div className="text-[10px] tracking-[0.2em] uppercase text-primary font-semibold mb-1.5">The Reading List</div>
+                    <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-foreground tracking-[-0.02em]">
+                      {selectedCategory === "all" ? <>Latest <span className="font-editorial italic font-normal text-primary">articles</span></> : selectedCategory}
+                    </h2>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium">{filtered.length} {filtered.length === 1 ? "story" : "stories"}</span>
                 </div>
+
 
                 <div className="grid sm:grid-cols-2 gap-6">
                   {(selectedCategory === "all" && !searchQuery ? regularArticles : filtered).map((item, i) => (
