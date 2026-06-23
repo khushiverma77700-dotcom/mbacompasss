@@ -15,6 +15,7 @@ import { useCtaGate } from "@/hooks/useCtaGate";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import SEOHead, { generateCollegeSchema, generateFAQSchema } from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
