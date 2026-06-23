@@ -39,7 +39,7 @@ const PopularExamsSection = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("exams")
-        .select("name, slug, full_name, exam_date, registration_deadline, conducting_body, frequency, eligibility, description, pattern");
+        .select("name, slug, full_name, exam_date, registration_deadline, conducting_body");
       const now = new Date();
       const all = (data || []).filter((e: any) => e.name?.trim());
       // Sort by nearest upcoming exam date ascending; past/unknown dates go last
