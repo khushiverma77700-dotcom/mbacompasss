@@ -385,9 +385,21 @@ const CollegeDetailPage = () => {
                     </span>
                   )}
                 </div>
-                <h1 className="font-heading text-2xl sm:text-3xl md:text-5xl font-extrabold text-primary-foreground leading-tight tracking-tight mb-2 break-words [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.2)]">
-                  {college.name}
+                <h1 className="font-heading text-2xl sm:text-3xl md:text-5xl font-extrabold text-primary-foreground leading-[1.08] tracking-tight mb-3 break-words [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.2)]">
+                  {(() => {
+                    const words = (college.name || "").split(" ");
+                    if (words.length < 2) return college.name;
+                    const tail = words.slice(-1)[0];
+                    const head = words.slice(0, -1).join(" ");
+                    return (
+                      <>
+                        {head}{" "}
+                        <span className="font-editorial italic font-normal text-yellow-100/95">{tail}</span>
+                      </>
+                    );
+                  })()}
                 </h1>
+                <div className="h-px w-12 bg-primary-foreground/30 mb-3" />
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-primary-foreground/90 text-sm">
                   <span className="inline-flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {college.city}{college.state ? `, ${college.state}` : ""}</span>
                   {college.established && <span className="inline-flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Est. {college.established}</span>}
