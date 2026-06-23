@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 
-
 const fallbackDeadlines = [
   { name: "CAT 2025", slug: "cat", registration_deadline: "2025-09-20", exam_date: "2025-11-24", conducting_body: "IIM" },
   { name: "XAT 2026", slug: "xat", registration_deadline: "2025-11-30", exam_date: "2026-01-05", conducting_body: "XLRI" },
