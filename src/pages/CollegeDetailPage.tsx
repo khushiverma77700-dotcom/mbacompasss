@@ -501,7 +501,8 @@ const CollegeDetailPage = () => {
 
       {/* Sticky Tab Nav — Premium pill style */}
       <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+
           <div className="flex overflow-x-auto gap-1.5 py-2.5 scrollbar-hide">
             {tabItems.map(t => (
               <button
