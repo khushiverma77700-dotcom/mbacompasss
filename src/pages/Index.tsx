@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
 import SEOHead, {
   generateWebsiteSchema,
@@ -8,33 +7,27 @@ import SEOHead, {
 } from "@/components/SEOHead";
 import { LazyMount } from "@/hooks/useInView";
 
-// Homepage is intentionally minimal: 5 sections only, no scroll/entrance
-// animations, no intersection-observer mounting. Sections render immediately
-// after Hero so the page feels static and complete on first paint.
-//   1. Hero
-//   2. Top Colleges Strip
-//   3. Key Features (Why Choose Us)
-//   4. How It Works
-//   5. CTA
-// Heavier marketing sections (testimonials, stats, blog preview, etc.)
-// have been moved to inner pages to keep the homepage light.
-const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedCollegesSection"));
-const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
-const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
-const CTASection = lazy(() => import("@/components/CTASection"));
-const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
-const AICoachingFinder = lazy(() => import("@/components/AICoachingFinder"));
-const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
-const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
-const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
-const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
-const CategoryCards = lazy(() => import("@/components/CategoryCards"));
-const TopCitiesSection = lazy(() => import("@/components/TopCitiesSection"));
-const TopExamComparisonSection = lazy(() => import("@/components/TopExamComparisonSection"));
-const SuccessStoriesSection = lazy(() => import("@/components/SuccessStoriesSection"));
-const LearningResourcesSection = lazy(() => import("@/components/LearningResourcesSection"));
-const NewsSection = lazy(() => import("@/components/NewsSection"));
-const FAQSection = lazy(() => import("@/components/FAQSection"));
+// All homepage sections are bundled into the Index chunk (no per-section lazy
+// imports) so that scrolling never triggers additional network fetches — the
+// page becomes "instant" once Index is loaded. LazyMount still defers the
+// React render of below-the-fold sections to keep first paint cheap.
+import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
+import WhyChooseUs from "@/components/WhyChooseUs";
+import HowItWorksSection from "@/components/HowItWorksSection";
+import CTASection from "@/components/CTASection";
+import StatsCounterSection from "@/components/StatsCounterSection";
+import AICoachingFinder from "@/components/AICoachingFinder";
+import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import LatestArticlesSection from "@/components/LatestArticlesSection";
+import PopularExamsSection from "@/components/PopularExamsSection";
+import CategoryCards from "@/components/CategoryCards";
+import TopCitiesSection from "@/components/TopCitiesSection";
+import TopExamComparisonSection from "@/components/TopExamComparisonSection";
+import SuccessStoriesSection from "@/components/SuccessStoriesSection";
+import LearningResourcesSection from "@/components/LearningResourcesSection";
+import NewsSection from "@/components/NewsSection";
+import FAQSection from "@/components/FAQSection";
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -57,20 +50,10 @@ const jsonLdSchemas = [
   ]),
 ];
 
-const SectionFallback = ({ height = 320 }: { height?: number }) => (
-  <div
-    style={{ minHeight: height }}
-    className="container mx-auto px-4 py-8"
-    aria-hidden="true"
-  >
-    <div className="h-6 w-48 rounded bg-muted/40 animate-pulse mb-4" />
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="h-40 rounded-xl bg-muted/30 animate-pulse" />
-      ))}
-    </div>
-  </div>
+const SectionPlaceholder = ({ height = 320 }: { height?: number }) => (
+  <div style={{ minHeight: height }} aria-hidden="true" />
 );
+
 
 const Index = () => {
   return (
