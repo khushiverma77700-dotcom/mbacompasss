@@ -95,19 +95,16 @@ const PopularExamsSection = () => {
           </p>
         </motion.div>
 
-        {/* Exam Cards */}
-        <div className="space-y-5">
-          {exams.map((exam, i) => {
+        {/* Exam Cards — 2x2 visual grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 max-w-5xl mx-auto">
+          {exams.slice(0, 4).map((exam, i) => {
             const examDate = parseExamDate(exam.exam_date);
             const daysLeft = examDate ? differenceInDays(examDate, today) : null;
-            const patterns = (exam.pattern as unknown as ExamPattern[] | null) || [];
-            const totalQuestions = patterns.reduce((s, p) => s + (p.questions || 0), 0);
-            const totalMarks = patterns.reduce((s, p) => s + (p.marks || 0), 0);
-
-            // Progress: assume ~365 day prep window
+            const accent = ACCENT_COLORS[i % ACCENT_COLORS.length];
             const progressPercent = daysLeft !== null && daysLeft >= 0
               ? Math.max(2, Math.min(100, ((365 - daysLeft) / 365) * 100))
               : 0;
+            const isUrgent = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
 
             return (
               <motion.div
@@ -115,152 +112,92 @@ const PopularExamsSection = () => {
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.06, duration: 0.4 }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
+                className="h-full"
               >
                 <Link
                   to={`/exam/${exam.slug}`}
-                  className="block bg-card border border-border rounded-2xl overflow-hidden transition-shadow duration-300"
+                  className={`group relative flex flex-col h-full ${accent.bg} rounded-2xl border ${accent.border} p-5 md:p-6 overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-all duration-300`}
                 >
-                  <div className="p-5 md:p-7">
-                    {/* Top row: Name + Date badge */}
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-primary/10 flex-shrink-0">
-                          <FileText className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-heading font-bold text-xl text-foreground">
-                            {exam.name}
-                          </h3>
-                          {exam.full_name && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{exam.full_name}</p>
-                          )}
-                          {exam.conducting_body && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                              <Award className="w-3 h-3" /> {exam.conducting_body}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                  {/* Top accent bar */}
+                  <div className={`absolute inset-x-0 top-0 h-1 ${accent.bar}`} />
 
-                      {/* Date badge */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {exam.exam_date && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-semibold">
-                            <Calendar className="w-4 h-4" />
-                            {exam.exam_date}
-                          </span>
-                        )}
-                        {exam.frequency && !exam.exam_date && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium">
-                            <Clock className="w-4 h-4" />
-                            {exam.frequency}
-                          </span>
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-4 mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-xl ${accent.iconBg} ${accent.text} flex items-center justify-center flex-shrink-0`}>
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-heading font-bold text-lg md:text-xl text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+                          {exam.name}
+                        </h3>
+                        {exam.conducting_body && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
+                            <Award className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{exam.conducting_body}</span>
+                          </p>
                         )}
                       </div>
                     </div>
 
-                    {/* Description */}
-                    {exam.description && (
-                      <p className="text-sm text-muted-foreground mb-5 leading-relaxed line-clamp-2">
-                        {exam.description.replace(/<[^>]*>/g, "").substring(0, 200)}
-                      </p>
-                    )}
-
-                    {/* Pattern stats row */}
-                    {patterns.length > 0 && (
-                      <div className="mb-5">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <div className="bg-muted/50 rounded-xl p-3 text-center">
-                            <p className="text-2xl font-bold text-foreground">{totalQuestions}</p>
-                            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Total Questions</p>
-                          </div>
-                          <div className="bg-muted/50 rounded-xl p-3 text-center">
-                            <p className="text-2xl font-bold text-foreground">{totalMarks}</p>
-                            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Total Marks</p>
-                          </div>
-                          <div className="bg-muted/50 rounded-xl p-3 text-center">
-                            <p className="text-2xl font-bold text-foreground">{patterns.length}</p>
-                            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Sections</p>
-                          </div>
-                          <div className="bg-muted/50 rounded-xl p-3 text-center">
-                            <p className="text-2xl font-bold text-foreground">
-                              {daysLeft !== null && daysLeft >= 0 ? daysLeft : "—"}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Days Left</p>
-                          </div>
-                        </div>
-
-                        {/* Section breakdown pills */}
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {patterns.map((p) => (
-                            <span
-                              key={p.name}
-                              className="px-2.5 py-1 rounded-lg bg-background border border-border text-xs text-foreground font-medium"
-                            >
-                              {p.name}: {p.questions}Q · {p.marks}M
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Countdown progress bar */}
                     {daysLeft !== null && daysLeft >= 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-foreground">
-                            Exam Countdown
-                          </span>
-                          <span className="text-xs font-bold text-primary">
-                            {daysLeft} days remaining
-                          </span>
+                      <div className="text-center flex-shrink-0">
+                        <div className={`text-2xl md:text-3xl font-extrabold ${isUrgent ? "text-destructive" : accent.text} leading-none`}>
+                          {daysLeft}
                         </div>
-                        <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full transition-all duration-1000"
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between mt-1.5">
-                          <span className="text-[10px] text-muted-foreground">Preparation started</span>
-                          <span className="text-[10px] text-muted-foreground">Exam day</span>
-                        </div>
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">days left</div>
                       </div>
                     )}
+                  </div>
 
-                    {/* Registration deadline */}
+                  {/* Full name */}
+                  {exam.full_name && (
+                    <p className="text-sm text-muted-foreground line-clamp-1 mb-4">
+                      {exam.full_name}
+                    </p>
+                  )}
+
+                  {/* Date + deadline row */}
+                  <div className="space-y-2.5 mb-5">
+                    {exam.exam_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className={`w-4 h-4 ${accent.text} flex-shrink-0`} />
+                        <span className="text-foreground font-medium">{exam.exam_date}</span>
+                      </div>
+                    )}
                     {exam.registration_deadline && (
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/5 border border-destructive/10 mb-4">
-                        <Clock className="w-4 h-4 text-destructive flex-shrink-0" />
-                        <p className="text-xs text-foreground">
-                          <span className="font-semibold">Registration Deadline:</span> {exam.registration_deadline}
-                        </p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className={`w-4 h-4 ${isUrgent ? "text-destructive" : accent.text} flex-shrink-0`} />
+                        <span className="text-foreground font-medium">Reg. by {exam.registration_deadline}</span>
                       </div>
                     )}
+                  </div>
 
-                    {/* Eligibility */}
-                    {exam.eligibility && (
-                      <div className="pt-4 border-t border-border/50">
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          <span className="font-semibold text-foreground">Eligibility: </span>
-                          {exam.eligibility.replace(/<[^>]*>/g, "").substring(0, 150)}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* CTA row */}
-                    <div className="mt-5 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
-                          {exam.frequency || "Annual exam"}
+                  {/* Progress bar */}
+                  {daysLeft !== null && daysLeft >= 0 && (
+                    <div className="mt-auto mb-5">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Exam countdown</span>
+                        <span className={`text-[10px] font-bold ${isUrgent ? "text-destructive" : accent.text}`}>
+                          {daysLeft === 0 ? "Today" : `${daysLeft} days remaining`}
                         </span>
                       </div>
-                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                        View Full Details <ArrowRight className="w-4 h-4" />
-                      </span>
+                      <div className="w-full h-2 bg-background/70 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${accent.bar} rounded-full transition-all duration-1000`}
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
                     </div>
+                  )}
+
+                  {/* CTA */}
+                  <div className="mt-auto pt-4 border-t border-border/40 flex items-center justify-between">
+                    <span className={`text-sm font-semibold ${accent.text}`}>View details</span>
+                    <span className={`w-8 h-8 rounded-full ${accent.iconBg} ${accent.text} flex items-center justify-center group-hover:translate-x-1 transition-transform`}>
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
                   </div>
                 </Link>
               </motion.div>
