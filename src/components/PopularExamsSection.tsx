@@ -14,12 +14,6 @@ const ACCENT_COLORS = [
 ];
 
 
-interface ExamPattern {
-  name: string;
-  questions: number;
-  marks: number;
-}
-
 /** Try multiple date formats to parse exam_date string */
 const parseExamDate = (dateStr: string | null): Date | null => {
   if (!dateStr) return null;
