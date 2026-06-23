@@ -1,4 +1,5 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X, ArrowLeft, Share2, LayoutGrid, List, Map as MapIcon, Sparkles, Tag } from "lucide-react";
@@ -43,6 +44,13 @@ const CoachingPage = () => {
   const minRating = searchParams.get("rating") || "all"; // 4.5, 4, 3.5
   const view = searchParams.get("view") || "list"; // list | grid | map
   const quick = searchParams.get("quick") || ""; // verified | offer | featured
+
+  // Pagination — 20 per page, Load More button. Avoids rendering 500+ cards at once.
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [search, selectedState, selectedCity, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, minRating, quick, view]);
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -457,20 +465,34 @@ const CoachingPage = () => {
           </div>
         </div>
 
-        {/* Institute Cards */}
+        {/* Institute Cards (paginated — 20 per page, Load More) */}
         {view === "map" ? (
           <CoachingMapView institutes={filtered} onCityClick={(c) => { setFilter("city", c); setFilter("view", "list"); }} />
         ) : view === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            {filtered.map((inst: any, i: number) => (
+            {filtered.slice(0, visibleCount).map((inst: any, i: number) => (
               <InstituteGridCard key={inst.id} inst={inst} index={i} rank={i + 1} />
             ))}
           </div>
         ) : (
           <div className="space-y-5">
-            {filtered.map((inst: any, i: number) => (
+            {filtered.slice(0, visibleCount).map((inst: any, i: number) => (
               <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
             ))}
+          </div>
+        )}
+
+        {view !== "map" && visibleCount < filtered.length && (
+          <div className="flex justify-center mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="rounded-xl"
+            >
+              Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
           </div>
         )}
 
