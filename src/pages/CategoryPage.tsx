@@ -13,6 +13,7 @@ import InstituteListingCard from "@/components/InstituteListingCard";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 import LCPImagePreload from "@/components/LCPImagePreload";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import PageKeywords from "@/components/PageKeywords";
