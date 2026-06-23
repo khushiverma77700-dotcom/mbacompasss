@@ -169,22 +169,23 @@ const HeroSection = () => {
             </span>
           </div>
 
-          {/* Heading */}
-          <h1 className="font-heading text-[1.7rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-2 tracking-tight">
+          {/* Heading — editorial: bold sans + italic serif accent */}
+          <h1 className="font-heading text-[1.8rem] leading-[1.1] sm:text-[2.6rem] md:text-[3.2rem] lg:text-[3.8rem] font-extrabold text-primary-foreground mb-3 tracking-[-0.02em]">
             Find the Best{" "}
-            <span className="relative inline-block">
-              <span className="relative z-10 bg-gradient-to-r from-yellow-200 via-amber-100 to-yellow-200 bg-clip-text text-transparent">
-                MBA Coaching
-              </span>
+            <span className="font-editorial italic font-normal text-yellow-100/95 tracking-tight">
+              MBA Coaching
             </span>
-            <span className="block text-base sm:text-xl md:text-2xl lg:text-3xl font-semibold text-primary-foreground/85 mt-1.5">
-              for Your Dream B-School
+            <span className="block font-editorial italic font-normal text-lg sm:text-2xl md:text-3xl lg:text-4xl text-primary-foreground/85 mt-2 tracking-tight">
+              for your dream B-School
             </span>
           </h1>
 
-          <p className="text-primary-foreground/80 text-sm md:text-base mb-5 max-w-xl mx-auto leading-relaxed">
+          <div className="mx-auto mb-5 h-px w-12 bg-primary-foreground/30" />
+
+          <p className="text-primary-foreground/80 text-sm md:text-base mb-6 max-w-xl mx-auto leading-relaxed">
             {subheading}
           </p>
+
 
           {/* Search bar */}
           <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-4">
