@@ -31,6 +31,16 @@ const getUrgencyStyle = (days: number | null) => {
 };
 
 const ExamDeadlinesTicker = () => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const cardWidth = 320;
+    const gap = 16;
+    const delta = direction === "left" ? -(cardWidth + gap) : cardWidth + gap;
+    scrollRef.current.scrollBy({ left: delta, behavior: "smooth" });
+  };
+
   const { data: exams } = useQuery({
     queryKey: ["exam-deadlines-ticker"],
     queryFn: async () => {
