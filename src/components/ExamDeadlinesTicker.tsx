@@ -95,7 +95,7 @@ const ExamDeadlinesTicker = () => {
 
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 scrollbar-thin"
+            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-5 -mx-4 px-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/30 hover:[&::-webkit-scrollbar-thumb]:bg-primary/50"
           >
             {items.map((exam: any, i: number) => {
               const regDays = getDaysLeft(exam.registration_deadline);
