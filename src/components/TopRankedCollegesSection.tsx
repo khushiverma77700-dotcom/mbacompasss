@@ -96,21 +96,21 @@ const TopRankedCollegesSection = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-5 border-t border-border/60">
-                  <div>
+                  <div className="flex flex-col">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Fees</p>
-                    <div className="min-h-[2.5rem]">
-                      <p className="text-sm font-semibold text-foreground flex items-start gap-1 line-clamp-2">
-                        <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
-                        <span className="break-words">{college.fees || "N/A"}</span>
+                    <div className="flex items-start gap-1 min-h-[2.5rem]">
+                      <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-semibold text-foreground line-clamp-2 break-words">
+                        {college.fees || "N/A"}
                       </p>
                     </div>
                   </div>
-                  <div>
+                  <div className="flex flex-col">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Avg Package</p>
-                    <div className="min-h-[2.5rem]">
-                      <p className="text-sm font-semibold text-foreground flex items-start gap-1 line-clamp-2">
-                        <TrendingUp className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
-                        <span className="break-words">{college.placement_avg || "N/A"}</span>
+                    <div className="flex items-start gap-1 min-h-[2.5rem]">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-semibold text-foreground line-clamp-2 break-words">
+                        {college.placement_avg || "N/A"}
                       </p>
                     </div>
                   </div>
