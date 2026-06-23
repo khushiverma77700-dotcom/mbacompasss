@@ -740,6 +740,24 @@
   }
 }
 
+/* Public-site mobile safety net: any table placed inside an `overflow-x-auto`
+   wrapper (the standard responsive pattern) must NOT have its columns squeezed
+   into 1-character-wide vertical strips. Force the table to its intrinsic
+   content width on small screens so the wrapper scrolls horizontally instead. */
+@media (max-width: 639px) {
+  .overflow-x-auto > table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+  }
+  .overflow-x-auto > table th,
+  .overflow-x-auto > table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+
 
 /* Top progress bar shown during route chunk loading (see App.tsx TopProgressBar) */
 @keyframes lov-route-progress {
