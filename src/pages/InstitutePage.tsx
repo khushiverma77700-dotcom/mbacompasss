@@ -222,7 +222,7 @@ const InstitutePage = () => {
           <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
             <div className="flex items-start gap-5 flex-wrap">
               {institute.logo_url ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={institute.logo_url}
                   alt={institute.name}
                   className="w-28 h-28 rounded-2xl border bg-white object-contain p-2.5 shrink-0 shadow-md ring-1 ring-sky-100"
