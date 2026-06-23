@@ -21,6 +21,12 @@ const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedColleg
 const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
 const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
+const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
+const AICoachingFinder = lazy(() => import("@/components/AICoachingFinder"));
+const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
+const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
+const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
