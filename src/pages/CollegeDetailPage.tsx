@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCtaGate } from "@/hooks/useCtaGate";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
+import SEOHead, { generateCollegeSchema, generateFAQSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
@@ -315,7 +315,7 @@ const CollegeDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead {...resolvedSeo} />
+      <SEOHead {...resolvedSeo} jsonLd={[collegeJsonLd, generateFAQSchema(qaItems)].filter(Boolean) as any} />
       <LoginRequiredDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} message="Sign in to access detailed college information." />
 
       {/* ===== Premium Hero Banner ===== */}
