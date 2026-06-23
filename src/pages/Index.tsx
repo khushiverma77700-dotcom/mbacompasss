@@ -95,93 +95,79 @@ const Index = () => {
       />
 
       <div>
-        {/* 1. Hero */}
+        {/* 1. Hero — eager (above-the-fold) */}
         <HeroSection />
 
-        {/* 2. Exam Deadlines Ticker */}
+        {/* 2. Exam Deadlines Ticker — eager, lightweight, near top */}
         <Suspense fallback={<SectionFallback height={80} />}>
           <ExamDeadlinesTicker />
         </Suspense>
 
-        {/* 3. Top Colleges Strip */}
+        {/* 3. Top Colleges Strip — eager, primary content */}
         <Suspense fallback={<SectionFallback height={520} />}>
           <TopRankedCollegesSection />
         </Suspense>
 
-        {/* 4. Stats Counter */}
-        <Suspense fallback={<SectionFallback height={200} />}>
+        {/* Everything below mounts only when scrolled near viewport */}
+        <LazyMount minHeight={200} fallback={<SectionFallback height={200} />}>
           <StatsCounterSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 5. Popular Exams */}
-        <Suspense fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
           <PopularExamsSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 6. Browse by Category */}
-        <Suspense fallback={<SectionFallback height={320} />}>
+        <LazyMount minHeight={320} fallback={<SectionFallback height={320} />}>
           <CategoryCards />
-        </Suspense>
+        </LazyMount>
 
-        {/* 7. Top Cities */}
-        <Suspense fallback={<SectionFallback height={320} />}>
+        <LazyMount minHeight={320} fallback={<SectionFallback height={320} />}>
           <TopCitiesSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 8. Exam Comparison */}
-        <Suspense fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
           <TopExamComparisonSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 9. Key Features */}
-        <Suspense fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
           <WhyChooseUs />
-        </Suspense>
+        </LazyMount>
 
-        {/* 10. AI Coaching Finder */}
-        <Suspense fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
           <AICoachingFinder />
-        </Suspense>
+        </LazyMount>
 
-        {/* 11. How It Works */}
-        <Suspense fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
           <HowItWorksSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 12. Success Stories */}
-        <Suspense fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
           <SuccessStoriesSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 13. Testimonials */}
-        <Suspense fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
           <TestimonialsSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 14. Learning Resources */}
-        <Suspense fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
           <LearningResourcesSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 15. Latest Articles */}
-        <Suspense fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
           <LatestArticlesSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 16. News */}
-        <Suspense fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
           <NewsSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 17. FAQ */}
-        <Suspense fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
           <FAQSection />
-        </Suspense>
+        </LazyMount>
 
-        {/* 18. CTA */}
-        <Suspense fallback={<SectionFallback height={280} />}>
+        <LazyMount minHeight={280} fallback={<SectionFallback height={280} />}>
           <CTASection />
-        </Suspense>
+        </LazyMount>
       </div>
     </>
   );
