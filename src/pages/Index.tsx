@@ -90,22 +90,52 @@ const Index = () => {
         {/* 1. Hero */}
         <HeroSection />
 
-        {/* 2. Top Colleges Strip */}
+        {/* 2. Exam Deadlines Ticker */}
+        <Suspense fallback={<SectionFallback height={80} />}>
+          <ExamDeadlinesTicker />
+        </Suspense>
+
+        {/* 3. Top Colleges Strip */}
         <Suspense fallback={<SectionFallback height={520} />}>
           <TopRankedCollegesSection />
         </Suspense>
 
-        {/* 3. Key Features */}
+        {/* 4. Stats Counter */}
+        <Suspense fallback={<SectionFallback height={200} />}>
+          <StatsCounterSection />
+        </Suspense>
+
+        {/* 5. Popular Exams */}
+        <Suspense fallback={<SectionFallback height={360} />}>
+          <PopularExamsSection />
+        </Suspense>
+
+        {/* 6. Key Features */}
         <Suspense fallback={<SectionFallback height={420} />}>
           <WhyChooseUs />
         </Suspense>
 
-        {/* 4. How It Works */}
+        {/* 7. AI Coaching Finder */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <AICoachingFinder />
+        </Suspense>
+
+        {/* 8. How It Works */}
         <Suspense fallback={<SectionFallback height={360} />}>
           <HowItWorksSection />
         </Suspense>
 
-        {/* 5. CTA */}
+        {/* 9. Testimonials */}
+        <Suspense fallback={<SectionFallback height={360} />}>
+          <TestimonialsSection />
+        </Suspense>
+
+        {/* 10. Latest Articles */}
+        <Suspense fallback={<SectionFallback height={420} />}>
+          <LatestArticlesSection />
+        </Suspense>
+
+        {/* 11. CTA */}
         <Suspense fallback={<SectionFallback height={280} />}>
           <CTASection />
         </Suspense>
