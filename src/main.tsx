@@ -1,7 +1,10 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
 import "./index.css";
+
 
 // Kick off the Supabase client chunk download in parallel with App.tsx
 // evaluation on auth-heavy entry routes (LMS, admin, mocks, dashboard

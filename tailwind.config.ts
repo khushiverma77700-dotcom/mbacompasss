@@ -19,7 +19,9 @@ export default {
         // dimensions as the web font — eliminates font-swap CLS.
         heading: ['Plus Jakarta Sans', 'Plus Jakarta Fallback', 'system-ui', 'sans-serif'],
         body: ['DM Sans', 'DM Sans Fallback', 'system-ui', 'sans-serif'],
+        editorial: ['"Instrument Serif"', 'ui-serif', 'Georgia', 'serif'],
       },
+
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
