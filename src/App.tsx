@@ -227,14 +227,18 @@ const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDi
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      // 30 min — most public content (colleges, exams, articles) rarely changes
+      // intra-session; this turns repeat navigations into instant cache hits.
+      staleTime: 30 * 60 * 1000,
       gcTime: 24 * 60 * 60 * 1000, // 24h — kept for persistence
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
+      refetchOnMount: false,
       retry: 1,
     },
   },
 });
+
 
 const ROUTE_PREFETCHERS = {
   "/blog": [BlogPage.preload],
