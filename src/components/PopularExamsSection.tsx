@@ -2,9 +2,17 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, ArrowRight, BookOpen, Award, FileText, Users } from "lucide-react";
+import { Calendar, Clock, ArrowRight, BookOpen, Award, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { differenceInDays, parse, isValid } from "date-fns";
+
+const ACCENT_COLORS = [
+  { bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700", bar: "bg-sky-500", iconBg: "bg-sky-100" },
+  { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700", bar: "bg-indigo-500", iconBg: "bg-indigo-100" },
+  { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", bar: "bg-emerald-500", iconBg: "bg-emerald-100" },
+  { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", bar: "bg-amber-500", iconBg: "bg-amber-100" },
+];
+
 
 interface ExamPattern {
   name: string;
