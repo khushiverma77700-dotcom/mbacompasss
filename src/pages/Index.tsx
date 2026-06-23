@@ -82,73 +82,71 @@ const Index = () => {
         <HeroSection />
 
         {/* 2. Exam Deadlines Ticker — eager, lightweight, near top */}
-        <Suspense fallback={<SectionFallback height={80} />}>
-          <ExamDeadlinesTicker />
-        </Suspense>
+        <ExamDeadlinesTicker />
 
         {/* 3. Top Colleges Strip — eager, primary content */}
-        <Suspense fallback={<SectionFallback height={520} />}>
-          <TopRankedCollegesSection />
-        </Suspense>
+        <TopRankedCollegesSection />
 
-        {/* Everything below mounts only when scrolled near viewport */}
-        <LazyMount minHeight={200} fallback={<SectionFallback height={200} />}>
+        {/* Everything below renders only when scrolled near viewport.
+            All section code is bundled with Index — no extra network fetches
+            occur on scroll, so the page feels instant once loaded. */}
+        <LazyMount minHeight={200} fallback={<SectionPlaceholder height={200} />}>
           <StatsCounterSection />
         </LazyMount>
 
-        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
           <PopularExamsSection />
         </LazyMount>
 
-        <LazyMount minHeight={320} fallback={<SectionFallback height={320} />}>
+        <LazyMount minHeight={320} fallback={<SectionPlaceholder height={320} />}>
           <CategoryCards />
         </LazyMount>
 
-        <LazyMount minHeight={320} fallback={<SectionFallback height={320} />}>
+        <LazyMount minHeight={320} fallback={<SectionPlaceholder height={320} />}>
           <TopCitiesSection />
         </LazyMount>
 
-        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
           <TopExamComparisonSection />
         </LazyMount>
 
-        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
           <WhyChooseUs />
         </LazyMount>
 
-        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
           <AICoachingFinder />
         </LazyMount>
 
-        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
           <HowItWorksSection />
         </LazyMount>
 
-        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
           <SuccessStoriesSection />
         </LazyMount>
 
-        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
           <TestimonialsSection />
         </LazyMount>
 
-        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
           <LearningResourcesSection />
         </LazyMount>
 
-        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
           <LatestArticlesSection />
         </LazyMount>
 
-        <LazyMount minHeight={360} fallback={<SectionFallback height={360} />}>
+        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
           <NewsSection />
         </LazyMount>
 
-        <LazyMount minHeight={420} fallback={<SectionFallback height={420} />}>
+        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
           <FAQSection />
         </LazyMount>
 
-        <LazyMount minHeight={280} fallback={<SectionFallback height={280} />}>
+        <LazyMount minHeight={280} fallback={<SectionPlaceholder height={280} />}>
           <CTASection />
         </LazyMount>
       </div>
