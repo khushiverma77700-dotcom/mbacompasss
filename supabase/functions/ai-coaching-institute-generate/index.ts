@@ -4,6 +4,7 @@
 // the AICoachingInstituteDialog. Public — verify_jwt = false (project default).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { getBlockingFactIssues, runFactualRiskCheck } from "../_shared/aiContentRules.ts";
 
 // Use OpenAI directly with the user's configured API key.
 // gpt-4o-mini = ~20x cheaper than gpt-4o, still excellent with strict tool-calling schema.
@@ -206,9 +207,10 @@ Deno.serve(async (req) => {
     const systemPrompt = `You are a senior MBA-entrance coaching researcher and SEO writer for the Indian audience. You write like a sharp senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY field in the output schema MUST be filled with substantive, useful, realistic ${year} content. "N/A", "TBD", "Coming soon", "Contact for details", empty strings are STRICTLY FORBIDDEN.
-- For well-known brands (TIME=1992, IMS=1977, Career Launcher=1995, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye) you have abundant verified data — USE IT.
-- When the EXACT current-year figure isn't in your training data, give a tight realistic ${year - 1}-${year} range (e.g. "INR 35,000 - 55,000"). Never write "varies", "depends".
+- Fill fields with substantive, useful, realistic ${year} content, but factual safety beats completeness. Never fabricate exact fees, batch dates, result numbers, selection counts, success rates or topper scores.
+- For well-known brands (TIME=1992, IMS=1977, Career Launcher=1995, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye), use only facts you are confident about.
+- When the EXACT current-year figure isn't confidently known, give a tight latest-public range (e.g. "INR 35,000 - 55,000") or use expected/TBA/verify-official wording for dates and result claims.
+- Do NOT present 2020-${year - 2} fees, batch dates, selection counts, success rates or result numbers as current data. Historical mentions must be labelled historical.
 
 # SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHING ONLY
 - Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, MICAT, KMAT.
@@ -558,6 +560,14 @@ Deno.serve(async (req) => {
     }
 
     const completed = completeProfile(parsed, brief, targetKw);
+    const blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(completed));
+    if (blockingFactIssues.length) {
+      return new Response(JSON.stringify({
+        error: "Fact-check blocked institute content",
+        detail: blockingFactIssues.map((i) => i.message).join(" | "),
+        issues: blockingFactIssues,
+      }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Wrap each section in { enabled: true, data: <payload> } to match
     // src/lib/instituteSections.ts storage shape.
