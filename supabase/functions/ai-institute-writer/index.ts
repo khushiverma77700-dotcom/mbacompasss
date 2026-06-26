@@ -80,7 +80,7 @@ ACCURACY IS MANDATORY. For well-known Indian MBA-prep brands (TIME, IMS, Career 
 
 FRESHNESS RULES:
 - Today is ${todayIso}. Active batch cycle: ${admissionCycle}. Freshness window: ${freshness}.
-- Do NOT present 2020-2023 fees, batch dates, success numbers or selection counts as current data. If old data is mentioned, clearly label it historical.
+- Do NOT present 2020-${currentYear - 2} fees, batch dates, success numbers or selection counts as current data. If old data is mentioned, clearly label it historical.
 - DO NOT include ANY citation, source, footnote or attribution markers anywhere in the output. Forbidden patterns include: "[src:Brochure 2026]", "[src:...]", "(source: ...)", "(Source/...)", "(as per ...)", "[1]", "Ref:", "*Source:*", "Sources —", or any bracketed/parenthesised attribution. State facts plainly with the year woven into the sentence.
 - Do NOT append a "Last updated:" line.
 
