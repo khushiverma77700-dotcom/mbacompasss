@@ -524,8 +524,21 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       out = out.replace(/[ \t]{2,}/g, " ");
       return out.trim();
     };
-profile.description = runFinalQualityCheck(scrubHtml(descriptionHtml), { requireMbaCompass: true, requireTable: true, minInternalLinks: 4 }).html;
-    profile.admission_process = runFinalQualityCheck(scrubHtml(admissionHtml), { requireMbaCompass: false, minInternalLinks: 2 }).html;
+    const descriptionQC = runFinalQualityCheck(scrubHtml(descriptionHtml), { requireMbaCompass: true, requireTable: true, minInternalLinks: 4 });
+    const admissionQC = runFinalQualityCheck(scrubHtml(admissionHtml), { requireMbaCompass: false, minInternalLinks: 2 });
+    const htmlFactBlocks = getBlockingFactIssues([...descriptionQC.issues, ...admissionQC.issues]);
+    if (htmlFactBlocks.length) {
+      return new Response(
+        JSON.stringify({
+          error: "Fact-check blocked college HTML",
+          detail: htmlFactBlocks.map((i) => i.message).join(" | "),
+          issues: htmlFactBlocks,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    profile.description = descriptionQC.html;
+    profile.admission_process = admissionQC.html;
 
     if (!profile.description || !profile.admission_process) {
       return new Response(
