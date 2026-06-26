@@ -324,6 +324,12 @@ export function runFinalQualityCheck(rawHtml: string, opts?: {
   // Clean any double spaces / orphan commas from removals
   html = html.replace(/[ \t]{2,}/g, " ").replace(/\s+([,.;:])/g, "$1");
 
+  // 1b. MBA fact check — auto-rewrite known false claims (XLRI/CAT, IIM/XAT, ISB, NMIMS, Symbiosis, conducting bodies, etc.)
+  const fact = runFactCheck(html);
+  html = fact.html;
+  issues.push(...fact.issues);
+
+
   // 2. Detect any banned phrases still present (worth flagging for prompt tightening)
   const text = stripTags(html).toLowerCase();
   for (const phrase of BANNED_PHRASES) {
