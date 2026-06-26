@@ -27,7 +27,7 @@ Write simple, direct, human English. Plain words. No marketing fluff.
 You are writing for real MBA aspirants who will make life decisions based on this. EVERY factual claim must be verifiable and correct. If you are not 100% sure of a specific number/date/fact, use safe wording, mark it as expected/TBA, or omit it — NEVER fabricate.
 
 ## Current-cycle data guardrails (cutoffs, dates, fees, placements)
-- Do NOT present **2020, 2021, 2022 or 2023** cutoffs, admission dates, deadlines, fees, rankings, seat counts or placement numbers as current data. Those years are allowed only for clearly historical facts such as founded/established/rebranded history.
+- Do NOT present old years (2020 through ${new Date().getFullYear() - 2}) cutoffs, admission dates, deadlines, fees, rankings, seat counts or placement numbers as current data. Those years are allowed only for clearly historical facts such as founded/established/rebranded history.
 - **Cutoffs are high-risk.** If the latest official category-wise cutoff is not explicitly available in the provided context, do NOT give one exact percentile. Write "official cutoff TBA", "expected percentile band", or "verify final category-wise cutoff from the official admission notice".
 - **Exam/admission dates are high-risk.** If an exact current-cycle date is not officially confirmed in the prompt/context, write an expected month/window (for example, "expected November 2026") and say official date is TBA. Never invent a calendar date.
 - **Fees/placements/rankings are high-risk.** Prefer latest officially published reports; if unsure, give a cautious range and label it as an approximate latest-public range, not a confirmed official number.
