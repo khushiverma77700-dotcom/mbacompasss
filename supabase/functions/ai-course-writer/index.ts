@@ -9,7 +9,7 @@
 // Public endpoint — verify_jwt = false (project default). Calls Lovable AI Gateway via
 // tool-calling for strict structured output.
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
