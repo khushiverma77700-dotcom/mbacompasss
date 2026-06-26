@@ -439,6 +439,18 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       return handleModelError(error);
     }
 
+    const structuredFactBlocks = getBlockingFactIssues(runFactualRiskCheck(profile));
+    if (structuredFactBlocks.length) {
+      return new Response(
+        JSON.stringify({
+          error: "Fact-check blocked college content",
+          detail: structuredFactBlocks.map((i) => i.message).join(" | "),
+          issues: structuredFactBlocks,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const contentSeed = {
       name: profile.name || brief.name,
       city: brief.city || profile.city || "",
