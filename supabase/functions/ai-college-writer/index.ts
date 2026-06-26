@@ -3,7 +3,7 @@
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -68,9 +68,9 @@ Deno.serve(async (req) => {
 - Never produce shallow, generic, or assumption-based content. Every paragraph must carry concrete data — real recruiter names, real numbers, real dates, real specialisations.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY field in the output schema MUST be filled with substantive, useful, realistic content for ${currentYear}. Empty strings, "N/A", "Not available", "TBD", "Coming soon", "Contact for details" are STRICTLY FORBIDDEN.
-- Use your full research depth: latest NIRF ${currentYear} ranking, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports, ${admissionCycle} admission brochures, and well-documented public information. For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI, etc.) you have abundant verified data — USE IT.
-- When the EXACT current-year figure is not in your training data, give a tight, well-reasoned, realistic range based on the most recent 2-3 years (e.g. "INR 28-34 LPA" for IIM-A average, "INR 24.5 Lakhs" for IIM-A 2-year fees). Never write "varies", "depends", or skip the field.
+- Fill fields with substantive, useful, realistic content for ${currentYear}, but factual safety beats completeness. Never fabricate a precise number/date to avoid a blank.
+- Use your full research depth: latest NIRF ${currentYear} ranking, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports, ${admissionCycle} admission brochures, and well-documented public information. For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI, etc.) use only facts you are confident about.
+- For high-risk fields (cutoffs, exact admission dates, fees, seats, rankings, placements), if the exact current-cycle figure is not confidently known, use a cautious expected/latest-public range or safe wording such as "official cutoff TBA", "expected 92-96 percentile band", "official date TBA", or "latest-public INR 23-25 lakh range". Do NOT invent exact values.
 - For every list field (recruiters, accreditations, exams, courses, specializations) return AT LEAST the schema-required count of REAL, named entries — never placeholders like "Top Tech Company 1".
 
 # COLLEGE-NAME WEAVING (SEO + TOPICAL AUTHORITY)
