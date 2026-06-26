@@ -1181,7 +1181,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         model,
         max_tokens: dynamicMaxTokens,
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
+
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
@@ -1283,7 +1284,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
           model: "openai/gpt-5-mini",
           max_tokens: Math.min(32000, Math.max(10000, Math.round(wmax * 3) + 3000)),
           messages: [
-            { role: "system", content: systemPrompt },
+            { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
+
             { role: "user", content: `The current draft is ${currentWords} words but the brief requires ${wmin}-${wmax}. Expand it by adding ${wordsNeeded}+ words of NEW substance specific to "${targetKw}": 3-5 NEW <h2> sections (each ${minWordsPerSection}-500 words) covering angles not yet discussed (e.g. year-on-year trends specific to this topic, common mistakes specific to this topic, alumni stories, ROI math, regional breakdown, expert tips, alternatives, deep comparison tables) plus 3-4 additional FAQ Q&A. Every new section MUST contain topic-specific data, named entities, examples, and at least one new internal link relevant to "${targetKw}" only. Return the COMPLETE merged article (intro + content) re-rendered with new sections woven into logical places — do not just append at the end. Maintain ALL hard rules: ${density}% density, declarative headings, real ${currentYear} data, no banned phrases, no generic MBA filler unrelated to this topic.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
           ],
           tools: [tool],
@@ -1343,7 +1345,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
             model: "openai/gpt-5-mini",
             max_tokens: Math.min(32000, Math.max(10000, Math.round(wmax * 3) + 3000)),
             messages: [
-              { role: "system", content: systemPrompt },
+              { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
               { role: "user", content: `The current draft uses the exact phrase "${targetKw}" only ${postStats.occurrences} times (~${postStats.density}% density). The editor requires ~${targetOccurrences} exact-match occurrences (~${density}% density). Rewrite the article to naturally include the phrase "${targetKw}" approximately ${need} MORE times, distributed evenly across the body (roughly once per 200-300 words). Replace some pronouns ("it", "this programme", "the course") and generic noun phrases ("the programme", "this exam") with the exact phrase "${targetKw}" where it reads naturally. Do NOT shorten the article. Do NOT remove sections, FAQs, tables, or internal links. Keep the same intro/H1/title/meta/slug/keywords. Return the COMPLETE article with intro and content updated.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
             ],
             tools: [tool],
