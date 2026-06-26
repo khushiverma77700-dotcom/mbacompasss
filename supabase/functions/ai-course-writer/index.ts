@@ -174,6 +174,10 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
   const data = await res.json();
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
+  const structuredFactBlocks = getBlockingFactIssues(runFactualRiskCheck(args));
+  if (structuredFactBlocks.length) {
+    throw new Error(`Fact-check blocked course content: ${structuredFactBlocks.map((i) => i.message).join(" | ")}`);
+  }
   return { courses: args.courses || [] };
 }
 
@@ -375,7 +379,12 @@ For EACH course return:
     c.price_confidence = ["Verified", "Range", "Unknown"].includes(c.price_confidence) ? c.price_confidence : "Range";
     c.accuracy_notes = (c.accuracy_notes || "").toString().trim() || "Fee shown is the typical published range; verify the latest with the institute before enrolling.";
     if (typeof c.description_html === "string" && c.description_html.length > 200) {
-      c.description_html = runFinalQualityCheck(c.description_html, { requireMbaCompass: true, minInternalLinks: 2 }).html;
+      const descriptionQC = runFinalQualityCheck(c.description_html, { requireMbaCompass: true, minInternalLinks: 2 });
+      const htmlFactBlocks = getBlockingFactIssues(descriptionQC.issues);
+      if (htmlFactBlocks.length) {
+        throw new Error(`Fact-check blocked course HTML: ${htmlFactBlocks.map((i) => i.message).join(" | ")}`);
+      }
+      c.description_html = descriptionQC.html;
     }
     return c;
   });
