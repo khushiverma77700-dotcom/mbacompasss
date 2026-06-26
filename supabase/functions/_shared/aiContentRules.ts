@@ -198,7 +198,10 @@ const EXACT_CUTOFF_RE = /(?:\bcut\s*-?\s*offs?\b[^.!?]{0,140}\b(?:[6-9]\d(?:\.\d
 const SAFE_CUTOFF_WORDING_RE = /\b(expected|approx(?:\.|imate|imately)?|range|band|previous|historical|official|announced|category\s*-?\s*wise|verify|tba|tentative|last\s+published|latest\s+published|\[src:)\b/i;
 const FULL_DATE_RE = /\b(?:\d{1,2}\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},?\s+\d{4})\b/i;
 const DATE_TERM_RE = /\b(exam|registration|application|deadline|admit\s+card|result|interview|gd\s*-?\s*pi|wat|counselling|counseling|admission)\b/i;
-const SAFE_DATE_WORDING_RE = /\b(expected|tentative|official|announced|notification|confirmed|scheduled|window|tba|\[src:)\b/i;
+// Exact full calendar dates are risky because models often invent them. Only
+// pass exact dates when they carry a source marker or clearly refer to a past
+// released/published event; otherwise use month/window/TBA wording.
+const SAFE_DATE_WORDING_RE = /\b(\[src:|published|released|declared|already\s+announced|past|historical)\b/i;
 
 // ===================================================================
 // MBA FACT CHECKER — auto-detects and rewrites common factual errors
