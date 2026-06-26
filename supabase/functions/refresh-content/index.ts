@@ -329,7 +329,7 @@ HYPERLINK RULES (STRICT):
 
 FORMATTING RULES (long-form HTML fields):
 - Concise bullet lists with 3–5 crisp <li> items per section — no long paragraphs.
-- Important dates, deadlines, fees, cut-offs and key numbers MUST be bold AND underlined: <strong><u>15 Jan ${year}</u></strong>.
+- Important dates, deadlines, fees, cut-offs and key numbers MUST be bold AND underlined, but use exact calendar dates only if verified in the current content/context; otherwise use windows such as <strong><u>expected January ${year}</u></strong>.
 - Use <table> with <thead>/<tbody> for placements, cut-offs, important dates, fee structures, and comparisons.
 - Semantic <h2>/<h3> subheadings. No repetition, no fluff. Human-friendly tone.
 - Every long-form HTML field must include at least one official hyperlink when an official website or official exam/regulatory source is available.
