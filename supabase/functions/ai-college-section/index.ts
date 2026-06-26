@@ -9,7 +9,7 @@
 //  • Anchor-fact propagation so the same establishment year / ranking / fees are reused across every section
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -637,12 +637,12 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 - Today: ${todayIso}
 `.trim();
 
-    // COMPLETE-DATA MODE: every field must be filled with the latest realistic data.
+    // Safety-first mode: useful content is required, but exact unverified data is blocked.
     const factSafetyRules = `
-# COMPLETE-DATA MODE (STRICT — overrides any conservative instinct)
-- EVERY field in the output schema MUST be filled with substantive, useful, realistic ${currentYear} content. Empty strings, "N/A", "Not available", "TBD", "Not publicly confirmed", "Contact institute", placeholder names are STRICTLY FORBIDDEN.
-- For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI) you have abundant verified data from NIRF ${currentYear}, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports and ${admissionCycle} brochures — USE IT confidently.
-- When the EXACT current-year figure is not in your training data, give a TIGHT, well-reasoned realistic range based on the most recent 2-3 years (e.g. "INR 28-34 LPA average", "98%+ placement rate", "INR 24-26 Lakhs for 2-year programme"). Never write "varies", "depends", or skip the field.
+# SAFETY-FIRST DATA MODE (STRICT)
+- Fill fields with substantive, useful ${currentYear} content, but factual safety beats completeness. Never fabricate an exact cutoff, admission date, fee, rank, seat count, placement figure, recruiter list, faculty name or accreditation.
+- Use anchor facts above as the source of truth. If anchor facts are missing and the exact current-cycle figure is not confidently verified, use cautious wording: "official cutoff TBA", "expected 92-96 percentile band", "official date TBA", or "latest-public INR 24-26 lakh range".
+- For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI), use only facts you are confident about.
 - For arrays (recruiters, sectors, faculty, scholarships, FAQs, etc.) return AT LEAST the schema-required count of REAL named entries — never placeholder lists like "Recruiter 1, Recruiter 2".
 - Use the anchor facts above as the source of truth. If anchor facts contradict your guess, the anchor wins.`;
 
@@ -672,7 +672,7 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 
 ACCURACY RULES:
 - Established years for famous schools must be correct (XLRI=1949, IIM-A=1961, IIM-B=1973, IIM-C=1961, FMS=1954, JBIMS=1965, SPJIMR=1981, MDI=1973, IIFT=1963, NMIMS=1981, ISB=2001).
-- All fees, placements, cutoffs, recruiter lists must reflect the latest ${freshness} data window. The active admission cycle is ${admissionCycle}. Today is ${todayIso}. Never use 2020-2023 numbers.
+- All fees, placements, cutoffs, recruiter lists must reflect the latest ${freshness} data window. The active admission cycle is ${admissionCycle}. Today is ${todayIso}. Never use 2020-${currentYear - 2} numbers as current data.
 - Accreditations and rankings (NIRF rank, AACSB, AMBA, EQUIS, NAAC grade, NBA) must be 100% accurate — if the school does NOT actually hold an accreditation, do NOT claim it. When in doubt, omit rather than fabricate.
 
 # ABSOLUTE OUTPUT BANS — DO NOT VIOLATE
@@ -686,7 +686,7 @@ ACCURACY RULES:
 - HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/<blockquote>/markdown fences.
 - ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes, NO width/height/color attributes. Plain semantic HTML only — the platform applies uniform typography.
 - CRITICAL OUTPUT HYGIENE: NEVER write the literal characters "\\n", "\n", "/n", "\\t" or any visible escape sequences inside the HTML or any field — use real <p>, <br>, list tags or actual line breaks.
-- DEEP-RESEARCH FIRST: Before writing, mentally verify rankings, fees, placements, recruiters, accreditations and dates against the most authoritative public sources. Never guess shallow filler. If you are not confident about a specific number, give a tight realistic range based on the most recent 2-3 years rather than a single fabricated figure.
+- DEEP-RESEARCH FIRST: Before writing, mentally verify rankings, fees, placements, recruiters, accreditations and dates against the most authoritative public sources. Never guess shallow filler. If you are not confident about a specific number, give an expected/TBA/latest-public range rather than a single fabricated figure.
 - Headings & opening sentences must be DECLARATIVE — never start with a question.
 - Avoid AI clichés: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
 - Reading level ~grade 8. Use real numbers, real names, contractions.${factSafetyRules}`;
@@ -824,12 +824,29 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
     // ── Clean ALL short fields: strip HTML, [src:...] citations, "Last updated" stamps,
     //    and coerce percentage strings to numeric. The `content` field keeps its HTML.
     payload = cleanPayload(payload);
+    const structuredFactBlocks = getBlockingFactIssues(runFactualRiskCheck(payload));
+    if (structuredFactBlocks.length) {
+      return new Response(JSON.stringify({
+        error: "Fact-check blocked college section content",
+        detail: structuredFactBlocks.map((i) => i.message).join(" | "),
+        issues: structuredFactBlocks,
+      }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // ── Sanitize HTML in `content` field (kept rich) ──
     if (typeof payload.content === "string") {
       payload.content = sanitizeHtml(payload.content);
       // Final quality gate — buzzword scrub + auto-inject MBA Compass section if missing
-      payload.content = runFinalQualityCheck(payload.content, { requireMbaCompass: true, minInternalLinks: 3 }).html;
+      const contentQC = runFinalQualityCheck(payload.content, { requireMbaCompass: true, minInternalLinks: 3 });
+      const htmlFactBlocks = getBlockingFactIssues(contentQC.issues);
+      if (htmlFactBlocks.length) {
+        return new Response(JSON.stringify({
+          error: "Fact-check blocked college section HTML",
+          detail: htmlFactBlocks.map((i) => i.message).join(" | "),
+          issues: htmlFactBlocks,
+        }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      payload.content = contentQC.html;
       // Ensure "Last updated" stamp is present
       if (!/Last updated:/i.test(payload.content)) {
         payload.content += `\n<p><em>Last updated: ${todayIso}</em></p>`;
