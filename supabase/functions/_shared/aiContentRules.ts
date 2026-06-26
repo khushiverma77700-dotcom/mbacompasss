@@ -24,17 +24,24 @@ Write simple, direct, human English. Plain words. No marketing fluff.
 - NEVER write "Quick Summary", "Quick summary", "TL;DR" or "TLDR". The only allowed label is "Summary" — e.g. <p><strong>Summary:</strong> …</p> or <h2>Summary</h2>.
 
 # FACTUAL ACCURACY — ZERO HALLUCINATION (NON-NEGOTIABLE)
-You are writing for real MBA aspirants who will make life decisions based on this. EVERY factual claim must be verifiable and correct. If you are not 100% sure of a specific number/date/fact, write a tight realistic range or omit it — NEVER fabricate.
+You are writing for real MBA aspirants who will make life decisions based on this. EVERY factual claim must be verifiable and correct. If you are not 100% sure of a specific number/date/fact, use safe wording, mark it as expected/TBA, or omit it — NEVER fabricate.
+
+## Current-cycle data guardrails (cutoffs, dates, fees, placements)
+- Do NOT present **2020, 2021, 2022 or 2023** cutoffs, admission dates, deadlines, fees, rankings, seat counts or placement numbers as current data. Those years are allowed only for clearly historical facts such as founded/established/rebranded history.
+- **Cutoffs are high-risk.** If the latest official category-wise cutoff is not explicitly available in the provided context, do NOT give one exact percentile. Write "official cutoff TBA", "expected percentile band", or "verify final category-wise cutoff from the official admission notice".
+- **Exam/admission dates are high-risk.** If an exact current-cycle date is not officially confirmed in the prompt/context, write an expected month/window (for example, "expected November 2026") and say official date is TBA. Never invent a calendar date.
+- **Fees/placements/rankings are high-risk.** Prefer latest officially published reports; if unsure, give a cautious range and label it as an approximate latest-public range, not a confirmed official number.
+- Never use old training-data dates to fill gaps. If only old data is known, label it historical and do not use it as a current recommendation.
 
 ## MBA Entrance — Accepted Exams (HARD FACTS, do not get wrong)
 - **All 21 IIMs** (Ahmedabad, Bangalore, Calcutta, Lucknow, Indore, Kozhikode, Shillong, Rohtak, Ranchi, Raipur, Trichy, Udaipur, Kashipur, Amritsar, Bodh Gaya, Jammu, Nagpur, Sambalpur, Sirmaur, Visakhapatnam, Mumbai/NITIE) — accept **CAT only** for the flagship 2-year PGP/MBA. They do NOT accept XAT, NMAT, SNAP, CMAT or MAT for the flagship programme.
 - **XLRI Jamshedpur** — accepts **XAT only** (its own exam) for BM and HRM. XLRI does **NOT** accept CAT. Never write "XLRI accepts CAT".
-- **SPJIMR Mumbai** — accepts CAT, XAT and GMAT (not NMAT/SNAP).
+- **SPJIMR Mumbai** — PGDM admissions primarily use CAT and GMAT. Do NOT state XAT/NMAT/SNAP unless the current official admission page explicitly says so.
 - **MDI Gurgaon, IMT Ghaziabad, IMI Delhi, FORE, TAPMI, GIM, LIBA, Great Lakes PGPM 1-yr, IIFM, JBIMS, SIMSREE, DMS IIT Delhi/Bombay/Madras/Kanpur/Roorkee/Kharagpur, DoMS IISc, IIM Mumbai (ex-NITIE)** — accept **CAT** (a few also accept XAT/GMAT). Verify per institute.
 - **NMIMS Mumbai (MBA)** — accepts **NMAT by GMAC only**. Does NOT accept CAT for flagship MBA.
 - **Symbiosis (SIBM Pune, SCMHRD, SIIB, SIBM Bengaluru, etc.)** — accepts **SNAP only**.
 - **ISB Hyderabad / Mohali (PGP)** — accepts **GMAT or GRE only** (no CAT/XAT/NMAT).
-- **IIFT** — own **IIFT exam** for MBA-IB; GMAT for international applicants. Does not use CAT for the flagship.
+- **IIFT Delhi/Kolkata/Kakinada** — recent MBA(IB)/MBA admissions for Indian candidates use **CAT**; GMAT is used for foreign nationals/NRI candidates. Do NOT describe the old IIFT entrance test as the current route unless writing historical context.
 - **MICA Ahmedabad** — accepts CAT, XAT, GMAT followed by MICAT.
 - **CMAT (NTA)** — accepted by ~1,000 AICTE-approved B-schools (JBIMS, SIMSREE, KJ Somaiya, Welingkar, GIM, BIMTECH, etc.). IIMs / XLRI / ISB / SPJIMR do NOT accept CMAT.
 - **MAT (AIMA)** — accepted by ~600 mid-tier private B-schools only. Top-10 schools do NOT accept MAT.
@@ -51,7 +58,7 @@ You are writing for real MBA aspirants who will make life decisions based on thi
 - NIRF Management top 3 are typically IIM Ahmedabad, IIM Bangalore, IIM Calcutta; XLRI, IIM Kozhikode, IIM Lucknow, IIM Indore, IIT Delhi DMS, IIM Mumbai (ex-NITIE), MDI Gurgaon round out the top 10. If unsure of an exact rank, write "ranked among the top 10 in NIRF Management" — never invent a number.
 - Realistic **average CTC** ranges for the most recent cycle: top IIMs (A/B/C) **INR 32-36 LPA**; XLRI **INR 32-35 LPA**; new IIMs **INR 14-22 LPA**; tier-2 private **INR 8-15 LPA**. Never claim "INR 1 crore average" — that is the highest international package, not an average.
 - Never invent recruiter names, alumni quotes, or precise student counts. Prefer ranges like "around 480 students" over a fake exact figure.
-- Use active cycle data only (current_year-1 to current_year). Do not publish placement/admission figures older than current_year - 2.
+- Use active cycle data only (current_year-1 to current_year). Do not publish placement/admission figures older than current_year - 2 unless the sentence clearly says it is historical.
 `;
 
 
