@@ -159,6 +159,42 @@ export interface QualityCheckResult {
 
 const stripTags = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
+const BLOCKING_FACT_CODES = new Set([
+  "implausible_average_ctc",
+  "stale_current_data_year",
+  "exact_unverified_cutoff",
+  "unverified_exact_date",
+  "xlri_accepts_cat",
+  "iim_accepts_xat_or_nmat",
+  "isb_accepts_cat",
+  "nmims_accepts_cat",
+  "symbiosis_accepts_cat",
+  "cat_conducting_body",
+  "nmat_conducting_body",
+  "xat_conducting_body",
+  "snap_conducting_body",
+]);
+
+export function getBlockingFactIssues(issues: QualityIssue[]): QualityIssue[] {
+  return issues.filter((issue) => issue.severity === "error" && BLOCKING_FACT_CODES.has(issue.code));
+}
+
+const splitIntoSentences = (text: string) =>
+  String(text || "")
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+|(?=<h[23]\b)|\s+\|\s+/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+const CURRENT_DATA_TERM_RE = /\b(cut\s*-?\s*offs?|cutoffs?|deadlines?|registration|application\s+(?:date|window|deadline)?|admission\s+(?:date|deadline|cycle|window|timeline|process)?|exam\s+date|result\s+date|interview\s+date|gd\s*-?\s*pi|wat|counselling|placements?|average\s+(?:ctc|package|salary)|median\s+(?:ctc|package|salary)|highest\s+(?:ctc|package|salary)|fees?|rankings?|nirf|seats?)\b/i;
+const STALE_YEAR_RE = /\b(2020|2021|2022|2023)\b/i;
+const CLEAR_HISTORY_RE = /\b(founded|established|started|launched|created|set\s+up|rebranded|formerly|history|historic|historical|legacy|inception|became|converted|renamed|since\s+\d{4})\b/i;
+const EXACT_CUTOFF_RE = /(?:\bcut\s*-?\s*offs?\b[^.!?]{0,140}\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b|\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b[^.!?]{0,140}\bcut\s*-?\s*offs?\b)/i;
+const SAFE_CUTOFF_WORDING_RE = /\b(expected|approx(?:\.|imate|imately)?|range|band|previous|historical|official|announced|category\s*-?\s*wise|verify|tba|tentative|last\s+published|latest\s+published|\[src:)\b/i;
+const FULL_DATE_RE = /\b(?:\d{1,2}\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},?\s+\d{4})\b/i;
+const DATE_TERM_RE = /\b(exam|registration|application|deadline|admit\s+card|result|interview|gd\s*-?\s*pi|wat|counselling|counseling|admission)\b/i;
+const SAFE_DATE_WORDING_RE = /\b(expected|tentative|official|announced|notification|confirmed|scheduled|window|tba|\[src:)\b/i;
+
 // ===================================================================
 // MBA FACT CHECKER — auto-detects and rewrites common factual errors
 // that AI models keep making about the Indian MBA ecosystem.
@@ -295,6 +331,42 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
         severity: stillBad ? "error" : "warn",
       });
     }
+  }
+
+  const checkedText = stripTags(out);
+  const sentences = splitIntoSentences(checkedText);
+
+  const staleSentence = sentences.find((sentence) =>
+    STALE_YEAR_RE.test(sentence) && CURRENT_DATA_TERM_RE.test(sentence) && !CLEAR_HISTORY_RE.test(sentence)
+  );
+  if (staleSentence) {
+    issues.push({
+      code: "stale_current_data_year",
+      message: `Possible old current-cycle data found: "${staleSentence.slice(0, 180)}". Do not publish 2020-2023 cutoffs, dates, fees, rankings or placements as current data.`,
+      severity: "error",
+    });
+  }
+
+  const riskyCutoffSentence = sentences.find((sentence) =>
+    EXACT_CUTOFF_RE.test(sentence) && !SAFE_CUTOFF_WORDING_RE.test(sentence)
+  );
+  if (riskyCutoffSentence) {
+    issues.push({
+      code: "exact_unverified_cutoff",
+      message: `Exact cutoff percentile needs official proof or safe wording: "${riskyCutoffSentence.slice(0, 180)}". Use expected band/TBA/verify wording instead of a naked exact cutoff.`,
+      severity: "error",
+    });
+  }
+
+  const riskyDateSentence = sentences.find((sentence) =>
+    FULL_DATE_RE.test(sentence) && DATE_TERM_RE.test(sentence) && !SAFE_DATE_WORDING_RE.test(sentence)
+  );
+  if (riskyDateSentence) {
+    issues.push({
+      code: "unverified_exact_date",
+      message: `Exact exam/admission date needs official confirmation or tentative wording: "${riskyDateSentence.slice(0, 180)}". Use expected month/window or official TBA if not verified.`,
+      severity: "error",
+    });
   }
   return { html: out, issues, changed: out !== before };
 }
