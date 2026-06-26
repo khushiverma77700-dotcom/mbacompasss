@@ -1387,6 +1387,10 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     {
       const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
       const contentQC = runFinalQualityCheck(article.content, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+      const blockingFactIssues = getBlockingFactIssues([...introQC.issues, ...contentQC.issues]);
+      if (blockingFactIssues.length) {
+        throw new Error(`Fact-check blocked publishing: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+      }
       article.intro = introQC.html;
       article.content = contentQC.html;
       if (contentQC.issues.length) {
