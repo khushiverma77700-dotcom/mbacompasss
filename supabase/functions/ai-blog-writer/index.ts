@@ -533,7 +533,7 @@ HARD requirements:
 - At least one concrete data point (number / INR figure / %ile / rank / date) per ~300-500 words. Bold important numbers with <strong>.
 - 2-4 contextual internal relative links inside this section (anchor = entity name or descriptive phrase; never "click here").
 - If this section answers a "what/why/how" style question, the FIRST sentence after the H2 must be a direct 1-2 sentence answer (featured-snippet style).
-- Use current ${targets.currentYear}-${targets.currentYear + 1} Indian MBA data with named colleges/recruiters/exams and [src:Source Year] markers (no bare URLs, no external <a>).
+- Use current ${targets.currentYear}-${targets.currentYear + 1} Indian MBA data with named colleges/recruiters/exams. Add source names only when genuinely known; no bare URLs and no external <a>.
 - Name relevant entities (IIMs, XLRI, FMS, MDI, SPJIMR, NMIMS, CAT, XAT, NMAT, SNAP, CMAT, AICTE, UGC, NIRF) where it fits.
 - Demonstrate EEAT with at least one phrase like "Based on placement reports…", "According to official admission data…", "Industry experts suggest…", "As per NIRF ${targets.currentYear}…".
 - Do NOT repeat content from other planned sections.
@@ -1085,18 +1085,18 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 - DO NOT output any external <a href="http..."> or <a href="https..."> links anywhere in the article. ZERO outbound links.
 - DO NOT output bare URLs (no "https://...", no "www....") inside paragraphs, tables, lists, citations or FAQs.
 - The ONLY allowed <a href="..."> values are RELATIVE internal URLs that start with "/" on mbacompass.in (e.g. /college/iim-ahmedabad, /exams/cat, /blog/...).
-- Authoritative sources must be cited as PLAIN TEXT only (e.g. "NIRF ${currentYear} Management Rankings", "IIM Ahmedabad official placement report ${currentYear - 1}-${String(currentYear).slice(-2)}") and/or as [src:Source Year] markers — never as clickable links, never with URLs.
+- Authoritative sources must be mentioned as PLAIN TEXT only when genuinely known (e.g. "NIRF ${currentYear} Management Rankings", "IIM Ahmedabad official placement report ${currentYear - 1}-${String(currentYear).slice(-2)}") — never as clickable links, never with URLs, and never as fake [src:...] markers.
 - Any external link found in your output will be stripped and the article rejected. Internal-only linking, always.
 
 
 # HARD RULES — WORD COUNT & SECTION DEPTH (NON-NEGOTIABLE)
 1. **WORD COUNT: ${wmin}-${wmax} words minimum** in (intro + content) plain text. Articles below ${wmin} words will be REJECTED. Count as you write; expand body sections rather than truncating. Never stop early. Long-form 5,000-10,000+ word articles are fully supported — write the full requested length.
 2. **Section depth — EVERY <h2> section MUST be ${minWordsPerSection}-700 words** of detailed, substantive content. ONE-LINER ANSWERS ARE STRICTLY FORBIDDEN. NO section may be just 1-3 short sentences, a single short paragraph, or a "summary-style" reply. Every <h2> section must include ALL of:
-   - A direct-answer opening paragraph (40-70 words, max 3 sentences) that names the topic entity and gives the exact numeric/factual answer
+   - A direct-answer opening paragraph (40-70 words, max 3 sentences) that names the topic entity and gives the safest confirmed answer; use ranges/windows/TBA for unverified high-risk data
    - 2-4 short supporting paragraphs (EACH 2-3 sentences, MAX 60 words). If a thought would run longer, SPLIT it into two paragraphs OR convert it to a list/table. Walls of text are REJECTED.
    - At least one bullet or numbered list (5+ items, each item a full crisp sentence — NOT a 2-word fragment)
-   - At least one concrete example, named entity, recruiter, college, package figure, exam date, or data point specific to "${targetKw}"
-   - Either a comparison <table> with 5+ rows of real ${currentYear} numbers OR a numbered step-by-step checklist
+   - At least one concrete example, named entity, recruiter, college, package range, exam window, or data point specific to "${targetKw}"
+   - Either a comparison <table> with 5+ rows of safe ${currentYear} figures/ranges OR a numbered step-by-step checklist
    - 1-2 contextual internal links anchored to topic-relevant entities
    - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
    - A short closing takeaway sentence; you may bold ONLY a 2-4 word fragment of it with <strong>. NEVER wrap the whole sentence in <strong>.
@@ -1108,13 +1108,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 7. **STRICT PARAGRAPH LIMIT — MOBILE-FIRST**: Every <p> MUST be 2-3 sentences MAX and UNDER 60 words. NO exceptions. If a paragraph would run longer:
    - Split it into two short paragraphs, OR
    - Convert it into a <ul>, <ol>, or <table>.
-   Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected. Whenever you'd list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → use a list or table instead of prose. **At least 5 HTML <table> blocks** (each 5+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article. The finished article must be fully scannable on a phone — H2 → H3 → bold lead → list/table, with prose only as connective tissue.
+   Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected. Whenever you'd list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → use a list or table instead of prose. **At least 5 HTML <table> blocks** (each 5+ rows of safe ${currentYear} data/ranges specific to this topic — fees, packages, cutoff bands, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article. The finished article must be fully scannable on a phone — H2 → H3 → bold lead → list/table, with prose only as connective tissue.
 8. **STRUCTURE — REQUIRED ORDER**:
    a. Summary <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
    c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
    d. <h2>Takeaways</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:", or the heading "Key Takeaways".
-   e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer must give exact figures, named entities, dates and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
+    e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer should give safe figures/ranges/windows, named entities and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
    - Primary keyword in: title, H1, slug, meta title, meta description, excerpt, first 100 words, and last paragraph. Vary H2 headings with synonyms — do not stuff the exact keyword into multiple headings.
@@ -1122,11 +1122,11 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - **LSI/NLP keywords**: 20-30 semantically related terms derived from THIS topic.
    - **External authority mentions** (plain text, no fabricated URLs): cite the AUTHORITATIVE sources for THIS specific topic (e.g. for IIM-A placement → IIM Ahmedabad official PR ${currentYear - 1}-${String(currentYear).slice(-2)}; for CAT → IIM-conducting-institute CAT ${currentYear} notification; for NIRF data → NIRF ${currentYear}).
    - **Featured-snippet bait**: ≥2 direct-answer <p> right under an <h2>, ≥1 numbered <ol> step-by-step list, ≥2 comparison <table>.
-   - **E-E-A-T signals**: cite specific [src:Source Year] markers; name REAL recruiters & B-schools relevant to THIS topic only.
+    - **E-E-A-T signals**: mention specific authoritative source names when genuinely known; name REAL recruiters & B-schools relevant to THIS topic only.
     - <strong> on 12-20 SHORT high-value fragments only (data points, numbers, named entities, 2-4 word lead phrases). Each <strong> ≤ 12 words. NEVER bold full sentences, paragraphs, list items, table cells, or headings. <em> sparingly.
     - ABSOLUTELY NO IMAGES: do NOT emit any <img>, <picture>, <figure>, <svg>, image URLs, or "Image:" / "Infographic:" placeholders. The blog is strictly text-only.
 10. **FORMATTING POLISH**: Bold ONLY a 2-4 word lead of important paragraphs (not the whole paragraph). <h2> 4-9 words, benefit-driven. No ALL-CAPS.
-11. Real, current Indian MBA ecosystem data: CAT ${currentYear} dates, NIRF ${currentYear} rankings, ${currentYear - 1}-${String(currentYear).slice(-2)} placement averages. Use only figures relevant to THIS topic.
+11. Real, current Indian MBA ecosystem data: CAT ${currentYear} windows, NIRF ${currentYear} bands/rankings only if known, ${currentYear - 1}-${String(currentYear).slice(-2)} placement ranges. Use only figures relevant to THIS topic.
 12. NEVER fabricate implausible numbers. Realistic ${currentYear - 1}-${currentYear} ranges only.
 13. NO <h1> — title rendered separately.
 
