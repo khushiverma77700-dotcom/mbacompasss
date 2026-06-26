@@ -250,7 +250,7 @@ Voice rules (MANDATORY):
 
 Content rules:
 - Stay strictly inside MBA / management education and MBA entrance exams.
-- Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context.
+- Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context. Never recycle 2020-2023 cutoffs, dates, fees, rankings or placement numbers as current data.
 - Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams, realistic INR figures and source markers like [src:NIRF ${currentYear}].
 - No external links and no bare URLs. Only relative internal links starting with / are allowed.
 - Return clean HTML only using h2,h3,h4,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
@@ -299,7 +299,7 @@ Topic focus rules (MANDATORY — zero tolerance for drift):
 
 Data-driven content rules (MANDATORY — tables FIRST, prose SECOND):
 - Every H2 section must include at least one concrete data point: NIRF rank, cutoff percentile, fee figure (INR), average/median package, placement %, recruiter count, batch size, seat count, exam date, attempt count, or year-on-year trend.
-- Use REAL, current ${currentYear}-${currentYear + 1} Indian MBA data. Never write "data not available", "varies", "depends", "contact for details", "N/A", "—". If an exact figure isn't known, give a tight realistic range (e.g. "INR 24-28 LPA", "92-96 percentile", "INR 23-25 lakh fees") and tag it with [src:Source Year].
+- Use REAL, current ${currentYear}-${currentYear + 1} Indian MBA data. For high-risk items (cutoffs, exact exam/admission dates, fees, rankings, seats and placements), never invent a precise number/date. If the current official figure is not confirmed in the prompt/context, write an expected band/window and clearly label it expected/TBA/verify with official notice (e.g. "expected 92-96 percentile band", "official date TBA", "latest-public INR 23-25 lakh fee range").
 - TABLE-FIRST RULE (NON-NEGOTIABLE): if information can be expressed as rows × columns, it MUST be a <table>. Prefer tables over paragraphs for ALL of the following — even when only 2 entities are being compared:
   • Fees breakdown (Year/Component | Amount INR | Notes)
   • Placement stats (Year | Avg CTC | Median CTC | Highest CTC | Placement %)
