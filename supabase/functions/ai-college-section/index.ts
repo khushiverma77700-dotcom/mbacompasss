@@ -49,7 +49,7 @@ const SECTION_TOOLS: Record<string, any> = {
     name: "courses_fees_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML intro (260-400 words). Mention the college name 5-7 times. Cover the FULL programme portfolio (flagship 2-yr, 1-yr, executive, part-time, online, doctoral-management, dual-degree, exchange), fee philosophy, what's included in fees (tuition, hostel, mess, books, alumni), instalment options, scholarship anchors, and the ROI angle for the 2025-2026 cycle." },
+      content: { type: "string", description: "HTML intro (260-400 words). Mention the college name 5-7 times. Cover the verified MBA/PGP/PGDM/MiM programme portfolio, fee philosophy, what's included in fees, instalment options, scholarship anchors, and ROI angle. If a programme/fee is not confidently verified, say official details are TBA instead of inventing." },
       courses: {
         type: "array",
         minItems: 6,
@@ -83,7 +83,7 @@ const SECTION_TOOLS: Record<string, any> = {
             fees: { type: "string", description: "Latest total programme fee in INR Lakhs (tuition + hostel where applicable). Use official/anchor value when known; otherwise use a cautious latest-public range." },
             fees_total_lakhs: { type: "number", description: "Numeric total fees in lakhs (midpoint if range), e.g. 28.5." },
             fees_breakdown: { type: "string", description: "Short fees breakdown — what's included (tuition, hostel, mess, alumni, books, deposits)." },
-            fees_year: { type: "string", description: "Fee cycle year, e.g. '2025-2026'." },
+            fees_year: { type: "string", description: "Fee cycle year only if known, e.g. '2025-2026'; otherwise 'latest-public' or 'official TBA'." },
             specializations: { type: "array", minItems: 4, items: { type: "string" }, description: "4-8 real specialisations / electives / majors offered within this programme (Finance, Marketing, Operations, Strategy, Business Analytics, HR, Consulting, Entrepreneurship, etc.)." },
             highlights: { type: "array", items: { type: "string" }, description: "3-6 selling points specific to this programme (international immersion, exchange partners, capstone, dual-degree, signature electives, scholarship pool)." },
             intake_seats: { type: "number", description: "Approximate annual intake / seats." },
@@ -105,7 +105,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "content", "courses"],
     instructions:
-      "DEEP RESEARCH MODE — list EVERY MBA / Masters-in-Management programme the college actually runs. Aim for 6-12 entries. Always include the flagship 2-year programme PLUS every variant the college offers: 1-Year MBA / PGPX / EPGP / PGPpro, Executive MBA, Part-time / Weekend MBA, Blended / Online MBA, sectoral MBAs (PGP-ABM, PGP-FABM, PGP-HRM, PGP-BA, MBA in Digital Business, MBA in Healthcare, MBA in Sustainability, etc.), dual-degree / exchange programmes (LBS, ESSEC, Yale), and Fellow / Doctoral Programme in Management (FPM/PhD). For top schools (IIM-A, IIM-B, IIM-C, IIM-L, IIM-K, IIM-I, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, ISB, Great Lakes) verify the exact official portfolio from your training data — DO NOT collapse everything into a single 'MBA' entry. Each programme MUST include: real official name, short name, programme_type, real duration + duration_months, mode, full eligibility (graduation %, accepted exams as booleans, CAT/XAT/GMAT score targets, work-ex band, age band), latest 2025-2026 total fees (string + numeric fees_total_lakhs + fees_breakdown + fees_year), 4-8 real specialisations, 3-6 highlights, intake_seats, AND a verifiable source_url on the college's own domain plus a 12-30 word evidence_snippet quoting the source page. NEVER fabricate URLs — always use the actual official admissions / programmes / brochure URL.",
+      "SAFETY-FIRST RESEARCH MODE — list only MBA / Masters-in-Management programmes the college actually runs and you are confident about. Include the flagship 2-year programme and verified variants such as 1-Year MBA / PGPX / EPGP, Executive MBA, Part-time / Weekend MBA, sectoral PGP/MBA variants, and Fellow/Doctoral Programme in Management only when known. Do not invent programme names, source URLs, fees, intakes or eligibility. Use 'official TBA' / latest-public ranges where exact current-cycle details are not verified; leave source_url/evidence_snippet empty or cautious rather than fabricating proof.",
   },
   admission: {
     name: "admission_payload",
@@ -114,7 +114,7 @@ const SECTION_TOOLS: Record<string, any> = {
       content: {
         type: "string",
         description:
-          "HTML overview (350-500 words). Declarative, not question-based. Mention the college name 4-6 times. Cover the latest 2025-2026 admission cycle in depth (eligibility, exams, weightage, dates, application fee, documents).",
+          "HTML overview (350-500 words). Declarative, not question-based. Mention the college name 4-6 times. Cover the current admission cycle with eligibility, accepted exams, known weightage, application fee/documents and expected timeline windows. Use official TBA for unconfirmed exact dates.",
       },
       steps: {
         type: "array",
@@ -136,13 +136,13 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "content", "steps", "eligibility"],
-    instructions: "7-9 sequential admission steps + 6-8 eligibility criteria. Real exams, real cutoff bands, real shortlisting weightage.",
+    instructions: "7-9 sequential admission steps + 6-8 eligibility criteria. Real accepted exams only. Use official shortlisting weightage/cutoff bands when known; otherwise use TBA/expected band wording.",
   },
   placements: {
     name: "placements_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML 250-400 words narrative on the latest 2024-2025 placement cycle. Mention the college name 4-6 times. Cover roles, recruiter mix, sectoral trend vs prior years, international offers, summer-internship stipends." },
+      content: { type: "string", description: "HTML 250-400 words narrative on the latest publicly available placement cycle. Mention the college name 4-6 times. Cover roles, recruiter mix, sectoral trend vs prior years, international offers and summer-internship stipends only where verified; otherwise use range/TBA wording." },
       avg_package: { type: "string", description: "e.g. INR 25 LPA" },
       highest_package: { type: "string" },
       median_package: { type: "string" },
@@ -171,7 +171,7 @@ const SECTION_TOOLS: Record<string, any> = {
       "placement_rate", "sectors", "recruiters",
     ],
     instructions:
-      "Use latest 2024-2025 placement report figures. 6-8 sectors with realistic % shares (sum ~100). 15-25 real recruiters.",
+      "Use the latest publicly available placement report figures only. For unverified numbers, return cautious latest-public ranges or 'official TBA'. Include only real recruiters you are confident about; do not invent sector percentages.",
   },
   cutoff: {
     name: "cutoff_payload",
@@ -180,7 +180,7 @@ const SECTION_TOOLS: Record<string, any> = {
       content: {
         type: "string",
         description:
-          "HTML 280-450 words. Mention the college name 4-6 times. Explain (a) which exam scores the college accepts and the official shortlisting weightage (CAT/XAT/GMAT score, 10th, 12th, graduation, work-ex, gender/academic diversity), (b) overall AND sectional cutoff trends across the last 3 admission cycles, (c) why cutoffs moved up or down (applicants, seats, brand pull, new programmes), (d) category-wise relaxation logic, and (e) a clear statement of the EXPECTED 2025-2026 cutoff band. Include at least one short <table> if helpful.",
+            "HTML 280-450 words. Mention the college name 4-6 times. Explain accepted exams, known shortlisting weightage, overall/sectional cutoff trend bands where publicly available, category-wise relaxation logic, and expected current-cycle cutoff bands. Never give naked exact cutoff percentiles unless official/current; use TBA or expected range wording.",
       },
       cutoffs: {
         type: "array",
@@ -217,12 +217,12 @@ const SECTION_TOOLS: Record<string, any> = {
       },
       trend_summary: {
         type: "string",
-        description: "1-2 sentence plain-text takeaway of how cutoffs moved YoY and what aspirants should target for the 2025-2026 cycle. Mention the college name once.",
+        description: "1-2 sentence plain-text takeaway of how cutoffs moved and what aspirants should target for the current cycle. Mention the college name once. Use expected band/TBA wording if exact cutoffs are not official.",
       },
     },
     required: ["title", "content", "cutoffs", "shortlisting_weightage", "trend_summary"],
     instructions:
-      "DEEP RESEARCH MODE — never return an empty cutoffs array. Cover EVERY accepted entrance exam × EVERY reservation category × the last 3 admission cycles (2023, 2024, 2025). For top schools verify the exact official cutoffs (IIM-A overall ~99-99.5%ile General, IIM-B ~99+, IIM-C ~99+, IIM-L ~97+, IIM-K ~96+, IIM-I ~95+, XLRI BM ~96+/HRM ~93+ on XAT, FMS ~98+, SPJIMR ~85+ profile-led, MDI ~95+, IIFT ~98+ on IIFT exam, NMIMS ~96+ on NMAT, ISB GMAT ~700-730 median). Always provide sectional cutoffs for CAT/XAT-accepting schools (VARC, DILR, QA). Always populate the shortlisting_weightage table with the OFFICIAL admission policy weightage. If precise data is unavailable, return an 'Indicative band' rather than skipping the row.",
+      "SAFETY-FIRST CUTOFF MODE — cover accepted exams and reservation categories only where the exam-college mapping is correct. Do not force every category/year if official data is unavailable. Never invent exact percentiles or sectional cutoffs; use 'official TBA', 'expected band', or latest-public historical bands clearly labelled. Populate shortlisting_weightage only with official/known policy fields; otherwise write 'official policy TBA'.",
   },
   rankings: {
     name: "rankings_payload",
@@ -249,7 +249,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "rankings", "accreditations"],
     instructions:
-      "5-8 ranking bodies (NIRF, Outlook, Business Today, The Week, QS, FT, Bloomberg, ET) with latest 2025 ranks. Real accreditations only (AACSB/AMBA/EQUIS/NBA/NAAC).",
+      "Use only latest publicly available rankings from bodies the college actually appears in. If exact current rank is unknown, use a ranking band or omit that body. Real accreditations only (AACSB/AMBA/EQUIS/NBA/NAAC); never claim an accreditation when unsure.",
   },
   reviews: {
     name: "reviews_payload",
@@ -283,7 +283,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "overall_rating", "aspects", "reviews"],
     instructions:
-      "6 rating aspects (Academics, Faculty, Infrastructure, Placements, Campus Life, Value-for-Money). 5-7 realistic anonymised student reviews from 2023-2025 batches; positives/negatives 35-60 words each, mention the college name.",
+      "6 rating aspects (Academics, Faculty, Infrastructure, Placements, Campus Life, Value-for-Money). Return anonymised review themes, not fake testimonials or quotes. Use names like 'Anonymous student' and cautious year labels such as 'recent batch' if exact batch is unknown.",
   },
   scholarships: {
     name: "scholarships_payload",
@@ -305,7 +305,7 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "scholarships"],
-    instructions: "5-8 realistic scholarships (merit, need-based, diversity, corporate-sponsored, alumni-funded). Description 35-60 words each, mention the college name.",
+    instructions: "List only verified scholarship categories where known. If exact award names/amounts are not confirmed, use broad categories such as merit-based or need-based aid with 'official details TBA'. Description 35-60 words each, mention the college name.",
   },
   faculty: {
     name: "faculty_payload",
@@ -351,7 +351,7 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "content", "campus_size", "total_students", "hostel_rooms", "library", "facilities"],
-    instructions: "12-18 real campus facilities. Realistic numbers based on the actual college.",
+    instructions: "List real campus facilities you are confident about. Use ranges or 'not publicly confirmed' for campus size, student count, hostel rooms and library numbers instead of inventing exact figures.",
   },
   qa: {
     name: "qa_payload",
