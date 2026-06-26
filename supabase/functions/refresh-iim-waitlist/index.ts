@@ -128,9 +128,9 @@ async function callAIForSection(section: Exclude<Section, "all">, currentRows: a
 NON-NEGOTIABLE DATA RULES:
 - Use only verified ${year} / ${year - 1}-${String(year).slice(-2)} data — official RTI replies, IIM admission portals, NIRF ${year}, college press releases, IIMCAT.ac.in, mbauniverse.com, careers360.com, pagalguy.com, insideiim.com.
 - For result dates: only mark a row as "declared" if the official merit list is genuinely live as of ${todayIso}. Otherwise use "coming_soon" (within 7 days) or "expected" (later).
-- For waitlist counts: prefer RTI-sourced numbers. Round to whole integers. Mark trend as rising / falling / stable based on the last 3 years.
+- For waitlist counts: prefer RTI-sourced numbers. If the latest exact number is not verified, keep the existing value or use a cautious estimate field only where the schema explicitly says "est". Never invent current exact movement numbers.
 - For RTI insights: 2 short HTML bullet strings per college. Bold + underline key numbers like <strong><u>97 %ile</u></strong>, <strong><u>400 seats</u></strong>, dates etc.
-- NEVER use "N/A", "Not available", "TBD". Give realistic ranges if the exact number is unknown.
+- For exact result dates and current-year stats, factual safety beats completeness: use expected/TBA status or keep existing values when not verified.
 - Preserve the existing row count and college order. Only update fields that have new ${year} information.
 
 OUTPUT: Return a single tool call with a "rows" array containing every row from the current snapshot, with refreshed values where appropriate.`;

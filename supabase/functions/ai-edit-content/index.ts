@@ -8,6 +8,7 @@
 //     "Add 2025 NIRF rank", "Interlink IIM Ahmedabad wherever it appears", etc.)
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getBlockingFactIssues, runFactualRiskCheck } from "../_shared/aiContentRules.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
 
 const corsHeaders = {
@@ -164,10 +165,12 @@ FORMATTING RULES (apply to long-form HTML fields like description / content / in
 - Use <table> with <thead>/<tbody> for: placements, cut-offs, important dates, fee structures, comparisons. Always clean and minimal.
 - Use semantic <h2>/<h3> subheadings to break up sections.
 - Keep it concise, human-friendly, no repetition, no fluff.
-- Never use "N/A" or "Contact for details" — give realistic values or keep existing.
+- If an exact current number/date is not confirmed, keep the existing value or use expected/TBA/verify-official wording. Never invent exact values.
 
 DATA RULES:
-- For factual updates (fees, ranks, placements), use ${year}/${year-1}-${String(year).slice(-2)} verified data and append [src:...] citations.
+- For factual updates (fees, ranks, placements, cutoffs, dates), use only verified ${year}/${year-1}-${String(year).slice(-2)} data. Do NOT add fake [src:...] citations.
+- Do NOT present 2020-${year - 2} cutoffs, dates, fees, ranks, seats or placement numbers as current data. If old data is mentioned, clearly label it historical.
+- Cutoffs and exact exam/admission dates are high-risk: use expected bands/windows or official TBA unless current official confirmation is present in the prompt.
 - Scope: MBA / PGP / PGDM / MMS / MiM / Executive MBA only.`;
 
     const userPrompt = `Entity: ${entityName} (${body.entity_type}, id ${body.entity_id})
@@ -206,6 +209,10 @@ Apply the instruction and return all ${fields.length} fields. Unchanged fields m
 
     try {
       const proposedSnapshot = await callAI(systemPrompt, userPrompt, schema);
+      const blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(proposedSnapshot));
+      if (blockingFactIssues.length) {
+        throw new Error(`Fact-check blocked edit: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+      }
       const diff = computeDiff(currentSnapshot, proposedSnapshot);
       const changedCount = Object.values(diff).filter((d: any) => d.changed).length;
 

@@ -9,7 +9,7 @@
 // Public endpoint — verify_jwt = false (project default). Calls Lovable AI Gateway via
 // tool-calling for strict structured output.
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
@@ -174,6 +174,10 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
   const data = await res.json();
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
+  const structuredFactBlocks = getBlockingFactIssues(runFactualRiskCheck(args));
+  if (structuredFactBlocks.length) {
+    throw new Error(`Fact-check blocked course content: ${structuredFactBlocks.map((i) => i.message).join(" | ")}`);
+  }
   return { courses: args.courses || [] };
 }
 
@@ -188,10 +192,10 @@ async function generate(body: Extract<Body, { mode: "generate" }>) {
   const system = `You are a senior MBA-entrance coaching researcher and SEO writer for India. You write like a smart senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY field MUST be filled with concrete, useful, realistic ${f.currentYear} data. Empty strings, "N/A", "Not available", "TBD", "Contact for details", 0 (where 0 is meaningless like fees_inr=0 or total_seats=0) are STRICTLY FORBIDDEN.
-- For famous brands (TIME, IMS, Career Launcher, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye) you have abundant verified data — USE IT confidently.
-- When the EXACT current-year fee is not in training data, give a TIGHT realistic ${f.currentYear - 1}-${f.currentYear} range as fees_text (e.g. "INR 35,000 - 55,000") AND set fees_inr to the midpoint (e.g. 45000). Never set fees_inr to 0 or skip it.
-- highlights[] MUST have 5-8 punchy real bullets. curriculum[] MUST have 6-12 real module names. start_date MUST be a real-feeling string like "Next batch: <Month> ${f.currentYear}" or "Rolling weekly batches every Saturday".
+- Fill fields with concrete, useful, realistic ${f.currentYear} data, but factual safety beats completeness. Never fabricate exact fees, batch start dates, seat counts or success claims.
+- For famous brands (TIME, IMS, Career Launcher, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye), use only facts you are confident about.
+- When the EXACT current-year fee is not confidently known, give a TIGHT latest-public range as fees_text (e.g. "INR 35,000 - 55,000") AND set fees_inr to the midpoint (e.g. 45000). For exact start dates, use official/TBA/expected wording unless confirmed.
+- highlights[] MUST have 5-8 useful bullets. curriculum[] MUST have 6-12 real module names. start_date should be an official/expected batch window like "Expected next batch: <Month> ${f.currentYear}" or "Rolling weekly batches every Saturday".
 - batch_info MUST be a real specific line like "Weekend + Weekday batches, 4 classes/week, 3 hr each, max 40 students per batch".
 
 ${SCOPE_LOCK}
@@ -207,6 +211,7 @@ ${SCOPE_LOCK}
 - Do NOT add a "Last updated" line.
 
 ACCURACY RULES — for famous Indian MBA-prep brands (TIME, IMS, Career Launcher, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye, BYJU'S Exam Prep) the brand-specific flagship product names, mock-series names (AIMCAT / SimCAT / Mock CAT), founding era, and HQ city must be correct.
+- Do NOT present 2020-${f.currentYear - 2} fees, batch dates, seat counts or success numbers as current data. If old data is mentioned, label it historical.
 
 FRESHNESS: Today is ${f.todayIso}. Active batch cycle: ${f.cycle}. ${dateCtx}
 
@@ -374,7 +379,12 @@ For EACH course return:
     c.price_confidence = ["Verified", "Range", "Unknown"].includes(c.price_confidence) ? c.price_confidence : "Range";
     c.accuracy_notes = (c.accuracy_notes || "").toString().trim() || "Fee shown is the typical published range; verify the latest with the institute before enrolling.";
     if (typeof c.description_html === "string" && c.description_html.length > 200) {
-      c.description_html = runFinalQualityCheck(c.description_html, { requireMbaCompass: true, minInternalLinks: 2 }).html;
+      const descriptionQC = runFinalQualityCheck(c.description_html, { requireMbaCompass: true, minInternalLinks: 2 });
+      const htmlFactBlocks = getBlockingFactIssues(descriptionQC.issues);
+      if (htmlFactBlocks.length) {
+        throw new Error(`Fact-check blocked course HTML: ${htmlFactBlocks.map((i) => i.message).join(" | ")}`);
+      }
+      c.description_html = descriptionQC.html;
     }
     return c;
   });

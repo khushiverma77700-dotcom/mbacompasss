@@ -4,7 +4,7 @@
 // Public endpoint — keep verify_jwt = false (project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,9 +56,9 @@ Deno.serve(async (req) => {
     const systemPrompt = `You are a senior MBA-entrance coaching researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY field in the output schema MUST be filled with substantive, useful, realistic ${currentYear} content. Empty strings, "N/A", "Not available", "TBD", "Coming soon", "Contact for details" are STRICTLY FORBIDDEN.
-- For well-known brands (TIME=1992, IMS=1977, Career Launcher=1995, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye) you have abundant verified data — USE IT.
-- When the EXACT current-year figure is not in your training data, give a tight realistic ${currentYear - 1}-${currentYear} range (e.g. "INR 35,000 - 55,000" for full CAT classroom). Never write "varies", "depends", "contact for details", or skip the field.
+- Fill fields with substantive, useful, realistic ${currentYear} content, but factual safety beats completeness. Never fabricate exact fees, batch dates, selection counts or success numbers to fill a field.
+- For well-known brands (TIME=1992, IMS=1977, Career Launcher=1995, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye), use only facts you are confident about.
+- When the EXACT current-year figure is not confidently known, give a tight realistic latest-public range (e.g. "INR 35,000 - 55,000" for full CAT classroom) or use expected/TBA wording for exact batch dates.
 - programs[], faculty_highlights[], results[], features[], exams_covered[], specializations[] MUST each return at least the schema-required count of REAL named entries. fees_lakhs MUST be > 0. students_count MUST be > 0. success_rate MUST be > 0.
 - Phone/email/website: if not 100% memorized, return a realistic public-facing pattern (e.g. info@${brief.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.in, +91-XXX-XXXXXXX placeholder is FORBIDDEN — instead use a real central helpline format like "1800-XXX-XXXX (toll-free)" only if you actually know it; otherwise leave as empty string and the admin will fill it).
 
@@ -80,6 +80,7 @@ ACCURACY IS MANDATORY. For well-known Indian MBA-prep brands (TIME, IMS, Career 
 
 FRESHNESS RULES:
 - Today is ${todayIso}. Active batch cycle: ${admissionCycle}. Freshness window: ${freshness}.
+- Do NOT present 2020-${currentYear - 2} fees, batch dates, success numbers or selection counts as current data. If old data is mentioned, clearly label it historical.
 - DO NOT include ANY citation, source, footnote or attribution markers anywhere in the output. Forbidden patterns include: "[src:Brochure 2026]", "[src:...]", "(source: ...)", "(Source/...)", "(as per ...)", "[1]", "Ref:", "*Source:*", "Sources —", or any bracketed/parenthesised attribution. State facts plainly with the year woven into the sentence.
 - Do NOT append a "Last updated:" line.
 
@@ -99,9 +100,9 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 - Date context: ${dateCtx}
 
 # HARD RULES
-1. **COMPLETE DATA, NO BLANKS**: Fill every field with real, latest, useful content. fees_lakhs > 0, students_count > 0, success_rate > 0, programs has 4-8 items, faculty_highlights has 3-6, results has at least 2 recent years, exams_covered has the actual exams. NEVER leave anything as 0, "", "N/A", "Not available", or placeholder.
+1. **SAFETY-FIRST DATA**: Fill fields with real, latest, useful content where known, but never invent exact fees, student counts, success rates, result numbers or founding data. If an exact numeric value is not verified, use a cautious range in text and safe defaults for numeric fields.
 2. **FACTUAL ACCURACY (NON-NEGOTIABLE)**: founding era, HQ city, mode and exam coverage MUST be correct for known brands. NEVER output a clearly wrong year.
-3. **LATEST DATA (${currentYear})**: All fees, batch durations, mock-test series counts, success-story numbers (e.g. "120+ IIM converts in ${currentYear - 1}") must reflect the most recent published cycle. State the data year context naturally inside the prose (e.g. "as per the ${currentYear - 1} CAT result").
+3. **LATEST DATA (${currentYear})**: All fees, batch durations, mock-test series counts and success-story numbers must reflect the most recent published cycle. If not confidently verified, use expected/range wording and avoid precise conversion claims.
 4. **HUMANIZED LANGUAGE**: Roughly 8th-grade reading level. Contractions, second person ("you"), concrete numbers. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
 4. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
 5. **DESCRIPTION (long-form HTML)**: 600-900 words covering history (with the CORRECT founding era), USP, flagship products, faculty pedigree, success record, who this coaching is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront — including the founding era and mode. Then 4-6 <h2> sections (e.g. "About ${brief.name}", "Flagship Programs", "Faculty & Pedagogy", "Why Choose ${brief.name}", "Results & Track Record"). Use lists where helpful. Do NOT add a "Last updated" line.
@@ -274,9 +275,33 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       );
     }
 
+    const structuredFactBlocks = getBlockingFactIssues(runFactualRiskCheck(profile));
+    if (structuredFactBlocks.length) {
+      return new Response(
+        JSON.stringify({
+          error: "Fact-check blocked institute content",
+          detail: structuredFactBlocks.map((i) => i.message).join(" | "),
+          issues: structuredFactBlocks,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Final quality gate — buzzword scrub + auto-inject "About MBA Compass" if missing
     if (typeof profile.description === "string" && profile.description) {
-      profile.description = runFinalQualityCheck(profile.description, { requireMbaCompass: true, requireTable: true, minInternalLinks: 3 }).html;
+      const descriptionQC = runFinalQualityCheck(profile.description, { requireMbaCompass: true, requireTable: true, minInternalLinks: 3 });
+      const htmlFactBlocks = getBlockingFactIssues(descriptionQC.issues);
+      if (htmlFactBlocks.length) {
+        return new Response(
+          JSON.stringify({
+            error: "Fact-check blocked institute HTML",
+            detail: htmlFactBlocks.map((i) => i.message).join(" | "),
+            issues: htmlFactBlocks,
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      profile.description = descriptionQC.html;
     }
 
 

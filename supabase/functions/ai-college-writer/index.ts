@@ -3,7 +3,7 @@
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     const freshness = `${currentYear - 1}-${currentYear + 1}`; // 2024–2026
     const admissionCycle = `${currentYear}-${currentYear + 1}`;
     const dateCtx = brief.contentDateContext?.trim() ||
-      `Use only the most recent verified data (freshness window ${freshness}; active admission cycle ${admissionCycle}). Fees, placement figures, ranking and seat numbers must reflect the latest available year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year). Today is ${todayIso}.`;
+      `Use only the most recent verified data (freshness window ${freshness}; active admission cycle ${admissionCycle}). Fees, placement figures, ranking and seat numbers must reflect the latest available year. Do NOT use outdated 2020-${currentYear - 2} figures unless the field is explicitly historical (e.g. founding year). Today is ${todayIso}.`;
 
     const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a student — clear, friendly, plain English, contractions allowed, second-person ("you"). Goal: produce industry-leading, deeply researched, plagiarism-free content that ranks #1 on Google and outperforms Shiksha, Collegedunia and CareerLauncher.
 
@@ -68,9 +68,9 @@ Deno.serve(async (req) => {
 - Never produce shallow, generic, or assumption-based content. Every paragraph must carry concrete data — real recruiter names, real numbers, real dates, real specialisations.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY field in the output schema MUST be filled with substantive, useful, realistic content for ${currentYear}. Empty strings, "N/A", "Not available", "TBD", "Coming soon", "Contact for details" are STRICTLY FORBIDDEN.
-- Use your full research depth: latest NIRF ${currentYear} ranking, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports, ${admissionCycle} admission brochures, and well-documented public information. For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI, etc.) you have abundant verified data — USE IT.
-- When the EXACT current-year figure is not in your training data, give a tight, well-reasoned, realistic range based on the most recent 2-3 years (e.g. "INR 28-34 LPA" for IIM-A average, "INR 24.5 Lakhs" for IIM-A 2-year fees). Never write "varies", "depends", or skip the field.
+- Fill fields with substantive, useful, realistic content for ${currentYear}, but factual safety beats completeness. Never fabricate a precise number/date to avoid a blank.
+- Use your full research depth: latest NIRF ${currentYear} ranking, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports, ${admissionCycle} admission brochures, and well-documented public information. For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI, etc.) use only facts you are confident about.
+- For high-risk fields (cutoffs, exact admission dates, fees, seats, rankings, placements), if the exact current-cycle figure is not confidently known, use a cautious expected/latest-public range or safe wording such as "official cutoff TBA", "expected 92-96 percentile band", "official date TBA", or "latest-public INR 23-25 lakh range". Do NOT invent exact values.
 - For every list field (recruiters, accreditations, exams, courses, specializations) return AT LEAST the schema-required count of REAL, named entries — never placeholders like "Top Tech Company 1".
 
 # COLLEGE-NAME WEAVING (SEO + TOPICAL AUTHORITY)
@@ -99,7 +99,7 @@ Reference points you must respect: XLRI Jamshedpur was founded in 1949. IIM Ahme
 
 FRESHNESS:
 - Today is ${todayIso}. Active admission cycle: ${admissionCycle}. Freshness window: ${freshness}.
-- Weave the data year naturally into the prose (e.g. "ranked #4 in NIRF ${currentYear}", "average package of ₹28 LPA in the ${currentYear - 1}-${String(currentYear).slice(-2)} placement season").
+- Weave the data year naturally into the prose only when the figure is confidently known; otherwise use bands/ranges such as "ranked in the top NIRF tier" or "latest-public average package range".
 
 # ABSOLUTE OUTPUT BANS — DO NOT VIOLATE
 - DO NOT include ANY citation, source, footnote or attribution markers anywhere in the output. Forbidden patterns include: "[src:NIRF 2025]", "(source: NIRF 2025)", "(Source/NIRF 2026 Ranking)", "(as per NIRF)", "[1]", "[NIRF]", "Ref:", "*Source:*", "Sources —", parenthetical attributions like "(Source: ...)", "(Ref: ...)". State facts plainly with the year woven into the sentence.
@@ -115,7 +115,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 - Do NOT wrap output in markdown code fences. Return plain JSON via the tool call.
 
 # DEEP-RESEARCH MODE
-- Before writing each section, mentally verify the facts against the most authoritative public sources (NIRF, official placement reports, school brochures, AICTE/NAAC listings). No shallow filler — every paragraph must carry concrete data, named recruiters, real numbers or specific dates. If you are not confident about a number, give a tight realistic range over the most recent 2-3 years rather than a single fabricated figure.`;
+- Before writing each section, mentally verify the facts against the most authoritative public sources (NIRF, official placement reports, school brochures, AICTE/NAAC listings). No shallow filler — every paragraph must carry useful factual value. If you are not confident about a number/date, use expected/TBA/latest-public range wording rather than a single fabricated figure.`;
 
     const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA college / B-school. Verify every factual claim against your training knowledge of well-known Indian B-schools before writing.
 
@@ -131,13 +131,13 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 - Date context: ${dateCtx}
 
 # HARD RULES
-1. **COMPLETE DATA, NO BLANKS**: Fill every field with real, latest, useful content. If you don't have the exact ${currentYear} number, give a tight realistic ${currentYear - 1}-${currentYear} range — but NEVER leave anything as "N/A", "Not available", "Contact institute", empty string, or zero where zero is meaningless (total_students=0, fees_lakhs=0). placement_avg, placement_highest, placement_median, total_students, campus_size, fees, fees_lakhs, ranking, established MUST all be populated with concrete realistic values.
-2. **FACTUAL ACCURACY (NON-NEGOTIABLE)**: established year, location, type, exams accepted, accreditations and ranking band MUST be correct for known institutions. NEVER output a clearly wrong year (e.g. 2020 for a 1949 institution). For lesser-known colleges, infer a realistic founding year from context (e.g. most Indian private B-schools were founded between 1985-2010).
-3. **LATEST DATA (${currentYear})**: All fees, placement figures (avg/median/highest), seat counts and recruiter lists MUST reflect the most recent published cycle (${currentYear - 1}-${currentYear} placements / ${admissionCycle} admissions). State the data year context naturally inside the prose (e.g. "as per the ${currentYear} placement report").
+1. **FACTUAL DATA FIRST**: Fill fields with real, latest, useful content only when confident. If you don't have the exact ${currentYear} number/date, use a cautious latest-public range or mark official data as TBA/expected. NEVER fabricate precise cutoffs, exact dates, rankings, seat counts, fees or placement numbers just to fill a field.
+2. **FACTUAL ACCURACY (NON-NEGOTIABLE)**: established year, location, type, exams accepted, accreditations and ranking band MUST be correct for known institutions. NEVER output a clearly wrong year (e.g. 2020 for a 1949 institution). For lesser-known colleges, use the supplied value or a widely known value; if unknown, set numeric fields like established/ranking to 0 and do not mention them in prose.
+3. **LATEST DATA (${currentYear})**: Fees, placement figures (avg/median/highest), seat counts, cutoffs, dates and recruiter lists must reflect the most recent published cycle (${currentYear - 1}-${currentYear} placements / ${admissionCycle} admissions). Do NOT use 2020-${currentYear - 2} data as current. If only older data is known, clearly label it historical and do not use it as the current recommendation.
 4. **HUMANIZED LANGUAGE**: Roughly 8th-grade reading level. Contractions, second person ("you"), concrete numbers, real examples. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world".
 5. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
 6. **DESCRIPTION (long-form HTML, 1500-2200 words — DEEP & COMPREHENSIVE)**: Cover history & legacy, rankings (national + global), accreditations, courses offered, admission process summary, eligibility, entrance exams accepted, cut-off trends, fees structure breakdown, placements (avg/median/highest/recruiters/trends), ROI analysis, campus infrastructure, faculty strength (named real professors only — never invented), student life, internships & industry exposure, scholarships, alumni network, comparisons with peer colleges. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (70-90 words) giving the core overview upfront — including the correct founding year and type. Then 9-13 <h2> sections such as: "About ${brief.name}", "${brief.name} History & Legacy", "${brief.name} Rankings & Accreditations", "Courses Offered at ${brief.name}", "${brief.name} Admission Process ${admissionCycle}", "${brief.name} Fees Structure & ROI", "${brief.name} Placements ${currentYear - 1}-${currentYear}", "Campus Infrastructure at ${brief.name}", "Faculty & Academic Strengths", "Student Life & Clubs", "Scholarships at ${brief.name}", "${brief.name} vs Peer B-Schools", "Why Choose ${brief.name}", "${brief.name} FAQs". Each H2 section MUST be 120-200 words minimum — never one-liners. Use semantic <ul>/<ol> for any 3+ enumeration. Include AT LEAST THREE <table>s (Fees breakdown; Placements summary; NIRF/peer comparison). Use <strong> on 12-20 high-value phrases (real names, key facts, numbers — NEVER on filler words or whole sentences). Do NOT add a "Last updated" stamp at the end — the platform handles that.
-7. **ADMISSION PROCESS (HTML, 500-800 words)**: Cover eligibility (academic + work-ex + reservation), exams accepted (REAL exams with cut-off bands), selection stages (written test / WAT / GD / PI), shortlisting weightage, latest ${admissionCycle} cycle dates, application fees, documents required, and tips to crack the process at ${brief.name}. Use <h3> subsections, bullet lists, and at least TWO <table>s (selection-criteria weightage; ${admissionCycle} timeline). Mention "${brief.name}" at least 6 times naturally. NO question headings.
+7. **ADMISSION PROCESS (HTML, 500-800 words)**: Cover eligibility (academic + work-ex + reservation), exams accepted (REAL exams with expected/official cut-off bands only), selection stages (written test / WAT / GD / PI), shortlisting weightage, latest ${admissionCycle} cycle windows, application fees, documents required, and tips to crack the process at ${brief.name}. Use <h3> subsections, bullet lists, and at least TWO <table>s (selection-criteria weightage; ${admissionCycle} timeline). Use exact dates only when officially confirmed; otherwise use expected month/window or official TBA. Mention "${brief.name}" at least 6 times naturally. NO question headings.
 8. **ON-PAGE SEO MUST-HAVES** (build naturally into description):
    - Primary keyword AND college name "${brief.name}" both in the first 100 words AND in at least 4 <h2> headings
    - Secondary keywords sprinkled naturally — every secondary keyword should appear at least once
@@ -395,23 +395,23 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
               tier: { type: "string" },
               college_category: { type: "string" },
               established: { type: "number" },
-              ranking: { type: "number" },
-              fees: { type: "string" },
-              fees_lakhs: { type: "number" },
+              ranking: { type: "number", description: "Exact latest rank only if confidently known; otherwise 0 and describe ranking band in prose." },
+              fees: { type: "string", description: "Official/latest-public fee or cautious range; use 'official TBA' if not verified." },
+              fees_lakhs: { type: "number", description: "Numeric fee only when confidently known; otherwise 0." },
               website: { type: "string" },
-              placement_avg: { type: "string" },
-              placement_highest: { type: "string" },
-              placement_median: { type: "string" },
-              campus_size: { type: "string" },
-              total_students: { type: "number" },
-              courses: { type: "array", minItems: 3, items: { type: "string" } },
-              accreditations: { type: "array", minItems: 2, items: { type: "string" } },
-              exams_accepted: { type: "array", minItems: 2, items: { type: "string" } },
-              top_recruiters: { type: "array", minItems: 8, items: { type: "string" } },
-              specializations: { type: "array", minItems: 6, items: { type: "string" } },
+              placement_avg: { type: "string", description: "Latest-public average placement or range; use 'official TBA' if not verified." },
+              placement_highest: { type: "string", description: "Latest-public highest placement or range; use 'official TBA' if not verified." },
+              placement_median: { type: "string", description: "Latest-public median placement or range; use 'official TBA' if not verified." },
+              campus_size: { type: "string", description: "Known campus size/range; use 'not publicly confirmed' if unsure." },
+              total_students: { type: "number", description: "Exact/approx count only when known; otherwise 0." },
+              courses: { type: "array", items: { type: "string" }, description: "Only verified MBA/PGP/PGDM/MiM courses; empty array if unknown." },
+              accreditations: { type: "array", items: { type: "string" }, description: "Only real accreditations; empty array if unknown." },
+              exams_accepted: { type: "array", items: { type: "string" }, description: "Only exams actually accepted for flagship management programmes." },
+              top_recruiters: { type: "array", items: { type: "string" }, description: "Only real recruiters you are confident about; empty array if not verified." },
+              specializations: { type: "array", items: { type: "string" }, description: "Only verified/standard MBA specialization areas." },
               meta_title: { type: "string" },
               meta_description: { type: "string" },
-              keywords: { type: "array", minItems: 6, items: { type: "string" } },
+              keywords: { type: "array", items: { type: "string" } },
               primary_keyword: { type: "string" },
               h1_tag: { type: "string" },
               funnel_stage: { type: "string" },
@@ -437,6 +437,18 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       });
     } catch (error) {
       return handleModelError(error);
+    }
+
+    const structuredFactBlocks = getBlockingFactIssues(runFactualRiskCheck(profile));
+    if (structuredFactBlocks.length) {
+      return new Response(
+        JSON.stringify({
+          error: "Fact-check blocked college content",
+          detail: structuredFactBlocks.map((i) => i.message).join(" | "),
+          issues: structuredFactBlocks,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const contentSeed = {
@@ -512,8 +524,21 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       out = out.replace(/[ \t]{2,}/g, " ");
       return out.trim();
     };
-profile.description = runFinalQualityCheck(scrubHtml(descriptionHtml), { requireMbaCompass: true, requireTable: true, minInternalLinks: 4 }).html;
-    profile.admission_process = runFinalQualityCheck(scrubHtml(admissionHtml), { requireMbaCompass: false, minInternalLinks: 2 }).html;
+    const descriptionQC = runFinalQualityCheck(scrubHtml(descriptionHtml), { requireMbaCompass: true, requireTable: true, minInternalLinks: 4 });
+    const admissionQC = runFinalQualityCheck(scrubHtml(admissionHtml), { requireMbaCompass: false, minInternalLinks: 2 });
+    const htmlFactBlocks = getBlockingFactIssues([...descriptionQC.issues, ...admissionQC.issues]);
+    if (htmlFactBlocks.length) {
+      return new Response(
+        JSON.stringify({
+          error: "Fact-check blocked college HTML",
+          detail: htmlFactBlocks.map((i) => i.message).join(" | "),
+          issues: htmlFactBlocks,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    profile.description = descriptionQC.html;
+    profile.admission_process = admissionQC.html;
 
     if (!profile.description || !profile.admission_process) {
       return new Response(

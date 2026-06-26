@@ -24,17 +24,24 @@ Write simple, direct, human English. Plain words. No marketing fluff.
 - NEVER write "Quick Summary", "Quick summary", "TL;DR" or "TLDR". The only allowed label is "Summary" — e.g. <p><strong>Summary:</strong> …</p> or <h2>Summary</h2>.
 
 # FACTUAL ACCURACY — ZERO HALLUCINATION (NON-NEGOTIABLE)
-You are writing for real MBA aspirants who will make life decisions based on this. EVERY factual claim must be verifiable and correct. If you are not 100% sure of a specific number/date/fact, write a tight realistic range or omit it — NEVER fabricate.
+You are writing for real MBA aspirants who will make life decisions based on this. EVERY factual claim must be verifiable and correct. If you are not 100% sure of a specific number/date/fact, use safe wording, mark it as expected/TBA, or omit it — NEVER fabricate.
+
+## Current-cycle data guardrails (cutoffs, dates, fees, placements)
+- Do NOT present old years (2020 through ${new Date().getFullYear() - 2}) cutoffs, admission dates, deadlines, fees, rankings, seat counts or placement numbers as current data. Those years are allowed only for clearly historical facts such as founded/established/rebranded history.
+- **Cutoffs are high-risk.** If the latest official category-wise cutoff is not explicitly available in the provided context, do NOT give one exact percentile. Write "official cutoff TBA", "expected percentile band", or "verify final category-wise cutoff from the official admission notice".
+- **Exam/admission dates are high-risk.** If an exact current-cycle date is not officially confirmed in the prompt/context, write an expected month/window (for example, "expected November 2026") and say official date is TBA. Never invent a calendar date.
+- **Fees/placements/rankings are high-risk.** Prefer latest officially published reports; if unsure, give a cautious range and label it as an approximate latest-public range, not a confirmed official number.
+- Never use old training-data dates to fill gaps. If only old data is known, label it historical and do not use it as a current recommendation.
 
 ## MBA Entrance — Accepted Exams (HARD FACTS, do not get wrong)
 - **All 21 IIMs** (Ahmedabad, Bangalore, Calcutta, Lucknow, Indore, Kozhikode, Shillong, Rohtak, Ranchi, Raipur, Trichy, Udaipur, Kashipur, Amritsar, Bodh Gaya, Jammu, Nagpur, Sambalpur, Sirmaur, Visakhapatnam, Mumbai/NITIE) — accept **CAT only** for the flagship 2-year PGP/MBA. They do NOT accept XAT, NMAT, SNAP, CMAT or MAT for the flagship programme.
 - **XLRI Jamshedpur** — accepts **XAT only** (its own exam) for BM and HRM. XLRI does **NOT** accept CAT. Never write "XLRI accepts CAT".
-- **SPJIMR Mumbai** — accepts CAT, XAT and GMAT (not NMAT/SNAP).
+- **SPJIMR Mumbai** — PGDM admissions primarily use CAT and GMAT. Do NOT state XAT/NMAT/SNAP unless the current official admission page explicitly says so.
 - **MDI Gurgaon, IMT Ghaziabad, IMI Delhi, FORE, TAPMI, GIM, LIBA, Great Lakes PGPM 1-yr, IIFM, JBIMS, SIMSREE, DMS IIT Delhi/Bombay/Madras/Kanpur/Roorkee/Kharagpur, DoMS IISc, IIM Mumbai (ex-NITIE)** — accept **CAT** (a few also accept XAT/GMAT). Verify per institute.
 - **NMIMS Mumbai (MBA)** — accepts **NMAT by GMAC only**. Does NOT accept CAT for flagship MBA.
 - **Symbiosis (SIBM Pune, SCMHRD, SIIB, SIBM Bengaluru, etc.)** — accepts **SNAP only**.
 - **ISB Hyderabad / Mohali (PGP)** — accepts **GMAT or GRE only** (no CAT/XAT/NMAT).
-- **IIFT** — own **IIFT exam** for MBA-IB; GMAT for international applicants. Does not use CAT for the flagship.
+- **IIFT Delhi/Kolkata/Kakinada** — recent MBA(IB)/MBA admissions for Indian candidates use **CAT**; GMAT is used for foreign nationals/NRI candidates. Do NOT describe the old IIFT entrance test as the current route unless writing historical context.
 - **MICA Ahmedabad** — accepts CAT, XAT, GMAT followed by MICAT.
 - **CMAT (NTA)** — accepted by ~1,000 AICTE-approved B-schools (JBIMS, SIMSREE, KJ Somaiya, Welingkar, GIM, BIMTECH, etc.). IIMs / XLRI / ISB / SPJIMR do NOT accept CMAT.
 - **MAT (AIMA)** — accepted by ~600 mid-tier private B-schools only. Top-10 schools do NOT accept MAT.
@@ -51,7 +58,7 @@ You are writing for real MBA aspirants who will make life decisions based on thi
 - NIRF Management top 3 are typically IIM Ahmedabad, IIM Bangalore, IIM Calcutta; XLRI, IIM Kozhikode, IIM Lucknow, IIM Indore, IIT Delhi DMS, IIM Mumbai (ex-NITIE), MDI Gurgaon round out the top 10. If unsure of an exact rank, write "ranked among the top 10 in NIRF Management" — never invent a number.
 - Realistic **average CTC** ranges for the most recent cycle: top IIMs (A/B/C) **INR 32-36 LPA**; XLRI **INR 32-35 LPA**; new IIMs **INR 14-22 LPA**; tier-2 private **INR 8-15 LPA**. Never claim "INR 1 crore average" — that is the highest international package, not an average.
 - Never invent recruiter names, alumni quotes, or precise student counts. Prefer ranges like "around 480 students" over a fake exact figure.
-- Use active cycle data only (current_year-1 to current_year). Do not publish placement/admission figures older than current_year - 2.
+- Use active cycle data only (current_year-1 to current_year). Do not publish placement/admission figures older than current_year - 2 unless the sentence clearly says it is historical.
 `;
 
 
@@ -151,6 +158,50 @@ export interface QualityCheckResult {
 }
 
 const stripTags = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+const BLOCKING_FACT_CODES = new Set([
+  "implausible_average_ctc",
+  "stale_current_data_year",
+  "exact_unverified_cutoff",
+  "unverified_exact_date",
+  "xlri_accepts_cat",
+  "iim_accepts_xat_or_nmat",
+  "isb_accepts_cat",
+  "nmims_accepts_cat",
+  "symbiosis_accepts_cat",
+  "cat_conducting_body",
+  "nmat_conducting_body",
+  "xat_conducting_body",
+  "snap_conducting_body",
+]);
+
+export function getBlockingFactIssues(issues: QualityIssue[]): QualityIssue[] {
+  return issues.filter((issue) => issue.severity === "error" && BLOCKING_FACT_CODES.has(issue.code));
+}
+
+const splitIntoSentences = (text: string) =>
+  String(text || "")
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+|(?=<h[23]\b)|\s+\|\s+/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+const CURRENT_DATA_TERM_RE = /\b(cut\s*-?\s*offs?|cutoffs?|deadlines?|registration|application\s+(?:date|window|deadline)?|admission\s+(?:date|deadline|cycle|window|timeline|process)?|exam\s+date|result\s+date|interview\s+date|gd\s*-?\s*pi|wat|counselling|placements?|average\s+(?:ctc|package|salary)|median\s+(?:ctc|package|salary)|highest\s+(?:ctc|package|salary)|fees?|rankings?|nirf|seats?)\b/i;
+const getStaleCurrentDataYearRe = () => {
+  const currentYear = new Date().getFullYear();
+  const staleYears: string[] = [];
+  for (let y = 2020; y <= currentYear - 2; y++) staleYears.push(String(y));
+  return staleYears.length ? new RegExp(`\\b(${staleYears.join("|")})\\b`, "i") : /a^/;
+};
+const CLEAR_HISTORY_RE = /\b(founded|established|started|launched|created|set\s+up|rebranded|formerly|history|historic|historical|legacy|inception|became|converted|renamed|since\s+\d{4})\b/i;
+const EXACT_CUTOFF_RE = /(?:\bcut\s*-?\s*offs?\b[^.!?]{0,140}\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b|\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b[^.!?]{0,140}\bcut\s*-?\s*offs?\b)/i;
+const SAFE_CUTOFF_WORDING_RE = /\b(expected|approx(?:\.|imate|imately)?|range|band|previous|historical|verify|tba|tentative|last\s+published|latest\s+published)\b/i;
+const FULL_DATE_RE = /\b(?:\d{1,2}\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},?\s+\d{4})\b/i;
+const DATE_TERM_RE = /\b(exam|registration|application|deadline|admit\s+card|result|interview|gd\s*-?\s*pi|wat|counselling|counseling|admission)\b/i;
+// Exact full calendar dates are risky because models often invent them. Only
+// pass exact dates when they carry a source marker or clearly refer to a past
+// released/published event; otherwise use month/window/TBA wording.
+const SAFE_DATE_WORDING_RE = /\b(past|historical|history)\b/i;
 
 // ===================================================================
 // MBA FACT CHECKER — auto-detects and rewrites common factual errors
@@ -289,7 +340,49 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       });
     }
   }
+
+  const checkedText = stripTags(out);
+  const sentences = splitIntoSentences(checkedText);
+
+  const staleYearRe = getStaleCurrentDataYearRe();
+  const staleSentence = sentences.find((sentence) =>
+    staleYearRe.test(sentence) && CURRENT_DATA_TERM_RE.test(sentence) && !CLEAR_HISTORY_RE.test(sentence)
+  );
+  if (staleSentence) {
+    issues.push({
+      code: "stale_current_data_year",
+      message: `Possible old current-cycle data found: "${staleSentence.slice(0, 180)}". Do not publish old cutoffs, dates, fees, rankings or placements as current data.`,
+      severity: "error",
+    });
+  }
+
+  const riskyCutoffSentence = sentences.find((sentence) =>
+    EXACT_CUTOFF_RE.test(sentence) && !SAFE_CUTOFF_WORDING_RE.test(sentence)
+  );
+  if (riskyCutoffSentence) {
+    issues.push({
+      code: "exact_unverified_cutoff",
+      message: `Exact cutoff percentile needs official proof or safe wording: "${riskyCutoffSentence.slice(0, 180)}". Use expected band/TBA/verify wording instead of a naked exact cutoff.`,
+      severity: "error",
+    });
+  }
+
+  const riskyDateSentence = sentences.find((sentence) =>
+    FULL_DATE_RE.test(sentence) && DATE_TERM_RE.test(sentence) && !SAFE_DATE_WORDING_RE.test(sentence)
+  );
+  if (riskyDateSentence) {
+    issues.push({
+      code: "unverified_exact_date",
+      message: `Exact exam/admission date needs official confirmation or tentative wording: "${riskyDateSentence.slice(0, 180)}". Use expected month/window or official TBA if not verified.`,
+      severity: "error",
+    });
+  }
   return { html: out, issues, changed: out !== before };
+}
+
+export function runFactualRiskCheck(rawContent: unknown): QualityIssue[] {
+  const text = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent || "");
+  return runFactCheck(text).issues;
 }
 
 

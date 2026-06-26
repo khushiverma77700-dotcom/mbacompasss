@@ -4,7 +4,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -250,8 +250,8 @@ Voice rules (MANDATORY):
 
 Content rules:
 - Stay strictly inside MBA / management education and MBA entrance exams.
-- Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context.
-- Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams, realistic INR figures and source markers like [src:NIRF ${currentYear}].
+- Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context. Never recycle 2020-${currentYear - 2} cutoffs, dates, fees, rankings or placement numbers as current data.
+- Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams and cautious INR figures. Do not invent exact figures or fake source markers.
 - No external links and no bare URLs. Only relative internal links starting with / are allowed.
 - Return clean HTML only using h2,h3,h4,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
 - Never give shallow one-line answers or generic filler.
@@ -282,7 +282,7 @@ Internal linking rules (MANDATORY — auto-link every relevant entity):
 - Every link must be CONTEXTUAL — the surrounding sentence must mention the entity being linked. No bolt-on link dumps, no parenthetical "(read more)".
 - Vary the link set per section; never repeat the same anchor twice in one section; never link the same URL more than 2 times in the whole article.
 - Inside tables: when a row names a college or exam, link the entity in the leftmost cell using a contextual anchor. At least 2 tables must contain linked entities.
-- EXTERNAL links are NOT rendered as <a> tags. When citing an authoritative external source (NIRF, AICTE, IIM official placement report, RBI, exam-conducting body, Economic Times, Business Standard, etc.), name it in PLAIN TEXT and add a [src:Source Year] marker — e.g. "as per the IIM Ahmedabad PGP placement report 2024-25 [src:IIM-A Placement Report 2024-25]". Suggest the authority by name; do not output a URL.
+- EXTERNAL links are NOT rendered as <a> tags. When a source is genuinely known from the prompt/context, name it in PLAIN TEXT. Do not add fake [src:...] markers just to make a claim look verified.
 
 Terminology rule (STRICT):
 - NEVER use the phrase "Quick Summary", "Quick summary", "TL;DR", "TLDR" or any variant anywhere in titles, headings, bold leads, or body copy. If a summary section is needed, the ONLY allowed label is "Summary" (e.g. <p><strong>Summary:</strong> …</p> or <h2>Summary</h2>). This applies to every content type and every field.
@@ -298,8 +298,8 @@ Topic focus rules (MANDATORY — zero tolerance for drift):
 - Keep sentences short and punchy. Cut adjectives that add no information. If a sentence can be removed without losing meaning, remove it.
 
 Data-driven content rules (MANDATORY — tables FIRST, prose SECOND):
-- Every H2 section must include at least one concrete data point: NIRF rank, cutoff percentile, fee figure (INR), average/median package, placement %, recruiter count, batch size, seat count, exam date, attempt count, or year-on-year trend.
-- Use REAL, current ${currentYear}-${currentYear + 1} Indian MBA data. Never write "data not available", "varies", "depends", "contact for details", "N/A", "—". If an exact figure isn't known, give a tight realistic range (e.g. "INR 24-28 LPA", "92-96 percentile", "INR 23-25 lakh fees") and tag it with [src:Source Year].
+- Every H2 section should include at least one useful data point where safe: NIRF band, expected cutoff band, fee range (INR), average/median package range, placement context, recruiter count range, batch size range, seat count range, exam month/window, attempt count, or year-on-year trend. Do not invent exact figures.
+- Use REAL, current ${currentYear}-${currentYear + 1} Indian MBA data. For high-risk items (cutoffs, exact exam/admission dates, fees, rankings, seats and placements), never invent a precise number/date. If the current official figure is not confirmed in the prompt/context, write an expected band/window and clearly label it expected/TBA/verify with official notice (e.g. "expected 92-96 percentile band", "official date TBA", "latest-public INR 23-25 lakh fee range").
 - TABLE-FIRST RULE (NON-NEGOTIABLE): if information can be expressed as rows × columns, it MUST be a <table>. Prefer tables over paragraphs for ALL of the following — even when only 2 entities are being compared:
   • Fees breakdown (Year/Component | Amount INR | Notes)
   • Placement stats (Year | Avg CTC | Median CTC | Highest CTC | Placement %)
@@ -307,7 +307,7 @@ Data-driven content rules (MANDATORY — tables FIRST, prose SECOND):
   • Rankings (Publication | Year | Rank | Category)
   • Eligibility (Programme | Age | Graduation % | Work-Ex | Entrance Accepted)
   • Exam patterns (Section | Questions | Marks | Duration | Negative Marking)
-  • Important dates (Event | Date ${currentYear} | Window | Notes)
+  • Important dates (Event | Date/window ${currentYear} | Official status | Notes)
   • College comparisons (Name | NIRF Rank ${currentYear} | Fees | Avg CTC | Cutoff %ile | Top Recruiters)
   • Course / specialization details (Specialization | Duration | Core Subjects | Top Recruiters | Avg CTC)
   • Recruiter lists (Sector | Top Recruiters | Avg CTC | Roles)
@@ -385,7 +385,7 @@ STRICT 25-RULE SEO + GEO + AI SEARCH CHARTER (HARD REQUIREMENTS — every rule b
 15. GEO (ChatGPT / Gemini / Claude / Perplexity / Google AI Overviews): use clear definitions, direct answers, FAQ format, expert insights, comparisons, and statistics so generative engines can quote you cleanly.
 16. Entity SEO: name real, relevant entities throughout — colleges (IIM Ahmedabad, IIM Bangalore, FMS Delhi, XLRI, MDI, SPJIMR, NMIMS, IIFT, IMT), exams (CAT, XAT, NMAT, SNAP, CMAT, MAT, IIFT, MICAT), bodies (AICTE, UGC, NIRF, MoE), recruiters (McKinsey, BCG, Bain, Accenture, TAS, ABG, HUL, ITC, Goldman Sachs).
 17. Internal linking: 1 contextual internal link every 300-500 words. Mandatory placements: at least one after the intro, one mid-article, one before the conclusion. Total 12-20 internal links. Anchor must be the entity name or a natural descriptive phrase — never "click here", "read more".
-18. External "citations": 3-5 authoritative source MENTIONS (gov sites, NIRF, AICTE, UGC, official college websites, recent research/industry reports, Economic Times, Business Standard). Cite them by NAME in plain text using [src:Source Year] markers — NEVER render bare URLs or <a> tags to external domains.
+18. External source mentions: use 3-5 authoritative source NAMES only when genuinely relevant (gov sites, NIRF, AICTE, UGC, official college websites, recent reports, Economic Times, Business Standard). Do not render bare URLs or external <a> tags, and do not invent [src:...] markers for unverified claims.
 19. Images: DO NOT include any <img> tags or image placeholders. The blog is text-only — typography must stay uniform end-to-end.
 20. CTAs at 3 FIXED positions: (a) after the introduction, (b) middle of the article, (c) just before the conclusion. Use the mentor voice (e.g. "Want expert guidance for MBA admissions? Connect with our mentors today.", "Need help selecting the right MBA college? Explore our MBA counseling.", "Start your MBA journey today by exploring top colleges and admission opportunities."). Each CTA paragraph contains 1-2 internal links.
 21. Takeaways section: REQUIRED, placed JUST BEFORE the Conclusion. H2 titled exactly "Takeaways" (NEVER "Key Takeaways"). 4-6 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. "<strong>Fee gap</strong>", "<strong>Cutoff trend</strong>") — never "Bold lead:" / "Key:" / "Note:".
@@ -533,7 +533,7 @@ HARD requirements:
 - At least one concrete data point (number / INR figure / %ile / rank / date) per ~300-500 words. Bold important numbers with <strong>.
 - 2-4 contextual internal relative links inside this section (anchor = entity name or descriptive phrase; never "click here").
 - If this section answers a "what/why/how" style question, the FIRST sentence after the H2 must be a direct 1-2 sentence answer (featured-snippet style).
-- Use current ${targets.currentYear}-${targets.currentYear + 1} Indian MBA data with named colleges/recruiters/exams and [src:Source Year] markers (no bare URLs, no external <a>).
+- Use current ${targets.currentYear}-${targets.currentYear + 1} Indian MBA data with named colleges/recruiters/exams. Add source names only when genuinely known; no bare URLs and no external <a>.
 - Name relevant entities (IIMs, XLRI, FMS, MDI, SPJIMR, NMIMS, CAT, XAT, NMAT, SNAP, CMAT, AICTE, UGC, NIRF) where it fits.
 - Demonstrate EEAT with at least one phrase like "Based on placement reports…", "According to official admission data…", "Industry experts suggest…", "As per NIRF ${targets.currentYear}…".
 - Do NOT repeat content from other planned sections.
@@ -685,6 +685,10 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const contentRaw = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
   const introQC = runFinalQualityCheck(introRaw, { requireMbaCompass: false, minInternalLinks: 0 });
   const contentQC = runFinalQualityCheck(contentRaw, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+  const blockingFactIssues = getBlockingFactIssues([...introQC.issues, ...contentQC.issues]);
+  if (blockingFactIssues.length) {
+    throw new Error(`Fact-check blocked publishing: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+  }
   const intro = introQC.html;
   const content = contentQC.html;
   if (contentQC.issues.length) {
@@ -991,7 +995,7 @@ Deno.serve(async (req) => {
     const _now = new Date();
     const _yr = _now.getFullYear();
     const dateCtx = brief.contentDateContext?.trim() ||
-      `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-2023 figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
+      `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-${_yr - 2} figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
 
     // Approx target keyword occurrences.
     const targetWords = Math.round((wmin + wmax) / 2);
@@ -1013,7 +1017,8 @@ Deno.serve(async (req) => {
 - No hype, no corporate jargon, no filler. Every sentence must carry a fact, a number, a name, or actionable advice.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY claim, table, list and stat MUST be filled with concrete, latest ${currentYear} data. NEVER use phrases like "data not available", "varies widely", "depends on the institute", "contact for details", "TBD". If you don't have an exact ${currentYear} figure, give a tight realistic ${currentYear - 1}-${currentYear} range (e.g. "INR 25-32 LPA", "98% placement rate", "5,000-7,000 seats").
+- Every claim, table, list and stat must use safe, latest ${currentYear} data where confirmed. Never recycle 2020-${currentYear - 2} cutoffs, dates, fees, rankings or placement numbers as current data.
+- For high-risk items (cutoffs, exact exam/admission dates, fees, rankings, seats and placements), never invent a precise number/date. If the current official figure is not confirmed in the prompt/context, write an expected band/window and clearly label it expected/TBA/verify with official notice (e.g. "expected 92-96 percentile band", "official date TBA", "latest-public INR 23-25 lakh fee range").
 - Tables MUST have real rows with real numbers — never empty cells, never "—", never "N/A".
 - Recruiter lists, college lists, exam-pattern facts MUST be real and named — never placeholder.
 
@@ -1024,7 +1029,7 @@ Deno.serve(async (req) => {
 
 # FRESHNESS & MACHINE-READABLE CITATIONS
 - Today is ${todayIso}. Active admission cycle: ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.
-- For EVERY key stat (cutoff, fee, package, percentile band, ranking) append a machine-readable inline citation marker in this EXACT shape: [src:<Source> <Year>]. Examples: [src:NIRF ${currentYear}], [src:CAT Notification ${currentYear}], [src:Placement Report ${currentYear - 1}-${String(currentYear).slice(-2)}]. Our frontend converts these markers into clickable "view source" pills — the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
+- For key stats (cutoff, fee, package, percentile band, ranking), mention source names only when they are genuinely known from official context. Do not add fake machine-readable [src:...] markers; safer expected bands/windows are better than invented citations.
 - End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
 
 # OUTPUT FORMAT
@@ -1080,18 +1085,18 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 - DO NOT output any external <a href="http..."> or <a href="https..."> links anywhere in the article. ZERO outbound links.
 - DO NOT output bare URLs (no "https://...", no "www....") inside paragraphs, tables, lists, citations or FAQs.
 - The ONLY allowed <a href="..."> values are RELATIVE internal URLs that start with "/" on mbacompass.in (e.g. /college/iim-ahmedabad, /exams/cat, /blog/...).
-- Authoritative sources must be cited as PLAIN TEXT only (e.g. "NIRF ${currentYear} Management Rankings", "IIM Ahmedabad official placement report ${currentYear - 1}-${String(currentYear).slice(-2)}") and/or as [src:Source Year] markers — never as clickable links, never with URLs.
+- Authoritative sources must be mentioned as PLAIN TEXT only when genuinely known (e.g. "NIRF ${currentYear} Management Rankings", "IIM Ahmedabad official placement report ${currentYear - 1}-${String(currentYear).slice(-2)}") — never as clickable links, never with URLs, and never as fake [src:...] markers.
 - Any external link found in your output will be stripped and the article rejected. Internal-only linking, always.
 
 
 # HARD RULES — WORD COUNT & SECTION DEPTH (NON-NEGOTIABLE)
 1. **WORD COUNT: ${wmin}-${wmax} words minimum** in (intro + content) plain text. Articles below ${wmin} words will be REJECTED. Count as you write; expand body sections rather than truncating. Never stop early. Long-form 5,000-10,000+ word articles are fully supported — write the full requested length.
 2. **Section depth — EVERY <h2> section MUST be ${minWordsPerSection}-700 words** of detailed, substantive content. ONE-LINER ANSWERS ARE STRICTLY FORBIDDEN. NO section may be just 1-3 short sentences, a single short paragraph, or a "summary-style" reply. Every <h2> section must include ALL of:
-   - A direct-answer opening paragraph (40-70 words, max 3 sentences) that names the topic entity and gives the exact numeric/factual answer
+   - A direct-answer opening paragraph (40-70 words, max 3 sentences) that names the topic entity and gives the safest confirmed answer; use ranges/windows/TBA for unverified high-risk data
    - 2-4 short supporting paragraphs (EACH 2-3 sentences, MAX 60 words). If a thought would run longer, SPLIT it into two paragraphs OR convert it to a list/table. Walls of text are REJECTED.
    - At least one bullet or numbered list (5+ items, each item a full crisp sentence — NOT a 2-word fragment)
-   - At least one concrete example, named entity, recruiter, college, package figure, exam date, or data point specific to "${targetKw}"
-   - Either a comparison <table> with 5+ rows of real ${currentYear} numbers OR a numbered step-by-step checklist
+   - At least one concrete example, named entity, recruiter, college, package range, exam window, or data point specific to "${targetKw}"
+   - Either a comparison <table> with 5+ rows of safe ${currentYear} figures/ranges OR a numbered step-by-step checklist
    - 1-2 contextual internal links anchored to topic-relevant entities
    - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
    - A short closing takeaway sentence; you may bold ONLY a 2-4 word fragment of it with <strong>. NEVER wrap the whole sentence in <strong>.
@@ -1103,13 +1108,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 7. **STRICT PARAGRAPH LIMIT — MOBILE-FIRST**: Every <p> MUST be 2-3 sentences MAX and UNDER 60 words. NO exceptions. If a paragraph would run longer:
    - Split it into two short paragraphs, OR
    - Convert it into a <ul>, <ol>, or <table>.
-   Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected. Whenever you'd list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → use a list or table instead of prose. **At least 5 HTML <table> blocks** (each 5+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article. The finished article must be fully scannable on a phone — H2 → H3 → bold lead → list/table, with prose only as connective tissue.
+   Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected. Whenever you'd list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → use a list or table instead of prose. **At least 5 HTML <table> blocks** (each 5+ rows of safe ${currentYear} data/ranges specific to this topic — fees, packages, cutoff bands, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article. The finished article must be fully scannable on a phone — H2 → H3 → bold lead → list/table, with prose only as connective tissue.
 8. **STRUCTURE — REQUIRED ORDER**:
    a. Summary <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
    c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
    d. <h2>Takeaways</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:", or the heading "Key Takeaways".
-   e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer must give exact figures, named entities, dates and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
+    e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer should give safe figures/ranges/windows, named entities and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
    - Primary keyword in: title, H1, slug, meta title, meta description, excerpt, first 100 words, and last paragraph. Vary H2 headings with synonyms — do not stuff the exact keyword into multiple headings.
@@ -1117,11 +1122,11 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - **LSI/NLP keywords**: 20-30 semantically related terms derived from THIS topic.
    - **External authority mentions** (plain text, no fabricated URLs): cite the AUTHORITATIVE sources for THIS specific topic (e.g. for IIM-A placement → IIM Ahmedabad official PR ${currentYear - 1}-${String(currentYear).slice(-2)}; for CAT → IIM-conducting-institute CAT ${currentYear} notification; for NIRF data → NIRF ${currentYear}).
    - **Featured-snippet bait**: ≥2 direct-answer <p> right under an <h2>, ≥1 numbered <ol> step-by-step list, ≥2 comparison <table>.
-   - **E-E-A-T signals**: cite specific [src:Source Year] markers; name REAL recruiters & B-schools relevant to THIS topic only.
+    - **E-E-A-T signals**: mention specific authoritative source names when genuinely known; name REAL recruiters & B-schools relevant to THIS topic only.
     - <strong> on 12-20 SHORT high-value fragments only (data points, numbers, named entities, 2-4 word lead phrases). Each <strong> ≤ 12 words. NEVER bold full sentences, paragraphs, list items, table cells, or headings. <em> sparingly.
     - ABSOLUTELY NO IMAGES: do NOT emit any <img>, <picture>, <figure>, <svg>, image URLs, or "Image:" / "Infographic:" placeholders. The blog is strictly text-only.
 10. **FORMATTING POLISH**: Bold ONLY a 2-4 word lead of important paragraphs (not the whole paragraph). <h2> 4-9 words, benefit-driven. No ALL-CAPS.
-11. Real, current Indian MBA ecosystem data: CAT ${currentYear} dates, NIRF ${currentYear} rankings, ${currentYear - 1}-${String(currentYear).slice(-2)} placement averages. Use only figures relevant to THIS topic.
+11. Real, current Indian MBA ecosystem data: CAT ${currentYear} windows, NIRF ${currentYear} bands/rankings only if known, ${currentYear - 1}-${String(currentYear).slice(-2)} placement ranges. Use only figures relevant to THIS topic.
 12. NEVER fabricate implausible numbers. Realistic ${currentYear - 1}-${currentYear} ranges only.
 13. NO <h1> — title rendered separately.
 
@@ -1382,6 +1387,10 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     {
       const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
       const contentQC = runFinalQualityCheck(article.content, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+      const blockingFactIssues = getBlockingFactIssues([...introQC.issues, ...contentQC.issues]);
+      if (blockingFactIssues.length) {
+        throw new Error(`Fact-check blocked publishing: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+      }
       article.intro = introQC.html;
       article.content = contentQC.html;
       if (contentQC.issues.length) {
