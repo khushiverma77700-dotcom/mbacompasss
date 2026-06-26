@@ -371,6 +371,11 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
   return { html: out, issues, changed: out !== before };
 }
 
+export function runFactualRiskCheck(rawContent: unknown): QualityIssue[] {
+  const text = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent || "");
+  return runFactCheck(text).issues;
+}
+
 
 
 /**
