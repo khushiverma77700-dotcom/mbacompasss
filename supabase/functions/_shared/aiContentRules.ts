@@ -152,6 +152,148 @@ export interface QualityCheckResult {
 
 const stripTags = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
+// ===================================================================
+// MBA FACT CHECKER — auto-detects and rewrites common factual errors
+// that AI models keep making about the Indian MBA ecosystem.
+// Each rule has a detection regex and a safe rewritten replacement.
+// Hits are also reported as `error`-severity issues so callers can
+// decide to regenerate.
+// ===================================================================
+
+type FactRule = {
+  code: string;
+  // Pattern run against plain text (lowercased) to detect the falsehood.
+  detect: RegExp;
+  // Pattern run against HTML to rewrite it in place. Use case-insensitive global flags.
+  rewrite: { pattern: RegExp; replacement: string }[];
+  message: string;
+};
+
+const MBA_FACT_RULES: FactRule[] = [
+  {
+    code: "xlri_accepts_cat",
+    detect: /xlri[^.<]{0,80}\b(accepts?|takes?|considers?|uses?|admits?\s+through|admission\s+through)\b[^.<]{0,40}\bcat\b/i,
+    rewrite: [
+      { pattern: /\bxlri(\s+jamshedpur)?\s+(also\s+)?(accepts?|takes?|considers?|uses?)\s+(the\s+)?cat(\s+exam|\s+score|\s+scores)?\b/gi,
+        replacement: "XLRI Jamshedpur accepts XAT only (not CAT)" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+xlri(\s+jamshedpur)?\s+(is\s+)?through\s+(the\s+)?cat\b/gi,
+        replacement: "Admission to XLRI Jamshedpur is through XAT (XLRI does not accept CAT)" },
+    ],
+    message: "XLRI Jamshedpur accepts XAT only — never CAT. Auto-corrected.",
+  },
+  {
+    code: "iim_accepts_xat_or_nmat",
+    detect: /\biim\s+(ahmedabad|bangalore|calcutta|lucknow|indore|kozhikode|shillong|rohtak|ranchi|raipur|trichy|udaipur|kashipur|amritsar|jammu|nagpur|sambalpur|sirmaur|visakhapatnam|bodh\s*gaya|mumbai)[^.<]{0,80}\b(accepts?|takes?|considers?)\b[^.<]{0,30}\b(xat|nmat|snap|cmat|mat)\b/i,
+    rewrite: [
+      { pattern: /\b(iim\s+[a-z]+)\s+(also\s+)?(accepts?|takes?|considers?)\s+(the\s+)?(xat|nmat|snap|cmat|mat)(\s+exam|\s+score|\s+scores)?\b/gi,
+        replacement: "$1 accepts CAT only for its flagship MBA/PGP" },
+    ],
+    message: "IIMs accept CAT only for the flagship PGP/MBA — not XAT/NMAT/SNAP/CMAT/MAT. Auto-corrected.",
+  },
+  {
+    code: "isb_accepts_cat",
+    detect: /\bisb\s+(hyderabad|mohali)?[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\b(cat|xat|nmat|snap|cmat|mat)\b/i,
+    rewrite: [
+      { pattern: /\bisb(\s+hyderabad|\s+mohali)?\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?(cat|xat|nmat|snap|cmat|mat)(\s+exam|\s+score|\s+scores)?\b/gi,
+        replacement: "ISB accepts GMAT or GRE only" },
+    ],
+    message: "ISB (Hyderabad/Mohali) accepts GMAT or GRE only — never CAT/XAT/NMAT/SNAP/CMAT/MAT. Auto-corrected.",
+  },
+  {
+    code: "nmims_accepts_cat",
+    detect: /\bnmims[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\bcat\b/i,
+    rewrite: [
+      { pattern: /\bnmims(\s+mumbai)?\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?cat(\s+exam|\s+score|\s+scores)?\b/gi,
+        replacement: "NMIMS Mumbai accepts NMAT by GMAC only for its flagship MBA" },
+    ],
+    message: "NMIMS Mumbai flagship MBA accepts NMAT only — not CAT. Auto-corrected.",
+  },
+  {
+    code: "symbiosis_accepts_cat",
+    detect: /\b(sibm|scmhrd|siib|symbiosis)[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\b(cat|xat|nmat)\b/i,
+    rewrite: [
+      { pattern: /\b(sibm\s+\w+|scmhrd|siib|symbiosis[^,.<]{0,40})\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?(cat|xat|nmat)(\s+exam|\s+score|\s+scores)?\b/gi,
+        replacement: "$1 accepts SNAP only" },
+    ],
+    message: "Symbiosis B-schools (SIBM/SCMHRD/SIIB) accept SNAP only. Auto-corrected.",
+  },
+  {
+    code: "cat_conducting_body",
+    detect: /\bcat\s+(exam\s+)?is\s+conducted\s+by\s+(nta|aicte|ugc|gmac|aima)\b/i,
+    rewrite: [
+      { pattern: /\bcat(\s+exam)?\s+is\s+conducted\s+by\s+(nta|aicte|ugc|gmac|aima)\b/gi,
+        replacement: "CAT is conducted by the IIMs on rotation" },
+    ],
+    message: "CAT is conducted by the IIMs on rotation — not NTA/AICTE/UGC/GMAC/AIMA. Auto-corrected.",
+  },
+  {
+    code: "nmat_conducting_body",
+    detect: /\bnmat\s+is\s+conducted\s+by\s+(nta|aicte|nmims|symbiosis|iim|aima)\b/i,
+    rewrite: [
+      { pattern: /\bnmat\s+is\s+conducted\s+by\s+(nta|aicte|nmims|symbiosis|iim[a-z\s]*|aima)\b/gi,
+        replacement: "NMAT is conducted by GMAC" },
+    ],
+    message: "NMAT is conducted by GMAC. Auto-corrected.",
+  },
+  {
+    code: "xat_conducting_body",
+    detect: /\bxat\s+is\s+conducted\s+by\s+(nta|aicte|iim|nmims|symbiosis|gmac|aima)\b/i,
+    rewrite: [
+      { pattern: /\bxat\s+is\s+conducted\s+by\s+(nta|aicte|iim[a-z\s]*|nmims|symbiosis|gmac|aima)\b/gi,
+        replacement: "XAT is conducted by XLRI Jamshedpur" },
+    ],
+    message: "XAT is conducted by XLRI Jamshedpur. Auto-corrected.",
+  },
+  {
+    code: "snap_conducting_body",
+    detect: /\bsnap\s+is\s+conducted\s+by\s+(nta|aicte|nmims|gmac|iim|aima)\b/i,
+    rewrite: [
+      { pattern: /\bsnap\s+is\s+conducted\s+by\s+(nta|aicte|nmims|gmac|iim[a-z\s]*|aima)\b/gi,
+        replacement: "SNAP is conducted by Symbiosis International (Deemed) University" },
+    ],
+    message: "SNAP is conducted by Symbiosis. Auto-corrected.",
+  },
+  {
+    code: "implausible_average_ctc",
+    detect: /\baverage\s+(ctc|package|salary)[^.<]{0,40}\b(1\s*crore|₹\s*1\s*cr|inr\s*1\s*cr|100\s*lpa|[7-9]\d\s*lpa)\b/i,
+    rewrite: [], // Don't auto-rewrite — too risky. Flag only.
+    message: "Implausible 'average CTC' figure (≥70 LPA). Top IIM averages are around INR 32-36 LPA — flagged for manual review.",
+  },
+  {
+    code: "nitie_not_iim_mumbai",
+    detect: /\bnitie\b[^.<]{0,60}\b(separate|different|not\s+(an\s+)?iim|distinct)\b/i,
+    rewrite: [
+      { pattern: /\bnitie\b/gi, replacement: "IIM Mumbai (formerly NITIE)" },
+    ],
+    message: "NITIE was rebranded to IIM Mumbai in 2023. Auto-corrected.",
+  },
+];
+
+function runFactCheck(html: string): { html: string; issues: QualityIssue[]; changed: boolean } {
+  const issues: QualityIssue[] = [];
+  const text = stripTags(html);
+  let out = html;
+  const before = out;
+
+  for (const rule of MBA_FACT_RULES) {
+    if (rule.detect.test(text)) {
+      for (const r of rule.rewrite) {
+        out = out.replace(r.pattern, r.replacement);
+      }
+      // If detection still fires after rewrite (couldn't fix), flag as error.
+      const stillBad = rule.detect.test(stripTags(out));
+      issues.push({
+        code: rule.code,
+        message: rule.message,
+        severity: stillBad ? "error" : "warn",
+      });
+    }
+  }
+  return { html: out, issues, changed: out !== before };
+}
+
+
+
 /**
  * Final quality + sanitisation pass for any AI-generated HTML content.
  * - Auto-fixes: buzzword swaps, "Quick Summary"→"Summary"
