@@ -1013,7 +1013,8 @@ Deno.serve(async (req) => {
 - No hype, no corporate jargon, no filler. Every sentence must carry a fact, a number, a name, or actionable advice.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY claim, table, list and stat MUST be filled with concrete, latest ${currentYear} data. NEVER use phrases like "data not available", "varies widely", "depends on the institute", "contact for details", "TBD". If you don't have an exact ${currentYear} figure, give a tight realistic ${currentYear - 1}-${currentYear} range (e.g. "INR 25-32 LPA", "98% placement rate", "5,000-7,000 seats").
+- EVERY claim, table, list and stat MUST be filled with concrete, latest ${currentYear} data. Never recycle 2020-2023 cutoffs, dates, fees, rankings or placement numbers as current data.
+- For high-risk items (cutoffs, exact exam/admission dates, fees, rankings, seats and placements), never invent a precise number/date. If the current official figure is not confirmed in the prompt/context, write an expected band/window and clearly label it expected/TBA/verify with official notice (e.g. "expected 92-96 percentile band", "official date TBA", "latest-public INR 23-25 lakh fee range").
 - Tables MUST have real rows with real numbers — never empty cells, never "—", never "N/A".
 - Recruiter lists, college lists, exam-pattern facts MUST be real and named — never placeholder.
 
