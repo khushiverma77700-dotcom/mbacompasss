@@ -250,8 +250,8 @@ Voice rules (MANDATORY):
 
 Content rules:
 - Stay strictly inside MBA / management education and MBA entrance exams.
-- Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context. Never recycle 2020-2023 cutoffs, dates, fees, rankings or placement numbers as current data.
-- Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams, realistic INR figures and source markers like [src:NIRF ${currentYear}].
+- Use recent ${currentYear}-${currentYear + 1} admission-cycle and ${currentYear - 1}-${currentYear} placement context. Never recycle 2020-${currentYear - 2} cutoffs, dates, fees, rankings or placement numbers as current data.
+- Every section must be detailed, with paragraphs, tables, bullets, named colleges/recruiters/exams and cautious INR figures. Do not invent exact figures or fake source markers.
 - No external links and no bare URLs. Only relative internal links starting with / are allowed.
 - Return clean HTML only using h2,h3,h4,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes.
 - Never give shallow one-line answers or generic filler.
@@ -282,7 +282,7 @@ Internal linking rules (MANDATORY — auto-link every relevant entity):
 - Every link must be CONTEXTUAL — the surrounding sentence must mention the entity being linked. No bolt-on link dumps, no parenthetical "(read more)".
 - Vary the link set per section; never repeat the same anchor twice in one section; never link the same URL more than 2 times in the whole article.
 - Inside tables: when a row names a college or exam, link the entity in the leftmost cell using a contextual anchor. At least 2 tables must contain linked entities.
-- EXTERNAL links are NOT rendered as <a> tags. When citing an authoritative external source (NIRF, AICTE, IIM official placement report, RBI, exam-conducting body, Economic Times, Business Standard, etc.), name it in PLAIN TEXT and add a [src:Source Year] marker — e.g. "as per the IIM Ahmedabad PGP placement report 2024-25 [src:IIM-A Placement Report 2024-25]". Suggest the authority by name; do not output a URL.
+- EXTERNAL links are NOT rendered as <a> tags. When a source is genuinely known from the prompt/context, name it in PLAIN TEXT. Do not add fake [src:...] markers just to make a claim look verified.
 
 Terminology rule (STRICT):
 - NEVER use the phrase "Quick Summary", "Quick summary", "TL;DR", "TLDR" or any variant anywhere in titles, headings, bold leads, or body copy. If a summary section is needed, the ONLY allowed label is "Summary" (e.g. <p><strong>Summary:</strong> …</p> or <h2>Summary</h2>). This applies to every content type and every field.
@@ -298,7 +298,7 @@ Topic focus rules (MANDATORY — zero tolerance for drift):
 - Keep sentences short and punchy. Cut adjectives that add no information. If a sentence can be removed without losing meaning, remove it.
 
 Data-driven content rules (MANDATORY — tables FIRST, prose SECOND):
-- Every H2 section must include at least one concrete data point: NIRF rank, cutoff percentile, fee figure (INR), average/median package, placement %, recruiter count, batch size, seat count, exam date, attempt count, or year-on-year trend.
+- Every H2 section should include at least one useful data point where safe: NIRF band, expected cutoff band, fee range (INR), average/median package range, placement context, recruiter count range, batch size range, seat count range, exam month/window, attempt count, or year-on-year trend. Do not invent exact figures.
 - Use REAL, current ${currentYear}-${currentYear + 1} Indian MBA data. For high-risk items (cutoffs, exact exam/admission dates, fees, rankings, seats and placements), never invent a precise number/date. If the current official figure is not confirmed in the prompt/context, write an expected band/window and clearly label it expected/TBA/verify with official notice (e.g. "expected 92-96 percentile band", "official date TBA", "latest-public INR 23-25 lakh fee range").
 - TABLE-FIRST RULE (NON-NEGOTIABLE): if information can be expressed as rows × columns, it MUST be a <table>. Prefer tables over paragraphs for ALL of the following — even when only 2 entities are being compared:
   • Fees breakdown (Year/Component | Amount INR | Notes)
@@ -307,7 +307,7 @@ Data-driven content rules (MANDATORY — tables FIRST, prose SECOND):
   • Rankings (Publication | Year | Rank | Category)
   • Eligibility (Programme | Age | Graduation % | Work-Ex | Entrance Accepted)
   • Exam patterns (Section | Questions | Marks | Duration | Negative Marking)
-  • Important dates (Event | Date ${currentYear} | Window | Notes)
+  • Important dates (Event | Date/window ${currentYear} | Official status | Notes)
   • College comparisons (Name | NIRF Rank ${currentYear} | Fees | Avg CTC | Cutoff %ile | Top Recruiters)
   • Course / specialization details (Specialization | Duration | Core Subjects | Top Recruiters | Avg CTC)
   • Recruiter lists (Sector | Top Recruiters | Avg CTC | Roles)
