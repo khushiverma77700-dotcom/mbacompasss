@@ -19,6 +19,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,10 +92,17 @@ Deno.serve(async (req) => {
     const state = merged.state || "";
     const category = merged.category || merged.tier || merged.type || "";
 
+    const year = new Date().getFullYear();
     const systemPrompt = `You are an expert SEO content writer for the Indian MBA admissions niche
 (CAT, XAT, GMAT, SNAP, NMAT, IIFT, CMAT, MAT). You write for MBA Compass —
 a professional advisor brand. Your tone is calm, expert, never hype, never
 emoji.
+
+FACTUAL SAFETY RULES (NON-NEGOTIABLE):
+- Factual safety beats completeness. Never fabricate exact cutoffs, admission dates, exam dates, fees, rankings, seats, placement figures, faculty names or success numbers.
+- If a current exact value is not provided in the row/context, use expected/TBA/verify-official wording or a cautious latest-public range.
+- Do NOT present 2020-${year - 2} cutoffs, dates, fees, ranks, seats or placement numbers as current data. Historical mentions must be labelled historical.
+- Respect hard exam-college facts: XLRI accepts XAT only; IIM flagship MBA/PGP accepts CAT only; NMIMS accepts NMAT; Symbiosis accepts SNAP; ISB accepts GMAT/GRE.
 
 Your job: produce LONG-FORM, SEO-friendly HTML content that follows a strict
 formatting pattern so it renders cleanly in TipTap and prose styles:
@@ -122,7 +130,8 @@ FORMATTING RULES (HARD):
   If a stat is not provided, speak qualitatively ("strong placement record",
   "experienced mentors") instead of inventing a digit.
 - DO NOT write meta tags, JSON-LD, or HTML <head> elements — body only.
-- Start the response directly with <h2>. No preamble, no closing notes.`;
+- Start the response directly with <h2>. No preamble, no closing notes.
+${MBA_COMPASS_SECTION_RULES}`;
 
     const userPrompt = `Generate the LONG-FORM body content for this page.
 
@@ -191,6 +200,16 @@ described in the system prompt. Aim for 1100-1300 words. Begin with <h2>.`;
       .replace(/```\s*$/i, "")
       .replace(/^#{1,6}\s+/gm, "")
       .trim();
+
+    const qc = runFinalQualityCheck(html, { requireMbaCompass: true, requireFaq: true, minInternalLinks: 2 });
+    const blockingFactIssues = getBlockingFactIssues(qc.issues);
+    if (blockingFactIssues.length) {
+      return new Response(JSON.stringify({
+        error: "Fact-check blocked expanded content. Please add verified current data or retry with safer wording.",
+        issues: blockingFactIssues,
+      }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    html = qc.html;
 
     if (!html || wordCount(html) < 400) {
       return new Response(JSON.stringify({
