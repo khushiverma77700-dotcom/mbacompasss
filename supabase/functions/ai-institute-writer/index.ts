@@ -275,9 +275,33 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       );
     }
 
+    const structuredFactBlocks = getBlockingFactIssues(runFactualRiskCheck(profile));
+    if (structuredFactBlocks.length) {
+      return new Response(
+        JSON.stringify({
+          error: "Fact-check blocked institute content",
+          detail: structuredFactBlocks.map((i) => i.message).join(" | "),
+          issues: structuredFactBlocks,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Final quality gate — buzzword scrub + auto-inject "About MBA Compass" if missing
     if (typeof profile.description === "string" && profile.description) {
-      profile.description = runFinalQualityCheck(profile.description, { requireMbaCompass: true, requireTable: true, minInternalLinks: 3 }).html;
+      const descriptionQC = runFinalQualityCheck(profile.description, { requireMbaCompass: true, requireTable: true, minInternalLinks: 3 });
+      const htmlFactBlocks = getBlockingFactIssues(descriptionQC.issues);
+      if (htmlFactBlocks.length) {
+        return new Response(
+          JSON.stringify({
+            error: "Fact-check blocked institute HTML",
+            detail: htmlFactBlocks.map((i) => i.message).join(" | "),
+            issues: htmlFactBlocks,
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      profile.description = descriptionQC.html;
     }
 
 
