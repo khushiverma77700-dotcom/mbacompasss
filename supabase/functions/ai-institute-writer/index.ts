@@ -56,9 +56,9 @@ Deno.serve(async (req) => {
     const systemPrompt = `You are a senior MBA-entrance coaching researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY field in the output schema MUST be filled with substantive, useful, realistic ${currentYear} content. Empty strings, "N/A", "Not available", "TBD", "Coming soon", "Contact for details" are STRICTLY FORBIDDEN.
-- For well-known brands (TIME=1992, IMS=1977, Career Launcher=1995, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye) you have abundant verified data — USE IT.
-- When the EXACT current-year figure is not in your training data, give a tight realistic ${currentYear - 1}-${currentYear} range (e.g. "INR 35,000 - 55,000" for full CAT classroom). Never write "varies", "depends", "contact for details", or skip the field.
+- Fill fields with substantive, useful, realistic ${currentYear} content, but factual safety beats completeness. Never fabricate exact fees, batch dates, selection counts or success numbers to fill a field.
+- For well-known brands (TIME=1992, IMS=1977, Career Launcher=1995, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye), use only facts you are confident about.
+- When the EXACT current-year figure is not confidently known, give a tight realistic latest-public range (e.g. "INR 35,000 - 55,000" for full CAT classroom) or use expected/TBA wording for exact batch dates.
 - programs[], faculty_highlights[], results[], features[], exams_covered[], specializations[] MUST each return at least the schema-required count of REAL named entries. fees_lakhs MUST be > 0. students_count MUST be > 0. success_rate MUST be > 0.
 - Phone/email/website: if not 100% memorized, return a realistic public-facing pattern (e.g. info@${brief.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.in, +91-XXX-XXXXXXX placeholder is FORBIDDEN — instead use a real central helpline format like "1800-XXX-XXXX (toll-free)" only if you actually know it; otherwise leave as empty string and the admin will fill it).
 
@@ -80,6 +80,7 @@ ACCURACY IS MANDATORY. For well-known Indian MBA-prep brands (TIME, IMS, Career 
 
 FRESHNESS RULES:
 - Today is ${todayIso}. Active batch cycle: ${admissionCycle}. Freshness window: ${freshness}.
+- Do NOT present 2020-2023 fees, batch dates, success numbers or selection counts as current data. If old data is mentioned, clearly label it historical.
 - DO NOT include ANY citation, source, footnote or attribution markers anywhere in the output. Forbidden patterns include: "[src:Brochure 2026]", "[src:...]", "(source: ...)", "(Source/...)", "(as per ...)", "[1]", "Ref:", "*Source:*", "Sources —", or any bracketed/parenthesised attribution. State facts plainly with the year woven into the sentence.
 - Do NOT append a "Last updated:" line.
 
