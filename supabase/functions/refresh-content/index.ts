@@ -4,7 +4,7 @@
 // Public endpoint (admin gate enforced by RLS on insert via service-role).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -143,13 +143,18 @@ function postProcessSnapshot(snapshot: Record<string, unknown>, fields: string[]
   for (const field of fields) {
     const value = snapshot[field];
     if (HTML_FIELDS.has(field) && typeof value === "string") {
-      // Enrich → then run shared final quality check (buzzword scrub + auto MBA Compass)
+      // Enrich → then run shared final quality check (buzzword scrub + factual risk scan)
       const enriched = enrichHtml(value, field, ctx);
       const isLongForm = enriched.length > 600;
-      next[field] = runFinalQualityCheck(enriched, {
+      const qc = runFinalQualityCheck(enriched, {
         requireMbaCompass: isLongForm,
         minInternalLinks: 0,
-      }).html;
+      });
+      const blocking = getBlockingFactIssues(qc.issues);
+      if (blocking.length) {
+        throw new Error(`Fact-check blocked ${field}: ${blocking.map((i) => i.message).join(" | ")}`);
+      }
+      next[field] = qc.html;
     } else if (SEO_FIELDS.has(field) && typeof value === "string") {
       next[field] = value.replace(/\[src:[^\]]+\]/gi, "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
     } else {
@@ -303,8 +308,9 @@ ${modeNote}
 
 NON-NEGOTIABLE DATA RULES:
 - Use only verified ${year} / ${year - 1}-${String(year).slice(-2)} data (NIRF ${year}, latest placement reports, ${year}-${year + 1} admission brochures).
-- For every key stat append a machine-readable citation: [src:NIRF ${year}], [src:Placement Report ${year - 1}-${String(year).slice(-2)}], [src:Admission Brochure ${year}].
-- NEVER use "N/A", "Not available", "Contact for details", "TBD". Give realistic ranges if exact figure unknown.
+- Factual safety beats completeness. If a current exact cutoff, date, fee, rank, seat count or placement figure is not confirmed in the current snapshot/context, keep the existing value, write an expected month/window/range, or say official data is TBA/needs official verification. NEVER invent precise current figures.
+- Do NOT present old 2020-${year - 2} cutoffs, dates, fees, ranks, seats or placement numbers as current data. Historical mentions must be clearly labelled historical.
+- Do NOT append fake machine-readable citations. If you cannot verify a source, keep the fact cautious and plain.
 - Scope: MBA / PGP / PGDM / MMS / MiM / Executive MBA / Masters in Management ONLY.
 - Return ALL ${fields.length} fields in the tool call, even if unchanged in smart mode.
 
@@ -374,6 +380,20 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
     try {
       const ctx: QualityContext = { entityName, city, state, website, todayIso, year };
       let proposedSnapshot = postProcessSnapshot(await callAI(systemPrompt, userPrompt, schema), fields, ctx);
+      let blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(proposedSnapshot));
+      if (blockingFactIssues.length) {
+        proposedSnapshot = postProcessSnapshot(await repairAI(
+          systemPrompt,
+          userPrompt,
+          schema,
+          blockingFactIssues.map((i) => `FACT-CHECK: ${i.message}`),
+          proposedSnapshot,
+        ), fields, ctx);
+        blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(proposedSnapshot));
+      }
+      if (blockingFactIssues.length) {
+        throw new Error(`Fact-check blocked refresh: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+      }
       const failures = qualityFailures(proposedSnapshot, fields, ctx);
       if (failures.length > 0) {
         proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot), fields, ctx);
