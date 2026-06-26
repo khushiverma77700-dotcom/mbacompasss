@@ -1,7 +1,7 @@
 // News & Insights — AI-curated current affairs generator (OpenAI)
 // Generates one category at a time to avoid edge function timeouts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { MBA_COMPASS_SECTION_RULES, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,7 +86,7 @@ async function generateForCategory(opts: {
 
   const sys = `You are an MBA current-affairs editor for Indian B-school aspirants (CAT/XAT/SNAP/NMAT/GDPI/WAT).
 Generate concise, factually-grounded, exam-focused news cards covering the date range ${dateFrom} to ${dateTo}.
-Use realistic Indian/global sources (Economic Times, Mint, Business Standard, The Hindu, PIB, RBI, Bloomberg, Reuters).
+Factual safety beats volume: never fabricate a headline, source URL, exact date, statistic, quote or government/company announcement. Use only events you are confident are real and date-appropriate. If a specific URL is not confidently known, leave source_url as an empty string instead of inventing one.
 Return STRICTLY valid JSON. No commentary.`;
 
   const user = `Generate ${count} news cards for category: "${category}".
@@ -99,7 +99,7 @@ key_facts (3-6 bullets with numbers/names), gdpi_points (3-5),
 wat_topics (2-3), vocabulary (1-3 items {word, meaning}),
 exam_relevance (0-10 for cat, xat, snap, nmat, gdpi, wat),
 importance (high/medium/low), reading_seconds (30-90),
-source_name, source_url (realistic), news_date (YYYY-MM-DD within ${dateFrom}..${dateTo}),
+source_name, source_url (real verified URL only if confidently known, otherwise empty string), news_date (YYYY-MM-DD within ${dateFrom}..${dateTo}),
 category (exactly "${category}"), tags (array of 2-5 strings).`;
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -182,6 +182,14 @@ Deno.serve(async (req) => {
           return;
         }
         for (const a of r.value) {
+          const factBlocks = getBlockingFactIssues(runFactualRiskCheck(a));
+          if (factBlocks.length) {
+            errors.push({
+              category: cat,
+              error: `Skipped unsafe AI news card: ${factBlocks.map((i) => i.message).join(" | ").slice(0, 500)}`,
+            });
+            continue;
+          }
           // Buzzword scrub on every text field (no MBA Compass injection for news blurbs)
           const scrub = (s: any) => typeof s === "string" && s ? runFinalQualityCheck(s, { requireMbaCompass: false, minInternalLinks: 0 }).html : s;
           rows.push({
