@@ -1181,7 +1181,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         model,
         max_tokens: dynamicMaxTokens,
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
+
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
