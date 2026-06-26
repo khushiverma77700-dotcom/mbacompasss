@@ -685,6 +685,10 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const contentRaw = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
   const introQC = runFinalQualityCheck(introRaw, { requireMbaCompass: false, minInternalLinks: 0 });
   const contentQC = runFinalQualityCheck(contentRaw, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+  const blockingFactIssues = getBlockingFactIssues([...introQC.issues, ...contentQC.issues]);
+  if (blockingFactIssues.length) {
+    throw new Error(`Fact-check blocked publishing: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+  }
   const intro = introQC.html;
   const content = contentQC.html;
   if (contentQC.issues.length) {
