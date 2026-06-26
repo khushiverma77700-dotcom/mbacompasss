@@ -995,7 +995,7 @@ Deno.serve(async (req) => {
     const _now = new Date();
     const _yr = _now.getFullYear();
     const dateCtx = brief.contentDateContext?.trim() ||
-      `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-2023 figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
+      `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-${_yr - 2} figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
 
     // Approx target keyword occurrences.
     const targetWords = Math.round((wmin + wmax) / 2);
@@ -1017,7 +1017,7 @@ Deno.serve(async (req) => {
 - No hype, no corporate jargon, no filler. Every sentence must carry a fact, a number, a name, or actionable advice.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
-- EVERY claim, table, list and stat MUST be filled with concrete, latest ${currentYear} data. Never recycle 2020-2023 cutoffs, dates, fees, rankings or placement numbers as current data.
+- Every claim, table, list and stat must use safe, latest ${currentYear} data where confirmed. Never recycle 2020-${currentYear - 2} cutoffs, dates, fees, rankings or placement numbers as current data.
 - For high-risk items (cutoffs, exact exam/admission dates, fees, rankings, seats and placements), never invent a precise number/date. If the current official figure is not confirmed in the prompt/context, write an expected band/window and clearly label it expected/TBA/verify with official notice (e.g. "expected 92-96 percentile band", "official date TBA", "latest-public INR 23-25 lakh fee range").
 - Tables MUST have real rows with real numbers — never empty cells, never "—", never "N/A".
 - Recruiter lists, college lists, exam-pattern facts MUST be real and named — never placeholder.
@@ -1029,7 +1029,7 @@ Deno.serve(async (req) => {
 
 # FRESHNESS & MACHINE-READABLE CITATIONS
 - Today is ${todayIso}. Active admission cycle: ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.
-- For EVERY key stat (cutoff, fee, package, percentile band, ranking) append a machine-readable inline citation marker in this EXACT shape: [src:<Source> <Year>]. Examples: [src:NIRF ${currentYear}], [src:CAT Notification ${currentYear}], [src:Placement Report ${currentYear - 1}-${String(currentYear).slice(-2)}]. Our frontend converts these markers into clickable "view source" pills — the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
+- For key stats (cutoff, fee, package, percentile band, ranking), mention source names only when they are genuinely known from official context. Do not add fake machine-readable [src:...] markers; safer expected bands/windows are better than invented citations.
 - End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
 
 # OUTPUT FORMAT
