@@ -211,7 +211,7 @@ ${SCOPE_LOCK}
 - Do NOT add a "Last updated" line.
 
 ACCURACY RULES — for famous Indian MBA-prep brands (TIME, IMS, Career Launcher, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye, BYJU'S Exam Prep) the brand-specific flagship product names, mock-series names (AIMCAT / SimCAT / Mock CAT), founding era, and HQ city must be correct.
-- Do NOT present 2020-2023 fees, batch dates, seat counts or success numbers as current data. If old data is mentioned, label it historical.
+- Do NOT present 2020-${f.currentYear - 2} fees, batch dates, seat counts or success numbers as current data. If old data is mentioned, label it historical.
 
 FRESHNESS: Today is ${f.todayIso}. Active batch cycle: ${f.cycle}. ${dateCtx}
 
