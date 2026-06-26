@@ -80,16 +80,16 @@ const SECTION_TOOLS: Record<string, any> = {
             max_work_ex_months: { type: "number", description: "Maximum work-ex limit in months for this programme. 0 or omit if no upper cap." },
             min_age: { type: "number", description: "Minimum age in years. 0 if no requirement." },
             max_age: { type: "number", description: "Maximum age in years. 0 if no requirement." },
-            fees: { type: "string", description: "Latest 2025-2026 total programme fee in INR Lakhs (tuition + hostel where applicable). Use a tight realistic range if exact figure unknown." },
+            fees: { type: "string", description: "Latest total programme fee in INR Lakhs (tuition + hostel where applicable). Use official/anchor value when known; otherwise use a cautious latest-public range." },
             fees_total_lakhs: { type: "number", description: "Numeric total fees in lakhs (midpoint if range), e.g. 28.5." },
             fees_breakdown: { type: "string", description: "Short fees breakdown — what's included (tuition, hostel, mess, alumni, books, deposits)." },
             fees_year: { type: "string", description: "Fee cycle year, e.g. '2025-2026'." },
             specializations: { type: "array", minItems: 4, items: { type: "string" }, description: "4-8 real specialisations / electives / majors offered within this programme (Finance, Marketing, Operations, Strategy, Business Analytics, HR, Consulting, Entrepreneurship, etc.)." },
             highlights: { type: "array", items: { type: "string" }, description: "3-6 selling points specific to this programme (international immersion, exchange partners, capstone, dual-degree, signature electives, scholarship pool)." },
             intake_seats: { type: "number", description: "Approximate annual intake / seats." },
-            source_url: { type: "string", description: "MANDATORY — the exact official college webpage URL where this programme is listed (admissions / programmes / brochure landing page on the college's own domain). Never fabricate — use the most authoritative public URL you can verify." },
+            source_url: { type: "string", description: "Official college webpage URL where this programme is listed, only if confidently known. Never fabricate; use empty string if not verified." },
             source_brochure_url: { type: "string", description: "Optional direct PDF brochure URL if available, otherwise empty string." },
-            evidence_snippet: { type: "string", description: "MANDATORY — a short 12-30 word quote / paraphrase from the source page that proves the programme name and fee/duration figures (e.g. 'IIM Indore PGP — 2-year full-time residential, fee INR 23.06 lakhs (2025-27 batch).')." },
+            evidence_snippet: { type: "string", description: "Short proof snippet only when confidently known; otherwise use safe wording such as 'official brochure verification pending'. Never invent a quote." },
           },
           required: [
             "name", "short_name", "programme_type", "duration", "mode", "eligibility",
@@ -186,7 +186,7 @@ const SECTION_TOOLS: Record<string, any> = {
         type: "array",
         minItems: 8,
         description:
-          "AT LEAST 8 rows — ideally 12-20. Cover EVERY accepted exam (CAT is mandatory for IIMs/most B-schools; add XAT for XLRI/XAT-accepting schools; GMAT/GRE for ISB/IIM PGPX/1-year programmes; CMAT/MAT/NMAT/SNAP/IIFT where applicable) × EVERY category (General, EWS, OBC-NCL, SC, ST, PwD) × at least the last 2-3 admission cycles (2023, 2024, 2025) so frontend can plot the trend. NEVER return an empty array — if exact figures are not publicly confirmed, return realistic researched bands with a 'Indicative' note.",
+          "AT LEAST 8 rows where safe. Cover accepted exams and categories using official/latest-public bands. Never fabricate exact category-wise cutoffs; if exact figures are not publicly confirmed, return expected/latest-published bands with an 'Indicative' or 'Official TBA' note.",
         items: {
           type: "object",
           properties: {
