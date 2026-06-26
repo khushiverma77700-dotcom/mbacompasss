@@ -187,7 +187,12 @@ const splitIntoSentences = (text: string) =>
     .filter(Boolean);
 
 const CURRENT_DATA_TERM_RE = /\b(cut\s*-?\s*offs?|cutoffs?|deadlines?|registration|application\s+(?:date|window|deadline)?|admission\s+(?:date|deadline|cycle|window|timeline|process)?|exam\s+date|result\s+date|interview\s+date|gd\s*-?\s*pi|wat|counselling|placements?|average\s+(?:ctc|package|salary)|median\s+(?:ctc|package|salary)|highest\s+(?:ctc|package|salary)|fees?|rankings?|nirf|seats?)\b/i;
-const STALE_YEAR_RE = /\b(2020|2021|2022|2023)\b/i;
+const getStaleCurrentDataYearRe = () => {
+  const currentYear = new Date().getFullYear();
+  const staleYears: string[] = [];
+  for (let y = 2020; y <= currentYear - 2; y++) staleYears.push(String(y));
+  return staleYears.length ? new RegExp(`\\b(${staleYears.join("|")})\\b`, "i") : /a^/;
+};
 const CLEAR_HISTORY_RE = /\b(founded|established|started|launched|created|set\s+up|rebranded|formerly|history|historic|historical|legacy|inception|became|converted|renamed|since\s+\d{4})\b/i;
 const EXACT_CUTOFF_RE = /(?:\bcut\s*-?\s*offs?\b[^.!?]{0,140}\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b|\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b[^.!?]{0,140}\bcut\s*-?\s*offs?\b)/i;
 const SAFE_CUTOFF_WORDING_RE = /\b(expected|approx(?:\.|imate|imately)?|range|band|previous|historical|official|announced|category\s*-?\s*wise|verify|tba|tentative|last\s+published|latest\s+published|\[src:)\b/i;
@@ -336,13 +341,14 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
   const checkedText = stripTags(out);
   const sentences = splitIntoSentences(checkedText);
 
+  const staleYearRe = getStaleCurrentDataYearRe();
   const staleSentence = sentences.find((sentence) =>
-    STALE_YEAR_RE.test(sentence) && CURRENT_DATA_TERM_RE.test(sentence) && !CLEAR_HISTORY_RE.test(sentence)
+    staleYearRe.test(sentence) && CURRENT_DATA_TERM_RE.test(sentence) && !CLEAR_HISTORY_RE.test(sentence)
   );
   if (staleSentence) {
     issues.push({
       code: "stale_current_data_year",
-      message: `Possible old current-cycle data found: "${staleSentence.slice(0, 180)}". Do not publish 2020-2023 cutoffs, dates, fees, rankings or placements as current data.`,
+      message: `Possible old current-cycle data found: "${staleSentence.slice(0, 180)}". Do not publish old cutoffs, dates, fees, rankings or placements as current data.`,
       severity: "error",
     });
   }
