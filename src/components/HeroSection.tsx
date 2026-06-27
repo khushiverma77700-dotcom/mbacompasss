@@ -267,15 +267,16 @@ const HeroSection = () => {
                 key={i}
                 className="group cursor-default"
               >
-                <div className="relative text-center bg-white/15 backdrop-blur-sm rounded-2xl p-3.5 md:p-5 border border-white/25 overflow-hidden transition-all duration-200 group-hover:bg-white/25 group-hover:border-white/40 group-hover:-translate-y-0.5 shadow-lg shadow-black/5">
+                <div className="relative text-center bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-md rounded-2xl p-3.5 md:p-5 border border-white/30 overflow-hidden transition-all duration-300 group-hover:from-white/30 group-hover:to-white/10 group-hover:border-yellow-200/40 group-hover:-translate-y-1 shadow-lg shadow-black/10">
+                  <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full bg-yellow-200/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-white/20 flex items-center justify-center mb-2 group-hover:bg-white/30 transition-colors ring-1 ring-white/30">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center mb-2 group-hover:from-yellow-200/30 transition-colors ring-1 ring-white/40">
                       <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-xl md:text-2xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
+                    <div className="text-xl md:text-[1.6rem] font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
                       {stat.value}
                     </div>
-                    <div className="text-[10px] md:text-xs text-primary-foreground/75 font-medium leading-tight">
+                    <div className="text-[10px] md:text-xs text-primary-foreground/80 font-medium leading-tight">
                       {stat.label}
                     </div>
                   </div>
