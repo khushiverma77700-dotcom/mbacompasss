@@ -179,11 +179,7 @@ const InlineAuthPanel = ({
           setLoading(false);
           return;
         }
-        if (dup?.phoneExists) {
-          switchToLoginWith(parsed.data.phone);
-          setLoading(false);
-          return;
-        }
+        // Phone duplicates allowed.
       } catch {
         /* non-fatal */
       }
