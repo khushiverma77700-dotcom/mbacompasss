@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential } from "../_shared/getCredential.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,9 +23,14 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const twoFactorKey = (await getCredential("TWOFACTOR_API_KEY")) || Deno.env.get("TWOFACTOR_API_KEY");
+    const hspUsername = Deno.env.get("HSPSMS_USERNAME");
+    const hspApiKey = Deno.env.get("HSPSMS_API_KEY");
+    const hspSender = Deno.env.get("HSPSMS_SENDER_ID");
+    const hspTemplate = Deno.env.get("HSPSMS_OTP_TEMPLATE");
 
-    if (!twoFactorKey) throw new Error("TWOFACTOR_API_KEY is not configured");
+    if (!hspUsername || !hspApiKey || !hspSender || !hspTemplate) {
+      throw new Error("HSPSMS credentials are not configured");
+    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -63,20 +68,33 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Send SMS via 2Factor.in (no DLT / no template required).
-    // Endpoint: /SMS/{phone}/{otp}/AUTOGEN  → forces transactional SMS only (no voice call fallback).
-    const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorKey)}/SMS/${phone}/${otp}/AUTOGEN`;
 
-    const smsTask = fetch(twoFactorUrl, { method: "GET" })
+
+
+    // Send SMS via HSP SMS (DLT transactional). Template must include an OTP placeholder
+    // such as {OTP} or {#var#} — we substitute the generated code into it.
+    const message = hspTemplate
+      .replace(/\{#var#\}/gi, otp)
+      .replace(/\{otp\}/gi, otp)
+      .replace(/\{\{otp\}\}/gi, otp);
+
+    const hspUrl = `https://sms.hspsms.com/sendSMS?username=${encodeURIComponent(hspUsername)}` +
+      `&message=${encodeURIComponent(message)}` +
+      `&sendername=${encodeURIComponent(hspSender)}` +
+      `&smstype=TRANS` +
+      `&numbers=${encodeURIComponent(phone)}` +
+      `&apikey=${encodeURIComponent(hspApiKey)}`;
+
+    const smsTask = fetch(hspUrl, { method: "GET" })
       .then(async (r) => {
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok || j?.Status !== "Success") {
-          console.error("2Factor error:", JSON.stringify(j));
+        const text = await r.text().catch(() => "");
+        if (!r.ok) {
+          console.error("HSPSMS error:", r.status, text);
         } else {
-          console.log("OTP sent via 2Factor to", phone, JSON.stringify(j));
+          console.log("OTP sent via HSPSMS to", phone, text);
         }
       })
-      .catch((e) => console.error("2Factor fetch failed:", e));
+      .catch((e) => console.error("HSPSMS fetch failed:", e));
 
     // @ts-ignore EdgeRuntime is provided by Supabase Edge Functions
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
