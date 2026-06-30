@@ -111,10 +111,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
         return;
       }
 
-      if (dupRes?.data?.phoneExists) {
-        toast({ title: "Number already in use", description: "This mobile is registered to another account.", variant: "destructive" });
-        return;
-      }
+      // Phone duplicates allowed — same number can belong to multiple accounts.
 
       if (otpRes.error) throw new Error(otpRes.error.message);
       if (otpRes.data?.error) throw new Error(otpRes.data.error);

@@ -127,11 +127,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
         const { data: dupCheck } = await supabase.functions.invoke("check-duplicate", {
           body: { phone, email },
         });
-        if (dupCheck?.phoneExists) {
-          toast({ title: "Already Registered", description: "This mobile number is already registered. Please sign in instead.", variant: "destructive" });
-          setLoading(false);
-          return;
-        }
+        // Phone duplicates allowed — same number can belong to multiple accounts.
         if (dupCheck?.emailExists) {
           toast({ title: "Already Registered", description: "This email is already registered. Please sign in instead.", variant: "destructive" });
           setLoading(false);
