@@ -23,9 +23,14 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const twoFactorKey = (await getCredential("TWOFACTOR_API_KEY")) || Deno.env.get("TWOFACTOR_API_KEY");
+    const hspUsername = Deno.env.get("HSPSMS_USERNAME");
+    const hspApiKey = Deno.env.get("HSPSMS_API_KEY");
+    const hspSender = Deno.env.get("HSPSMS_SENDER_ID");
+    const hspTemplate = Deno.env.get("HSPSMS_OTP_TEMPLATE");
 
-    if (!twoFactorKey) throw new Error("TWOFACTOR_API_KEY is not configured");
+    if (!hspUsername || !hspApiKey || !hspSender || !hspTemplate) {
+      throw new Error("HSPSMS credentials are not configured");
+    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
