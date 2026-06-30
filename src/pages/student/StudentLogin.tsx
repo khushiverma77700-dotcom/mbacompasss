@@ -147,43 +147,27 @@ export default function StudentLogin() {
     setError(null);
     setOtpVerifying(true);
     try {
-      const { data: vData, error: vErr } = await supabase.functions.invoke("verify-otp", {
-        body: { phone, otp },
-      });
-      if (vErr) throw new Error(vErr.message);
-      if (vData?.error) throw new Error(vData.error);
-      if (!vData?.verified) throw new Error("Invalid OTP.");
-
-      // Resolve the email for this phone to complete passwordless sign-in.
-      const { data: lookup, error: lErr } = await supabase.functions.invoke("lookup-email-by-phone", {
-        body: { phone },
-      });
-      if (lErr) throw new Error(lErr.message);
-      const resolvedEmail = lookup?.email;
-      if (!resolvedEmail) {
-        setError(NO_PURCHASE_MESSAGE);
-        return;
-      }
-
-      // Issue a one-time magic link sign-in for that email.
       const { data: signRes, error: signErr } = await supabase.functions.invoke("otp-sign-in", {
-        body: { email: resolvedEmail, phone, otp },
+        body: { phone, otp },
       });
       if (signErr) throw new Error(signErr.message);
       if (signRes?.error) throw new Error(signRes.error);
-      if (signRes?.access_token && signRes?.refresh_token) {
-        const { data: sessRes, error: sessErr } = await supabase.auth.setSession({
-          access_token: signRes.access_token,
-          refresh_token: signRes.refresh_token,
-        });
-        if (sessErr) throw sessErr;
-        const uid = sessRes.user?.id;
-        if (!uid || !(await enforcePurchaseGate(uid))) return;
-        toast({ title: "Signed in", description: "Loading your dashboard…" });
-        navigate(redirectTo, { replace: true });
-      } else {
+      if (signRes?.noAccount) {
+        setError(NO_PURCHASE_MESSAGE);
+        return;
+      }
+      if (!signRes?.access_token || !signRes?.refresh_token) {
         throw new Error("Unable to complete sign-in.");
       }
+      const { data: sessRes, error: sessErr } = await supabase.auth.setSession({
+        access_token: signRes.access_token,
+        refresh_token: signRes.refresh_token,
+      });
+      if (sessErr) throw sessErr;
+      const uid = sessRes.user?.id;
+      if (!uid || !(await enforcePurchaseGate(uid))) return;
+      toast({ title: "Signed in", description: "Loading your dashboard…" });
+      navigate(redirectTo, { replace: true });
     } catch (err: any) {
       setError(err?.message || "OTP sign-in failed.");
     } finally {
