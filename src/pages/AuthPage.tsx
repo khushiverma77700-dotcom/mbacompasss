@@ -142,11 +142,7 @@ const AuthPage = () => {
       ]);
 
       const dup: any = dupRes?.data;
-      if (dup?.phoneExists) {
-        toast({ title: "Account exists", description: "This mobile is already registered. Please sign in.", variant: "destructive" });
-        setIsLogin(true);
-        return;
-      }
+      // Phone duplicates are allowed — same number can be used across multiple accounts.
       if (dup?.emailExists) {
         toast({ title: "Account exists", description: "This email is already registered. Please sign in.", variant: "destructive" });
         setIsLogin(true);
