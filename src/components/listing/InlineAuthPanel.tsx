@@ -115,18 +115,8 @@ const InlineAuthPanel = ({
       toast.error("Enter a valid 10-digit mobile number first.");
       return;
     }
-    // Pre-check duplicate phone before sending OTP
-    try {
-      const { data: dup } = await supabase.functions.invoke("check-duplicate", {
-        body: { phone: signupForm.phone },
-      });
-      if (dup?.phoneExists) {
-        switchToLoginWith(signupForm.phone);
-        return;
-      }
-    } catch {
-      /* non-fatal */
-    }
+    // Phone duplicates allowed — skip pre-check.
+
 
     setOtpSending(true);
     try {
