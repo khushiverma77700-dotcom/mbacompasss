@@ -56,11 +56,23 @@ Deno.serve(async (req) => {
       .insert({ ip, phone_hash_prefix: phone.slice(0, 3) })
       .then(() => undefined, () => undefined);
 
-    const { data: profile } = await supabase
+    // Phone numbers may be shared across multiple accounts (duplicates allowed).
+    // Pick the most recently created profile that has a usable auth email.
+    const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id")
+      .select("user_id, created_at")
       .eq("phone", phone)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    let profile: { user_id: string } | null = null;
+    if (profiles && profiles.length > 0) {
+      for (const p of profiles) {
+        const { data: u } = await supabase.auth.admin.getUserById(p.user_id);
+        if (u?.user?.email) { profile = { user_id: p.user_id }; break; }
+      }
+      if (!profile) profile = { user_id: profiles[0].user_id };
+    }
 
     if (!profile?.user_id) {
       return new Response(JSON.stringify({ email: null }), {
