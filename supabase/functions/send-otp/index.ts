@@ -68,9 +68,8 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Send SMS via 2Factor.in (no DLT / no template required).
-    // Endpoint: /SMS/{phone}/{otp}/AUTOGEN  → forces transactional SMS only (no voice call fallback).
-    const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorKey)}/SMS/${phone}/${otp}/AUTOGEN`;
+
+
 
     // Send SMS via HSP SMS (DLT transactional). Template must include an OTP placeholder
     // such as {OTP} or {#var#} — we substitute the generated code into it.
