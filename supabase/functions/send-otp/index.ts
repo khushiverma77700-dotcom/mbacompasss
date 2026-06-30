@@ -72,16 +72,30 @@ Deno.serve(async (req) => {
     // Endpoint: /SMS/{phone}/{otp}/AUTOGEN  → forces transactional SMS only (no voice call fallback).
     const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorKey)}/SMS/${phone}/${otp}/AUTOGEN`;
 
-    const smsTask = fetch(twoFactorUrl, { method: "GET" })
+    // Send SMS via HSP SMS (DLT transactional). Template must include an OTP placeholder
+    // such as {OTP} or {#var#} — we substitute the generated code into it.
+    const message = hspTemplate
+      .replace(/\{#var#\}/gi, otp)
+      .replace(/\{otp\}/gi, otp)
+      .replace(/\{\{otp\}\}/gi, otp);
+
+    const hspUrl = `https://sms.hspsms.com/sendSMS?username=${encodeURIComponent(hspUsername)}` +
+      `&message=${encodeURIComponent(message)}` +
+      `&sendername=${encodeURIComponent(hspSender)}` +
+      `&smstype=TRANS` +
+      `&numbers=${encodeURIComponent(phone)}` +
+      `&apikey=${encodeURIComponent(hspApiKey)}`;
+
+    const smsTask = fetch(hspUrl, { method: "GET" })
       .then(async (r) => {
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok || j?.Status !== "Success") {
-          console.error("2Factor error:", JSON.stringify(j));
+        const text = await r.text().catch(() => "");
+        if (!r.ok) {
+          console.error("HSPSMS error:", r.status, text);
         } else {
-          console.log("OTP sent via 2Factor to", phone, JSON.stringify(j));
+          console.log("OTP sent via HSPSMS to", phone, text);
         }
       })
-      .catch((e) => console.error("2Factor fetch failed:", e));
+      .catch((e) => console.error("HSPSMS fetch failed:", e));
 
     // @ts-ignore EdgeRuntime is provided by Supabase Edge Functions
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
