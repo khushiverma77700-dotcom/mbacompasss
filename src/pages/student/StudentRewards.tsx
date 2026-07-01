@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
+import { DEMO_REWARDS } from "@/lib/demoData";
 import { Card } from "@/components/ui/card";
 import { Coins, Flame, Trophy, Star, Award, Zap, Target, BookOpenCheck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -26,11 +28,28 @@ const ALL_BADGES = [
 
 export default function StudentRewards() {
   const { user } = useAuth();
-  const [rewards, setRewards] = useState<Rewards | null>(null);
-  const [badges, setBadges] = useState<Badge[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isDemo = useIsDemo();
+  const [rewards, setRewards] = useState<Rewards | null>(() => isDemo ? ({ ...DEMO_REWARDS, total_mocks_completed: 8 } as Rewards) : null);
+  const [badges, setBadges] = useState<Badge[]>(() => isDemo ? [
+    { id: "demo-b1", badge_key: "first_mock", badge_name: "First Step", badge_description: null, earned_at: new Date().toISOString() },
+    { id: "demo-b2", badge_key: "streak_7", badge_name: "7-Day Streak", badge_description: null, earned_at: new Date().toISOString() },
+    { id: "demo-b3", badge_key: "score_90", badge_name: "90+ Percentile", badge_description: null, earned_at: new Date().toISOString() },
+    { id: "demo-b4", badge_key: "mocks_10", badge_name: "Consistent", badge_description: null, earned_at: new Date().toISOString() },
+  ] : []);
+  const [loading, setLoading] = useState(!isDemo);
 
   useEffect(() => {
+    if (isDemo) {
+      setRewards({ ...DEMO_REWARDS, total_mocks_completed: 8 } as Rewards);
+      setBadges([
+        { id: "demo-b1", badge_key: "first_mock", badge_name: "First Step", badge_description: null, earned_at: new Date().toISOString() },
+        { id: "demo-b2", badge_key: "streak_7", badge_name: "7-Day Streak", badge_description: null, earned_at: new Date().toISOString() },
+        { id: "demo-b3", badge_key: "score_90", badge_name: "90+ Percentile", badge_description: null, earned_at: new Date().toISOString() },
+        { id: "demo-b4", badge_key: "mocks_10", badge_name: "Consistent", badge_description: null, earned_at: new Date().toISOString() },
+      ]);
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     (async () => {
       const [{ data: r }, { data: b }] = await Promise.all([
@@ -41,7 +60,7 @@ export default function StudentRewards() {
       setBadges((b ?? []) as any);
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, isDemo]);
 
   const xp = rewards?.xp ?? 0;
   const level = rewards?.level ?? 1;

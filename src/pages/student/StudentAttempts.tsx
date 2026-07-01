@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { History, Search, Filter, ArrowDownAZ, Calendar, Trophy, Eye, Brain, Dow
 import { ensureStudentMode, mockAttemptPath, mockResultPath } from "@/lib/studentModeNav";
 
 import SectionSkeleton from "@/components/student/SectionSkeleton";
+import { DEMO_ATTEMPTS } from "@/lib/demoData";
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Completed", auto_submitted: "Auto-submitted",
   in_progress: "In progress", abandoned: "Abandoned",
@@ -21,8 +23,9 @@ type SortKey = "date_desc" | "date_asc" | "score_desc" | "score_asc" | "percenti
 
 export default function StudentAttempts() {
   const { user } = useAuth();
-  const [attempts, setAttempts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isDemo = useIsDemo();
+  const [attempts, setAttempts] = useState<any[]>(() => isDemo ? DEMO_ATTEMPTS : []);
+  const [loading, setLoading] = useState(!isDemo);
 
   const [q, setQ] = useState("");
   const [exam, setExam] = useState<string>("all");
@@ -35,6 +38,11 @@ export default function StudentAttempts() {
   const [sort, setSort] = useState<SortKey>("date_desc");
 
   useEffect(() => {
+    if (isDemo) {
+      setAttempts(DEMO_ATTEMPTS as any[]);
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     (async () => {
       const { data } = await supabase.from("mock_attempts")
@@ -44,7 +52,7 @@ export default function StudentAttempts() {
       setAttempts(data ?? []);
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, isDemo]);
 
   const examOptions = useMemo(() => {
     const set = new Set<string>();

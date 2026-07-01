@@ -23,6 +23,15 @@ const clearAdminCache = (userId?: string) => {
   }
 };
 
+const DEMO_AUTH_USER = {
+  id: "demo-user",
+  email: "aman.demo@mbacompass.in",
+  app_metadata: {},
+  aud: "authenticated",
+  created_at: new Date(0).toISOString(),
+  user_metadata: { display_name: "Aman Verma" },
+} as unknown as User;
+
 type AdminCacheEntry = {
   isAdmin: boolean;
   allowedSections: string[] | null;
@@ -98,6 +107,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
+  const isDemoPath = location.pathname.startsWith("/demo");
   const initialSession = useRef<Session | null>(readStoredSession());
   const initialNeedsAdmin = typeof window !== "undefined" && shouldResolveAdminForPath(window.location.pathname);
   const [user, setUser] = useState<User | null>(initialSession.current?.user ?? null);
@@ -185,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (typeof window !== "undefined" && window.location.pathname.startsWith("/student")) {
+      if (typeof window !== "undefined" && (window.location.pathname.startsWith("/student") || window.location.pathname.startsWith("/demo"))) {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
         setAllowedSections(null);
@@ -307,7 +317,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, adminLoading, allowedSections, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user: isDemoPath ? DEMO_AUTH_USER : user,
+      session: isDemoPath ? null : session,
+      loading: isDemoPath ? false : loading,
+      isAdmin: isDemoPath ? false : isAdmin,
+      adminLoading: isDemoPath ? false : adminLoading,
+      allowedSections: isDemoPath ? null : allowedSections,
+      signUp,
+      signIn,
+      signOut,
+    }}>
       {children}
     </AuthContext.Provider>
   );

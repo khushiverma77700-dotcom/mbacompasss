@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 import SectionSkeleton from "@/components/student/SectionSkeleton";
+import { DEMO_ATTEMPTS, DEMO_GOALS, DEMO_STUDY_PROFILE, DEMO_TASKS, DEMO_WEAK_TOPICS } from "@/lib/demoData";
 const SECTIONS = ["QA", "VARC", "DILR"] as const;
 const TASK_TEMPLATES = [
   { section: "QA", task_type: "practice", title: "20 QA practice questions", target_value: 20, duration_minutes: 45 },
@@ -27,13 +29,14 @@ const TASK_TEMPLATES = [
 
 export default function StudentGoals() {
   const { user } = useAuth();
+  const isDemo = useIsDemo();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<any>(null);
-  const [goals, setGoals] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [weak, setWeak] = useState<any[]>([]);
-  const [attempts, setAttempts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(() => isDemo ? DEMO_STUDY_PROFILE : null);
+  const [goals, setGoals] = useState<any[]>(() => isDemo ? DEMO_GOALS : []);
+  const [tasks, setTasks] = useState<any[]>(() => isDemo ? DEMO_TASKS : []);
+  const [weak, setWeak] = useState<any[]>(() => isDemo ? DEMO_WEAK_TOPICS : []);
+  const [attempts, setAttempts] = useState<any[]>(() => isDemo ? DEMO_ATTEMPTS : []);
+  const [loading, setLoading] = useState(!isDemo);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [form, setForm] = useState({
@@ -46,6 +49,15 @@ export default function StudentGoals() {
   const today = new Date().toISOString().slice(0, 10);
 
   const load = async () => {
+    if (isDemo) {
+      setProfile(DEMO_STUDY_PROFILE);
+      setGoals(DEMO_GOALS as any[]);
+      setTasks(DEMO_TASKS as any[]);
+      setWeak(DEMO_WEAK_TOPICS as any[]);
+      setAttempts(DEMO_ATTEMPTS as any[]);
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     const [{ data: pf }, { data: g }, { data: tk }, { data: wk }, { data: at }] = await Promise.all([
       supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
@@ -72,7 +84,7 @@ export default function StudentGoals() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, isDemo]);
 
   // Streak: distinct days in last 30 days
   const streak = useMemo(() => {
