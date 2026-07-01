@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
 
 import StudentBottomNav from "@/components/student/StudentBottomNav";
+import DemoBanner from "@/components/student/DemoBanner";
 import InstallAppPrompt from "@/components/student/InstallAppPrompt";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
 import { QuickViewProvider } from "@/components/student/QuickViewProvider";
