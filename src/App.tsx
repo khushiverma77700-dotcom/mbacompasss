@@ -615,7 +615,7 @@ const StudentLazyPage = ({ children }: { children: React.ReactNode }) => (
 if (typeof window !== "undefined") {
   const path = window.location.pathname;
   const onDashHost = window.location.hostname === "dashboard.mbacompass.in";
-  if (onDashHost || path.startsWith("/student")) {
+  if (onDashHost || path.startsWith("/student") || path === "/demo" || path.startsWith("/demo/")) {
     StudentLayout.preload?.();
     StudentOverview.preload?.();
   }
