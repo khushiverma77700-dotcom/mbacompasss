@@ -352,7 +352,25 @@ export default function StudentLogin() {
             </div>
           )}
 
-          <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+          <Link
+            to="/demo"
+            className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 hover:border-amber-300 hover:shadow-sm transition"
+          >
+            <div className="flex items-start gap-3">
+              <div className="h-8 w-8 rounded-lg bg-amber-100 grid place-items-center shrink-0">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+              </div>
+              <div className="text-xs text-slate-700 leading-relaxed">
+                <span className="font-semibold text-slate-900">Try a Demo Account</span>
+                <div className="text-slate-600">
+                  Explore every tab and screen — no login required.
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
+          </Link>
+
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-lg bg-sky-100 grid place-items-center shrink-0">
                 <ShieldCheck className="h-4 w-4 text-sky-600" />

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, matchPath, useLocation, useNavigate } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
@@ -830,6 +831,19 @@ const App = () => (
             ) : (
               <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
             )}
+            {/* Demo dashboard — read-only preview of the student LMS. Same layout, same
+                child routes, but wrapped in DemoModeProvider so all interactive
+                widgets are blocked and a top banner is shown. */}
+            <Route
+              path="/demo"
+              element={
+                <DemoModeProvider>
+                  <StudentLazyPage><StudentLayout /></StudentLazyPage>
+                </DemoModeProvider>
+              }
+            >
+              <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
+            </Route>
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
