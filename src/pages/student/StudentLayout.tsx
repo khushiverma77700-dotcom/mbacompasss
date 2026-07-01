@@ -678,13 +678,14 @@ function SidebarContent() {
 
       <div className="pt-4 mt-4 border-t border-border space-y-1">
         <Link
-          to="/student/mocks/full-length"
+          to={resolveTo("/student/mocks/full-length")}
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →
         </Link>
         <Link
-          to="/student/install"
+          to={resolveTo("/student/install")}
+
           className="flex items-center gap-2 text-xs font-medium text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-md px-3 py-2"
         >
           <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-[10px]">↓</span>
