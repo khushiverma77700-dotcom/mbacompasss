@@ -52,7 +52,10 @@ export default function StudentBottomNav() {
           return (
             <li key={tab.to}>
               <NavLink
-                to={tab.to}
+                to={typeof window !== "undefined" && window.location.pathname.startsWith("/demo")
+                  ? (tab.to === "/student" ? "/demo" : "/demo" + tab.to.slice("/student".length))
+                  : tab.to}
+
                 end={tab.end}
                 onTouchStart={() => preloadStudentRoute(tab.to)}
                 onMouseEnter={() => preloadStudentRoute(tab.to)}
