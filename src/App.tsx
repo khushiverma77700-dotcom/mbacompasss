@@ -412,6 +412,7 @@ const StudentBackGuard = () => {
       typeof window !== "undefined" &&
       window.location.hostname === "dashboard.mbacompass.in";
     const path = location.pathname;
+    if (path === "/demo" || path.startsWith("/demo/")) return; // keep demo tree free
     const mockWorkPath = path.startsWith("/mocks/attempt/") || path.startsWith("/mocks/result/") || path.startsWith("/mocks/review/") || path.startsWith("/mocks/leaderboard/");
     const insideLms = onDashHost
       ? (path === "/" || path.startsWith("/student"))
@@ -419,6 +420,7 @@ const StudentBackGuard = () => {
     if (path === "/student/login" || !insideLms) {
       navigate(onDashHost ? "/" : "/student", { replace: true });
     }
+
   }, [location.pathname, navigate]);
 
   return null;
