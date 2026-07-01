@@ -949,12 +949,22 @@ const App = () => (
               );
               return (
                 <>
-                  {/* Demo dashboard removed to reduce load. */}
+                  <Route
+                    path="/demo"
+                    element={
+                      <DemoModeProvider>
+                        <StudentLazyPage><StudentLayout /></StudentLazyPage>
+                      </DemoModeProvider>
+                    }
+                  >
+                    {studentChildRoutes}
+                  </Route>
                   <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                     {studentChildRoutes}
                   </Route>
                 </>
               );
+
             })()}
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
