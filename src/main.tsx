@@ -16,6 +16,8 @@ try {
   if (
     host === "dashboard.mbacompass.in" ||
     path.startsWith("/student") ||
+    path === "/demo" ||
+    path.startsWith("/demo/") ||
     path.startsWith("/admin") ||
     path.startsWith("/mocks") ||
     path.startsWith("/auth")
