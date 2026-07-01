@@ -310,12 +310,12 @@ export default function StudentLayout() {
 
         <div
           className="flex"
-          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
+          style={{ paddingTop: `calc(env(safe-area-inset-top, 0px) + 3.5rem + ${demoOffset})` }}
         >
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
           <aside
             className="hidden lg:flex flex-col w-72 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
+            style={{ top: `calc(env(safe-area-inset-top, 0px) + 3.5rem + ${demoOffset})` }}
           >
             <SidebarContent />
           </aside>
