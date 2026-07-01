@@ -144,7 +144,7 @@ export default function StudentLayout() {
   const onDashboardHost =
     typeof window !== "undefined" &&
     window.location.hostname === "dashboard.mbacompass.in";
-  const homePath = onDashboardHost ? "/" : "/student";
+  const homePath = isDemo ? "/demo" : onDashboardHost ? "/" : "/student";
 
   // Mark "student mode" so mock pages know the user lives inside the dashboard
   // and route their back / post-submit navigation back into /student/*.
