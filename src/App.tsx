@@ -843,7 +843,9 @@ const App = () => (
               }
             >
               <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
+              {studentChildRoutes}
             </Route>
+
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
