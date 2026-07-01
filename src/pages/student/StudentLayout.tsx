@@ -224,13 +224,16 @@ export default function StudentLayout() {
   }
 
 
+  const demoOffset = isDemo ? "2.25rem" : "0px"; // matches DemoBanner h-9
+
   return (
     <StudentThemeProvider>
+      {isDemo && <DemoBanner />}
       <div className="student-scope min-h-[100dvh] bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
         {/* Top bar */}
         <header
-          className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border"
-          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          className="fixed left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border"
+          style={{ top: demoOffset, paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
           <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-6 h-14">
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
