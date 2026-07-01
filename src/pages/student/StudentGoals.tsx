@@ -185,7 +185,7 @@ export default function StudentGoals() {
   const activeGoals = goals.filter((g) => !g.is_completed);
   const doneGoals = goals.filter((g) => g.is_completed);
 
-  if (loading) return <SectionSkeleton />;
+  if (loading && !isDemo) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

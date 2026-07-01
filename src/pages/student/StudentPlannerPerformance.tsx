@@ -212,7 +212,7 @@ export default function StudentPlannerPerformance() {
     m < 60 ? "bg-sky-400 dark:bg-sky-500/50" :
     m < 120 ? "bg-sky-500 dark:bg-sky-500/70" : "bg-sky-700 dark:bg-sky-400";
 
-  if (loading) return <SectionSkeleton />;
+  if (loading && !isDemo) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

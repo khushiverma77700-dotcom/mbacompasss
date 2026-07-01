@@ -310,7 +310,8 @@ export default function StudentDayPlanner() {
     load();
   };
 
-  if (loading) return <SectionSkeleton />;
+  // Demo must never get stuck on the skeleton if auth/user resolution lags.
+  if (loading && !isDemo) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

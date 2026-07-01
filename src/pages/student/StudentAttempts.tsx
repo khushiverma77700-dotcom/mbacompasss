@@ -173,7 +173,7 @@ export default function StudentAttempts() {
     setMinScore(""); setMaxScore(""); setSort("date_desc");
   };
 
-  if (loading) return <SectionSkeleton />;
+  if (loading && !isDemo) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">
