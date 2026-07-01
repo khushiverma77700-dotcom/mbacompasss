@@ -350,7 +350,7 @@ const GlobalNavigationPrefetch = () => {
     // Warm up the most-visited public chunks at idle so the first navigation
     // is instant. Skip on admin/student to avoid wasting bandwidth.
     const path = window.location.pathname;
-    const skipIdleWarm = path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt");
+    const skipIdleWarm = path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/demo") || path.startsWith("/mocks/attempt");
     let idleHandle: number | undefined;
     if (!skipIdleWarm) {
       const w = window as any;
@@ -432,7 +432,7 @@ const SettingsPrefetcher = () => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const path = window.location.pathname;
-    if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt")) return;
+    if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/demo") || path.startsWith("/mocks/attempt")) return;
     const w = window as any;
     let idleHandle: number | undefined;
     const timer = window.setTimeout(() => {
@@ -647,7 +647,7 @@ const OnboardingGate = () => {
     // dashboard subdomain where the LMS lives at "/". Mobile verification is
     // only required at course-purchase time.
     if (onDashboardHost) return;
-    if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt") || path === "/profile-analyzer") return;
+    if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/demo") || path.startsWith("/mocks/attempt") || path === "/profile-analyzer") return;
     if (loading || !user || checked) return;
 
     let cancelled = false;
@@ -686,6 +686,7 @@ const OnboardingGate = () => {
   if (!showOnboarding || !user) return null;
   if (typeof window !== "undefined" && (
     window.location.pathname.startsWith("/student") ||
+    window.location.pathname.startsWith("/demo") ||
     window.location.hostname === "dashboard.mbacompass.in"
   )) return null;
 
@@ -708,6 +709,7 @@ const OAuthRedirectHandler = () => {
 
   React.useEffect(() => {
     if (loading || !user) return;
+    if (location.pathname === "/demo" || location.pathname.startsWith("/demo/")) return;
 
     const pendingPath = consumePostAuthRedirect();
     const currentPath = `${location.pathname}${location.search}${location.hash}`;

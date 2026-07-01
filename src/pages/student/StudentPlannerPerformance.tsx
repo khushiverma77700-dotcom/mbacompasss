@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
 import { format, subDays } from "date-fns";
 
 import SectionSkeleton from "@/components/student/SectionSkeleton";
+import { DEMO_TASKS } from "@/lib/demoData";
 type Range = "7d" | "30d" | "90d" | "custom";
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -42,16 +44,39 @@ interface Task {
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const dateStr = (d: Date) => d.toISOString().slice(0, 10);
+const demoPlannerHistory = (): Task[] => {
+  const categories = ["qa", "varc", "revision", "sectional", "custom"];
+  const rows: Task[] = [];
+  for (let day = 0; day < 28; day++) {
+    const d = subDays(new Date(), day);
+    const ds = dateStr(d);
+    DEMO_TASKS.slice(0, day % 4 === 0 ? 4 : 5).forEach((task, index) => rows.push({
+      scheduled_date: ds,
+      status: day < 2 ? task.is_completed ? "completed" : "pending" : index < 3 + (day % 3 === 0 ? 1 : 0) ? "completed" : "pending",
+      category: categories[index] ?? "custom",
+      estimated_minutes: index === 3 ? 45 : 30,
+      actual_minutes: index === 3 ? 42 : 28,
+      completed_at: index < 4 ? new Date(ds + "T20:00:00").toISOString() : null,
+    }));
+  }
+  return rows;
+};
 
 export default function StudentPlannerPerformance() {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isDemo = useIsDemo();
+  const [tasks, setTasks] = useState<Task[]>(() => isDemo ? demoPlannerHistory() : []);
+  const [loading, setLoading] = useState(!isDemo);
   const [range, setRange] = useState<Range>("30d");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(subDays(new Date(), 14));
   const [customTo, setCustomTo] = useState<Date | undefined>(new Date());
 
   useEffect(() => {
+    if (isDemo) {
+      setTasks(demoPlannerHistory());
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     (async () => {
       const since = dateStr(subDays(new Date(), 120));
@@ -64,7 +89,7 @@ export default function StudentPlannerPerformance() {
       setTasks((data ?? []) as Task[]);
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, isDemo]);
 
   // Range bounds
   const { from, to } = useMemo(() => {
@@ -187,7 +212,7 @@ export default function StudentPlannerPerformance() {
     m < 60 ? "bg-sky-400 dark:bg-sky-500/50" :
     m < 120 ? "bg-sky-500 dark:bg-sky-500/70" : "bg-sky-700 dark:bg-sky-400";
 
-  if (loading) return <SectionSkeleton />;
+  if (loading && !isDemo) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

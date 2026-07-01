@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ import PlannerTaskDialog, { TaskFormValue } from "@/components/student/PlannerTa
 import PlannerSuggestions from "@/components/student/PlannerSuggestions";
 import DayPlannerAnimatedTour from "@/components/student/DayPlannerAnimatedTour";
 import { Recurrence, addDays, fmtDate, fmtFullDate, todayStr, describeRecurrence } from "@/lib/plannerRecurrence";
+import { DEMO_REWARDS, DEMO_TASKS } from "@/lib/demoData";
 
 import SectionSkeleton from "@/components/student/SectionSkeleton";
 interface Task {
@@ -68,11 +70,41 @@ const PRIORITY_COLOR: Record<string, string> = {
 
 const ROLLOVER_KEY = "planner_rollover_date";
 
+const demoPlannerTasks = (): Task[] => {
+  const today = todayStr();
+  const slots = ["07:30", "09:00", "18:30", "20:00", "21:15"];
+  const categories = ["qa", "varc", "revision", "sectional", "custom"];
+  return DEMO_TASKS.map((task, index) => ({
+    id: task.id,
+    title: task.title,
+    description: index < 3 ? "Completed in the demo study plan." : "Scheduled for today in the demo plan.",
+    category: categories[index] ?? "custom",
+    priority: index === 3 ? "high" : index === 4 ? "medium" : "low",
+    scheduled_date: task.task_date || today,
+    scheduled_start_time: slots[index] ?? null,
+    estimated_minutes: index === 3 ? 45 : index === 4 ? 20 : 30,
+    actual_minutes: task.is_completed ? (index === 1 ? 40 : 30) : null,
+    status: task.is_completed ? "completed" : "pending",
+    completed_at: task.is_completed ? new Date().toISOString() : null,
+    notes: null,
+    recurrence: "none",
+    recurrence_days: [],
+    recurrence_until: null,
+    series_id: null,
+    linked_action: index === 3 ? "mocks" : index === 4 ? "personalized_hub" : null,
+    linked_ref: null,
+    rolled_over_from: null,
+    auto_rollover: true,
+    original_date: task.task_date || today,
+  }));
+};
+
 export default function StudentDayPlanner() {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [rewards, setRewards] = useState<{ streak_days: number; longest_streak: number } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isDemo = useIsDemo();
+  const [tasks, setTasks] = useState<Task[]>(() => isDemo ? demoPlannerTasks() : []);
+  const [rewards, setRewards] = useState<{ streak_days: number; longest_streak: number } | null>(() => isDemo ? DEMO_REWARDS : null);
+  const [loading, setLoading] = useState(!isDemo);
 
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
@@ -80,6 +112,12 @@ export default function StudentDayPlanner() {
   const [showGuide, setShowGuide] = useState(false);
 
   const load = async () => {
+    if (isDemo) {
+      setTasks(demoPlannerTasks());
+      setRewards(DEMO_REWARDS);
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     const [{ data: t }, { data: r }] = await Promise.all([
       supabase
@@ -98,6 +136,12 @@ export default function StudentDayPlanner() {
 
   // First mount per day: rollover stale pending tasks + materialise upcoming recurrences
   useEffect(() => {
+    if (isDemo) {
+      setTasks(demoPlannerTasks());
+      setRewards(DEMO_REWARDS);
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     const today = todayStr();
     const stamp = typeof window !== "undefined" ? localStorage.getItem(ROLLOVER_KEY) : today;
@@ -114,10 +158,11 @@ export default function StudentDayPlanner() {
       load();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, isDemo]);
 
   // First-time user guide
   useEffect(() => {
+    if (isDemo) return;
     if (!user) return;
     try {
       const key = `planner_guide_seen_${user.id}`;
@@ -265,7 +310,8 @@ export default function StudentDayPlanner() {
     load();
   };
 
-  if (loading) return <SectionSkeleton />;
+  // Demo must never get stuck on the skeleton if auth/user resolution lags.
+  if (loading && !isDemo) return <SectionSkeleton />;
 
   return (
     <div className="space-y-6">

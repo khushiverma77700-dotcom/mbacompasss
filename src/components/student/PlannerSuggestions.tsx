@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Plus, ArrowRight, FileText, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsDemo } from "@/contexts/DemoModeContext";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { todayStr } from "@/lib/plannerRecurrence";
@@ -33,9 +34,37 @@ interface Props {
  */
 export default function PlannerSuggestions({ existingTitles, onAdded }: Props) {
   const { user } = useAuth();
+  const isDemo = useIsDemo();
   const [items, setItems] = useState<Suggestion[]>([]);
 
   useEffect(() => {
+    if (isDemo) {
+      setItems([
+        {
+          key: "demo:lrdi",
+          title: "LRDI caselet booster",
+          hint: "20-minute drill from your weak topics",
+          cta: "Open hub",
+          icon: Brain,
+          to: "/demo/personalized-hub",
+          linked_action: "personalized_hub",
+          category: "custom",
+          estimated_minutes: 20,
+        },
+        {
+          key: "demo:mock",
+          title: "CAT Full Mock 09",
+          hint: "Next full-length mock in your plan",
+          cta: "View mock",
+          icon: FileText,
+          to: "/demo/mocks/full-length",
+          linked_action: "mocks",
+          category: "mock",
+          estimated_minutes: 120,
+        },
+      ].filter((s) => !existingTitles.some((t) => t.toLowerCase() === s.title.toLowerCase())));
+      return;
+    }
     if (!user) return;
     (async () => {
       const out: Suggestion[] = [];
@@ -102,7 +131,7 @@ export default function PlannerSuggestions({ existingTitles, onAdded }: Props) {
       const lc = new Set(existingTitles.map((t) => t.toLowerCase()));
       setItems(out.filter((s) => !lc.has(s.title.toLowerCase())).slice(0, 3));
     })();
-  }, [user, existingTitles.join("|")]);
+  }, [user, isDemo, existingTitles.join("|")]);
 
   const addAsTask = async (s: Suggestion) => {
     if (!user) return;

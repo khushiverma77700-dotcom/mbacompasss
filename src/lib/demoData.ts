@@ -33,7 +33,8 @@ export const DEMO_ATTEMPTS = [
   {
     id: "demo-a1", test_id: "demo-t1", user_id: "demo-user",
     status: "submitted",
-    percentile: 96.4, total_score: 138, accuracy: 78,
+    percentile: 96.4, total_score: 138, max_score: 198, accuracy: 78,
+    total_correct: 51, total_attempted: 65, total_incorrect: 14,
     started_at: daysAgo(2), submitted_at: daysAgo(2),
     test: { name: "MBA Compass CAT Full Mock 08", slug: "cat-fm-08", exam_code: "CAT" },
     sectional_scores: {
@@ -45,7 +46,8 @@ export const DEMO_ATTEMPTS = [
   {
     id: "demo-a2", test_id: "demo-t2", user_id: "demo-user",
     status: "submitted",
-    percentile: 94.1, total_score: 129, accuracy: 74,
+    percentile: 94.1, total_score: 129, max_score: 198, accuracy: 74,
+    total_correct: 47, total_attempted: 64, total_incorrect: 17,
     started_at: daysAgo(6), submitted_at: daysAgo(6),
     test: { name: "MBA Compass CAT Full Mock 07", slug: "cat-fm-07", exam_code: "CAT" },
     sectional_scores: {
@@ -57,7 +59,8 @@ export const DEMO_ATTEMPTS = [
   {
     id: "demo-a3", test_id: "demo-t3", user_id: "demo-user",
     status: "submitted",
-    percentile: 91.8, total_score: 121, accuracy: 71,
+    percentile: 91.8, total_score: 121, max_score: 198, accuracy: 71,
+    total_correct: 44, total_attempted: 62, total_incorrect: 18,
     started_at: daysAgo(10), submitted_at: daysAgo(10),
     test: { name: "MBA Compass CAT Full Mock 06", slug: "cat-fm-06", exam_code: "CAT" },
     sectional_scores: {
@@ -69,7 +72,8 @@ export const DEMO_ATTEMPTS = [
   {
     id: "demo-a4", test_id: "demo-t4", user_id: "demo-user",
     status: "submitted",
-    percentile: 89.2, total_score: 114, accuracy: 68,
+    percentile: 89.2, total_score: 114, max_score: 198, accuracy: 68,
+    total_correct: 41, total_attempted: 60, total_incorrect: 19,
     started_at: daysAgo(15), submitted_at: daysAgo(15),
     test: { name: "MBA Compass CAT Sectional — QA 04", slug: "cat-sec-qa-04", exam_code: "CAT" },
     sectional_scores: {
@@ -79,7 +83,8 @@ export const DEMO_ATTEMPTS = [
   {
     id: "demo-a5", test_id: "demo-t5", user_id: "demo-user",
     status: "submitted",
-    percentile: 87.5, total_score: 108, accuracy: 65,
+    percentile: 87.5, total_score: 108, max_score: 198, accuracy: 65,
+    total_correct: 39, total_attempted: 60, total_incorrect: 21,
     started_at: daysAgo(20), submitted_at: daysAgo(20),
     test: { name: "MBA Compass CAT Full Mock 05", slug: "cat-fm-05", exam_code: "CAT" },
     sectional_scores: {
@@ -91,7 +96,8 @@ export const DEMO_ATTEMPTS = [
   {
     id: "demo-a6", test_id: "demo-t6", user_id: "demo-user",
     status: "submitted",
-    percentile: 83.1, total_score: 98, accuracy: 61,
+    percentile: 83.1, total_score: 98, max_score: 198, accuracy: 61,
+    total_correct: 35, total_attempted: 57, total_incorrect: 22,
     started_at: daysAgo(28), submitted_at: daysAgo(28),
     test: { name: "MBA Compass CAT Full Mock 04", slug: "cat-fm-04", exam_code: "CAT" },
     sectional_scores: {
