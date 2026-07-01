@@ -283,7 +283,8 @@ export default function StudentLayout() {
               <ThemeToggle />
               {!isStandalone && (
                 <Link
-                  to="/student/install"
+                  to={resolveTo("/student/install")}
+
                   className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
                   aria-label="Install app"
                   title="Install MBA Compass - CAT Prep as an app"
