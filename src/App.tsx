@@ -831,20 +831,9 @@ const App = () => (
             ) : (
               <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
             )}
-            {/* Demo dashboard — read-only preview of the student LMS. Same layout, same
-                child routes, but wrapped in DemoModeProvider so all interactive
-                widgets are blocked and a top banner is shown. */}
-            <Route
-              path="/demo"
-              element={
-                <DemoModeProvider>
-                  <StudentLazyPage><StudentLayout /></StudentLazyPage>
-                </DemoModeProvider>
-              }
-            >
-              <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
-              {studentChildRoutes}
-            </Route>
+            {/* Demo dashboard routes are registered inside the IIFE below so
+                they can reuse the same studentChildRoutes tree. */}
+
 
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
