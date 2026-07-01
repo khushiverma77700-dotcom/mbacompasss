@@ -621,7 +621,7 @@ function SidebarContent() {
 
       {/* PerformX — premium gamification block (Apex Arena) */}
       <NavLink
-        to="/student/performx"
+        to={resolveTo("/student/performx")}
         className={({ isActive }) =>
           cn(
             "relative my-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold overflow-hidden border transition-all group",
