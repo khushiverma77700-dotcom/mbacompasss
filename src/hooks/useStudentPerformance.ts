@@ -273,17 +273,24 @@ function computeDemoPerformance(): StudentPerformanceData {
     }
     return s;
   }, 0);
-  const avgPercentile = +(ps.reduce((a, b) => a + b, 0) / n).toFixed(1);
-  const bestPercentile = Math.max(...ps);
-  const avgAccuracy = Math.round(accs.reduce((a, b) => a + b, 0) / n);
-  const avgScore = +(totalScore / n).toFixed(1);
+  const avgPercentile = n ? +(ps.reduce((a, b) => a + b, 0) / n).toFixed(1) : 0;
+  const bestPercentile = n ? Math.max(...ps) : 0;
+  const avgAccuracy = n ? Math.round(accs.reduce((a, b) => a + b, 0) / n) : 0;
+  const avgScore = n ? +(totalScore / n).toFixed(1) : 0;
   const totalHours = +(totalSec / 3600).toFixed(1);
-  const mean = ps.reduce((a, b) => a + b, 0) / n;
-  const variance = ps.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
-  const consistency = Math.max(0, Math.round(100 - Math.sqrt(variance)));
+  let consistency = 0;
+  if (n >= 2) {
+    const mean = ps.reduce((a, b) => a + b, 0) / n;
+    const variance = ps.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+    consistency = Math.max(0, Math.round(100 - Math.sqrt(variance)));
+  }
   const chrono = submitted.slice().reverse();
-  const improvement = +((Number(chrono[chrono.length - 1].percentile || 0)) - Number(chrono[0].percentile || 0)).toFixed(1);
-  const lastDelta = +((Number(submitted[0].percentile || 0)) - Number(submitted[1].percentile || 0)).toFixed(1);
+  const improvement = chrono.length >= 2
+    ? +((Number(chrono[chrono.length - 1].percentile || 0)) - Number(chrono[0].percentile || 0)).toFixed(1)
+    : 0;
+  const lastDelta = submitted.length >= 2
+    ? +((Number(submitted[0].percentile || 0)) - Number(submitted[1].percentile || 0)).toFixed(1)
+    : 0;
   const days = new Set(submitted.filter((x) => x.submitted_at).map((x) => new Date(x.submitted_at!).toDateString()));
 
   const agg: Record<string, { score: number; max: number; correct: number; attempted: number; percentile: number; count: number }> = {};
