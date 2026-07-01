@@ -293,7 +293,7 @@ export default function StudentLayout() {
                   <span className="hidden md:inline">Install</span>
                 </Link>
               )}
-              <Link to="/student/notifications" className="relative p-1.5 sm:p-2 rounded-md hover:bg-accent" aria-label="Notifications">
+              <Link to={resolveTo("/student/notifications")} className="relative p-1.5 sm:p-2 rounded-md hover:bg-accent" aria-label="Notifications">
                 <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5 text-foreground/70" />
               </Link>
               <div className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l border-border">
