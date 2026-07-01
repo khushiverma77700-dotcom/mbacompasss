@@ -489,7 +489,7 @@ function SidebarContent() {
     return (
       <NavLink
         key={item.to}
-        to={item.to}
+        to={resolveTo(item.to)}
         end={item.end}
         className={({ isActive }) =>
           cn(
