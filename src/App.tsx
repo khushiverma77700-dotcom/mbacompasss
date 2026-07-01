@@ -412,6 +412,7 @@ const StudentBackGuard = () => {
       typeof window !== "undefined" &&
       window.location.hostname === "dashboard.mbacompass.in";
     const path = location.pathname;
+    if (path === "/demo" || path.startsWith("/demo/")) return; // keep demo tree free
     const mockWorkPath = path.startsWith("/mocks/attempt/") || path.startsWith("/mocks/result/") || path.startsWith("/mocks/review/") || path.startsWith("/mocks/leaderboard/");
     const insideLms = onDashHost
       ? (path === "/" || path.startsWith("/student"))
@@ -419,6 +420,7 @@ const StudentBackGuard = () => {
     if (path === "/student/login" || !insideLms) {
       navigate(onDashHost ? "/" : "/student", { replace: true });
     }
+
   }, [location.pathname, navigate]);
 
   return null;
@@ -831,19 +833,10 @@ const App = () => (
             ) : (
               <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
             )}
-            {/* Demo dashboard — read-only preview of the student LMS. Same layout, same
-                child routes, but wrapped in DemoModeProvider so all interactive
-                widgets are blocked and a top banner is shown. */}
-            <Route
-              path="/demo"
-              element={
-                <DemoModeProvider>
-                  <StudentLazyPage><StudentLayout /></StudentLazyPage>
-                </DemoModeProvider>
-              }
-            >
-              <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
-            </Route>
+            {/* Demo dashboard routes are registered inside the IIFE below so
+                they can reuse the same studentChildRoutes tree. */}
+
+
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
@@ -958,12 +951,22 @@ const App = () => (
               );
               return (
                 <>
-                  {/* Demo dashboard removed to reduce load. */}
+                  <Route
+                    path="/demo"
+                    element={
+                      <DemoModeProvider>
+                        <StudentLazyPage><StudentLayout /></StudentLazyPage>
+                      </DemoModeProvider>
+                    }
+                  >
+                    {studentChildRoutes}
+                  </Route>
                   <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                     {studentChildRoutes}
                   </Route>
                 </>
               );
+
             })()}
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />

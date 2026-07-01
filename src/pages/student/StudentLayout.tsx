@@ -49,6 +49,20 @@ import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
 import { preloadAllStudentRoutes, preloadStudentRoute } from "@/lib/preloadStudentRoutes";
 
+// In demo mode the LMS renders under /demo/* instead of /student/*.
+// Any hard-coded "/student/..." link needs to be swapped so navigation stays
+// inside the read-only demo tree (otherwise the real /student routes bounce
+// the demo user through the auth guard).
+const isDemoPath = () =>
+  typeof window !== "undefined" && window.location.pathname.startsWith("/demo");
+const resolveTo = (to: string) => {
+  if (!isDemoPath()) return to;
+  if (to === "/student") return "/demo";
+  if (to.startsWith("/student/")) return "/demo" + to.slice("/student".length);
+  return to;
+};
+
+
 type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
 
 // "My Mocks" — single, self-explanatory group containing every mock-related section.
@@ -130,7 +144,7 @@ export default function StudentLayout() {
   const onDashboardHost =
     typeof window !== "undefined" &&
     window.location.hostname === "dashboard.mbacompass.in";
-  const homePath = onDashboardHost ? "/" : "/student";
+  const homePath = isDemo ? "/demo" : onDashboardHost ? "/" : "/student";
 
   // Mark "student mode" so mock pages know the user lives inside the dashboard
   // and route their back / post-submit navigation back into /student/*.
@@ -269,7 +283,8 @@ export default function StudentLayout() {
               <ThemeToggle />
               {!isStandalone && (
                 <Link
-                  to="/student/install"
+                  to={resolveTo("/student/install")}
+
                   className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
                   aria-label="Install app"
                   title="Install MBA Compass - CAT Prep as an app"
@@ -278,7 +293,7 @@ export default function StudentLayout() {
                   <span className="hidden md:inline">Install</span>
                 </Link>
               )}
-              <Link to="/student/notifications" className="relative p-1.5 sm:p-2 rounded-md hover:bg-accent" aria-label="Notifications">
+              <Link to={resolveTo("/student/notifications")} className="relative p-1.5 sm:p-2 rounded-md hover:bg-accent" aria-label="Notifications">
                 <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5 text-foreground/70" />
               </Link>
               <div className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l border-border">
@@ -415,7 +430,8 @@ function SidebarContent() {
     return (
       <NavLink
         key={item.to}
-        to={item.to}
+        to={resolveTo(item.to)}
+
         end={item.end}
         onClick={() => badge > 0 && markSeen(item.to)}
         onMouseEnter={() => preloadStudentRoute(item.to)}
@@ -473,7 +489,7 @@ function SidebarContent() {
     return (
       <NavLink
         key={item.to}
-        to={item.to}
+        to={resolveTo(item.to)}
         end={item.end}
         className={({ isActive }) =>
           cn(
@@ -605,7 +621,7 @@ function SidebarContent() {
 
       {/* PerformX — premium gamification block (Apex Arena) */}
       <NavLink
-        to="/student/performx"
+        to={resolveTo("/student/performx")}
         className={({ isActive }) =>
           cn(
             "relative my-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold overflow-hidden border transition-all group",
@@ -662,13 +678,14 @@ function SidebarContent() {
 
       <div className="pt-4 mt-4 border-t border-border space-y-1">
         <Link
-          to="/student/mocks/full-length"
+          to={resolveTo("/student/mocks/full-length")}
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →
         </Link>
         <Link
-          to="/student/install"
+          to={resolveTo("/student/install")}
+
           className="flex items-center gap-2 text-xs font-medium text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-md px-3 py-2"
         >
           <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-[10px]">↓</span>
