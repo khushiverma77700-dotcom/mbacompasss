@@ -49,6 +49,20 @@ import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
 import { preloadAllStudentRoutes, preloadStudentRoute } from "@/lib/preloadStudentRoutes";
 
+// In demo mode the LMS renders under /demo/* instead of /student/*.
+// Any hard-coded "/student/..." link needs to be swapped so navigation stays
+// inside the read-only demo tree (otherwise the real /student routes bounce
+// the demo user through the auth guard).
+const isDemoPath = () =>
+  typeof window !== "undefined" && window.location.pathname.startsWith("/demo");
+const resolveTo = (to: string) => {
+  if (!isDemoPath()) return to;
+  if (to === "/student") return "/demo";
+  if (to.startsWith("/student/")) return "/demo" + to.slice("/student".length);
+  return to;
+};
+
+
 type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
 
 // "My Mocks" — single, self-explanatory group containing every mock-related section.
