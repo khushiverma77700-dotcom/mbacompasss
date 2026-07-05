@@ -56,6 +56,10 @@ export default function StudentLogin() {
     let cancelled = false;
     (async () => {
       setGateChecking(true);
+      if (isDemoFlow) {
+        navigate(redirectTo, { replace: true });
+        return;
+      }
       const ok = await userHasPurchasedCourse(user.id);
       if (cancelled) return;
       if (ok) {
@@ -67,7 +71,7 @@ export default function StudentLogin() {
       }
     })();
     return () => { cancelled = true; };
-  }, [authLoading, user, navigate, redirectTo]);
+  }, [authLoading, user, navigate, redirectTo, isDemoFlow]);
 
   const enforcePurchaseGate = async (userId: string) => {
     const ok = await userHasPurchasedCourse(userId);
