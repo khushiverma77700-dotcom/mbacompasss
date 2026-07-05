@@ -11,6 +11,7 @@ export const getAuthRedirectUri = () => {
     hostname === "127.0.0.1" ||
     hostname === "mbacompass.in" ||
     hostname === "www.mbacompass.in" ||
+    hostname.endsWith(".mbacompass.in") ||
     hostname.endsWith(".lovable.app")
   ) {
     return origin;
