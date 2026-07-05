@@ -63,9 +63,7 @@ const AuthPage = () => {
     || normalizeRedirectPath(searchParams?.get("redirect"))
     || "/";
 
-  useEffect(() => {
-    if (isDemoFlow) setIsLogin(false);
-  }, [isDemoFlow]);
+  // Demo flow allows both sign in and sign up; Google sign-up still enforces mobile OTP via OnboardingDialog.
 
   useEffect(() => {
     if (resendTimer <= 0) return;
