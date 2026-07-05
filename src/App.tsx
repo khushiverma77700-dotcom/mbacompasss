@@ -850,6 +850,9 @@ const App = () => (
             <Route path="/compare" element={<PublicLayout><LazyPage><ComparePage /></LazyPage></PublicLayout>} />
             <Route path="/article/:slug" element={<PublicLayout><LazyPage><ArticlePage /></LazyPage></PublicLayout>} />
             <Route path="/college/:slug" element={<PublicLayout><LazyPage><CollegeDetailPage /></LazyPage></PublicLayout>} />
+            {/* Legacy indexed URLs: /college/:slug/programme/:programmeSlug → redirect to parent college page (Soft-404 fix) */}
+            <Route path="/college/:slug/programme/:programmeSlug" element={<LazyPage><CollegeProgrammeRedirect /></LazyPage>} />
+            <Route path="/college/:slug/programme" element={<LazyPage><CollegeProgrammeRedirect /></LazyPage>} />
             {/* H5: SEO hub pages — must be registered before the generic /colleges/:region catch-all */}
             <Route path="/colleges/type/:typeSlug" element={<PublicLayout><LazyPage><CollegeHubPage kind="type" /></LazyPage></PublicLayout>} />
             <Route path="/colleges/by-city/:citySlug" element={<PublicLayout><LazyPage><CollegeHubPage kind="city" /></LazyPage></PublicLayout>} />
