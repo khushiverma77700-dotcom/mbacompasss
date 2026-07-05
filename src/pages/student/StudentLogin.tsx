@@ -359,7 +359,10 @@ export default function StudentLogin() {
             </div>
           )}
 
-          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3">
+          <Link
+            to="/demo"
+            className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 hover:from-amber-100 hover:to-orange-100 transition-colors cursor-pointer"
+          >
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-lg bg-amber-100 grid place-items-center shrink-0">
                 <Sparkles className="h-4 w-4 text-amber-600" />
@@ -372,7 +375,7 @@ export default function StudentLogin() {
               </div>
             </div>
             <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
-          </div>
+          </Link>
 
 
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
