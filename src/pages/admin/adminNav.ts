@@ -65,6 +65,8 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Bulk AI Mock Generation", path: "/admin/bulk-mock-generation", icon: Sparkles },
       { label: "✨ Fix Explanations (AI)", path: "/admin/explanation-cleaner", icon: Sparkles },
       { label: "Students", path: "/admin/student-mocks", icon: Users },
+      { label: "Demo Leads", path: "/admin/demo-leads", icon: Users },
+
       { label: "Orders", path: "/admin/mock-orders", icon: ShoppingCart },
       { label: "Support Tickets", path: "/admin/support-tickets", icon: Ticket, dotKey: "supportTickets" },
       // Secondary tools
