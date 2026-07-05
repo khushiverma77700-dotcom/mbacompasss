@@ -979,6 +979,8 @@ const App = () => (
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
+            {/* Legacy top-level college slugs (e.g. /asm-ibmr-pune, /pumba-pune-mba-admission) — resolve to /college/:slug or NotFound. Keep second-to-last so real routes win. */}
+            <Route path="/:slug" element={<PublicLayout><LazyPage><LegacyCollegeSlugRedirect /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </DeferredRoutes>
         </AuthProvider>
