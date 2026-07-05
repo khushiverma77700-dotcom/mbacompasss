@@ -800,6 +800,8 @@ const App = () => (
               <Route path="sitemap" element={<LazyPage><AdminSitemap /></LazyPage>} />
               <Route path="clear-cache" element={<LazyPage><AdminClearCache /></LazyPage>} />
               <Route path="leads" element={<LazyPage><AdminLeads /></LazyPage>} />
+              <Route path="demo-leads" element={<LazyPage><AdminDemoLeads /></LazyPage>} />
+
               
               <Route path="all-links" element={<LazyPage><AdminAllLinks /></LazyPage>} />
               <Route path="comparisons" element={<LazyPage><AdminComparisons /></LazyPage>} />
