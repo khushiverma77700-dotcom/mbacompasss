@@ -973,13 +973,16 @@ const App = () => (
                   <Route
                     path="/demo"
                     element={
-                      <DemoModeProvider>
-                        <StudentLazyPage><StudentLayout /></StudentLazyPage>
-                      </DemoModeProvider>
+                      <DemoAuthGate>
+                        <DemoModeProvider>
+                          <StudentLazyPage><StudentLayout /></StudentLazyPage>
+                        </DemoModeProvider>
+                      </DemoAuthGate>
                     }
                   >
                     {studentChildRoutes}
                   </Route>
+
                   <Route path="/student" element={<StudentLazyPage><StudentLayout /></StudentLazyPage>}>
                     {studentChildRoutes}
                   </Route>
