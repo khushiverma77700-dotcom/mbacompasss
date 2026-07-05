@@ -736,6 +736,25 @@ const CourseSlugRedirect = () => {
 };
 
 
+// Gate the /demo experience behind a real signed-in account. StudentLogin
+// requires an OTP-verified mobile number, so this doubles as OTP gating.
+const DemoAuthGate = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <StudentShellFallback />;
+  }
+  if (!user) {
+    return (
+      <Navigate
+        to={`/student/login?redirect=${encodeURIComponent("/demo")}&reason=demo`}
+        replace
+      />
+    );
+  }
+  return <>{children}</>;
+};
+
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
