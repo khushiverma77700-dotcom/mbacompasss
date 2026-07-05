@@ -23,15 +23,6 @@ const clearAdminCache = (userId?: string) => {
   }
 };
 
-const DEMO_AUTH_USER = {
-  id: "demo-user",
-  email: "aman.demo@mbacompass.in",
-  app_metadata: {},
-  aud: "authenticated",
-  created_at: new Date(0).toISOString(),
-  user_metadata: { display_name: "Aman Verma" },
-} as unknown as User;
-
 type AdminCacheEntry = {
   isAdmin: boolean;
   allowedSections: string[] | null;
@@ -107,7 +98,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
-  const isDemoPath = location.pathname.startsWith("/demo");
   const initialSession = useRef<Session | null>(readStoredSession());
   const initialNeedsAdmin = typeof window !== "undefined" && shouldResolveAdminForPath(window.location.pathname);
   const [user, setUser] = useState<User | null>(initialSession.current?.user ?? null);
@@ -145,7 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // dashboard.mbacompass.in lives at "/" — auth must start immediately
       // or the LMS shell sits in a skeleton state for ~3.5s.
       if (host === "dashboard.mbacompass.in") return true;
-      return path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/auth") ||
+      return path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/auth") || path.startsWith("/demo") ||
         path.startsWith("/dashboard") || path.startsWith("/profile-analyzer") || path.startsWith("/mocks");
     };
     const startAuth = () => import("@/integrations/supabase/client")
@@ -318,12 +308,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{
-      user: isDemoPath ? DEMO_AUTH_USER : user,
-      session: isDemoPath ? null : session,
-      loading: isDemoPath ? false : loading,
-      isAdmin: isDemoPath ? false : isAdmin,
-      adminLoading: isDemoPath ? false : adminLoading,
-      allowedSections: isDemoPath ? null : allowedSections,
+      user,
+      session,
+      loading,
+      isAdmin,
+      adminLoading,
+      allowedSections,
       signUp,
       signIn,
       signOut,

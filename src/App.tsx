@@ -758,7 +758,7 @@ const DemoAuthGate = ({ children }: { children: React.ReactNode }) => {
           .maybeSingle();
         if (cancelled) return;
         const name = (profile as any)?.display_name || (user.user_metadata as any)?.display_name || null;
-        const phone = (profile as any)?.phone || null;
+        const phone = (profile as any)?.phone || (user.user_metadata as any)?.phone || null;
         const email = user.email || null;
         const referrer = typeof document !== "undefined" ? document.referrer : null;
         const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
@@ -792,7 +792,7 @@ const DemoAuthGate = ({ children }: { children: React.ReactNode }) => {
   if (!user) {
     return (
       <Navigate
-        to={`/student/login?redirect=${encodeURIComponent("/demo")}&reason=demo`}
+        to={`/auth?mode=signup&redirect=${encodeURIComponent("/demo")}&reason=demo`}
         replace
       />
     );
