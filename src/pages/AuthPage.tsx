@@ -29,7 +29,7 @@ const AuthPage = () => {
     : null;
   const initialMode = searchParams?.get("mode") ?? null;
   const isDemoFlow = searchParams?.get("reason") === "demo" || normalizeRedirectPath(searchParams?.get("redirect")) === "/demo";
-  const [isLogin, setIsLogin] = useState(isDemoFlow ? false : initialMode !== "signup");
+  const [isLogin, setIsLogin] = useState(initialMode !== "signup");
 
   // Login: identifier can be email OR 10-digit phone.
   const [loginId, setLoginId] = useState("");
