@@ -736,7 +736,7 @@ const CollegeDetailPage = () => {
               <Card>
                 <CardHeader><CardTitle className="font-heading">Cutoff Details</CardTitle></CardHeader>
                 <CardContent>
-                  {cutoffData.cutoffs?.length > 0 ? (
+                  {Array.isArray(cutoffData.cutoffs) && cutoffData.cutoffs.length > 0 ? (
                     <div className="-mx-6 px-6">
                       <div className="overflow-x-auto rounded-lg border border-border bg-card">
                         <table className="w-full text-sm border-collapse min-w-[480px]">
@@ -747,7 +747,7 @@ const CollegeDetailPage = () => {
                             <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border whitespace-nowrap">Percentile</th>
                           </tr></thead>
                           <tbody>
-                            {cutoffData.cutoffs.map((c: any, i: number) => (
+                            {(cutoffData.cutoffs as any[]).map((c: any, i: number) => (
                               <tr key={i} className="border-b border-border last:border-0">
                                 <td className="py-3 px-3 font-medium text-foreground whitespace-nowrap">{c.category}</td>
                                 <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">{c.exam}</td>
