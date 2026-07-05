@@ -109,6 +109,8 @@ const AdminCTAManager = lazyWithPreload(() => import("./pages/admin/AdminCTAMana
 const AdminCTAAnalytics = lazyWithPreload(() => import("./pages/admin/AdminCTAAnalytics"));
 const AdminStaticPageSEO = lazyWithPreload(() => import("./pages/admin/AdminStaticPageSEO"));
 const AdminAllLeads = lazyWithPreload(() => import("./pages/admin/AdminAllLeads"));
+const AdminDemoLeads = lazyWithPreload(() => import("./pages/admin/AdminDemoLeads"));
+
 const AdminBusinessInquiries = lazyWithPreload(() => import("./pages/admin/AdminBusinessInquiries"));
 const AdminShortlisterColleges = lazyWithPreload(() => import("./pages/admin/AdminShortlisterColleges"));
 const AdminCallbacks = lazyWithPreload(() => import("./pages/admin/AdminCallbacks"));
