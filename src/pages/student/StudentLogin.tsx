@@ -352,23 +352,28 @@ export default function StudentLogin() {
             </div>
           )}
 
-          <Link
-            to="/demo"
-            className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 hover:border-amber-300 hover:shadow-sm transition"
-          >
+          {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reason") === "demo" && (
+            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+              <span className="font-semibold">Sign in to try the demo.</span>{" "}
+              Verify your mobile with OTP below and you'll be taken straight to the demo dashboard.
+            </div>
+          )}
+
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3">
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-lg bg-amber-100 grid place-items-center shrink-0">
                 <Sparkles className="h-4 w-4 text-amber-600" />
               </div>
               <div className="text-xs text-slate-700 leading-relaxed">
-                <span className="font-semibold text-slate-900">Try a Demo Account</span>
+                <span className="font-semibold text-slate-900">Want to try a Demo Account?</span>
                 <div className="text-slate-600">
-                  Explore every tab and screen — no login required.
+                  Sign in above with your OTP-verified mobile — the demo opens right after.
                 </div>
               </div>
             </div>
             <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
-          </Link>
+          </div>
+
 
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
             <div className="flex items-start gap-3">
