@@ -31,7 +31,8 @@ export default function StudentLogin() {
   const { toast } = useToast();
   const params = new URLSearchParams(location.search);
   const redirectParam = params.get("redirect");
-  const redirectTo = redirectParam?.startsWith("/student") ? redirectParam : "/student";
+  const isDemoFlow = redirectParam === "/demo" || params.get("reason") === "demo";
+  const redirectTo = redirectParam?.startsWith("/student") || redirectParam === "/demo" ? redirectParam : "/student";
   const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -92,7 +93,7 @@ export default function StudentLogin() {
         setLoading(false);
         return;
       }
-      if (!(await enforcePurchaseGate(data.user.id))) {
+      if (!isDemoFlow && !(await enforcePurchaseGate(data.user.id))) {
         setLoading(false);
         return;
       }
@@ -165,7 +166,7 @@ export default function StudentLogin() {
       });
       if (sessErr) throw sessErr;
       const uid = sessRes.user?.id;
-      if (!uid || !(await enforcePurchaseGate(uid))) return;
+      if (!uid || (!isDemoFlow && !(await enforcePurchaseGate(uid)))) return;
       toast({ title: "Signed in", description: "Loading your dashboard…" });
       navigate(redirectTo, { replace: true });
     } catch (err: any) {
@@ -360,7 +361,7 @@ export default function StudentLogin() {
           )}
 
           <Link
-            to="/demo"
+            to="/auth?mode=signup&redirect=/demo&reason=demo"
             className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 hover:from-amber-100 hover:to-orange-100 transition-colors cursor-pointer"
           >
             <div className="flex items-start gap-3">
@@ -370,7 +371,7 @@ export default function StudentLogin() {
               <div className="text-xs text-slate-700 leading-relaxed">
                 <span className="font-semibold text-slate-900">Want to try a Demo Account?</span>
                 <div className="text-slate-600">
-                  Sign in above with your OTP-verified mobile — the demo opens right after.
+                  Create a full OTP-verified account — the demo opens right after.
                 </div>
               </div>
             </div>

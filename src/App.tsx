@@ -792,7 +792,7 @@ const DemoAuthGate = ({ children }: { children: React.ReactNode }) => {
   if (!user) {
     return (
       <Navigate
-        to={`/student/login?redirect=${encodeURIComponent("/demo")}&reason=demo`}
+        to={`/auth?mode=signup&redirect=${encodeURIComponent("/demo")}&reason=demo`}
         replace
       />
     );
