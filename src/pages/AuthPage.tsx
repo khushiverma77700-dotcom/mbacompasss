@@ -398,12 +398,12 @@ const AuthPage = () => {
             </div>
           )}
 
-          {!isDemoFlow && <div className="text-center text-sm text-muted-foreground pt-1">
+          <div className="text-center text-sm text-muted-foreground pt-1">
             {isLogin ? "New to MBA Compass?" : "Already have an account?"}{" "}
             <button onClick={resetMode} className="text-primary font-medium hover:underline">
               {isLogin ? "Create account" : "Sign in"}
             </button>
-          </div>}
+          </div>
 
           <div className="pt-3 mt-1 border-t border-border space-y-2 text-center">
             <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
