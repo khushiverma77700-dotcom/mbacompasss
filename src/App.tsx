@@ -724,6 +724,18 @@ const OAuthRedirectHandler = () => {
   return null;
 };
 
+const ExamSlugRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const clean = (slug || "").replace(/-exam$/, "");
+  return <Navigate to={`/exam/${clean}`} replace />;
+};
+
+const CourseSlugRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={`/courses/${slug || ""}`} replace />;
+};
+
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
