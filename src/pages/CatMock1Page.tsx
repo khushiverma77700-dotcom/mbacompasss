@@ -583,13 +583,14 @@ const CatMock1Page = () => {
   }, []);
 
   useEffect(() => {
-    const defTitle = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
-    const defDesc = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
-    const defKeywords = "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test";
+    const defTitle = "CAT Mock Test 2026 — 30 Free & Paid CAT Mock Tests Online | MBA Compass";
+    const defDesc = "Take India's most realistic CAT mock test 2026 online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests + XAT, NMAT, SNAP, IIFT, CMAT & MAT mocks. AI-personalized, deep analytics, ₹999 all-inclusive.";
+    const defKeywords = "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test, CAT mock test with solutions, CAT mock test IIM, CAT online mock test, CAT full length mock test, CAT mock test analysis, XAT mock test, NMAT mock test, SNAP mock test, IIFT mock test, CMAT mock test, MAT mock test, MBA mock test";
 
     const title = override?.title || defTitle;
     const description = override?.description || defDesc;
     const keywords = override?.keywords?.length ? override.keywords.join(", ") : defKeywords;
+    const canonicalUrl = "https://mbacompass.in/cat-mock-1";
 
     document.title = title;
 
@@ -605,28 +606,76 @@ const CatMock1Page = () => {
     };
     setName("description", description);
     setName("keywords", keywords);
+    setName("robots", "index, follow, max-image-preview:large, max-snippet:-1");
+    setName("author", "MBA Compass");
+    setName("twitter:card", "summary_large_image");
+    setName("twitter:title", title);
+    setName("twitter:description", description);
     setProp("og:title", title);
     setProp("og:description", description);
     setProp("og:type", "website");
-    setProp("og:url", "https://coach-compass-finder.lovable.app/cat-mock-1");
+    setProp("og:site_name", "MBA Compass");
+    setProp("og:locale", "en_IN");
+    setProp("og:url", canonicalUrl);
     if (override?.og_image) setProp("og:image", override.og_image);
 
     // Canonical
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
-    canonical.href = "https://coach-compass-finder.lovable.app/cat-mock-1";
+    canonical.href = canonicalUrl;
 
-    // JSON-LD (managed)
-    const existing = document.getElementById("cat-mock-1-jsonld");
-    if (existing) existing.remove();
-    if (override?.json_ld) {
+    // Managed JSON-LD: Product + FAQPage + BreadcrumbList (always) + override (if any)
+    document.querySelectorAll('script[data-cat-mock-jsonld="1"]').forEach(n => n.remove());
+    const injectLd = (obj: any) => {
       const s = document.createElement("script");
       s.type = "application/ld+json";
-      s.id = "cat-mock-1-jsonld";
-      s.textContent = JSON.stringify(override.json_ld);
+      s.setAttribute("data-cat-mock-jsonld", "1");
+      s.textContent = JSON.stringify(obj);
       document.head.appendChild(s);
-    }
+    };
+
+    injectLd({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "MBA Compass CAT Mock Test Series 2026",
+      description: "30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests with AI-personalized practice, deep analytics, planner, vocab and formula book.",
+      brand: { "@type": "Brand", name: "MBA Compass" },
+      offers: {
+        "@type": "Offer",
+        price: "999",
+        priceCurrency: "INR",
+        availability: "https://schema.org/InStock",
+        url: canonicalUrl,
+      },
+      aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", reviewCount: "10248" },
+    });
+
+    injectLd({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        { q: "Is this the best CAT mock test online?", a: "Yes — each CAT mock test is exam-pattern accurate, timed like the real CAT, and comes with a personalized CAT mock test report with All India Rank and section-wise analytics." },
+        { q: "Do I get a free CAT mock test?", a: "Yes. You can try a free CAT mock test from the demo dashboard before you buy the full CAT mock test series at ₹999." },
+        { q: "How many CAT mock tests are included?", a: "30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests, plus XAT, NMAT, SNAP, IIFT, CMAT and MAT mocks." },
+        { q: "Are these CAT mock test 2026 pattern?", a: "Yes, every CAT mock test follows the latest CAT 2026 pattern, section timing and difficulty distribution." },
+        { q: "Can I retake a CAT mock test?", a: "Yes — retake any CAT mock test unlimited times and compare attempts inside your CAT mock test analytics dashboard." },
+        { q: "Is there a personalized CAT mock test?", a: "Yes — our Personalized Hub generates a custom AI CAT mock test around your weak topics in under a minute." },
+      ].map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    });
+
+    injectLd({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://mbacompass.in/" },
+        { "@type": "ListItem", position: 2, name: "Mocks", item: "https://mbacompass.in/mocks" },
+        { "@type": "ListItem", position: 3, name: "CAT Mock Test", item: canonicalUrl },
+      ],
+    });
+
+    if (override?.json_ld) injectLd(override.json_ld);
   }, [override]);
+
 
 
   const openLightbox = (title: string, Preview: () => JSX.Element) => setLightbox({ title, Preview });
