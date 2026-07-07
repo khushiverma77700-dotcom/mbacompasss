@@ -391,6 +391,115 @@ const SnapshotButton = ({ title, children, onOpen }: { title: string; children: 
   </button>
 );
 
+/* --------------------- Suggested courses auto slider ------------------- */
+
+type SuggestedCourse = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  price: number | null;
+  original_price: number | null;
+  thumbnail_url: string | null;
+  rating: number | null;
+};
+
+const SuggestedCoursesSlider = () => {
+  const [courses, setCourses] = useState<SuggestedCourse[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("mba_compass_courses")
+        .select("id, slug, title, subtitle, price, original_price, thumbnail_url, rating")
+        .eq("is_active", true)
+        .order("is_featured", { ascending: false })
+        .order("sort_order")
+        .limit(12);
+      setCourses((data ?? []) as SuggestedCourse[]);
+    })();
+  }, []);
+
+  if (!courses.length) return null;
+  const loop = [...courses, ...courses];
+
+  return (
+    <section className="py-12 md:py-16 bg-gradient-to-b from-white to-sky-50/50 overflow-hidden">
+      <div className="container mx-auto px-4 mb-8">
+        <div className="text-center max-w-2xl mx-auto">
+          <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-3">
+            <Sparkles className="w-3.5 h-3.5 mr-1" /> Suggested Courses
+          </Badge>
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            Students who bought this also loved
+          </h2>
+          <p className="text-slate-500 mt-2 text-sm md:text-base">
+            Hand-picked MBA Compass courses to complement your mock prep.
+          </p>
+        </div>
+      </div>
+
+      <div className="relative group">
+        <div
+          className="flex gap-4 md:gap-5 w-max animate-[slide_40s_linear_infinite] group-hover:[animation-play-state:paused]"
+        >
+          {loop.map((c, i) => (
+            <Link
+              key={`${c.id}-${i}`}
+              to={`/mba-compass/${c.slug}`}
+              className="w-64 md:w-72 shrink-0 rounded-xl overflow-hidden border border-slate-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+              <div className="aspect-video bg-gradient-to-br from-sky-100 to-cyan-100 relative overflow-hidden">
+                {c.thumbnail_url ? (
+                  <img src={c.thumbnail_url} alt={c.title} loading="lazy" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-sky-600">
+                    <BookOpen className="w-10 h-10" />
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <div className="font-semibold text-sm text-slate-900 line-clamp-2 min-h-[2.5rem]">{c.title}</div>
+                {c.subtitle && <div className="text-xs text-slate-500 mt-1 line-clamp-1">{c.subtitle}</div>}
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-baseline gap-2">
+                    {c.price != null && (
+                      <span className="text-base font-bold text-slate-900">₹{c.price}</span>
+                    )}
+                    {c.original_price && c.price && c.original_price > c.price && (
+                      <span className="text-xs text-slate-400 line-through">₹{c.original_price}</span>
+                    )}
+                  </div>
+                  {c.rating ? (
+                    <div className="flex items-center gap-0.5 text-xs text-amber-600">
+                      <Star className="w-3 h-3 fill-current" /> {c.rating.toFixed(1)}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes slide {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
+
+      <div className="text-center mt-8">
+        <Link to="/mba-compass">
+          <Button variant="outline" size="lg" className="border-sky-200 gap-2">
+            Browse all courses <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
+      </div>
+    </section>
+  );
+};
+
 /* --------------------------------- Page -------------------------------- */
 
 const CatMock1Page = () => {
