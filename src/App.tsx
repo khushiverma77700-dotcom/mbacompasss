@@ -647,11 +647,13 @@ const OnboardingGate = () => {
     const path = location.pathname;
     const onDashboardHost =
       typeof window !== "undefined" && window.location.hostname === "dashboard.mbacompass.in";
-    // Skip onboarding (phone OTP) dialog inside the student LMS — including the
-    // dashboard subdomain where the LMS lives at "/". Mobile verification is
-    // only required at course-purchase time.
-    if (onDashboardHost) return;
-    if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/demo") || path.startsWith("/mocks/attempt") || path === "/profile-analyzer") return;
+    const inDemoContext = path.startsWith("/demo") || onDashboardHost;
+    // Skip onboarding (phone OTP) dialog inside the student LMS. Mobile verification
+    // is only required at course-purchase time — EXCEPT for the demo flow, where
+    // OTP-verified mobile is mandatory to access the demo dashboard.
+    if (!inDemoContext) {
+      if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt") || path === "/profile-analyzer") return;
+    }
     if (loading || !user || checked) return;
 
     let cancelled = false;
@@ -662,14 +664,20 @@ const OnboardingGate = () => {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("profiles")
-        .select("onboarding_completed")
+        .select("onboarding_completed, phone")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (cancelled) return;
 
       if (data) {
-        if (!(data as any).onboarding_completed) setShowOnboarding(true);
+        const d = data as any;
+        // In the demo flow, treat missing/empty phone as "onboarding not complete"
+        // so existing accounts without a verified mobile still hit the OTP step.
+        const needsOtp = inDemoContext
+          ? (!d.onboarding_completed || !d.phone)
+          : !d.onboarding_completed;
+        if (needsOtp) setShowOnboarding(true);
         setChecked(true);
         return;
       }
@@ -688,11 +696,14 @@ const OnboardingGate = () => {
   }, [loading, user, checked, location.pathname]);
 
   if (!showOnboarding || !user) return null;
-  if (typeof window !== "undefined" && (
-    window.location.pathname.startsWith("/student") ||
-    window.location.pathname.startsWith("/demo") ||
-    window.location.hostname === "dashboard.mbacompass.in"
-  )) return null;
+  if (typeof window !== "undefined") {
+    const path = window.location.pathname;
+    const onDashHost = window.location.hostname === "dashboard.mbacompass.in";
+    const inDemo = path.startsWith("/demo") || onDashHost;
+    // Suppress inside student LMS only — allow inside demo / dashboard host.
+    if (!inDemo && path.startsWith("/student")) return null;
+  }
+
 
   return (
     <Suspense fallback={null}>
