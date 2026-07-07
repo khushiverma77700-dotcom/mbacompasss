@@ -650,18 +650,34 @@ const CatMock1Page = () => {
                     <Sparkles className="w-3.5 h-3.5 mr-1" /> India's #1 CAT Mock Test Platform
                   </Badge>
                 </m.div>
-                <m.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
-                  The most realistic <span className="text-sky-600">CAT Mock Test</span> online — built for{" "}
-                  <span className="text-sky-600">right practice</span>, not just more questions.
-                </m.h1>
-                <m.p variants={fadeUp} className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed">
-                  30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests —
-                  every CAT mock test comes with a personalized report, deep analytics and a smart revision plan.
-                </m.p>
-                <m.p variants={fadeUp} className="mt-4 text-lg md:text-xl font-semibold text-slate-800">
-                  That's why <span className="text-sky-600">MBA Compass CAT Mock Test</span> is India's most
-                  student-focused CAT mock test series.
-                </m.p>
+                {override?.h1 ? (
+                  <m.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+                    {override.h1}
+                  </m.h1>
+                ) : (
+                  <m.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+                    The most realistic <span className="text-sky-600">CAT Mock Test</span> online — built for{" "}
+                    <span className="text-sky-600">right practice</span>, not just more questions.
+                  </m.h1>
+                )}
+                {override?.intro_html ? (
+                  <m.div
+                    variants={fadeUp}
+                    className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed prose prose-slate max-w-none prose-p:my-2 prose-strong:text-slate-900"
+                    dangerouslySetInnerHTML={{ __html: override.intro_html }}
+                  />
+                ) : (
+                  <>
+                    <m.p variants={fadeUp} className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed">
+                      30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests —
+                      every CAT mock test comes with a personalized report, deep analytics and a smart revision plan.
+                    </m.p>
+                    <m.p variants={fadeUp} className="mt-4 text-lg md:text-xl font-semibold text-slate-800">
+                      That's why <span className="text-sky-600">MBA Compass CAT Mock Test</span> is India's most
+                      student-focused CAT mock test series.
+                    </m.p>
+                  </>
+                )}
                 <m.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-3">
                   <BuyNowButton label="Buy CAT Mock Test — ₹999" />
                   <Link to="/student">
