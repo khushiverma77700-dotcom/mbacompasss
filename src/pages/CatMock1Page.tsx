@@ -192,12 +192,16 @@ const MockPlannerSnap = () => {
           <div className="font-semibold text-slate-900 text-sm">Consistency Heatmap</div>
         </div>
         <div className="inline-flex items-center gap-1 text-xs text-orange-600 font-semibold shrink-0">
-          <Flame className="w-3.5 h-3.5" /> 24 day streak
+          <span className="anim-flame"><Flame className="w-3.5 h-3.5" /></span> 24 day streak
         </div>
       </div>
       <div className="grid grid-cols-7 gap-1 mb-3">
         {days.map((v, i) => (
-          <div key={i} className={`aspect-square rounded-sm ${shades[v]}`} />
+          <div
+            key={i}
+            className={`aspect-square rounded-sm ${shades[v]} anim-cell`}
+            style={{ animationDelay: `${i * 18}ms` }}
+          />
         ))}
       </div>
       <div className="space-y-1.5">
@@ -206,7 +210,11 @@ const MockPlannerSnap = () => {
           { t: "QA — Time, Speed & Distance", d: "Topic test · 20 Q", done: true },
           { t: "Vocabulary revision — 15 words", d: "Daily", done: false },
         ].map((task, i) => (
-          <div key={i} className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1.5 bg-white">
+          <div
+            key={i}
+            className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1.5 bg-white anim-pop"
+            style={{ animationDelay: `${700 + i * 140}ms` }}
+          >
             <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${task.done ? "text-emerald-500" : "text-slate-300"}`} />
             <div className="flex-1 min-w-0">
               <div className={`text-xs font-medium truncate ${task.done ? "text-slate-500 line-through" : "text-slate-800"}`}>{task.t}</div>
