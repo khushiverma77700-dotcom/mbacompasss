@@ -5080,6 +5080,113 @@ export type Database = {
         }
         Relationships: []
       }
+      page_seo_audits: {
+        Row: {
+          approved: boolean
+          checklist: Json | null
+          competitors: Json | null
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          keyword_gap: Json | null
+          proposal: Json | null
+          slug: string
+          status: string
+          steps: Json
+          target_keyword: string
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          checklist?: Json | null
+          competitors?: Json | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          keyword_gap?: Json | null
+          proposal?: Json | null
+          slug: string
+          status?: string
+          steps?: Json
+          target_keyword: string
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          checklist?: Json | null
+          competitors?: Json | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          keyword_gap?: Json | null
+          proposal?: Json | null
+          slug?: string
+          status?: string
+          steps?: Json
+          target_keyword?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      page_seo_overrides: {
+        Row: {
+          applied_at: string
+          applied_by: string | null
+          description: string | null
+          faq: Json | null
+          h1: string | null
+          intro_html: string | null
+          json_ld: Json | null
+          keywords: string[] | null
+          og_image: string | null
+          slug: string
+          source_audit_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by?: string | null
+          description?: string | null
+          faq?: Json | null
+          h1?: string | null
+          intro_html?: string | null
+          json_ld?: Json | null
+          keywords?: string[] | null
+          og_image?: string | null
+          slug: string
+          source_audit_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string | null
+          description?: string | null
+          faq?: Json | null
+          h1?: string | null
+          intro_html?: string | null
+          json_ld?: Json | null
+          keywords?: string[] | null
+          og_image?: string | null
+          slug?: string
+          source_audit_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_seo_overrides_source_audit_id_fkey"
+            columns: ["source_audit_id"]
+            isOneToOne: false
+            referencedRelation: "page_seo_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_summary_cache: {
         Row: {
           content_hash: string

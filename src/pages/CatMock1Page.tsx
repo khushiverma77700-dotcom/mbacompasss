@@ -566,41 +566,68 @@ const SuggestedCoursesSlider = () => {
 
 /* --------------------------------- Page -------------------------------- */
 
+type SeoOverride = {
+  title?: string; description?: string; h1?: string; intro_html?: string;
+  keywords?: string[]; faq?: { q: string; a: string }[]; json_ld?: any; og_image?: string;
+};
+
 const CatMock1Page = () => {
   const [lightbox, setLightbox] = useState<{ title: string; Preview: () => JSX.Element } | null>(null);
+  const [override, setOverride] = useState<SeoOverride | null>(null);
 
   useEffect(() => {
-    document.title = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
-    const content = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      (meta as HTMLMetaElement).name = "description";
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute("content", content);
+    let cancelled = false;
+    supabase.from("page_seo_overrides").select("*").eq("slug", "cat-mock-1").maybeSingle()
+      .then(({ data }) => { if (!cancelled && data) setOverride(data as any); });
+    return () => { cancelled = true; };
+  }, []);
 
-    const setMeta = (prop: string, val: string) => {
-      let el = document.querySelector(`meta[property="${prop}"]`);
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute("property", prop);
-        document.head.appendChild(el);
-      }
+  useEffect(() => {
+    const defTitle = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
+    const defDesc = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
+    const defKeywords = "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test";
+
+    const title = override?.title || defTitle;
+    const description = override?.description || defDesc;
+    const keywords = override?.keywords?.length ? override.keywords.join(", ") : defKeywords;
+
+    document.title = title;
+
+    const setName = (name: string, val: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`);
+      if (!el) { el = document.createElement("meta"); (el as HTMLMetaElement).name = name; document.head.appendChild(el); }
       el.setAttribute("content", val);
     };
-    setMeta("og:title", "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests");
-    setMeta("og:description", content);
-    setMeta("og:type", "website");
+    const setProp = (prop: string, val: string) => {
+      let el = document.querySelector(`meta[property="${prop}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute("property", prop); document.head.appendChild(el); }
+      el.setAttribute("content", val);
+    };
+    setName("description", description);
+    setName("keywords", keywords);
+    setProp("og:title", title);
+    setProp("og:description", description);
+    setProp("og:type", "website");
+    setProp("og:url", "https://coach-compass-finder.lovable.app/cat-mock-1");
+    if (override?.og_image) setProp("og:image", override.og_image);
 
-    let kw = document.querySelector('meta[name="keywords"]');
-    if (!kw) {
-      kw = document.createElement("meta");
-      (kw as HTMLMetaElement).name = "keywords";
-      document.head.appendChild(kw);
+    // Canonical
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
+    canonical.href = "https://coach-compass-finder.lovable.app/cat-mock-1";
+
+    // JSON-LD (managed)
+    const existing = document.getElementById("cat-mock-1-jsonld");
+    if (existing) existing.remove();
+    if (override?.json_ld) {
+      const s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.id = "cat-mock-1-jsonld";
+      s.textContent = JSON.stringify(override.json_ld);
+      document.head.appendChild(s);
     }
-    kw.setAttribute("content", "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test");
-  }, []);
+  }, [override]);
+
 
   const openLightbox = (title: string, Preview: () => JSX.Element) => setLightbox({ title, Preview });
 
@@ -623,18 +650,34 @@ const CatMock1Page = () => {
                     <Sparkles className="w-3.5 h-3.5 mr-1" /> India's #1 CAT Mock Test Platform
                   </Badge>
                 </m.div>
-                <m.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
-                  The most realistic <span className="text-sky-600">CAT Mock Test</span> online — built for{" "}
-                  <span className="text-sky-600">right practice</span>, not just more questions.
-                </m.h1>
-                <m.p variants={fadeUp} className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed">
-                  30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests —
-                  every CAT mock test comes with a personalized report, deep analytics and a smart revision plan.
-                </m.p>
-                <m.p variants={fadeUp} className="mt-4 text-lg md:text-xl font-semibold text-slate-800">
-                  That's why <span className="text-sky-600">MBA Compass CAT Mock Test</span> is India's most
-                  student-focused CAT mock test series.
-                </m.p>
+                {override?.h1 ? (
+                  <m.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+                    {override.h1}
+                  </m.h1>
+                ) : (
+                  <m.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+                    The most realistic <span className="text-sky-600">CAT Mock Test</span> online — built for{" "}
+                    <span className="text-sky-600">right practice</span>, not just more questions.
+                  </m.h1>
+                )}
+                {override?.intro_html ? (
+                  <m.div
+                    variants={fadeUp}
+                    className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed prose prose-slate max-w-none prose-p:my-2 prose-strong:text-slate-900"
+                    dangerouslySetInnerHTML={{ __html: override.intro_html }}
+                  />
+                ) : (
+                  <>
+                    <m.p variants={fadeUp} className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed">
+                      30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests —
+                      every CAT mock test comes with a personalized report, deep analytics and a smart revision plan.
+                    </m.p>
+                    <m.p variants={fadeUp} className="mt-4 text-lg md:text-xl font-semibold text-slate-800">
+                      That's why <span className="text-sky-600">MBA Compass CAT Mock Test</span> is India's most
+                      student-focused CAT mock test series.
+                    </m.p>
+                  </>
+                )}
                 <m.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-3">
                   <BuyNowButton label="Buy CAT Mock Test — ₹999" />
                   <Link to="/student">
@@ -957,8 +1000,27 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* AI-optimized FAQ (from approved SEO audit) */}
+        {override?.faq && override.faq.length > 0 && (
+          <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16 border-t border-slate-100">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">CAT Mock Test — FAQs</h2>
+              <div className="space-y-4">
+                {override.faq.map((item, i) => (
+                  <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 md:p-5">
+                    <div className="font-semibold text-slate-900">{item.q}</div>
+                    <div className="mt-2 text-sm md:text-base text-slate-600 leading-relaxed">{item.a}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Suggested courses auto slider */}
         <SuggestedCoursesSlider />
+
+
 
 
         {/* Contact */}
