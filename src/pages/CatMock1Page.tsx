@@ -566,41 +566,68 @@ const SuggestedCoursesSlider = () => {
 
 /* --------------------------------- Page -------------------------------- */
 
+type SeoOverride = {
+  title?: string; description?: string; h1?: string; intro_html?: string;
+  keywords?: string[]; faq?: { q: string; a: string }[]; json_ld?: any; og_image?: string;
+};
+
 const CatMock1Page = () => {
   const [lightbox, setLightbox] = useState<{ title: string; Preview: () => JSX.Element } | null>(null);
+  const [override, setOverride] = useState<SeoOverride | null>(null);
 
   useEffect(() => {
-    document.title = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
-    const content = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      (meta as HTMLMetaElement).name = "description";
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute("content", content);
+    let cancelled = false;
+    supabase.from("page_seo_overrides").select("*").eq("slug", "cat-mock-1").maybeSingle()
+      .then(({ data }) => { if (!cancelled && data) setOverride(data as any); });
+    return () => { cancelled = true; };
+  }, []);
 
-    const setMeta = (prop: string, val: string) => {
-      let el = document.querySelector(`meta[property="${prop}"]`);
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute("property", prop);
-        document.head.appendChild(el);
-      }
+  useEffect(() => {
+    const defTitle = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
+    const defDesc = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
+    const defKeywords = "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test";
+
+    const title = override?.title || defTitle;
+    const description = override?.description || defDesc;
+    const keywords = override?.keywords?.length ? override.keywords.join(", ") : defKeywords;
+
+    document.title = title;
+
+    const setName = (name: string, val: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`);
+      if (!el) { el = document.createElement("meta"); (el as HTMLMetaElement).name = name; document.head.appendChild(el); }
       el.setAttribute("content", val);
     };
-    setMeta("og:title", "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests");
-    setMeta("og:description", content);
-    setMeta("og:type", "website");
+    const setProp = (prop: string, val: string) => {
+      let el = document.querySelector(`meta[property="${prop}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute("property", prop); document.head.appendChild(el); }
+      el.setAttribute("content", val);
+    };
+    setName("description", description);
+    setName("keywords", keywords);
+    setProp("og:title", title);
+    setProp("og:description", description);
+    setProp("og:type", "website");
+    setProp("og:url", "https://coach-compass-finder.lovable.app/cat-mock-1");
+    if (override?.og_image) setProp("og:image", override.og_image);
 
-    let kw = document.querySelector('meta[name="keywords"]');
-    if (!kw) {
-      kw = document.createElement("meta");
-      (kw as HTMLMetaElement).name = "keywords";
-      document.head.appendChild(kw);
+    // Canonical
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
+    canonical.href = "https://coach-compass-finder.lovable.app/cat-mock-1";
+
+    // JSON-LD (managed)
+    const existing = document.getElementById("cat-mock-1-jsonld");
+    if (existing) existing.remove();
+    if (override?.json_ld) {
+      const s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.id = "cat-mock-1-jsonld";
+      s.textContent = JSON.stringify(override.json_ld);
+      document.head.appendChild(s);
     }
-    kw.setAttribute("content", "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test");
-  }, []);
+  }, [override]);
+
 
   const openLightbox = (title: string, Preview: () => JSX.Element) => setLightbox({ title, Preview });
 
