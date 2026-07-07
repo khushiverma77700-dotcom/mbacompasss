@@ -802,6 +802,7 @@ const CatMock1Page = () => {
         </div>
       </div>
     </LazyMotion>
+  );
 };
 
 export default CatMock1Page;
