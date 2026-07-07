@@ -34,8 +34,7 @@ export default function StudentLogin() {
   const redirectParam = params.get("redirect");
   const isDemoFlow = redirectParam === "/demo" || params.get("reason") === "demo";
   const redirectTo = redirectParam?.startsWith("/student") || redirectParam === "/demo" ? redirectParam : "/student";
-  const onDashboardHost = typeof window !== "undefined" && window.location.hostname === "dashboard.mbacompass.in";
-  const showTopDemoCta = onDashboardHost && !isDemoFlow;
+  const showTopDemoCta = !isDemoFlow;
   const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -116,8 +115,9 @@ export default function StudentLogin() {
     setError(null);
     setGoogleLoading(true);
     try {
+      storePostAuthRedirect(redirectTo);
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/student/login",
+        redirect_uri: getAuthRedirectUri(),
       });
       if (result.error) throw result.error;
       // The useEffect above will gate the session once the redirect completes.
