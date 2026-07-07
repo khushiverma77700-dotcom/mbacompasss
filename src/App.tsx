@@ -68,6 +68,7 @@ const CollegeShortlisterPage = lazyWithPreload(() => import("./pages/CollegeShor
 const BusinessInquiryPage = lazyWithPreload(() => import("./pages/BusinessInquiryPage"));
 const NotFound = lazyWithPreload(() => import("./pages/NotFound"));
 const IIMWaitlistPage = lazyWithPreload(() => import("./pages/IIMWaitlistPage"));
+const CatMock1Page = lazyWithPreload(() => import("./pages/CatMock1Page"));
 
 // Lazy-loaded admin pages
 const AdminLayout = lazyWithPreload(() => import("./pages/admin/AdminLayout"));
