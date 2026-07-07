@@ -504,14 +504,23 @@ const SuggestedCoursesSlider = () => {
               to={`/mba-compass/${c.slug}`}
               className="w-64 md:w-72 shrink-0 rounded-xl overflow-hidden border border-slate-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
-              <div className="aspect-video bg-gradient-to-br from-sky-100 to-cyan-100 relative overflow-hidden">
-                {c.thumbnail_url ? (
-                  <img src={c.thumbnail_url} alt={c.title} loading="lazy" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-sky-600">
-                    <BookOpen className="w-10 h-10" />
-                  </div>
-                )}
+              <div
+                className={`aspect-video relative overflow-hidden anim-gradient anim-shimmer bg-gradient-to-br ${
+                  ["from-sky-400 via-cyan-400 to-blue-500",
+                   "from-fuchsia-400 via-pink-400 to-rose-500",
+                   "from-emerald-400 via-teal-400 to-cyan-500",
+                   "from-amber-400 via-orange-400 to-rose-500",
+                   "from-violet-400 via-purple-400 to-fuchsia-500",
+                   "from-blue-400 via-indigo-400 to-violet-500"][i % 6]
+                }`}
+              >
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  <BookOpen className="w-10 h-10 anim-float drop-shadow-lg" />
+                </div>
+                <div
+                  className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/20 blur-2xl anim-float"
+                  style={{ animationDelay: `${(i % 6) * 300}ms` }}
+                />
               </div>
               <div className="p-4">
                 <div className="font-semibold text-sm text-slate-900 line-clamp-2 min-h-[2.5rem]">{c.title}</div>
