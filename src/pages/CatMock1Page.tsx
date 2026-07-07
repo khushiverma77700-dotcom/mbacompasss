@@ -586,8 +586,6 @@ const CatMock1Page = () => {
               </m.div>
 
 
-              </m.div>
-
               {/* Hero snapshots */}
               <m.div
                 initial={{ opacity: 0, y: 24 }}
