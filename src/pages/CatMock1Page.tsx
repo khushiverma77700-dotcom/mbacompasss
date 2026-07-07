@@ -555,11 +555,6 @@ const CatMock1Page = () => {
               <m.div initial="hidden" animate="show" variants={stagger}>
                 <m.div variants={fadeUp}>
                   <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-4">
-                    <Sparkles className="w-3.5 h-3.5 mr-1" /> Hi Aspirant
-                  </Badge>
-                </m.div>
-                <m.div variants={fadeUp}>
-                  <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-4">
                     <Sparkles className="w-3.5 h-3.5 mr-1" /> India's #1 CAT Mock Test Platform
                   </Badge>
                 </m.div>
