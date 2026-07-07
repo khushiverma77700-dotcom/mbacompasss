@@ -232,7 +232,7 @@ const MockVocabSnap = () => (
     <div className="flex items-center justify-between mb-3 gap-2">
       <div className="min-w-0">
         <div className="text-[11px] text-slate-500">Word of the Day</div>
-        <div className="font-semibold text-slate-900 text-lg">Ubiquitous</div>
+        <div className="font-semibold text-slate-900 text-lg anim-typing anim-caret">Ubiquitous</div>
         <div className="text-[11px] text-slate-500 mt-0.5 truncate">/juːˈbɪk.wɪ.təs/ · adjective</div>
       </div>
       <Badge className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-100 border-0 shrink-0 text-[10px]">CAT · XAT</Badge>
@@ -242,8 +242,12 @@ const MockVocabSnap = () => (
         { l: "English", v: "Present, appearing, or found everywhere." },
         { l: "Hindi", v: "सर्वव्यापी — हर जगह मौजूद" },
         { l: "Usage · GDPI", v: "\"Smartphones have become ubiquitous in modern business.\"" },
-      ].map((r) => (
-        <div key={r.l} className="rounded-md bg-slate-50 p-2">
+      ].map((r, i) => (
+        <div
+          key={r.l}
+          className="rounded-md bg-slate-50 p-2 anim-pop"
+          style={{ animationDelay: `${300 + i * 180}ms` }}
+        >
           <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{r.l}</div>
           <div className="text-slate-800 break-words">{r.v}</div>
         </div>
@@ -253,8 +257,8 @@ const MockVocabSnap = () => (
       <span>Progress today</span>
       <span className="font-semibold text-sky-600">12 / 15 words</span>
     </div>
-    <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-      <div style={{ width: "80%" }} className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500" />
+    <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden anim-shimmer">
+      <div style={{ ["--fill" as string]: "80%" }} className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500 anim-fill-bar" />
     </div>
   </BrowserFrame>
 );
@@ -271,15 +275,19 @@ const MockPersonalizedSnap = () => (
         { l: "Section", v: "Quantitative Aptitude" },
         { l: "Difficulty", v: "Hard" },
         { l: "Questions", v: "15" },
-      ].map((r) => (
-        <div key={r.l} className="flex items-center justify-between rounded-md border border-slate-200 px-2.5 py-1.5 gap-2">
+      ].map((r, i) => (
+        <div
+          key={r.l}
+          className="flex items-center justify-between rounded-md border border-slate-200 px-2.5 py-1.5 gap-2 anim-pop"
+          style={{ animationDelay: `${i * 160}ms` }}
+        >
           <span className="text-slate-500 shrink-0">{r.l}</span>
           <span className="font-semibold text-slate-800 truncate">{r.v}</span>
         </div>
       ))}
     </div>
-    <div className="mt-3 w-full inline-flex items-center justify-center gap-1 rounded-md bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-semibold py-2">
-      <Zap className="w-3.5 h-3.5" /> Generate My Mock
+    <div className="mt-3 w-full inline-flex items-center justify-center gap-1 rounded-md bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-semibold py-2 anim-pulse-cta anim-gradient">
+      <Zap className="w-3.5 h-3.5 anim-flame" /> Generate My Mock
     </div>
   </BrowserFrame>
 );
@@ -290,14 +298,14 @@ const MockFormulaSnap = () => (
       <div className="text-[11px] text-slate-500">Quants Formula Book</div>
       <div className="font-semibold text-slate-900 text-sm">Time · Speed · Distance</div>
     </div>
-    <div className="rounded-lg bg-gradient-to-br from-violet-50 to-white border border-violet-100 p-3 text-center">
+    <div className="rounded-lg bg-gradient-to-br from-violet-50 to-white border border-violet-100 p-3 text-center anim-pop">
       <div className="font-mono text-base sm:text-lg text-violet-700 break-words">Distance = Speed × Time</div>
       <div className="text-[10px] text-slate-500 mt-1">D = S × T</div>
     </div>
     <div className="mt-3 space-y-1.5 text-xs text-slate-700">
-      <div className="flex gap-2"><span className="text-violet-500">•</span> Use when two variables are known</div>
-      <div className="flex gap-2"><span className="text-violet-500">•</span> Convert km/hr → m/s by × 5/18</div>
-      <div className="flex gap-2"><span className="text-violet-500">•</span> Common trap: units mismatch</div>
+      <div className="flex gap-2 anim-pop" style={{ animationDelay: "300ms" }}><span className="text-violet-500">•</span> Use when two variables are known</div>
+      <div className="flex gap-2 anim-pop" style={{ animationDelay: "500ms" }}><span className="text-violet-500">•</span> Convert km/hr → m/s by × 5/18</div>
+      <div className="flex gap-2 anim-pop" style={{ animationDelay: "700ms" }}><span className="text-violet-500">•</span> Common trap: units mismatch</div>
     </div>
   </BrowserFrame>
 );
