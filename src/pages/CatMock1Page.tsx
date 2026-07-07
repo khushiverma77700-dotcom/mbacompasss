@@ -50,8 +50,43 @@ const viewportOnce = { once: true, amount: 0.2 } as const;
 
 /* ---------------------------- Snapshot frame --------------------------- */
 
+const AnimationStyles = () => (
+  <style>{`
+    @keyframes growBar { from { transform: scaleY(.05); opacity: .3 } to { transform: scaleY(1); opacity: 1 } }
+    @keyframes flameWiggle { 0%,100% { transform: scale(1) rotate(-3deg) } 50% { transform: scale(1.18) rotate(4deg) } }
+    @keyframes fillBar { from { width: 0 } to { width: var(--fill, 80%) } }
+    @keyframes floatY { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+    @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0) } 50% { box-shadow: 0 0 22px 4px rgba(251,146,60,.55) } }
+    @keyframes pulseGlowSky { 0%,100% { box-shadow: 0 0 0 0 rgba(14,165,233,0) } 50% { box-shadow: 0 0 22px 4px rgba(14,165,233,.5) } }
+    @keyframes shimmer { to { transform: translateX(100%) } }
+    @keyframes popIn { from { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.08); opacity: 1 } to { transform: scale(1); opacity: 1 } }
+    @keyframes cellReveal { from { transform: scale(0); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+    @keyframes ticker { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+    @keyframes typing { from { width: 0 } to { width: 100% } }
+    @keyframes caret { 50% { opacity: 0 } }
+    @keyframes cursorTrack { 0% { transform: translate(0,0) } 30% { transform: translate(110%, 40%) } 60% { transform: translate(160%, 130%) } 100% { transform: translate(0,0) } }
+    @keyframes gradientShift { 0%,100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
+
+    .anim-grow-bar { transform-origin: bottom; animation: growBar 1.1s cubic-bezier(.22,1,.36,1) both }
+    .anim-flame { display: inline-flex; animation: flameWiggle 1.1s ease-in-out infinite; transform-origin: center }
+    .anim-fill-bar { animation: fillBar 1.8s cubic-bezier(.22,1,.36,1) forwards; width: 0 }
+    .anim-float { animation: floatY 3.4s ease-in-out infinite }
+    .anim-pulse-cta { animation: pulseGlow 2.2s ease-in-out infinite }
+    .anim-pulse-sky { animation: pulseGlowSky 2.4s ease-in-out infinite }
+    .anim-pop { animation: popIn .6s cubic-bezier(.22,1,.36,1) both }
+    .anim-cell { animation: cellReveal .5s cubic-bezier(.22,1,.36,1) both }
+    .anim-shimmer { position: relative; overflow: hidden }
+    .anim-shimmer::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); animation: shimmer 3s infinite }
+    .anim-ticker { display: inline-block; animation: ticker 1.4s ease-in-out infinite }
+    .anim-typing { display: inline-block; overflow: hidden; white-space: nowrap; animation: typing 1.6s steps(20,end) both }
+    .anim-caret::after { content: '|'; margin-left: 2px; animation: caret 1s steps(2) infinite; color: currentColor }
+    .anim-cursor { animation: cursorTrack 6s ease-in-out infinite }
+    .anim-gradient { background-size: 200% 200%; animation: gradientShift 6s ease-in-out infinite }
+  `}</style>
+);
+
 const BrowserFrame = memo(({ label, children }: { label: string; children: ReactNode }) => (
-  <div className="rounded-xl overflow-hidden border border-slate-200 shadow-xl bg-white w-full">
+  <div className="rounded-xl overflow-hidden border border-slate-200 shadow-xl bg-white w-full anim-float">
     <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200">
       <div className="flex gap-1.5 shrink-0">
         <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
@@ -82,8 +117,12 @@ const MockFullLengthSnap = () => (
         { l: "VARC", q: "24 Q", t: "40m" },
         { l: "DILR", q: "22 Q", t: "40m" },
         { l: "QA", q: "22 Q", t: "40m" },
-      ].map((s) => (
-        <div key={s.l} className="rounded-lg border border-slate-200 p-2 bg-white">
+      ].map((s, i) => (
+        <div
+          key={s.l}
+          className="rounded-lg border border-slate-200 p-2 bg-white anim-pop"
+          style={{ animationDelay: `${i * 120}ms` }}
+        >
           <div className="text-[10px] font-semibold text-sky-600">{s.l}</div>
           <div className="text-xs text-slate-800 mt-0.5">{s.q}</div>
           <div className="text-[10px] text-slate-500 flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {s.t}</div>
@@ -92,7 +131,7 @@ const MockFullLengthSnap = () => (
     </div>
     <div className="flex items-center justify-between text-xs gap-2">
       <span className="text-slate-500 truncate">120 min · 66 questions</span>
-      <span className="inline-flex items-center gap-1 rounded-md bg-sky-600 text-white px-3 py-1.5 text-xs font-medium shrink-0">
+      <span className="inline-flex items-center gap-1 rounded-md bg-sky-600 text-white px-3 py-1.5 text-xs font-medium shrink-0 anim-pulse-sky">
         <Play className="w-3 h-3" /> Start
       </span>
     </div>
@@ -109,9 +148,9 @@ const MockInsightsSnap = () => {
           <div className="font-semibold text-slate-900 text-sm">All India Rank</div>
         </div>
         <div className="text-right shrink-0">
-          <div className="text-lg font-bold text-sky-600">#1,284</div>
+          <div className="text-lg font-bold text-sky-600 anim-ticker">#1,284</div>
           <div className="text-[10px] text-emerald-600 flex items-center gap-0.5 justify-end">
-            <TrendingUp className="w-3 h-3" /> +362
+            <TrendingUp className="w-3 h-3 anim-float" /> +362
           </div>
         </div>
       </div>
@@ -119,8 +158,8 @@ const MockInsightsSnap = () => {
         {bars.map((h, i) => (
           <div
             key={i}
-            style={{ height: `${h}%` }}
-            className="flex-1 rounded-t bg-gradient-to-t from-sky-500 to-cyan-400"
+            style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }}
+            className="flex-1 rounded-t bg-gradient-to-t from-sky-500 to-cyan-400 anim-grow-bar"
           />
         ))}
       </div>
@@ -153,12 +192,16 @@ const MockPlannerSnap = () => {
           <div className="font-semibold text-slate-900 text-sm">Consistency Heatmap</div>
         </div>
         <div className="inline-flex items-center gap-1 text-xs text-orange-600 font-semibold shrink-0">
-          <Flame className="w-3.5 h-3.5" /> 24 day streak
+          <span className="anim-flame"><Flame className="w-3.5 h-3.5" /></span> 24 day streak
         </div>
       </div>
       <div className="grid grid-cols-7 gap-1 mb-3">
         {days.map((v, i) => (
-          <div key={i} className={`aspect-square rounded-sm ${shades[v]}`} />
+          <div
+            key={i}
+            className={`aspect-square rounded-sm ${shades[v]} anim-cell`}
+            style={{ animationDelay: `${i * 18}ms` }}
+          />
         ))}
       </div>
       <div className="space-y-1.5">
@@ -167,7 +210,11 @@ const MockPlannerSnap = () => {
           { t: "QA — Time, Speed & Distance", d: "Topic test · 20 Q", done: true },
           { t: "Vocabulary revision — 15 words", d: "Daily", done: false },
         ].map((task, i) => (
-          <div key={i} className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1.5 bg-white">
+          <div
+            key={i}
+            className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1.5 bg-white anim-pop"
+            style={{ animationDelay: `${700 + i * 140}ms` }}
+          >
             <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${task.done ? "text-emerald-500" : "text-slate-300"}`} />
             <div className="flex-1 min-w-0">
               <div className={`text-xs font-medium truncate ${task.done ? "text-slate-500 line-through" : "text-slate-800"}`}>{task.t}</div>
@@ -185,7 +232,7 @@ const MockVocabSnap = () => (
     <div className="flex items-center justify-between mb-3 gap-2">
       <div className="min-w-0">
         <div className="text-[11px] text-slate-500">Word of the Day</div>
-        <div className="font-semibold text-slate-900 text-lg">Ubiquitous</div>
+        <div className="font-semibold text-slate-900 text-lg anim-typing anim-caret">Ubiquitous</div>
         <div className="text-[11px] text-slate-500 mt-0.5 truncate">/juːˈbɪk.wɪ.təs/ · adjective</div>
       </div>
       <Badge className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-100 border-0 shrink-0 text-[10px]">CAT · XAT</Badge>
@@ -195,8 +242,12 @@ const MockVocabSnap = () => (
         { l: "English", v: "Present, appearing, or found everywhere." },
         { l: "Hindi", v: "सर्वव्यापी — हर जगह मौजूद" },
         { l: "Usage · GDPI", v: "\"Smartphones have become ubiquitous in modern business.\"" },
-      ].map((r) => (
-        <div key={r.l} className="rounded-md bg-slate-50 p-2">
+      ].map((r, i) => (
+        <div
+          key={r.l}
+          className="rounded-md bg-slate-50 p-2 anim-pop"
+          style={{ animationDelay: `${300 + i * 180}ms` }}
+        >
           <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{r.l}</div>
           <div className="text-slate-800 break-words">{r.v}</div>
         </div>
@@ -206,8 +257,8 @@ const MockVocabSnap = () => (
       <span>Progress today</span>
       <span className="font-semibold text-sky-600">12 / 15 words</span>
     </div>
-    <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-      <div style={{ width: "80%" }} className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500" />
+    <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden anim-shimmer">
+      <div style={{ ["--fill" as string]: "80%" }} className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500 anim-fill-bar" />
     </div>
   </BrowserFrame>
 );
@@ -224,15 +275,19 @@ const MockPersonalizedSnap = () => (
         { l: "Section", v: "Quantitative Aptitude" },
         { l: "Difficulty", v: "Hard" },
         { l: "Questions", v: "15" },
-      ].map((r) => (
-        <div key={r.l} className="flex items-center justify-between rounded-md border border-slate-200 px-2.5 py-1.5 gap-2">
+      ].map((r, i) => (
+        <div
+          key={r.l}
+          className="flex items-center justify-between rounded-md border border-slate-200 px-2.5 py-1.5 gap-2 anim-pop"
+          style={{ animationDelay: `${i * 160}ms` }}
+        >
           <span className="text-slate-500 shrink-0">{r.l}</span>
           <span className="font-semibold text-slate-800 truncate">{r.v}</span>
         </div>
       ))}
     </div>
-    <div className="mt-3 w-full inline-flex items-center justify-center gap-1 rounded-md bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-semibold py-2">
-      <Zap className="w-3.5 h-3.5" /> Generate My Mock
+    <div className="mt-3 w-full inline-flex items-center justify-center gap-1 rounded-md bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-semibold py-2 anim-pulse-cta anim-gradient">
+      <Zap className="w-3.5 h-3.5 anim-flame" /> Generate My Mock
     </div>
   </BrowserFrame>
 );
@@ -243,14 +298,14 @@ const MockFormulaSnap = () => (
       <div className="text-[11px] text-slate-500">Quants Formula Book</div>
       <div className="font-semibold text-slate-900 text-sm">Time · Speed · Distance</div>
     </div>
-    <div className="rounded-lg bg-gradient-to-br from-violet-50 to-white border border-violet-100 p-3 text-center">
+    <div className="rounded-lg bg-gradient-to-br from-violet-50 to-white border border-violet-100 p-3 text-center anim-pop">
       <div className="font-mono text-base sm:text-lg text-violet-700 break-words">Distance = Speed × Time</div>
       <div className="text-[10px] text-slate-500 mt-1">D = S × T</div>
     </div>
     <div className="mt-3 space-y-1.5 text-xs text-slate-700">
-      <div className="flex gap-2"><span className="text-violet-500">•</span> Use when two variables are known</div>
-      <div className="flex gap-2"><span className="text-violet-500">•</span> Convert km/hr → m/s by × 5/18</div>
-      <div className="flex gap-2"><span className="text-violet-500">•</span> Common trap: units mismatch</div>
+      <div className="flex gap-2 anim-pop" style={{ animationDelay: "300ms" }}><span className="text-violet-500">•</span> Use when two variables are known</div>
+      <div className="flex gap-2 anim-pop" style={{ animationDelay: "500ms" }}><span className="text-violet-500">•</span> Convert km/hr → m/s by × 5/18</div>
+      <div className="flex gap-2 anim-pop" style={{ animationDelay: "700ms" }}><span className="text-violet-500">•</span> Common trap: units mismatch</div>
     </div>
   </BrowserFrame>
 );
@@ -449,14 +504,23 @@ const SuggestedCoursesSlider = () => {
               to={`/mba-compass/${c.slug}`}
               className="w-64 md:w-72 shrink-0 rounded-xl overflow-hidden border border-slate-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
-              <div className="aspect-video bg-gradient-to-br from-sky-100 to-cyan-100 relative overflow-hidden">
-                {c.thumbnail_url ? (
-                  <img src={c.thumbnail_url} alt={c.title} loading="lazy" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-sky-600">
-                    <BookOpen className="w-10 h-10" />
-                  </div>
-                )}
+              <div
+                className={`aspect-video relative overflow-hidden anim-gradient anim-shimmer bg-gradient-to-br ${
+                  ["from-sky-400 via-cyan-400 to-blue-500",
+                   "from-fuchsia-400 via-pink-400 to-rose-500",
+                   "from-emerald-400 via-teal-400 to-cyan-500",
+                   "from-amber-400 via-orange-400 to-rose-500",
+                   "from-violet-400 via-purple-400 to-fuchsia-500",
+                   "from-blue-400 via-indigo-400 to-violet-500"][i % 6]
+                }`}
+              >
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  <BookOpen className="w-10 h-10 anim-float drop-shadow-lg" />
+                </div>
+                <div
+                  className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/20 blur-2xl anim-float"
+                  style={{ animationDelay: `${(i % 6) * 300}ms` }}
+                />
               </div>
               <div className="p-4">
                 <div className="font-semibold text-sm text-slate-900 line-clamp-2 min-h-[2.5rem]">{c.title}</div>
@@ -543,6 +607,7 @@ const CatMock1Page = () => {
   return (
     <LazyMotion features={domAnimation}>
       <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white overflow-x-hidden">
+        <AnimationStyles />
         {/* Hero */}
         <section className="relative">
           <div aria-hidden className="pointer-events-none absolute inset-0 opacity-60 overflow-hidden">
