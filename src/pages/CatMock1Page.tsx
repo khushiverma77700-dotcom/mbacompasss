@@ -613,10 +613,10 @@ const CatMock1Page = () => {
               className="mt-16 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto"
             >
               {[
-                { k: "30", v: "CAT Full Mocks" },
-                { k: "200+", v: "Topic Tests" },
-                { k: "5,000+", v: "Vocabulary Words" },
-                { k: "₹999", v: "Complete Access" },
+                { k: "30", v: "Full-Length CAT Mock Tests" },
+                { k: "45+", v: "Sectional CAT Mock Tests" },
+                { k: "200+", v: "Topic-wise CAT Mock Tests" },
+                { k: "₹999", v: "Complete CAT Mock Test Access" },
               ].map((s, i) => (
                 <m.div key={i} variants={fadeUp}>
                   <Card className="p-4 sm:p-5 text-center border-sky-100 bg-white/70 backdrop-blur">
