@@ -631,22 +631,98 @@ const CatMock1Page = () => {
 
         {/* Intro */}
         <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-4">
-          <p className="text-center text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
-            One dashboard. Multiple MBA exams. Thousands of questions. Smart planning tools.
-            Detailed analytics. A complete ecosystem — designed around <span className="font-semibold text-slate-800">you</span>.
+          <p className="text-center text-slate-600 max-w-3xl mx-auto text-sm md:text-base">
+            One CAT mock test platform. Every CAT mock test is exam-pattern accurate, timed like the real CAT,
+            and paired with a personalized report so every CAT mock test moves you a step closer to your target percentile.
           </p>
+        </section>
+
+        {/* Animated marquee — keyword reinforcement */}
+        <section aria-hidden className="py-4 border-y border-sky-100 bg-sky-50/50 overflow-hidden">
+          <div className="flex gap-8 w-max animate-[slide_30s_linear_infinite] text-sky-700/80 text-sm font-semibold uppercase tracking-wider">
+            {Array.from({ length: 2 }).flatMap((_, r) => [
+              "Free CAT Mock Test", "Full-Length CAT Mock Test", "Sectional CAT Mock Test",
+              "Personalized CAT Mock Test", "Topic-wise CAT Mock Test", "AI-powered CAT Mock Test",
+              "Best CAT Mock Test 2026", "CAT Mock Test with Analytics",
+            ].map((t, i) => (
+              <span key={`${r}-${i}`} className="inline-flex items-center gap-2 whitespace-nowrap">
+                <Sparkles className="w-3.5 h-3.5 text-sky-500" /> {t}
+              </span>
+            )))}
+          </div>
+        </section>
+
+        {/* Personalized CAT Mock Test section */}
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-14 md:py-20">
+          <m.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={viewportOnce}
+            transition={{ duration: 0.5, ease: EASE }}
+            className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 md:gap-14 items-center"
+          >
+            <div>
+              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-0">
+                <Zap className="w-3.5 h-3.5 mr-1" /> Personalized CAT Mock Test
+              </Badge>
+              <h2 className="mt-4 font-heading text-2xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                Build your own CAT mock test in <span className="text-sky-600">60 seconds</span>
+              </h2>
+              <p className="mt-3 text-slate-600 text-sm md:text-base leading-relaxed">
+                Every aspirant is different — so every CAT mock test should be too. Pick a section, a difficulty and
+                a duration, and our AI instantly assembles a personalized CAT mock test around your weak areas.
+                No two CAT mock tests are ever the same.
+              </p>
+              <ul className="mt-5 space-y-2.5">
+                {[
+                  "Adaptive CAT mock test difficulty that grows with you",
+                  "Weak-area targeting after every CAT mock test attempt",
+                  "10-minute quick CAT mock test or full 3-hour sitting",
+                  "Personalized revision plan after each CAT mock test",
+                ].map((b) => (
+                  <li key={b} className="flex items-start gap-2.5 text-slate-700 text-sm md:text-base">
+                    <CheckCircle2 className="w-4 h-4 text-sky-500 mt-1 shrink-0" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <BuyNowButton label="Start Personalized CAT Mock Test" />
+                <Link to="/student">
+                  <Button size="lg" variant="outline" className="border-sky-200 gap-2">
+                    See a Sample <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <m.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={viewportOnce}
+              transition={{ duration: 0.6, ease: EASE }}
+              className="relative"
+            >
+              <div aria-hidden className="absolute -inset-4 bg-gradient-to-tr from-yellow-200/50 to-orange-200/40 rounded-3xl blur-2xl pointer-events-none" />
+              <div className="relative">
+                <SnapshotButton title="Personalized CAT Mock Test" onOpen={() => openLightbox("Personalized CAT Mock Test", MockPersonalizedSnap)}>
+                  <MockPersonalizedSnap />
+                </SnapshotButton>
+              </div>
+            </m.div>
+          </m.div>
         </section>
 
         {/* Features */}
         <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
             <h2 className="font-heading text-2xl md:text-4xl font-bold text-slate-900 tracking-tight">
-              Everything you get inside the dashboard
+              Everything inside your CAT mock test dashboard
             </h2>
             <p className="text-slate-500 mt-3 text-sm md:text-base">
-              Tap any snapshot to zoom in. Real screens from the student dashboard.
+              Tap any snapshot to zoom in. Real screens from a live CAT mock test attempt.
             </p>
           </div>
+
 
           <div className="space-y-16 md:space-y-24 max-w-6xl mx-auto">
             {features.map((f, i) => {
