@@ -148,9 +148,9 @@ const MockInsightsSnap = () => {
           <div className="font-semibold text-slate-900 text-sm">All India Rank</div>
         </div>
         <div className="text-right shrink-0">
-          <div className="text-lg font-bold text-sky-600">#1,284</div>
+          <div className="text-lg font-bold text-sky-600 anim-ticker">#1,284</div>
           <div className="text-[10px] text-emerald-600 flex items-center gap-0.5 justify-end">
-            <TrendingUp className="w-3 h-3" /> +362
+            <TrendingUp className="w-3 h-3 anim-float" /> +362
           </div>
         </div>
       </div>
