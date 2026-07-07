@@ -104,6 +104,7 @@ const AdminComparisons = lazyWithPreload(() => import("./pages/admin/AdminCompar
 const AdminCoachingResults = lazyWithPreload(() => import("./pages/admin/AdminCoachingResults"));
 const AdminSEODashboard = lazyWithPreload(() => import("./pages/admin/AdminSEODashboard"));
 const AdminPageEditor = lazyWithPreload(() => import("./pages/admin/AdminPageEditor"));
+const AdminPageSEOReview = lazyWithPreload(() => import("./pages/admin/AdminPageSEOReview"));
 const AdminProfileAnalyzer = lazyWithPreload(() => import("./pages/admin/AdminProfileAnalyzer"));
 const AdminManageAdmins = lazyWithPreload(() => import("./pages/admin/AdminManageAdmins"));
 const AdminCTAManager = lazyWithPreload(() => import("./pages/admin/AdminCTAManager"));
@@ -865,6 +866,7 @@ const App = () => (
               <Route path="coaching-results" element={<LazyPage><AdminCoachingResults /></LazyPage>} />
               <Route path="seo-dashboard" element={<LazyPage><AdminSEODashboard /></LazyPage>} />
               <Route path="page-editor" element={<LazyPage><AdminPageEditor /></LazyPage>} />
+              <Route path="pages/:slug" element={<LazyPage><AdminPageSEOReview /></LazyPage>} />
               <Route path="profile-analyzer" element={<LazyPage><AdminProfileAnalyzer /></LazyPage>} />
               <Route path="manage-admins" element={<LazyPage><AdminManageAdmins /></LazyPage>} />
               <Route path="cta-manager" element={<LazyPage><AdminCTAManager /></LazyPage>} />

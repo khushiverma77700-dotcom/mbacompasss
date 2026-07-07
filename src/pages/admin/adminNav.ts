@@ -6,7 +6,7 @@ import {
   GraduationCap, Mail, FileText, Tag, Menu, Settings, MessageCircle, Trophy,
   Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare,
   TrendingUp, Sparkles, ShieldCheck, Briefcase, Target, PhoneCall, Database,
-  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart, CalendarClock,
+  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart, CalendarClock, FileCode,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -123,6 +123,12 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Bulk AI Editor", path: "/admin/bulk-ai-edit", icon: Sparkles },
       { label: "Hyperlink Update", path: "/admin/hyperlink-update", icon: Link2 },
       { label: "IIM Waitlist & RTI", path: "/admin/iim-waitlist", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "Pages",
+    items: [
+      { label: "CAT Mock 1 (/cat-mock-1)", path: "/admin/pages/cat-mock-1", icon: FileCode },
     ],
   },
   {
