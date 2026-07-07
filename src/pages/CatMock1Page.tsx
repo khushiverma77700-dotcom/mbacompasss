@@ -790,10 +790,10 @@ const CatMock1Page = () => {
             <Card className="p-8 md:p-10 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-xl text-center">
               <Trophy className="w-10 h-10 text-sky-600 mx-auto" />
               <h3 className="mt-3 font-heading text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-                Complete MBA Compass Mocks Access
+                Complete CAT Mock Test Access — All-in-one
               </h3>
               <p className="text-slate-600 mt-2 max-w-xl mx-auto text-sm md:text-base">
-                Full-Length + Sectional + Topic Tests, Day Planner, Vocab, Formula Book, News Insights, My Insights, Personalized Hub — everything.
+                Full-length CAT mock tests, sectional CAT mock tests, topic-wise CAT mock tests, personalized CAT mock test builder, planner, vocab and formula book — one price, lifetime prep.
               </p>
               <div className="mt-6 flex items-end justify-center gap-2">
                 <span className="text-5xl md:text-6xl font-bold text-sky-600">₹999</span>
