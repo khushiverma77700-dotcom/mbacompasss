@@ -117,8 +117,12 @@ const MockFullLengthSnap = () => (
         { l: "VARC", q: "24 Q", t: "40m" },
         { l: "DILR", q: "22 Q", t: "40m" },
         { l: "QA", q: "22 Q", t: "40m" },
-      ].map((s) => (
-        <div key={s.l} className="rounded-lg border border-slate-200 p-2 bg-white">
+      ].map((s, i) => (
+        <div
+          key={s.l}
+          className="rounded-lg border border-slate-200 p-2 bg-white anim-pop"
+          style={{ animationDelay: `${i * 120}ms` }}
+        >
           <div className="text-[10px] font-semibold text-sky-600">{s.l}</div>
           <div className="text-xs text-slate-800 mt-0.5">{s.q}</div>
           <div className="text-[10px] text-slate-500 flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {s.t}</div>
@@ -127,7 +131,7 @@ const MockFullLengthSnap = () => (
     </div>
     <div className="flex items-center justify-between text-xs gap-2">
       <span className="text-slate-500 truncate">120 min · 66 questions</span>
-      <span className="inline-flex items-center gap-1 rounded-md bg-sky-600 text-white px-3 py-1.5 text-xs font-medium shrink-0">
+      <span className="inline-flex items-center gap-1 rounded-md bg-sky-600 text-white px-3 py-1.5 text-xs font-medium shrink-0 anim-pulse-sky">
         <Play className="w-3 h-3" /> Start
       </span>
     </div>
