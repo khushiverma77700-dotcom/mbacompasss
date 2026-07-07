@@ -1000,8 +1000,27 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* AI-optimized FAQ (from approved SEO audit) */}
+        {override?.faq && override.faq.length > 0 && (
+          <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16 border-t border-slate-100">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">CAT Mock Test — FAQs</h2>
+              <div className="space-y-4">
+                {override.faq.map((item, i) => (
+                  <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 md:p-5">
+                    <div className="font-semibold text-slate-900">{item.q}</div>
+                    <div className="mt-2 text-sm md:text-base text-slate-600 leading-relaxed">{item.a}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Suggested courses auto slider */}
         <SuggestedCoursesSlider />
+
+
 
 
         {/* Contact */}
