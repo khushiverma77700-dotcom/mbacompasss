@@ -550,15 +550,18 @@ const CatMock1Page = () => {
                   student-focused MBA preparation dashboard.
                 </m.p>
                 <m.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-3">
+                  <BuyNowButton label="Buy Now — ₹999" />
                   <Link to="/student">
-                    <Button size="lg" className="bg-sky-600 hover:bg-sky-700 text-white gap-2">
-                      Explore the Dashboard for Free <ArrowRight className="w-4 h-4" />
+                    <Button size="lg" variant="outline" className="border-sky-200 gap-2">
+                      Try Free Demo <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
-                  <Link to="/mocks">
-                    <Button size="lg" variant="outline" className="border-sky-200">View Mocks</Button>
-                  </Link>
                 </m.div>
+                <m.div variants={fadeUp} className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                  <span className="inline-flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Secure Razorpay checkout</span>
+                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Instant access</span>
+                </m.div>
+
               </m.div>
 
               {/* Hero snapshots */}
