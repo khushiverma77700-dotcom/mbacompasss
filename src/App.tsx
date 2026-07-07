@@ -68,6 +68,7 @@ const CollegeShortlisterPage = lazyWithPreload(() => import("./pages/CollegeShor
 const BusinessInquiryPage = lazyWithPreload(() => import("./pages/BusinessInquiryPage"));
 const NotFound = lazyWithPreload(() => import("./pages/NotFound"));
 const IIMWaitlistPage = lazyWithPreload(() => import("./pages/IIMWaitlistPage"));
+const CatMock1Page = lazyWithPreload(() => import("./pages/CatMock1Page"));
 
 // Lazy-loaded admin pages
 const AdminLayout = lazyWithPreload(() => import("./pages/admin/AdminLayout"));
@@ -967,6 +968,7 @@ const App = () => (
             <Route path="/authors" element={<PublicLayout><LazyPage><AuthorsPage /></LazyPage></PublicLayout>} />
             <Route path="/authors/:slug" element={<PublicLayout><LazyPage><AuthorDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/cat-score-calculator" element={<PublicLayout><LazyPage><CATScoreCalculatorPage /></LazyPage></PublicLayout>} />
+            <Route path="/cat-mock-1" element={<PublicLayout><LazyPage><CatMock1Page /></LazyPage></PublicLayout>} />
             <Route path="/roi-calculator" element={<PublicLayout><LazyPage><MBARoiCalculatorPage /></LazyPage></PublicLayout>} />
             <Route path="/business-inquiries" element={<PublicLayout><LazyPage><BusinessInquiryPage /></LazyPage></PublicLayout>} />
             <Route path="/forgot-password" element={<PublicLayout><LazyPage><ForgotPasswordPage /></LazyPage></PublicLayout>} />
