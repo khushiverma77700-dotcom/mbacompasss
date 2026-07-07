@@ -607,6 +607,7 @@ const CatMock1Page = () => {
   return (
     <LazyMotion features={domAnimation}>
       <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white overflow-x-hidden">
+        <AnimationStyles />
         {/* Hero */}
         <section className="relative">
           <div aria-hidden className="pointer-events-none absolute inset-0 opacity-60 overflow-hidden">
