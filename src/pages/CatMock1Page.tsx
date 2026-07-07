@@ -673,6 +673,19 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* Mid-page Buy Now band */}
+        <section className="container mx-auto px-4 pb-4">
+          <div className="max-w-5xl mx-auto rounded-2xl bg-gradient-to-r from-sky-600 via-sky-700 to-cyan-700 text-white p-6 md:p-8 shadow-2xl shadow-sky-500/20 flex flex-col md:flex-row items-center gap-5">
+            <div className="flex-1 text-center md:text-left">
+              <div className="text-xs uppercase tracking-wider text-sky-100">Limited launch offer</div>
+              <div className="mt-1 text-xl md:text-2xl font-bold">Unlock the entire dashboard for just ₹999</div>
+              <div className="text-sm text-sky-100 mt-1">30 CAT mocks · 200+ topic tests · Planner · Vocab · Formula book</div>
+            </div>
+            <BuyNowButton label="Buy Now — ₹999" className="!bg-white !text-orange-600 hover:!bg-amber-50 !from-white !to-white shadow-white/30" />
+          </div>
+        </section>
+
+
         {/* Pricing */}
         <section className="container mx-auto px-4 py-12 md:py-16">
           <div className="max-w-3xl mx-auto">
