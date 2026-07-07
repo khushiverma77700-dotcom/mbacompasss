@@ -158,8 +158,8 @@ const MockInsightsSnap = () => {
         {bars.map((h, i) => (
           <div
             key={i}
-            style={{ height: `${h}%` }}
-            className="flex-1 rounded-t bg-gradient-to-t from-sky-500 to-cyan-400"
+            style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }}
+            className="flex-1 rounded-t bg-gradient-to-t from-sky-500 to-cyan-400 anim-grow-bar"
           />
         ))}
       </div>
