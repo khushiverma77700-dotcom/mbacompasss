@@ -50,8 +50,43 @@ const viewportOnce = { once: true, amount: 0.2 } as const;
 
 /* ---------------------------- Snapshot frame --------------------------- */
 
+const AnimationStyles = () => (
+  <style>{`
+    @keyframes growBar { from { transform: scaleY(.05); opacity: .3 } to { transform: scaleY(1); opacity: 1 } }
+    @keyframes flameWiggle { 0%,100% { transform: scale(1) rotate(-3deg) } 50% { transform: scale(1.18) rotate(4deg) } }
+    @keyframes fillBar { from { width: 0 } to { width: var(--fill, 80%) } }
+    @keyframes floatY { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+    @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0) } 50% { box-shadow: 0 0 22px 4px rgba(251,146,60,.55) } }
+    @keyframes pulseGlowSky { 0%,100% { box-shadow: 0 0 0 0 rgba(14,165,233,0) } 50% { box-shadow: 0 0 22px 4px rgba(14,165,233,.5) } }
+    @keyframes shimmer { to { transform: translateX(100%) } }
+    @keyframes popIn { from { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.08); opacity: 1 } to { transform: scale(1); opacity: 1 } }
+    @keyframes cellReveal { from { transform: scale(0); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+    @keyframes ticker { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+    @keyframes typing { from { width: 0 } to { width: 100% } }
+    @keyframes caret { 50% { opacity: 0 } }
+    @keyframes cursorTrack { 0% { transform: translate(0,0) } 30% { transform: translate(110%, 40%) } 60% { transform: translate(160%, 130%) } 100% { transform: translate(0,0) } }
+    @keyframes gradientShift { 0%,100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
+
+    .anim-grow-bar { transform-origin: bottom; animation: growBar 1.1s cubic-bezier(.22,1,.36,1) both }
+    .anim-flame { display: inline-flex; animation: flameWiggle 1.1s ease-in-out infinite; transform-origin: center }
+    .anim-fill-bar { animation: fillBar 1.8s cubic-bezier(.22,1,.36,1) forwards; width: 0 }
+    .anim-float { animation: floatY 3.4s ease-in-out infinite }
+    .anim-pulse-cta { animation: pulseGlow 2.2s ease-in-out infinite }
+    .anim-pulse-sky { animation: pulseGlowSky 2.4s ease-in-out infinite }
+    .anim-pop { animation: popIn .6s cubic-bezier(.22,1,.36,1) both }
+    .anim-cell { animation: cellReveal .5s cubic-bezier(.22,1,.36,1) both }
+    .anim-shimmer { position: relative; overflow: hidden }
+    .anim-shimmer::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); animation: shimmer 3s infinite }
+    .anim-ticker { display: inline-block; animation: ticker 1.4s ease-in-out infinite }
+    .anim-typing { display: inline-block; overflow: hidden; white-space: nowrap; animation: typing 1.6s steps(20,end) both }
+    .anim-caret::after { content: '|'; margin-left: 2px; animation: caret 1s steps(2) infinite; color: currentColor }
+    .anim-cursor { animation: cursorTrack 6s ease-in-out infinite }
+    .anim-gradient { background-size: 200% 200%; animation: gradientShift 6s ease-in-out infinite }
+  `}</style>
+);
+
 const BrowserFrame = memo(({ label, children }: { label: string; children: ReactNode }) => (
-  <div className="rounded-xl overflow-hidden border border-slate-200 shadow-xl bg-white w-full">
+  <div className="rounded-xl overflow-hidden border border-slate-200 shadow-xl bg-white w-full anim-float">
     <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200">
       <div className="flex gap-1.5 shrink-0">
         <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
