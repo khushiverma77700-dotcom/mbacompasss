@@ -425,7 +425,7 @@ const SuggestedCoursesSlider = () => {
 
   return (
     <section className="py-12 md:py-16 bg-gradient-to-b from-white to-sky-50/50 overflow-hidden">
-      <div className="container mx-auto px-4 mb-8">
+      <div className="container mx-auto px-5 sm:px-6 lg:px-8 mb-8">
         <div className="text-center max-w-2xl mx-auto">
           <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-3">
             <Sparkles className="w-3.5 h-3.5 mr-1" /> Suggested Courses
@@ -506,15 +506,36 @@ const CatMock1Page = () => {
   const [lightbox, setLightbox] = useState<{ title: string; Preview: () => JSX.Element } | null>(null);
 
   useEffect(() => {
-    document.title = "CAT Mock 1 — Inside MBA Compass Mocks Dashboard | MBA Compass";
-    const meta = document.querySelector('meta[name="description"]');
-    const content = "Inside India's most student-focused MBA prep dashboard: 30 CAT mocks, 45+ sectionals, 200+ topic tests, Day Planner, 5,000+ vocab, Quants formula book, Personalized Hub — all at ₹999.";
-    if (meta) meta.setAttribute("content", content);
-    else {
-      const el = document.createElement("meta");
-      el.name = "description"; el.content = content;
-      document.head.appendChild(el);
+    document.title = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
+    const content = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      (meta as HTMLMetaElement).name = "description";
+      document.head.appendChild(meta);
     }
+    meta.setAttribute("content", content);
+
+    const setMeta = (prop: string, val: string) => {
+      let el = document.querySelector(`meta[property="${prop}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("property", prop);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", val);
+    };
+    setMeta("og:title", "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests");
+    setMeta("og:description", content);
+    setMeta("og:type", "website");
+
+    let kw = document.querySelector('meta[name="keywords"]');
+    if (!kw) {
+      kw = document.createElement("meta");
+      (kw as HTMLMetaElement).name = "keywords";
+      document.head.appendChild(kw);
+    }
+    kw.setAttribute("content", "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test");
   }, []);
 
   const openLightbox = (title: string, Preview: () => JSX.Element) => setLightbox({ title, Preview });
@@ -529,40 +550,41 @@ const CatMock1Page = () => {
             <div className="absolute top-40 -right-24 h-80 w-80 rounded-full bg-cyan-200 blur-3xl" />
           </div>
 
-          <div className="container mx-auto px-4 pt-14 md:pt-20 pb-10 relative">
+          <div className="container mx-auto px-5 sm:px-6 lg:px-8 pt-14 md:pt-20 pb-10 relative">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
               <m.div initial="hidden" animate="show" variants={stagger}>
                 <m.div variants={fadeUp}>
                   <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-4">
-                    <Sparkles className="w-3.5 h-3.5 mr-1" /> Hi Aspirant
+                    <Sparkles className="w-3.5 h-3.5 mr-1" /> India's #1 CAT Mock Test Platform
                   </Badge>
                 </m.div>
                 <m.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
-                  MBA prep isn't about solving <span className="text-sky-600">more questions.</span>{" "}
-                  It's about the <span className="text-sky-600">right practice.</span>
+                  The most realistic <span className="text-sky-600">CAT Mock Test</span> online — built for{" "}
+                  <span className="text-sky-600">right practice</span>, not just more questions.
                 </m.h1>
                 <m.p variants={fadeUp} className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed">
-                  Right strategy. A clear daily plan. Continuous performance analysis. Strong vocabulary.
-                  Quick revision. And awareness of what's happening around you.
+                  30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests —
+                  every CAT mock test comes with a personalized report, deep analytics and a smart revision plan.
                 </m.p>
                 <m.p variants={fadeUp} className="mt-4 text-lg md:text-xl font-semibold text-slate-800">
-                  That's why we built <span className="text-sky-600">MBA Compass Mocks</span> — India's most
-                  student-focused MBA preparation dashboard.
+                  That's why <span className="text-sky-600">MBA Compass CAT Mock Test</span> is India's most
+                  student-focused CAT mock test series.
                 </m.p>
                 <m.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-3">
-                  <BuyNowButton label="Buy Now — ₹999" />
+                  <BuyNowButton label="Buy CAT Mock Test — ₹999" />
                   <Link to="/student">
                     <Button size="lg" variant="outline" className="border-sky-200 gap-2">
-                      Try Free Demo <ArrowRight className="w-4 h-4" />
+                      Try Free CAT Mock Test <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                 </m.div>
                 <m.div variants={fadeUp} className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-500">
                   <span className="inline-flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Secure Razorpay checkout</span>
-                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Instant access</span>
+                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Instant CAT mock test access</span>
                 </m.div>
 
               </m.div>
+
 
               {/* Hero snapshots */}
               <m.div
@@ -591,10 +613,10 @@ const CatMock1Page = () => {
               className="mt-16 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto"
             >
               {[
-                { k: "30", v: "CAT Full Mocks" },
-                { k: "200+", v: "Topic Tests" },
-                { k: "5,000+", v: "Vocabulary Words" },
-                { k: "₹999", v: "Complete Access" },
+                { k: "30", v: "Full-Length CAT Mock Tests" },
+                { k: "45+", v: "Sectional CAT Mock Tests" },
+                { k: "200+", v: "Topic-wise CAT Mock Tests" },
+                { k: "₹999", v: "Complete CAT Mock Test Access" },
               ].map((s, i) => (
                 <m.div key={i} variants={fadeUp}>
                   <Card className="p-4 sm:p-5 text-center border-sky-100 bg-white/70 backdrop-blur">
@@ -608,23 +630,99 @@ const CatMock1Page = () => {
         </section>
 
         {/* Intro */}
-        <section className="container mx-auto px-4 py-4">
-          <p className="text-center text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
-            One dashboard. Multiple MBA exams. Thousands of questions. Smart planning tools.
-            Detailed analytics. A complete ecosystem — designed around <span className="font-semibold text-slate-800">you</span>.
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-4">
+          <p className="text-center text-slate-600 max-w-3xl mx-auto text-sm md:text-base">
+            One CAT mock test platform. Every CAT mock test is exam-pattern accurate, timed like the real CAT,
+            and paired with a personalized report so every CAT mock test moves you a step closer to your target percentile.
           </p>
         </section>
 
+        {/* Animated marquee — keyword reinforcement */}
+        <section aria-hidden className="py-4 border-y border-sky-100 bg-sky-50/50 overflow-hidden">
+          <div className="flex gap-8 w-max animate-[slide_30s_linear_infinite] text-sky-700/80 text-sm font-semibold uppercase tracking-wider">
+            {Array.from({ length: 2 }).flatMap((_, r) => [
+              "Free CAT Mock Test", "Full-Length CAT Mock Test", "Sectional CAT Mock Test",
+              "Personalized CAT Mock Test", "Topic-wise CAT Mock Test", "AI-powered CAT Mock Test",
+              "Best CAT Mock Test 2026", "CAT Mock Test with Analytics",
+            ].map((t, i) => (
+              <span key={`${r}-${i}`} className="inline-flex items-center gap-2 whitespace-nowrap">
+                <Sparkles className="w-3.5 h-3.5 text-sky-500" /> {t}
+              </span>
+            )))}
+          </div>
+        </section>
+
+        {/* Personalized CAT Mock Test section */}
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-14 md:py-20">
+          <m.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={viewportOnce}
+            transition={{ duration: 0.5, ease: EASE }}
+            className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 md:gap-14 items-center"
+          >
+            <div>
+              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-0">
+                <Zap className="w-3.5 h-3.5 mr-1" /> Personalized CAT Mock Test
+              </Badge>
+              <h2 className="mt-4 font-heading text-2xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                Build your own CAT mock test in <span className="text-sky-600">60 seconds</span>
+              </h2>
+              <p className="mt-3 text-slate-600 text-sm md:text-base leading-relaxed">
+                Every aspirant is different — so every CAT mock test should be too. Pick a section, a difficulty and
+                a duration, and our AI instantly assembles a personalized CAT mock test around your weak areas.
+                No two CAT mock tests are ever the same.
+              </p>
+              <ul className="mt-5 space-y-2.5">
+                {[
+                  "Adaptive CAT mock test difficulty that grows with you",
+                  "Weak-area targeting after every CAT mock test attempt",
+                  "10-minute quick CAT mock test or full 3-hour sitting",
+                  "Personalized revision plan after each CAT mock test",
+                ].map((b) => (
+                  <li key={b} className="flex items-start gap-2.5 text-slate-700 text-sm md:text-base">
+                    <CheckCircle2 className="w-4 h-4 text-sky-500 mt-1 shrink-0" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <BuyNowButton label="Start Personalized CAT Mock Test" />
+                <Link to="/student">
+                  <Button size="lg" variant="outline" className="border-sky-200 gap-2">
+                    See a Sample <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <m.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={viewportOnce}
+              transition={{ duration: 0.6, ease: EASE }}
+              className="relative"
+            >
+              <div aria-hidden className="absolute -inset-4 bg-gradient-to-tr from-yellow-200/50 to-orange-200/40 rounded-3xl blur-2xl pointer-events-none" />
+              <div className="relative">
+                <SnapshotButton title="Personalized CAT Mock Test" onOpen={() => openLightbox("Personalized CAT Mock Test", MockPersonalizedSnap)}>
+                  <MockPersonalizedSnap />
+                </SnapshotButton>
+              </div>
+            </m.div>
+          </m.div>
+        </section>
+
         {/* Features */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
             <h2 className="font-heading text-2xl md:text-4xl font-bold text-slate-900 tracking-tight">
-              Everything you get inside the dashboard
+              Everything inside your CAT mock test dashboard
             </h2>
             <p className="text-slate-500 mt-3 text-sm md:text-base">
-              Tap any snapshot to zoom in. Real screens from the student dashboard.
+              Tap any snapshot to zoom in. Real screens from a live CAT mock test attempt.
             </p>
           </div>
+
 
           <div className="space-y-16 md:space-y-24 max-w-6xl mx-auto">
             {features.map((f, i) => {
@@ -674,7 +772,7 @@ const CatMock1Page = () => {
         </section>
 
         {/* Mid-page Buy Now band */}
-        <section className="container mx-auto px-4 pb-4">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 pb-4">
           <div className="max-w-5xl mx-auto rounded-2xl bg-gradient-to-r from-sky-600 via-sky-700 to-cyan-700 text-white p-6 md:p-8 shadow-2xl shadow-sky-500/20 flex flex-col md:flex-row items-center gap-5">
             <div className="flex-1 text-center md:text-left">
               <div className="text-xs uppercase tracking-wider text-sky-100">Limited launch offer</div>
@@ -687,15 +785,15 @@ const CatMock1Page = () => {
 
 
         {/* Pricing */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-3xl mx-auto">
             <Card className="p-8 md:p-10 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-xl text-center">
               <Trophy className="w-10 h-10 text-sky-600 mx-auto" />
               <h3 className="mt-3 font-heading text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-                Complete MBA Compass Mocks Access
+                Complete CAT Mock Test Access — All-in-one
               </h3>
               <p className="text-slate-600 mt-2 max-w-xl mx-auto text-sm md:text-base">
-                Full-Length + Sectional + Topic Tests, Day Planner, Vocab, Formula Book, News Insights, My Insights, Personalized Hub — everything.
+                Full-length CAT mock tests, sectional CAT mock tests, topic-wise CAT mock tests, personalized CAT mock test builder, planner, vocab and formula book — one price, lifetime prep.
               </p>
               <div className="mt-6 flex items-end justify-center gap-2">
                 <span className="text-5xl md:text-6xl font-bold text-sky-600">₹999</span>
@@ -721,7 +819,7 @@ const CatMock1Page = () => {
         </section>
 
         {/* Free demo */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-2 justify-center mb-4">
               <Unlock className="w-5 h-5 text-emerald-600" />
@@ -752,11 +850,54 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* CAT Mock Test FAQ — keyword-dense */}
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-3">
+                <BookOpen className="w-3.5 h-3.5 mr-1" /> CAT Mock Test FAQ
+              </Badge>
+              <h2 className="font-heading text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                Frequently asked questions about our CAT mock test series
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {[
+                { q: "Is this the best CAT mock test online?", a: "Yes — each CAT mock test is exam-pattern accurate, timed like the real CAT, and comes with a personalized CAT mock test report." },
+                { q: "Do I get a free CAT mock test?", a: "Absolutely. Try a demo CAT mock test with the free dashboard before you buy the full CAT mock test series." },
+                { q: "How many CAT mock tests are included?", a: "30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests — one CAT mock test for every stage of prep." },
+                { q: "Are these CAT mock test 2026 pattern?", a: "Yes, every CAT mock test follows the latest CAT 2026 pattern and difficulty distribution." },
+                { q: "Can I retake a CAT mock test?", a: "Yes — retake any CAT mock test and compare attempts inside your CAT mock test analytics." },
+                { q: "Is there a personalized CAT mock test?", a: "Our Personalized Hub generates a custom CAT mock test around your weak areas in under a minute." },
+              ].map((f, i) => (
+                <m.div
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={viewportOnce}
+                  transition={{ duration: 0.35, ease: EASE, delay: i * 0.04 }}
+                >
+                  <Card className="p-5 border-sky-100 hover:border-sky-300 transition-colors h-full">
+                    <div className="font-semibold text-slate-900 flex items-start gap-2">
+                      <Sparkles className="w-4 h-4 text-sky-500 mt-1 shrink-0" /> {f.q}
+                    </div>
+                    <p className="text-sm text-slate-600 mt-2 leading-relaxed">{f.a}</p>
+                  </Card>
+                </m.div>
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <BuyNowButton label="Buy CAT Mock Test Series — ₹999" />
+            </div>
+          </div>
+        </section>
+
         {/* Suggested courses auto slider */}
         <SuggestedCoursesSlider />
 
+
         {/* Contact */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-2xl mx-auto text-center">
             <div className="inline-flex flex-wrap items-center justify-center gap-2 text-slate-700 text-sm md:text-base">
               <Phone className="w-4 h-4 text-sky-600" />
