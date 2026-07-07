@@ -792,9 +792,16 @@ const CatMock1Page = () => {
             )}
           </DialogContent>
         </Dialog>
+        {/* Sticky mobile Buy CTA */}
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2.5 flex items-center gap-2 shadow-[0_-6px_20px_rgba(0,0,0,0.06)]">
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] text-slate-500">Complete access</div>
+            <div className="font-bold text-slate-900">₹999 <span className="text-xs font-normal text-slate-500">/ one-time</span></div>
+          </div>
+          <BuyNowButton size="default" label="Buy Now" />
+        </div>
       </div>
     </LazyMotion>
-  );
 };
 
 export default CatMock1Page;
