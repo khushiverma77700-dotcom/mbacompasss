@@ -752,6 +752,9 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* Suggested courses auto slider */}
+        <SuggestedCoursesSlider />
+
         {/* Contact */}
         <section className="container mx-auto px-4 py-12 md:py-16">
           <div className="max-w-2xl mx-auto text-center">
