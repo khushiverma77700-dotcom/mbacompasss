@@ -207,45 +207,45 @@ export default function StudentLogin() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-white">
+    <div className="h-[100svh] min-h-[560px] overflow-hidden grid lg:grid-cols-2 bg-white">
       {/* LEFT — Login form */}
-      <div className="flex items-center justify-center px-6 py-10 sm:px-12 bg-white">
+      <div className="flex items-center justify-center px-4 py-3 sm:px-8 sm:py-6 lg:px-12 lg:py-10 bg-white">
         <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Link to="/" className="inline-flex items-center gap-2 mb-8 group">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
-              <GraduationCap className="h-5 w-5" />
+          <Link to="/" className="inline-flex items-center gap-2 mb-3 sm:mb-6 lg:mb-8 group">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
+              <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold text-slate-900">MBA Compass</div>
-              <div className="text-[11px] text-slate-500">Student LMS</div>
+              <div className="hidden min-[380px]:block text-[11px] text-slate-500">Student LMS</div>
             </div>
           </Link>
 
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Welcome back</h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+          <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-600">
             Sign in to access your personalized student dashboard.
           </p>
 
           {showTopDemoCta && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2.5 shadow-sm">
-              <div className="flex items-start gap-2.5">
-                <div className="h-8 w-8 rounded-md bg-amber-100 grid place-items-center shrink-0">
+            <div className="mt-2 sm:mt-4 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-2.5 py-2 sm:px-3 sm:py-2.5 shadow-sm">
+              <div className="flex items-start gap-2">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-md bg-amber-100 grid place-items-center shrink-0">
                   <Sparkles className="h-3.5 w-3.5 text-amber-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-slate-900 leading-tight">Want to try a Demo Account?</div>
-                  <div className="text-[11px] text-slate-600 leading-snug">
+                  <div className="text-xs sm:text-sm font-semibold text-slate-900 leading-tight">Want to try a Demo Account?</div>
+                  <div className="hidden min-[380px]:block text-[11px] text-slate-600 leading-snug">
                     Sign up with Google, verify mobile by OTP if needed, and open the demo dashboard.
                   </div>
                 </div>
               </div>
-              <div className="mt-2.5 grid grid-cols-2 gap-2">
+              <div className="mt-2 grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleDemoGoogle}
                   disabled={googleLoading}
-                  className="h-9 bg-white border-amber-200 text-slate-800 hover:bg-amber-50 text-xs px-2"
+                  className="h-8 sm:h-9 bg-white border-amber-200 text-slate-800 hover:bg-amber-50 text-xs px-2"
                 >
                   <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -257,9 +257,9 @@ export default function StudentLogin() {
                 </Button>
                 <Link
                   to="/auth?mode=signup&redirect=/demo&reason=demo"
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-amber-500 px-3 text-xs font-semibold text-white hover:bg-amber-600 transition-colors"
+                  className="inline-flex h-8 sm:h-9 items-center justify-center rounded-md bg-amber-500 px-2 sm:px-3 text-xs font-semibold text-white hover:bg-amber-600 transition-colors"
                 >
-                  Mobile signup <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  Mobile <span className="hidden min-[380px]:inline ml-1">signup</span> <ArrowRight className="h-3.5 w-3.5 ml-1" />
                 </Link>
               </div>
             </div>
@@ -270,9 +270,9 @@ export default function StudentLogin() {
             variant="outline"
             onClick={handleGoogle}
             disabled={googleLoading}
-            className="mt-6 w-full h-11 border-slate-200"
+            className="mt-3 sm:mt-5 lg:mt-6 w-full h-9 sm:h-11 border-slate-200 text-sm"
           >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -281,21 +281,21 @@ export default function StudentLogin() {
             {googleLoading ? "Redirecting…" : "Continue with Google"}
           </Button>
 
-          <div className="relative my-6">
+          <div className="relative my-3 sm:my-5 lg:my-6">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs text-slate-500">or</span>
           </div>
 
           <Tabs defaultValue="email" className="w-full">
-            <TabsList className="grid grid-cols-2 w-full">
+            <TabsList className="grid grid-cols-2 w-full h-9 sm:h-10">
               <TabsTrigger value="email">Email</TabsTrigger>
               <TabsTrigger value="mobile">Mobile OTP</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="email" className="mt-5">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-slate-700">Email address</Label>
+            <TabsContent value="email" className="mt-3 sm:mt-5">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="email" className="sr-only sm:not-sr-only text-slate-700">Email address</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <Input
@@ -306,13 +306,13 @@ export default function StudentLogin() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="pl-10 h-11 bg-white border-slate-200 focus-visible:ring-sky-500"
+                      className="pl-10 h-9 sm:h-11 bg-white border-slate-200 focus-visible:ring-sky-500"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-slate-700">Password</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="password" className="sr-only sm:not-sr-only text-slate-700">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <Input
@@ -323,7 +323,7 @@ export default function StudentLogin() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
-                      className="pl-10 h-11 bg-white border-slate-200 focus-visible:ring-sky-500"
+                      className="pl-10 h-9 sm:h-11 bg-white border-slate-200 focus-visible:ring-sky-500"
                     />
                   </div>
                   <div className="flex justify-end">
@@ -336,7 +336,7 @@ export default function StudentLogin() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-md shadow-sky-500/20 transition-all"
+                  className="w-full h-9 sm:h-11 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-md shadow-sky-500/20 transition-all"
                 >
                   {loading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Signing in…</>
@@ -347,10 +347,10 @@ export default function StudentLogin() {
               </form>
             </TabsContent>
 
-            <TabsContent value="mobile" className="mt-5">
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-slate-700">Mobile number</Label>
+            <TabsContent value="mobile" className="mt-3 sm:mt-5">
+              <div className="space-y-3 sm:space-y-5">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="phone" className="sr-only sm:not-sr-only text-slate-700">Mobile number</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <Input
@@ -363,7 +363,7 @@ export default function StudentLogin() {
                         setOtp("");
                       }}
                       placeholder="10-digit mobile number"
-                      className="pl-10 h-11 bg-white border-slate-200 focus-visible:ring-sky-500"
+                      className="pl-10 h-9 sm:h-11 bg-white border-slate-200 focus-visible:ring-sky-500"
                     />
                   </div>
                 </div>
@@ -373,13 +373,13 @@ export default function StudentLogin() {
                     type="button"
                     onClick={handleSendOtp}
                     disabled={otpSending || phone.length !== 10}
-                    className="w-full h-11 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white"
+                    className="w-full h-9 sm:h-11 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white"
                   >
                     {otpSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending…</> : "Send OTP"}
                   </Button>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <Label className="text-slate-700">Enter 6-digit OTP</Label>
                       <InputOTP maxLength={6} value={otp} onChange={setOtp}>
                         <InputOTPGroup>
@@ -391,7 +391,7 @@ export default function StudentLogin() {
                       type="button"
                       onClick={handleVerifyOtp}
                       disabled={otpVerifying || otp.length !== 6}
-                      className="w-full h-11 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white"
+                      className="w-full h-9 sm:h-11 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white"
                     >
                       {otpVerifying ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Verifying…</> : "Verify & Sign in"}
                     </Button>
@@ -409,30 +409,30 @@ export default function StudentLogin() {
           </Tabs>
 
           {error && (
-            <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="mt-3 sm:mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs sm:text-sm text-red-700 animate-in fade-in slide-in-from-top-1 duration-200">
               {error}
             </div>
           )}
 
           {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reason") === "demo" && (
-            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+            <div className="mt-3 sm:mt-5 rounded-lg sm:rounded-xl border border-amber-200 bg-amber-50 px-3 sm:px-4 py-2 sm:py-3 text-xs text-amber-800">
               <span className="font-semibold">Sign in to try the demo.</span>{" "}
-              Verify your mobile with OTP below and you'll be taken straight to the demo dashboard.
+              <span className="hidden min-[380px]:inline">Verify your mobile with OTP below and you'll be taken straight to the demo dashboard.</span>
             </div>
           )}
 
           {!showTopDemoCta && (
             <Link
               to="/auth?mode=signup&redirect=/demo&reason=demo"
-              className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 hover:from-amber-100 hover:to-orange-100 transition-colors cursor-pointer"
+              className="mt-3 sm:mt-5 flex items-center justify-between gap-2 sm:gap-3 rounded-lg sm:rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 sm:px-4 py-2 sm:py-3 hover:from-amber-100 hover:to-orange-100 transition-colors cursor-pointer"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 <div className="h-8 w-8 rounded-lg bg-amber-100 grid place-items-center shrink-0">
                   <Sparkles className="h-4 w-4 text-amber-600" />
                 </div>
-                <div className="text-xs text-slate-700 leading-relaxed">
+                <div className="text-xs text-slate-700 leading-snug sm:leading-relaxed">
                   <span className="font-semibold text-slate-900">Want to try a Demo Account?</span>
-                  <div className="text-slate-600">
+                  <div className="hidden min-[380px]:block text-slate-600">
                     Create a full OTP-verified account — the demo opens right after.
                   </div>
                 </div>
@@ -442,7 +442,7 @@ export default function StudentLogin() {
           )}
 
 
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+          <div className="hidden sm:block mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-lg bg-sky-100 grid place-items-center shrink-0">
                 <ShieldCheck className="h-4 w-4 text-sky-600" />
@@ -460,7 +460,7 @@ export default function StudentLogin() {
             </div>
           </div>
 
-          <p className="mt-8 text-center text-[11px] text-slate-400">
+          <p className="mt-3 sm:mt-6 lg:mt-8 text-center text-[10px] sm:text-[11px] text-slate-400">
             Protected by industry-standard encryption · MBA Compass © {new Date().getFullYear()}
           </p>
         </div>
