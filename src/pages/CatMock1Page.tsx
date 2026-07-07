@@ -760,6 +760,85 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* Exams & Mock Types We Cover */}
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-14 md:py-20">
+          <div className="text-center max-w-3xl mx-auto mb-10 md:mb-14">
+            <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-3">
+              <Trophy className="w-3.5 h-3.5 mr-1" /> Every Major MBA Entrance Exam
+            </Badge>
+            <h2 className="font-heading text-2xl md:text-4xl font-bold text-slate-900 tracking-tight">
+              Not just a CAT mock test — mocks for <span className="text-sky-600">every</span> MBA exam
+            </h2>
+            <p className="text-slate-500 mt-3 text-sm md:text-base">
+              Full-length, sectional, topic-wise and personalized mocks for CAT, XAT, NMAT, SNAP, IIFT, CMAT and MAT — all inside one dashboard.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+            {[
+              { name: "CAT",   full: 30, sec: "45+", topic: "200+", accent: "from-sky-500 to-cyan-500",       tag: "IIM entrance" },
+              { name: "XAT",   full: 20, sec: "45+", topic: "150+", accent: "from-blue-500 to-indigo-500",    tag: "XLRI & 160+ B-schools" },
+              { name: "NMAT",  full: 20, sec: "45+", topic: "120+", accent: "from-emerald-500 to-teal-500",   tag: "NMIMS & top private" },
+              { name: "SNAP",  full: 20, sec: "45+", topic: "120+", accent: "from-fuchsia-500 to-pink-500",   tag: "Symbiosis institutes" },
+              { name: "IIFT",  full: 20, sec: "45+", topic: "120+", accent: "from-orange-500 to-amber-500",   tag: "IIFT MBA (IB)" },
+              { name: "CMAT",  full: 20, sec: "40+", topic: "100+", accent: "from-violet-500 to-purple-500",  tag: "AICTE B-schools" },
+              { name: "MAT",   full: 20, sec: "40+", topic: "100+", accent: "from-rose-500 to-red-500",       tag: "600+ B-schools" },
+              { name: "TISSNET / MICAT / MAH-CET", full: 15, sec: "30+", topic: "80+", accent: "from-cyan-500 to-blue-500", tag: "Specialised exams" },
+            ].map((e, i) => (
+              <m.div
+                key={e.name}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={viewportOnce}
+                transition={{ duration: 0.4, ease: EASE, delay: i * 0.05 }}
+              >
+                <Card className="p-5 h-full border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all bg-white">
+                  <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r ${e.accent}`}>
+                    <Rocket className="w-3 h-3" /> {e.name}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-2">{e.tag}</div>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex items-center justify-between"><span className="text-slate-600">Full-length mocks</span><span className="font-bold text-slate-900">{e.full}</span></div>
+                    <div className="flex items-center justify-between"><span className="text-slate-600">Sectional tests</span><span className="font-bold text-slate-900">{e.sec}</span></div>
+                    <div className="flex items-center justify-between"><span className="text-slate-600">Topic-wise tests</span><span className="font-bold text-slate-900">{e.topic}</span></div>
+                    <div className="flex items-center justify-between"><span className="text-slate-600">Personalized</span><span className="font-bold text-emerald-600 inline-flex items-center gap-1"><Zap className="w-3 h-3" /> AI</span></div>
+                  </div>
+                </Card>
+              </m.div>
+            ))}
+          </div>
+
+          <div className="max-w-6xl mx-auto mt-12 grid md:grid-cols-4 gap-4">
+            {[
+              { icon: Rocket,       t: "Full-Length Mocks",     d: "Real exam pattern, timed like the actual paper, with All-India Rank." },
+              { icon: Target,       t: "Sectional Tests",        d: "VARC, DILR, QA, LR, GK, DI — isolate and fix your weakest section." },
+              { icon: BookOpen,     t: "Topic-Wise Tests",       d: "3–5 tests per concept: TSD, P&C, RC, Para-Jumbles, Sets, Caselets…" },
+              { icon: Zap,          t: "Personalized Mocks",     d: "AI builds a mock by exam + section + difficulty + duration in 60 seconds." },
+            ].map((c, i) => {
+              const Ic = c.icon;
+              return (
+                <m.div
+                  key={c.t}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={viewportOnce}
+                  transition={{ duration: 0.35, ease: EASE, delay: i * 0.05 }}
+                >
+                  <Card className="p-5 h-full border-sky-100 bg-gradient-to-br from-sky-50/60 to-white">
+                    <div className="w-9 h-9 rounded-lg bg-sky-600 text-white flex items-center justify-center"><Ic className="w-4 h-4" /></div>
+                    <div className="mt-3 font-semibold text-slate-900">{c.t}</div>
+                    <div className="text-sm text-slate-600 mt-1 leading-relaxed">{c.d}</div>
+                  </Card>
+                </m.div>
+              );
+            })}
+          </div>
+
+          <p className="text-center text-xs md:text-sm text-slate-500 mt-8 max-w-3xl mx-auto">
+            One purchase unlocks every CAT mock test, XAT mock test, NMAT mock test, SNAP mock test, IIFT mock test, CMAT mock test and MAT mock test — plus sectional and topic-wise tests for each.
+          </p>
+        </section>
+
         {/* Personalized CAT Mock Test section */}
         <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-14 md:py-20">
           <m.div
