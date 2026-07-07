@@ -126,6 +126,12 @@ export const adminNavGroups: AdminNavGroup[] = [
     ],
   },
   {
+    label: "Pages",
+    items: [
+      { label: "CAT Mock 1 (/cat-mock-1)", path: "/admin/pages/cat-mock-1", icon: FileCode },
+    ],
+  },
+  {
     label: "System & Admin",
     items: [
       { label: "Mega Menu", path: "/admin/mega-menu", icon: Menu },
