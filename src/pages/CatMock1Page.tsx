@@ -689,11 +689,20 @@ const CatMock1Page = () => {
                 <span className="text-slate-500 mb-2 text-sm">/ complete access</span>
               </div>
               <p className="text-xs text-slate-500 mt-2">No bundles. No confusion. Just one student-focused dashboard.</p>
-              <Link to="/mocks">
-                <Button size="lg" className="mt-6 bg-sky-600 hover:bg-sky-700 text-white gap-2">
-                  Get Full Access <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <BuyNowButton label="Buy Now — Unlock Everything" />
+                <Link to="/mocks">
+                  <Button size="lg" variant="outline" className="border-sky-200 gap-2">
+                    See what's inside <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Razorpay secured</span>
+                <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Instant activation</span>
+                <span className="inline-flex items-center gap-1"><Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> Loved by 10,000+ aspirants</span>
+              </div>
+
             </Card>
           </div>
         </section>
