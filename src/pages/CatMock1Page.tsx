@@ -506,15 +506,36 @@ const CatMock1Page = () => {
   const [lightbox, setLightbox] = useState<{ title: string; Preview: () => JSX.Element } | null>(null);
 
   useEffect(() => {
-    document.title = "CAT Mock 1 — Inside MBA Compass Mocks Dashboard | MBA Compass";
-    const meta = document.querySelector('meta[name="description"]');
-    const content = "Inside India's most student-focused MBA prep dashboard: 30 CAT mocks, 45+ sectionals, 200+ topic tests, Day Planner, 5,000+ vocab, Quants formula book, Personalized Hub — all at ₹999.";
-    if (meta) meta.setAttribute("content", content);
-    else {
-      const el = document.createElement("meta");
-      el.name = "description"; el.content = content;
-      document.head.appendChild(el);
+    document.title = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
+    const content = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      (meta as HTMLMetaElement).name = "description";
+      document.head.appendChild(meta);
     }
+    meta.setAttribute("content", content);
+
+    const setMeta = (prop: string, val: string) => {
+      let el = document.querySelector(`meta[property="${prop}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("property", prop);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", val);
+    };
+    setMeta("og:title", "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests");
+    setMeta("og:description", content);
+    setMeta("og:type", "website");
+
+    let kw = document.querySelector('meta[name="keywords"]');
+    if (!kw) {
+      kw = document.createElement("meta");
+      (kw as HTMLMetaElement).name = "keywords";
+      document.head.appendChild(kw);
+    }
+    kw.setAttribute("content", "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test");
   }, []);
 
   const openLightbox = (title: string, Preview: () => JSX.Element) => setLightbox({ title, Preview });
