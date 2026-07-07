@@ -583,13 +583,14 @@ const CatMock1Page = () => {
   }, []);
 
   useEffect(() => {
-    const defTitle = "CAT Mock Test 2026 — 30 Full-Length CAT Mock Tests | MBA Compass";
-    const defDesc = "Take the most realistic CAT mock test online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests with deep analytics, planner, vocab & formula book — all at ₹999.";
-    const defKeywords = "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test";
+    const defTitle = "CAT Mock Test 2026 — 30 Free & Paid CAT Mock Tests Online | MBA Compass";
+    const defDesc = "Take India's most realistic CAT mock test 2026 online. 30 full-length CAT mock tests, 45+ sectional CAT mock tests, 200+ topic-wise CAT mock tests + XAT, NMAT, SNAP, IIFT, CMAT & MAT mocks. AI-personalized, deep analytics, ₹999 all-inclusive.";
+    const defKeywords = "CAT mock test, CAT mock test 2026, free CAT mock test, CAT mock test online, sectional CAT mock test, CAT mock test series, best CAT mock test, CAT mock test with solutions, CAT mock test IIM, CAT online mock test, CAT full length mock test, CAT mock test analysis, XAT mock test, NMAT mock test, SNAP mock test, IIFT mock test, CMAT mock test, MAT mock test, MBA mock test";
 
     const title = override?.title || defTitle;
     const description = override?.description || defDesc;
     const keywords = override?.keywords?.length ? override.keywords.join(", ") : defKeywords;
+    const canonicalUrl = "https://mbacompass.in/cat-mock-1";
 
     document.title = title;
 
@@ -605,28 +606,76 @@ const CatMock1Page = () => {
     };
     setName("description", description);
     setName("keywords", keywords);
+    setName("robots", "index, follow, max-image-preview:large, max-snippet:-1");
+    setName("author", "MBA Compass");
+    setName("twitter:card", "summary_large_image");
+    setName("twitter:title", title);
+    setName("twitter:description", description);
     setProp("og:title", title);
     setProp("og:description", description);
     setProp("og:type", "website");
-    setProp("og:url", "https://coach-compass-finder.lovable.app/cat-mock-1");
+    setProp("og:site_name", "MBA Compass");
+    setProp("og:locale", "en_IN");
+    setProp("og:url", canonicalUrl);
     if (override?.og_image) setProp("og:image", override.og_image);
 
     // Canonical
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
-    canonical.href = "https://coach-compass-finder.lovable.app/cat-mock-1";
+    canonical.href = canonicalUrl;
 
-    // JSON-LD (managed)
-    const existing = document.getElementById("cat-mock-1-jsonld");
-    if (existing) existing.remove();
-    if (override?.json_ld) {
+    // Managed JSON-LD: Product + FAQPage + BreadcrumbList (always) + override (if any)
+    document.querySelectorAll('script[data-cat-mock-jsonld="1"]').forEach(n => n.remove());
+    const injectLd = (obj: any) => {
       const s = document.createElement("script");
       s.type = "application/ld+json";
-      s.id = "cat-mock-1-jsonld";
-      s.textContent = JSON.stringify(override.json_ld);
+      s.setAttribute("data-cat-mock-jsonld", "1");
+      s.textContent = JSON.stringify(obj);
       document.head.appendChild(s);
-    }
+    };
+
+    injectLd({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "MBA Compass CAT Mock Test Series 2026",
+      description: "30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests with AI-personalized practice, deep analytics, planner, vocab and formula book.",
+      brand: { "@type": "Brand", name: "MBA Compass" },
+      offers: {
+        "@type": "Offer",
+        price: "999",
+        priceCurrency: "INR",
+        availability: "https://schema.org/InStock",
+        url: canonicalUrl,
+      },
+      aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", reviewCount: "10248" },
+    });
+
+    injectLd({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        { q: "Is this the best CAT mock test online?", a: "Yes — each CAT mock test is exam-pattern accurate, timed like the real CAT, and comes with a personalized CAT mock test report with All India Rank and section-wise analytics." },
+        { q: "Do I get a free CAT mock test?", a: "Yes. You can try a free CAT mock test from the demo dashboard before you buy the full CAT mock test series at ₹999." },
+        { q: "How many CAT mock tests are included?", a: "30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests, plus XAT, NMAT, SNAP, IIFT, CMAT and MAT mocks." },
+        { q: "Are these CAT mock test 2026 pattern?", a: "Yes, every CAT mock test follows the latest CAT 2026 pattern, section timing and difficulty distribution." },
+        { q: "Can I retake a CAT mock test?", a: "Yes — retake any CAT mock test unlimited times and compare attempts inside your CAT mock test analytics dashboard." },
+        { q: "Is there a personalized CAT mock test?", a: "Yes — our Personalized Hub generates a custom AI CAT mock test around your weak topics in under a minute." },
+      ].map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    });
+
+    injectLd({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://mbacompass.in/" },
+        { "@type": "ListItem", position: 2, name: "Mocks", item: "https://mbacompass.in/mocks" },
+        { "@type": "ListItem", position: 3, name: "CAT Mock Test", item: canonicalUrl },
+      ],
+    });
+
+    if (override?.json_ld) injectLd(override.json_ld);
   }, [override]);
+
 
 
   const openLightbox = (title: string, Preview: () => JSX.Element) => setLightbox({ title, Preview });
@@ -1037,8 +1086,98 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* SEO-rich long-form content — Why our CAT Mock Test */}
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16 border-t border-slate-100">
+          <article className="max-w-4xl mx-auto prose prose-slate prose-headings:font-heading prose-headings:tracking-tight prose-h2:text-2xl md:prose-h2:text-3xl prose-h3:text-xl prose-a:text-sky-600 prose-strong:text-slate-900">
+            <h2>Why the MBA Compass CAT Mock Test is India's most trusted CAT mock test series in 2026</h2>
+            <p>
+              A great CAT mock test isn't just a set of questions — it is a full CAT preparation experience.
+              Every MBA Compass CAT mock test is designed on the exact CAT 2026 exam pattern: three sections
+              (VARC, DILR, QA), 66 questions in 120 minutes, sectional timers and negative marking. When you
+              take a CAT mock test with us, you are training your brain for the real CAT exam — not just
+              solving random questions.
+            </p>
+            <p>
+              With 30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock
+              tests, our CAT mock test series is one of the most comprehensive CAT mock test libraries
+              online. Every CAT mock test comes with detailed CAT mock test analysis, All India Rank,
+              percentile prediction, section-wise accuracy, time management insights and a personalized
+              revision plan — everything you need to convert practice into percentile.
+            </p>
+
+            <h3>What makes our CAT mock test different from any other CAT mock test online</h3>
+            <ul>
+              <li><strong>CAT mock test with solutions:</strong> every CAT mock test question includes a video-style explanation, shortcut approach and difficulty tag.</li>
+              <li><strong>CAT mock test analysis:</strong> attempt-vs-attempt comparison, question-level time tracking and weak-topic detection after each CAT mock test.</li>
+              <li><strong>Free CAT mock test demo:</strong> try a free CAT mock test with a real dashboard experience before buying the full CAT mock test series.</li>
+              <li><strong>Personalized CAT mock test:</strong> AI builds a custom CAT mock test for your weak topics in under 60 seconds.</li>
+              <li><strong>CAT mock test for IIM aspirants:</strong> difficulty progression from CAT 2023–2025 to a beyond-CAT level so a 99+ percentile feels comfortable.</li>
+            </ul>
+
+            <h3>Sectional CAT mock tests — VARC, DILR and Quant, done right</h3>
+            <p>
+              Sectional CAT mock tests are how serious CAT aspirants fix percentile leaks. Our sectional CAT
+              mock test library covers Reading Comprehension, Verbal Ability, Para-Jumbles, Para-Summary,
+              Data Interpretation, Logical Reasoning caselets, Arithmetic, Algebra, Number System, Geometry,
+              Modern Math and more — each sectional CAT mock test is timed exactly like the CAT section it
+              targets.
+            </p>
+
+            <h3>Topic-wise CAT mock tests — master concepts, not just questions</h3>
+            <p>
+              Every important CAT topic has 3–5 dedicated topic-wise CAT mock tests: Time-Speed-Distance,
+              Percentages, Profit & Loss, Permutations & Combinations, Probability, Sets, Venn Diagrams,
+              Functions, Progressions, Mensuration, Coordinate Geometry, Reading Comprehension by genre,
+              Critical Reasoning, Assumptions, Puzzles, Arrangements and more. Attempt a topic-wise CAT
+              mock test, review the analysis, revise the concept, and re-attempt until mastered.
+            </p>
+
+            <h3>Beyond the CAT mock test — XAT, NMAT, SNAP, IIFT, CMAT & MAT mocks</h3>
+            <p>
+              A single ₹999 purchase also unlocks XAT mock tests (with Decision Making and GK), NMAT mock
+              tests (with adaptive timing), SNAP mock tests, IIFT mock tests (with GK section), CMAT mock
+              tests and MAT mock tests. Whether you are targeting IIM Ahmedabad, XLRI Jamshedpur, NMIMS
+              Mumbai, SIBM Pune, IIFT Delhi or any of the 600+ top B-schools in India, our mock test series
+              covers the exam you need.
+            </p>
+
+            <h3>How to use this CAT mock test series to crack CAT 2026</h3>
+            <ol>
+              <li>Start with a diagnostic CAT mock test to establish your baseline percentile.</li>
+              <li>Use topic-wise CAT mock tests to fix weak concepts identified by the analysis.</li>
+              <li>Take a sectional CAT mock test twice a week to build section-specific strategy.</li>
+              <li>Attempt one full-length CAT mock test every weekend under real exam conditions.</li>
+              <li>Review every CAT mock test in your dashboard — solutions, timing, weak areas.</li>
+              <li>Use the Personalized Hub to generate a CAT mock test for the topics you keep missing.</li>
+            </ol>
+
+            <h3>Who should buy this CAT mock test series</h3>
+            <p>
+              This CAT mock test series is built for first-time CAT aspirants targeting a 95+ percentile,
+              repeaters targeting 99+, working professionals with limited prep time, and college students
+              preparing alongside academics. If you want a CAT mock test that adapts to <em>your</em>
+              schedule, weaknesses and target — this is the CAT mock test series to buy.
+            </p>
+
+            <div className="not-prose mt-6 p-5 rounded-xl bg-sky-50 border border-sky-100">
+              <div className="font-semibold text-slate-900">Explore more MBA prep resources</div>
+              <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                <Link to="/mocks" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">All Mock Tests</Link>
+                <Link to="/student/personalized-hub" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">Personalized Mock Hub</Link>
+                <Link to="/student/vocabulary" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">MBA Vocabulary</Link>
+                <Link to="/mba-compass" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">MBA Compass Courses</Link>
+                <Link to="/student/day-planner" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">Day Planner</Link>
+                <Link to="/colleges" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">Top B-Schools</Link>
+                <Link to="/exams" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">MBA Entrance Exams</Link>
+                <Link to="/coaching" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">CAT Coaching</Link>
+              </div>
+            </div>
+          </article>
+        </section>
+
         {/* CAT Mock Test FAQ — keyword-dense */}
         <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
+
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10">
               <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-3">
