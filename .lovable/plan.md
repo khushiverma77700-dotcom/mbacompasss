@@ -1,71 +1,99 @@
+# Deep SEO Audit + Approval + Live Injection
 
-# SEO Audit & Fix Plan — mbacompass.in
+Turn `/admin/pages/cat-mock-1` into a real, multi-step AI-driven audit that ends by publishing approved changes to the live page.
 
-Your prompt covers ~30 distinct workstreams across 200+ files. Trying to do it all in one shot guarantees regressions, blown context, and unverifiable changes. I'll do it as 4 focused passes — each is reviewable, deployable, and builds on the last. Tell me which to start with (or say "all, in order") and I'll execute.
+## Flow the user will see
 
-## Current state (already in place from prior work)
+```
+1. Read page content       ──►  fetch HTML, extract title/desc/H1/body/links/images
+2. Web research            ──►  Firecrawl search: "CAT mock test", SERP top 10, related
+3. Competitor analysis     ──►  scrape top 3 SERP results, extract their title/H1/topics
+4. Keyword gap             ──►  Lovable AI diff (our page words vs competitor corpus)
+5. SEO checklist           ──►  same rule set as SEO Dashboard (title/desc len, kw density,
+                                 H1/H2, alt text, OG/Twitter, JSON-LD, canonical, wc, links)
+6. Proposed changes        ──►  Lovable AI writes new title, meta description, H1, intro
+                                 paragraph, FAQ additions, JSON-LD, OG tags, keywords list
+7. Review + approve        ──►  side-by-side diff, per-field accept/reject, one-click Approve
+8. Publish live            ──►  writes to page_seo_overrides row; page reads it and renders
+```
 
-- Prerender pipeline (`scripts/prerender-seo.ts`) + Cloudflare Worker bot-routing (`cloudflare/worker.js`) → Googlebot gets fully-rendered HTML.
-- Per-route `<Helmet>` via `useResolvedSeo` + `seoAutomation` (DB-driven titles/descriptions/canonicals/JSON-LD).
-- `public/robots.txt` clean, sitemap referenced, admin/auth disallowed.
-- Sitemap kept fresh by admin + 6h cron.
-- CWV: CLS audit complete, LazyMount + font-display fallbacks, dashboard auth cold-start fixed.
+Each step streams a status card (pending → running → done/failed) with its findings.
 
-So the foundations are solid. What's left is **enforcement, dedupe, and gap-filling**.
+## Data model
 
-## Pass 1 — Metadata correctness (Critical/High)
+New table `page_seo_overrides` (one row per page slug):
 
-Goal: every public route ships a unique, length-correct title + description + self-referencing canonical in source HTML.
+- `slug` (pk, e.g. `cat-mock-1`)
+- `title`, `description`, `h1`, `intro_html`, `og_image`
+- `keywords` (text[]), `faq` (jsonb), `json_ld` (jsonb)
+- `applied_at`, `applied_by`, `source_audit_id`
+- RLS: `authenticated` read, admin write (via `has_role`)
 
-- Add a validator script `scripts/audit-seo-metadata.ts` that:
-  - Crawls sitemap, fetches each URL with `?_prerender=1`, parses `<head>`.
-  - Reports: missing/duplicate titles, missing/duplicate descriptions, title <50 or >60 chars, description <150 or >160 chars, missing/wrong canonical, canonical loops, missing OG, missing JSON-LD.
-  - Writes `reports/seo-metadata-audit.json` + a markdown summary.
-- Fix the top offenders surfaced by the report (template-level fixes in `seoAutomation.ts` defaults + per-route Helmet where DB rows are blank).
-- Enforce length bounds at write time in `AdminBulkSEO` / `AdminMetaValidator` (already partly there — wire warnings into save flow).
+New table `page_seo_audits`:
 
-## Pass 2 — Structured data & E-E-A-T (High)
+- `id`, `slug`, `status`, `steps` (jsonb — per-step logs), `checklist` (jsonb),
+  `competitors` (jsonb), `keyword_gap` (jsonb), `proposal` (jsonb — the writable fields),
+  `approved` (bool), `created_by`, `created_at`
+- RLS: admin-only.
 
-- Sitewide `Organization` + `WebSite` (with `SearchAction`) JSON-LD in `index.html`.
-- `BreadcrumbList` on every detail page (College, Article, Exam, Institute, Coaching, Course).
-- `Article` schema on `ArticlePage` with `author` (Person), `publisher` (Organization w/ logo), `datePublished`, `dateModified`, `image` (≥1200×630).
-- `CollegeOrUniversity` / `EducationalOrganization` schema on college pages.
-- `Course` schema on MBA Compass courses.
-- `FAQPage` only when FAQs actually exist (dedupe already handled in `useResolvedSeo`).
-- Add `author` pages (`/author/[slug]`) with `Person` schema — needed for E-E-A-T + Discover eligibility.
+## Backend
 
-## Pass 3 — Indexing, crawlability, internal linking (High/Medium)
+Edge function `deep-seo-audit` (new):
 
-- Sitemap split: index file + per-type sub-sitemaps (colleges, articles, exams, institutes, coaching, courses, static) — already partly done; verify gzipped & <50k URLs each.
-- `lastmod` from real `updated_at`, not build time.
-- `hreflang="en-IN"` + `x-default` on canonical pages.
-- Internal-link audit: every detail page links to ≥3 related pages; category hubs link to children; orphan-page detector script.
-- `robots.txt`: add `Disallow: /*?utm_*`, `/*?fbclid=`, `/*?gclid=` to avoid param-duplicate indexing.
-- 404 vs soft-404: ensure `NotFound.tsx` sets `<meta name="robots" content="noindex">` and prerender writes 404 status.
+- `POST { slug, targetKeyword }` → creates audit row, kicks off `EdgeRuntime.waitUntil`.
+- Streams progress by updating `steps` jsonb after each stage (client polls every 2s).
+- Step 1: fetch `${SITE_URL}/${slug}` HTML, parse with `deno-dom`.
+- Step 2/3: Firecrawl `/v2/search` for the keyword (top 10), then `/v2/scrape` on top 3
+  competitors (markdown only). Firecrawl connector required — will prompt to link.
+- Step 4: Lovable AI (`google/gemini-2.5-flash`) prompt: "given our text and competitor
+  corpus, list missing keywords/topics".
+- Step 5: run existing checklist logic (same as `AdminPageSEOReview.tsx` analyze()).
+- Step 6: Lovable AI generates full proposal JSON (strict schema) targeting the checklist
+  gaps + keyword-gap terms, honoring keyword density ≤ 3%.
+- Marks audit `status = ready_for_review`.
 
-## Pass 4 — GEO / AI Search & Discover (Medium)
+Edge function `apply-seo-override` (new):
 
-- `public/llms.txt` exists — refresh with current top pages + descriptions.
-- `Speakable` schema on news/article pages (Discover signal).
-- `NewsArticle` schema on `NewsSection`/Newsroom items with `dateline` (Discover eligibility).
-- AI-citation friendliness:
-  - Add "Last updated" + "Reviewed by {author}" visible on Article/College pages (E-E-A-T).
-  - Add "Key takeaways" / TL;DR block to articles (renders as `Speakable` selector).
-  - Add `<meta name="article:author">`, `<meta name="article:published_time">`, `<meta name="article:modified_time">` (Helmet).
-- Open Graph image fallback per content type (already partly there) — ensure all ≥1200×630.
-- Verify Bingbot, GPTBot, PerplexityBot, Google-Extended in `robots.txt` (opt-in for AI training/citation).
+- `POST { auditId, accepted: {...} }` — admin-guarded, writes selected fields into
+  `page_seo_overrides` and flips `page_seo_audits.approved = true`.
 
-## Deliverables per pass
+## Frontend
 
-1. List of files modified + diff summary.
-2. The audit report JSON/MD (Pass 1).
-3. Before/after sample for 3 routes (homepage, an article, a college).
-4. What's deferred to the next pass.
+Rewrite `src/pages/admin/AdminPageSEOReview.tsx`:
 
-## Tell me how to proceed
+- "Run deep audit" button starts edge function, then polls the audit row.
+- Renders 5 step cards with live status + expandable findings.
+- Renders a "Proposed changes" panel with per-field checkboxes and current vs proposed diff
+  (title, description, H1, intro, keywords, FAQ, JSON-LD, OG image).
+- "Approve & publish" calls `apply-seo-override`; on success shows "Live on /cat-mock-1".
 
-Reply with one of:
-- **"Pass 1"** — start with the metadata audit + fixes (recommended first).
-- **"All, in order"** — I'll do Pass 1 fully, report, then continue. Each pass ends with a checkpoint so you can review before the next.
-- **"Skip to Pass N"** — if you've already handled the earlier passes elsewhere.
-- **Custom scope** — e.g. "just structured data on article + college pages".
+Update `src/pages/CatMock1Page.tsx`:
+
+- On mount, fetch `page_seo_overrides` row where `slug = 'cat-mock-1'`.
+- If present, override the `<Helmet>` title/description/OG/JSON-LD and the visible H1 /
+  intro paragraph / FAQ items / keywords with the stored values (fallback = current
+  hardcoded content).
+- Ensures approved changes go live instantly without a redeploy.
+
+## Connectors and secrets
+
+- **Firecrawl** — required for search + competitor scrape. Trigger
+  `standard_connectors--connect` for `firecrawl` in the same turn.
+- `LOVABLE_API_KEY` — already present.
+- No new user-entered secrets.
+
+## Files touched
+
+- `supabase/migrations/…_page_seo_overrides.sql` (2 tables, RLS, grants)
+- `supabase/functions/deep-seo-audit/index.ts` (new)
+- `supabase/functions/apply-seo-override/index.ts` (new)
+- `src/pages/admin/AdminPageSEOReview.tsx` (rewrite around the new flow)
+- `src/pages/CatMock1Page.tsx` (read + apply override)
+
+## Out of scope for this pass
+
+- Semrush-backed keyword volumes (can be added later via the Semrush connector).
+- Applying overrides to pages other than `/cat-mock-1` (the schema supports it; UI wires
+  only the one slug for now).
+
+Confirm and I'll build it end-to-end.
