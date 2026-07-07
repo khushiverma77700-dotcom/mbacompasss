@@ -850,8 +850,51 @@ const CatMock1Page = () => {
           </div>
         </section>
 
+        {/* CAT Mock Test FAQ — keyword-dense */}
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-3">
+                <BookOpen className="w-3.5 h-3.5 mr-1" /> CAT Mock Test FAQ
+              </Badge>
+              <h2 className="font-heading text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                Frequently asked questions about our CAT mock test series
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {[
+                { q: "Is this the best CAT mock test online?", a: "Yes — each CAT mock test is exam-pattern accurate, timed like the real CAT, and comes with a personalized CAT mock test report." },
+                { q: "Do I get a free CAT mock test?", a: "Absolutely. Try a demo CAT mock test with the free dashboard before you buy the full CAT mock test series." },
+                { q: "How many CAT mock tests are included?", a: "30 full-length CAT mock tests, 45+ sectional CAT mock tests and 200+ topic-wise CAT mock tests — one CAT mock test for every stage of prep." },
+                { q: "Are these CAT mock test 2026 pattern?", a: "Yes, every CAT mock test follows the latest CAT 2026 pattern and difficulty distribution." },
+                { q: "Can I retake a CAT mock test?", a: "Yes — retake any CAT mock test and compare attempts inside your CAT mock test analytics." },
+                { q: "Is there a personalized CAT mock test?", a: "Our Personalized Hub generates a custom CAT mock test around your weak areas in under a minute." },
+              ].map((f, i) => (
+                <m.div
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={viewportOnce}
+                  transition={{ duration: 0.35, ease: EASE, delay: i * 0.04 }}
+                >
+                  <Card className="p-5 border-sky-100 hover:border-sky-300 transition-colors h-full">
+                    <div className="font-semibold text-slate-900 flex items-start gap-2">
+                      <Sparkles className="w-4 h-4 text-sky-500 mt-1 shrink-0" /> {f.q}
+                    </div>
+                    <p className="text-sm text-slate-600 mt-2 leading-relaxed">{f.a}</p>
+                  </Card>
+                </m.div>
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <BuyNowButton label="Buy CAT Mock Test Series — ₹999" />
+            </div>
+          </div>
+        </section>
+
         {/* Suggested courses auto slider */}
         <SuggestedCoursesSlider />
+
 
         {/* Contact */}
         <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
