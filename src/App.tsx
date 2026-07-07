@@ -104,6 +104,7 @@ const AdminComparisons = lazyWithPreload(() => import("./pages/admin/AdminCompar
 const AdminCoachingResults = lazyWithPreload(() => import("./pages/admin/AdminCoachingResults"));
 const AdminSEODashboard = lazyWithPreload(() => import("./pages/admin/AdminSEODashboard"));
 const AdminPageEditor = lazyWithPreload(() => import("./pages/admin/AdminPageEditor"));
+const AdminPageSEOReview = lazyWithPreload(() => import("./pages/admin/AdminPageSEOReview"));
 const AdminProfileAnalyzer = lazyWithPreload(() => import("./pages/admin/AdminProfileAnalyzer"));
 const AdminManageAdmins = lazyWithPreload(() => import("./pages/admin/AdminManageAdmins"));
 const AdminCTAManager = lazyWithPreload(() => import("./pages/admin/AdminCTAManager"));
