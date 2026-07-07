@@ -425,7 +425,7 @@ const SuggestedCoursesSlider = () => {
 
   return (
     <section className="py-12 md:py-16 bg-gradient-to-b from-white to-sky-50/50 overflow-hidden">
-      <div className="container mx-auto px-4 mb-8">
+      <div className="container mx-auto px-5 sm:px-6 lg:px-8 mb-8">
         <div className="text-center max-w-2xl mx-auto">
           <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 mb-3">
             <Sparkles className="w-3.5 h-3.5 mr-1" /> Suggested Courses
@@ -529,7 +529,7 @@ const CatMock1Page = () => {
             <div className="absolute top-40 -right-24 h-80 w-80 rounded-full bg-cyan-200 blur-3xl" />
           </div>
 
-          <div className="container mx-auto px-4 pt-14 md:pt-20 pb-10 relative">
+          <div className="container mx-auto px-5 sm:px-6 lg:px-8 pt-14 md:pt-20 pb-10 relative">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
               <m.div initial="hidden" animate="show" variants={stagger}>
                 <m.div variants={fadeUp}>
@@ -608,7 +608,7 @@ const CatMock1Page = () => {
         </section>
 
         {/* Intro */}
-        <section className="container mx-auto px-4 py-4">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-4">
           <p className="text-center text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
             One dashboard. Multiple MBA exams. Thousands of questions. Smart planning tools.
             Detailed analytics. A complete ecosystem — designed around <span className="font-semibold text-slate-800">you</span>.
@@ -616,7 +616,7 @@ const CatMock1Page = () => {
         </section>
 
         {/* Features */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
             <h2 className="font-heading text-2xl md:text-4xl font-bold text-slate-900 tracking-tight">
               Everything you get inside the dashboard
@@ -674,7 +674,7 @@ const CatMock1Page = () => {
         </section>
 
         {/* Mid-page Buy Now band */}
-        <section className="container mx-auto px-4 pb-4">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 pb-4">
           <div className="max-w-5xl mx-auto rounded-2xl bg-gradient-to-r from-sky-600 via-sky-700 to-cyan-700 text-white p-6 md:p-8 shadow-2xl shadow-sky-500/20 flex flex-col md:flex-row items-center gap-5">
             <div className="flex-1 text-center md:text-left">
               <div className="text-xs uppercase tracking-wider text-sky-100">Limited launch offer</div>
@@ -687,7 +687,7 @@ const CatMock1Page = () => {
 
 
         {/* Pricing */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-3xl mx-auto">
             <Card className="p-8 md:p-10 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-xl text-center">
               <Trophy className="w-10 h-10 text-sky-600 mx-auto" />
@@ -721,7 +721,7 @@ const CatMock1Page = () => {
         </section>
 
         {/* Free demo */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-2 justify-center mb-4">
               <Unlock className="w-5 h-5 text-emerald-600" />
@@ -756,7 +756,7 @@ const CatMock1Page = () => {
         <SuggestedCoursesSlider />
 
         {/* Contact */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="container mx-auto px-5 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-2xl mx-auto text-center">
             <div className="inline-flex flex-wrap items-center justify-center gap-2 text-slate-700 text-sm md:text-base">
               <Phone className="w-4 h-4 text-sky-600" />
