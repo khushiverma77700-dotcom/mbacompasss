@@ -430,7 +430,7 @@ export const generateComparisonSchema = (courses: any[]) => ({
         "@type": "Course",
         name: c.name,
         provider: { "@type": "Organization", name: c.institutes?.name || "" },
-        offers: c.fees ? { "@type": "Offer", price: String(c.fees), priceCurrency: "INR" } : undefined,
+        offers: c.fees ? withMerchantOfferFields({ "@type": "Offer", price: String(c.fees), priceCurrency: "INR", availability: "https://schema.org/InStock" }) : undefined,
       },
     })),
   },
