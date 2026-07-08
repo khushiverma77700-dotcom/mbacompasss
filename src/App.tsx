@@ -971,6 +971,9 @@ const App = () => (
             <Route path="/authors/:slug" element={<PublicLayout><LazyPage><AuthorDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/cat-score-calculator" element={<PublicLayout><LazyPage><CATScoreCalculatorPage /></LazyPage></PublicLayout>} />
             <Route path="/cat-mock-1" element={<PublicLayout><LazyPage><CatMock1Page /></LazyPage></PublicLayout>} />
+            <Route path="/CAT-MOCK-1" element={<Navigate to="/cat-mock-1" replace />} />
+            <Route path="/CAT-Mock-1" element={<Navigate to="/cat-mock-1" replace />} />
+            <Route path="/Cat-Mock-1" element={<Navigate to="/cat-mock-1" replace />} />
             <Route path="/roi-calculator" element={<PublicLayout><LazyPage><MBARoiCalculatorPage /></LazyPage></PublicLayout>} />
             <Route path="/business-inquiries" element={<PublicLayout><LazyPage><BusinessInquiryPage /></LazyPage></PublicLayout>} />
             <Route path="/forgot-password" element={<PublicLayout><LazyPage><ForgotPasswordPage /></LazyPage></PublicLayout>} />
