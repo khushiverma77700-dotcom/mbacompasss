@@ -363,7 +363,7 @@ export const generateInstituteSchema = (institute: any) => {
             name: c.name,
             description: c.description,
             provider: { "@type": "Organization", name: institute.name },
-            offers: c.fees ? { "@type": "Offer", price: String(c.fees), priceCurrency: "INR" } : undefined,
+            offers: c.fees ? withMerchantOfferFields({ "@type": "Offer", price: String(c.fees), priceCurrency: "INR", availability: "https://schema.org/InStock" }) : undefined,
           })),
         }
       : undefined,
