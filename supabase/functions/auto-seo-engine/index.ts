@@ -174,8 +174,27 @@ function buildSchemaMarkup(
         price: String(price),
         priceCurrency: "INR",
         availability: "https://schema.org/InStock",
+        itemCondition: "https://schema.org/NewCondition",
         validFrom: new Date().toISOString().slice(0, 10),
         ...(original > price ? { priceSpecification: { "@type": "UnitPriceSpecification", price: String(original), priceCurrency: "INR" } } : {}),
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "INR" },
+          shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" },
+          deliveryTime: {
+            "@type": "ShippingDeliveryTime",
+            handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+            transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+          },
+        },
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "IN",
+          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 7,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/FreeReturn",
+        },
       };
     }
     if (page.rating || page.aggregate_rating) {
