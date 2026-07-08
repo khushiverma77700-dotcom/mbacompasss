@@ -349,7 +349,7 @@ const MBARoiCalculatorPage = () => {
           {
             "@context": "https://schema.org", "@type": "SoftwareApplication",
             name: "MBA ROI Calculator", applicationCategory: "EducationalApplication",
-            operatingSystem: "Web", offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+            operatingSystem: "Web", offers: { "@type": "Offer", price: "0", priceCurrency: "INR", availability: "https://schema.org/InStock", itemCondition: "https://schema.org/NewCondition", shippingDetails: { "@type": "OfferShippingDetails", shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "INR" }, shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" }, deliveryTime: { "@type": "ShippingDeliveryTime", handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" }, transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" } } }, hasMerchantReturnPolicy: { "@type": "MerchantReturnPolicy", applicableCountry: "IN", returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted" } },
             aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", ratingCount: "12450" },
             description: "AI-powered MBA Return on Investment calculator with personalized college recommendations.",
           },
