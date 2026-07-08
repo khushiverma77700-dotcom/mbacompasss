@@ -13,9 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 
-/* ---------------- Razorpay direct payment link ---------------- */
-// Replace with your live Razorpay Payment Link (e.g. https://rzp.io/l/xxxx)
-const RAZORPAY_BUY_URL = "https://rzp.io/l/mbacompass-mocks";
+/* ---------------- Buy Now → routes to the working /mocks checkout ---------------- */
+const BUY_URL = "/mocks#pricing";
 
 const BuyNowButton = ({
   size = "lg",
@@ -23,19 +22,14 @@ const BuyNowButton = ({
   label = "Buy Now — ₹999",
   fullWidth = false,
 }: { size?: "sm" | "default" | "lg"; className?: string; label?: string; fullWidth?: boolean }) => (
-  <a
-    href={RAZORPAY_BUY_URL}
-    target="_blank"
-    rel="noopener noreferrer"
-    className={fullWidth ? "block" : "inline-block"}
-  >
+  <Link to={BUY_URL} className={fullWidth ? "block" : "inline-block"}>
     <Button
       size={size}
       className={`bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white gap-2 shadow-lg shadow-orange-500/30 ${fullWidth ? "w-full" : ""} ${className}`}
     >
       <ShoppingCart className="w-4 h-4" /> {label}
     </Button>
-  </a>
+  </Link>
 );
 
 /* ---------------- Motion tokens (single source of truth) ---------------- */
