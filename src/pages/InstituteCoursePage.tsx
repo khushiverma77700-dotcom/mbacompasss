@@ -79,11 +79,12 @@ const InstituteCoursePage = () => {
       url: canonicalUrl(`/institute/${inst.slug}`),
     },
     ...(c.fees && {
-      offers: {
+      offers: withMerchantOfferFields({
         "@type": "Offer",
         price: String(c.fees),
         priceCurrency: "INR",
-      },
+        availability: "https://schema.org/InStock",
+      }),
     }),
   } : undefined;
 
