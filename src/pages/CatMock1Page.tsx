@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 
 /* ---------------- Buy Now → routes to the working /mocks checkout ---------------- */
-const BUY_URL = "/mocks#pricing";
+const BUY_URL = "/mba-compass/bsb-full-series-advance-cat-nmat-xat-snap-other-omets";
 
 const BuyNowButton = ({
   size = "lg",
