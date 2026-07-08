@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { normalizeReviewSchemas } from "@/lib/normalizeReviewSchema";
+import { withMerchantOfferFields } from "@/lib/offerSchema";
 
 // The ONLY canonical host for this site. All canonical / og:url / JSON-LD
 // URLs we emit always point at this host, regardless of which alias is
