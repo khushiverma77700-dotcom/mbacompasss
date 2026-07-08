@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import SEOHead, { generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { canonicalUrl } from "@/lib/canonical";
+import { withMerchantOfferFields } from "@/lib/offerSchema";
 import {
   ChevronRight, ArrowLeft, GraduationCap, BookOpen, Clock, Calendar,
   CheckCircle2, Phone, MessageCircle, Mail, Trophy, Sparkles, ShieldCheck, Building2,
@@ -78,11 +79,12 @@ const InstituteCoursePage = () => {
       url: canonicalUrl(`/institute/${inst.slug}`),
     },
     ...(c.fees && {
-      offers: {
+      offers: withMerchantOfferFields({
         "@type": "Offer",
         price: String(c.fees),
         priceCurrency: "INR",
-      },
+        availability: "https://schema.org/InStock",
+      }),
     }),
   } : undefined;
 

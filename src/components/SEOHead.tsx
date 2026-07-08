@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { normalizeReviewSchemas } from "@/lib/normalizeReviewSchema";
+import { withMerchantOfferFields } from "@/lib/offerSchema";
 
 // The ONLY canonical host for this site. All canonical / og:url / JSON-LD
 // URLs we emit always point at this host, regardless of which alias is
@@ -362,7 +363,7 @@ export const generateInstituteSchema = (institute: any) => {
             name: c.name,
             description: c.description,
             provider: { "@type": "Organization", name: institute.name },
-            offers: c.fees ? { "@type": "Offer", price: String(c.fees), priceCurrency: "INR" } : undefined,
+            offers: c.fees ? withMerchantOfferFields({ "@type": "Offer", price: String(c.fees), priceCurrency: "INR", availability: "https://schema.org/InStock" }) : undefined,
           })),
         }
       : undefined,
@@ -429,7 +430,7 @@ export const generateComparisonSchema = (courses: any[]) => ({
         "@type": "Course",
         name: c.name,
         provider: { "@type": "Organization", name: c.institutes?.name || "" },
-        offers: c.fees ? { "@type": "Offer", price: String(c.fees), priceCurrency: "INR" } : undefined,
+        offers: c.fees ? withMerchantOfferFields({ "@type": "Offer", price: String(c.fees), priceCurrency: "INR", availability: "https://schema.org/InStock" }) : undefined,
       },
     })),
   },
