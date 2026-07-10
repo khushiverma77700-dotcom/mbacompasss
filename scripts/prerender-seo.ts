@@ -530,6 +530,18 @@ const STATIC_PAGE_META: Array<{ path: string; title: string; description: string
   { path: "/blog", title: "MBA Blog — Latest CAT Strategy, B-School News & Admission Insights | MBA Compass", description: "MBA blog with expert articles on CAT strategy, B-school news, IIM admissions, MBA placements, GD-PI tips, salary trends and career advice — written by ex-IIM students and admission consultants." },
 ];
 
+// Static hero shell injected into dist/index.html so mobile browsers paint the
+// LCP element (H1) BEFORE the React bundle downloads/parses. React hydrates
+// on top; visible text stays identical, so browsers credit the pre-hydration
+// paint as LCP.
+const HOMEPAGE_HERO_SHELL = `
+  <section style="min-height:520px;padding:64px 20px 40px;background:linear-gradient(180deg,#f0f9ff 0%,#ffffff 100%);text-align:center;font-family:'DM Sans','DM Sans Fallback',system-ui,sans-serif">
+    <h1 style="font-family:'Plus Jakarta Sans','Plus Jakarta Fallback',system-ui,sans-serif;font-weight:700;font-size:clamp(28px,5vw,48px);line-height:1.15;color:#0f172a;max-width:880px;margin:0 auto 16px">Find the Best MBA Coaching</h1>
+    <p style="font-size:clamp(15px,2.2vw,18px);line-height:1.5;color:#475569;max-width:640px;margin:0 auto 28px">Compare top MBA coaching institutes, read reviews, and make informed decisions</p>
+    <div style="max-width:640px;margin:0 auto;height:56px;border-radius:14px;background:#fff;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(15,23,42,.06)"></div>
+  </section>
+`;
+
 async function prerenderStatics(): Promise<number> {
   let n = 0;
   for (const p of STATIC_PAGE_META) {
@@ -542,19 +554,19 @@ async function prerenderStatics(): Promise<number> {
         canonical,
       }),
     );
-    // Special-case "/" → write to dist/index.html directly so the SPA shell
-    // ALSO gets the homepage-specific meta baked in (overwrites the template
-    // with the homepage variant; route resolves to dist/index.html anyway).
+    // Special-case "/" → also overwrite dist/index.html with homepage meta AND
+    // a pre-rendered hero shell inside #root so LCP paints before JS runs.
     if (p.path === "/") {
-      writeFileSync(
-        resolve(DIST, "index.html"),
-        buildHtml({
-          title: clip(p.title, 65),
-          description: clip(p.description, 160),
-          canonical,
-        }),
-        "utf8",
+      let homeHtml = buildHtml({
+        title: clip(p.title, 65),
+        description: clip(p.description, 160),
+        canonical,
+      });
+      homeHtml = homeHtml.replace(
+        /<div id="root">\s*<\/div>/,
+        `<div id="root">${HOMEPAGE_HERO_SHELL}</div>`,
       );
+      writeFileSync(resolve(DIST, "index.html"), homeHtml, "utf8");
     }
     n++;
   }
