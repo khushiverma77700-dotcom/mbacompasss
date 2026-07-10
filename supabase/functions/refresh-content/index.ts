@@ -421,7 +421,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
       if (failures.length > 0) {
         proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot, selectedModel), fields, ctx);
       }
-      const diff = computeDiff(currentSnapshot, proposedSnapshot);
+      const diff = computeDiff(currentSnapshot, proposedSnapshot, mode === "full");
       const changedCount = Object.values(diff).filter((d: any) => d.changed).length;
 
       const { error: updErr } = await supabase
