@@ -238,13 +238,9 @@
   </head>
 
   <body>
-    <div id="app-shell" aria-hidden="true">
-      <div class="shell-inner">
-        <div class="shell-spinner"></div>
-        <div class="shell-brand">MBA Compass</div>
-        <p class="shell-tag">Loading…</p>
-      </div>
-    </div>
+    <!-- #app-shell overlay removed: it was covering prerendered content and
+         making Googlebot classify non-homepage routes as Soft 404. -->
+
     <div id="root"></div>
     <noscript>
       <div style="max-width:960px;margin:0 auto;padding:24px;font-family:system-ui,sans-serif">
