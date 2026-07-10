@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,29 +11,16 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   Rocket, ArrowLeft, RefreshCw, CheckCircle2, XCircle, Clock, Zap, Globe,
-  Building2, GraduationCap, BookOpen, Newspaper, Loader2, PauseCircle, PlayCircle, StopCircle, ClipboardList,
+  Building2, GraduationCap, BookOpen, Newspaper, Loader2, PauseCircle, PlayCircle, StopCircle, ClipboardList, Cpu, Server,
 } from "lucide-react";
 
 type EntityType = "college" | "institute" | "course" | "article";
-type ItemStatus = "pending" | "running" | "succeeded" | "failed";
 
-interface QueueItem {
-  id: string;
-  name: string;
-  type: EntityType;
-  status: ItemStatus;
-  startedAt?: number;
-  finishedAt?: number;
-  error?: string;
-  changed?: number;
-  total?: number;
-}
-
-const TYPE_CFG: Record<EntityType, { table: string; nameField: string; label: string; icon: any; hasRefreshTs: boolean; color: string }> = {
-  college:   { table: "colleges",   nameField: "name",  label: "Colleges",   icon: GraduationCap, hasRefreshTs: true,  color: "text-blue-600" },
-  institute: { table: "institutes", nameField: "name",  label: "Institutes", icon: Building2,     hasRefreshTs: true,  color: "text-violet-600" },
-  course:    { table: "courses",    nameField: "name",  label: "Courses",    icon: BookOpen,      hasRefreshTs: false, color: "text-emerald-600" },
-  article:   { table: "articles",   nameField: "title", label: "Articles",   icon: Newspaper,     hasRefreshTs: true,  color: "text-amber-600" },
+const TYPE_CFG: Record<EntityType, { table: string; label: string; icon: any; hasRefreshTs: boolean; color: string }> = {
+  college:   { table: "colleges",   label: "Colleges",   icon: GraduationCap, hasRefreshTs: true,  color: "text-blue-600" },
+  institute: { table: "institutes", label: "Institutes", icon: Building2,     hasRefreshTs: true,  color: "text-violet-600" },
+  course:    { table: "courses",    label: "Courses",    icon: BookOpen,      hasRefreshTs: false, color: "text-emerald-600" },
+  article:   { table: "articles",   label: "Articles",   icon: Newspaper,     hasRefreshTs: true,  color: "text-amber-600" },
 };
 
 const FRESHNESS = [
@@ -43,16 +30,38 @@ const FRESHNESS = [
   { value: "never",label: "Never refreshed" },
 ];
 
+const MODELS = [
+  { value: "openai/gpt-5-mini",    label: "GPT-5 Mini (fast, cheap — default)" },
+  { value: "openai/gpt-5",         label: "GPT-5 (highest quality, slower)" },
+  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (fast, cheap)" },
+  { value: "google/gemini-2.5-pro",   label: "Gemini 2.5 Pro (quality)" },
+  { value: "anthropic/claude-sonnet-4.5", label: "Claude Sonnet 4.5 (quality)" },
+];
+
 const fmtDuration = (ms: number) => {
   if (ms < 0 || !isFinite(ms)) return "—";
   const s = Math.round(ms / 1000);
   if (s < 60) return `${s}s`;
   const m = Math.floor(s / 60);
-  const r = s % 60;
-  if (m < 60) return `${m}m ${r}s`;
+  if (m < 60) return `${m}m ${s % 60}s`;
   const h = Math.floor(m / 60);
   return `${h}h ${m % 60}m`;
 };
+
+interface Job {
+  id: string; status: string; mode: string; model: string; freshness: string;
+  entity_types: string[]; concurrency: number; paused: boolean;
+  total: number; succeeded: number; failed: number; in_progress: number;
+  last_activity: string | null; started_at: string | null; finished_at: string | null;
+  created_at: string;
+}
+
+interface Item {
+  id: string; entity_type: EntityType; entity_name: string;
+  status: "pending" | "processing" | "succeeded" | "failed" | "skipped";
+  error: string | null; changed_fields: number | null; total_fields: number | null;
+  started_at: string | null; finished_at: string | null;
+}
 
 const AdminMasterRefresh = () => {
   const navigate = useNavigate();
@@ -61,24 +70,17 @@ const AdminMasterRefresh = () => {
   const [counts, setCounts] = useState<Record<EntityType, number>>({ college: 0, institute: 0, course: 0, article: 0 });
   const [selectedTypes, setSelectedTypes] = useState<Record<EntityType, boolean>>({ college: true, institute: true, course: true, article: true });
   const [mode, setMode] = useState<"smart" | "full">("smart");
+  const [model, setModel] = useState<string>("openai/gpt-5-mini");
   const [freshness, setFreshness] = useState<string>("all");
   const [concurrency, setConcurrency] = useState(4);
   const [loading, setLoading] = useState(true);
+  const [enqueueing, setEnqueueing] = useState(false);
 
-  const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [running, setRunning] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const stopRef = useRef(false);
-  const pauseRef = useRef(false);
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [now, setNow] = useState(Date.now());
+  const [activeJob, setActiveJob] = useState<Job | null>(null);
+  const [recentJobs, setRecentJobs] = useState<Job[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
 
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Load counts per type honoring freshness filter
+  // Load counts per type
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -107,117 +109,92 @@ const AdminMasterRefresh = () => {
     return () => { cancelled = true; };
   }, [freshness]);
 
+  // Poll active job + recents
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      const { data: jobs } = await supabase.from("master_refresh_jobs")
+        .select("*").order("created_at", { ascending: false }).limit(6);
+      if (cancelled || !jobs) return;
+      const active = jobs.find((j: any) => ["queued", "running", "paused"].includes(j.status));
+      setActiveJob((active || jobs[0]) as any);
+      setRecentJobs(jobs as any);
+    };
+    poll();
+    const t = setInterval(poll, 3000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, []);
+
+  // Poll items for active job
+  useEffect(() => {
+    if (!activeJob?.id) { setItems([]); return; }
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase.from("master_refresh_items")
+        .select("id, entity_type, entity_name, status, error, changed_fields, total_fields, started_at, finished_at")
+        .eq("job_id", activeJob.id)
+        .order("finished_at", { ascending: false, nullsFirst: false })
+        .limit(50);
+      if (!cancelled && data) setItems(data as any);
+    };
+    load();
+    const t = setInterval(load, 3000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [activeJob?.id]);
+
   const totalSelected = useMemo(
     () => (Object.keys(TYPE_CFG) as EntityType[]).reduce((s, t) => s + (selectedTypes[t] ? counts[t] : 0), 0),
     [selectedTypes, counts]
   );
 
-  const stats = useMemo(() => {
-    const total = queue.length;
-    const succeeded = queue.filter(q => q.status === "succeeded").length;
-    const failed = queue.filter(q => q.status === "failed").length;
-    const runningNow = queue.filter(q => q.status === "running").length;
-    const done = succeeded + failed;
-    const elapsed = startedAt ? now - startedAt : 0;
-    const rate = elapsed > 0 ? done / (elapsed / 1000) : 0;
-    const eta = rate > 0 ? ((total - done) / rate) * 1000 : 0;
-    const perType: Record<EntityType, { done: number; total: number; ok: number; fail: number }> = {
-      college: { done: 0, total: 0, ok: 0, fail: 0 },
-      institute: { done: 0, total: 0, ok: 0, fail: 0 },
-      course: { done: 0, total: 0, ok: 0, fail: 0 },
-      article: { done: 0, total: 0, ok: 0, fail: 0 },
-    };
-    for (const q of queue) {
-      perType[q.type].total++;
-      if (q.status === "succeeded") { perType[q.type].done++; perType[q.type].ok++; }
-      else if (q.status === "failed") { perType[q.type].done++; perType[q.type].fail++; }
-    }
-    return { total, succeeded, failed, runningNow, done, elapsed, rate, eta, perType };
-  }, [queue, startedAt, now]);
-
-  const buildQueue = async (): Promise<QueueItem[]> => {
-    const items: QueueItem[] = [];
-    const cutoffFor = (f: string) => {
-      if (f === "30d") return new Date(Date.now() - 30 * 86400000).toISOString();
-      if (f === "90d") return new Date(Date.now() - 90 * 86400000).toISOString();
-      return null;
-    };
-    for (const t of Object.keys(TYPE_CFG) as EntityType[]) {
-      if (!selectedTypes[t]) continue;
-      const cfg = TYPE_CFG[t];
-      let q = supabase.from(cfg.table as any).select(`id, ${cfg.nameField}`).limit(5000);
-      if (cfg.hasRefreshTs && freshness !== "all") {
-        if (freshness === "never") q = q.is("last_seo_refresh", null);
-        else {
-          const cutoff = cutoffFor(freshness);
-          if (cutoff) q = q.or(`last_seo_refresh.is.null,last_seo_refresh.lt.${cutoff}`);
-        }
-      }
-      const { data, error } = await q;
-      if (error) { toast({ title: `Failed to load ${cfg.label}`, description: error.message, variant: "destructive" }); continue; }
-      (data || []).forEach((r: any) => items.push({ id: r.id, type: t, name: r[cfg.nameField] || "Untitled", status: "pending" }));
-    }
-    return items;
-  };
-
   const start = async () => {
     if (totalSelected === 0) { toast({ title: "Nothing to refresh", variant: "destructive" }); return; }
+    const entity_types = (Object.keys(TYPE_CFG) as EntityType[]).filter(t => selectedTypes[t]);
     if (!confirm(
-      `Refresh ${totalSelected} items from the internet (${mode === "full" ? "FULL REWRITE" : "smart refresh"})?\n\n` +
-      `• AI re-researches each item from official websites & regulators (NIRF, AICTE, exam bodies)\n` +
-      `• Results land in Content Refresh Queue for your approval\n` +
-      `• Concurrency: ${concurrency}\n\n` +
-      `Estimated: ~${fmtDuration(Math.ceil(totalSelected * 8 / concurrency) * 1000)}`
+      `Queue ${totalSelected} items on the server (${mode === "full" ? "FULL REWRITE" : "smart"}) using ${model}?\n\n` +
+      `Runs in the background — you can close this tab.\nResults land in Content Refresh Queue for approval.`
     )) return;
-
-    const items = await buildQueue();
-    if (items.length === 0) { toast({ title: "Queue empty", variant: "destructive" }); return; }
-
-    setQueue(items);
-    setRunning(true); setPaused(false); stopRef.current = false; pauseRef.current = false;
-    setStartedAt(Date.now());
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const idx = { i: 0 };
-
-    const worker = async () => {
-      while (true) {
-        while (pauseRef.current && !stopRef.current) await new Promise(r => setTimeout(r, 300));
-        if (stopRef.current) return;
-        const myIdx = idx.i++;
-        if (myIdx >= items.length) return;
-        const item = items[myIdx];
-        setQueue(prev => prev.map(x => x.id === item.id && x.type === item.type ? { ...x, status: "running", startedAt: Date.now() } : x));
-        try {
-          const { data, error } = await supabase.functions.invoke("refresh-content", {
-            body: { entity_type: item.type, entity_id: item.id, mode, requested_by: user?.id },
-          });
-          if (error) throw error;
-          const changed = (data as any)?.changed_fields ?? 0;
-          const total = (data as any)?.total_fields ?? 0;
-          setQueue(prev => prev.map(x => x.id === item.id && x.type === item.type
-            ? { ...x, status: "succeeded", finishedAt: Date.now(), changed, total } : x));
-        } catch (e: any) {
-          setQueue(prev => prev.map(x => x.id === item.id && x.type === item.type
-            ? { ...x, status: "failed", finishedAt: Date.now(), error: e?.message || "Unknown error" } : x));
-        }
-      }
-    };
-
-    await Promise.all(Array.from({ length: concurrency }, () => worker()));
-    setRunning(false);
-    toast({ title: "Master refresh complete", description: "Review updates in Content Refresh Queue." });
+    setEnqueueing(true);
+    const { data, error } = await supabase.functions.invoke("master-refresh-enqueue", {
+      body: { mode, model, freshness, entity_types, concurrency },
+    });
+    setEnqueueing(false);
+    if (error) return toast({ title: "Failed to start", description: error.message, variant: "destructive" });
+    toast({ title: "Master refresh started", description: `Queued ${(data as any)?.total || 0} items server-side. Progress continues even if you close this page.` });
   };
 
-  const togglePause = () => { pauseRef.current = !pauseRef.current; setPaused(pauseRef.current); };
-  const stop = () => { stopRef.current = true; pauseRef.current = false; setPaused(false); setRunning(false); };
+  const setJobFlag = async (patch: Partial<Job>) => {
+    if (!activeJob) return;
+    const { error } = await supabase.from("master_refresh_jobs").update(patch).eq("id", activeJob.id);
+    if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    setActiveJob({ ...activeJob, ...patch } as any);
+    if ((patch as any).paused === false) {
+      // Kick worker back into gear
+      supabase.functions.invoke("master-refresh-worker", { body: { resume: true } }).catch(() => {});
+    }
+  };
 
-  const recentActivity = useMemo(() =>
-    [...queue].sort((a, b) => (b.finishedAt || b.startedAt || 0) - (a.finishedAt || a.startedAt || 0)).slice(0, 25),
-    [queue]
-  );
+  const cancel = () => setJobFlag({ status: "cancelled", paused: true, finished_at: new Date().toISOString() } as any);
 
-  const overallPct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+  const done = activeJob ? activeJob.succeeded + activeJob.failed : 0;
+  const overallPct = activeJob && activeJob.total > 0 ? Math.round((done / activeJob.total) * 100) : 0;
+  const elapsed = activeJob?.started_at ? (activeJob.finished_at ? new Date(activeJob.finished_at).getTime() : Date.now()) - new Date(activeJob.started_at).getTime() : 0;
+  const rate = elapsed > 0 ? done / (elapsed / 1000) : 0;
+  const eta = rate > 0 && activeJob ? ((activeJob.total - done) / rate) * 1000 : 0;
+
+  const perType = useMemo(() => {
+    const map: Record<EntityType, { done: number; total: number; ok: number; fail: number }> =
+      { college: {done:0,total:0,ok:0,fail:0}, institute: {done:0,total:0,ok:0,fail:0}, course: {done:0,total:0,ok:0,fail:0}, article: {done:0,total:0,ok:0,fail:0} };
+    for (const it of items) {
+      if (!map[it.entity_type]) continue;
+      map[it.entity_type].total++;
+      if (it.status === "succeeded") { map[it.entity_type].done++; map[it.entity_type].ok++; }
+      else if (it.status === "failed") { map[it.entity_type].done++; map[it.entity_type].fail++; }
+    }
+    return map;
+  }, [items]);
+
+  const jobActive = activeJob && ["queued", "running", "paused"].includes(activeJob.status);
 
   return (
     <div className="space-y-6">
@@ -229,10 +206,9 @@ const AdminMasterRefresh = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
             <Rocket className="w-6 h-6 text-blue-600" /> Master Content Refresh
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-3xl">
-            One-click site-wide refresh. AI re-researches colleges, institutes, courses & articles from official sources
-            (college websites, NIRF, AICTE, NAAC, exam bodies) and reformats content. All updates land in the Content
-            Refresh Queue for your approval — nothing goes live automatically.
+          <p className="text-sm text-muted-foreground mt-1 max-w-3xl flex items-center gap-1.5">
+            <Server className="w-4 h-4 text-emerald-600" />
+            Runs entirely on the server — safe to close this tab or shut down your laptop. Cron continues progress every minute.
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/admin/content-refreshes")}>
@@ -243,22 +219,18 @@ const AdminMasterRefresh = () => {
       {/* Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">1. What should we refresh?</CardTitle>
-          <CardDescription>Pick entity types and freshness. Data is pulled from official websites only.</CardDescription>
+          <CardTitle className="text-lg">1. Configure & queue a background job</CardTitle>
+          <CardDescription>Pick entity types, freshness, model, and concurrency. Nothing goes live until approved.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {(Object.keys(TYPE_CFG) as EntityType[]).map(t => {
-              const cfg = TYPE_CFG[t];
-              const Icon = cfg.icon;
+              const cfg = TYPE_CFG[t]; const Icon = cfg.icon;
               return (
                 <label key={t} className={`border rounded-lg p-3 cursor-pointer transition ${selectedTypes[t] ? "border-blue-500 bg-blue-50/60" : "hover:bg-muted/40"}`}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon className={`w-5 h-5 ${cfg.color}`} />
-                      <span className="font-medium">{cfg.label}</span>
-                    </div>
-                    <Switch checked={selectedTypes[t]} onCheckedChange={(v) => setSelectedTypes(s => ({ ...s, [t]: v }))} disabled={running} />
+                    <div className="flex items-center gap-2"><Icon className={`w-5 h-5 ${cfg.color}`} /><span className="font-medium">{cfg.label}</span></div>
+                    <Switch checked={selectedTypes[t]} onCheckedChange={(v) => setSelectedTypes(s => ({ ...s, [t]: v }))} disabled={enqueueing} />
                   </div>
                   <div className="text-2xl font-bold mt-2">{loading ? "…" : counts[t].toLocaleString()}</div>
                   <div className="text-xs text-muted-foreground">items match filter</div>
@@ -267,91 +239,94 @@ const AdminMasterRefresh = () => {
             })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t">
             <div>
               <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Freshness</Label>
-              <Select value={freshness} onValueChange={setFreshness} disabled={running}>
+              <Select value={freshness} onValueChange={setFreshness} disabled={enqueueing}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{FRESHNESS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Refresh Mode</Label>
-              <Select value={mode} onValueChange={(v) => setMode(v as any)} disabled={running}>
+              <Select value={mode} onValueChange={(v) => setMode(v as any)} disabled={enqueueing}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="smart">Smart (fees, placements, rankings, dates)</SelectItem>
-                  <SelectItem value="full">Full rewrite (all fields + reformat)</SelectItem>
+                  <SelectItem value="smart">Smart (facts + reformat)</SelectItem>
+                  <SelectItem value="full">Full rewrite</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
+              <Label className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><Cpu className="w-3.5 h-3.5" /> AI Model</Label>
+              <Select value={model} onValueChange={setModel} disabled={enqueueing}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{MODELS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Concurrency: {concurrency}</Label>
-              <input type="range" min={1} max={8} value={concurrency} onChange={(e) => setConcurrency(parseInt(e.target.value))}
-                disabled={running} className="w-full h-10" />
+              <input type="range" min={1} max={8} value={concurrency} onChange={(e) => setConcurrency(parseInt(e.target.value))} disabled={enqueueing} className="w-full h-10" />
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t flex-wrap gap-3">
             <div className="text-sm text-muted-foreground flex items-center gap-2">
               <Globe className="w-4 h-4 text-emerald-600" />
-              <strong className="text-foreground">{totalSelected.toLocaleString()}</strong> items ready • sources restricted to official websites & regulators
+              <strong className="text-foreground">{totalSelected.toLocaleString()}</strong> items ready • sources restricted to admin allowlist
             </div>
-            <div className="flex gap-2">
-              {!running ? (
-                <Button size="lg" onClick={start} disabled={totalSelected === 0 || loading} className="gap-2 bg-blue-600 hover:bg-blue-700">
-                  <Rocket className="w-5 h-5" /> Refresh Everything Now
-                </Button>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={togglePause} className="gap-2">
-                    {paused ? <><PlayCircle className="w-4 h-4" /> Resume</> : <><PauseCircle className="w-4 h-4" /> Pause</>}
-                  </Button>
-                  <Button variant="destructive" onClick={stop} className="gap-2">
-                    <StopCircle className="w-4 h-4" /> Stop
-                  </Button>
-                </>
-              )}
-            </div>
+            <Button size="lg" onClick={start} disabled={totalSelected === 0 || loading || enqueueing || !!jobActive} className="gap-2 bg-blue-600 hover:bg-blue-700">
+              {enqueueing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Rocket className="w-5 h-5" />}
+              {jobActive ? "Job already running…" : "Start Background Refresh"}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Live Dashboard */}
-      {queue.length > 0 && (
+      {/* Live dashboard for active/latest job */}
+      {activeJob && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <StatCard icon={<Zap className="w-4 h-4" />} label="Progress" value={`${overallPct}%`} sub={`${stats.done}/${stats.total}`} />
-            <StatCard icon={<Loader2 className={`w-4 h-4 ${running && !paused ? "animate-spin" : ""}`} />} label="Running" value={stats.runningNow.toString()} sub={paused ? "paused" : running ? "live" : "idle"} />
-            <StatCard icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} label="Succeeded" value={stats.succeeded.toString()} sub={stats.total ? `${Math.round(stats.succeeded / stats.total * 100)}%` : ""} />
-            <StatCard icon={<XCircle className="w-4 h-4 text-red-600" />} label="Failed" value={stats.failed.toString()} sub={stats.total ? `${Math.round(stats.failed / stats.total * 100)}%` : ""} />
-            <StatCard icon={<Clock className="w-4 h-4" />} label="ETA" value={fmtDuration(stats.eta)} sub={`elapsed ${fmtDuration(stats.elapsed)} • ${stats.rate.toFixed(2)}/s`} />
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <StatCard icon={<Zap className="w-4 h-4" />} label="Progress" value={`${overallPct}%`} sub={`${done}/${activeJob.total}`} />
+            <StatCard icon={<Loader2 className={`w-4 h-4 ${activeJob.status === "running" ? "animate-spin" : ""}`} />} label="Status" value={activeJob.status} sub={activeJob.paused ? "paused" : ""} />
+            <StatCard icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} label="Succeeded" value={activeJob.succeeded.toString()} sub="" />
+            <StatCard icon={<XCircle className="w-4 h-4 text-red-600" />} label="Failed" value={activeJob.failed.toString()} sub="" />
+            <StatCard icon={<Clock className="w-4 h-4" />} label="ETA" value={fmtDuration(eta)} sub={`elapsed ${fmtDuration(elapsed)}`} />
+            <StatCard icon={<Cpu className="w-4 h-4" />} label="Model" value={activeJob.model.split("/").pop() || activeJob.model} sub={`${activeJob.mode} • ${activeJob.freshness}`} />
           </div>
 
           <Card>
-            <CardHeader><CardTitle className="text-lg">Overall Progress</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Live Job Progress</CardTitle>
+                <CardDescription>{activeJob.last_activity || "Waiting for worker…"}</CardDescription>
+              </div>
+              {jobActive && (
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setJobFlag({ paused: !activeJob.paused, status: activeJob.paused ? "running" : "paused" } as any)}>
+                    {activeJob.paused ? <><PlayCircle className="w-4 h-4 mr-1" /> Resume</> : <><PauseCircle className="w-4 h-4 mr-1" /> Pause</>}
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={cancel}><StopCircle className="w-4 h-4 mr-1" /> Cancel</Button>
+                </div>
+              )}
+            </CardHeader>
             <CardContent>
               <Progress value={overallPct} className="h-3" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                 {(Object.keys(TYPE_CFG) as EntityType[]).map(t => {
-                  const pt = stats.perType[t];
-                  if (pt.total === 0) return null;
+                  const pt = perType[t]; if (pt.total === 0) return null;
                   const pct = pt.total ? Math.round(pt.done / pt.total * 100) : 0;
                   const Icon = TYPE_CFG[t].icon;
                   return (
                     <div key={t} className="border rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 font-medium text-sm">
-                          <Icon className={`w-4 h-4 ${TYPE_CFG[t].color}`} />
-                          {TYPE_CFG[t].label}
-                        </div>
+                        <div className="flex items-center gap-2 font-medium text-sm"><Icon className={`w-4 h-4 ${TYPE_CFG[t].color}`} />{TYPE_CFG[t].label}</div>
                         <div className="text-xs text-muted-foreground">{pt.done}/{pt.total} • {pct}%</div>
                       </div>
                       <Progress value={pct} className="h-2" />
                       <div className="flex gap-3 mt-2 text-xs">
                         <span className="text-emerald-700">✓ {pt.ok}</span>
                         <span className="text-red-700">✗ {pt.fail}</span>
-                        <span className="text-muted-foreground">pending {pt.total - pt.done}</span>
                       </div>
                     </div>
                   );
@@ -363,26 +338,23 @@ const AdminMasterRefresh = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Live Activity</CardTitle>
-              <CardDescription>Most recent refresh operations</CardDescription>
+              <CardDescription>Most recent refresh operations from the server worker</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="border rounded-md max-h-[420px] overflow-y-auto divide-y">
-                {recentActivity.map(item => {
-                  const Icon = TYPE_CFG[item.type].icon;
-                  const dur = item.startedAt ? (item.finishedAt || now) - item.startedAt : 0;
+                {items.length === 0 && <div className="p-6 text-center text-sm text-muted-foreground">No activity yet — worker is picking up the queue.</div>}
+                {items.map(item => {
+                  const Icon = TYPE_CFG[item.entity_type]?.icon || RefreshCw;
+                  const dur = item.started_at ? (item.finished_at ? new Date(item.finished_at).getTime() : Date.now()) - new Date(item.started_at).getTime() : 0;
                   return (
-                    <div key={`${item.type}-${item.id}`} className="flex items-center gap-3 px-3 py-2 text-sm">
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${TYPE_CFG[item.type].color}`} />
+                    <div key={item.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${TYPE_CFG[item.entity_type]?.color || ""}`} />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{item.name}</div>
-                        {item.status === "failed" && item.error && (
-                          <div className="text-xs text-red-600 truncate">{item.error}</div>
-                        )}
-                        {item.status === "succeeded" && (item.changed !== undefined) && (
-                          <div className="text-xs text-muted-foreground">{item.changed}/{item.total} fields proposed</div>
-                        )}
+                        <div className="font-medium truncate">{item.entity_name}</div>
+                        {item.status === "failed" && item.error && <div className="text-xs text-red-600 truncate">{item.error}</div>}
+                        {item.status === "succeeded" && item.changed_fields !== null && <div className="text-xs text-muted-foreground">{item.changed_fields}/{item.total_fields} fields proposed</div>}
                       </div>
-                      <div className="text-xs text-muted-foreground whitespace-nowrap">{fmtDuration(dur)}</div>
+                      <div className="text-xs text-muted-foreground whitespace-nowrap">{item.started_at ? fmtDuration(dur) : ""}</div>
                       <StatusBadge status={item.status} />
                     </div>
                   );
@@ -392,6 +364,27 @@ const AdminMasterRefresh = () => {
           </Card>
         </>
       )}
+
+      {recentJobs.length > 1 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Recent Jobs</CardTitle></CardHeader>
+          <CardContent>
+            <div className="divide-y border rounded-md">
+              {recentJobs.map(j => (
+                <div key={j.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+                  <Badge variant="outline" className="capitalize">{j.status}</Badge>
+                  <div className="flex-1 min-w-0 truncate">
+                    <span className="font-mono text-xs text-muted-foreground">{j.id.slice(0, 8)}</span>
+                    <span className="ml-2">{j.mode} • {j.model.split("/").pop()} • {j.entity_types.join(", ")}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{j.succeeded}✓ {j.failed}✗ / {j.total}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(j.created_at).toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
@@ -400,14 +393,14 @@ const StatCard = ({ icon, label, value, sub }: { icon: React.ReactNode; label: s
   <Card>
     <CardContent className="pt-4">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">{icon} {label}</div>
-      <div className="text-2xl font-bold mt-1 font-heading">{value}</div>
-      {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
+      <div className="text-2xl font-bold mt-1 font-heading capitalize truncate">{value}</div>
+      {sub && <div className="text-xs text-muted-foreground mt-0.5 truncate">{sub}</div>}
     </CardContent>
   </Card>
 );
 
-const StatusBadge = ({ status }: { status: ItemStatus }) => {
-  if (status === "running") return <Badge className="bg-blue-100 text-blue-800 border-blue-200 gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Running</Badge>;
+const StatusBadge = ({ status }: { status: Item["status"] }) => {
+  if (status === "processing") return <Badge className="bg-blue-100 text-blue-800 border-blue-200 gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Running</Badge>;
   if (status === "succeeded") return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1"><CheckCircle2 className="w-3 h-3" /> Done</Badge>;
   if (status === "failed") return <Badge className="bg-red-100 text-red-800 border-red-200 gap-1"><XCircle className="w-3 h-3" /> Failed</Badge>;
   return <Badge variant="outline" className="gap-1"><Clock className="w-3 h-3" /> Pending</Badge>;
