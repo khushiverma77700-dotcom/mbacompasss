@@ -39,7 +39,24 @@ if (!existsSync(TEMPLATE_PATH)) {
   console.warn(`[prerender] no dist/index.html found at ${TEMPLATE_PATH} — skipping`);
   process.exit(0);
 }
-const TEMPLATE = readFileSync(TEMPLATE_PATH, "utf8");
+let TEMPLATE = readFileSync(TEMPLATE_PATH, "utf8");
+
+// ── FCP fix ──────────────────────────────────────────────────────────────
+// Vite injects the bundled app CSS as a plain <link rel="stylesheet"> in
+// <head>. On mobile 4G this stylesheet (100–200 KB) is render-blocking and
+// pushes First Contentful Paint to ~4 s even though we already have inline
+// critical CSS + an #app-shell loader. Rewriting every stylesheet link to a
+// `rel="preload" ... onload="this.rel='stylesheet'"` swap makes the CSS
+// non-blocking: FCP paints from inline CSS immediately, and the full
+// stylesheet applies as soon as it arrives (no visual flash because the
+// #app-shell overlay hides the tree until React mounts). A <noscript>
+// fallback ensures no-JS crawlers still see the styles.
+TEMPLATE = TEMPLATE.replace(
+  /<link\s+rel="stylesheet"\s+([^>]*?)href="([^"]+\.css)"([^>]*)>/gi,
+  (_m, pre, href, post) =>
+    `<link rel="preload" as="style" ${pre}href="${href}"${post} onload="this.onload=null;this.rel='stylesheet'">` +
+    `<noscript><link rel="stylesheet" ${pre}href="${href}"${post}></noscript>`,
+);
 
 // ── helpers ─────────────────────────────────────────────────────────────
 const esc = (s: unknown) =>
