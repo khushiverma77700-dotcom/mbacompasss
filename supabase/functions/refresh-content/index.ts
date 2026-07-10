@@ -21,6 +21,7 @@ interface Body {
   entity_id: string;
   mode?: Mode;
   requested_by?: string;
+  model?: string;
 }
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -202,9 +203,9 @@ function computeDiff(current: Record<string, unknown>, proposed: Record<string, 
   return diff;
 }
 
-async function callAI(systemPrompt: string, userPrompt: string, schema: any): Promise<any> {
+async function callAI(systemPrompt: string, userPrompt: string, schema: any, model: string = MODEL): Promise<any> {
   const resp = await callAIGateway({
-      model: MODEL,
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -223,7 +224,7 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any): Pr
   return JSON.parse(tc.function.arguments);
 }
 
-async function repairAI(systemPrompt: string, userPrompt: string, schema: any, failures: string[], draft: Record<string, unknown>): Promise<any> {
+async function repairAI(systemPrompt: string, userPrompt: string, schema: any, failures: string[], draft: Record<string, unknown>, model: string = MODEL): Promise<any> {
   const repairPrompt = `${userPrompt}
 
 The previous draft failed quality review:
@@ -233,7 +234,7 @@ PREVIOUS DRAFT (JSON):
 ${JSON.stringify(draft, null, 2)}
 
 Return a corrected version of every tracked field. Do not explain.`;
-  return callAI(systemPrompt, repairPrompt, schema);
+  return callAI(systemPrompt, repairPrompt, schema, model);
 }
 
 function buildSchema(fields: string[]) {
@@ -286,6 +287,7 @@ Deno.serve(async (req) => {
     if (fetchErr || !row) throw new Error(fetchErr?.message || "Entity not found");
 
     const currentSnapshot = pickFields(row as Record<string, unknown>, fields);
+    const selectedModel = (typeof body.model === "string" && body.model.trim()) ? body.model.trim() : MODEL;
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
     const year = today.getFullYear();
@@ -390,7 +392,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
         current_snapshot: currentSnapshot,
         proposed_snapshot: {},
         diff: {},
-        ai_model: MODEL,
+        ai_model: selectedModel,
         requested_by: body.requested_by || null,
       })
       .select()
@@ -399,7 +401,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
 
     try {
       const ctx: QualityContext = { entityName, city, state, website, todayIso, year };
-      let proposedSnapshot = postProcessSnapshot(await callAI(systemPrompt, userPrompt, schema), fields, ctx);
+      let proposedSnapshot = postProcessSnapshot(await callAI(systemPrompt, userPrompt, schema, selectedModel), fields, ctx);
       let blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(proposedSnapshot));
       if (blockingFactIssues.length) {
         proposedSnapshot = postProcessSnapshot(await repairAI(
@@ -408,6 +410,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
           schema,
           blockingFactIssues.map((i) => `FACT-CHECK: ${i.message}`),
           proposedSnapshot,
+          selectedModel,
         ), fields, ctx);
         blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(proposedSnapshot));
       }
@@ -416,7 +419,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
       }
       const failures = qualityFailures(proposedSnapshot, fields, ctx);
       if (failures.length > 0) {
-        proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot), fields, ctx);
+        proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot, selectedModel), fields, ctx);
       }
       const diff = computeDiff(currentSnapshot, proposedSnapshot);
       const changedCount = Object.values(diff).filter((d: any) => d.changed).length;

@@ -3269,6 +3269,131 @@ export type Database = {
           },
         ]
       }
+      master_refresh_items: {
+        Row: {
+          attempts: number
+          changed_fields: number | null
+          created_at: string
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          job_id: string
+          started_at: string | null
+          status: string
+          total_fields: number | null
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        Insert: {
+          attempts?: number
+          changed_fields?: number | null
+          created_at?: string
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_id: string
+          started_at?: string | null
+          status?: string
+          total_fields?: number | null
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Update: {
+          attempts?: number
+          changed_fields?: number | null
+          created_at?: string
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_id?: string
+          started_at?: string | null
+          status?: string
+          total_fields?: number | null
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_refresh_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "master_refresh_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_refresh_jobs: {
+        Row: {
+          concurrency: number
+          created_at: string
+          created_by: string | null
+          entity_types: string[]
+          failed: number
+          finished_at: string | null
+          freshness: string
+          id: string
+          in_progress: number
+          last_activity: string | null
+          mode: string
+          model: string
+          paused: boolean
+          started_at: string | null
+          status: string
+          succeeded: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          concurrency?: number
+          created_at?: string
+          created_by?: string | null
+          entity_types?: string[]
+          failed?: number
+          finished_at?: string | null
+          freshness?: string
+          id?: string
+          in_progress?: number
+          last_activity?: string | null
+          mode?: string
+          model?: string
+          paused?: boolean
+          started_at?: string | null
+          status?: string
+          succeeded?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          concurrency?: number
+          created_at?: string
+          created_by?: string | null
+          entity_types?: string[]
+          failed?: number
+          finished_at?: string | null
+          freshness?: string
+          id?: string
+          in_progress?: number
+          last_activity?: string | null
+          mode?: string
+          model?: string
+          paused?: boolean
+          started_at?: string | null
+          status?: string
+          succeeded?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mba_compass_courses: {
         Row: {
           banner_url: string | null
@@ -8146,6 +8271,32 @@ export type Database = {
       backfill_personalized_questions_from_mocks: {
         Args: never
         Returns: number
+      }
+      claim_master_refresh_item: {
+        Args: { _lock_minutes?: number }
+        Returns: {
+          attempts: number
+          changed_fields: number | null
+          created_at: string
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          job_id: string
+          started_at: string | null
+          status: string
+          total_fields: number | null
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "master_refresh_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       claim_mock_section_job: {
         Args: { _lock_minutes?: number }
