@@ -117,11 +117,13 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .in("status", ["pending", "processing"]);
     if ((remaining ?? 0) > 0) {
-      EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
+      const kick = fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
         body: JSON.stringify({ self_kick: true }),
-      }).catch(() => {}));
+      }).catch(() => {});
+      // @ts-ignore EdgeRuntime is a Supabase Deno global
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(kick);
     }
 
     return new Response(JSON.stringify({ processed, remaining: remaining ?? 0 }), {
