@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Website Optimization Engine — runs a 40-step audit + auto-fix pass
 // Mode: 'audit' (read-only) | 'fix' (aggressive auto-fixes incl. AI rewrites)
 
@@ -684,6 +685,8 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const { mode = "audit", action = "run", run_id } = await req.json().catch(() => ({}));

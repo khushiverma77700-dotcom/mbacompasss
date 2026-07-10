@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // News & Insights — AI-curated current affairs generator (OpenAI)
 // Generates one category at a time to avoid edge function timeouts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -134,6 +135,8 @@ category (exactly "${category}"), tags (array of 2-5 strings).`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

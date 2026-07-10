@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Edit Content — applies a custom user instruction to one entity
 // (article / college / institute / course) using AI, then queues the result
 // in content_refreshes for admin review & approval (same pipeline as refresh-content).
@@ -101,6 +102,8 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any): Pr
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const body = (await req.json()) as Body;

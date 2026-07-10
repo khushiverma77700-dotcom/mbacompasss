@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI College Section Writer — generates structured content for one section of a college profile.
 // Uses Lovable AI Gateway (openai/gpt-5) with tool-calling for type-safe structured output.
 //
@@ -575,6 +576,8 @@ function buildFaqSchema(items: { question: string; answer: string }[]) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   // Caller can pick which AI backend to use (set by the bulk dashboard).
   const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();

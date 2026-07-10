@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Apply Content Refresh — applies an approved (or per-field selected) refresh
 // to the live entity table and marks the refresh row as approved+published.
 
@@ -30,6 +31,8 @@ interface Body {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const body = (await req.json()) as Body;

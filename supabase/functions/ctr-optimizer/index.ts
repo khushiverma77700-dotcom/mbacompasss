@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // CTR Optimizer edge function.
 //
 // Actions:
@@ -275,6 +276,9 @@ function resolveTableAndSlug(pageUrl: string): { table: string; slug: string } |
 // ---------- Main handler ----------
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",

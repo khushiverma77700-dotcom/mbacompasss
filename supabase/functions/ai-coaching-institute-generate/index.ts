@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI generator for the new modular Coaching Institute admin.
 // Returns BOTH `basic` (institute row fields) and `sections` (JSONB matching
 // the schema in src/lib/instituteSections.ts). Designed to be called from
@@ -186,6 +187,8 @@ function completeProfile(parsed: any, brief: Brief, targetKw: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const brief = (await req.json()) as Brief;

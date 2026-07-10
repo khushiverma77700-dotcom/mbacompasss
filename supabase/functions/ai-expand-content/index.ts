@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Expand Content — when a page's main content is under the SEO minimum
 // (~800 words), this function regenerates a long, well-formatted, SEO-friendly
 // HTML body in the SAME structural pattern (H2 → H3 → bullet lists → bold
@@ -44,6 +45,8 @@ const wordCount = (html: string) => stripHtml(html || "").split(/\s+/).filter(Bo
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const { contentType, recordId, data, force } = await req.json();
