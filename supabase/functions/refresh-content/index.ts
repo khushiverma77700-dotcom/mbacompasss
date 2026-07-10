@@ -392,7 +392,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
         current_snapshot: currentSnapshot,
         proposed_snapshot: {},
         diff: {},
-        ai_model: MODEL,
+        ai_model: selectedModel,
         requested_by: body.requested_by || null,
       })
       .select()
