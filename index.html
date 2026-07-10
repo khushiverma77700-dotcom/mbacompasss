@@ -131,6 +131,9 @@
          paint never waits on Google Fonts. Critical CSS already declares the
          system fallback so the H1 (LCP) renders immediately. -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=DM+Sans:wght@400&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <!-- Preload the actual woff2 files so LCP text renders without a font-swap repaint -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/plusjakartasans/v8/LDIbaomQNQcsA88c7O9yZ4KMCoOg4Ko20yE.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriI5-g7vlQEg.woff2" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=DM+Sans:wght@400&display=swap" /></noscript>
     <!-- Inline critical CSS for faster FP + mobile CLS hardening.
          The @font-face fallbacks below use Chrome's size-adjust + override
