@@ -203,9 +203,9 @@ function computeDiff(current: Record<string, unknown>, proposed: Record<string, 
   return diff;
 }
 
-async function callAI(systemPrompt: string, userPrompt: string, schema: any): Promise<any> {
+async function callAI(systemPrompt: string, userPrompt: string, schema: any, model: string = MODEL): Promise<any> {
   const resp = await callAIGateway({
-      model: MODEL,
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
