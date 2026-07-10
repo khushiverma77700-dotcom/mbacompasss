@@ -1,4 +1,7 @@
+import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
+import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
+import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
 import SEOHead, {
   generateWebsiteSchema,
   generateOrganizationSchema,
@@ -7,27 +10,23 @@ import SEOHead, {
 } from "@/components/SEOHead";
 import { LazyMount } from "@/hooks/useInView";
 
-// All homepage sections are bundled into the Index chunk (no per-section lazy
-// imports) so that scrolling never triggers additional network fetches — the
-// page becomes "instant" once Index is loaded. LazyMount still defers the
-// React render of below-the-fold sections to keep first paint cheap.
-import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
-import WhyChooseUs from "@/components/WhyChooseUs";
-import HowItWorksSection from "@/components/HowItWorksSection";
-import CTASection from "@/components/CTASection";
-import StatsCounterSection from "@/components/StatsCounterSection";
-import AICoachingFinder from "@/components/AICoachingFinder";
-import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
-import TestimonialsSection from "@/components/TestimonialsSection";
-import LatestArticlesSection from "@/components/LatestArticlesSection";
-import PopularExamsSection from "@/components/PopularExamsSection";
-import CategoryCards from "@/components/CategoryCards";
-import TopCitiesSection from "@/components/TopCitiesSection";
-import TopExamComparisonSection from "@/components/TopExamComparisonSection";
-import SuccessStoriesSection from "@/components/SuccessStoriesSection";
-import LearningResourcesSection from "@/components/LearningResourcesSection";
-import NewsSection from "@/components/NewsSection";
-import FAQSection from "@/components/FAQSection";
+// Below-the-fold sections are code-split (React.lazy) so the initial JS bundle
+// stays tiny — this is the biggest lever for LCP on a React SPA.
+const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
+const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
+const CategoryCards = lazy(() => import("@/components/CategoryCards"));
+const TopCitiesSection = lazy(() => import("@/components/TopCitiesSection"));
+const TopExamComparisonSection = lazy(() => import("@/components/TopExamComparisonSection"));
+const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
+const AICoachingFinder = lazy(() => import("@/components/AICoachingFinder"));
+const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
+const SuccessStoriesSection = lazy(() => import("@/components/SuccessStoriesSection"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
+const LearningResourcesSection = lazy(() => import("@/components/LearningResourcesSection"));
+const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
+const NewsSection = lazy(() => import("@/components/NewsSection"));
+const FAQSection = lazy(() => import("@/components/FAQSection"));
+const CTASection = lazy(() => import("@/components/CTASection"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -54,6 +53,11 @@ const SectionPlaceholder = ({ height = 320 }: { height?: number }) => (
   <div style={{ minHeight: height }} aria-hidden="true" />
 );
 
+const Deferred = ({ height, children }: { height: number; children: React.ReactNode }) => (
+  <LazyMount minHeight={height} fallback={<SectionPlaceholder height={height} />}>
+    <Suspense fallback={<SectionPlaceholder height={height} />}>{children}</Suspense>
+  </LazyMount>
+);
 
 const Index = () => {
   return (
@@ -78,77 +82,27 @@ const Index = () => {
       />
 
       <div>
-        {/* 1. Hero — eager (above-the-fold) */}
+        {/* Above-the-fold: eager, in the initial chunk */}
         <HeroSection />
-
-        {/* 2. Exam Deadlines Ticker — eager, lightweight, near top */}
         <ExamDeadlinesTicker />
-
-        {/* 3. Top Colleges Strip — eager, primary content */}
         <TopRankedCollegesSection />
 
-        {/* Everything below renders only when scrolled near viewport.
-            All section code is bundled with Index — no extra network fetches
-            occur on scroll, so the page feels instant once loaded. */}
-        <LazyMount minHeight={200} fallback={<SectionPlaceholder height={200} />}>
-          <StatsCounterSection />
-        </LazyMount>
-
-        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
-          <PopularExamsSection />
-        </LazyMount>
-
-        <LazyMount minHeight={320} fallback={<SectionPlaceholder height={320} />}>
-          <CategoryCards />
-        </LazyMount>
-
-        <LazyMount minHeight={320} fallback={<SectionPlaceholder height={320} />}>
-          <TopCitiesSection />
-        </LazyMount>
-
-        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
-          <TopExamComparisonSection />
-        </LazyMount>
-
-        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
-          <WhyChooseUs />
-        </LazyMount>
-
-        <LazyMount minHeight={160} fallback={<SectionPlaceholder height={160} />}>
-          <AICoachingFinder />
-        </LazyMount>
-
-        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
-          <HowItWorksSection />
-        </LazyMount>
-
-        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
-          <SuccessStoriesSection />
-        </LazyMount>
-
-        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
-          <TestimonialsSection />
-        </LazyMount>
-
-        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
-          <LearningResourcesSection />
-        </LazyMount>
-
-        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
-          <LatestArticlesSection />
-        </LazyMount>
-
-        <LazyMount minHeight={360} fallback={<SectionPlaceholder height={360} />}>
-          <NewsSection />
-        </LazyMount>
-
-        <LazyMount minHeight={420} fallback={<SectionPlaceholder height={420} />}>
-          <FAQSection />
-        </LazyMount>
-
-        <LazyMount minHeight={280} fallback={<SectionPlaceholder height={280} />}>
-          <CTASection />
-        </LazyMount>
+        {/* Below-the-fold: code-split + mount on scroll */}
+        <Deferred height={200}><StatsCounterSection /></Deferred>
+        <Deferred height={360}><PopularExamsSection /></Deferred>
+        <Deferred height={320}><CategoryCards /></Deferred>
+        <Deferred height={320}><TopCitiesSection /></Deferred>
+        <Deferred height={420}><TopExamComparisonSection /></Deferred>
+        <Deferred height={420}><WhyChooseUs /></Deferred>
+        <Deferred height={160}><AICoachingFinder /></Deferred>
+        <Deferred height={360}><HowItWorksSection /></Deferred>
+        <Deferred height={420}><SuccessStoriesSection /></Deferred>
+        <Deferred height={360}><TestimonialsSection /></Deferred>
+        <Deferred height={360}><LearningResourcesSection /></Deferred>
+        <Deferred height={420}><LatestArticlesSection /></Deferred>
+        <Deferred height={360}><NewsSection /></Deferred>
+        <Deferred height={420}><FAQSection /></Deferred>
+        <Deferred height={280}><CTASection /></Deferred>
       </div>
     </>
   );
