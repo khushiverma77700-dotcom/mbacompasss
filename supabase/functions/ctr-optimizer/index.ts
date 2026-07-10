@@ -277,6 +277,9 @@ function resolveTableAndSlug(pageUrl: string): { table: string; slug: string } |
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
