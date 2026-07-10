@@ -5080,6 +5080,39 @@ export type Database = {
         }
         Relationships: []
       }
+      official_source_domains: {
+        Row: {
+          content_type: string
+          created_at: string
+          domain: string
+          id: string
+          is_active: boolean
+          label: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          domain: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       page_seo_audits: {
         Row: {
           approved: boolean
