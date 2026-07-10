@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "bunx tsx scripts/refresh-sitemap.ts",
-    "build": "vite build && bunx tsx scripts/prerender-seo.ts",
+    "build": "vite build && bunx tsx scripts/prerender-seo.ts && bunx tsx scripts/verify-prerender.ts",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
