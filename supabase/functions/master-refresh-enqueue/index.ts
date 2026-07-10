@@ -1,8 +1,4 @@
-// Master Refresh Enqueue — admin creates a server-side refresh job. v2
-// Populates master_refresh_jobs + master_refresh_items, then kicks the worker
-// once so it can start immediately (cron continues progress every minute).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { requireAdmin } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +8,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const TYPE_CFG: Record<string, { table: string; nameField: string; hasRefreshTs: boolean }> = {
   college:   { table: "colleges",   nameField: "name",  hasRefreshTs: true },
@@ -20,12 +17,30 @@ const TYPE_CFG: Record<string, { table: string; nameField: string; hasRefreshTs:
   article:   { table: "articles",   nameField: "title", hasRefreshTs: true },
 };
 
+async function isAdmin(authHeader: string | null): Promise<string | null> {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.replace("Bearer ", "");
+  const anon = createClient(SUPABASE_URL, ANON_KEY);
+  const { data } = await anon.auth.getUser(token);
+  if (!data?.user) return null;
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: role } = await admin
+    .from("user_roles").select("role")
+    .eq("user_id", data.user.id).eq("role", "admin").maybeSingle();
+  return role ? data.user.id : null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const guard = await requireAdmin(req, corsHeaders);
-  if (guard) return guard;
 
   try {
+    const userId = await isAdmin(req.headers.get("Authorization"));
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body = await req.json();
     const entityTypes: string[] = (body.entity_types || []).filter((t: string) => TYPE_CFG[t]);
     if (!entityTypes.length) throw new Error("entity_types required");
@@ -36,18 +51,11 @@ Deno.serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Get creator from auth token
-    const authHeader = req.headers.get("Authorization")!;
-    const { data: userData } = await sb.auth.getUser(authHeader.replace("Bearer ", ""));
-    const createdBy = userData?.user?.id || null;
-
-    // Create job row
     const { data: job, error: jobErr } = await sb.from("master_refresh_jobs").insert({
-      mode, model, freshness, entity_types: entityTypes, concurrency, created_by: createdBy, status: "queued",
+      mode, model, freshness, entity_types: entityTypes, concurrency, created_by: userId, status: "queued",
     }).select().single();
     if (jobErr) throw jobErr;
 
-    // Fetch and enqueue items per type
     const cutoff = (f: string) => {
       if (f === "30d") return new Date(Date.now() - 30 * 86400000).toISOString();
       if (f === "90d") return new Date(Date.now() - 90 * 86400000).toISOString();
@@ -69,7 +77,6 @@ Deno.serve(async (req) => {
       const items = (rows || []).map((r: any) => ({
         job_id: job.id, entity_type: t, entity_id: r.id, entity_name: r[cfg.nameField] || "Untitled",
       }));
-      // Insert in chunks
       for (let i = 0; i < items.length; i += 500) {
         const { error } = await sb.from("master_refresh_items").insert(items.slice(i, i + 500));
         if (error) throw error;
@@ -77,9 +84,13 @@ Deno.serve(async (req) => {
       total += items.length;
     }
 
-    await sb.from("master_refresh_jobs").update({ total, status: total > 0 ? "queued" : "completed", finished_at: total === 0 ? new Date().toISOString() : null }).eq("id", job.id);
+    await sb.from("master_refresh_jobs").update({
+      total,
+      status: total > 0 ? "queued" : "completed",
+      finished_at: total === 0 ? new Date().toISOString() : null,
+    }).eq("id", job.id);
 
-    // Kick worker immediately (fire-and-forget)
+    // Kick worker (fire-and-forget)
     const kick = fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
