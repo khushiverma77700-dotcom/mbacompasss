@@ -605,9 +605,11 @@ async function prerenderStatics(): Promise<number> {
         description: clip(p.description, 160),
         canonical,
       });
+      // buildHtml now injects a generic content shell into #root — for the
+      // homepage we replace it with the branded LCP hero shell.
       homeHtml = homeHtml.replace(
-        /<div id="root">\s*<\/div>/,
-        `<div id="root">${HOMEPAGE_HERO_SHELL}</div>`,
+        /<div id="root">[\s\S]*?<\/div>\s*(?=<!--|<script|<noscript)/,
+        `<div id="root">${HOMEPAGE_HERO_SHELL}</div>\n    `,
       );
       writeFileSync(resolve(DIST, "index.html"), homeHtml, "utf8");
     }
