@@ -3,7 +3,7 @@
 // Claims pending items from master_refresh_items, invokes refresh-content
 // with the job's configured model, and rolls up progress on the job row.
 // Runs entirely on the backend — no browser needs to stay open.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
