@@ -191,13 +191,13 @@ function pickFields(row: Record<string, unknown>, fields: string[]) {
   return out;
 }
 
-function computeDiff(current: Record<string, unknown>, proposed: Record<string, unknown>) {
+function computeDiff(current: Record<string, unknown>, proposed: Record<string, unknown>, forceAllChanged = false) {
   const diff: Record<string, { changed: boolean; before: unknown; after: unknown }> = {};
   const keys = new Set([...Object.keys(current), ...Object.keys(proposed)]);
   for (const k of keys) {
     const a = current[k];
     const b = proposed[k];
-    const changed = JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
+    const changed = forceAllChanged || JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
     diff[k] = { changed, before: a ?? null, after: b ?? null };
   }
   return diff;
@@ -318,7 +318,7 @@ Deno.serve(async (req) => {
 
 
     const modeNote = mode === "full"
-      ? "Rewrite EVERY field from scratch with the latest verified information. Improve clarity, structure, formatting, and humanise the tone."
+      ? `Rewrite EVERY one of the ${fields.length} tracked fields from scratch with the latest verified ${year} information. Every field MUST be materially different from the current snapshot — improved clarity, structure, formatting, tone and freshness. Do NOT echo current values.`
       : "ONLY update time-sensitive facts: fees, placement figures, rankings, recruiter lists, dates, citations, and meta freshness. Preserve the existing tone, narrative structure and unchanged sections. If a field is already accurate and current for " + year + ", return it unchanged.";
 
     const systemPrompt = `You are a senior MBA/B-school researcher, SEO editor and originality checker refreshing an existing page for ${year}. Today is ${todayIso}.
@@ -421,7 +421,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
       if (failures.length > 0) {
         proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot, selectedModel), fields, ctx);
       }
-      const diff = computeDiff(currentSnapshot, proposedSnapshot);
+      const diff = computeDiff(currentSnapshot, proposedSnapshot, mode === "full");
       const changedCount = Object.values(diff).filter((d: any) => d.changed).length;
 
       const { error: updErr } = await supabase
