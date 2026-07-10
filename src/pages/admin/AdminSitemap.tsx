@@ -138,6 +138,40 @@ const AdminSitemap = () => {
         </CardContent>
       </Card>
 
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Clock className="w-5 h-5 text-primary" /> Daily Auto-Refresh
+          </CardTitle>
+          <CardDescription>
+            Sitemap re-syncs with the database every day at <b>7:00 PM IST</b>. New institutes, courses, colleges, and articles go live automatically.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid sm:grid-cols-3 gap-4 text-sm">
+          <div>
+            <div className="text-muted-foreground text-xs">Last auto-refresh</div>
+            <div className="font-semibold">
+              {report?.generated_at ? fmtIST(new Date(report.generated_at)) : "Not run yet"}
+            </div>
+            {report?.status === "failed" && (
+              <div className="text-destructive text-xs mt-1">Failed: {report.error}</div>
+            )}
+          </div>
+          <div>
+            <div className="text-muted-foreground text-xs">URLs in last snapshot</div>
+            <div className="font-semibold">{report?.url_count ?? "—"}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground text-xs">Next refresh</div>
+            <div className="font-semibold">
+              {fmtIST(report?.next_refresh_at ? new Date(report.next_refresh_at) : nextRefreshAt())}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+
+
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
