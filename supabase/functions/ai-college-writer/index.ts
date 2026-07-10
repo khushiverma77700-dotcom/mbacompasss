@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI College Writer — generates a full college profile (basic info, description, placements, SEO, etc.)
 // using Lovable AI Gateway (google/gemini-2.5-flash) via tool-calling for structured output.
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).

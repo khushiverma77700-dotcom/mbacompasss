@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Apply Content Refresh — applies an approved (or per-field selected) refresh
 // to the live entity table and marks the refresh row as approved+published.
 

@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI generator for the new modular Coaching Institute admin.
 // Returns BOTH `basic` (institute row fields) and `sections` (JSONB matching
 // the schema in src/lib/instituteSections.ts). Designed to be called from

@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // News & Insights — AI-curated current affairs generator (OpenAI)
 // Generates one category at a time to avoid edge function timeouts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";

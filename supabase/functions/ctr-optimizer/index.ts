@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // CTR Optimizer edge function.
 //
 // Actions:

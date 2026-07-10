@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Expand Content — when a page's main content is under the SEO minimum
 // (~800 words), this function regenerates a long, well-formatted, SEO-friendly
 // HTML body in the SAME structural pattern (H2 → H3 → bullet lists → bold

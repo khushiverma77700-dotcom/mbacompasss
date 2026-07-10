@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Website Optimization Engine — runs a 40-step audit + auto-fix pass
 // Mode: 'audit' (read-only) | 'fix' (aggressive auto-fixes incl. AI rewrites)
 

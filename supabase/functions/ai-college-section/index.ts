@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI College Section Writer — generates structured content for one section of a college profile.
 // Uses Lovable AI Gateway (openai/gpt-5) with tool-calling for type-safe structured output.
 //

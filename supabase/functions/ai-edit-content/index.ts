@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Edit Content — applies a custom user instruction to one entity
 // (article / college / institute / course) using AI, then queues the result
 // in content_refreshes for admin review & approval (same pipeline as refresh-content).
