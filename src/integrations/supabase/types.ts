@@ -8028,6 +8028,10 @@ export type Database = {
       }
     }
     Functions: {
+      _indexing_url_for: {
+        Args: { _slug: string; _table: string }
+        Returns: string
+      }
       admin_delete_bundle: { Args: { _bundle_id: string }; Returns: Json }
       admin_search_students: {
         Args: { _limit?: number; _query?: string }
