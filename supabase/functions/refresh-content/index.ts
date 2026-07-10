@@ -297,6 +297,24 @@ Deno.serve(async (req) => {
     const state = (row as any).state || (row as any).colleges?.state || "";
     const website = (row as any).website || (row as any).colleges?.website || "";
 
+    // Load admin-managed allowlist of official source domains for this content type + globals.
+    const { data: allowRows } = await supabase
+      .from("official_source_domains")
+      .select("domain, label, content_type")
+      .in("content_type", [body.entity_type, "global", "exam"])
+      .eq("is_active", true);
+    const allowedDomains = (allowRows || []).map((r: any) => r.domain);
+    if (website) {
+      try {
+        const host = new URL(website.startsWith("http") ? website : `https://${website}`).hostname.replace(/^www\./, "");
+        if (host && !allowedDomains.includes(host)) allowedDomains.push(host);
+      } catch { /* ignore */ }
+    }
+    const allowlistBlock = allowedDomains.length
+      ? `ALLOWED SOURCE DOMAINS (research + links MUST come from these ONLY):\n${(allowRows || []).map((r: any) => `- ${r.domain}${r.label ? ` — ${r.label}` : ""}`).join("\n")}${website ? `\n- ${(() => { try { return new URL(website.startsWith("http") ? website : `https://${website}`).hostname.replace(/^www\./, ""); } catch { return website; } })()} — Official ${body.entity_type} website` : ""}\nIf a fact cannot be verified on one of these domains, mark it TBA — do NOT invent or borrow from other sources.`
+      : "";
+
+
     const modeNote = mode === "full"
       ? "Rewrite EVERY field from scratch with the latest verified information. Improve clarity, structure, formatting, and humanise the tone."
       : "ONLY update time-sensitive facts: fees, placement figures, rankings, recruiter lists, dates, citations, and meta freshness. Preserve the existing tone, narrative structure and unchanged sections. If a field is already accurate and current for " + year + ", return it unchanged.";
@@ -324,8 +342,10 @@ ORIGINALITY + SEO RULES:
 HYPERLINK RULES (STRICT):
 - REMOVE all links to google search, bing, or generic/irrelevant pages.
 - DO NOT add links back to mbacompass.in or third-party/partner sites.
-- Allowed link targets ONLY: (1) Official college/institute website, (2) Official exam website (iimcat.ac.in, xatonline.in, etc.), (3) Government / regulatory sites (nirfindia.org, aicte-india.org, ugc.gov.in).
-- Every <a href="..."> must be a real verified official URL with target="_blank" rel="noopener". If unsure, keep as plain text — never guess.
+- Allowed link targets ONLY: domains listed under "ALLOWED SOURCE DOMAINS" below. Any other host is forbidden.
+- Every <a href="..."> must be a real verified URL on one of those domains, with target="_blank" rel="noopener". If unsure, keep as plain text — never guess.
+
+${allowlistBlock}
 
 FORMATTING RULES (long-form HTML fields):
 - Concise bullet lists with 3–5 crisp <li> items per section — no long paragraphs.
