@@ -3,7 +3,7 @@
 // Claims pending items from master_refresh_items, invokes refresh-content
 // with the job's configured model, and rolls up progress on the job row.
 // Runs entirely on the backend — no browser needs to stay open.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,11 +117,13 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .in("status", ["pending", "processing"]);
     if ((remaining ?? 0) > 0) {
-      EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
+      const kick = fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
         body: JSON.stringify({ self_kick: true }),
-      }).catch(() => {}));
+      }).catch(() => {});
+      // @ts-ignore EdgeRuntime is a Supabase Deno global
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(kick);
     }
 
     return new Response(JSON.stringify({ processed, remaining: remaining ?? 0 }), {
