@@ -97,6 +97,7 @@ const AdminBulkGenerateSections = lazyWithPreload(() => import("./pages/admin/Ad
 const AdminInstituteResults = lazyWithPreload(() => import("./pages/admin/AdminInstituteResults"));
 const AdminSitemap = lazyWithPreload(() => import("./pages/admin/AdminSitemap"));
 const AdminClearCache = lazyWithPreload(() => import("./pages/admin/AdminClearCache"));
+const AdminCacheDiagnostics = lazyWithPreload(() => import("./pages/admin/AdminCacheDiagnostics"));
 const AdminLeads = lazyWithPreload(() => import("./pages/admin/AdminLeads"));
 
 const AdminAllLinks = lazyWithPreload(() => import("./pages/admin/AdminAllLinks"));
@@ -857,6 +858,7 @@ const App = () => (
               <Route path="institute-results" element={<LazyPage><AdminInstituteResults /></LazyPage>} />
               <Route path="sitemap" element={<LazyPage><AdminSitemap /></LazyPage>} />
               <Route path="clear-cache" element={<LazyPage><AdminClearCache /></LazyPage>} />
+              <Route path="cache-diagnostics" element={<LazyPage><AdminCacheDiagnostics /></LazyPage>} />
               <Route path="leads" element={<LazyPage><AdminLeads /></LazyPage>} />
               <Route path="demo-leads" element={<LazyPage><AdminDemoLeads /></LazyPage>} />
 
