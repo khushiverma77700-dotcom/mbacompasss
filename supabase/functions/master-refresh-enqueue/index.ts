@@ -80,11 +80,13 @@ Deno.serve(async (req) => {
     await sb.from("master_refresh_jobs").update({ total, status: total > 0 ? "queued" : "completed", finished_at: total === 0 ? new Date().toISOString() : null }).eq("id", job.id);
 
     // Kick worker immediately (fire-and-forget)
-    EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
+    const kick = fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
       body: JSON.stringify({ job_id: job.id }),
-    }).catch(() => {}));
+    }).catch(() => {});
+    // @ts-ignore EdgeRuntime is a Supabase Deno global
+    if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(kick);
 
     return new Response(JSON.stringify({ job_id: job.id, total }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
