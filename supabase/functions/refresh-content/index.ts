@@ -21,6 +21,7 @@ interface Body {
   entity_id: string;
   mode?: Mode;
   requested_by?: string;
+  model?: string;
 }
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
