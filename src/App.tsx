@@ -123,6 +123,7 @@ const AdminApiKeys = lazyWithPreload(() => import("./pages/admin/AdminApiKeys"))
 // Welcome Email admin page removed
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
 const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
+const AdminMasterRefresh = lazyWithPreload(() => import("./pages/admin/AdminMasterRefresh"));
 const AdminContentStudio = lazyWithPreload(() => import("./pages/admin/AdminContentStudio"));
 const AdminCourseCategories = lazyWithPreload(() => import("./pages/admin/AdminCourseCategories"));
 const AdminCATScores = lazyWithPreload(() => import("./pages/admin/AdminCATScores"));
@@ -884,6 +885,7 @@ const App = () => (
               {/* welcome-email admin route removed */}
               <Route path="content-refreshes" element={<LazyPage><AdminContentRefreshes /></LazyPage>} />
               <Route path="bulk-refresh" element={<LazyPage><AdminBulkRefresh /></LazyPage>} />
+              <Route path="master-refresh" element={<LazyPage><AdminMasterRefresh /></LazyPage>} />
               <Route path="content-studio" element={<LazyPage><AdminContentStudio /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
               <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />

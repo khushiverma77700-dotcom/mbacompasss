@@ -119,6 +119,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       // Citation Sources Audit removed
       { label: "Content Studio (All-in-one)", path: "/admin/content-studio", icon: Sparkles },
       { label: "Content Refresh Queue", path: "/admin/content-refreshes", icon: RefreshCw },
+      { label: "Master Refresh (All Content)", path: "/admin/master-refresh", icon: Sparkles },
       { label: "Bulk Refresh Content", path: "/admin/bulk-refresh", icon: Sparkles },
       { label: "Bulk AI Editor", path: "/admin/bulk-ai-edit", icon: Sparkles },
       { label: "Hyperlink Update", path: "/admin/hyperlink-update", icon: Link2 },
