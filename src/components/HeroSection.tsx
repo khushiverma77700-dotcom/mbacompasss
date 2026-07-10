@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useDeferredValue, useTransition, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target, ChevronRight, MapPin, Tag, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,8 @@ const HeroSection = () => {
   const [hydrateSettings, setHydrateSettings] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [, startTransition] = useTransition();
+  const deferredQuery = useDeferredValue(query);
   const { data: heroSettings } = useSiteSettings("hero", { enabled: hydrateSettings });
   const { data: statsSettings } = useSiteSettings("stats", { enabled: hydrateSettings });
 
@@ -73,10 +75,10 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
-    if (query.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    if (deferredQuery.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
     const controller = new AbortController();
     const timer = setTimeout(async () => {
-      const q = query.toLowerCase();
+      const q = deferredQuery.toLowerCase();
       const results: HeroSuggestion[] = [];
       // Lazy-import supabase only when the user actually searches — keeps it out of the LCP critical path
       const { supabase } = await import("@/integrations/supabase/client");
@@ -93,13 +95,16 @@ const HeroSection = () => {
       collegeRes.data?.forEach((c) => results.push({ type: "college", label: c.name, sub: `${c.city || ""} · Rank #${c.ranking || "—"}`, link: `/college/${c.slug}` }));
       articleRes.data?.forEach((a) => results.push({ type: "article" as any, label: a.title, sub: a.category || "Blog", link: `/article/${a.slug}` }));
       if (!controller.signal.aborted) {
-        setSuggestions(results.slice(0, 8));
-        setShowSuggestions(results.length > 0);
-        setSelectedIdx(-1);
+        // Non-urgent: don't block keystroke paint on rendering the suggestion list
+        startTransition(() => {
+          setSuggestions(results.slice(0, 8));
+          setShowSuggestions(results.length > 0);
+          setSelectedIdx(-1);
+        });
       }
     }, 200);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [query]);
+  }, [deferredQuery]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -249,7 +254,7 @@ const HeroSection = () => {
             {popularSearches.slice(0, 4).map((term: string) => (
               <button
                 key={term}
-                onClick={() => { setQuery(term); }}
+                onClick={() => { startTransition(() => setQuery(term)); }}
                 className="text-primary-foreground/95 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/20 hover:border-white/40 font-medium backdrop-blur-sm"
               >
                 {term}
