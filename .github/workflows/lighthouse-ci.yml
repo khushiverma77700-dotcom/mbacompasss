@@ -1,0 +1,45 @@
+name: Lighthouse CI
+
+# Runs after every push to main (Lovable auto-syncs deploys to main).
+# Waits 90s for the Lovable CDN to serve the new build, then runs LHCI
+# in both mobile and desktop profiles against the live site and fails
+# the workflow if TTFB (server-response-time) or TBT regresses beyond
+# the thresholds in lighthouserc*.json.
+#
+# NOTE: INP is a field-only metric — Lighthouse lab runs cannot measure
+# it. TBT is the lab proxy and is what this workflow gates on. For real
+# INP tracking, wire up CrUX API or a RUM tool separately.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lhci:
+    name: Lighthouse (${{ matrix.profile }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install LHCI
+        run: npm install -g @lhci/cli@0.14.x
+
+      - name: Wait for Lovable deploy to propagate
+        run: sleep 90
+
+      - name: Run Lighthouse CI
+        run: |
+          if [ "${{ matrix.profile }}" = "mobile" ]; then
+            lhci autorun --config=./lighthouserc.mobile.json
+          else
+            lhci autorun --config=./lighthouserc.json
+          fi

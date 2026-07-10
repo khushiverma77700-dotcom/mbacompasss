@@ -1,0 +1,40 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "https://mbacompass.in/",
+        "https://mbacompass.in/colleges",
+        "https://mbacompass.in/coaching"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "perf",
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        },
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "cpuSlowdownMultiplier": 4
+        }
+      }
+    },
+    "assert": {
+      "assertions": {
+        "server-response-time":   ["error", { "maxNumericValue": 1000 }],
+        "total-blocking-time":    ["error", { "maxNumericValue": 300 }],
+        "first-contentful-paint": ["warn",  { "maxNumericValue": 2500 }],
+        "largest-contentful-paint":["warn", { "maxNumericValue": 3500 }],
+        "cumulative-layout-shift":["warn",  { "maxNumericValue": 0.1 }]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}
