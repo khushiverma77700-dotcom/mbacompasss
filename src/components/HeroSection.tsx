@@ -75,10 +75,10 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
-    if (query.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    if (deferredQuery.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
     const controller = new AbortController();
     const timer = setTimeout(async () => {
-      const q = query.toLowerCase();
+      const q = deferredQuery.toLowerCase();
       const results: HeroSuggestion[] = [];
       // Lazy-import supabase only when the user actually searches — keeps it out of the LCP critical path
       const { supabase } = await import("@/integrations/supabase/client");
@@ -95,13 +95,16 @@ const HeroSection = () => {
       collegeRes.data?.forEach((c) => results.push({ type: "college", label: c.name, sub: `${c.city || ""} · Rank #${c.ranking || "—"}`, link: `/college/${c.slug}` }));
       articleRes.data?.forEach((a) => results.push({ type: "article" as any, label: a.title, sub: a.category || "Blog", link: `/article/${a.slug}` }));
       if (!controller.signal.aborted) {
-        setSuggestions(results.slice(0, 8));
-        setShowSuggestions(results.length > 0);
-        setSelectedIdx(-1);
+        // Non-urgent: don't block keystroke paint on rendering the suggestion list
+        startTransition(() => {
+          setSuggestions(results.slice(0, 8));
+          setShowSuggestions(results.length > 0);
+          setSelectedIdx(-1);
+        });
       }
     }, 200);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [query]);
+  }, [deferredQuery]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
