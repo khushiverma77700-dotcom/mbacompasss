@@ -318,7 +318,7 @@ Deno.serve(async (req) => {
 
 
     const modeNote = mode === "full"
-      ? "Rewrite EVERY field from scratch with the latest verified information. Improve clarity, structure, formatting, and humanise the tone."
+      ? `Rewrite EVERY one of the ${fields.length} tracked fields from scratch with the latest verified ${year} information. Every field MUST be materially different from the current snapshot — improved clarity, structure, formatting, tone and freshness. Do NOT echo current values.`
       : "ONLY update time-sensitive facts: fees, placement figures, rankings, recruiter lists, dates, citations, and meta freshness. Preserve the existing tone, narrative structure and unchanged sections. If a field is already accurate and current for " + year + ", return it unchanged.";
 
     const systemPrompt = `You are a senior MBA/B-school researcher, SEO editor and originality checker refreshing an existing page for ${year}. Today is ${todayIso}.
