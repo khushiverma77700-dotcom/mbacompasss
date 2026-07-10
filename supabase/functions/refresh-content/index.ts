@@ -342,8 +342,10 @@ ORIGINALITY + SEO RULES:
 HYPERLINK RULES (STRICT):
 - REMOVE all links to google search, bing, or generic/irrelevant pages.
 - DO NOT add links back to mbacompass.in or third-party/partner sites.
-- Allowed link targets ONLY: (1) Official college/institute website, (2) Official exam website (iimcat.ac.in, xatonline.in, etc.), (3) Government / regulatory sites (nirfindia.org, aicte-india.org, ugc.gov.in).
-- Every <a href="..."> must be a real verified official URL with target="_blank" rel="noopener". If unsure, keep as plain text — never guess.
+- Allowed link targets ONLY: domains listed under "ALLOWED SOURCE DOMAINS" below. Any other host is forbidden.
+- Every <a href="..."> must be a real verified URL on one of those domains, with target="_blank" rel="noopener". If unsure, keep as plain text — never guess.
+
+${allowlistBlock}
 
 FORMATTING RULES (long-form HTML fields):
 - Concise bullet lists with 3–5 crisp <li> items per section — no long paragraphs.
