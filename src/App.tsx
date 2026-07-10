@@ -887,6 +887,7 @@ const App = () => (
               <Route path="content-refreshes" element={<LazyPage><AdminContentRefreshes /></LazyPage>} />
               <Route path="bulk-refresh" element={<LazyPage><AdminBulkRefresh /></LazyPage>} />
               <Route path="master-refresh" element={<LazyPage><AdminMasterRefresh /></LazyPage>} />
+              <Route path="source-domains" element={<LazyPage><AdminSourceDomains /></LazyPage>} />
               <Route path="content-studio" element={<LazyPage><AdminContentStudio /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
               <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />
