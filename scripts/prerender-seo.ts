@@ -178,6 +178,32 @@ function buildHtml(fields: HeadFields): string {
     }
   }
   html = html.replace("</head>", `    ${inject.join("\n    ")}\n  </head>`);
+
+  // ── Crawler-visible content shell ─────────────────────────────────────
+  // Every prerendered route must ship visible HTML in #root, otherwise
+  // Googlebot (which times out waiting for React to hydrate the app CSS
+  // bundle) classifies the page as "Soft 404 / crawled — currently not
+  // indexed". React overwrites this on hydration, so users never see it.
+  const canonicalPath = canonical.replace(SITE, "") || "/";
+  const contentShell = `
+    <main style="max-width:960px;margin:0 auto;padding:40px 20px;font-family:'DM Sans','DM Sans Fallback',system-ui,sans-serif;color:#0f172a">
+      <h1 style="font-family:'Plus Jakarta Sans','Plus Jakarta Fallback',system-ui,sans-serif;font-weight:700;font-size:clamp(24px,4vw,36px);line-height:1.2;margin:0 0 12px">${esc(title)}</h1>
+      <p style="font-size:16px;line-height:1.55;color:#475569;margin:0 0 20px">${esc(description)}</p>
+      <nav aria-label="Sections" style="font-size:14px;color:#334155">
+        <a href="/" style="color:#0369a1;text-decoration:none;margin-right:16px">Home</a>
+        <a href="/colleges" style="color:#0369a1;text-decoration:none;margin-right:16px">Top MBA Colleges</a>
+        <a href="/coaching" style="color:#0369a1;text-decoration:none;margin-right:16px">MBA Coaching</a>
+        <a href="/blog" style="color:#0369a1;text-decoration:none;margin-right:16px">Articles</a>
+        <a href="/sitemap.xml" style="color:#0369a1;text-decoration:none">Sitemap</a>
+      </nav>
+      <p style="margin-top:24px;font-size:12px;color:#94a3b8">Loading interactive view for <span>${esc(canonicalPath)}</span>…</p>
+    </main>
+  `;
+  html = html.replace(
+    /<div id="root">[\s\S]*?<\/div>/,
+    `<div id="root">${contentShell}</div>`,
+  );
+
   return html;
 }
 
