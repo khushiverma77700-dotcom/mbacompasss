@@ -1,21 +1,73 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Globe, ExternalLink, Copy, CheckCircle, Download, AlertTriangle } from "lucide-react";
+import { RefreshCw, Globe, ExternalLink, Copy, CheckCircle, Download, AlertTriangle, Clock } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 const SITE_URL = "https://mbacompass.in";
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
 const LIVE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-sitemap`;
 
+// 13:30 UTC = 19:00 IST. Next occurrence from `from`.
+function nextRefreshAt(from = new Date()): Date {
+  const d = new Date(from);
+  d.setUTCHours(13, 30, 0, 0);
+  if (d.getTime() <= from.getTime()) d.setUTCDate(d.getUTCDate() + 1);
+  return d;
+}
+function fmtIST(d: Date) {
+  return d.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
+}
+
+type SitemapReport = {
+  url_count?: number;
+  generated_at?: string;
+  next_refresh_at?: string;
+  status?: string;
+  error?: string;
+  source?: string;
+};
+
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");
   const [loading, setLoading] = useState(false);
   const [urlCount, setUrlCount] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [report, setReport] = useState<SitemapReport | null>(null);
+  const lastReportAt = useRef<string | null>(null);
   const { toast } = useToast();
+
+  // Load last cron report + poll for updates so the admin sees the auto-refresh notification.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "sitemap_last_report")
+        .maybeSingle();
+      if (cancelled || !data?.value) return;
+      let parsed: SitemapReport | null = null;
+      try { parsed = typeof data.value === "string" ? JSON.parse(data.value) : (data.value as any); } catch { /* ignore */ }
+      if (!parsed) return;
+      setReport(parsed);
+      if (lastReportAt.current && parsed.generated_at && parsed.generated_at !== lastReportAt.current) {
+        toast({
+          title: parsed.status === "failed" ? "Sitemap auto-refresh failed" : "Sitemap updated",
+          description: parsed.status === "failed"
+            ? (parsed.error || "Check the cron logs.")
+            : `${parsed.url_count ?? 0} URLs · next refresh ${parsed.next_refresh_at ? fmtIST(new Date(parsed.next_refresh_at)) : "tomorrow 7 PM IST"}`,
+        });
+      }
+      lastReportAt.current = parsed.generated_at ?? lastReportAt.current;
+    };
+    load();
+    const t = setInterval(load, 60_000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [toast]);
+
 
   const generateSitemap = async () => {
     setLoading(true);
@@ -85,6 +137,40 @@ const AdminSitemap = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Clock className="w-5 h-5 text-primary" /> Daily Auto-Refresh
+          </CardTitle>
+          <CardDescription>
+            Sitemap re-syncs with the database every day at <b>7:00 PM IST</b>. New institutes, courses, colleges, and articles go live automatically.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid sm:grid-cols-3 gap-4 text-sm">
+          <div>
+            <div className="text-muted-foreground text-xs">Last auto-refresh</div>
+            <div className="font-semibold">
+              {report?.generated_at ? fmtIST(new Date(report.generated_at)) : "Not run yet"}
+            </div>
+            {report?.status === "failed" && (
+              <div className="text-destructive text-xs mt-1">Failed: {report.error}</div>
+            )}
+          </div>
+          <div>
+            <div className="text-muted-foreground text-xs">URLs in last snapshot</div>
+            <div className="font-semibold">{report?.url_count ?? "—"}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground text-xs">Next refresh</div>
+            <div className="font-semibold">
+              {fmtIST(report?.next_refresh_at ? new Date(report.next_refresh_at) : nextRefreshAt())}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
