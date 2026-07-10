@@ -224,7 +224,7 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any, mod
   return JSON.parse(tc.function.arguments);
 }
 
-async function repairAI(systemPrompt: string, userPrompt: string, schema: any, failures: string[], draft: Record<string, unknown>): Promise<any> {
+async function repairAI(systemPrompt: string, userPrompt: string, schema: any, failures: string[], draft: Record<string, unknown>, model: string = MODEL): Promise<any> {
   const repairPrompt = `${userPrompt}
 
 The previous draft failed quality review:
@@ -234,7 +234,7 @@ PREVIOUS DRAFT (JSON):
 ${JSON.stringify(draft, null, 2)}
 
 Return a corrected version of every tracked field. Do not explain.`;
-  return callAI(systemPrompt, repairPrompt, schema);
+  return callAI(systemPrompt, repairPrompt, schema, model);
 }
 
 function buildSchema(fields: string[]) {
