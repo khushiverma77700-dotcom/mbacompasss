@@ -191,13 +191,13 @@ function pickFields(row: Record<string, unknown>, fields: string[]) {
   return out;
 }
 
-function computeDiff(current: Record<string, unknown>, proposed: Record<string, unknown>) {
+function computeDiff(current: Record<string, unknown>, proposed: Record<string, unknown>, forceAllChanged = false) {
   const diff: Record<string, { changed: boolean; before: unknown; after: unknown }> = {};
   const keys = new Set([...Object.keys(current), ...Object.keys(proposed)]);
   for (const k of keys) {
     const a = current[k];
     const b = proposed[k];
-    const changed = JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
+    const changed = forceAllChanged || JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
     diff[k] = { changed, before: a ?? null, after: b ?? null };
   }
   return diff;
