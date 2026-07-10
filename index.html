@@ -151,14 +151,10 @@
       /* Reserve hero space so the gradient block paints at the right height before JS hydrates. */
       main>section:first-of-type{min-height:520px}
       @media (min-width:768px){main>section:first-of-type{min-height:600px}}
-      /* Minimal neutral loader painted before React mounts — disappears the moment the app mounts. */
-      #app-shell{position:fixed;inset:0;z-index:1;background:#ffffff;display:flex;align-items:center;justify-content:center;pointer-events:none}
-      #app-shell .shell-inner{display:flex;flex-direction:column;align-items:center;gap:14px;color:#475569;font-family:'DM Sans',system-ui,sans-serif}
-      #app-shell .shell-spinner{width:34px;height:34px;border-radius:50%;border:3px solid #e0f2fe;border-top-color:#0ea5e9;animation:shell-spin .8s linear infinite}
-      #app-shell .shell-brand{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:700;font-size:14px;letter-spacing:.02em;color:#0f172a}
-      #app-shell .shell-tag{font-size:12px;opacity:.7;margin:0}
-      @keyframes shell-spin{to{transform:rotate(360deg)}}
-      .app-mounted #app-shell{display:none}
+      /* Reserved space for the initial page while React mounts. Intentionally
+         NO full-screen overlay: Googlebot was seeing only the "Loading…"
+         spinner on non-prerendered routes and flagging them as Soft 404.
+         Real prerendered content in #root paints first now. */
     </style>
 
     <meta property="og:type" content="website" />
