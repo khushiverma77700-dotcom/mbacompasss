@@ -169,7 +169,17 @@ const CategoryPage = () => {
       title: metaTitle,
       description: metaDesc,
       keywords,
-      canonical: typeof window !== "undefined" ? canonicalUrl(`${window.location.pathname}${window.location.search}`) : undefined,
+      // Self-canonical: strip filter params (city/state/mode/q/fee/specialization/sort),
+      // keep only `page` so paginated pages self-canonicalize. Filtered URLs get
+      // noindex,follow automatically via SEOHead (M6 rule).
+      canonical: typeof window !== "undefined"
+        ? (() => {
+            const sp = new URLSearchParams(window.location.search);
+            const page = sp.get("page");
+            const tail = page && page !== "1" ? `?page=${page}` : "";
+            return canonicalUrl(`${window.location.pathname}${tail}`);
+          })()
+        : undefined,
       jsonLd,
       ogImage: cityPage?.hero_image_url || undefined,
     }
