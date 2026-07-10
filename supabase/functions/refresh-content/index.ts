@@ -410,6 +410,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
           schema,
           blockingFactIssues.map((i) => `FACT-CHECK: ${i.message}`),
           proposedSnapshot,
+          selectedModel,
         ), fields, ctx);
         blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(proposedSnapshot));
       }
