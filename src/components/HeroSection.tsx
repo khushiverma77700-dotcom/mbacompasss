@@ -254,7 +254,7 @@ const HeroSection = () => {
             {popularSearches.slice(0, 4).map((term: string) => (
               <button
                 key={term}
-                onClick={() => { setQuery(term); }}
+                onClick={() => { startTransition(() => setQuery(term)); }}
                 className="text-primary-foreground/95 hover:text-primary-foreground bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors duration-150 border border-white/20 hover:border-white/40 font-medium backdrop-blur-sm"
               >
                 {term}
