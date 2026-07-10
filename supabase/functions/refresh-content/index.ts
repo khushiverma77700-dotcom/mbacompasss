@@ -401,7 +401,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
 
     try {
       const ctx: QualityContext = { entityName, city, state, website, todayIso, year };
-      let proposedSnapshot = postProcessSnapshot(await callAI(systemPrompt, userPrompt, schema), fields, ctx);
+      let proposedSnapshot = postProcessSnapshot(await callAI(systemPrompt, userPrompt, schema, selectedModel), fields, ctx);
       let blockingFactIssues = getBlockingFactIssues(runFactualRiskCheck(proposedSnapshot));
       if (blockingFactIssues.length) {
         proposedSnapshot = postProcessSnapshot(await repairAI(
