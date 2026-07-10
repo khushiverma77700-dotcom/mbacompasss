@@ -1,4 +1,4 @@
-// Master Refresh Enqueue — admin creates a server-side refresh job.
+// Master Refresh Enqueue — admin creates a server-side refresh job. v2
 // Populates master_refresh_jobs + master_refresh_items, then kicks the worker
 // once so it can start immediately (cron continues progress every minute).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
