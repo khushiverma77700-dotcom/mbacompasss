@@ -43,6 +43,8 @@ const HeroSection = () => {
   const [hydrateSettings, setHydrateSettings] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [, startTransition] = useTransition();
+  const deferredQuery = useDeferredValue(query);
   const { data: heroSettings } = useSiteSettings("hero", { enabled: hydrateSettings });
   const { data: statsSettings } = useSiteSettings("stats", { enabled: hydrateSettings });
 
