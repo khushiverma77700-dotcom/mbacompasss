@@ -419,7 +419,7 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
       }
       const failures = qualityFailures(proposedSnapshot, fields, ctx);
       if (failures.length > 0) {
-        proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot), fields, ctx);
+        proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot, selectedModel), fields, ctx);
       }
       const diff = computeDiff(currentSnapshot, proposedSnapshot);
       const changedCount = Object.values(diff).filter((d: any) => d.changed).length;
