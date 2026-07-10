@@ -135,6 +135,8 @@ category (exactly "${category}"), tags (array of 2-5 strings).`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

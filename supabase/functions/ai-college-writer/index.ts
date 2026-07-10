@@ -27,6 +27,8 @@ interface CollegeBrief {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   // Caller (e.g. bulk dashboard) can pick which AI backend to use via header.
   const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();

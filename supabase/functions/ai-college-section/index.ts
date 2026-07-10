@@ -576,6 +576,8 @@ function buildFaqSchema(items: { question: string; answer: string }[]) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   // Caller can pick which AI backend to use (set by the bulk dashboard).
   const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();

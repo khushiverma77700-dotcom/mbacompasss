@@ -187,6 +187,8 @@ function completeProfile(parsed: any, brief: Brief, targetKw: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const brief = (await req.json()) as Brief;

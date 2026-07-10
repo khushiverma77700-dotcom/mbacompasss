@@ -45,6 +45,8 @@ const wordCount = (html: string) => stripHtml(html || "").split(/\s+/).filter(Bo
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const { contentType, recordId, data, force } = await req.json();

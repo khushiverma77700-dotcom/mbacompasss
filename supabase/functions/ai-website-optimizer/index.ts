@@ -685,6 +685,8 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const { mode = "audit", action = "run", run_id } = await req.json().catch(() => ({}));
