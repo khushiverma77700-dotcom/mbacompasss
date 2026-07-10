@@ -287,6 +287,7 @@ Deno.serve(async (req) => {
     if (fetchErr || !row) throw new Error(fetchErr?.message || "Entity not found");
 
     const currentSnapshot = pickFields(row as Record<string, unknown>, fields);
+    const selectedModel = (typeof body.model === "string" && body.model.trim()) ? body.model.trim() : MODEL;
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
     const year = today.getFullYear();
