@@ -243,17 +243,22 @@ const AdminFreebies = () => {
       }),
     );
     try {
-      const updates: Promise<any>[] = [];
+      const updates: PromiseLike<any>[] = [];
       ordered.forEach((id, idx) => {
         updates.push(
-          supabase.from("freebies").update({ is_featured: true, featured_order: idx }).eq("id", id),
+          Promise.resolve(
+            supabase.from("freebies").update({ is_featured: true, featured_order: idx }).eq("id", id),
+          ),
         );
       });
       removedIds.forEach((id) => {
         updates.push(
-          supabase.from("freebies").update({ is_featured: false, featured_order: 0 }).eq("id", id),
+          Promise.resolve(
+            supabase.from("freebies").update({ is_featured: false, featured_order: 0 }).eq("id", id),
+          ),
         );
       });
+
       const results = await Promise.all(updates);
       const err = results.find((r) => r.error)?.error;
       if (err) throw err;
