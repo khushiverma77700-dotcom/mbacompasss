@@ -204,10 +204,20 @@ const FreebiesPage = () => {
     return { total, downloads, cats };
   }, [items]);
 
+  const featured = useMemo(
+    () =>
+      [...items]
+        .filter((i) => (i as any).is_featured)
+        .sort((a, b) => ((a as any).featured_order || 0) - ((b as any).featured_order || 0))
+        .slice(0, 3),
+    [items],
+  );
+
   const trending = useMemo(
     () => [...items].sort((a, b) => (b.download_count || 0) - (a.download_count || 0)).slice(0, 3),
     [items],
   );
+
 
   const handleDownload = async (f: Freebie) => {
     if (!user) {
