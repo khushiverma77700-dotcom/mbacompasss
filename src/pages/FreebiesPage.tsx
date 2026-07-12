@@ -588,6 +588,67 @@ const FreebiesPage = () => {
         )}
       </section>
 
+      {/* SOCIAL PROOF — TESTIMONIALS */}
+      <section className="border-t border-slate-100 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-6xl mx-auto px-4 py-14 sm:py-20">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
+              <Quote className="h-3.5 w-3.5" /> Loved by aspirants
+            </div>
+            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+              What CAT toppers say about our free material
+            </h2>
+            <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
+              Real stories from aspirants who used MBA Compass Freebies to crack CAT, XAT and NMAT.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { n: "Ananya Sharma", r: "IIM Bangalore · 99.6%iler", q: "The Quant formula sheet saved me hours. I taped it above my desk and by mock 5 I stopped fumbling on arithmetic entirely.", g: "from-sky-500 to-blue-600" },
+              { n: "Rohan Menon", r: "IIM Ahmedabad · 99.4%iler", q: "The WAT-PI kit was gold. I walked into the IIM-A interview knowing exactly which frameworks to structure my answers around.", g: "from-violet-500 to-fuchsia-600" },
+              { n: "Priyanka Iyer", r: "XLRI Jamshedpur · 99.1%iler", q: "GK digests for XAT are the best I found online — concise, dated correctly, and no filler. Used them every morning for 3 months.", g: "from-emerald-500 to-teal-600" },
+            ].map((t) => (
+              <figure key={t.n} className="relative rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <Quote className="absolute top-4 right-4 h-6 w-6 text-slate-100" />
+                <div className="flex items-center gap-0.5 text-amber-400">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400" />)}
+                </div>
+                <blockquote className="mt-3 text-sm text-slate-700 leading-relaxed">"{t.q}"</blockquote>
+                <figcaption className="mt-4 flex items-center gap-3 pt-4 border-t border-slate-100">
+                  <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${t.g} text-white grid place-items-center font-bold shadow`}>
+                    {t.n.split(" ").map((p) => p[0]).join("")}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900 text-sm">{t.n}</div>
+                    <div className="text-[11px] text-slate-500">{t.r}</div>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          {/* Trust badges strip */}
+          <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { icon: <Users className="h-4 w-4" />, v: "50,000+", l: "Aspirants served" },
+              { icon: <GraduationCap className="h-4 w-4" />, v: "1,200+", l: "IIM/XLRI converts" },
+              { icon: <Layers className="h-4 w-4" />, v: "180+", l: "Curated PDFs" },
+              { icon: <Target className="h-4 w-4" />, v: "99+%ile", l: "Author benchmark" },
+            ].map((b) => (
+              <div key={b.l} className="rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
+                  {b.icon}
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-slate-900 leading-none tabular-nums">{b.v}</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-medium">{b.l}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* SEO CONTENT + FAQ */}
       <section className="bg-gradient-to-b from-white to-slate-50 border-t border-slate-100">
         <div className="max-w-4xl mx-auto px-4 py-14 sm:py-20">
