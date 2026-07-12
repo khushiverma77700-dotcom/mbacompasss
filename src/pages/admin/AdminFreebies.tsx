@@ -499,8 +499,20 @@ const AdminFreebies = () => {
               </TableHeader>
               <TableBody>
                 {rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.title}</TableCell>
+                  <TableRow
+                    key={r.id}
+                    draggable
+                    onDragStart={(e) => { e.dataTransfer.setData("freebie-id", r.id); setDragId(r.id); }}
+                    onDragEnd={() => setDragId(null)}
+                    className={`cursor-move ${dragId === r.id ? "opacity-40" : ""}`}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-3.5 w-3.5 text-slate-300" />
+                        {r.is_featured && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400" />}
+                        <span>{r.title}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{r.category || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="text-xs">
                       {r.file_name || r.file_url}
@@ -514,6 +526,14 @@ const AdminFreebies = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title={r.is_featured ? "Remove from featured" : "Add to featured"}
+                          onClick={() => r.is_featured ? removeFromFeatured(r.id) : addToFeatured(r.id)}
+                        >
+                          <Star className={`h-4 w-4 ${r.is_featured ? "text-amber-500 fill-amber-400" : "text-slate-400"}`} />
+                        </Button>
                         <a href="/freebies" target="_blank" rel="noreferrer">
                           <Button size="icon" variant="ghost"><ExternalLink className="h-4 w-4" /></Button>
                         </a>
@@ -523,6 +543,7 @@ const AdminFreebies = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+
               </TableBody>
             </Table>
           )}
