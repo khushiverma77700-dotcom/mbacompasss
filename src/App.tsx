@@ -946,6 +946,7 @@ const App = () => (
 
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
+            <Route path="/freebies" element={<PublicLayout><LazyPage><FreebiesPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
             <Route path="/coaching" element={<PublicLayout><LazyPage><CoachingPage /></LazyPage></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><LazyPage><AuthPage /></LazyPage></PublicLayout>} />
