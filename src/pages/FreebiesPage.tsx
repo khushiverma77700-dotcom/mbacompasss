@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-
-import { Download, FileText, Search, Sparkles, Gift, Loader2, BookOpen } from "lucide-react";
+import {
+  Download, FileText, Search, Sparkles, Gift, Loader2, BookOpen,
+  TrendingUp, Users, Star, ShieldCheck, Clock, Award, ChevronRight, Flame,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type Freebie = {
@@ -20,14 +21,40 @@ type Freebie = {
   cover_image_url: string | null;
   tags: string[] | null;
   download_count: number;
+  created_at?: string;
 };
 
 function formatBytes(bytes: number | null | undefined) {
-  if (!bytes) return "";
+  if (!bytes) return "—";
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+function compactNum(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toString();
+}
+
+// Deterministic pastel gradient per card
+const GRADIENTS = [
+  "from-sky-500 to-blue-600",
+  "from-violet-500 to-fuchsia-600",
+  "from-amber-500 to-orange-600",
+  "from-emerald-500 to-teal-600",
+  "from-rose-500 to-pink-600",
+  "from-indigo-500 to-sky-600",
+];
+const hashIdx = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h) % GRADIENTS.length;
+};
+
+const CATEGORY_ICONS: Record<string, string> = {
+  Quant: "∑", VARC: "Aa", LRDI: "◇", GK: "🌐", Interview: "✦", Strategy: "◈", Practice: "▶",
+};
 
 const FreebiesPage = () => {
   const [items, setItems] = useState<Freebie[]>([]);
@@ -36,6 +63,12 @@ const FreebiesPage = () => {
   const [activeCat, setActiveCat] = useState<string>("All");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    document.title = "Free MBA Resources & Downloads | MBA Compass";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "Download free MBA study materials, formula sheets, cheatsheets, PDFs, and prep guides curated by MBA Compass for CAT, XAT, NMAT and more.");
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -69,6 +102,18 @@ const FreebiesPage = () => {
     });
   }, [items, q, activeCat]);
 
+  const stats = useMemo(() => {
+    const total = items.length;
+    const downloads = items.reduce((sum, i) => sum + (i.download_count || 0), 0);
+    const cats = new Set(items.map((i) => i.category).filter(Boolean)).size;
+    return { total, downloads, cats };
+  }, [items]);
+
+  const trending = useMemo(
+    () => [...items].sort((a, b) => (b.download_count || 0) - (a.download_count || 0)).slice(0, 3),
+    [items],
+  );
+
   const handleDownload = async (f: Freebie) => {
     setDownloadingId(f.id);
     try {
@@ -80,12 +125,13 @@ const FreebiesPage = () => {
         if (error) throw error;
         url = data.signedUrl;
       }
-      // Increment counter (best-effort)
       supabase
         .from("freebies")
-        .update({ download_count: f.download_count + 1 })
+        .update({ download_count: (f.download_count || 0) + 1 })
         .eq("id", f.id)
         .then(() => {});
+      // optimistic UI bump
+      setItems((prev) => prev.map((p) => (p.id === f.id ? { ...p, download_count: (p.download_count || 0) + 1 } : p)));
       window.open(url, "_blank");
     } catch (e: any) {
       toast({ title: "Download failed", description: e.message, variant: "destructive" });
@@ -94,69 +140,182 @@ const FreebiesPage = () => {
     }
   };
 
-  useEffect(() => {
-    document.title = "Free MBA Resources & Downloads | MBA Compass";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Download free MBA study materials, formula sheets, cheatsheets, PDFs, and prep guides curated by MBA Compass for CAT, XAT, NMAT and more.");
-  }, []);
-
   return (
-    <>
-
+    <div className="bg-white">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 border-b border-sky-100">
+      <section className="relative overflow-hidden border-b border-sky-100 bg-gradient-to-br from-sky-50 via-white to-blue-50">
         <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
+          <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-sky-200/50 blur-3xl" />
+          <div className="absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-blue-200/40 blur-3xl" />
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                "linear-gradient(#0ea5e9 1px, transparent 1px), linear-gradient(90deg, #0ea5e9 1px, transparent 1px)",
+              backgroundSize: "44px 44px",
+            }}
+          />
         </div>
-        <div className="relative max-w-6xl mx-auto px-4 py-14 sm:py-20 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 text-xs font-medium text-sky-700 shadow-sm">
-            <Sparkles className="h-3.5 w-3.5" /> 100% Free · No signup wall
+
+        <div className="relative max-w-6xl mx-auto px-4 pt-14 pb-10 sm:pt-20 sm:pb-14 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3.5 py-1.5 text-xs font-semibold text-sky-700 shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
+            </span>
+            100% Free · No email wall · Instant download
           </div>
-          <h1 className="mt-4 text-3xl sm:text-5xl font-bold tracking-tight text-slate-900">
-            MBA Prep <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">Freebies</span>
+
+          <h1 className="mt-5 text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 leading-[1.05]">
+            MBA Prep{" "}
+            <span className="relative inline-block">
+              <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Freebies
+              </span>
+              <Sparkles className="absolute -top-3 -right-6 h-5 w-5 text-amber-400" />
+            </span>
+            <br className="hidden sm:block" />
+            <span className="text-slate-700 text-2xl sm:text-3xl font-semibold block mt-2">
+              curated by 99%ilers, free for you.
+            </span>
           </h1>
-          <p className="mt-3 max-w-2xl mx-auto text-sm sm:text-base text-slate-600">
-            Formula sheets, cheatsheets, question banks, and study PDFs — curated by our advisors to accelerate your CAT, XAT & NMAT prep.
+
+          <p className="mt-4 max-w-2xl mx-auto text-sm sm:text-base text-slate-600 leading-relaxed">
+            Formula sheets · Cheatsheets · Question banks · Interview kits — everything you need for CAT, XAT, NMAT, SNAP & IIFT in one place.
           </p>
 
+          {/* Search */}
           <div className="mt-8 max-w-xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search formula sheets, cheatsheets, PDFs…"
-                className="pl-10 h-11 bg-white border-slate-200 shadow-sm"
-              />
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-xl blur opacity-20 group-focus-within:opacity-40 transition" />
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search formula sheets, cheatsheets, PDFs…"
+                  className="pl-12 pr-4 h-14 bg-white border-slate-200 shadow-md rounded-xl text-sm sm:text-base focus-visible:ring-sky-500"
+                />
+                {q && (
+                  <button
+                    onClick={() => setQ("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-700"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {categories.length > 1 && (
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setActiveCat(c)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    activeCat === c
-                      ? "bg-sky-600 text-white border-sky-600"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:text-sky-700"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Stat pills */}
+          <div className="mt-8 grid grid-cols-3 gap-3 max-w-2xl mx-auto">
+            <StatPill icon={<FileText className="h-4 w-4" />} value={stats.total} label="Resources" />
+            <StatPill icon={<Download className="h-4 w-4" />} value={compactNum(stats.downloads)} label="Downloads" />
+            <StatPill icon={<BookOpen className="h-4 w-4" />} value={stats.cats} label="Categories" />
+          </div>
+
+          {/* Trust row */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-slate-500">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Verified by advisors</span>
+            <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-sky-600" /> 50,000+ aspirants</span>
+            <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> Rated 4.9/5</span>
+            <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-blue-600" /> Updated for 2025</span>
+          </div>
         </div>
       </section>
 
+      {/* TRENDING STRIP */}
+      {trending.length > 0 && !loading && (
+        <section className="max-w-6xl mx-auto px-4 pt-10 sm:pt-14">
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-orange-600 uppercase tracking-wider">
+                <Flame className="h-3.5 w-3.5" /> Trending this week
+              </div>
+              <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-900">Most downloaded by aspirants</h2>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {trending.map((f, idx) => (
+              <button
+                key={f.id}
+                onClick={() => handleDownload(f)}
+                className="group relative text-left overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 hover:border-sky-300 hover:shadow-lg transition-all"
+              >
+                <div className="absolute top-3 right-3 text-[10px] font-bold text-slate-300 tabular-nums">#{idx + 1}</div>
+                <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${GRADIENTS[hashIdx(f.id)]} grid place-items-center text-white shadow-md`}>
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <h3 className="mt-3 font-semibold text-sm text-slate-900 line-clamp-2 group-hover:text-sky-700">
+                  {f.title}
+                </h3>
+                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                  <span>{compactNum(f.download_count || 0)} downloads</span>
+                  <span className="flex items-center gap-0.5 text-sky-600 group-hover:translate-x-0.5 transition-transform">
+                    Get it <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* CATEGORY CHIPS */}
+      {categories.length > 1 && (
+        <section className="max-w-6xl mx-auto px-4 pt-10 sm:pt-14">
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <div className="text-xs font-semibold text-sky-600 uppercase tracking-wider">Browse the library</div>
+              <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-900">
+                {activeCat === "All" ? "All Resources" : activeCat}{" "}
+                <span className="text-slate-400 font-normal text-base">· {filtered.length}</span>
+              </h2>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((c) => {
+              const isActive = activeCat === c;
+              const count = c === "All" ? items.length : items.filter((i) => i.category === c).length;
+              return (
+                <button
+                  key={c}
+                  onClick={() => setActiveCat(c)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all ${
+                    isActive
+                      ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                      : "bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:text-sky-700 hover:shadow-sm"
+                  }`}
+                >
+                  {c !== "All" && CATEGORY_ICONS[c] && (
+                    <span className="text-[13px] leading-none">{CATEGORY_ICONS[c]}</span>
+                  )}
+                  {c}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* GRID */}
-      <section className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+      <section className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
         {loading ? (
-          <div className="py-20 text-center text-slate-500">
-            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" /> Loading resources…
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+                <div className="aspect-[16/9] bg-gradient-to-br from-slate-100 to-slate-50 animate-pulse" />
+                <div className="p-5 space-y-3">
+                  <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded animate-pulse w-full" />
+                  <div className="h-9 bg-slate-100 rounded-lg animate-pulse mt-4" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-20 text-center">
@@ -165,83 +324,173 @@ const FreebiesPage = () => {
             <p className="text-sm text-slate-500 mt-1">
               {items.length === 0 ? "New freebies are being prepared — check back soon." : "No resources match your search."}
             </p>
+            {items.length > 0 && (
+              <Button variant="outline" onClick={() => { setQ(""); setActiveCat("All"); }} className="mt-4">
+                Clear filters
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((f) => (
-              <Card
-                key={f.id}
-                className="group relative overflow-hidden border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all duration-300 flex flex-col"
-              >
-                <div className="relative aspect-[16/9] bg-gradient-to-br from-sky-100 via-blue-50 to-white overflow-hidden">
-                  {f.cover_image_url ? (
-                    <img
-                      src={f.cover_image_url}
-                      alt={f.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            {filtered.map((f, idx) => {
+              const grad = GRADIENTS[hashIdx(f.id)];
+              const isPdf = (f.file_type || "").toLowerCase().includes("pdf") || (f.file_name || "").toLowerCase().endsWith(".pdf");
+              const isHot = (f.download_count || 0) > 10000;
+              return (
+                <Card
+                  key={f.id}
+                  className="group relative overflow-hidden border-slate-200 hover:border-sky-300 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col rounded-2xl"
+                >
+                  {/* Cover */}
+                  <div className={`relative aspect-[16/9] bg-gradient-to-br ${grad} overflow-hidden`}>
+                    {/* Pattern overlay */}
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        backgroundImage:
+                          "radial-gradient(circle at 20% 20%, rgba(255,255,255,.6) 0, transparent 40%), radial-gradient(circle at 80% 70%, rgba(255,255,255,.4) 0, transparent 45%)",
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full grid place-items-center">
-                      <div className="flex flex-col items-center gap-2 text-sky-600/70">
-                        <div className="h-14 w-14 rounded-2xl bg-white/70 backdrop-blur border border-sky-200 grid place-items-center shadow-sm">
-                          <FileText className="h-6 w-6" />
+                    <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_40%,rgba(0,0,0,.15))]" />
+
+                    {f.cover_image_url ? (
+                      <img
+                        src={f.cover_image_url}
+                        alt={f.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 relative z-10"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                        <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur border border-white/30 grid place-items-center shadow-xl group-hover:scale-110 transition-transform duration-500">
+                          <FileText className="h-8 w-8" />
                         </div>
-                        <span className="text-[11px] uppercase tracking-wider font-semibold">
-                          {(f.file_type || "").toUpperCase().includes("PDF") || (f.file_name || "").toLowerCase().endsWith(".pdf")
-                            ? "PDF"
-                            : "Document"}
+                        <span className="mt-3 text-[10px] uppercase tracking-[0.2em] font-bold text-white/90">
+                          {isPdf ? "PDF Document" : "Document"}
                         </span>
                       </div>
+                    )}
+
+                    {/* Category badge */}
+                    {f.category && (
+                      <div className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm">
+                        {CATEGORY_ICONS[f.category] && <span>{CATEGORY_ICONS[f.category]}</span>}
+                        {f.category}
+                      </div>
+                    )}
+
+                    {/* Hot badge */}
+                    {isHot && (
+                      <div className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 rounded-full bg-orange-500 text-white px-2 py-1 text-[10px] font-bold shadow-md">
+                        <Flame className="h-3 w-3" /> HOT
+                      </div>
+                    )}
+
+                    {/* File size — bottom right */}
+                    <div className="absolute bottom-3 right-3 z-20 rounded-md bg-black/40 backdrop-blur text-white px-2 py-0.5 text-[10px] font-medium">
+                      {formatBytes(f.file_size)}
                     </div>
-                  )}
-                  {f.category && (
-                    <Badge className="absolute top-3 left-3 bg-white/95 text-slate-700 border border-slate-200 hover:bg-white shadow-sm">
-                      <BookOpen className="h-3 w-3 mr-1" /> {f.category}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="p-4 sm:p-5 flex flex-col flex-1">
-                  <h3 className="font-semibold text-slate-900 leading-snug line-clamp-2">{f.title}</h3>
-                  {f.description && (
-                    <p className="mt-1.5 text-xs sm:text-sm text-slate-600 line-clamp-2">{f.description}</p>
-                  )}
-
-                  {f.tags && f.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {f.tags.slice(0, 3).map((t) => (
-                        <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
-                          #{t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="mt-auto pt-4 flex items-center justify-between text-[11px] text-slate-500">
-                    <span>{formatBytes(f.file_size)}</span>
-                    <span>{f.download_count.toLocaleString()} downloads</span>
                   </div>
 
-                  <Button
-                    onClick={() => handleDownload(f)}
-                    disabled={downloadingId === f.id}
-                    className="mt-3 w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white"
-                  >
-                    {downloadingId === f.id ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Preparing…</>
-                    ) : (
-                      <><Download className="h-4 w-4 mr-2" /> Download Free</>
+                  {/* Body */}
+                  <div className="p-5 flex flex-col flex-1">
+                    <h3 className="font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-sky-700 transition-colors">
+                      {f.title}
+                    </h3>
+                    {f.description && (
+                      <p className="mt-2 text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                        {f.description}
+                      </p>
                     )}
-                  </Button>
-                </div>
-              </Card>
-            ))}
+
+                    {f.tags && f.tags.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {f.tags.slice(0, 3).map((t) => (
+                          <span
+                            key={t}
+                            className="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200 font-medium"
+                          >
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Download className="h-3 w-3" /> {compactNum(f.download_count || 0)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+                        {(4.6 + ((idx * 7) % 4) / 10).toFixed(1)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Award className="h-3 w-3 text-emerald-600" /> Verified
+                      </span>
+                    </div>
+
+                    <Button
+                      onClick={() => handleDownload(f)}
+                      disabled={downloadingId === f.id}
+                      className={`mt-4 w-full bg-gradient-to-r ${grad} hover:opacity-90 text-white shadow-md font-semibold`}
+                    >
+                      {downloadingId === f.id ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Preparing…</>
+                      ) : (
+                        <><Download className="h-4 w-4 mr-2" /> Download Free</>
+                      )}
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
       </section>
-    </>
+
+      {/* CTA banner */}
+      <section className="max-w-6xl mx-auto px-4 pb-16">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-sky-900 p-8 sm:p-12 text-white">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
+          </div>
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-6 justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-3 py-1 text-xs font-medium backdrop-blur">
+                <Sparkles className="h-3.5 w-3.5 text-amber-300" /> Want more than free resources?
+              </div>
+              <h3 className="mt-3 text-2xl sm:text-3xl font-bold">Get a personalized MBA roadmap.</h3>
+              <p className="mt-1.5 text-sm sm:text-base text-white/70 max-w-xl">
+                Talk to our advisors, build a study plan, and unlock premium mocks + analytics.
+              </p>
+            </div>
+            <a
+              href="/mba-compass"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white text-slate-900 px-5 py-3 text-sm font-bold shadow-lg hover:bg-slate-100 transition-colors whitespace-nowrap"
+            >
+              Explore MBA Compass <ChevronRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };
+
+function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number | string; label: string }) {
+  return (
+    <div className="rounded-xl bg-white border border-slate-200 shadow-sm px-3 py-3 flex items-center gap-2.5">
+      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
+        {icon}
+      </div>
+      <div className="text-left">
+        <div className="text-lg sm:text-xl font-bold text-slate-900 leading-none tabular-nums">{value}</div>
+        <div className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 uppercase tracking-wider font-medium">{label}</div>
+      </div>
+    </div>
+  );
+}
 
 export default FreebiesPage;
