@@ -128,9 +128,15 @@ async function trySendFast2sms(phone: string, otp: string): Promise<ProviderResu
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const reqId = crypto.randomUUID().slice(0, 8);
+  const startedAt = new Date().toISOString();
+
   try {
     const { phone } = await req.json();
+    console.log(`[send-otp][${reqId}] incoming request`, { phone, startedAt, provider: "hspsms" });
+
     if (!phone || !/^\d{10}$/.test(phone)) {
+      console.warn(`[send-otp][${reqId}] invalid phone`, { phone });
       return new Response(JSON.stringify({ error: "Valid 10-digit phone number required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -147,7 +153,9 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .eq("phone", phone)
       .gte("created_at", tenMinAgo);
+    console.log(`[send-otp][${reqId}] rate-limit check`, { phone, count });
     if ((count ?? 0) >= 3) {
+      console.warn(`[send-otp][${reqId}] rate limited`, { phone, count });
       return new Response(JSON.stringify({ error: "Too many OTP requests. Please try after 10 minutes." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -163,41 +171,38 @@ Deno.serve(async (req) => {
       expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     });
     if (insertError) {
-      console.error("DB insert error:", insertError);
+      console.error(`[send-otp][${reqId}] DB insert error`, insertError);
       throw new Error("Failed to store OTP");
     }
+    console.log(`[send-otp][${reqId}] OTP stored in DB`, { phone, otp_last4: otp.slice(-4) });
 
-    // Try providers in order; return success only when one accepts the send.
-    const attempts: ProviderResult[] = [];
-    // HSPSMS only — per admin preference.
-    for (const fn of [trySendHspsms]) {
-      const res = await fn(phone, otp);
-      if (!res) continue; // provider not configured
-      attempts.push(res);
-      console.log(`[send-otp] provider=${res.provider} ok=${res.ok} detail=${res.detail}`);
-      if (res.ok) {
-        return new Response(JSON.stringify({ success: true, provider: res.provider }), {
-          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
+    // HSPSMS is the only provider — per admin preference.
+    const res = await trySendHspsms(phone, otp, reqId);
 
-    if (attempts.length === 0) {
-      console.error("[send-otp] No SMS provider configured");
-      return new Response(JSON.stringify({ error: "SMS provider not configured. Contact support." }), {
+    if (!res) {
+      console.error(`[send-otp][${reqId}] HSPSMS not configured`);
+      return new Response(JSON.stringify({ error: "HSPSMS credentials missing. Contact support." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.error("[send-otp] All providers failed:", attempts);
+    console.log(`[send-otp][${reqId}] final result`, { ok: res.ok, provider: res.provider, msgid: res.msgid, detail: res.detail });
+
+    if (res.ok) {
+      return new Response(JSON.stringify({ success: true, provider: "hspsms", msgid: res.msgid }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({
-      error: "Unable to send OTP right now. Please try again in a minute.",
-      attempts: attempts.map((a) => ({ provider: a.provider, ok: a.ok })),
+      error: "HSPSMS rejected the OTP send. Check edge function logs for details.",
+      provider_detail: res.detail,
     }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    console.error("send-otp error:", error);
+    console.error(`[send-otp][${reqId}] fatal`, error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Internal error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
