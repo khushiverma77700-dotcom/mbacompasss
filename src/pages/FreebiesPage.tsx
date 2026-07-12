@@ -362,7 +362,100 @@ const FreebiesPage = () => {
         </div>
       </section>
 
+      {/* FEATURED SLIDER */}
+      {featured.length > 0 && (
+        <section className="border-b border-slate-100 bg-gradient-to-br from-amber-50 via-white to-sky-50">
+          <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
+            <div className="flex items-end justify-between mb-4 sm:mb-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-[10px] sm:text-xs font-semibold">
+                  <Star className="h-3 w-3 fill-amber-500" /> Editor's picks
+                </div>
+                <h2 className="mt-2 text-xl sm:text-3xl font-bold text-slate-900 leading-tight">
+                  Featured freebies this week
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                  Hand-picked resources our advisors recommend right now.
+                </p>
+              </div>
+            </div>
+
+            <Carousel opts={{ align: "start", loop: featured.length > 1 }} className="w-full">
+              <CarouselContent className="-ml-3">
+                {featured.map((f, idx) => {
+                  const gradient = GRADIENTS[hashIdx(f.id)];
+                  const isDl = downloadingId === f.id;
+                  return (
+                    <CarouselItem key={f.id} className="pl-3 sm:basis-1/2 lg:basis-1/3">
+                      <Card className="overflow-hidden border-amber-200 shadow-md hover:shadow-lg transition-all h-full flex flex-col">
+                        <div className={`relative h-40 sm:h-48 bg-gradient-to-br ${gradient}`}>
+                          {f.cover_image_url ? (
+                            <img
+                              src={f.cover_image_url}
+                              alt={f.title}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-white/90">
+                              <FileText className="h-14 w-14" />
+                            </div>
+                          )}
+                          <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 text-amber-700 px-2 py-1 text-[10px] font-bold shadow">
+                            <Star className="h-3 w-3 fill-amber-500" /> Featured #{idx + 1}
+                          </div>
+                          {f.category && (
+                            <div className="absolute top-3 right-3 rounded-full bg-black/40 backdrop-blur text-white px-2 py-1 text-[10px] font-medium">
+                              {f.category}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4 flex-1 flex flex-col">
+                          <h3 className="font-bold text-slate-900 line-clamp-2 leading-snug">
+                            {f.title}
+                          </h3>
+                          {f.description && (
+                            <p className="mt-1 text-xs sm:text-sm text-slate-600 line-clamp-2">
+                              {f.description}
+                            </p>
+                          )}
+                          <div className="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+                            <span className="flex items-center gap-1"><Download className="h-3 w-3" /> {compactNum(f.download_count || 0)}</span>
+                            <span>·</span>
+                            <span>{formatBytes(f.file_size)}</span>
+                          </div>
+                          <Button
+                            onClick={() => handleDownload(f)}
+                            disabled={isDl}
+                            className="mt-3 w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-95 text-white"
+                          >
+                            {isDl ? (
+                              <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Preparing…</>
+                            ) : !user ? (
+                              <><Lock className="h-4 w-4 mr-1" /> Login to Download</>
+                            ) : (
+                              <><Download className="h-4 w-4 mr-1" /> Download Free</>
+                            )}
+                          </Button>
+                        </div>
+                      </Card>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+              {featured.length > 1 && (
+                <>
+                  <CarouselPrevious className="hidden sm:flex -left-4" />
+                  <CarouselNext className="hidden sm:flex -right-4" />
+                </>
+              )}
+            </Carousel>
+          </div>
+        </section>
+      )}
+
       {/* HOW IT WORKS — 3 steps */}
+
       <section className="border-b border-slate-100 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
