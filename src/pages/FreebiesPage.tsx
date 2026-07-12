@@ -234,49 +234,50 @@ const FreebiesPage = () => {
           />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 pt-14 pb-10 sm:pt-20 sm:pb-14 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3.5 py-1.5 text-xs font-semibold text-sky-700 shadow-sm">
-            <span className="relative flex h-2 w-2">
+        <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8 sm:pt-20 sm:pb-14 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 sm:px-3.5 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-sky-700 shadow-sm max-w-full">
+            <span className="relative flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
             </span>
-            100% Free · No email wall · Instant download
+            <span className="truncate">100% Free · No email wall · Instant download</span>
           </div>
 
-          <h1 className="mt-5 text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 leading-[1.05]">
+          <h1 className="mt-4 sm:mt-5 text-3xl sm:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
             MBA Prep{" "}
             <span className="relative inline-block">
               <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Freebies
               </span>
-              <Sparkles className="absolute -top-3 -right-6 h-5 w-5 text-amber-400" />
+              <Sparkles className="absolute -top-2 -right-4 sm:-top-3 sm:-right-6 h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
             </span>
             <br className="hidden sm:block" />
-            <span className="text-slate-700 text-2xl sm:text-3xl font-semibold block mt-2">
+            <span className="text-slate-700 text-lg sm:text-3xl font-semibold block mt-2">
               curated by 99%ilers, free for you.
             </span>
           </h1>
 
-          <p className="mt-4 max-w-2xl mx-auto text-sm sm:text-base text-slate-600 leading-relaxed">
+          <p className="mt-3 sm:mt-4 max-w-2xl mx-auto text-xs sm:text-base text-slate-600 leading-relaxed px-2">
             Formula sheets · Cheatsheets · Question banks · Interview kits — everything you need for CAT, XAT, NMAT, SNAP & IIFT in one place.
           </p>
 
+
           {/* Search */}
-          <div className="mt-8 max-w-xl mx-auto">
+          <div className="mt-6 sm:mt-8 max-w-xl mx-auto">
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-xl blur opacity-20 group-focus-within:opacity-40 transition" />
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                 <Input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search formula sheets, cheatsheets, PDFs…"
-                  className="pl-12 pr-4 h-14 bg-white border-slate-200 shadow-md rounded-xl text-sm sm:text-base focus-visible:ring-sky-500"
+                  placeholder="Search formula sheets, PDFs…"
+                  className="pl-10 sm:pl-12 pr-4 h-12 sm:h-14 bg-white border-slate-200 shadow-md rounded-xl text-sm sm:text-base focus-visible:ring-sky-500"
                 />
                 {q && (
                   <button
                     onClick={() => setQ("")}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-700"
+                    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-700"
                   >
                     Clear
                   </button>
@@ -284,6 +285,7 @@ const FreebiesPage = () => {
               </div>
             </div>
           </div>
+
 
           {/* Stat pills */}
           <div className="mt-8 grid grid-cols-3 gap-3 max-w-2xl mx-auto">
@@ -336,7 +338,7 @@ const FreebiesPage = () => {
                 <div className="flex items-center gap-2 text-xs font-semibold text-sky-600 uppercase tracking-wider">
                   <Sparkles className="h-3.5 w-3.5" /> Featured library
                 </div>
-                <h2 className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900">
+                <h2 className="mt-1 text-xl sm:text-3xl font-bold text-slate-900 leading-tight">
                   Hand-picked resources, moving in real time
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">Hover to pause · click any card to download instantly</p>
@@ -595,7 +597,8 @@ const FreebiesPage = () => {
             <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
               <Quote className="h-3.5 w-3.5" /> Loved by aspirants
             </div>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+            <h2 className="mt-3 text-xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+
               What CAT toppers say about our free material
             </h2>
             <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
@@ -656,7 +659,7 @@ const FreebiesPage = () => {
             <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
               <BookOpen className="h-3.5 w-3.5" /> Learn more
             </div>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+            <h2 className="mt-3 text-xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
               Free MBA Study Material for CAT, XAT, NMAT & SNAP 2025
             </h2>
             <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl mx-auto">
@@ -774,17 +777,18 @@ const FreebiesPage = () => {
 
 function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number | string; label: string }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 shadow-sm px-3 py-3 flex items-center gap-2.5">
-      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
+    <div className="rounded-xl bg-white border border-slate-200 shadow-sm px-2 py-2.5 sm:px-3 sm:py-3 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center sm:text-left">
+      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
         {icon}
       </div>
-      <div className="text-left">
-        <div className="text-lg sm:text-xl font-bold text-slate-900 leading-none tabular-nums">{value}</div>
-        <div className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 uppercase tracking-wider font-medium">{label}</div>
+      <div className="min-w-0">
+        <div className="text-base sm:text-xl font-bold text-slate-900 leading-none tabular-nums">{value}</div>
+        <div className="text-[9px] sm:text-[11px] text-slate-500 mt-0.5 uppercase tracking-wider font-medium">{label}</div>
       </div>
     </div>
   );
 }
+
 
 function SeoCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
