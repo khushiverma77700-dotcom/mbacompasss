@@ -199,8 +199,18 @@ const FreebiesPage = () => {
   );
 
   const handleDownload = async (f: Freebie) => {
+    if (!user) {
+      storePostAuthRedirect("/freebies");
+      toast({
+        title: "Login required",
+        description: "Sign in or create a free account to download this resource.",
+      });
+      navigate("/auth");
+      return;
+    }
     setDownloadingId(f.id);
     try {
+
       let url = f.file_url;
       if (!url.startsWith("http")) {
         const { data, error } = await supabase.storage
