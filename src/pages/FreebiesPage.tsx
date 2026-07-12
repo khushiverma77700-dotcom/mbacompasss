@@ -623,4 +623,104 @@ function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number
   );
 }
 
+function SeoCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 hover:border-sky-200 hover:shadow-sm transition-all">
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
+          {icon}
+        </div>
+        <div className="font-semibold text-slate-900 text-sm">{title}</div>
+      </div>
+      <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">{children}</p>
+    </div>
+  );
+}
+
+function MarqueeCard({
+  f,
+  onClick,
+  downloading,
+}: {
+  f: Freebie;
+  onClick: () => void;
+  downloading: boolean;
+}) {
+  const grad = GRADIENTS[hashIdx(f.id)];
+  const isPdf =
+    (f.file_type || "").toLowerCase().includes("pdf") ||
+    (f.file_name || "").toLowerCase().endsWith(".pdf");
+  return (
+    <button
+      onClick={onClick}
+      disabled={downloading}
+      className="group relative w-[260px] sm:w-[300px] shrink-0 text-left rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-sky-300 hover:shadow-xl transition-all"
+    >
+      <div className={`relative h-24 bg-gradient-to-br ${grad} overflow-hidden`}>
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 20%, rgba(255,255,255,.6) 0, transparent 45%), radial-gradient(circle at 80% 70%, rgba(255,255,255,.4) 0, transparent 45%)",
+          }}
+        />
+        <div className="absolute inset-0 flex items-center gap-3 px-4 text-white">
+          <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur border border-white/30 grid place-items-center shadow">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">
+            {isPdf ? "PDF" : "DOC"} · {formatBytes(f.file_size)}
+          </div>
+        </div>
+        {f.category && (
+          <div className="absolute top-2 right-2 rounded-full bg-white/95 text-slate-800 px-2 py-0.5 text-[10px] font-bold shadow-sm">
+            {f.category}
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-sm text-slate-900 line-clamp-2 group-hover:text-sky-700 min-h-[2.5rem]">
+          {f.title}
+        </h3>
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+          <span className="flex items-center gap-1">
+            <Download className="h-3 w-3" /> {compactNum(f.download_count || 0)}
+          </span>
+          <span className="flex items-center gap-1 text-sky-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+            {downloading ? "…" : "Get free"} <ChevronRight className="h-3.5 w-3.5" />
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: "Are these MBA prep resources really free?",
+    a: "Yes — every PDF on the Freebies page is 100% free. No signup wall, no email trap, no hidden charges. Click Download and the file lands on your device instantly.",
+  },
+  {
+    q: "Which exams are these resources useful for?",
+    a: "The library covers CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT and TISS. Quant, VARC, LRDI and DI content overlaps across exams; GK digests and interview kits are specifically tuned for XAT, IIFT, SNAP and IIM WAT-PI rounds.",
+  },
+  {
+    q: "How often are the freebies updated?",
+    a: "Formula sheets and strategy playbooks are refreshed once per exam cycle. GK and current-affairs digests are updated monthly. College comparison sheets are updated after every placement season.",
+  },
+  {
+    q: "Can I share these PDFs with my friends?",
+    a: "Absolutely — that's the point. Share the /freebies link with your study group, batchmates or on WhatsApp. We only ask that you don't rebrand or sell the material as your own.",
+  },
+  {
+    q: "Do you offer paid coaching or mocks as well?",
+    a: "Yes. Beyond free resources, MBA Compass runs AI-powered mock tests, a full college directory with reviews, and a personalized advisor roadmap. Check the top navigation for Mocks and MBA Compass.",
+  },
+  {
+    q: "How do I get notified when new freebies are added?",
+    a: "Bookmark /freebies and check the Trending section — it always shows what's been downloaded most this week. You can also sign up for our newsletter from the homepage.",
+  },
+];
+
 export default FreebiesPage;
