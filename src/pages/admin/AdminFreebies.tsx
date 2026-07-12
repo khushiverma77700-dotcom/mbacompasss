@@ -6,6 +6,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const CATEGORY_OPTIONS = [
+  "Quant",
+  "VARC",
+  "LRDI",
+  "GK / Current Affairs",
+  "CAT Prep",
+  "XAT Prep",
+  "NMAT Prep",
+  "SNAP Prep",
+  "IIFT Prep",
+  "CMAT Prep",
+  "MAT Prep",
+  "GD/PI/WAT",
+  "Interview Prep",
+  "Essay/SOP",
+  "Formula Sheets",
+  "Previous Year Papers",
+  "Mock Analysis",
+  "Study Plan",
+  "Other",
+];
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -228,7 +251,14 @@ const AdminFreebies = () => {
               </div>
               <div>
                 <Label>Category</Label>
-                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Quant, VARC, LRDI, GK…" />
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
