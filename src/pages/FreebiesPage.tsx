@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Helmet } from "react-helmet-async";
+
 import { Download, FileText, Search, Sparkles, Gift, Loader2, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
