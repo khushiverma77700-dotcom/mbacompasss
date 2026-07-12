@@ -2505,6 +2505,50 @@ export type Database = {
           },
         ]
       }
+      freebie_downloads: {
+        Row: {
+          created_at: string
+          email: string | null
+          freebie_id: string
+          id: string
+          name: string | null
+          phone: string | null
+          referrer: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          freebie_id: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          freebie_id?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freebie_downloads_freebie_id_fkey"
+            columns: ["freebie_id"]
+            isOneToOne: false
+            referencedRelation: "freebies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       freebies: {
         Row: {
           category: string | null
