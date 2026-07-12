@@ -67,7 +67,10 @@ const FreebiesPage = () => {
   const [q, setQ] = useState("");
   const [activeCat, setActiveCat] = useState<string>("All");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
 
   useEffect(() => {
     const TITLE =
