@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { storePostAuthRedirect } from "@/lib/authRedirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   Download, FileText, Search, Sparkles, Gift, Loader2, BookOpen,
   TrendingUp, Users, Star, ShieldCheck, Clock, Award, ChevronRight, Flame,
-  GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket,
+  GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket, Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
 
 type Freebie = {
   id: string;
@@ -63,7 +67,10 @@ const FreebiesPage = () => {
   const [q, setQ] = useState("");
   const [activeCat, setActiveCat] = useState<string>("All");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
 
   useEffect(() => {
     const TITLE =
@@ -192,8 +199,18 @@ const FreebiesPage = () => {
   );
 
   const handleDownload = async (f: Freebie) => {
+    if (!user) {
+      storePostAuthRedirect("/freebies");
+      toast({
+        title: "Login required",
+        description: "Sign in or create a free account to download this resource.",
+      });
+      navigate("/auth");
+      return;
+    }
     setDownloadingId(f.id);
     try {
+
       let url = f.file_url;
       if (!url.startsWith("http")) {
         const { data, error } = await supabase.storage
@@ -598,9 +615,12 @@ const FreebiesPage = () => {
                     >
                       {downloadingId === f.id ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Preparing…</>
+                      ) : !user ? (
+                        <><Lock className="h-4 w-4 mr-2" /> Login to Download</>
                       ) : (
                         <><Download className="h-4 w-4 mr-2" /> Download Free</>
                       )}
+
                     </Button>
                   </div>
                 </Card>
