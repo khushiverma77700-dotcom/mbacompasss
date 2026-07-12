@@ -207,6 +207,25 @@ const FreebiesPage = () => {
         .update({ download_count: (f.download_count || 0) + 1 })
         .eq("id", f.id)
         .then(() => {});
+
+      // Log download (fire-and-forget)
+      (async () => {
+        try {
+          const { data: auth } = await supabase.auth.getUser();
+          const u = auth?.user;
+          const meta: any = u?.user_metadata || {};
+          await (supabase as any).from("freebie_downloads").insert({
+            freebie_id: f.id,
+            user_id: u?.id ?? null,
+            name: meta.display_name || meta.full_name || meta.name || null,
+            email: u?.email || null,
+            phone: meta.phone || null,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+            referrer: typeof document !== "undefined" ? document.referrer || null : null,
+          });
+        } catch { /* silent */ }
+      })();
+
       // optimistic UI bump
       setItems((prev) => prev.map((p) => (p.id === f.id ? { ...p, download_count: (p.download_count || 0) + 1 } : p)));
       window.open(url, "_blank");
@@ -216,6 +235,7 @@ const FreebiesPage = () => {
       setDownloadingId(null);
     }
   };
+
 
   return (
     <div className="bg-white">
