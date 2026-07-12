@@ -416,30 +416,8 @@ export default function StudentLogin() {
               Mobile demo
             </Link>
           </div>
-        </div>
-      </div>
 
-
-
-          <div className="hidden sm:block mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-sky-100 grid place-items-center shrink-0">
-                <ShieldCheck className="h-4 w-4 text-sky-600" />
-              </div>
-              <div className="text-xs text-slate-600 leading-relaxed">
-                <span className="font-medium text-slate-800">Don't have an account?</span>{" "}
-                Student accounts are created automatically after course purchase.{" "}
-                <a
-                  href="https://mbacompass.in/courses"
-                  className="text-sky-600 font-medium hover:underline"
-                >
-                  Browse courses →
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-3 sm:mt-6 lg:mt-8 text-center text-[10px] sm:text-[11px] text-slate-400">
+          <p className="mt-4 sm:mt-6 lg:mt-8 text-center text-[10px] sm:text-[11px] text-slate-400">
             Protected by industry-standard encryption · MBA Compass © {new Date().getFullYear()}
           </p>
         </div>
