@@ -32,7 +32,7 @@ const CATEGORY_OPTIONS = [
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Upload, FileText, Loader2, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Upload, FileText, Loader2, ExternalLink, GripVertical, Star, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type Freebie = {
@@ -49,8 +49,13 @@ type Freebie = {
   download_count: number;
   is_published: boolean;
   sort_order: number;
+  is_featured: boolean;
+  featured_order: number;
   created_at: string;
 };
+
+const MAX_FEATURED = 3;
+
 
 const emptyForm = {
   title: "",
