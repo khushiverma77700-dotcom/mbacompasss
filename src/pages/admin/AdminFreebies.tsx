@@ -286,6 +286,7 @@ const AdminFreebies = () => {
 
             <div>
               <Label>Cover Image (optional)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Recommended: 800×450 px (16:9), JPG/PNG, under 500 KB</p>
               <div className="flex items-center gap-3 mt-1">
                 <Input
                   type="file"
