@@ -234,32 +234,33 @@ const FreebiesPage = () => {
           />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 pt-14 pb-10 sm:pt-20 sm:pb-14 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3.5 py-1.5 text-xs font-semibold text-sky-700 shadow-sm">
-            <span className="relative flex h-2 w-2">
+        <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8 sm:pt-20 sm:pb-14 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 sm:px-3.5 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-sky-700 shadow-sm max-w-full">
+            <span className="relative flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
             </span>
-            100% Free · No email wall · Instant download
+            <span className="truncate">100% Free · No email wall · Instant download</span>
           </div>
 
-          <h1 className="mt-5 text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 leading-[1.05]">
+          <h1 className="mt-4 sm:mt-5 text-3xl sm:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
             MBA Prep{" "}
             <span className="relative inline-block">
               <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Freebies
               </span>
-              <Sparkles className="absolute -top-3 -right-6 h-5 w-5 text-amber-400" />
+              <Sparkles className="absolute -top-2 -right-4 sm:-top-3 sm:-right-6 h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
             </span>
             <br className="hidden sm:block" />
-            <span className="text-slate-700 text-2xl sm:text-3xl font-semibold block mt-2">
+            <span className="text-slate-700 text-lg sm:text-3xl font-semibold block mt-2">
               curated by 99%ilers, free for you.
             </span>
           </h1>
 
-          <p className="mt-4 max-w-2xl mx-auto text-sm sm:text-base text-slate-600 leading-relaxed">
+          <p className="mt-3 sm:mt-4 max-w-2xl mx-auto text-xs sm:text-base text-slate-600 leading-relaxed px-2">
             Formula sheets · Cheatsheets · Question banks · Interview kits — everything you need for CAT, XAT, NMAT, SNAP & IIFT in one place.
           </p>
+
 
           {/* Search */}
           <div className="mt-8 max-w-xl mx-auto">
