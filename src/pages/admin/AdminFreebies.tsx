@@ -225,6 +225,83 @@ const AdminFreebies = () => {
     load();
   };
 
+  // ============ FEATURED (drag & drop, max 3) ============
+  const featured = rows
+    .filter((r) => r.is_featured)
+    .sort((a, b) => (a.featured_order || 0) - (b.featured_order || 0));
+  const nonFeatured = rows.filter((r) => !r.is_featured);
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  const persistFeatured = async (ordered: string[], removedIds: string[] = []) => {
+    // Optimistic update
+    setRows((prev) =>
+      prev.map((r) => {
+        if (removedIds.includes(r.id)) return { ...r, is_featured: false, featured_order: 0 };
+        const idx = ordered.indexOf(r.id);
+        if (idx >= 0) return { ...r, is_featured: true, featured_order: idx };
+        return r;
+      }),
+    );
+    try {
+      const updates: Promise<any>[] = [];
+      ordered.forEach((id, idx) => {
+        updates.push(
+          supabase.from("freebies").update({ is_featured: true, featured_order: idx }).eq("id", id),
+        );
+      });
+      removedIds.forEach((id) => {
+        updates.push(
+          supabase.from("freebies").update({ is_featured: false, featured_order: 0 }).eq("id", id),
+        );
+      });
+      const results = await Promise.all(updates);
+      const err = results.find((r) => r.error)?.error;
+      if (err) throw err;
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+      load();
+    }
+  };
+
+  const addToFeatured = (id: string) => {
+    if (featured.some((f) => f.id === id)) return;
+    if (featured.length >= MAX_FEATURED) {
+      toast({ title: `Max ${MAX_FEATURED} featured`, description: "Remove one first.", variant: "destructive" });
+      return;
+    }
+    persistFeatured([...featured.map((f) => f.id), id]);
+  };
+
+  const removeFromFeatured = (id: string) => {
+    persistFeatured(featured.filter((f) => f.id !== id).map((f) => f.id), [id]);
+  };
+
+  const onDropOnFeatured = (e: React.DragEvent, targetIndex: number | null) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("freebie-id");
+    if (!id) return;
+    const currentIds = featured.map((f) => f.id);
+    const fromIdx = currentIds.indexOf(id);
+    let nextIds: string[];
+    if (fromIdx >= 0) {
+      // reorder within featured
+      nextIds = currentIds.filter((x) => x !== id);
+      const insertAt = targetIndex === null ? nextIds.length : Math.min(targetIndex, nextIds.length);
+      nextIds.splice(insertAt, 0, id);
+    } else {
+      if (currentIds.length >= MAX_FEATURED) {
+        toast({ title: `Max ${MAX_FEATURED} featured`, variant: "destructive" });
+        return;
+      }
+      nextIds = [...currentIds];
+      const insertAt = targetIndex === null ? nextIds.length : Math.min(targetIndex, nextIds.length);
+      nextIds.splice(insertAt, 0, id);
+    }
+    persistFeatured(nextIds);
+    setDragId(null);
+  };
+
+
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
