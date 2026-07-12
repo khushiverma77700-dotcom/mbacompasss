@@ -263,21 +263,21 @@ const FreebiesPage = () => {
 
 
           {/* Search */}
-          <div className="mt-8 max-w-xl mx-auto">
+          <div className="mt-6 sm:mt-8 max-w-xl mx-auto">
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-xl blur opacity-20 group-focus-within:opacity-40 transition" />
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                 <Input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search formula sheets, cheatsheets, PDFs…"
-                  className="pl-12 pr-4 h-14 bg-white border-slate-200 shadow-md rounded-xl text-sm sm:text-base focus-visible:ring-sky-500"
+                  placeholder="Search formula sheets, PDFs…"
+                  className="pl-10 sm:pl-12 pr-4 h-12 sm:h-14 bg-white border-slate-200 shadow-md rounded-xl text-sm sm:text-base focus-visible:ring-sky-500"
                 />
                 {q && (
                   <button
                     onClick={() => setQ("")}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-700"
+                    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-700"
                   >
                     Clear
                   </button>
@@ -285,6 +285,7 @@ const FreebiesPage = () => {
               </div>
             </div>
           </div>
+
 
           {/* Stat pills */}
           <div className="mt-8 grid grid-cols-3 gap-3 max-w-2xl mx-auto">
