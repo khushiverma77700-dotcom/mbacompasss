@@ -14,6 +14,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
 type Freebie = {
   id: string;
   title: string;
@@ -26,8 +34,11 @@ type Freebie = {
   cover_image_url: string | null;
   tags: string[] | null;
   download_count: number;
+  is_featured?: boolean;
+  featured_order?: number;
   created_at?: string;
 };
+
 
 function formatBytes(bytes: number | null | undefined) {
   if (!bytes) return "—";
