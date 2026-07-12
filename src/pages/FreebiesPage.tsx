@@ -225,6 +225,43 @@ const FreebiesPage = () => {
         </div>
       </section>
 
+      {/* FEATURED — AUTO-SCROLLING MARQUEES */}
+      {items.length > 0 && !loading && (
+        <section className="py-10 sm:py-14 bg-white border-b border-slate-100">
+          <div className="max-w-6xl mx-auto px-4 mb-6">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-sky-600 uppercase tracking-wider">
+                  <Sparkles className="h-3.5 w-3.5" /> Featured library
+                </div>
+                <h2 className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900">
+                  Hand-picked resources, moving in real time
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">Hover to pause · click any card to download instantly</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 1 — LTR */}
+          <div className="freebies-marquee-track relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+            <div className="freebies-marquee flex gap-4 w-max py-2">
+              {[...items, ...items].map((f, idx) => (
+                <MarqueeCard key={`m1-${f.id}-${idx}`} f={f} onClick={() => handleDownload(f)} downloading={downloadingId === f.id} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 — RTL, offset */}
+          <div className="freebies-marquee-track relative overflow-hidden mt-4 [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+            <div className="freebies-marquee-reverse flex gap-4 w-max py-2">
+              {[...items.slice().reverse(), ...items.slice().reverse()].map((f, idx) => (
+                <MarqueeCard key={`m2-${f.id}-${idx}`} f={f} onClick={() => handleDownload(f)} downloading={downloadingId === f.id} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* TRENDING STRIP */}
       {trending.length > 0 && !loading && (
         <section className="max-w-6xl mx-auto px-4 pt-10 sm:pt-14">
