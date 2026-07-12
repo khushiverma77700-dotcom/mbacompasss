@@ -2556,11 +2556,13 @@ export type Database = {
           created_at: string
           description: string | null
           download_count: number
+          featured_order: number
           file_name: string | null
           file_size: number | null
           file_type: string | null
           file_url: string
           id: string
+          is_featured: boolean
           is_published: boolean
           sort_order: number
           tags: string[] | null
@@ -2573,11 +2575,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           download_count?: number
+          featured_order?: number
           file_name?: string | null
           file_size?: number | null
           file_type?: string | null
           file_url: string
           id?: string
+          is_featured?: boolean
           is_published?: boolean
           sort_order?: number
           tags?: string[] | null
@@ -2590,11 +2594,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           download_count?: number
+          featured_order?: number
           file_name?: string | null
           file_size?: number | null
           file_type?: string | null
           file_url?: string
           id?: string
+          is_featured?: boolean
           is_published?: boolean
           sort_order?: number
           tags?: string[] | null

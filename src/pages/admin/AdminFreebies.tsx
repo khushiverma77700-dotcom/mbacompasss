@@ -32,7 +32,7 @@ const CATEGORY_OPTIONS = [
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Upload, FileText, Loader2, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Upload, FileText, Loader2, ExternalLink, GripVertical, Star, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type Freebie = {
@@ -49,8 +49,13 @@ type Freebie = {
   download_count: number;
   is_published: boolean;
   sort_order: number;
+  is_featured: boolean;
+  featured_order: number;
   created_at: string;
 };
+
+const MAX_FEATURED = 3;
+
 
 const emptyForm = {
   title: "",
@@ -220,6 +225,88 @@ const AdminFreebies = () => {
     load();
   };
 
+  // ============ FEATURED (drag & drop, max 3) ============
+  const featured = rows
+    .filter((r) => r.is_featured)
+    .sort((a, b) => (a.featured_order || 0) - (b.featured_order || 0));
+  const nonFeatured = rows.filter((r) => !r.is_featured);
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  const persistFeatured = async (ordered: string[], removedIds: string[] = []) => {
+    // Optimistic update
+    setRows((prev) =>
+      prev.map((r) => {
+        if (removedIds.includes(r.id)) return { ...r, is_featured: false, featured_order: 0 };
+        const idx = ordered.indexOf(r.id);
+        if (idx >= 0) return { ...r, is_featured: true, featured_order: idx };
+        return r;
+      }),
+    );
+    try {
+      const updates: PromiseLike<any>[] = [];
+      ordered.forEach((id, idx) => {
+        updates.push(
+          Promise.resolve(
+            supabase.from("freebies").update({ is_featured: true, featured_order: idx }).eq("id", id),
+          ),
+        );
+      });
+      removedIds.forEach((id) => {
+        updates.push(
+          Promise.resolve(
+            supabase.from("freebies").update({ is_featured: false, featured_order: 0 }).eq("id", id),
+          ),
+        );
+      });
+
+      const results = await Promise.all(updates);
+      const err = results.find((r) => r.error)?.error;
+      if (err) throw err;
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+      load();
+    }
+  };
+
+  const addToFeatured = (id: string) => {
+    if (featured.some((f) => f.id === id)) return;
+    if (featured.length >= MAX_FEATURED) {
+      toast({ title: `Max ${MAX_FEATURED} featured`, description: "Remove one first.", variant: "destructive" });
+      return;
+    }
+    persistFeatured([...featured.map((f) => f.id), id]);
+  };
+
+  const removeFromFeatured = (id: string) => {
+    persistFeatured(featured.filter((f) => f.id !== id).map((f) => f.id), [id]);
+  };
+
+  const onDropOnFeatured = (e: React.DragEvent, targetIndex: number | null) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("freebie-id");
+    if (!id) return;
+    const currentIds = featured.map((f) => f.id);
+    const fromIdx = currentIds.indexOf(id);
+    let nextIds: string[];
+    if (fromIdx >= 0) {
+      // reorder within featured
+      nextIds = currentIds.filter((x) => x !== id);
+      const insertAt = targetIndex === null ? nextIds.length : Math.min(targetIndex, nextIds.length);
+      nextIds.splice(insertAt, 0, id);
+    } else {
+      if (currentIds.length >= MAX_FEATURED) {
+        toast({ title: `Max ${MAX_FEATURED} featured`, variant: "destructive" });
+        return;
+      }
+      nextIds = [...currentIds];
+      const insertAt = targetIndex === null ? nextIds.length : Math.min(targetIndex, nextIds.length);
+      nextIds.splice(insertAt, 0, id);
+    }
+    persistFeatured(nextIds);
+    setDragId(null);
+  };
+
+
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
@@ -326,10 +413,70 @@ const AdminFreebies = () => {
         </Card>
       )}
 
+      {/* Featured (max 3, drag & drop) */}
+      <Card className="border-amber-200 bg-amber-50/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-amber-500 fill-amber-400" />
+            Featured on /freebies (top slider)
+            <span className="text-xs font-normal text-muted-foreground ml-1">
+              {featured.length}/{MAX_FEATURED} · drag rows below into this box, drag cards to reorder
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => onDropOnFeatured(e, null)}
+            className="min-h-[100px] rounded-lg border-2 border-dashed border-amber-300 bg-white p-3"
+          >
+            {featured.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-6">
+                No featured freebies yet. Drag any row from the list below into this box (max {MAX_FEATURED}).
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {featured.map((f, idx) => (
+                  <div
+                    key={f.id}
+                    draggable
+                    onDragStart={(e) => { e.dataTransfer.setData("freebie-id", f.id); setDragId(f.id); }}
+                    onDragEnd={() => setDragId(null)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => { e.stopPropagation(); onDropOnFeatured(e, idx); }}
+                    className={`relative rounded-lg border bg-white p-3 shadow-sm cursor-move transition ${dragId === f.id ? "opacity-40" : "hover:shadow-md"}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <GripVertical className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-700">
+                          <span className="rounded bg-amber-100 px-1.5 py-0.5">#{idx + 1}</span>
+                          {f.category && <span className="text-slate-500">{f.category}</span>}
+                        </div>
+                        <div className="mt-1 text-sm font-medium truncate">{f.title}</div>
+                        <div className="text-xs text-muted-foreground truncate">{f.file_name}</div>
+                      </div>
+                      <button
+                        onClick={() => removeFromFeatured(f.id)}
+                        className="text-slate-400 hover:text-destructive shrink-0"
+                        aria-label="Remove from featured"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>All Freebies ({rows.length})</CardTitle>
         </CardHeader>
+
         <CardContent>
           {loading ? (
             <div className="py-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline mr-2" /> Loading…</div>
@@ -352,8 +499,20 @@ const AdminFreebies = () => {
               </TableHeader>
               <TableBody>
                 {rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.title}</TableCell>
+                  <TableRow
+                    key={r.id}
+                    draggable
+                    onDragStart={(e) => { e.dataTransfer.setData("freebie-id", r.id); setDragId(r.id); }}
+                    onDragEnd={() => setDragId(null)}
+                    className={`cursor-move ${dragId === r.id ? "opacity-40" : ""}`}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-3.5 w-3.5 text-slate-300" />
+                        {r.is_featured && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400" />}
+                        <span>{r.title}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{r.category || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="text-xs">
                       {r.file_name || r.file_url}
@@ -367,6 +526,14 @@ const AdminFreebies = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title={r.is_featured ? "Remove from featured" : "Add to featured"}
+                          onClick={() => r.is_featured ? removeFromFeatured(r.id) : addToFeatured(r.id)}
+                        >
+                          <Star className={`h-4 w-4 ${r.is_featured ? "text-amber-500 fill-amber-400" : "text-slate-400"}`} />
+                        </Button>
                         <a href="/freebies" target="_blank" rel="noreferrer">
                           <Button size="icon" variant="ghost"><ExternalLink className="h-4 w-4" /></Button>
                         </a>
@@ -376,6 +543,7 @@ const AdminFreebies = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+
               </TableBody>
             </Table>
           )}
