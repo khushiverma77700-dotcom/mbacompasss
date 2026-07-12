@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { storePostAuthRedirect } from "@/lib/authRedirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   Download, FileText, Search, Sparkles, Gift, Loader2, BookOpen,
   TrendingUp, Users, Star, ShieldCheck, Clock, Award, ChevronRight, Flame,
-  GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket,
+  GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket, Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
 
 type Freebie = {
   id: string;
