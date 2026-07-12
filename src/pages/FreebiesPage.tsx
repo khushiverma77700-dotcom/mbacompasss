@@ -776,17 +776,18 @@ const FreebiesPage = () => {
 
 function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number | string; label: string }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 shadow-sm px-3 py-3 flex items-center gap-2.5">
-      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
+    <div className="rounded-xl bg-white border border-slate-200 shadow-sm px-2 py-2.5 sm:px-3 sm:py-3 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center sm:text-left">
+      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
         {icon}
       </div>
-      <div className="text-left">
-        <div className="text-lg sm:text-xl font-bold text-slate-900 leading-none tabular-nums">{value}</div>
-        <div className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 uppercase tracking-wider font-medium">{label}</div>
+      <div className="min-w-0">
+        <div className="text-base sm:text-xl font-bold text-slate-900 leading-none tabular-nums">{value}</div>
+        <div className="text-[9px] sm:text-[11px] text-slate-500 mt-0.5 uppercase tracking-wider font-medium">{label}</div>
       </div>
     </div>
   );
 }
+
 
 function SeoCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
