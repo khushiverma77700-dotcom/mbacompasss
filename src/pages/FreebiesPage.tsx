@@ -486,6 +486,99 @@ const FreebiesPage = () => {
         )}
       </section>
 
+      {/* SEO CONTENT + FAQ */}
+      <section className="bg-gradient-to-b from-white to-slate-50 border-t border-slate-100">
+        <div className="max-w-4xl mx-auto px-4 py-14 sm:py-20">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+              <BookOpen className="h-3.5 w-3.5" /> Learn more
+            </div>
+            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+              Free MBA Study Material for CAT, XAT, NMAT & SNAP 2025
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl mx-auto">
+              MBA Compass Freebies is India's most trusted library of free MBA preparation resources — from Quant formula sheets and VARC cheatsheets to LRDI question banks, GK digests, WAT-PI answer decks and interview kits. Every document is curated by 99+ percentilers and IIM alumni, updated for the 2025 exam cycle, and delivered as a clean printable PDF you can start using in seconds.
+            </p>
+          </div>
+
+          <article className="prose prose-slate prose-sm sm:prose-base max-w-none">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-8">Why aspirants trust MBA Compass Freebies</h3>
+            <p className="text-slate-700 leading-relaxed">
+              Cracking CAT, XAT, NMAT, SNAP or IIFT isn't about the number of books you buy — it's about drilling the right concepts with the right material. Our free MBA prep resources are built from the actual patterns of the last 10 years of MBA entrance exams, focus on high-yield topics that repeatedly appear in the paper, and include shortcuts, tricks and frameworks that 99+ percentilers use in the exam hall.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6 not-prose">
+              <SeoCard icon={<ShieldCheck className="h-4 w-4" />} title="Verified by IIM Alumni">
+                Every resource is reviewed by our team of IIM/XLRI/ISB graduates before it goes live.
+              </SeoCard>
+              <SeoCard icon={<Clock className="h-4 w-4" />} title="Updated for CAT 2025">
+                Formulas, GK digests and question banks are refreshed monthly for the current cycle.
+              </SeoCard>
+              <SeoCard icon={<Download className="h-4 w-4" />} title="One-Click Downloads">
+                No signup wall, no email trap — click download and the PDF is on your device in seconds.
+              </SeoCard>
+              <SeoCard icon={<Award className="h-4 w-4" />} title="Exam-Focused Content">
+                Only high-yield concepts, past-year patterns and proven frameworks — no filler pages.
+              </SeoCard>
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">What you'll find in this free library</h3>
+            <ul className="text-slate-700 leading-relaxed space-y-1.5">
+              <li><strong>Quant Formula Sheets</strong> — Complete CAT Quant formulas covering arithmetic, algebra, geometry, mensuration and modern math.</li>
+              <li><strong>VARC Cheatsheets</strong> — Reading comprehension strategies, para-jumble decoding, tone/inference frameworks and 1000-word vocabulary builders.</li>
+              <li><strong>LRDI Question Banks</strong> — Curated puzzle sets by pattern: arrangements, distributions, games, Venn diagrams and DI caselets.</li>
+              <li><strong>GK &amp; Current Affairs</strong> — Monthly digests tuned for XAT, IIFT, SNAP and TISS — business, awards, sports, budget, appointments.</li>
+              <li><strong>WAT-PI &amp; Interview Kits</strong> — 100 most-asked WAT/PI questions with STAR-format sample answers used by IIM converts.</li>
+              <li><strong>Strategy Playbooks</strong> — Sectional attack plans, order-of-attempt logic, skip rules and mock-analysis templates.</li>
+              <li><strong>College Comparison Sheets</strong> — Side-by-side ROI, fees, placements and batch profile for top 25 B-Schools of India.</li>
+            </ul>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">How to use these free MBA resources effectively</h3>
+            <p className="text-slate-700 leading-relaxed">
+              Download the formula sheet on day 1 of your prep and paste it above your study desk — you'll internalize 80% of Quant formulas passively within two weeks. Pair the VARC cheatsheet with daily reading (business newspapers, long-form editorials) and revisit it every Sunday. Solve one LRDI set every alternate day from our question banks, and use the WAT-PI answer bank starting 4 weeks before your interview cycle. Every resource is designed to slot into a serious CAT 2025 preparation plan — no fluff, no wasted pages.
+            </p>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">Frequently Asked Questions</h3>
+            <div className="space-y-3 mt-4 not-prose">
+              {FAQS.map((faq, i) => (
+                <details
+                  key={i}
+                  className="group rounded-xl border border-slate-200 bg-white p-4 open:shadow-md transition-shadow"
+                >
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 font-semibold text-slate-900 text-sm sm:text-base">
+                    {faq.q}
+                    <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 transition-transform group-open:rotate-90" />
+                  </summary>
+                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+                </details>
+              ))}
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">Explore more on MBA Compass</h3>
+            <p className="text-slate-700 leading-relaxed">
+              Beyond free resources, MBA Compass runs India's most advanced <a href="/mocks" className="text-sky-600 font-semibold hover:underline">AI-powered mock test platform</a>, a detailed <a href="/colleges" className="text-sky-600 font-semibold hover:underline">MBA college directory</a>, curated <a href="/coaching" className="text-sky-600 font-semibold hover:underline">coaching institute reviews</a>, and a personalized <a href="/mba-compass" className="text-sky-600 font-semibold hover:underline">MBA advisor roadmap</a> — everything a serious aspirant needs from CAT registration to final admit.
+            </p>
+          </article>
+
+          {/* FAQ JSON-LD */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: FAQS.map((f) => ({
+                  "@type": "Question",
+                  name: f.q,
+                  acceptedAnswer: { "@type": "Answer", text: f.a },
+                })),
+              }),
+            }}
+          />
+        </div>
+      </section>
+
+
       {/* CTA banner */}
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-sky-900 p-8 sm:p-12 text-white">
