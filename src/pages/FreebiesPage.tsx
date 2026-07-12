@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import {
   Download, FileText, Search, Sparkles, Gift, Loader2, BookOpen,
   TrendingUp, Users, Star, ShieldCheck, Clock, Award, ChevronRight, Flame,
+  GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
