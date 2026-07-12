@@ -413,10 +413,70 @@ const AdminFreebies = () => {
         </Card>
       )}
 
+      {/* Featured (max 3, drag & drop) */}
+      <Card className="border-amber-200 bg-amber-50/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-amber-500 fill-amber-400" />
+            Featured on /freebies (top slider)
+            <span className="text-xs font-normal text-muted-foreground ml-1">
+              {featured.length}/{MAX_FEATURED} · drag rows below into this box, drag cards to reorder
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => onDropOnFeatured(e, null)}
+            className="min-h-[100px] rounded-lg border-2 border-dashed border-amber-300 bg-white p-3"
+          >
+            {featured.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-6">
+                No featured freebies yet. Drag any row from the list below into this box (max {MAX_FEATURED}).
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {featured.map((f, idx) => (
+                  <div
+                    key={f.id}
+                    draggable
+                    onDragStart={(e) => { e.dataTransfer.setData("freebie-id", f.id); setDragId(f.id); }}
+                    onDragEnd={() => setDragId(null)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => { e.stopPropagation(); onDropOnFeatured(e, idx); }}
+                    className={`relative rounded-lg border bg-white p-3 shadow-sm cursor-move transition ${dragId === f.id ? "opacity-40" : "hover:shadow-md"}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <GripVertical className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-700">
+                          <span className="rounded bg-amber-100 px-1.5 py-0.5">#{idx + 1}</span>
+                          {f.category && <span className="text-slate-500">{f.category}</span>}
+                        </div>
+                        <div className="mt-1 text-sm font-medium truncate">{f.title}</div>
+                        <div className="text-xs text-muted-foreground truncate">{f.file_name}</div>
+                      </div>
+                      <button
+                        onClick={() => removeFromFeatured(f.id)}
+                        className="text-slate-400 hover:text-destructive shrink-0"
+                        aria-label="Remove from featured"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>All Freebies ({rows.length})</CardTitle>
         </CardHeader>
+
         <CardContent>
           {loading ? (
             <div className="py-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline mr-2" /> Loading…</div>
