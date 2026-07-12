@@ -659,7 +659,7 @@ const FreebiesPage = () => {
             <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
               <BookOpen className="h-3.5 w-3.5" /> Learn more
             </div>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+            <h2 className="mt-3 text-xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
               Free MBA Study Material for CAT, XAT, NMAT & SNAP 2025
             </h2>
             <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl mx-auto">
