@@ -302,6 +302,31 @@ const FreebiesPage = () => {
         </div>
       </section>
 
+      {/* HOW IT WORKS — 3 steps */}
+      <section className="border-b border-slate-100 bg-white">
+        <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { n: "01", icon: <Search className="h-5 w-5" />, t: "Search or browse", d: "Filter by exam, topic or type — Quant, VARC, LRDI, GK, WAT-PI and more.", g: "from-sky-500 to-blue-600" },
+              { n: "02", icon: <Zap className="h-5 w-5" />, t: "One-click download", d: "No signup, no email wall. Every resource opens as a printable PDF in seconds.", g: "from-violet-500 to-fuchsia-600" },
+              { n: "03", icon: <Rocket className="h-5 w-5" />, t: "Ace CAT 2025", d: "Follow the strategy playbook, drill high-yield topics and track your score curve.", g: "from-emerald-500 to-teal-600" },
+            ].map((s) => (
+              <div key={s.n} className="relative rounded-2xl border border-slate-200 bg-white p-5 hover:border-sky-300 hover:shadow-lg transition-all overflow-hidden">
+                <div className={`absolute -top-6 -right-6 h-24 w-24 rounded-full bg-gradient-to-br ${s.g} opacity-10`} />
+                <div className="flex items-center gap-3">
+                  <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${s.g} text-white grid place-items-center shadow-md`}>
+                    {s.icon}
+                  </div>
+                  <div className="text-[11px] font-bold text-slate-400 tabular-nums tracking-widest">STEP {s.n}</div>
+                </div>
+                <h3 className="mt-3 font-bold text-slate-900">{s.t}</h3>
+                <p className="mt-1 text-sm text-slate-600 leading-relaxed">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FEATURED — AUTO-SCROLLING MARQUEES */}
       {items.length > 0 && !loading && (
         <section className="py-10 sm:py-14 bg-white border-b border-slate-100">
