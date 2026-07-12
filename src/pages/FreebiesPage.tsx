@@ -94,16 +94,14 @@ const FreebiesPage = () => {
     }
   };
 
+  useEffect(() => {
+    document.title = "Free MBA Resources & Downloads | MBA Compass";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "Download free MBA study materials, formula sheets, cheatsheets, PDFs, and prep guides curated by MBA Compass for CAT, XAT, NMAT and more.");
+  }, []);
+
   return (
     <>
-      <Helmet>
-        <title>Free MBA Resources & Downloads | MBA Compass</title>
-        <meta
-          name="description"
-          content="Download free MBA study materials, formula sheets, cheatsheets, PDFs, and prep guides curated by MBA Compass for CAT, XAT, NMAT and more."
-        />
-        <link rel="canonical" href="https://mbacompass.in/freebies" />
-      </Helmet>
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 border-b border-sky-100">
