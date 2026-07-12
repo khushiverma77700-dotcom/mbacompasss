@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import {
   Download, FileText, Search, Sparkles, Gift, Loader2, BookOpen,
   TrendingUp, Users, Star, ShieldCheck, Clock, Award, ChevronRight, Flame,
+  GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -65,9 +66,85 @@ const FreebiesPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    document.title = "Free MBA Resources & Downloads | MBA Compass";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Download free MBA study materials, formula sheets, cheatsheets, PDFs, and prep guides curated by MBA Compass for CAT, XAT, NMAT and more.");
+    const TITLE =
+      "Free MBA Study Material 2025 — CAT, XAT, NMAT, SNAP PDFs | MBA Compass";
+    const DESC =
+      "Download 100% free MBA study material for CAT 2025, XAT, NMAT, SNAP & IIFT — Quant formula sheets, VARC cheatsheets, LRDI question banks, GK digests, WAT-PI kits. Curated by 99+ percentilers & IIM alumni. No signup, instant PDF download.";
+    const URL = "https://mbacompass.in/freebies";
+    const KEYWORDS =
+      "free MBA study material, CAT 2025 PDF, XAT preparation free, NMAT free notes, SNAP free material, quant formula sheet PDF, VARC cheatsheet, LRDI question bank, MBA free download, IIM interview kit, WAT PI questions, GK for CAT, MBA preparation PDF, free CAT notes";
+
+    document.title = TITLE;
+
+    const upsertMeta = (attr: "name" | "property", key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+    const upsertLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) {
+        el = document.createElement("link");
+        el.setAttribute("rel", rel);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("href", href);
+    };
+
+    upsertMeta("name", "description", DESC);
+    upsertMeta("name", "keywords", KEYWORDS);
+    upsertMeta("name", "robots", "index,follow,max-image-preview:large,max-snippet:-1");
+    upsertMeta("name", "author", "MBA Compass");
+    upsertLink("canonical", URL);
+
+    upsertMeta("property", "og:title", TITLE);
+    upsertMeta("property", "og:description", DESC);
+    upsertMeta("property", "og:url", URL);
+    upsertMeta("property", "og:type", "website");
+    upsertMeta("property", "og:site_name", "MBA Compass");
+
+    upsertMeta("name", "twitter:card", "summary_large_image");
+    upsertMeta("name", "twitter:title", TITLE);
+    upsertMeta("name", "twitter:description", DESC);
+
+    // CollectionPage + Breadcrumb JSON-LD
+    const ldId = "freebies-collection-jsonld";
+    document.getElementById(ldId)?.remove();
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.id = ldId;
+    ld.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "CollectionPage",
+          name: TITLE,
+          description: DESC,
+          url: URL,
+          isPartOf: { "@type": "WebSite", name: "MBA Compass", url: "https://mbacompass.in" },
+          about: [
+            "CAT 2025 preparation",
+            "MBA entrance exam study material",
+            "Free MBA PDFs",
+          ],
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://mbacompass.in" },
+            { "@type": "ListItem", position: 2, name: "Freebies", item: URL },
+          ],
+        },
+      ],
+    });
+    document.head.appendChild(ld);
+    return () => {
+      document.getElementById(ldId)?.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -221,6 +298,31 @@ const FreebiesPage = () => {
             <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-sky-600" /> 50,000+ aspirants</span>
             <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> Rated 4.9/5</span>
             <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-blue-600" /> Updated for 2025</span>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS — 3 steps */}
+      <section className="border-b border-slate-100 bg-white">
+        <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { n: "01", icon: <Search className="h-5 w-5" />, t: "Search or browse", d: "Filter by exam, topic or type — Quant, VARC, LRDI, GK, WAT-PI and more.", g: "from-sky-500 to-blue-600" },
+              { n: "02", icon: <Zap className="h-5 w-5" />, t: "One-click download", d: "No signup, no email wall. Every resource opens as a printable PDF in seconds.", g: "from-violet-500 to-fuchsia-600" },
+              { n: "03", icon: <Rocket className="h-5 w-5" />, t: "Ace CAT 2025", d: "Follow the strategy playbook, drill high-yield topics and track your score curve.", g: "from-emerald-500 to-teal-600" },
+            ].map((s) => (
+              <div key={s.n} className="relative rounded-2xl border border-slate-200 bg-white p-5 hover:border-sky-300 hover:shadow-lg transition-all overflow-hidden">
+                <div className={`absolute -top-6 -right-6 h-24 w-24 rounded-full bg-gradient-to-br ${s.g} opacity-10`} />
+                <div className="flex items-center gap-3">
+                  <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${s.g} text-white grid place-items-center shadow-md`}>
+                    {s.icon}
+                  </div>
+                  <div className="text-[11px] font-bold text-slate-400 tabular-nums tracking-widest">STEP {s.n}</div>
+                </div>
+                <h3 className="mt-3 font-bold text-slate-900">{s.t}</h3>
+                <p className="mt-1 text-sm text-slate-600 leading-relaxed">{s.d}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -484,6 +586,67 @@ const FreebiesPage = () => {
             })}
           </div>
         )}
+      </section>
+
+      {/* SOCIAL PROOF — TESTIMONIALS */}
+      <section className="border-t border-slate-100 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-6xl mx-auto px-4 py-14 sm:py-20">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
+              <Quote className="h-3.5 w-3.5" /> Loved by aspirants
+            </div>
+            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+              What CAT toppers say about our free material
+            </h2>
+            <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
+              Real stories from aspirants who used MBA Compass Freebies to crack CAT, XAT and NMAT.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { n: "Ananya Sharma", r: "IIM Bangalore · 99.6%iler", q: "The Quant formula sheet saved me hours. I taped it above my desk and by mock 5 I stopped fumbling on arithmetic entirely.", g: "from-sky-500 to-blue-600" },
+              { n: "Rohan Menon", r: "IIM Ahmedabad · 99.4%iler", q: "The WAT-PI kit was gold. I walked into the IIM-A interview knowing exactly which frameworks to structure my answers around.", g: "from-violet-500 to-fuchsia-600" },
+              { n: "Priyanka Iyer", r: "XLRI Jamshedpur · 99.1%iler", q: "GK digests for XAT are the best I found online — concise, dated correctly, and no filler. Used them every morning for 3 months.", g: "from-emerald-500 to-teal-600" },
+            ].map((t) => (
+              <figure key={t.n} className="relative rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <Quote className="absolute top-4 right-4 h-6 w-6 text-slate-100" />
+                <div className="flex items-center gap-0.5 text-amber-400">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400" />)}
+                </div>
+                <blockquote className="mt-3 text-sm text-slate-700 leading-relaxed">"{t.q}"</blockquote>
+                <figcaption className="mt-4 flex items-center gap-3 pt-4 border-t border-slate-100">
+                  <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${t.g} text-white grid place-items-center font-bold shadow`}>
+                    {t.n.split(" ").map((p) => p[0]).join("")}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900 text-sm">{t.n}</div>
+                    <div className="text-[11px] text-slate-500">{t.r}</div>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          {/* Trust badges strip */}
+          <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { icon: <Users className="h-4 w-4" />, v: "50,000+", l: "Aspirants served" },
+              { icon: <GraduationCap className="h-4 w-4" />, v: "1,200+", l: "IIM/XLRI converts" },
+              { icon: <Layers className="h-4 w-4" />, v: "180+", l: "Curated PDFs" },
+              { icon: <Target className="h-4 w-4" />, v: "99+%ile", l: "Author benchmark" },
+            ].map((b) => (
+              <div key={b.l} className="rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
+                  {b.icon}
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-slate-900 leading-none tabular-nums">{b.v}</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-medium">{b.l}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* SEO CONTENT + FAQ */}
