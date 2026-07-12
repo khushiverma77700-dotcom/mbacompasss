@@ -81,6 +81,8 @@ const AdminCoachingSEOReports = lazyWithPreload(() => import("./pages/admin/Admi
 const AdminArticles = lazyWithPreload(() => import("./pages/admin/AdminArticles"));
 const AdminBanners = lazyWithPreload(() => import("./pages/admin/AdminBanners"));
 const AdminFreebies = lazyWithPreload(() => import("./pages/admin/AdminFreebies"));
+const AdminFreebieDownloads = lazyWithPreload(() => import("./pages/admin/AdminFreebieDownloads"));
+const AdminFreebieUsers = lazyWithPreload(() => import("./pages/admin/AdminFreebieUsers"));
 const FreebiesPage = lazyWithPreload(() => import("./pages/FreebiesPage"));
 const AdminInquiries = lazyWithPreload(() => import("./pages/admin/AdminInquiries"));
 const AdminCourses = lazyWithPreload(() => import("./pages/admin/AdminCourses"));
