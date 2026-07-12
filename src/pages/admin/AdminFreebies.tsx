@@ -6,6 +6,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const CATEGORY_OPTIONS = [
+  "Quant",
+  "VARC",
+  "LRDI",
+  "GK / Current Affairs",
+  "CAT Prep",
+  "XAT Prep",
+  "NMAT Prep",
+  "SNAP Prep",
+  "IIFT Prep",
+  "CMAT Prep",
+  "MAT Prep",
+  "GD/PI/WAT",
+  "Interview Prep",
+  "Essay/SOP",
+  "Formula Sheets",
+  "Previous Year Papers",
+  "Mock Analysis",
+  "Study Plan",
+  "Other",
+];
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
