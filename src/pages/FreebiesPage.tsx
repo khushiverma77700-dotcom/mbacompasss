@@ -615,9 +615,12 @@ const FreebiesPage = () => {
                     >
                       {downloadingId === f.id ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Preparing…</>
+                      ) : !user ? (
+                        <><Lock className="h-4 w-4 mr-2" /> Login to Download</>
                       ) : (
                         <><Download className="h-4 w-4 mr-2" /> Download Free</>
                       )}
+
                     </Button>
                   </div>
                 </Card>
