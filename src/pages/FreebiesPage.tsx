@@ -225,6 +225,43 @@ const FreebiesPage = () => {
         </div>
       </section>
 
+      {/* FEATURED — AUTO-SCROLLING MARQUEES */}
+      {items.length > 0 && !loading && (
+        <section className="py-10 sm:py-14 bg-white border-b border-slate-100">
+          <div className="max-w-6xl mx-auto px-4 mb-6">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-sky-600 uppercase tracking-wider">
+                  <Sparkles className="h-3.5 w-3.5" /> Featured library
+                </div>
+                <h2 className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900">
+                  Hand-picked resources, moving in real time
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">Hover to pause · click any card to download instantly</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 1 — LTR */}
+          <div className="freebies-marquee-track relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+            <div className="freebies-marquee flex gap-4 w-max py-2">
+              {[...items, ...items].map((f, idx) => (
+                <MarqueeCard key={`m1-${f.id}-${idx}`} f={f} onClick={() => handleDownload(f)} downloading={downloadingId === f.id} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 — RTL, offset */}
+          <div className="freebies-marquee-track relative overflow-hidden mt-4 [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+            <div className="freebies-marquee-reverse flex gap-4 w-max py-2">
+              {[...items.slice().reverse(), ...items.slice().reverse()].map((f, idx) => (
+                <MarqueeCard key={`m2-${f.id}-${idx}`} f={f} onClick={() => handleDownload(f)} downloading={downloadingId === f.id} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* TRENDING STRIP */}
       {trending.length > 0 && !loading && (
         <section className="max-w-6xl mx-auto px-4 pt-10 sm:pt-14">
@@ -449,6 +486,99 @@ const FreebiesPage = () => {
         )}
       </section>
 
+      {/* SEO CONTENT + FAQ */}
+      <section className="bg-gradient-to-b from-white to-slate-50 border-t border-slate-100">
+        <div className="max-w-4xl mx-auto px-4 py-14 sm:py-20">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+              <BookOpen className="h-3.5 w-3.5" /> Learn more
+            </div>
+            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+              Free MBA Study Material for CAT, XAT, NMAT & SNAP 2025
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl mx-auto">
+              MBA Compass Freebies is India's most trusted library of free MBA preparation resources — from Quant formula sheets and VARC cheatsheets to LRDI question banks, GK digests, WAT-PI answer decks and interview kits. Every document is curated by 99+ percentilers and IIM alumni, updated for the 2025 exam cycle, and delivered as a clean printable PDF you can start using in seconds.
+            </p>
+          </div>
+
+          <article className="prose prose-slate prose-sm sm:prose-base max-w-none">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-8">Why aspirants trust MBA Compass Freebies</h3>
+            <p className="text-slate-700 leading-relaxed">
+              Cracking CAT, XAT, NMAT, SNAP or IIFT isn't about the number of books you buy — it's about drilling the right concepts with the right material. Our free MBA prep resources are built from the actual patterns of the last 10 years of MBA entrance exams, focus on high-yield topics that repeatedly appear in the paper, and include shortcuts, tricks and frameworks that 99+ percentilers use in the exam hall.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6 not-prose">
+              <SeoCard icon={<ShieldCheck className="h-4 w-4" />} title="Verified by IIM Alumni">
+                Every resource is reviewed by our team of IIM/XLRI/ISB graduates before it goes live.
+              </SeoCard>
+              <SeoCard icon={<Clock className="h-4 w-4" />} title="Updated for CAT 2025">
+                Formulas, GK digests and question banks are refreshed monthly for the current cycle.
+              </SeoCard>
+              <SeoCard icon={<Download className="h-4 w-4" />} title="One-Click Downloads">
+                No signup wall, no email trap — click download and the PDF is on your device in seconds.
+              </SeoCard>
+              <SeoCard icon={<Award className="h-4 w-4" />} title="Exam-Focused Content">
+                Only high-yield concepts, past-year patterns and proven frameworks — no filler pages.
+              </SeoCard>
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">What you'll find in this free library</h3>
+            <ul className="text-slate-700 leading-relaxed space-y-1.5">
+              <li><strong>Quant Formula Sheets</strong> — Complete CAT Quant formulas covering arithmetic, algebra, geometry, mensuration and modern math.</li>
+              <li><strong>VARC Cheatsheets</strong> — Reading comprehension strategies, para-jumble decoding, tone/inference frameworks and 1000-word vocabulary builders.</li>
+              <li><strong>LRDI Question Banks</strong> — Curated puzzle sets by pattern: arrangements, distributions, games, Venn diagrams and DI caselets.</li>
+              <li><strong>GK &amp; Current Affairs</strong> — Monthly digests tuned for XAT, IIFT, SNAP and TISS — business, awards, sports, budget, appointments.</li>
+              <li><strong>WAT-PI &amp; Interview Kits</strong> — 100 most-asked WAT/PI questions with STAR-format sample answers used by IIM converts.</li>
+              <li><strong>Strategy Playbooks</strong> — Sectional attack plans, order-of-attempt logic, skip rules and mock-analysis templates.</li>
+              <li><strong>College Comparison Sheets</strong> — Side-by-side ROI, fees, placements and batch profile for top 25 B-Schools of India.</li>
+            </ul>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">How to use these free MBA resources effectively</h3>
+            <p className="text-slate-700 leading-relaxed">
+              Download the formula sheet on day 1 of your prep and paste it above your study desk — you'll internalize 80% of Quant formulas passively within two weeks. Pair the VARC cheatsheet with daily reading (business newspapers, long-form editorials) and revisit it every Sunday. Solve one LRDI set every alternate day from our question banks, and use the WAT-PI answer bank starting 4 weeks before your interview cycle. Every resource is designed to slot into a serious CAT 2025 preparation plan — no fluff, no wasted pages.
+            </p>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">Frequently Asked Questions</h3>
+            <div className="space-y-3 mt-4 not-prose">
+              {FAQS.map((faq, i) => (
+                <details
+                  key={i}
+                  className="group rounded-xl border border-slate-200 bg-white p-4 open:shadow-md transition-shadow"
+                >
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 font-semibold text-slate-900 text-sm sm:text-base">
+                    {faq.q}
+                    <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 transition-transform group-open:rotate-90" />
+                  </summary>
+                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+                </details>
+              ))}
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-10">Explore more on MBA Compass</h3>
+            <p className="text-slate-700 leading-relaxed">
+              Beyond free resources, MBA Compass runs India's most advanced <a href="/mocks" className="text-sky-600 font-semibold hover:underline">AI-powered mock test platform</a>, a detailed <a href="/colleges" className="text-sky-600 font-semibold hover:underline">MBA college directory</a>, curated <a href="/coaching" className="text-sky-600 font-semibold hover:underline">coaching institute reviews</a>, and a personalized <a href="/mba-compass" className="text-sky-600 font-semibold hover:underline">MBA advisor roadmap</a> — everything a serious aspirant needs from CAT registration to final admit.
+            </p>
+          </article>
+
+          {/* FAQ JSON-LD */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: FAQS.map((f) => ({
+                  "@type": "Question",
+                  name: f.q,
+                  acceptedAnswer: { "@type": "Answer", text: f.a },
+                })),
+              }),
+            }}
+          />
+        </div>
+      </section>
+
+
       {/* CTA banner */}
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-sky-900 p-8 sm:p-12 text-white">
@@ -492,5 +622,105 @@ function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number
     </div>
   );
 }
+
+function SeoCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 hover:border-sky-200 hover:shadow-sm transition-all">
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
+          {icon}
+        </div>
+        <div className="font-semibold text-slate-900 text-sm">{title}</div>
+      </div>
+      <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">{children}</p>
+    </div>
+  );
+}
+
+function MarqueeCard({
+  f,
+  onClick,
+  downloading,
+}: {
+  f: Freebie;
+  onClick: () => void;
+  downloading: boolean;
+}) {
+  const grad = GRADIENTS[hashIdx(f.id)];
+  const isPdf =
+    (f.file_type || "").toLowerCase().includes("pdf") ||
+    (f.file_name || "").toLowerCase().endsWith(".pdf");
+  return (
+    <button
+      onClick={onClick}
+      disabled={downloading}
+      className="group relative w-[260px] sm:w-[300px] shrink-0 text-left rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-sky-300 hover:shadow-xl transition-all"
+    >
+      <div className={`relative h-24 bg-gradient-to-br ${grad} overflow-hidden`}>
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 20%, rgba(255,255,255,.6) 0, transparent 45%), radial-gradient(circle at 80% 70%, rgba(255,255,255,.4) 0, transparent 45%)",
+          }}
+        />
+        <div className="absolute inset-0 flex items-center gap-3 px-4 text-white">
+          <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur border border-white/30 grid place-items-center shadow">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">
+            {isPdf ? "PDF" : "DOC"} · {formatBytes(f.file_size)}
+          </div>
+        </div>
+        {f.category && (
+          <div className="absolute top-2 right-2 rounded-full bg-white/95 text-slate-800 px-2 py-0.5 text-[10px] font-bold shadow-sm">
+            {f.category}
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-sm text-slate-900 line-clamp-2 group-hover:text-sky-700 min-h-[2.5rem]">
+          {f.title}
+        </h3>
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+          <span className="flex items-center gap-1">
+            <Download className="h-3 w-3" /> {compactNum(f.download_count || 0)}
+          </span>
+          <span className="flex items-center gap-1 text-sky-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+            {downloading ? "…" : "Get free"} <ChevronRight className="h-3.5 w-3.5" />
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: "Are these MBA prep resources really free?",
+    a: "Yes — every PDF on the Freebies page is 100% free. No signup wall, no email trap, no hidden charges. Click Download and the file lands on your device instantly.",
+  },
+  {
+    q: "Which exams are these resources useful for?",
+    a: "The library covers CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT and TISS. Quant, VARC, LRDI and DI content overlaps across exams; GK digests and interview kits are specifically tuned for XAT, IIFT, SNAP and IIM WAT-PI rounds.",
+  },
+  {
+    q: "How often are the freebies updated?",
+    a: "Formula sheets and strategy playbooks are refreshed once per exam cycle. GK and current-affairs digests are updated monthly. College comparison sheets are updated after every placement season.",
+  },
+  {
+    q: "Can I share these PDFs with my friends?",
+    a: "Absolutely — that's the point. Share the /freebies link with your study group, batchmates or on WhatsApp. We only ask that you don't rebrand or sell the material as your own.",
+  },
+  {
+    q: "Do you offer paid coaching or mocks as well?",
+    a: "Yes. Beyond free resources, MBA Compass runs AI-powered mock tests, a full college directory with reviews, and a personalized advisor roadmap. Check the top navigation for Mocks and MBA Compass.",
+  },
+  {
+    q: "How do I get notified when new freebies are added?",
+    a: "Bookmark /freebies and check the Trending section — it always shows what's been downloaded most this week. You can also sign up for our newsletter from the homepage.",
+  },
+];
 
 export default FreebiesPage;

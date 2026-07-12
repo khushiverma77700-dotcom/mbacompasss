@@ -765,6 +765,23 @@
   100% { background-position: -200% 0; }
 }
 
+/* Freebies page — infinite marquee auto-scroller */
+@keyframes freebies-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes freebies-marquee-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+.freebies-marquee { animation: freebies-marquee 40s linear infinite; }
+.freebies-marquee-reverse { animation: freebies-marquee-reverse 50s linear infinite; }
+.freebies-marquee-track:hover .freebies-marquee,
+.freebies-marquee-track:hover .freebies-marquee-reverse { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .freebies-marquee, .freebies-marquee-reverse { animation: none; }
+}
+
 /* Admin mobile safety: prevent wide tables/cards from breaking layout */
 @media (max-width: 1023px) {
   .admin-scope table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
