@@ -2505,6 +2505,60 @@ export type Database = {
           },
         ]
       }
+      freebies: {
+        Row: {
+          category: string | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          download_count: number
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          is_published: boolean
+          sort_order: number
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          is_published?: boolean
+          sort_order?: number
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          is_published?: boolean
+          sort_order?: number
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       iim_waitlist_applications: {
         Row: {
           admitted: number | null

@@ -80,6 +80,8 @@ const AdminCoachingRefreshHub = lazyWithPreload(() => import("./pages/admin/Admi
 const AdminCoachingSEOReports = lazyWithPreload(() => import("./pages/admin/AdminCoachingSEOReports"));
 const AdminArticles = lazyWithPreload(() => import("./pages/admin/AdminArticles"));
 const AdminBanners = lazyWithPreload(() => import("./pages/admin/AdminBanners"));
+const AdminFreebies = lazyWithPreload(() => import("./pages/admin/AdminFreebies"));
+const FreebiesPage = lazyWithPreload(() => import("./pages/FreebiesPage"));
 const AdminInquiries = lazyWithPreload(() => import("./pages/admin/AdminInquiries"));
 const AdminCourses = lazyWithPreload(() => import("./pages/admin/AdminCourses"));
 const AdminColleges = lazyWithPreload(() => import("./pages/admin/AdminColleges"));
@@ -843,6 +845,7 @@ const App = () => (
               <Route path="coaching-seo-reports" element={<LazyPage><AdminCoachingSEOReports /></LazyPage>} />
               <Route path="articles" element={<LazyPage><AdminArticles /></LazyPage>} />
               <Route path="banners" element={<LazyPage><AdminBanners /></LazyPage>} />
+              <Route path="freebies" element={<LazyPage><AdminFreebies /></LazyPage>} />
               <Route path="inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />
               <Route path="courses" element={<LazyPage><AdminCourses /></LazyPage>} />
               <Route path="colleges" element={<LazyPage><AdminColleges /></LazyPage>} />
@@ -943,6 +946,7 @@ const App = () => (
 
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
+            <Route path="/freebies" element={<PublicLayout><LazyPage><FreebiesPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
             <Route path="/coaching" element={<PublicLayout><LazyPage><CoachingPage /></LazyPage></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><LazyPage><AuthPage /></LazyPage></PublicLayout>} />
