@@ -1,3 +1,4 @@
+// v2 - multi-provider OTP with MSG91 primary. Rev 2026-07-12.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { getCredential } from "../_shared/getCredential.ts";
 
