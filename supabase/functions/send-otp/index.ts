@@ -1,4 +1,4 @@
-// v2 - multi-provider OTP with MSG91 primary. Rev 2026-07-12.
+// v3 - HSPSMS only with verbose delivery logging. Rev 2026-07-12b.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { getCredential } from "../_shared/getCredential.ts";
 
@@ -7,14 +7,37 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type ProviderResult = { ok: boolean; provider: string; detail: string };
+type ProviderResult = { ok: boolean; provider: string; detail: string; msgid?: string };
 
-async function trySendHspsms(phone: string, otp: string): Promise<ProviderResult | null> {
+function mask(s: string | null | undefined, keep = 4): string {
+  if (!s) return "(empty)";
+  if (s.length <= keep) return "*".repeat(s.length);
+  return `${s.slice(0, keep)}${"*".repeat(Math.max(0, s.length - keep))}`;
+}
+
+async function trySendHspsms(phone: string, otp: string, reqId: string): Promise<ProviderResult | null> {
+  const t0 = Date.now();
   const username = await getCredential("HSPSMS_USERNAME", { required: false });
   const apiKey = await getCredential("HSPSMS_API_KEY", { required: false });
   const sender = await getCredential("HSPSMS_SENDER_ID", { required: false });
   const template = await getCredential("HSPSMS_OTP_TEMPLATE", { required: false });
-  if (!username || !apiKey || !sender || !template) return null;
+
+  console.log(`[send-otp][${reqId}] HSPSMS creds check`, {
+    username_present: !!username,
+    username_preview: mask(username),
+    apiKey_present: !!apiKey,
+    apiKey_preview: mask(apiKey, 6),
+    sender_present: !!sender,
+    sender: sender || "(empty)",
+    template_present: !!template,
+    template_len: template?.length ?? 0,
+    template_preview: template ? template.slice(0, 80) : "(empty)",
+  });
+
+  if (!username || !apiKey || !sender || !template) {
+    console.error(`[send-otp][${reqId}] HSPSMS credentials incomplete — cannot send`);
+    return null;
+  }
 
   const message = template
     .replace(/\{#var#\}/gi, otp)
@@ -26,15 +49,50 @@ async function trySendHspsms(phone: string, otp: string): Promise<ProviderResult
     `&smstype=TRANS` +
     `&numbers=${encodeURIComponent(phone)}` +
     `&apikey=${encodeURIComponent(apiKey)}`;
+
+  const safeUrl = url.replace(encodeURIComponent(apiKey), "***").replace(encodeURIComponent(username), mask(username));
+  console.log(`[send-otp][${reqId}] HSPSMS request`, {
+    phone, sender, message_preview: message.slice(0, 120), url: safeUrl,
+  });
+
   try {
     const r = await fetch(url);
     const text = await r.text().catch(() => "");
-    const ok = r.ok && !/error|fail|invalid/i.test(text);
-    return { ok, provider: "hspsms", detail: `${r.status}: ${text.slice(0, 300)}` };
+    const elapsedMs = Date.now() - t0;
+
+    // Parse msgid / responseCode when present
+    let msgid: string | undefined;
+    let responseCode: string | undefined;
+    try {
+      const j = JSON.parse(text);
+      if (Array.isArray(j)) {
+        for (const item of j) {
+          if (item?.msgid) msgid = String(item.msgid);
+          if (item?.responseCode) responseCode = String(item.responseCode);
+        }
+      } else if (j && typeof j === "object") {
+        msgid = j.msgid ? String(j.msgid) : undefined;
+        responseCode = j.responseCode ? String(j.responseCode) : undefined;
+      }
+    } catch (_) { /* non-JSON response */ }
+
+    const badMarkers = /error|fail|invalid|insufficient|blocked|denied|reject/i;
+    const goodMarkers = /success|submitted/i;
+    const ok = r.ok && (goodMarkers.test(text) || !!msgid) && !badMarkers.test(text.replace(/success[^"]*/i, ""));
+
+    console.log(`[send-otp][${reqId}] HSPSMS response`, {
+      http_status: r.status, elapsed_ms: elapsedMs, ok, msgid, responseCode,
+      raw_body: text.slice(0, 500),
+    });
+
+    return { ok, provider: "hspsms", detail: `${r.status}: ${text.slice(0, 300)}`, msgid };
   } catch (e) {
-    return { ok: false, provider: "hspsms", detail: e instanceof Error ? e.message : String(e) };
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error(`[send-otp][${reqId}] HSPSMS fetch error`, { detail, elapsed_ms: Date.now() - t0 });
+    return { ok: false, provider: "hspsms", detail };
   }
 }
+
 
 async function trySendMsg91(phone: string, otp: string): Promise<ProviderResult | null> {
   const authKey = await getCredential("MSG91_AUTH_KEY", { required: false });
@@ -70,9 +128,15 @@ async function trySendFast2sms(phone: string, otp: string): Promise<ProviderResu
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const reqId = crypto.randomUUID().slice(0, 8);
+  const startedAt = new Date().toISOString();
+
   try {
     const { phone } = await req.json();
+    console.log(`[send-otp][${reqId}] incoming request`, { phone, startedAt, provider: "hspsms" });
+
     if (!phone || !/^\d{10}$/.test(phone)) {
+      console.warn(`[send-otp][${reqId}] invalid phone`, { phone });
       return new Response(JSON.stringify({ error: "Valid 10-digit phone number required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -89,7 +153,9 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .eq("phone", phone)
       .gte("created_at", tenMinAgo);
+    console.log(`[send-otp][${reqId}] rate-limit check`, { phone, count });
     if ((count ?? 0) >= 3) {
+      console.warn(`[send-otp][${reqId}] rate limited`, { phone, count });
       return new Response(JSON.stringify({ error: "Too many OTP requests. Please try after 10 minutes." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -105,41 +171,38 @@ Deno.serve(async (req) => {
       expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     });
     if (insertError) {
-      console.error("DB insert error:", insertError);
+      console.error(`[send-otp][${reqId}] DB insert error`, insertError);
       throw new Error("Failed to store OTP");
     }
+    console.log(`[send-otp][${reqId}] OTP stored in DB`, { phone, otp_last4: otp.slice(-4) });
 
-    // Try providers in order; return success only when one accepts the send.
-    const attempts: ProviderResult[] = [];
-    // HSPSMS only — per admin preference.
-    for (const fn of [trySendHspsms]) {
-      const res = await fn(phone, otp);
-      if (!res) continue; // provider not configured
-      attempts.push(res);
-      console.log(`[send-otp] provider=${res.provider} ok=${res.ok} detail=${res.detail}`);
-      if (res.ok) {
-        return new Response(JSON.stringify({ success: true, provider: res.provider }), {
-          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
+    // HSPSMS is the only provider — per admin preference.
+    const res = await trySendHspsms(phone, otp, reqId);
 
-    if (attempts.length === 0) {
-      console.error("[send-otp] No SMS provider configured");
-      return new Response(JSON.stringify({ error: "SMS provider not configured. Contact support." }), {
+    if (!res) {
+      console.error(`[send-otp][${reqId}] HSPSMS not configured`);
+      return new Response(JSON.stringify({ error: "HSPSMS credentials missing. Contact support." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.error("[send-otp] All providers failed:", attempts);
+    console.log(`[send-otp][${reqId}] final result`, { ok: res.ok, provider: res.provider, msgid: res.msgid, detail: res.detail });
+
+    if (res.ok) {
+      return new Response(JSON.stringify({ success: true, provider: "hspsms", msgid: res.msgid }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({
-      error: "Unable to send OTP right now. Please try again in a minute.",
-      attempts: attempts.map((a) => ({ provider: a.provider, ok: a.ok })),
+      error: "HSPSMS rejected the OTP send. Check edge function logs for details.",
+      provider_detail: res.detail,
     }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    console.error("send-otp error:", error);
+    console.error(`[send-otp][${reqId}] fatal`, error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Internal error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
