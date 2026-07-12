@@ -111,8 +111,8 @@ Deno.serve(async (req) => {
 
     // Try providers in order; return success only when one accepts the send.
     const attempts: ProviderResult[] = [];
-    // MSG91 first (purpose-built OTP API, best deliverability), then HSPSMS, then Fast2SMS.
-    for (const fn of [trySendMsg91, trySendHspsms, trySendFast2sms]) {
+    // HSPSMS only — per admin preference.
+    for (const fn of [trySendHspsms]) {
       const res = await fn(phone, otp);
       if (!res) continue; // provider not configured
       attempts.push(res);
