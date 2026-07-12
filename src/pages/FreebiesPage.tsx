@@ -597,7 +597,8 @@ const FreebiesPage = () => {
             <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
               <Quote className="h-3.5 w-3.5" /> Loved by aspirants
             </div>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+            <h2 className="mt-3 text-xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+
               What CAT toppers say about our free material
             </h2>
             <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
