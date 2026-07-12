@@ -66,9 +66,85 @@ const FreebiesPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    document.title = "Free MBA Resources & Downloads | MBA Compass";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Download free MBA study materials, formula sheets, cheatsheets, PDFs, and prep guides curated by MBA Compass for CAT, XAT, NMAT and more.");
+    const TITLE =
+      "Free MBA Study Material 2025 — CAT, XAT, NMAT, SNAP PDFs | MBA Compass";
+    const DESC =
+      "Download 100% free MBA study material for CAT 2025, XAT, NMAT, SNAP & IIFT — Quant formula sheets, VARC cheatsheets, LRDI question banks, GK digests, WAT-PI kits. Curated by 99+ percentilers & IIM alumni. No signup, instant PDF download.";
+    const URL = "https://mbacompass.in/freebies";
+    const KEYWORDS =
+      "free MBA study material, CAT 2025 PDF, XAT preparation free, NMAT free notes, SNAP free material, quant formula sheet PDF, VARC cheatsheet, LRDI question bank, MBA free download, IIM interview kit, WAT PI questions, GK for CAT, MBA preparation PDF, free CAT notes";
+
+    document.title = TITLE;
+
+    const upsertMeta = (attr: "name" | "property", key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+    const upsertLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) {
+        el = document.createElement("link");
+        el.setAttribute("rel", rel);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("href", href);
+    };
+
+    upsertMeta("name", "description", DESC);
+    upsertMeta("name", "keywords", KEYWORDS);
+    upsertMeta("name", "robots", "index,follow,max-image-preview:large,max-snippet:-1");
+    upsertMeta("name", "author", "MBA Compass");
+    upsertLink("canonical", URL);
+
+    upsertMeta("property", "og:title", TITLE);
+    upsertMeta("property", "og:description", DESC);
+    upsertMeta("property", "og:url", URL);
+    upsertMeta("property", "og:type", "website");
+    upsertMeta("property", "og:site_name", "MBA Compass");
+
+    upsertMeta("name", "twitter:card", "summary_large_image");
+    upsertMeta("name", "twitter:title", TITLE);
+    upsertMeta("name", "twitter:description", DESC);
+
+    // CollectionPage + Breadcrumb JSON-LD
+    const ldId = "freebies-collection-jsonld";
+    document.getElementById(ldId)?.remove();
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.id = ldId;
+    ld.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "CollectionPage",
+          name: TITLE,
+          description: DESC,
+          url: URL,
+          isPartOf: { "@type": "WebSite", name: "MBA Compass", url: "https://mbacompass.in" },
+          about: [
+            "CAT 2025 preparation",
+            "MBA entrance exam study material",
+            "Free MBA PDFs",
+          ],
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://mbacompass.in" },
+            { "@type": "ListItem", position: 2, name: "Freebies", item: URL },
+          ],
+        },
+      ],
+    });
+    document.head.appendChild(ld);
+    return () => {
+      document.getElementById(ldId)?.remove();
+    };
   }, []);
 
   useEffect(() => {
