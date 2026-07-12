@@ -87,6 +87,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Articles", path: "/admin/articles", icon: Newspaper },
       { label: "Testimonials", path: "/admin/testimonials", icon: MessageCircle },
       { label: "Coupons", path: "/admin/coupons", icon: Ticket },
+      { label: "Freebies", path: "/admin/freebies", icon: Gift },
     ],
   },
   {
