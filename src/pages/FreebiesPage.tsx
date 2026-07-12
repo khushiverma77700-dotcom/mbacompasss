@@ -338,7 +338,7 @@ const FreebiesPage = () => {
                 <div className="flex items-center gap-2 text-xs font-semibold text-sky-600 uppercase tracking-wider">
                   <Sparkles className="h-3.5 w-3.5" /> Featured library
                 </div>
-                <h2 className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900">
+                <h2 className="mt-1 text-xl sm:text-3xl font-bold text-slate-900 leading-tight">
                   Hand-picked resources, moving in real time
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">Hover to pause · click any card to download instantly</p>
