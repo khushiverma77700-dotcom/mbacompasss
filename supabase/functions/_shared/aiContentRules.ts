@@ -193,7 +193,7 @@ const getStaleCurrentDataYearRe = () => {
   for (let y = 2020; y <= currentYear - 2; y++) staleYears.push(String(y));
   return staleYears.length ? new RegExp(`\\b(${staleYears.join("|")})\\b`, "i") : /a^/;
 };
-const CLEAR_HISTORY_RE = /\b(founded|established|started|launched|created|set\s+up|rebranded|formerly|history|historic|historical|legacy|inception|became|converted|renamed|since\s+\d{4})\b/i;
+const CLEAR_HISTORY_RE = /\b(founded|established|started|launched|created|set\s+up|rebranded|formerly|history|historic|historical|legacy|inception|became|converted|renamed|since\s+\d{4}|trends?|year[-\s]on[-\s]year|y-?o-?y|past\s+\d+\s+years?|previous\s+years?|over\s+the\s+years?|from\s+20\d{2}\s*(?:to|–|-|—)\s*20\d{2}|20\d{2}\s*(?:to|–|-|—)\s*20\d{2}|between\s+20\d{2}\s+and\s+20\d{2}|snapshot|last\s+\d+\s+years?)\b/i;
 const EXACT_CUTOFF_RE = /(?:\bcut\s*-?\s*offs?\b[^.!?]{0,140}\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b|\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b[^.!?]{0,140}\bcut\s*-?\s*offs?\b)/i;
 const SAFE_CUTOFF_WORDING_RE = /\b(expected|approx(?:\.|imate|imately)?|range|band|previous|historical|verify|tba|tentative|last\s+published|latest\s+published)\b/i;
 const FULL_DATE_RE = /\b(?:\d{1,2}\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},?\s+\d{4})\b/i;
