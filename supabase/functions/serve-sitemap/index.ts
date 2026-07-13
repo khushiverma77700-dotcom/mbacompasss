@@ -98,7 +98,17 @@ Deno.serve(async (req) => {
       { loc: "/courses", changefreq: "weekly", priority: 0.8, lastmod: today },
       { loc: "/iim-waitlist-movement", changefreq: "daily", priority: 0.8, lastmod: today },
       { loc: "/freebies", changefreq: "weekly", priority: 0.7, lastmod: today },
-      
+      { loc: "/exams", changefreq: "weekly", priority: 0.8, lastmod: today },
+      { loc: "/authors", changefreq: "monthly", priority: 0.5, lastmod: today },
+      { loc: "/formulas", changefreq: "weekly", priority: 0.7, lastmod: today },
+      { loc: "/bundles", changefreq: "weekly", priority: 0.7, lastmod: today },
+      { loc: "/mba-programme-compare", changefreq: "monthly", priority: 0.6, lastmod: today },
+      { loc: "/editorial-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
+      { loc: "/fact-check-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
+      { loc: "/privacy-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
+      { loc: "/review-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
+      { loc: "/terms", changefreq: "yearly", priority: 0.3, lastmod: today },
+
       { loc: "/mba-compass", changefreq: "weekly", priority: 0.7, lastmod: today },
       { loc: "/mba-compass/compare", changefreq: "monthly", priority: 0.5, lastmod: today },
     ];
