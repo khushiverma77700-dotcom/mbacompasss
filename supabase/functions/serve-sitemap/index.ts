@@ -80,39 +80,14 @@ Deno.serve(async (req) => {
 
     const today = fmtDate(new Date());
 
-    const STATIC_PAGES: Entry[] = [
-      { loc: "/", changefreq: "daily", priority: 1.0, lastmod: today },
-      { loc: "/blog", changefreq: "daily", priority: 0.8, lastmod: today },
-      { loc: "/colleges", changefreq: "weekly", priority: 0.8, lastmod: today },
-      { loc: "/coaching", changefreq: "weekly", priority: 0.8, lastmod: today },
-      { loc: "/compare", changefreq: "monthly", priority: 0.6, lastmod: today },
-      { loc: "/college-finder", changefreq: "monthly", priority: 0.6, lastmod: today },
-      { loc: "/profile-analyzer", changefreq: "monthly", priority: 0.6, lastmod: today },
-      { loc: "/college-shortlister", changefreq: "monthly", priority: 0.6, lastmod: today },
-      { loc: "/cat-score-calculator", changefreq: "monthly", priority: 0.6, lastmod: today },
-      { loc: "/cat-mock-1", changefreq: "weekly", priority: 0.7, lastmod: today },
-      { loc: "/roi-calculator", changefreq: "monthly", priority: 0.6, lastmod: today },
-      { loc: "/about", changefreq: "monthly", priority: 0.5, lastmod: today },
-      { loc: "/contact", changefreq: "monthly", priority: 0.5, lastmod: today },
-      { loc: "/business-inquiries", changefreq: "monthly", priority: 0.5, lastmod: today },
-      { loc: "/list-your-business", changefreq: "monthly", priority: 0.5, lastmod: today },
-      { loc: "/mocks", changefreq: "weekly", priority: 0.8, lastmod: today },
-      { loc: "/courses", changefreq: "weekly", priority: 0.8, lastmod: today },
-      { loc: "/iim-waitlist-movement", changefreq: "daily", priority: 0.8, lastmod: today },
-      { loc: "/freebies", changefreq: "weekly", priority: 0.7, lastmod: today },
-      { loc: "/exams", changefreq: "weekly", priority: 0.8, lastmod: today },
-      { loc: "/authors", changefreq: "monthly", priority: 0.5, lastmod: today },
-      { loc: "/formulas", changefreq: "weekly", priority: 0.7, lastmod: today },
-      { loc: "/bundles", changefreq: "weekly", priority: 0.7, lastmod: today },
-      { loc: "/editorial-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
-      { loc: "/fact-check-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
-      { loc: "/privacy-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
-      { loc: "/review-policy", changefreq: "yearly", priority: 0.3, lastmod: today },
-      { loc: "/terms", changefreq: "yearly", priority: 0.3, lastmod: today },
-
-      { loc: "/mba-compass", changefreq: "weekly", priority: 0.7, lastmod: today },
-      { loc: "/mba-compass/compare", changefreq: "monthly", priority: 0.5, lastmod: today },
-    ];
+    // Source of truth: supabase/functions/_shared/staticRoutes.ts
+    // Keep sitemap + ssr-prerender aligned by editing that file only.
+    const STATIC_PAGES: Entry[] = STATIC_ROUTES.map((r) => ({
+      loc: r.path,
+      changefreq: r.changefreq,
+      priority: r.priority,
+      lastmod: today,
+    }));
 
     // Helper: fetch ALL rows (Supabase default limit = 1000)
     const fetchAll = async (table: string, columns: string, filters?: (q: any) => any) => {
