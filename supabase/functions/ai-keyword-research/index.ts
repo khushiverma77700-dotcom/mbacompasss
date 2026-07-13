@@ -508,7 +508,7 @@ Deno.serve(async (req) => {
 
     console.log(`[ai-keyword-research] AI call completed in ${Date.now() - aiStartTime}ms`);
     const aiData = await response.json();
-    await logAIUsage("keyword-research", "google/gemini-2.5-flash", aiData);
+    await logAIUsage("keyword-research", "gpt-5-mini", aiData);
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let result;
     if (toolCall?.function?.arguments) {
