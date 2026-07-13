@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
       { loc: "/mocks", changefreq: "weekly", priority: 0.8, lastmod: today },
       { loc: "/courses", changefreq: "weekly", priority: 0.8, lastmod: today },
       { loc: "/iim-waitlist-movement", changefreq: "daily", priority: 0.8, lastmod: today },
+      { loc: "/freebies", changefreq: "weekly", priority: 0.7, lastmod: today },
       
       { loc: "/mba-compass", changefreq: "weekly", priority: 0.7, lastmod: today },
       { loc: "/mba-compass/compare", changefreq: "monthly", priority: 0.5, lastmod: today },
