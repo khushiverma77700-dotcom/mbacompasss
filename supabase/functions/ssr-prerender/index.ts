@@ -12,9 +12,10 @@
 // Coverage:
 //   - / (homepage)
 //   - Static hubs: /blog /colleges /coaching /mocks /compare /courses /about
-//     /contact /business-inquiry /list-your-business /college-finder
+//     /contact /business-inquiries /list-your-business /college-finder
 //     /profile-analyzer /college-shortlister /cat-score-calculator
-//     /mba-roi-calculator /iim-waitlist-movement /mba-compass …
+//     /roi-calculator /freebies /exams /authors /formulas /bundles
+//     /iim-waitlist-movement /mba-compass …
 //   - Dynamic detail pages with full content:
 //       /article/<slug>          (DB-backed Article schema)
 //       /college/<slug>          (DB-backed CollegeOrUniversity schema)
@@ -243,6 +244,27 @@ const STATIC_ROUTES: RouteTemplate[] = [
     }),
   },
   {
+    match: /^\/freebies\/?$/,
+    build: () => ({
+      title: "Free MBA Prep Resources: CAT PDFs, Checklists & Templates",
+      description:
+        "Download free CAT and MBA admissions resources from MBA Compass — preparation PDFs, college shortlisting templates, checklists and planning sheets.",
+      h1: "Free MBA Prep Resources",
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Freebies", url: `${SITE}/freebies` },
+      ],
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Free MBA Prep Resources",
+        url: `${SITE}/freebies`,
+        description:
+          "Free CAT and MBA admissions resources, templates, PDFs and planning tools for Indian MBA aspirants.",
+      },
+    }),
+  },
+  {
     match: /^\/compare\/?$/,
     build: () => ({
       title: "Compare MBA Colleges Side-by-Side: Fees, Placements & ROI",
@@ -291,14 +313,15 @@ const STATIC_ROUTES: RouteTemplate[] = [
     }),
   },
   {
-    match: /^\/business-inquiry\/?$/,
+    match: /^\/business-inquir(?:y|ies)\/?$/,
     build: () => ({
       title: "Business Inquiry — Advertise & Partner With MBA Compass",
       description:
         "Reach India's most engaged MBA aspirant audience. Submit a business inquiry for advertising, lead-gen, content and partnership opportunities.",
+      url: `${SITE}/business-inquiries`,
       breadcrumbs: [
         { name: "Home", url: `${SITE}/` },
-        { name: "Business Inquiry", url: `${SITE}/business-inquiry` },
+        { name: "Business Inquiry", url: `${SITE}/business-inquiries` },
       ],
     }),
   },
@@ -363,14 +386,82 @@ const STATIC_ROUTES: RouteTemplate[] = [
     }),
   },
   {
-    match: /^\/mba-roi-calculator\/?$/,
+    match: /^\/(?:roi-calculator|mba-roi-calculator)\/?$/,
     build: () => ({
       title: "MBA ROI Calculator: Compute Your Real Return on Investment",
       description:
         "Calculate your true MBA return on investment — accounts for fees, lost salary, expected package growth, taxes and EMI repayment in India.",
+      url: `${SITE}/roi-calculator`,
       breadcrumbs: [
         { name: "Home", url: `${SITE}/` },
-        { name: "MBA ROI Calculator", url: `${SITE}/mba-roi-calculator` },
+        { name: "MBA ROI Calculator", url: `${SITE}/roi-calculator` },
+      ],
+    }),
+  },
+  {
+    match: /^\/cat-mock-1\/?$/i,
+    build: () => ({
+      title: "CAT Mock 1: Free Full-Length CAT Practice Test",
+      description:
+        "Take CAT Mock 1 on MBA Compass with exam-style questions, timed sections and performance analysis for serious CAT preparation.",
+      url: `${SITE}/cat-mock-1`,
+      h1: "CAT Mock 1",
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Mocks", url: `${SITE}/mocks` },
+        { name: "CAT Mock 1", url: `${SITE}/cat-mock-1` },
+      ],
+    }),
+  },
+  {
+    match: /^\/exams\/?$/,
+    build: () => ({
+      title: "MBA Entrance Exams 2026: CAT, XAT, NMAT, SNAP & More",
+      description:
+        "Compare MBA entrance exams in India — CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT and IIFT with dates, syllabus, pattern and colleges accepting scores.",
+      h1: "MBA Entrance Exams",
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Exams", url: `${SITE}/exams` },
+      ],
+    }),
+  },
+  {
+    match: /^\/authors\/?$/,
+    build: () => ({
+      title: "MBA Compass Authors & Editorial Experts",
+      description:
+        "Meet the MBA Compass editorial team and domain experts who write, review and fact-check MBA admissions, coaching and exam guidance.",
+      h1: "Authors & Editorial Experts",
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Authors", url: `${SITE}/authors` },
+      ],
+    }),
+  },
+  {
+    match: /^\/formulas\/?$/,
+    build: () => ({
+      title: "MBA Quant Formula Book: CAT, XAT & Aptitude Formulas",
+      description:
+        "Revise essential CAT and MBA entrance quant formulas for arithmetic, algebra, geometry, number system and modern math.",
+      h1: "MBA Quant Formula Book",
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Formulas", url: `${SITE}/formulas` },
+      ],
+    }),
+  },
+  {
+    match: /^\/bundles\/?$/,
+    build: () => ({
+      title: "CAT Mock Bundles: Practice Packs for MBA Entrance Exams",
+      description:
+        "Browse CAT, XAT, NMAT, SNAP and MBA entrance mock bundles with full-length tests, topic drills and detailed performance analysis.",
+      h1: "CAT Mock Bundles",
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Bundles", url: `${SITE}/bundles` },
       ],
     }),
   },
@@ -399,6 +490,19 @@ const STATIC_ROUTES: RouteTemplate[] = [
         { name: "Home", url: `${SITE}/` },
         { name: "MBA Compass", url: `${SITE}/mba-compass` },
         ...(m[1] ? [{ name: "Compare", url: `${SITE}/mba-compass/compare` }] : []),
+      ],
+    }),
+  },
+  {
+    match: /^\/mba-programme-compare\/?$/,
+    build: () => ({
+      title: "Compare MBA Colleges Side-by-Side: Fees, Placements & ROI",
+      description:
+        "Compare any two or three MBA colleges side-by-side on fees, placements, ROI, rankings, exams accepted and specializations.",
+      url: `${SITE}/compare`,
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Compare Colleges", url: `${SITE}/compare` },
       ],
     }),
   },
