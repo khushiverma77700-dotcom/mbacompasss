@@ -127,22 +127,20 @@
         } catch (e) {}
       })();
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Non-blocking web fonts: swap-in via media="print" trick so the first
-         paint never waits on Google Fonts. Critical CSS already declares the
-         system fallback so the H1 (LCP) renders immediately. -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=DM+Sans:wght@400&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-    <!-- Preload the actual woff2 files so LCP text renders without a font-swap repaint -->
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/plusjakartasans/v8/LDIbaomQNQcsA88c7O9yZ4KMCoOg4Ko20yE.woff2" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriI5-g7vlQEg.woff2" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=DM+Sans:wght@400&display=swap" /></noscript>
+    <!-- Self-hosted web fonts. Eliminates the fonts.googleapis + fonts.gstatic
+         round trips (previously ~200–400 ms on mobile) and lets the origin
+         Cache-Control apply. Files live in /public/fonts/ and ship with the
+         build. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/plus-jakarta-sans-700.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/dm-sans-400.woff2" />
     <!-- Inline critical CSS for faster FP + mobile CLS hardening.
          The @font-face fallbacks below use Chrome's size-adjust + override
          metrics so the system fallback matches Plus Jakarta / DM Sans
          dimensions. This eliminates the layout shift when the real web
          font swaps in (one of the biggest mobile CLS sources). -->
     <style>
+      @font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:700;font-display:swap;src:url("/fonts/plus-jakarta-sans-700.woff2") format("woff2")}
+      @font-face{font-family:"DM Sans";font-style:normal;font-weight:400;font-display:swap;src:url("/fonts/dm-sans-400.woff2") format("woff2")}
       @font-face{font-family:"Plus Jakarta Fallback";src:local("Arial");size-adjust:104%;ascent-override:94%;descent-override:24%;line-gap-override:0%}
       @font-face{font-family:"DM Sans Fallback";src:local("Arial");size-adjust:100%;ascent-override:96%;descent-override:24%;line-gap-override:0%}
       body{margin:0;font-family:'DM Sans','DM Sans Fallback',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a;-webkit-font-smoothing:antialiased;text-rendering:optimizeSpeed}
