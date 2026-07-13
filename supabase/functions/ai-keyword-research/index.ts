@@ -480,7 +480,7 @@ Deno.serve(async (req) => {
     console.log(`[ai-keyword-research] Calling AI gateway...`);
     const aiStartTime = Date.now();
     const response = await callAIGateway({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: payload.systemPrompt },
           { role: "user", content: payload.userPrompt },
@@ -508,7 +508,7 @@ Deno.serve(async (req) => {
 
     console.log(`[ai-keyword-research] AI call completed in ${Date.now() - aiStartTime}ms`);
     const aiData = await response.json();
-    await logAIUsage("keyword-research", "google/gemini-3-flash-preview", aiData);
+    await logAIUsage("keyword-research", "google/gemini-2.5-flash", aiData);
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let result;
     if (toolCall?.function?.arguments) {
