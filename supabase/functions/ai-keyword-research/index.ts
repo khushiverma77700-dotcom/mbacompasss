@@ -480,7 +480,7 @@ Deno.serve(async (req) => {
     console.log(`[ai-keyword-research] Calling AI gateway...`);
     const aiStartTime = Date.now();
     const response = await callAIGateway({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-5-mini",
         messages: [
           { role: "system", content: payload.systemPrompt },
           { role: "user", content: payload.userPrompt },
@@ -488,7 +488,7 @@ Deno.serve(async (req) => {
         max_tokens: 8192,
         tools: [payload.tool],
         tool_choice: { type: "function", function: { name: payload.toolName } },
-      }, { feature: "ai-keyword-research" });
+      }, { feature: "ai-keyword-research", provider: "openai-mini" });
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -508,7 +508,7 @@ Deno.serve(async (req) => {
 
     console.log(`[ai-keyword-research] AI call completed in ${Date.now() - aiStartTime}ms`);
     const aiData = await response.json();
-    await logAIUsage("keyword-research", "google/gemini-2.5-flash", aiData);
+    await logAIUsage("keyword-research", "gpt-5-mini", aiData);
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let result;
     if (toolCall?.function?.arguments) {
