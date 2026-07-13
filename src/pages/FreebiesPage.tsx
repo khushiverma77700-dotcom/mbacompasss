@@ -386,7 +386,7 @@ const FreebiesPage = () => {
                   const gradient = GRADIENTS[hashIdx(f.id)];
                   const isDl = downloadingId === f.id;
                   return (
-                    <CarouselItem key={f.id} className="pl-3 sm:basis-1/2 lg:basis-1/3">
+                    <CarouselItem key={f.id} className="pl-3 sm:basis-3/4 md:basis-1/2 lg:basis-1/2 xl:basis-2/5">
                       <Card className="overflow-hidden border-amber-200 shadow-md hover:shadow-lg transition-all h-full flex flex-col">
                         <div className={`relative h-40 sm:h-48 bg-gradient-to-br ${gradient}`}>
                           {f.cover_image_url ? (
