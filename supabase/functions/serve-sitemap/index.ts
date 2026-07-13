@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=denonext";
+import { STATIC_ROUTES } from "../_shared/staticRoutes.ts";
 
 const SITE_URL = "https://mbacompass.in";
 const MAX_URLS_PER_SITEMAP = 50000;
