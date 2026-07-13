@@ -480,7 +480,7 @@ Deno.serve(async (req) => {
     console.log(`[ai-keyword-research] Calling AI gateway...`);
     const aiStartTime = Date.now();
     const response = await callAIGateway({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: payload.systemPrompt },
           { role: "user", content: payload.userPrompt },
