@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "bunx tsx scripts/refresh-sitemap.ts",
-    "build": "vite build && bunx tsx scripts/prerender-seo.ts && bunx tsx scripts/verify-prerender.ts",
+    "prebuild": "npx tsx scripts/refresh-sitemap.ts",
+    "build": "vite build && npx tsx scripts/prerender-seo.ts && npx tsx scripts/verify-prerender.ts",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "refresh-sitemap": "bunx tsx scripts/refresh-sitemap.ts"
+    "refresh-sitemap": "npx tsx scripts/refresh-sitemap.ts"
   },
   "dependencies": {
     "@fontsource/instrument-serif": "^5.2.8",
