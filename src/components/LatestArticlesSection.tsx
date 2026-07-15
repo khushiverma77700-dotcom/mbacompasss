@@ -65,7 +65,7 @@ const LatestArticlesSection = () => {
           {/* Featured */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <Link to={`/article/${featured.slug}`} className="group block bg-card rounded-2xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-all duration-300 h-full">
-              <div className="h-56 overflow-hidden relative">
+              <div className="aspect-[16/9] overflow-hidden relative bg-muted">
                 {getImage(featured) ? (
                   <img src={cdnImage(getImage(featured), { width: 720, quality: 72 })} srcSet={cdnImageSrcSet(getImage(featured), { width: 720, quality: 72 })} sizes="(max-width: 768px) 100vw, 720px" alt={featured.title} width={720} height={405} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" />
                 ) : (
