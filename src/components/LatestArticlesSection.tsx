@@ -96,14 +96,15 @@ const LatestArticlesSection = () => {
             {rest.map((article, i) => (
               <motion.div key={article.id} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
                 <Link to={`/article/${article.slug}`} className="group flex gap-4 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/20">
-                  <div className="w-28 h-24 rounded-xl overflow-hidden flex-shrink-0">
+                  <div className="w-32 aspect-[16/9] rounded-xl overflow-hidden flex-shrink-0 bg-muted">
                     {getImage(article) ? (
-                      <img src={cdnImage(getImage(article), { width: 240, quality: 70 })} srcSet={cdnImageSrcSet(getImage(article), { width: 240, quality: 70 })} sizes="112px" alt={article.title} width={112} height={96} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
+                      <img src={cdnImage(getImage(article), { width: 280, quality: 70 })} srcSet={cdnImageSrcSet(getImage(article), { width: 280, quality: 70 })} sizes="128px" alt={article.title} width={128} height={72} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
                         <BookOpen className="w-6 h-6 text-muted-foreground/30" />
                       </div>
                     )}
+
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <Badge variant="secondary" className="text-[10px] w-fit mb-2">{article.category}</Badge>
