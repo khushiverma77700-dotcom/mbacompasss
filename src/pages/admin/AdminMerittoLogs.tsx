@@ -398,6 +398,46 @@ export default function AdminMerittoLogs() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkBusy && setBulkOpen(o)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Bulk upload leads to Meritto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div className="rounded-md border bg-muted/40 p-3">
+              <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
+              <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source.</p>
+              <a href="/meritto-bulk-sample.csv" download>
+                <Button size="sm" variant="outline"><Download className="h-3 w-3 mr-1" />Download sample.csv</Button>
+              </a>
+            </div>
+            <div>
+              <div className="font-medium mb-1">Step 2 — Upload your filled CSV</div>
+              <Input type="file" accept=".csv,text/csv" onChange={(e) => setBulkFile(e.target.files?.[0] ?? null)} disabled={bulkBusy} />
+              <p className="text-[11px] text-muted-foreground mt-1">Each row will be pushed to Meritto and logged in the history below.</p>
+            </div>
+            {bulkBusy && (
+              <div className="rounded-md border p-3 text-xs space-y-1">
+                <div>Pushing… {bulkProgress.done}/{bulkProgress.total}</div>
+                <div className="h-1.5 bg-muted rounded overflow-hidden">
+                  <div className="h-full bg-primary transition-all" style={{ width: `${bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }} />
+                </div>
+                <div className="flex gap-3 text-muted-foreground">
+                  <span className="text-emerald-600">Delivered: {bulkProgress.success}</span>
+                  <span className="text-red-600">Failed: {bulkProgress.failed}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={bulkBusy}>Close</Button>
+            <Button onClick={runBulk} disabled={bulkBusy || !bulkFile}>
+              <Upload className="h-4 w-4 mr-2" />{bulkBusy ? "Pushing…" : "Start Bulk Push"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
