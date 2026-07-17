@@ -3768,6 +3768,75 @@ export type Database = {
         }
         Relationships: []
       }
+      meritto_lead_logs: {
+        Row: {
+          campaign: string | null
+          campus: string | null
+          city: string | null
+          course: string | null
+          created_at: string
+          email: string | null
+          error: string | null
+          http_status: number | null
+          id: string
+          last_attempt_at: string | null
+          medium: string | null
+          mobile: string | null
+          name: string | null
+          payload: Json
+          response: Json | null
+          retry_count: number
+          source: string
+          state: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          campaign?: string | null
+          campus?: string | null
+          city?: string | null
+          course?: string | null
+          created_at?: string
+          email?: string | null
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          last_attempt_at?: string | null
+          medium?: string | null
+          mobile?: string | null
+          name?: string | null
+          payload: Json
+          response?: Json | null
+          retry_count?: number
+          source: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign?: string | null
+          campus?: string | null
+          city?: string | null
+          course?: string | null
+          created_at?: string
+          email?: string | null
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          last_attempt_at?: string | null
+          medium?: string | null
+          mobile?: string | null
+          name?: string | null
+          payload?: Json
+          response?: Json | null
+          retry_count?: number
+          source?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mock_ai_deep_analyses: {
         Row: {
           ai_model: string | null
