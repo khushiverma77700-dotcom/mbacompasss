@@ -541,42 +541,166 @@ export default function AdminMerittoLogs() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkBusy && setBulkOpen(o)}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={bulkOpen} onOpenChange={(o) => { if (bulkBusy) return; setBulkOpen(o); if (!o) resetBulk(); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Bulk upload leads to Meritto</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 text-sm">
-            <div className="rounded-md border bg-muted/40 p-3">
-              <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
-              <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source.</p>
-              <a href="/meritto-bulk-sample.csv" download>
-                <Button size="sm" variant="outline"><Download className="h-3 w-3 mr-1" />Download sample.csv</Button>
-              </a>
+
+          <div className="flex items-center gap-2 text-xs mb-2">
+            {(["upload", "map", "review"] as const).map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${bulkStep === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</div>
+                <span className={bulkStep === s ? "font-semibold" : "text-muted-foreground"}>{s === "upload" ? "Upload CSV" : s === "map" ? "Map columns" : "Review & push"}</span>
+                {i < 2 && <div className="w-6 h-px bg-border" />}
+              </div>
+            ))}
+          </div>
+
+          {bulkStep === "upload" && (
+            <div className="space-y-4 text-sm">
+              <div className="rounded-md border bg-muted/40 p-3">
+                <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
+                <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source. If your CSV uses different headers, you'll map them in the next step.</p>
+                <a href="/meritto-bulk-sample.csv" download>
+                  <Button size="sm" variant="outline"><Download className="h-3 w-3 mr-1" />Download sample.csv</Button>
+                </a>
+              </div>
+              <div>
+                <div className="font-medium mb-1">Step 2 — Upload your CSV</div>
+                <Input type="file" accept=".csv,text/csv" onChange={(e) => { const f = e.target.files?.[0]; if (f) onBulkFile(f); }} />
+                <p className="text-[11px] text-muted-foreground mt-1">You'll review headers, mapping and validation before anything is sent.</p>
+              </div>
             </div>
-            <div>
-              <div className="font-medium mb-1">Step 2 — Upload your filled CSV</div>
-              <Input type="file" accept=".csv,text/csv" onChange={(e) => setBulkFile(e.target.files?.[0] ?? null)} disabled={bulkBusy} />
-              <p className="text-[11px] text-muted-foreground mt-1">Each row will be pushed to Meritto and logged in the history below.</p>
-            </div>
-            {bulkBusy && (
-              <div className="rounded-md border p-3 text-xs space-y-1">
-                <div>Pushing… {bulkProgress.done}/{bulkProgress.total}</div>
-                <div className="h-1.5 bg-muted rounded overflow-hidden">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }} />
+          )}
+
+          {bulkStep === "map" && (() => {
+            const mapped = buildMapped();
+            const invalid = mapped.filter((m) => m.error).length;
+            return (
+              <div className="space-y-4 text-sm">
+                <div className="rounded-md border p-3 bg-muted/30">
+                  <div className="text-xs text-muted-foreground">Detected {bulkRaw.length} rows and {bulkHeaders.length} columns. Map each Meritto field to a column in your CSV.</div>
                 </div>
-                <div className="flex gap-3 text-muted-foreground">
-                  <span className="text-emerald-600">Delivered: {bulkProgress.success}</span>
-                  <span className="text-red-600">Failed: {bulkProgress.failed}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {MERITTO_FIELDS.map((f) => (
+                    <div key={f.key}>
+                      <Label className="text-xs">{f.label}{f.required && <span className="text-red-500"> *</span>}</Label>
+                      <Select value={bulkMapping[f.key] ?? "__none"} onValueChange={(v) => setBulkMapping({ ...bulkMapping, [f.key]: v === "__none" ? "" : v })}>
+                        <SelectTrigger><SelectValue placeholder="Select column" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none">— Skip —</SelectItem>
+                          {bulkHeaders.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+                <div className={`rounded-md border p-3 text-xs ${invalid ? "bg-red-50 border-red-200 text-red-800" : "bg-emerald-50 border-emerald-200 text-emerald-800"}`}>
+                  {invalid
+                    ? `${invalid} of ${mapped.length} rows have validation errors (missing name / contact, invalid email, or short mobile). You can still push — invalid rows will be skipped and shown in results.`
+                    : `All ${mapped.length} rows passed validation.`}
+                </div>
+                <div className="overflow-x-auto max-h-64 border rounded">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/40 sticky top-0">
+                      <tr>
+                        <th className="text-left px-2 py-1">Row</th>
+                        {MERITTO_FIELDS.map((f) => <th key={f.key} className="text-left px-2 py-1">{f.label}</th>)}
+                        <th className="text-left px-2 py-1">Validation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mapped.slice(0, 20).map((m, i) => (
+                        <tr key={i} className={`border-t ${m.error ? "bg-red-50" : ""}`}>
+                          <td className="px-2 py-1">{i + 2}</td>
+                          {MERITTO_FIELDS.map((f) => <td key={f.key} className="px-2 py-1">{m.mapped[f.key] || "-"}</td>)}
+                          <td className="px-2 py-1 text-red-700">{m.error || "OK"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {mapped.length > 20 && <div className="p-2 text-[11px] text-muted-foreground">Showing first 20 of {mapped.length} rows.</div>}
                 </div>
               </div>
+            );
+          })()}
+
+          {bulkStep === "review" && (
+            <div className="space-y-3 text-sm">
+              {bulkBusy && (
+                <div className="rounded-md border p-3 text-xs space-y-1">
+                  <div>Pushing… {bulkProgress.done}/{bulkProgress.total}</div>
+                  <div className="h-1.5 bg-muted rounded overflow-hidden">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }} />
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-4 gap-2 text-xs">
+                <ResultChip label="Total" value={bulkResults.length} />
+                <ResultChip label="Delivered" value={bulkResults.filter((r) => r.status === "success").length} tone="emerald" />
+                <ResultChip label="Failed" value={bulkResults.filter((r) => r.status === "failed").length} tone="red" />
+                <ResultChip label="Invalid" value={bulkResults.filter((r) => r.status === "invalid").length} tone="amber" />
+              </div>
+              <div className="overflow-x-auto max-h-80 border rounded">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/40 sticky top-0">
+                    <tr>
+                      <th className="text-left px-2 py-1">Row</th>
+                      <th className="text-left px-2 py-1">Name</th>
+                      <th className="text-left px-2 py-1">Email</th>
+                      <th className="text-left px-2 py-1">Mobile</th>
+                      <th className="text-left px-2 py-1">Status</th>
+                      <th className="text-left px-2 py-1">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkResults.map((r) => (
+                      <tr key={r.row} className={`border-t ${r.status === "failed" ? "bg-red-50" : r.status === "invalid" ? "bg-amber-50" : r.status === "success" ? "bg-emerald-50/40" : ""}`}>
+                        <td className="px-2 py-1">{r.row}</td>
+                        <td className="px-2 py-1">{r.mapped.name || "-"}</td>
+                        <td className="px-2 py-1">{r.mapped.email || "-"}</td>
+                        <td className="px-2 py-1">{r.mapped.mobile || "-"}</td>
+                        <td className="px-2 py-1">
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] border ${
+                            r.status === "success" ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            : r.status === "failed" ? "bg-red-100 text-red-800 border-red-200"
+                            : r.status === "invalid" ? "bg-amber-100 text-amber-800 border-amber-200"
+                            : "bg-muted text-muted-foreground"
+                          }`}>{r.status}{r.http ? ` · ${r.http}` : ""}</span>
+                        </td>
+                        <td className="px-2 py-1 text-red-700">{r.error || ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 flex-wrap">
+            {bulkStep === "upload" && (
+              <Button variant="outline" onClick={() => setBulkOpen(false)}>Close</Button>
             )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={bulkBusy}>Close</Button>
-            <Button onClick={runBulk} disabled={bulkBusy || !bulkFile}>
-              <Upload className="h-4 w-4 mr-2" />{bulkBusy ? "Pushing…" : "Start Bulk Push"}
-            </Button>
+            {bulkStep === "map" && (
+              <>
+                <Button variant="outline" onClick={resetBulk} disabled={bulkBusy}>Back</Button>
+                <Button onClick={runBulk} disabled={bulkBusy || !bulkMapping.name}>
+                  <Upload className="h-4 w-4 mr-2" />Start Bulk Push
+                </Button>
+              </>
+            )}
+            {bulkStep === "review" && (
+              <>
+                <Button variant="outline" onClick={resetBulk} disabled={bulkBusy}>New Upload</Button>
+                <Button variant="outline" onClick={exportResults} disabled={!bulkResults.length}>
+                  <Download className="h-4 w-4 mr-2" />Export CSV
+                </Button>
+                <Button onClick={retryFailed} disabled={bulkBusy || !bulkResults.some((r) => r.status === "failed")}>
+                  <RefreshCw className="h-4 w-4 mr-2" />Retry Failed
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
