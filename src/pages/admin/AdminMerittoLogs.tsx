@@ -164,6 +164,7 @@ export default function AdminMerittoLogs() {
     try {
       const { data, error } = await supabase.functions.invoke("push-to-meritto", {
         body: {
+          skip_log: true, // ephemeral: never persist bulk lead data on our server
           source: mapped.source || "bulk_upload",
           name: mapped.name || undefined,
           email: mapped.email || undefined,
