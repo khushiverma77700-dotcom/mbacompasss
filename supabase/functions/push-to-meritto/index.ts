@@ -31,7 +31,16 @@ function sanitizeMobile(m?: string) {
   return digits;
 }
 
-async function callMeritto(secret: string, lead: LeadInput) {
+function redact(body: Record<string, unknown>) {
+  const clone: Record<string, unknown> = { ...body };
+  if (typeof clone.secret_key === "string") {
+    const s = clone.secret_key as string;
+    clone.secret_key = s.length > 8 ? `${s.slice(0, 4)}…${s.slice(-4)}` : "***";
+  }
+  return clone;
+}
+
+async function callMeritto(secret: string, lead: LeadInput, cid: string) {
   // Meritto binds `source=bschoolbuzz` to the URL path — it cannot be changed.
   // To distinguish which of our domains the lead came from (bschoolbuzz /
   // bschoolbuzz.in / mbacompass.in), we tag the origin domain into multiple
@@ -56,8 +65,6 @@ async function callMeritto(secret: string, lead: LeadInput) {
     course: lead.course ?? "",
     medium,
     campaign,
-    // Sub-source / UTM fields — Meritto accepts these as extra params and
-    // shows them alongside the lead. Multiple field names for compatibility.
     sub_source: domain || "bschoolbuzz",
     utm_source: domain || "bschoolbuzz",
     utm_medium: baseMedium,
@@ -66,29 +73,48 @@ async function callMeritto(secret: string, lead: LeadInput) {
     ...(lead.extra ?? {}),
   };
 
-  const res = await fetch(MERITTO_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "secret-key": secret,
-    },
-    body: JSON.stringify(body),
+  const startedAt = Date.now();
+  console.log(`[meritto][${cid}] → POST ${MERITTO_URL}`, {
+    origin_domain: domain || null,
+    lead_source: lead.source,
+    payload: redact(body),
   });
 
+  let res: Response;
+  try {
+    res = await fetch(MERITTO_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "secret-key": secret },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    const durationMs = Date.now() - startedAt;
+    console.error(`[meritto][${cid}] ✗ network error after ${durationMs}ms`, err);
+    throw err;
+  }
+
   const text = await res.text();
+  const durationMs = Date.now() - startedAt;
   let json: any = null;
   try {
     json = JSON.parse(text);
   } catch {
     json = { raw: text };
   }
-  // Meritto returns HTTP 200 even for business-level failures (e.g. duplicate,
-  // invalid source). Detect the actual outcome from the payload.
   const merittoStatus = (json?.status ?? "").toString().toLowerCase();
   const businessOk = merittoStatus === "" || merittoStatus === "success" || merittoStatus === "ok";
   const ok = res.ok && businessOk;
-  return { ok, status: res.status, json, body };
+
+  console.log(`[meritto][${cid}] ← HTTP ${res.status} in ${durationMs}ms`, {
+    ok,
+    meritto_status: json?.status ?? null,
+    meritto_message: json?.message ?? null,
+    response_preview: text.slice(0, 500),
+  });
+
+  return { ok, status: res.status, json, body, durationMs };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -106,23 +132,31 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+  const cid = crypto.randomUUID().slice(0, 8);
+
   try {
     const input = (await req.json()) as LeadInput & { retry_log_id?: string; skip_log?: boolean };
     const skipLog = !!input.skip_log;
-    console.log("[meritto] incoming", { source: input.source, log_id: input.log_id, retry: !!input.retry_log_id, skip_log: skipLog });
+    console.log(`[meritto][${cid}] incoming`, {
+      source: input.source,
+      log_id: input.log_id ?? null,
+      retry_log_id: input.retry_log_id ?? null,
+      skip_log: skipLog,
+      origin_domain: input.origin_domain ?? null,
+      has_email: !!input.email,
+      has_mobile: !!input.mobile,
+    });
 
     // Ephemeral mode: push to Meritto WITHOUT persisting anything to our DB.
-    // Used by bulk uploads so lead data never lands on our server.
     if (skipLog && !input.retry_log_id) {
-      const result = await callMeritto(secret, input);
-      console.log("[meritto] ephemeral response", { status: result.status, ok: result.ok });
+      const result = await callMeritto(secret, input, cid);
+      console.log(`[meritto][${cid}] ephemeral done`, { ok: result.ok, http: result.status, ms: result.durationMs });
       return new Response(
-        JSON.stringify({ ok: result.ok, status: result.status, log_id: null, response: result.json, ephemeral: true }),
+        JSON.stringify({ ok: result.ok, status: result.status, log_id: null, response: result.json, correlation_id: cid, ephemeral: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Retry mode
     let logId = input.log_id ?? null;
     let lead: LeadInput = input;
 
@@ -133,7 +167,8 @@ Deno.serve(async (req) => {
         .eq("id", input.retry_log_id)
         .maybeSingle();
       if (!data) {
-        return new Response(JSON.stringify({ error: "log not found" }), {
+        console.warn(`[meritto][${cid}] retry log not found`, input.retry_log_id);
+        return new Response(JSON.stringify({ error: "log not found", correlation_id: cid }), {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -153,7 +188,6 @@ Deno.serve(async (req) => {
       };
     }
 
-    // Create pending log first (or update existing)
     if (!logId) {
       const { data: created } = await admin
         .from("meritto_lead_logs")
@@ -174,10 +208,10 @@ Deno.serve(async (req) => {
         .select("id")
         .single();
       logId = created?.id ?? null;
+      console.log(`[meritto][${cid}] created log ${logId}`);
     }
 
-    const result = await callMeritto(secret, lead);
-    console.log("[meritto] response", { status: result.status, ok: result.ok });
+    const result = await callMeritto(secret, lead, cid);
 
     const finalStatus = result.ok ? "success" : "failed";
     const errMsg = result.ok
@@ -185,11 +219,12 @@ Deno.serve(async (req) => {
       : ((result.json as any)?.message
           ? `Meritto: ${(result.json as any).message}`
           : `HTTP ${result.status}`);
+
     if (logId) {
       await admin
         .from("meritto_lead_logs")
         .update({
-          payload: result.body as unknown as Record<string, unknown>,
+          payload: redact(result.body) as unknown as Record<string, unknown>,
           response: result.json as unknown as Record<string, unknown>,
           http_status: result.status,
           status: finalStatus,
@@ -200,20 +235,22 @@ Deno.serve(async (req) => {
         .eq("id", logId);
 
       if (input.retry_log_id) {
-        // increment retry
         await admin.rpc("increment_meritto_retry", { p_id: logId }).catch(() => {});
       }
     }
 
+    console.log(`[meritto][${cid}] done`, { log_id: logId, status: finalStatus, http: result.status, ms: result.durationMs, error: errMsg });
+
     return new Response(
-      JSON.stringify({ ok: result.ok, status: result.status, log_id: logId, response: result.json }),
+      JSON.stringify({ ok: result.ok, status: result.status, log_id: logId, response: result.json, correlation_id: cid }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    console.error("[meritto] error", e);
-    return new Response(JSON.stringify({ error: String(e) }), {
+    console.error(`[meritto][${cid}] error`, e);
+    return new Response(JSON.stringify({ error: String(e), correlation_id: cid }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
