@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { RefreshCw, Send, Search, CheckCircle2, XCircle, Clock, Users, TrendingUp, Plus } from "lucide-react";
+import { RefreshCw, Send, Search, CheckCircle2, XCircle, Clock, Users, TrendingUp, Plus, Upload, Download } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -63,6 +63,69 @@ export default function AdminMerittoLogs() {
     campaign: "manual_push",
     extraJson: "",
   });
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; success: number; failed: number }>({ done: 0, total: 0, success: 0, failed: 0 });
+
+  const parseCSV = (text: string): Record<string, string>[] => {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) return [];
+    const parseLine = (line: string) => {
+      const out: string[] = [];
+      let cur = "", q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (q && line[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+        else if (c === "," && !q) { out.push(cur); cur = ""; }
+        else cur += c;
+      }
+      out.push(cur);
+      return out.map((s) => s.trim());
+    };
+    const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+    return lines.slice(1).map((line) => {
+      const cells = parseLine(line);
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
+      return row;
+    });
+  };
+
+  const runBulk = async () => {
+    if (!bulkFile) { toast.error("Choose a CSV file"); return; }
+    const text = await bulkFile.text();
+    const rows = parseCSV(text);
+    if (!rows.length) { toast.error("CSV appears empty"); return; }
+    setBulkBusy(true);
+    setBulkProgress({ done: 0, total: rows.length, success: 0, failed: 0 });
+    let success = 0, failed = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      try {
+        const { data, error } = await supabase.functions.invoke("push-to-meritto", {
+          body: {
+            source: r.source || "bulk_upload",
+            name: r.name || undefined,
+            email: r.email || undefined,
+            mobile: r.mobile || undefined,
+            state: r.state || undefined,
+            city: r.city || undefined,
+            campus: r.campus || undefined,
+            course: r.course || undefined,
+            medium: r.medium || "website",
+            campaign: r.campaign || "bulk_upload",
+          },
+        });
+        if (error || !data?.ok) failed++; else success++;
+      } catch { failed++; }
+      setBulkProgress({ done: i + 1, total: rows.length, success, failed });
+    }
+    setBulkBusy(false);
+    toast.success(`Bulk push complete — ${success} delivered, ${failed} failed`);
+    await load();
+  };
+
 
   const load = async () => {
     setLoading(true);
@@ -169,6 +232,7 @@ export default function AdminMerittoLogs() {
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setManualOpen(true)}><Plus className="h-4 w-4 mr-2" />Push Manually</Button>
+          <Button onClick={() => setBulkOpen(true)} variant="secondary"><Upload className="h-4 w-4 mr-2" />Bulk Upload</Button>
           <Button onClick={load} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
         </div>
       </div>
@@ -330,6 +394,46 @@ export default function AdminMerittoLogs() {
             <Button variant="outline" onClick={() => setManualOpen(false)}>Cancel</Button>
             <Button onClick={pushManual} disabled={manualBusy}>
               <Send className="h-4 w-4 mr-2" />{manualBusy ? "Pushing…" : "Push to Meritto"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkBusy && setBulkOpen(o)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Bulk upload leads to Meritto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div className="rounded-md border bg-muted/40 p-3">
+              <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
+              <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source.</p>
+              <a href="/meritto-bulk-sample.csv" download>
+                <Button size="sm" variant="outline"><Download className="h-3 w-3 mr-1" />Download sample.csv</Button>
+              </a>
+            </div>
+            <div>
+              <div className="font-medium mb-1">Step 2 — Upload your filled CSV</div>
+              <Input type="file" accept=".csv,text/csv" onChange={(e) => setBulkFile(e.target.files?.[0] ?? null)} disabled={bulkBusy} />
+              <p className="text-[11px] text-muted-foreground mt-1">Each row will be pushed to Meritto and logged in the history below.</p>
+            </div>
+            {bulkBusy && (
+              <div className="rounded-md border p-3 text-xs space-y-1">
+                <div>Pushing… {bulkProgress.done}/{bulkProgress.total}</div>
+                <div className="h-1.5 bg-muted rounded overflow-hidden">
+                  <div className="h-full bg-primary transition-all" style={{ width: `${bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }} />
+                </div>
+                <div className="flex gap-3 text-muted-foreground">
+                  <span className="text-emerald-600">Delivered: {bulkProgress.success}</span>
+                  <span className="text-red-600">Failed: {bulkProgress.failed}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={bulkBusy}>Close</Button>
+            <Button onClick={runBulk} disabled={bulkBusy || !bulkFile}>
+              <Upload className="h-4 w-4 mr-2" />{bulkBusy ? "Pushing…" : "Start Bulk Push"}
             </Button>
           </DialogFooter>
         </DialogContent>

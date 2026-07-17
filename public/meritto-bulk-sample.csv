@@ -1,0 +1,4 @@
+name,email,mobile,state,city,campus,course,medium,campaign,source
+John Doe,john@example.com,9876543210,Maharashtra,Mumbai,MBA Compass,MBA / PGDM,website,bulk_upload,manual_bulk
+Priya Sharma,priya@example.com,9123456780,Delhi,New Delhi,MBA Compass,PGDM,website,bulk_upload,manual_bulk
+Rahul Verma,rahul@example.com,9988776655,Karnataka,Bengaluru,MBA Compass,MBA,website,bulk_upload,manual_bulk
