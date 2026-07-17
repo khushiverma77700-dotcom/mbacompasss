@@ -92,6 +92,7 @@ export default function AdminMerittoLogs() {
   const [bulkMapping, setBulkMapping] = useState<Record<string, string>>({});
   const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
+  const [originDomain, setOriginDomain] = useState<string>("bschoolbuzz.in");
 
   const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
@@ -175,6 +176,7 @@ export default function AdminMerittoLogs() {
           course: mapped.course || undefined,
           medium: mapped.medium || "website",
           campaign: mapped.campaign || "bulk_upload",
+          origin_domain: originDomain,
         },
       });
       if (error) return { ok: false, error: error.message };
@@ -351,6 +353,7 @@ export default function AdminMerittoLogs() {
           course: manual.course || undefined,
           medium: manual.medium || undefined,
           campaign: manual.campaign || undefined,
+          origin_domain: originDomain,
           extra,
         },
       });
@@ -563,6 +566,20 @@ export default function AdminMerittoLogs() {
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
                 <div className="font-semibold mb-0.5">Zero-storage mode</div>
                 Bulk leads are streamed straight to Meritto — nothing is saved to our database. The results report lives only in this browser tab; export it as CSV before closing. Individual leads from website forms are still logged normally.
+              </div>
+              <div className="rounded-md border p-3">
+                <Label className="text-xs font-medium">Origin domain (tagged on every lead)</Label>
+                <Select value={originDomain} onValueChange={setOriginDomain}>
+                  <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bschoolbuzz.in">bschoolbuzz.in</SelectItem>
+                    <SelectItem value="bschoolbuzz.com">bschoolbuzz.com</SelectItem>
+                    <SelectItem value="mbacompass.in">mbacompass.in</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Meritto's URL fixes <code>source=bschoolbuzz</code>, so we tag the actual origin domain into <code>sub_source</code>, <code>utm_source</code>, <code>lead_origin</code>, <code>medium</code> and <code>campaign</code> — visible on the Meritto dashboard without triggering "Invalid Source".
+                </p>
               </div>
               <div className="rounded-md border bg-muted/40 p-3">
                 <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
