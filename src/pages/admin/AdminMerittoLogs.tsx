@@ -13,6 +13,27 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+const MERITTO_FIELDS: { key: string; label: string; required?: boolean }[] = [
+  { key: "name", label: "Name", required: true },
+  { key: "email", label: "Email" },
+  { key: "mobile", label: "Mobile" },
+  { key: "state", label: "State" },
+  { key: "city", label: "City" },
+  { key: "campus", label: "Campus / Program" },
+  { key: "course", label: "Course" },
+  { key: "medium", label: "Medium" },
+  { key: "campaign", label: "Campaign" },
+  { key: "source", label: "Source" },
+];
+
+type BulkResult = {
+  row: number;
+  mapped: Record<string, string>;
+  status: "pending" | "success" | "failed" | "invalid";
+  error?: string;
+  http?: number;
+};
+
 type Log = {
   id: string;
   source: string;
