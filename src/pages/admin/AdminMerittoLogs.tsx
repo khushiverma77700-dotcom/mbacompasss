@@ -63,6 +63,69 @@ export default function AdminMerittoLogs() {
     campaign: "manual_push",
     extraJson: "",
   });
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; success: number; failed: number }>({ done: 0, total: 0, success: 0, failed: 0 });
+
+  const parseCSV = (text: string): Record<string, string>[] => {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) return [];
+    const parseLine = (line: string) => {
+      const out: string[] = [];
+      let cur = "", q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (q && line[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+        else if (c === "," && !q) { out.push(cur); cur = ""; }
+        else cur += c;
+      }
+      out.push(cur);
+      return out.map((s) => s.trim());
+    };
+    const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+    return lines.slice(1).map((line) => {
+      const cells = parseLine(line);
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
+      return row;
+    });
+  };
+
+  const runBulk = async () => {
+    if (!bulkFile) { toast.error("Choose a CSV file"); return; }
+    const text = await bulkFile.text();
+    const rows = parseCSV(text);
+    if (!rows.length) { toast.error("CSV appears empty"); return; }
+    setBulkBusy(true);
+    setBulkProgress({ done: 0, total: rows.length, success: 0, failed: 0 });
+    let success = 0, failed = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      try {
+        const { data, error } = await supabase.functions.invoke("push-to-meritto", {
+          body: {
+            source: r.source || "bulk_upload",
+            name: r.name || undefined,
+            email: r.email || undefined,
+            mobile: r.mobile || undefined,
+            state: r.state || undefined,
+            city: r.city || undefined,
+            campus: r.campus || undefined,
+            course: r.course || undefined,
+            medium: r.medium || "website",
+            campaign: r.campaign || "bulk_upload",
+          },
+        });
+        if (error || !data?.ok) failed++; else success++;
+      } catch { failed++; }
+      setBulkProgress({ done: i + 1, total: rows.length, success, failed });
+    }
+    setBulkBusy(false);
+    toast.success(`Bulk push complete — ${success} delivered, ${failed} failed`);
+    await load();
+  };
+
 
   const load = async () => {
     setLoading(true);
