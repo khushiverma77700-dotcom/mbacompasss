@@ -353,6 +353,7 @@ export default function AdminMerittoLogs() {
           course: manual.course || undefined,
           medium: manual.medium || undefined,
           campaign: manual.campaign || undefined,
+          origin_domain: originDomain,
           extra,
         },
       });
