@@ -180,6 +180,11 @@ Deno.serve(async (req) => {
     console.log("[meritto] response", { status: result.status, ok: result.ok });
 
     const finalStatus = result.ok ? "success" : "failed";
+    const errMsg = result.ok
+      ? null
+      : ((result.json as any)?.message
+          ? `Meritto: ${(result.json as any).message}`
+          : `HTTP ${result.status}`);
     if (logId) {
       await admin
         .from("meritto_lead_logs")
@@ -188,7 +193,7 @@ Deno.serve(async (req) => {
           response: result.json as unknown as Record<string, unknown>,
           http_status: result.status,
           status: finalStatus,
-          error: result.ok ? null : `HTTP ${result.status}`,
+          error: errMsg,
           retry_count: input.retry_log_id ? (undefined as any) : 0,
           last_attempt_at: new Date().toISOString(),
         })
