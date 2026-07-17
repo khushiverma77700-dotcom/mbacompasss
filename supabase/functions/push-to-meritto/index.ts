@@ -19,6 +19,7 @@ type LeadInput = {
   course?: string;
   medium?: string;
   campaign?: string;
+  origin_domain?: string; // e.g. bschoolbuzz.in, mbacompass.in — tracked via sub_source
   extra?: Record<string, unknown>;
 };
 
@@ -31,6 +32,17 @@ function sanitizeMobile(m?: string) {
 }
 
 async function callMeritto(secret: string, lead: LeadInput) {
+  // Meritto binds `source=bschoolbuzz` to the URL path — it cannot be changed.
+  // To distinguish which of our domains the lead came from (bschoolbuzz /
+  // bschoolbuzz.in / mbacompass.in), we tag the origin domain into multiple
+  // sub-source/UTM fields so it's visible on the Meritto dashboard and CSV
+  // exports without triggering "Invalid Source".
+  const domain = (lead.origin_domain || "").trim().toLowerCase();
+  const baseMedium = lead.medium ?? "website";
+  const medium = domain ? `${baseMedium} | ${domain}` : baseMedium;
+  const baseCampaign = lead.campaign ?? lead.source;
+  const campaign = domain ? `${baseCampaign} | ${domain}` : baseCampaign;
+
   const body: Record<string, unknown> = {
     name: lead.name ?? "",
     email: lead.email ?? "",
@@ -42,8 +54,15 @@ async function callMeritto(secret: string, lead: LeadInput) {
     city: lead.city ?? "",
     campus: lead.campus ?? "",
     course: lead.course ?? "",
-    medium: lead.medium ?? "website",
-    campaign: lead.campaign ?? lead.source,
+    medium,
+    campaign,
+    // Sub-source / UTM fields — Meritto accepts these as extra params and
+    // shows them alongside the lead. Multiple field names for compatibility.
+    sub_source: domain || "bschoolbuzz",
+    utm_source: domain || "bschoolbuzz",
+    utm_medium: baseMedium,
+    utm_campaign: baseCampaign,
+    lead_origin: domain || "bschoolbuzz",
     ...(lead.extra ?? {}),
   };
 
@@ -57,13 +76,18 @@ async function callMeritto(secret: string, lead: LeadInput) {
   });
 
   const text = await res.text();
-  let json: unknown = null;
+  let json: any = null;
   try {
     json = JSON.parse(text);
   } catch {
     json = { raw: text };
   }
-  return { ok: res.ok, status: res.status, json, body };
+  // Meritto returns HTTP 200 even for business-level failures (e.g. duplicate,
+  // invalid source). Detect the actual outcome from the payload.
+  const merittoStatus = (json?.status ?? "").toString().toLowerCase();
+  const businessOk = merittoStatus === "" || merittoStatus === "success" || merittoStatus === "ok";
+  const ok = res.ok && businessOk;
+  return { ok, status: res.status, json, body };
 }
 
 Deno.serve(async (req) => {
