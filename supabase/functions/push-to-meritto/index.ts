@@ -31,7 +31,16 @@ function sanitizeMobile(m?: string) {
   return digits;
 }
 
-async function callMeritto(secret: string, lead: LeadInput) {
+function redact(body: Record<string, unknown>) {
+  const clone: Record<string, unknown> = { ...body };
+  if (typeof clone.secret_key === "string") {
+    const s = clone.secret_key as string;
+    clone.secret_key = s.length > 8 ? `${s.slice(0, 4)}…${s.slice(-4)}` : "***";
+  }
+  return clone;
+}
+
+async function callMeritto(secret: string, lead: LeadInput, cid: string) {
   // Meritto binds `source=bschoolbuzz` to the URL path — it cannot be changed.
   // To distinguish which of our domains the lead came from (bschoolbuzz /
   // bschoolbuzz.in / mbacompass.in), we tag the origin domain into multiple
@@ -56,8 +65,6 @@ async function callMeritto(secret: string, lead: LeadInput) {
     course: lead.course ?? "",
     medium,
     campaign,
-    // Sub-source / UTM fields — Meritto accepts these as extra params and
-    // shows them alongside the lead. Multiple field names for compatibility.
     sub_source: domain || "bschoolbuzz",
     utm_source: domain || "bschoolbuzz",
     utm_medium: baseMedium,
@@ -66,29 +73,48 @@ async function callMeritto(secret: string, lead: LeadInput) {
     ...(lead.extra ?? {}),
   };
 
-  const res = await fetch(MERITTO_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "secret-key": secret,
-    },
-    body: JSON.stringify(body),
+  const startedAt = Date.now();
+  console.log(`[meritto][${cid}] → POST ${MERITTO_URL}`, {
+    origin_domain: domain || null,
+    lead_source: lead.source,
+    payload: redact(body),
   });
 
+  let res: Response;
+  try {
+    res = await fetch(MERITTO_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "secret-key": secret },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    const durationMs = Date.now() - startedAt;
+    console.error(`[meritto][${cid}] ✗ network error after ${durationMs}ms`, err);
+    throw err;
+  }
+
   const text = await res.text();
+  const durationMs = Date.now() - startedAt;
   let json: any = null;
   try {
     json = JSON.parse(text);
   } catch {
     json = { raw: text };
   }
-  // Meritto returns HTTP 200 even for business-level failures (e.g. duplicate,
-  // invalid source). Detect the actual outcome from the payload.
   const merittoStatus = (json?.status ?? "").toString().toLowerCase();
   const businessOk = merittoStatus === "" || merittoStatus === "success" || merittoStatus === "ok";
   const ok = res.ok && businessOk;
-  return { ok, status: res.status, json, body };
+
+  console.log(`[meritto][${cid}] ← HTTP ${res.status} in ${durationMs}ms`, {
+    ok,
+    meritto_status: json?.status ?? null,
+    meritto_message: json?.message ?? null,
+    response_preview: text.slice(0, 500),
+  });
+
+  return { ok, status: res.status, json, body, durationMs };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
