@@ -83,8 +83,20 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
   try {
-    const input = (await req.json()) as LeadInput & { retry_log_id?: string };
-    console.log("[meritto] incoming", { source: input.source, log_id: input.log_id, retry: !!input.retry_log_id });
+    const input = (await req.json()) as LeadInput & { retry_log_id?: string; skip_log?: boolean };
+    const skipLog = !!input.skip_log;
+    console.log("[meritto] incoming", { source: input.source, log_id: input.log_id, retry: !!input.retry_log_id, skip_log: skipLog });
+
+    // Ephemeral mode: push to Meritto WITHOUT persisting anything to our DB.
+    // Used by bulk uploads so lead data never lands on our server.
+    if (skipLog && !input.retry_log_id) {
+      const result = await callMeritto(secret, input);
+      console.log("[meritto] ephemeral response", { status: result.status, ok: result.ok });
+      return new Response(
+        JSON.stringify({ ok: result.ok, status: result.status, log_id: null, response: result.json, ephemeral: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Retry mode
     let logId = input.log_id ?? null;

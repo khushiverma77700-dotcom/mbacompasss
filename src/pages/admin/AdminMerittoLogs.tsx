@@ -164,6 +164,7 @@ export default function AdminMerittoLogs() {
     try {
       const { data, error } = await supabase.functions.invoke("push-to-meritto", {
         body: {
+          skip_log: true, // ephemeral: never persist bulk lead data on our server
           source: mapped.source || "bulk_upload",
           name: mapped.name || undefined,
           email: mapped.email || undefined,
@@ -559,6 +560,10 @@ export default function AdminMerittoLogs() {
 
           {bulkStep === "upload" && (
             <div className="space-y-4 text-sm">
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                <div className="font-semibold mb-0.5">Zero-storage mode</div>
+                Bulk leads are streamed straight to Meritto — nothing is saved to our database. The results report lives only in this browser tab; export it as CSV before closing. Individual leads from website forms are still logged normally.
+              </div>
               <div className="rounded-md border bg-muted/40 p-3">
                 <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
                 <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source. If your CSV uses different headers, you'll map them in the next step.</p>
@@ -573,6 +578,8 @@ export default function AdminMerittoLogs() {
               </div>
             </div>
           )}
+
+
 
           {bulkStep === "map" && (() => {
             const mapped = buildMapped();
