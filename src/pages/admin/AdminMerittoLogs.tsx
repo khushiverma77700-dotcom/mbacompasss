@@ -121,14 +121,56 @@ export default function AdminMerittoLogs() {
     }
   };
 
+  const pushManual = async () => {
+    if (!manual.name && !manual.email && !manual.mobile) {
+      toast.error("Enter at least name, email or mobile");
+      return;
+    }
+    let extra: Record<string, unknown> | undefined;
+    if (manual.extraJson.trim()) {
+      try { extra = JSON.parse(manual.extraJson); }
+      catch { toast.error("Extra JSON is not valid JSON"); return; }
+    }
+    setManualBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("push-to-meritto", {
+        body: {
+          source: manual.source || "manual",
+          name: manual.name || undefined,
+          email: manual.email || undefined,
+          mobile: manual.mobile || undefined,
+          state: manual.state || undefined,
+          city: manual.city || undefined,
+          campus: manual.campus || undefined,
+          course: manual.course || undefined,
+          medium: manual.medium || undefined,
+          campaign: manual.campaign || undefined,
+          extra,
+        },
+      });
+      if (error) throw error;
+      toast.success(data?.ok ? "Lead pushed to Meritto ✅" : `Sent — Meritto responded HTTP ${data?.status}`);
+      setManualOpen(false);
+      setManual({ ...manual, name: "", email: "", mobile: "", state: "", city: "", campus: "", course: "", extraJson: "" });
+      await load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Push failed");
+    } finally {
+      setManualBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold">Meritto (NoPaperForms) Integration</h1>
           <p className="text-sm text-muted-foreground">Every lead captured on the site is automatically pushed to Meritto. Track delivery here.</p>
         </div>
-        <Button onClick={load} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setManualOpen(true)}><Plus className="h-4 w-4 mr-2" />Push Manually</Button>
+          <Button onClick={load} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
