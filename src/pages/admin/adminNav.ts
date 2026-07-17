@@ -7,7 +7,7 @@ import {
   Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare,
   TrendingUp, Sparkles, ShieldCheck, Briefcase, Target, PhoneCall, Database,
   Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart, CalendarClock, FileCode,
-  Gift,
+  Gift, Send,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -109,6 +109,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase, dotKey: "business" },
       { label: "User Submissions", path: "/admin/user-submissions", icon: ShieldCheck, dotKey: "submissions" },
       { label: "Listing Edit Requests", path: "/admin/listing-change-requests", icon: GitCompare, dotKey: "changeRequests" },
+      { label: "Meritto Integration", path: "/admin/meritto-logs", icon: Send },
     ],
   },
   {
