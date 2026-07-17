@@ -13,6 +13,27 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+const MERITTO_FIELDS: { key: string; label: string; required?: boolean }[] = [
+  { key: "name", label: "Name", required: true },
+  { key: "email", label: "Email" },
+  { key: "mobile", label: "Mobile" },
+  { key: "state", label: "State" },
+  { key: "city", label: "City" },
+  { key: "campus", label: "Campus / Program" },
+  { key: "course", label: "Course" },
+  { key: "medium", label: "Medium" },
+  { key: "campaign", label: "Campaign" },
+  { key: "source", label: "Source" },
+];
+
+type BulkResult = {
+  row: number;
+  mapped: Record<string, string>;
+  status: "pending" | "success" | "failed" | "invalid";
+  error?: string;
+  http?: number;
+};
+
 type Log = {
   id: string;
   source: string;
@@ -65,12 +86,16 @@ export default function AdminMerittoLogs() {
   });
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [bulkFile, setBulkFile] = useState<File | null>(null);
-  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; success: number; failed: number }>({ done: 0, total: 0, success: 0, failed: 0 });
+  const [bulkStep, setBulkStep] = useState<"upload" | "map" | "review">("upload");
+  const [bulkHeaders, setBulkHeaders] = useState<string[]>([]);
+  const [bulkRaw, setBulkRaw] = useState<Record<string, string>[]>([]);
+  const [bulkMapping, setBulkMapping] = useState<Record<string, string>>({});
+  const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
 
-  const parseCSV = (text: string): Record<string, string>[] => {
+  const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
+    if (lines.length < 2) return { headers: [], rows: [] };
     const parseLine = (line: string) => {
       const out: string[] = [];
       let cur = "", q = false;
@@ -83,48 +108,165 @@ export default function AdminMerittoLogs() {
       out.push(cur);
       return out.map((s) => s.trim());
     };
-    const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
-    return lines.slice(1).map((line) => {
+    const headers = parseLine(lines[0]);
+    const rows = lines.slice(1).map((line) => {
       const cells = parseLine(line);
       const row: Record<string, string> = {};
       headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
       return row;
     });
+    return { headers, rows };
+  };
+
+  const autoMap = (headers: string[]): Record<string, string> => {
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const map: Record<string, string> = {};
+    for (const t of MERITTO_FIELDS) {
+      const hit = headers.find((h) => norm(h) === norm(t.key)) || headers.find((h) => norm(h).includes(norm(t.key)));
+      if (hit) map[t.key] = hit;
+    }
+    return map;
+  };
+
+  const validateRow = (r: Record<string, string>): string | null => {
+    if (!r.name) return "Name is required";
+    if (!r.email && !r.mobile) return "Email or mobile is required";
+    if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) return "Invalid email format";
+    if (r.mobile) {
+      const digits = r.mobile.replace(/\D/g, "");
+      if (digits.length < 10) return "Mobile must have at least 10 digits";
+    }
+    return null;
+  };
+
+  const onBulkFile = async (file: File) => {
+    const text = await file.text();
+    const { headers, rows } = parseCSV(text);
+    if (!rows.length) { toast.error("CSV appears empty"); return; }
+    setBulkHeaders(headers);
+    setBulkRaw(rows);
+    setBulkMapping(autoMap(headers));
+    setBulkStep("map");
+  };
+
+  const buildMapped = (): { mapped: Record<string, string>; raw: Record<string, string>; error: string | null }[] => {
+    return bulkRaw.map((r) => {
+      const mapped: Record<string, string> = {};
+      for (const t of MERITTO_FIELDS) {
+        const src = bulkMapping[t.key];
+        mapped[t.key] = src ? (r[src] ?? "").trim() : "";
+      }
+      return { mapped, raw: r, error: validateRow(mapped) };
+    });
+  };
+
+  const pushOne = async (mapped: Record<string, string>): Promise<{ ok: boolean; error?: string; http?: number }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("push-to-meritto", {
+        body: {
+          source: mapped.source || "bulk_upload",
+          name: mapped.name || undefined,
+          email: mapped.email || undefined,
+          mobile: mapped.mobile || undefined,
+          state: mapped.state || undefined,
+          city: mapped.city || undefined,
+          campus: mapped.campus || undefined,
+          course: mapped.course || undefined,
+          medium: mapped.medium || "website",
+          campaign: mapped.campaign || "bulk_upload",
+        },
+      });
+      if (error) return { ok: false, error: error.message };
+      if (!data?.ok) return { ok: false, error: `Meritto rejected (HTTP ${data?.status ?? "?"})`, http: data?.status };
+      return { ok: true, http: data?.status };
+    } catch (e: any) {
+      return { ok: false, error: e?.message ?? "Network error" };
+    }
   };
 
   const runBulk = async () => {
-    if (!bulkFile) { toast.error("Choose a CSV file"); return; }
-    const text = await bulkFile.text();
-    const rows = parseCSV(text);
-    if (!rows.length) { toast.error("CSV appears empty"); return; }
+    const prepared = buildMapped();
+    const initial: BulkResult[] = prepared.map((p, i) => ({
+      row: i + 2,
+      mapped: p.mapped,
+      status: p.error ? "invalid" : "pending",
+      error: p.error ?? undefined,
+    }));
+    setBulkResults(initial);
+    setBulkStep("review");
+    const toSend = initial.map((r, idx) => ({ r, idx })).filter(({ r }) => r.status === "pending");
+    if (!toSend.length) { toast.error("No valid rows to send — fix errors and retry"); return; }
     setBulkBusy(true);
-    setBulkProgress({ done: 0, total: rows.length, success: 0, failed: 0 });
-    let success = 0, failed = 0;
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      try {
-        const { data, error } = await supabase.functions.invoke("push-to-meritto", {
-          body: {
-            source: r.source || "bulk_upload",
-            name: r.name || undefined,
-            email: r.email || undefined,
-            mobile: r.mobile || undefined,
-            state: r.state || undefined,
-            city: r.city || undefined,
-            campus: r.campus || undefined,
-            course: r.course || undefined,
-            medium: r.medium || "website",
-            campaign: r.campaign || "bulk_upload",
-          },
-        });
-        if (error || !data?.ok) failed++; else success++;
-      } catch { failed++; }
-      setBulkProgress({ done: i + 1, total: rows.length, success, failed });
+    setBulkProgress({ done: 0, total: toSend.length });
+    let done = 0;
+    const next = [...initial];
+    for (const { r, idx } of toSend) {
+      const res = await pushOne(r.mapped);
+      next[idx] = { ...r, status: res.ok ? "success" : "failed", error: res.error, http: res.http };
+      done++;
+      setBulkResults([...next]);
+      setBulkProgress({ done, total: toSend.length });
     }
     setBulkBusy(false);
-    toast.success(`Bulk push complete — ${success} delivered, ${failed} failed`);
+    const s = next.filter((x) => x.status === "success").length;
+    const f = next.filter((x) => x.status === "failed").length;
+    toast.success(`Bulk push complete — ${s} delivered, ${f} failed`);
     await load();
   };
+
+  const retryFailed = async () => {
+    const failedIdx = bulkResults.map((r, i) => (r.status === "failed" ? i : -1)).filter((i) => i >= 0);
+    if (!failedIdx.length) { toast.info("No failed rows to retry"); return; }
+    setBulkBusy(true);
+    setBulkProgress({ done: 0, total: failedIdx.length });
+    const next = [...bulkResults];
+    let done = 0;
+    for (const i of failedIdx) {
+      next[i] = { ...next[i], status: "pending", error: undefined };
+      setBulkResults([...next]);
+      const res = await pushOne(next[i].mapped);
+      next[i] = { ...next[i], status: res.ok ? "success" : "failed", error: res.error, http: res.http };
+      done++;
+      setBulkResults([...next]);
+      setBulkProgress({ done, total: failedIdx.length });
+    }
+    setBulkBusy(false);
+    await load();
+  };
+
+  const exportResults = () => {
+    if (!bulkResults.length) return;
+    const cols = ["row", "status", "http", "error", ...MERITTO_FIELDS.map((f) => f.key)];
+    const esc = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = cols.join(",");
+    const body = bulkResults.map((r) => cols.map((c) => {
+      if (c === "row") return r.row;
+      if (c === "status") return r.status;
+      if (c === "http") return r.http ?? "";
+      if (c === "error") return esc(r.error ?? "");
+      return esc(r.mapped[c] ?? "");
+    }).join(",")).join("\n");
+    const blob = new Blob([`${header}\n${body}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `meritto-bulk-results-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const resetBulk = () => {
+    setBulkStep("upload");
+    setBulkHeaders([]);
+    setBulkRaw([]);
+    setBulkMapping({});
+    setBulkResults([]);
+    setBulkProgress({ done: 0, total: 0 });
+  };
+
 
 
   const load = async () => {
@@ -399,42 +541,166 @@ export default function AdminMerittoLogs() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkBusy && setBulkOpen(o)}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={bulkOpen} onOpenChange={(o) => { if (bulkBusy) return; setBulkOpen(o); if (!o) resetBulk(); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Bulk upload leads to Meritto</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 text-sm">
-            <div className="rounded-md border bg-muted/40 p-3">
-              <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
-              <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source.</p>
-              <a href="/meritto-bulk-sample.csv" download>
-                <Button size="sm" variant="outline"><Download className="h-3 w-3 mr-1" />Download sample.csv</Button>
-              </a>
+
+          <div className="flex items-center gap-2 text-xs mb-2">
+            {(["upload", "map", "review"] as const).map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${bulkStep === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</div>
+                <span className={bulkStep === s ? "font-semibold" : "text-muted-foreground"}>{s === "upload" ? "Upload CSV" : s === "map" ? "Map columns" : "Review & push"}</span>
+                {i < 2 && <div className="w-6 h-px bg-border" />}
+              </div>
+            ))}
+          </div>
+
+          {bulkStep === "upload" && (
+            <div className="space-y-4 text-sm">
+              <div className="rounded-md border bg-muted/40 p-3">
+                <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
+                <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source. If your CSV uses different headers, you'll map them in the next step.</p>
+                <a href="/meritto-bulk-sample.csv" download>
+                  <Button size="sm" variant="outline"><Download className="h-3 w-3 mr-1" />Download sample.csv</Button>
+                </a>
+              </div>
+              <div>
+                <div className="font-medium mb-1">Step 2 — Upload your CSV</div>
+                <Input type="file" accept=".csv,text/csv" onChange={(e) => { const f = e.target.files?.[0]; if (f) onBulkFile(f); }} />
+                <p className="text-[11px] text-muted-foreground mt-1">You'll review headers, mapping and validation before anything is sent.</p>
+              </div>
             </div>
-            <div>
-              <div className="font-medium mb-1">Step 2 — Upload your filled CSV</div>
-              <Input type="file" accept=".csv,text/csv" onChange={(e) => setBulkFile(e.target.files?.[0] ?? null)} disabled={bulkBusy} />
-              <p className="text-[11px] text-muted-foreground mt-1">Each row will be pushed to Meritto and logged in the history below.</p>
-            </div>
-            {bulkBusy && (
-              <div className="rounded-md border p-3 text-xs space-y-1">
-                <div>Pushing… {bulkProgress.done}/{bulkProgress.total}</div>
-                <div className="h-1.5 bg-muted rounded overflow-hidden">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }} />
+          )}
+
+          {bulkStep === "map" && (() => {
+            const mapped = buildMapped();
+            const invalid = mapped.filter((m) => m.error).length;
+            return (
+              <div className="space-y-4 text-sm">
+                <div className="rounded-md border p-3 bg-muted/30">
+                  <div className="text-xs text-muted-foreground">Detected {bulkRaw.length} rows and {bulkHeaders.length} columns. Map each Meritto field to a column in your CSV.</div>
                 </div>
-                <div className="flex gap-3 text-muted-foreground">
-                  <span className="text-emerald-600">Delivered: {bulkProgress.success}</span>
-                  <span className="text-red-600">Failed: {bulkProgress.failed}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {MERITTO_FIELDS.map((f) => (
+                    <div key={f.key}>
+                      <Label className="text-xs">{f.label}{f.required && <span className="text-red-500"> *</span>}</Label>
+                      <Select value={bulkMapping[f.key] ?? "__none"} onValueChange={(v) => setBulkMapping({ ...bulkMapping, [f.key]: v === "__none" ? "" : v })}>
+                        <SelectTrigger><SelectValue placeholder="Select column" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none">— Skip —</SelectItem>
+                          {bulkHeaders.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+                <div className={`rounded-md border p-3 text-xs ${invalid ? "bg-red-50 border-red-200 text-red-800" : "bg-emerald-50 border-emerald-200 text-emerald-800"}`}>
+                  {invalid
+                    ? `${invalid} of ${mapped.length} rows have validation errors (missing name / contact, invalid email, or short mobile). You can still push — invalid rows will be skipped and shown in results.`
+                    : `All ${mapped.length} rows passed validation.`}
+                </div>
+                <div className="overflow-x-auto max-h-64 border rounded">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/40 sticky top-0">
+                      <tr>
+                        <th className="text-left px-2 py-1">Row</th>
+                        {MERITTO_FIELDS.map((f) => <th key={f.key} className="text-left px-2 py-1">{f.label}</th>)}
+                        <th className="text-left px-2 py-1">Validation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mapped.slice(0, 20).map((m, i) => (
+                        <tr key={i} className={`border-t ${m.error ? "bg-red-50" : ""}`}>
+                          <td className="px-2 py-1">{i + 2}</td>
+                          {MERITTO_FIELDS.map((f) => <td key={f.key} className="px-2 py-1">{m.mapped[f.key] || "-"}</td>)}
+                          <td className="px-2 py-1 text-red-700">{m.error || "OK"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {mapped.length > 20 && <div className="p-2 text-[11px] text-muted-foreground">Showing first 20 of {mapped.length} rows.</div>}
                 </div>
               </div>
+            );
+          })()}
+
+          {bulkStep === "review" && (
+            <div className="space-y-3 text-sm">
+              {bulkBusy && (
+                <div className="rounded-md border p-3 text-xs space-y-1">
+                  <div>Pushing… {bulkProgress.done}/{bulkProgress.total}</div>
+                  <div className="h-1.5 bg-muted rounded overflow-hidden">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }} />
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-4 gap-2 text-xs">
+                <ResultChip label="Total" value={bulkResults.length} />
+                <ResultChip label="Delivered" value={bulkResults.filter((r) => r.status === "success").length} tone="emerald" />
+                <ResultChip label="Failed" value={bulkResults.filter((r) => r.status === "failed").length} tone="red" />
+                <ResultChip label="Invalid" value={bulkResults.filter((r) => r.status === "invalid").length} tone="amber" />
+              </div>
+              <div className="overflow-x-auto max-h-80 border rounded">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/40 sticky top-0">
+                    <tr>
+                      <th className="text-left px-2 py-1">Row</th>
+                      <th className="text-left px-2 py-1">Name</th>
+                      <th className="text-left px-2 py-1">Email</th>
+                      <th className="text-left px-2 py-1">Mobile</th>
+                      <th className="text-left px-2 py-1">Status</th>
+                      <th className="text-left px-2 py-1">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkResults.map((r) => (
+                      <tr key={r.row} className={`border-t ${r.status === "failed" ? "bg-red-50" : r.status === "invalid" ? "bg-amber-50" : r.status === "success" ? "bg-emerald-50/40" : ""}`}>
+                        <td className="px-2 py-1">{r.row}</td>
+                        <td className="px-2 py-1">{r.mapped.name || "-"}</td>
+                        <td className="px-2 py-1">{r.mapped.email || "-"}</td>
+                        <td className="px-2 py-1">{r.mapped.mobile || "-"}</td>
+                        <td className="px-2 py-1">
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] border ${
+                            r.status === "success" ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            : r.status === "failed" ? "bg-red-100 text-red-800 border-red-200"
+                            : r.status === "invalid" ? "bg-amber-100 text-amber-800 border-amber-200"
+                            : "bg-muted text-muted-foreground"
+                          }`}>{r.status}{r.http ? ` · ${r.http}` : ""}</span>
+                        </td>
+                        <td className="px-2 py-1 text-red-700">{r.error || ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 flex-wrap">
+            {bulkStep === "upload" && (
+              <Button variant="outline" onClick={() => setBulkOpen(false)}>Close</Button>
             )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={bulkBusy}>Close</Button>
-            <Button onClick={runBulk} disabled={bulkBusy || !bulkFile}>
-              <Upload className="h-4 w-4 mr-2" />{bulkBusy ? "Pushing…" : "Start Bulk Push"}
-            </Button>
+            {bulkStep === "map" && (
+              <>
+                <Button variant="outline" onClick={resetBulk} disabled={bulkBusy}>Back</Button>
+                <Button onClick={runBulk} disabled={bulkBusy || !bulkMapping.name}>
+                  <Upload className="h-4 w-4 mr-2" />Start Bulk Push
+                </Button>
+              </>
+            )}
+            {bulkStep === "review" && (
+              <>
+                <Button variant="outline" onClick={resetBulk} disabled={bulkBusy}>New Upload</Button>
+                <Button variant="outline" onClick={exportResults} disabled={!bulkResults.length}>
+                  <Download className="h-4 w-4 mr-2" />Export CSV
+                </Button>
+                <Button onClick={retryFailed} disabled={bulkBusy || !bulkResults.some((r) => r.status === "failed")}>
+                  <RefreshCw className="h-4 w-4 mr-2" />Retry Failed
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -467,6 +733,16 @@ function Field({ label, value }: { label: string; value: string | null | undefin
     <div>
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="font-medium">{value || "-"}</div>
+    </div>
+  );
+}
+
+function ResultChip({ label, value, tone }: { label: string; value: number; tone?: string }) {
+  const cls = tone === "emerald" ? "text-emerald-600" : tone === "red" ? "text-red-600" : tone === "amber" ? "text-amber-600" : "";
+  return (
+    <div className="rounded-md border p-2">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={`text-lg font-bold ${cls}`}>{value}</div>
     </div>
   );
 }
