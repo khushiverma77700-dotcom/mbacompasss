@@ -8648,6 +8648,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_meritto_retry: { Args: { p_id: string }; Returns: undefined }
       is_admin_email: { Args: { _email: string }; Returns: boolean }
       mask_secret: { Args: { _v: string }; Returns: string }
       materialize_recurring_tasks: {
