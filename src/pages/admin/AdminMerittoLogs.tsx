@@ -176,6 +176,7 @@ export default function AdminMerittoLogs() {
           course: mapped.course || undefined,
           medium: mapped.medium || "website",
           campaign: mapped.campaign || "bulk_upload",
+          origin_domain: originDomain,
         },
       });
       if (error) return { ok: false, error: error.message };
