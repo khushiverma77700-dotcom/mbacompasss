@@ -567,6 +567,20 @@ export default function AdminMerittoLogs() {
                 <div className="font-semibold mb-0.5">Zero-storage mode</div>
                 Bulk leads are streamed straight to Meritto — nothing is saved to our database. The results report lives only in this browser tab; export it as CSV before closing. Individual leads from website forms are still logged normally.
               </div>
+              <div className="rounded-md border p-3">
+                <Label className="text-xs font-medium">Origin domain (tagged on every lead)</Label>
+                <Select value={originDomain} onValueChange={setOriginDomain}>
+                  <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bschoolbuzz.in">bschoolbuzz.in</SelectItem>
+                    <SelectItem value="bschoolbuzz.com">bschoolbuzz.com</SelectItem>
+                    <SelectItem value="mbacompass.in">mbacompass.in</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Meritto's URL fixes <code>source=bschoolbuzz</code>, so we tag the actual origin domain into <code>sub_source</code>, <code>utm_source</code>, <code>lead_origin</code>, <code>medium</code> and <code>campaign</code> — visible on the Meritto dashboard without triggering "Invalid Source".
+                </p>
+              </div>
               <div className="rounded-md border bg-muted/40 p-3">
                 <div className="font-medium mb-1">Step 1 — Download the sample CSV</div>
                 <p className="text-xs text-muted-foreground mb-2">Uses the exact field names Meritto expects: name, email, mobile, state, city, campus, course, medium, campaign, source. If your CSV uses different headers, you'll map them in the next step.</p>
