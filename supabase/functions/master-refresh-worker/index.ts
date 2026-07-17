@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
     }
     const remaining = 0;
 
-    return new Response(JSON.stringify({ processed, remaining: remaining ?? 0 }), {
+    return new Response(JSON.stringify({ processed, remaining }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
