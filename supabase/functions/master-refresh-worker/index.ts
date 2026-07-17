@@ -112,19 +112,32 @@ Deno.serve(async (req) => {
     }
     for (const jid of touchedJobs) await rollupJob(sb, jid);
 
-    // If work remains, re-kick self so processing continues without waiting for cron.
-    const { count: remaining } = await sb.from("master_refresh_items")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["pending", "processing"]);
-    if ((remaining ?? 0) > 0) {
-      const kick = fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
-        body: JSON.stringify({ self_kick: true }),
-      }).catch(() => {});
-      // @ts-ignore EdgeRuntime is a Supabase Deno global
-      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(kick);
+    // Auto-fail items that have exceeded the retry budget so they stop being requeued forever.
+    await sb.from("master_refresh_items")
+      .update({ status: "failed", worker_lock_until: null, finished_at: new Date().toISOString(), error: "exceeded max attempts (5)" })
+      .in("status", ["pending", "processing"])
+      .gte("attempts", 5);
+
+    // Only re-kick if we actually made progress AND there are claimable items left.
+    // "Claimable" = pending items belonging to a queued/running, un-paused job.
+    // This prevents the runaway self-kick loop that used to fire on any orphaned pending row.
+    if (processed > 0) {
+      const { count: claimable } = await sb.from("master_refresh_items")
+        .select("id, master_refresh_jobs!inner(status,paused)", { count: "exact", head: true })
+        .eq("status", "pending")
+        .in("master_refresh_jobs.status", ["queued", "running"])
+        .eq("master_refresh_jobs.paused", false);
+      if ((claimable ?? 0) > 0) {
+        const kick = fetch(`${SUPABASE_URL}/functions/v1/master-refresh-worker`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
+          body: JSON.stringify({ self_kick: true }),
+        }).catch(() => {});
+        // @ts-ignore EdgeRuntime is a Supabase Deno global
+        if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(kick);
+      }
     }
+    const remaining = 0;
 
     return new Response(JSON.stringify({ processed, remaining: remaining ?? 0 }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
