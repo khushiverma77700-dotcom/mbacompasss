@@ -132,23 +132,31 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+  const cid = crypto.randomUUID().slice(0, 8);
+
   try {
     const input = (await req.json()) as LeadInput & { retry_log_id?: string; skip_log?: boolean };
     const skipLog = !!input.skip_log;
-    console.log("[meritto] incoming", { source: input.source, log_id: input.log_id, retry: !!input.retry_log_id, skip_log: skipLog });
+    console.log(`[meritto][${cid}] incoming`, {
+      source: input.source,
+      log_id: input.log_id ?? null,
+      retry_log_id: input.retry_log_id ?? null,
+      skip_log: skipLog,
+      origin_domain: input.origin_domain ?? null,
+      has_email: !!input.email,
+      has_mobile: !!input.mobile,
+    });
 
     // Ephemeral mode: push to Meritto WITHOUT persisting anything to our DB.
-    // Used by bulk uploads so lead data never lands on our server.
     if (skipLog && !input.retry_log_id) {
-      const result = await callMeritto(secret, input);
-      console.log("[meritto] ephemeral response", { status: result.status, ok: result.ok });
+      const result = await callMeritto(secret, input, cid);
+      console.log(`[meritto][${cid}] ephemeral done`, { ok: result.ok, http: result.status, ms: result.durationMs });
       return new Response(
-        JSON.stringify({ ok: result.ok, status: result.status, log_id: null, response: result.json, ephemeral: true }),
+        JSON.stringify({ ok: result.ok, status: result.status, log_id: null, response: result.json, correlation_id: cid, ephemeral: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Retry mode
     let logId = input.log_id ?? null;
     let lead: LeadInput = input;
 
@@ -159,7 +167,8 @@ Deno.serve(async (req) => {
         .eq("id", input.retry_log_id)
         .maybeSingle();
       if (!data) {
-        return new Response(JSON.stringify({ error: "log not found" }), {
+        console.warn(`[meritto][${cid}] retry log not found`, input.retry_log_id);
+        return new Response(JSON.stringify({ error: "log not found", correlation_id: cid }), {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -179,7 +188,6 @@ Deno.serve(async (req) => {
       };
     }
 
-    // Create pending log first (or update existing)
     if (!logId) {
       const { data: created } = await admin
         .from("meritto_lead_logs")
@@ -200,10 +208,10 @@ Deno.serve(async (req) => {
         .select("id")
         .single();
       logId = created?.id ?? null;
+      console.log(`[meritto][${cid}] created log ${logId}`);
     }
 
-    const result = await callMeritto(secret, lead);
-    console.log("[meritto] response", { status: result.status, ok: result.ok });
+    const result = await callMeritto(secret, lead, cid);
 
     const finalStatus = result.ok ? "success" : "failed";
     const errMsg = result.ok
@@ -211,11 +219,12 @@ Deno.serve(async (req) => {
       : ((result.json as any)?.message
           ? `Meritto: ${(result.json as any).message}`
           : `HTTP ${result.status}`);
+
     if (logId) {
       await admin
         .from("meritto_lead_logs")
         .update({
-          payload: result.body as unknown as Record<string, unknown>,
+          payload: redact(result.body) as unknown as Record<string, unknown>,
           response: result.json as unknown as Record<string, unknown>,
           http_status: result.status,
           status: finalStatus,
@@ -226,20 +235,22 @@ Deno.serve(async (req) => {
         .eq("id", logId);
 
       if (input.retry_log_id) {
-        // increment retry
         await admin.rpc("increment_meritto_retry", { p_id: logId }).catch(() => {});
       }
     }
 
+    console.log(`[meritto][${cid}] done`, { log_id: logId, status: finalStatus, http: result.status, ms: result.durationMs, error: errMsg });
+
     return new Response(
-      JSON.stringify({ ok: result.ok, status: result.status, log_id: logId, response: result.json }),
+      JSON.stringify({ ok: result.ok, status: result.status, log_id: logId, response: result.json, correlation_id: cid }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    console.error("[meritto] error", e);
-    return new Response(JSON.stringify({ error: String(e) }), {
+    console.error(`[meritto][${cid}] error`, e);
+    return new Response(JSON.stringify({ error: String(e), correlation_id: cid }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
