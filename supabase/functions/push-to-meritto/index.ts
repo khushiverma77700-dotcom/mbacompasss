@@ -3,8 +3,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const MERITTO_URL = "https://bschoolbuzz.nopaperforms.io/lead/v1/leadCreation";
+const MERITTO_URL = "https://api.in4.nopaperforms.com/dataporting/7080/bschoolbuzz";
 const SOURCE = "bschoolbuzz";
+const COLLEGE_ID = "7080";
 
 type LeadInput = {
   log_id?: string;
@@ -35,6 +36,8 @@ async function callMeritto(secret: string, lead: LeadInput) {
     email: lead.email ?? "",
     mobile: sanitizeMobile(lead.mobile),
     source: SOURCE,
+    college_id: COLLEGE_ID,
+    secret_key: secret,
     state: lead.state ?? "",
     city: lead.city ?? "",
     campus: lead.campus ?? "",
