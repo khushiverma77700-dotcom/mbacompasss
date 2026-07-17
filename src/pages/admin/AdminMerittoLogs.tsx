@@ -48,6 +48,21 @@ export default function AdminMerittoLogs() {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Log | null>(null);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualBusy, setManualBusy] = useState(false);
+  const [manual, setManual] = useState({
+    source: "manual",
+    name: "",
+    email: "",
+    mobile: "",
+    state: "",
+    city: "",
+    campus: "",
+    course: "",
+    medium: "website",
+    campaign: "manual_push",
+    extraJson: "",
+  });
 
   const load = async () => {
     setLoading(true);
