@@ -36,6 +36,8 @@ async function callMeritto(secret: string, lead: LeadInput) {
     email: lead.email ?? "",
     mobile: sanitizeMobile(lead.mobile),
     source: SOURCE,
+    college_id: COLLEGE_ID,
+    secret_key: secret,
     state: lead.state ?? "",
     city: lead.city ?? "",
     campus: lead.campus ?? "",
