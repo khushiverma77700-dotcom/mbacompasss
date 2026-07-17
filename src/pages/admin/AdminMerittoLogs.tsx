@@ -92,6 +92,7 @@ export default function AdminMerittoLogs() {
   const [bulkMapping, setBulkMapping] = useState<Record<string, string>>({});
   const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
+  const [originDomain, setOriginDomain] = useState<string>("bschoolbuzz.in");
 
   const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
