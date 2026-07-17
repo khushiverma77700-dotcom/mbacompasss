@@ -65,12 +65,16 @@ export default function AdminMerittoLogs() {
   });
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [bulkFile, setBulkFile] = useState<File | null>(null);
-  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; success: number; failed: number }>({ done: 0, total: 0, success: 0, failed: 0 });
+  const [bulkStep, setBulkStep] = useState<"upload" | "map" | "review">("upload");
+  const [bulkHeaders, setBulkHeaders] = useState<string[]>([]);
+  const [bulkRaw, setBulkRaw] = useState<Record<string, string>[]>([]);
+  const [bulkMapping, setBulkMapping] = useState<Record<string, string>>({});
+  const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
 
-  const parseCSV = (text: string): Record<string, string>[] => {
+  const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
+    if (lines.length < 2) return { headers: [], rows: [] };
     const parseLine = (line: string) => {
       const out: string[] = [];
       let cur = "", q = false;
@@ -83,48 +87,165 @@ export default function AdminMerittoLogs() {
       out.push(cur);
       return out.map((s) => s.trim());
     };
-    const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
-    return lines.slice(1).map((line) => {
+    const headers = parseLine(lines[0]);
+    const rows = lines.slice(1).map((line) => {
       const cells = parseLine(line);
       const row: Record<string, string> = {};
       headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
       return row;
     });
+    return { headers, rows };
+  };
+
+  const autoMap = (headers: string[]): Record<string, string> => {
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const map: Record<string, string> = {};
+    for (const t of MERITTO_FIELDS) {
+      const hit = headers.find((h) => norm(h) === norm(t.key)) || headers.find((h) => norm(h).includes(norm(t.key)));
+      if (hit) map[t.key] = hit;
+    }
+    return map;
+  };
+
+  const validateRow = (r: Record<string, string>): string | null => {
+    if (!r.name) return "Name is required";
+    if (!r.email && !r.mobile) return "Email or mobile is required";
+    if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) return "Invalid email format";
+    if (r.mobile) {
+      const digits = r.mobile.replace(/\D/g, "");
+      if (digits.length < 10) return "Mobile must have at least 10 digits";
+    }
+    return null;
+  };
+
+  const onBulkFile = async (file: File) => {
+    const text = await file.text();
+    const { headers, rows } = parseCSV(text);
+    if (!rows.length) { toast.error("CSV appears empty"); return; }
+    setBulkHeaders(headers);
+    setBulkRaw(rows);
+    setBulkMapping(autoMap(headers));
+    setBulkStep("map");
+  };
+
+  const buildMapped = (): { mapped: Record<string, string>; raw: Record<string, string>; error: string | null }[] => {
+    return bulkRaw.map((r) => {
+      const mapped: Record<string, string> = {};
+      for (const t of MERITTO_FIELDS) {
+        const src = bulkMapping[t.key];
+        mapped[t.key] = src ? (r[src] ?? "").trim() : "";
+      }
+      return { mapped, raw: r, error: validateRow(mapped) };
+    });
+  };
+
+  const pushOne = async (mapped: Record<string, string>): Promise<{ ok: boolean; error?: string; http?: number }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("push-to-meritto", {
+        body: {
+          source: mapped.source || "bulk_upload",
+          name: mapped.name || undefined,
+          email: mapped.email || undefined,
+          mobile: mapped.mobile || undefined,
+          state: mapped.state || undefined,
+          city: mapped.city || undefined,
+          campus: mapped.campus || undefined,
+          course: mapped.course || undefined,
+          medium: mapped.medium || "website",
+          campaign: mapped.campaign || "bulk_upload",
+        },
+      });
+      if (error) return { ok: false, error: error.message };
+      if (!data?.ok) return { ok: false, error: `Meritto rejected (HTTP ${data?.status ?? "?"})`, http: data?.status };
+      return { ok: true, http: data?.status };
+    } catch (e: any) {
+      return { ok: false, error: e?.message ?? "Network error" };
+    }
   };
 
   const runBulk = async () => {
-    if (!bulkFile) { toast.error("Choose a CSV file"); return; }
-    const text = await bulkFile.text();
-    const rows = parseCSV(text);
-    if (!rows.length) { toast.error("CSV appears empty"); return; }
+    const prepared = buildMapped();
+    const initial: BulkResult[] = prepared.map((p, i) => ({
+      row: i + 2,
+      mapped: p.mapped,
+      status: p.error ? "invalid" : "pending",
+      error: p.error ?? undefined,
+    }));
+    setBulkResults(initial);
+    setBulkStep("review");
+    const toSend = initial.map((r, idx) => ({ r, idx })).filter(({ r }) => r.status === "pending");
+    if (!toSend.length) { toast.error("No valid rows to send — fix errors and retry"); return; }
     setBulkBusy(true);
-    setBulkProgress({ done: 0, total: rows.length, success: 0, failed: 0 });
-    let success = 0, failed = 0;
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      try {
-        const { data, error } = await supabase.functions.invoke("push-to-meritto", {
-          body: {
-            source: r.source || "bulk_upload",
-            name: r.name || undefined,
-            email: r.email || undefined,
-            mobile: r.mobile || undefined,
-            state: r.state || undefined,
-            city: r.city || undefined,
-            campus: r.campus || undefined,
-            course: r.course || undefined,
-            medium: r.medium || "website",
-            campaign: r.campaign || "bulk_upload",
-          },
-        });
-        if (error || !data?.ok) failed++; else success++;
-      } catch { failed++; }
-      setBulkProgress({ done: i + 1, total: rows.length, success, failed });
+    setBulkProgress({ done: 0, total: toSend.length });
+    let done = 0;
+    const next = [...initial];
+    for (const { r, idx } of toSend) {
+      const res = await pushOne(r.mapped);
+      next[idx] = { ...r, status: res.ok ? "success" : "failed", error: res.error, http: res.http };
+      done++;
+      setBulkResults([...next]);
+      setBulkProgress({ done, total: toSend.length });
     }
     setBulkBusy(false);
-    toast.success(`Bulk push complete — ${success} delivered, ${failed} failed`);
+    const s = next.filter((x) => x.status === "success").length;
+    const f = next.filter((x) => x.status === "failed").length;
+    toast.success(`Bulk push complete — ${s} delivered, ${f} failed`);
     await load();
   };
+
+  const retryFailed = async () => {
+    const failedIdx = bulkResults.map((r, i) => (r.status === "failed" ? i : -1)).filter((i) => i >= 0);
+    if (!failedIdx.length) { toast.info("No failed rows to retry"); return; }
+    setBulkBusy(true);
+    setBulkProgress({ done: 0, total: failedIdx.length });
+    const next = [...bulkResults];
+    let done = 0;
+    for (const i of failedIdx) {
+      next[i] = { ...next[i], status: "pending", error: undefined };
+      setBulkResults([...next]);
+      const res = await pushOne(next[i].mapped);
+      next[i] = { ...next[i], status: res.ok ? "success" : "failed", error: res.error, http: res.http };
+      done++;
+      setBulkResults([...next]);
+      setBulkProgress({ done, total: failedIdx.length });
+    }
+    setBulkBusy(false);
+    await load();
+  };
+
+  const exportResults = () => {
+    if (!bulkResults.length) return;
+    const cols = ["row", "status", "http", "error", ...MERITTO_FIELDS.map((f) => f.key)];
+    const esc = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = cols.join(",");
+    const body = bulkResults.map((r) => cols.map((c) => {
+      if (c === "row") return r.row;
+      if (c === "status") return r.status;
+      if (c === "http") return r.http ?? "";
+      if (c === "error") return esc(r.error ?? "");
+      return esc(r.mapped[c] ?? "");
+    }).join(",")).join("\n");
+    const blob = new Blob([`${header}\n${body}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `meritto-bulk-results-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const resetBulk = () => {
+    setBulkStep("upload");
+    setBulkHeaders([]);
+    setBulkRaw([]);
+    setBulkMapping({});
+    setBulkResults([]);
+    setBulkProgress({ done: 0, total: 0 });
+  };
+
 
 
   const load = async () => {
