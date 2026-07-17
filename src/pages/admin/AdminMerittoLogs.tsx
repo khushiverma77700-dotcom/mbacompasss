@@ -232,6 +232,7 @@ export default function AdminMerittoLogs() {
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setManualOpen(true)}><Plus className="h-4 w-4 mr-2" />Push Manually</Button>
+          <Button onClick={() => setBulkOpen(true)} variant="secondary"><Upload className="h-4 w-4 mr-2" />Bulk Upload</Button>
           <Button onClick={load} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
         </div>
       </div>
