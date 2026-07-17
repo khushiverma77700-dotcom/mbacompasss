@@ -298,6 +298,51 @@ export default function AdminMerittoLogs() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Push a lead manually to Meritto</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <ManualField label="Name" value={manual.name} onChange={(v) => setManual({ ...manual, name: v })} placeholder="John Doe" />
+            <ManualField label="Email" value={manual.email} onChange={(v) => setManual({ ...manual, email: v })} placeholder="john@example.com" />
+            <ManualField label="Mobile (10 digits)" value={manual.mobile} onChange={(v) => setManual({ ...manual, mobile: v })} placeholder="9876543210" />
+            <ManualField label="State" value={manual.state} onChange={(v) => setManual({ ...manual, state: v })} placeholder="Maharashtra" />
+            <ManualField label="City" value={manual.city} onChange={(v) => setManual({ ...manual, city: v })} placeholder="Mumbai" />
+            <ManualField label="Campus" value={manual.campus} onChange={(v) => setManual({ ...manual, campus: v })} placeholder="MBA Compass" />
+            <ManualField label="Course" value={manual.course} onChange={(v) => setManual({ ...manual, course: v })} placeholder="MBA / PGDM" />
+            <ManualField label="Source (tag)" value={manual.source} onChange={(v) => setManual({ ...manual, source: v })} placeholder="manual" />
+            <ManualField label="Medium" value={manual.medium} onChange={(v) => setManual({ ...manual, medium: v })} placeholder="website" />
+            <ManualField label="Campaign" value={manual.campaign} onChange={(v) => setManual({ ...manual, campaign: v })} placeholder="manual_push" />
+            <div className="md:col-span-2">
+              <Label className="text-xs">Extra fields (optional JSON)</Label>
+              <Textarea
+                rows={3}
+                placeholder='{ "utm_source": "facebook", "custom_field": "value" }'
+                value={manual.extraJson}
+                onChange={(e) => setManual({ ...manual, extraJson: e.target.value })}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">Any extra Meritto fields as JSON. Leave empty if not needed.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManualOpen(false)}>Cancel</Button>
+            <Button onClick={pushManual} disabled={manualBusy}>
+              <Send className="h-4 w-4 mr-2" />{manualBusy ? "Pushing…" : "Push to Meritto"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function ManualField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </div>
   );
 }
