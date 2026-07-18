@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Newspaper, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-type NewsItem = { tag: string; text: string; href: string };
+type NewsItem = { tag: string; text: string; href: string; start_at?: string | null; end_at?: string | null };
 
 const FALLBACK: NewsItem[] = [
   { tag: "CAT 2026", text: "IIM Kozhikode releases official CAT 2026 notification & exam calendar", href: "/exam/cat" },
@@ -12,6 +12,15 @@ const FALLBACK: NewsItem[] = [
   { tag: "SNAP", text: "Symbiosis announces 3-slot SNAP 2026 with revised marking scheme", href: "/exam/snap" },
   { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat" },
 ];
+
+const isActive = (it: NewsItem, now = Date.now()): boolean => {
+  const start = it.start_at ? Date.parse(it.start_at) : NaN;
+  const end = it.end_at ? Date.parse(it.end_at) : NaN;
+  if (!isNaN(start) && now < start) return false;
+  if (!isNaN(end) && now > end) return false;
+  return true;
+};
+
 
 type Props = {
   items?: NewsItem[];
