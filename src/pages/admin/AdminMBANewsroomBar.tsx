@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Plus, Trash2, GripVertical, Newspaper, ArrowUp, ArrowDown } from "lucide-react";
+import { Save, Plus, Trash2, GripVertical, Newspaper, ArrowUp, ArrowDown, Eye } from "lucide-react";
+import MBANewsBar from "@/components/MBANewsBar";
+
 
 type NewsItem = { tag: string; text: string; href: string };
 
