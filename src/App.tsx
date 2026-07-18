@@ -217,6 +217,7 @@ const StudentNewsroom = lazyWithPreload(() => import("./pages/student/StudentNew
 const AdminNewsroom = lazyWithPreload(() => import("./pages/admin/AdminNewsroom"));
 const AdminMBANewsroomBar = lazyWithPreload(() => import("./pages/admin/AdminMBANewsroomBar"));
 const AdminCollegeTables = lazyWithPreload(() => import("./pages/admin/AdminCollegeTables"));
+const AdminTablesManager = lazyWithPreload(() => import("./pages/admin/AdminTablesManager"));
 const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
 const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 // Demo Dashboard removed to reduce load
@@ -931,6 +932,8 @@ const App = () => (
               <Route path="newsroom" element={<LazyPage><AdminNewsroom /></LazyPage>} />
               <Route path="mba-newsroom-bar" element={<LazyPage><AdminMBANewsroomBar /></LazyPage>} />
               <Route path="college-tables" element={<LazyPage><AdminCollegeTables /></LazyPage>} />
+              <Route path="tables-manager" element={<LazyPage><AdminTablesManager /></LazyPage>} />
+              <Route path="homepage-tables" element={<LazyPage><AdminTablesManager /></LazyPage>} />
               <Route path="formulas" element={<LazyPage><AdminFormulas /></LazyPage>} />
               
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />

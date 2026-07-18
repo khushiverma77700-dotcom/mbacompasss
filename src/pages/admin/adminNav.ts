@@ -82,11 +82,17 @@ export const adminNavGroups: AdminNavGroup[] = [
     ],
   },
   {
+    label: "Homepage Tables",
+    items: [
+      { label: "Tables Manager (All-in-one)", path: "/admin/tables-manager", icon: Database },
+      { label: "College Tables (Ranked)", path: "/admin/college-tables", icon: GraduationCap },
+      { label: "MBA Newsroom Bar (Legacy)", path: "/admin/mba-newsroom-bar", icon: Newspaper },
+    ],
+  },
+  {
     label: "Content & Media",
     items: [
       { label: "Banners", path: "/admin/banners", icon: Image },
-      { label: "MBA Newsroom Bar (Homepage)", path: "/admin/mba-newsroom-bar", icon: Newspaper },
-      { label: "College Tables (Homepage)", path: "/admin/college-tables", icon: GraduationCap },
       { label: "Articles", path: "/admin/articles", icon: Newspaper },
       { label: "Testimonials", path: "/admin/testimonials", icon: MessageCircle },
       { label: "Coupons", path: "/admin/coupons", icon: Ticket },

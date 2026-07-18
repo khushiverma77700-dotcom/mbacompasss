@@ -1,7 +1,13 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const STEPS = [
+const ICONS: Record<string, any> = { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award };
+
+type Step = { n: string; icon: any; title: string; sub: string; link: string; cta: string };
+
+const DEFAULT_STEPS: Step[] = [
   { n: "01", icon: Compass, title: "Discover", sub: "Explore B-schools & specialisations that fit your goals.", link: "/colleges", cta: "Explore Colleges" },
   { n: "02", icon: BookOpenCheck, title: "Prepare", sub: "Coaching, mocks, sectionals — CAT, XAT, GMAT, SNAP.", link: "/mba-compass", cta: "Start Prep" },
   { n: "03", icon: FileEdit, title: "Register", sub: "Track exam windows & never miss a deadline.", link: "/exams", cta: "Exam Calendar" },
@@ -10,7 +16,35 @@ const STEPS = [
   { n: "06", icon: Award, title: "Admit", sub: "GDPI-WAT prep, profile building & final conversion.", link: "/blog", cta: "Read Guides" },
 ];
 
-const MBAJourneyStrip = () => (
+const MBAJourneyStrip = () => {
+  const [steps, setSteps] = useState<Step[]>(DEFAULT_STEPS);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "home_mba_journey_strip")
+        .maybeSingle();
+      const items: any[] = Array.isArray((data?.value as any)?.items) ? (data!.value as any).items : [];
+      if (cancelled || items.length === 0) return;
+      const mapped: Step[] = items
+        .filter((r) => r?.title && r?.link)
+        .map((r, i) => ({
+          n: r.n || String(i + 1).padStart(2, "0"),
+          icon: ICONS[r.icon] || DEFAULT_STEPS[i % DEFAULT_STEPS.length].icon,
+          title: r.title,
+          sub: r.sub || "",
+          link: r.link,
+          cta: r.cta || "Learn More",
+        }));
+      setSteps(mapped);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
   <section className="py-16 md:py-24 bg-white">
     <div className="container mx-auto px-4">
       <div className="max-w-2xl mx-auto text-center mb-10">
@@ -26,7 +60,7 @@ const MBAJourneyStrip = () => (
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-        {STEPS.map(({ n, icon: Icon, title, sub, link, cta }, i) => (
+        {steps.map(({ n, icon: Icon, title, sub, link, cta }, i) => (
           <Link
             key={n}
             to={link}
@@ -43,7 +77,7 @@ const MBAJourneyStrip = () => (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
               {cta} <ChevronRight className="w-3.5 h-3.5" />
             </span>
-            {i < STEPS.length - 1 && (
+            {i < steps.length - 1 && (
               <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-px bg-gradient-to-r from-primary/30 to-transparent" />
             )}
           </Link>
@@ -51,6 +85,7 @@ const MBAJourneyStrip = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default MBAJourneyStrip;
