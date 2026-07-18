@@ -458,7 +458,7 @@ const SettingsPrefetcher = () => {
       } else {
         setReady(true);
       }
-    }, 300); // Was 7000 — kept short so site-settings prefetch starts soon after FCP
+    }, 6000); // Keep database/client settings prefetch out of the homepage LCP window.
     return () => {
       window.clearTimeout(timer);
       if (idleHandle !== undefined) {
