@@ -99,7 +99,9 @@ const Index = () => {
         <Deferred height={200}><StatsCounterSection /></Deferred>
         <Deferred height={520}><MBALandscapeSection /></Deferred>
         <Deferred height={360}><PopularExamsSection /></Deferred>
+        <Deferred height={640}><ExamCutoffsTable /></Deferred>
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
+        <Deferred height={520}><PlacementsBySectorSection /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
         <Deferred height={320}><TopCitiesSection /></Deferred>
         <Deferred height={420}><TopExamComparisonSection /></Deferred>
