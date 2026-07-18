@@ -102,7 +102,7 @@ const MBALandscapeSection = () => {
 
         {/* Tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-6">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setActive(t.id)}
