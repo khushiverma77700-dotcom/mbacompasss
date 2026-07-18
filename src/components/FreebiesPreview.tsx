@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, FileText, Gift, ArrowRight } from "lucide-react";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
+
 
 type Freebie = {
   id: string;
