@@ -135,7 +135,50 @@ const CATS: { key: keyof CutoffRow; label: string; tone?: string }[] = [
 
 export default function ExamCutoffsTable() {
   const [active, setActive] = useState(EXAMS[0].id);
-  const current = EXAMS.find((e) => e.id === active)!;
+  const [override, setOverride] = useState<ExamTab[] | null>(null);
+
+  // Hydrate admin-managed rows from site_settings (managed via /admin/tables-manager).
+  // Flat rows are merged into the matching EXAMS tab by `exam` id (case-insensitive).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "home_exam_cutoffs")
+        .maybeSingle();
+      const items: any[] = Array.isArray((data?.value as any)?.items) ? (data!.value as any).items : [];
+      if (cancelled || items.length === 0) return;
+      const byExam = new Map<string, CutoffRow[]>();
+      for (const it of items) {
+        const key = String(it?.exam || "").toLowerCase().trim();
+        if (!key || !it?.college) continue;
+        const arr = byExam.get(key) || [];
+        arr.push({
+          college: it.college,
+          slug: it.slug || "",
+          general: it.general || "",
+          obc: it.obc || "",
+          sc: it.sc || "",
+          st: it.st || "",
+          ews: it.ews || "",
+          fees: it.fees || "",
+          avgCTC: it.avgCTC || "",
+          intake: it.intake || "",
+        });
+        byExam.set(key, arr);
+      }
+      const merged = EXAMS.map((e) => {
+        const custom = byExam.get(e.id.toLowerCase());
+        return custom && custom.length ? { ...e, rows: custom } : e;
+      });
+      setOverride(merged);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const exams = override || EXAMS;
+  const current = exams.find((e) => e.id === active) || exams[0];
 
   return (
     <section className="relative py-16 md:py-24 bg-gradient-to-b from-sky-50/50 via-white to-sky-50/40">
