@@ -92,9 +92,12 @@ const Index = () => {
         {/* Above-the-fold: eager, in the initial chunk */}
         <HeroSection />
         <HomeQuickAccessStrip />
-        <MBANewsBar />
-        <ExamDeadlinesTicker />
-        <TopRankedCollegesSection />
+
+        {/* Everything else: code-split + mount on scroll */}
+        <Deferred height={44}><MBANewsBar /></Deferred>
+        <Deferred height={320}><ExamDeadlinesTicker /></Deferred>
+        <Deferred height={520}><TopRankedCollegesSection /></Deferred>
+
 
         {/* Below-the-fold: code-split + mount on scroll */}
         <Deferred height={200}><StatsCounterSection /></Deferred>
