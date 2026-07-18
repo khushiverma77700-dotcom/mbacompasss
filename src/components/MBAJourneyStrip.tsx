@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award, ChevronRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const ICONS: Record<string, any> = { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award };
 
@@ -22,6 +21,7 @@ const MBAJourneyStrip = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("site_settings")
         .select("value")

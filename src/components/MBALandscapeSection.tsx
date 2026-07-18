@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trophy, TrendingUp, MapPin, IndianRupee, ArrowRight, Sparkles } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 type Row = {
   rank: number;
@@ -63,6 +62,7 @@ const MBALandscapeSection = () => {
 
   useEffect(() => {
     (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("landscape_colleges")
         .select("category,rank,name,slug,city,fees,cutoff,average_package,highlight,is_active,sort_order")

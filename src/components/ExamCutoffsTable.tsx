@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Target, Sparkles, ArrowRight, Info } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 type CutoffRow = {
   college: string;
@@ -142,6 +141,7 @@ export default function ExamCutoffsTable() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("site_settings")
         .select("value")
