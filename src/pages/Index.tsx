@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
+import HomeQuickAccessStrip from "@/components/HomeQuickAccessStrip";
+import MBANewsBar from "@/components/MBANewsBar";
 import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
 import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
 import SEOHead, {
