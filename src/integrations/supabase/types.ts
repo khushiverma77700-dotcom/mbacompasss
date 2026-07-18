@@ -3395,6 +3395,60 @@ export type Database = {
           },
         ]
       }
+      landscape_colleges: {
+        Row: {
+          average_package: string | null
+          category: string
+          city: string | null
+          created_at: string
+          cutoff: string | null
+          fees: string | null
+          highest_package: string | null
+          highlight: string | null
+          id: string
+          is_active: boolean
+          name: string
+          rank: number
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          average_package?: string | null
+          category: string
+          city?: string | null
+          created_at?: string
+          cutoff?: string | null
+          fees?: string | null
+          highest_package?: string | null
+          highlight?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          rank?: number
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          average_package?: string | null
+          category?: string
+          city?: string | null
+          created_at?: string
+          cutoff?: string | null
+          fees?: string | null
+          highest_package?: string | null
+          highlight?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          rank?: number
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listing_change_requests: {
         Row: {
           admin_notes: string | null
