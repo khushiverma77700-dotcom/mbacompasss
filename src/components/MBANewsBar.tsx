@@ -41,37 +41,38 @@ const MBANewsBar = () => {
   return (
     <div className="relative border-y border-primary/15 bg-gradient-to-r from-sky-50 via-white to-sky-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-stretch gap-4 py-2.5">
-          <div className="flex items-center gap-2 shrink-0 pr-4 border-r border-primary/15">
+        <div className="flex items-center gap-3 md:gap-4 py-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0 pr-2 md:pr-4 border-r border-primary/15" aria-label="MBA Newsroom">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
             <Newspaper className="w-4 h-4 text-primary" />
-            <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-primary">
-              MBA Newsroom
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary">
+              <span className="md:hidden">News</span>
+              <span className="hidden md:inline">MBA Newsroom</span>
             </span>
           </div>
-          <div className="flex-1 overflow-hidden relative">
-            <div className="flex gap-10 whitespace-nowrap animate-[marquee_50s_linear_infinite] hover:[animation-play-state:paused]">
+          <div className="flex-1 overflow-hidden relative min-w-0">
+            <div className="flex gap-6 md:gap-10 whitespace-nowrap animate-[marquee_45s_linear_infinite] hover:[animation-play-state:paused]">
               {loop.map((n, i) => (
                 <Link
                   key={i}
                   to={n.href}
-                  className="inline-flex items-center gap-2 text-xs md:text-sm text-foreground/80 hover:text-primary transition-colors"
+                  className="inline-flex items-center gap-2 shrink-0 whitespace-nowrap text-xs md:text-sm text-foreground/80 hover:text-primary transition-colors"
                 >
                   {n.tag && (
-                    <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded">
                       {n.tag}
                     </span>
                   )}
-                  <span className="font-medium">{n.text}</span>
-                  <ArrowRight className="w-3 h-3 opacity-60" />
+                  <span className="font-medium whitespace-nowrap">{n.text}</span>
+                  <ArrowRight className="w-3 h-3 opacity-60 flex-shrink-0" />
                 </Link>
               ))}
             </div>
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-sky-50 to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-sky-50 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-6 md:w-8 bg-gradient-to-r from-sky-50 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 md:w-8 bg-gradient-to-l from-sky-50 to-transparent" />
           </div>
         </div>
       </div>
