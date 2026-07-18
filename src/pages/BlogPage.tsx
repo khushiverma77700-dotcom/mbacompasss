@@ -188,9 +188,9 @@ const BlogPage = () => {
             </div>
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8 lg:gap-12">
+          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8 lg:gap-12 items-start">
             {/* Left column */}
-            <div className="col-span-12 lg:col-span-8 space-y-16">
+            <div className="col-span-12 lg:col-span-9 space-y-14">
               {/* Featured Auto-Slider */}
               {activeFeatured && selectedCategory === "all" && !searchQuery && (
                 <motion.div
