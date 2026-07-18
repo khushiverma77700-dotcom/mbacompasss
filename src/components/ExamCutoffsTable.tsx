@@ -197,7 +197,7 @@ export default function ExamCutoffsTable() {
 
         {/* Exam tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-5">
-          {EXAMS.map((e) => (
+          {exams.map((e) => (
             <button
               key={e.id}
               onClick={() => setActive(e.id)}
