@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Search, BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target, ChevronRight, MapPin, Tag, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 type HeroSuggestion = {
   type: "institute" | "exam" | "city" | "category" | "college" | "article";
@@ -40,13 +39,12 @@ const HeroSection = () => {
   // Mobile-perf: settings hydration is deferred 8s so it can never race the
   // initial paint or the CLS measurement window (which extends ~5s past last
   // input). Heading/subheading/stats render from constant fallbacks first.
-  const [hydrateSettings, setHydrateSettings] = useState(false);
+  const [heroSettings, setHeroSettings] = useState<any>(null);
+  const [statsSettings, setStatsSettings] = useState<any>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
   const deferredQuery = useDeferredValue(query);
-  const { data: heroSettings } = useSiteSettings("hero", { enabled: hydrateSettings });
-  const { data: statsSettings } = useSiteSettings("stats", { enabled: hydrateSettings });
 
   const heading = heroSettings?.heading || "Find the Best MBA Coaching";
   const subheading = heroSettings?.subheading || "Compare top MBA coaching institutes, read reviews, and make informed decisions";
@@ -59,14 +57,32 @@ const HeroSection = () => {
     // user interaction either.
     const w = window as any;
     let idleHandle: number | undefined;
+    let cancelled = false;
+    const hydrate = async () => {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase
+          .from("site_settings")
+          .select("key,value")
+          .in("key", ["hero", "stats"]);
+        if (cancelled) return;
+        const map: Record<string, any> = {};
+        data?.forEach((row: any) => { map[row.key] = row.value; });
+        setHeroSettings(map.hero ?? null);
+        setStatsSettings(map.stats ?? null);
+      } catch {
+        // Keep constant fallbacks on network/data errors.
+      }
+    };
     const timer = window.setTimeout(() => {
       if (typeof w.requestIdleCallback === "function") {
-        idleHandle = w.requestIdleCallback(() => setHydrateSettings(true), { timeout: 3000 });
+        idleHandle = w.requestIdleCallback(hydrate, { timeout: 3000 });
       } else {
-        setHydrateSettings(true);
+        hydrate();
       }
     }, 8000);
     return () => {
+      cancelled = true;
       window.clearTimeout(timer);
       if (idleHandle !== undefined) {
         try { w.cancelIdleCallback?.(idleHandle); } catch {}

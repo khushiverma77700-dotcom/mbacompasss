@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
 import { Trophy, MapPin, IndianRupee, TrendingUp, ChevronRight, Star, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +16,7 @@ const TopRankedCollegesSection = () => {
   const { data: colleges } = useQuery({
     queryKey: ["top-ranked-colleges"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("colleges")
         .select("name, slug, city, state, ranking, fees, placement_avg, type, logo_url")
@@ -33,12 +32,7 @@ const TopRankedCollegesSection = () => {
   return (
     <section className="py-20 md:py-24 bg-background border-y border-border/60">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-14 max-w-2xl mx-auto"
-        >
+        <div className="text-center mb-14 max-w-2xl mx-auto animate-fade-in">
           <div className="inline-flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-primary font-semibold mb-4">
             <span className="h-px w-8 bg-primary/40" />
             Top Rankings 2025
@@ -50,17 +44,14 @@ const TopRankedCollegesSection = () => {
           <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
             Hand-picked B-schools curated from NIRF rankings, placement records and verified student feedback.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
           {items.map((college: any, i: number) => (
-            <motion.div
+            <div
               key={college.slug || i}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: Math.min(i * 0.05, 0.25) }}
-              className="h-full"
+              className="h-full animate-fade-in"
+              style={{ animationDelay: `${Math.min(i * 50, 250)}ms` }}
             >
               <Link
                 to={`/colleges/${college.slug}`}
@@ -116,7 +107,7 @@ const TopRankedCollegesSection = () => {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
 

@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
 import { Star, Quote, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +11,7 @@ const TestimonialsSection = () => {
   const { data: testimonials = [] } = useQuery({
     queryKey: ["testimonials"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("testimonials")
         .select("*")
@@ -94,15 +93,10 @@ const TestimonialsSection = () => {
               </>
             )}
 
-            <AnimatePresence mode="wait">
-              {current && (
-                <motion.div
+            {current && (
+                <div
                   key={current.id}
-                  initial={{ opacity: 0, x: 40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -40 }}
-                  transition={{ duration: 0.35 }}
-                  className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+                  className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-fade-in"
                 >
                   {current.type === "text" && (
                     <div className="p-8 md:p-10">
@@ -171,9 +165,8 @@ const TestimonialsSection = () => {
                       </div>
                     </div>
                   )}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
 
             {/* Dots */}
             {filtered.length > 1 && (

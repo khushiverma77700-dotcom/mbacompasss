@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, IndianRupee, ArrowRight, BadgeCheck } from "lucide-react";
 
 type Row = {
@@ -36,6 +35,7 @@ const ROIComparisonTable = () => {
 
   useEffect(() => {
     (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("site_settings")
         .select("value")

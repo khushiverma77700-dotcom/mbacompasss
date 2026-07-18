@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Newspaper, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 type NewsItem = { tag: string; text: string; href: string };
 
@@ -20,6 +19,7 @@ const MBANewsBar = () => {
 
   useEffect(() => {
     (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("site_settings")
         .select("value")

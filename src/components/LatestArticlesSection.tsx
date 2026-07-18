@@ -1,15 +1,14 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Clock, Flame, User, BookOpen } from "lucide-react";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 
 const LatestArticlesSection = () => {
   const { data: articles, isLoading } = useQuery({
     queryKey: ["home-latest-articles"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("articles")
         .select("*")
@@ -40,12 +39,7 @@ const LatestArticlesSection = () => {
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex items-end justify-between mb-10"
-        >
+        <div className="flex items-end justify-between mb-10 animate-fade-in">
           <div>
             <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1 mb-3">
               <BookOpen className="w-3.5 h-3.5 text-primary" />
@@ -59,11 +53,11 @@ const LatestArticlesSection = () => {
           <Link to="/blog" className="hidden md:inline-flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all">
             All Articles <ArrowRight className="w-4 h-4" />
           </Link>
-        </motion.div>
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Featured */}
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <div className="animate-fade-in">
             <Link to={`/article/${featured.slug}`} className="group block bg-card rounded-2xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-all duration-300 h-full">
               <div className="aspect-[16/9] overflow-hidden relative bg-muted">
                 {getImage(featured) ? (
@@ -89,12 +83,12 @@ const LatestArticlesSection = () => {
                 </div>
               </div>
             </Link>
-          </motion.div>
+          </div>
 
           {/* Rest */}
           <div className="space-y-4">
             {rest.map((article, i) => (
-              <motion.div key={article.id} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+              <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
                 <Link to={`/article/${article.slug}`} className="group flex gap-4 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/20">
                   <div className="w-32 aspect-[16/9] rounded-xl overflow-hidden flex-shrink-0 bg-muted">
                     {getImage(article) ? (
@@ -115,7 +109,7 @@ const LatestArticlesSection = () => {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Download, FileText, Gift, ArrowRight } from "lucide-react";
 
 type Freebie = {
@@ -16,6 +15,7 @@ const FreebiesPreview = () => {
 
   useEffect(() => {
     (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("freebies")
         .select("id,title,category,cover_image_url,download_count,is_featured,featured_order,created_at")
