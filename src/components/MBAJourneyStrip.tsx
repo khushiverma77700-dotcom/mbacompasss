@@ -16,7 +16,35 @@ const DEFAULT_STEPS: Step[] = [
   { n: "06", icon: Award, title: "Admit", sub: "GDPI-WAT prep, profile building & final conversion.", link: "/blog", cta: "Read Guides" },
 ];
 
-const MBAJourneyStrip = () => (
+const MBAJourneyStrip = () => {
+  const [steps, setSteps] = useState<Step[]>(DEFAULT_STEPS);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "home_mba_journey_strip")
+        .maybeSingle();
+      const items: any[] = Array.isArray((data?.value as any)?.items) ? (data!.value as any).items : [];
+      if (cancelled || items.length === 0) return;
+      const mapped: Step[] = items
+        .filter((r) => r?.title && r?.link)
+        .map((r, i) => ({
+          n: r.n || String(i + 1).padStart(2, "0"),
+          icon: ICONS[r.icon] || DEFAULT_STEPS[i % DEFAULT_STEPS.length].icon,
+          title: r.title,
+          sub: r.sub || "",
+          link: r.link,
+          cta: r.cta || "Learn More",
+        }));
+      setSteps(mapped);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
   <section className="py-16 md:py-24 bg-white">
     <div className="container mx-auto px-4">
       <div className="max-w-2xl mx-auto text-center mb-10">
