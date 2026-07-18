@@ -79,8 +79,15 @@ const AdminMBANewsroomBar = () => {
   const save = async () => {
     setSaving(true);
     const clean = items
-      .map((it) => ({ tag: (it.tag || "").trim(), text: (it.text || "").trim(), href: (it.href || "").trim() }))
+      .map((it) => ({
+        tag: (it.tag || "").trim(),
+        text: (it.text || "").trim(),
+        href: (it.href || "").trim(),
+        start_at: it.start_at || null,
+        end_at: it.end_at || null,
+      }))
       .filter((it) => it.text && it.href);
+
     const value = { enabled, items: clean };
 
     const { data: existing } = await supabase.from("site_settings").select("id").eq("key", KEY).maybeSingle();
