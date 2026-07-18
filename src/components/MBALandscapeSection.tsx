@@ -121,7 +121,7 @@ const MBALandscapeSection = () => {
 
         {/* Table */}
         <div className="max-w-5xl mx-auto rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-15px_rgba(14,165,233,0.2)] overflow-hidden">
-          <div className="hidden md:grid grid-cols-[70px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 px-5 py-3 bg-sky-50/70 border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80">
+          <div className="hidden md:grid grid-cols-[60px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 px-4 py-2.5 bg-sky-50/70 border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80">
             <div>Rank</div>
             <div>B-School</div>
             <div><MapPin className="inline w-3 h-3 mr-1" />Location</div>
@@ -134,33 +134,33 @@ const MBALandscapeSection = () => {
             <Link
               key={row.slug}
               to={`/college/${row.slug}`}
-              className="grid grid-cols-[auto_1fr] md:grid-cols-[70px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 md:gap-3 px-4 md:px-5 py-3.5 md:py-4 border-b border-primary/5 last:border-0 hover:bg-sky-50/60 transition-colors group"
+              className="grid grid-cols-[auto_1fr] md:grid-cols-[60px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 border-b border-primary/5 last:border-0 hover:bg-sky-50/60 transition-colors group"
             >
               <div className="flex items-center">
-                <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-primary/15 to-sky-100 flex items-center justify-center">
-                  <span className="font-heading font-extrabold text-primary text-base md:text-lg">#{row.rank}</span>
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-primary/15 to-sky-100 flex items-center justify-center">
+                  <span className="font-heading font-extrabold text-primary text-sm md:text-base">#{row.rank}</span>
                 </div>
               </div>
               <div className="min-w-0 md:col-span-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="font-bold text-foreground text-sm md:text-base group-hover:text-primary transition-colors truncate">
+                  <div className="font-semibold text-foreground text-[13px] md:text-[15px] group-hover:text-primary transition-colors truncate">
                     {row.name}
                   </div>
                   {row.highlight && (
-                    <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                    <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
                       <Trophy className="inline w-2.5 h-2.5 mr-0.5 -mt-0.5" />{row.highlight}
                     </span>
                   )}
                 </div>
-                <div className="md:hidden mt-1 grid grid-cols-2 gap-1 text-[11px] text-muted-foreground">
+                <div className="md:hidden mt-0.5 grid grid-cols-2 gap-1 text-[10px] text-muted-foreground leading-tight">
                   <div>{row.city} · {row.fees}</div>
                   <div>{row.cutoff} · <span className="text-emerald-700 font-semibold">{row.medianCTC}</span></div>
                 </div>
               </div>
-              <div className="hidden md:flex items-center text-sm text-foreground/70">{row.city}</div>
-              <div className="hidden md:flex items-center text-sm font-semibold text-foreground">{row.fees}</div>
-              <div className="hidden md:flex items-center text-sm text-foreground/70">{row.cutoff}</div>
-              <div className="hidden md:flex items-center text-sm font-bold text-emerald-700">{row.medianCTC}</div>
+              <div className="hidden md:flex items-center text-xs md:text-sm text-foreground/70">{row.city}</div>
+              <div className="hidden md:flex items-center text-xs md:text-sm font-semibold text-foreground">{row.fees}</div>
+              <div className="hidden md:flex items-center text-xs md:text-sm text-foreground/70">{row.cutoff}</div>
+              <div className="hidden md:flex items-center text-xs md:text-sm font-bold text-emerald-700">{row.medianCTC}</div>
             </Link>
           ))}
         </div>
