@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
+
 
 const NewsSection = () => {
   const { data: articles, isLoading } = useQuery({
