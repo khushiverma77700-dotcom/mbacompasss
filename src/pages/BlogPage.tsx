@@ -449,10 +449,10 @@ const BlogPage = () => {
             </div>
 
             {/* Sidebar */}
-            <aside className="col-span-12 lg:col-span-4">
-              <div className="lg:sticky lg:top-24 space-y-8">
+            <aside className="col-span-12 lg:col-span-3">
+              <div className="lg:sticky lg:top-24 space-y-8 lg:pt-10">
                 {/* Trending */}
-                <div className="bg-sky-50/50 border border-sky-100 rounded-3xl p-8 lg:mt-16">
+                <div className="bg-sky-50/50 border border-sky-100 rounded-3xl p-6">
                   <h3 className="font-editorial italic text-xl text-slate-900 mb-8 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-sky-500 not-italic" />
                     Trending Conversations
