@@ -198,9 +198,9 @@ const BlogPage = () => {
                   className="relative"
                 >
                   <div className="relative bg-white border border-sky-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-sky-500/5 transition-all duration-500">
-                    <div className="grid md:grid-cols-2 min-h-[420px] md:min-h-[540px] lg:min-h-[600px]">
-                      {/* Image side — fills the card fully, no side borders */}
-                      <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[420px] lg:min-h-[540px] overflow-hidden bg-sky-50">
+                    <div className="grid md:grid-cols-5 min-h-[360px] md:min-h-[420px] lg:min-h-[460px]">
+                      {/* Image side — wider, shorter, edge-to-edge */}
+                      <div className="relative col-span-3 aspect-[16/10] md:aspect-auto md:min-h-[420px] lg:min-h-[460px] overflow-hidden bg-sky-50">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id}
