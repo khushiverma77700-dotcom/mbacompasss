@@ -29,12 +29,15 @@ type Props = {
 };
 
 const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true }: Props = {}) => {
-  const [items, setItems] = useState<NewsItem[]>(itemsProp && itemsProp.length ? itemsProp : FALLBACK);
+  const [items, setItems] = useState<NewsItem[]>(
+    itemsProp && itemsProp.length ? itemsProp.filter(isActive) : FALLBACK
+  );
   const [enabled, setEnabled] = useState(enabledProp ?? true);
 
   useEffect(() => {
     if (itemsProp) {
-      setItems(itemsProp.filter((it) => it?.text && it?.href).length ? itemsProp.filter((it) => it?.text && it?.href) : itemsProp);
+      const valid = itemsProp.filter((it) => it?.text && it?.href).filter(isActive);
+      setItems(valid);
     }
     if (typeof enabledProp === "boolean") setEnabled(enabledProp);
   }, [itemsProp, enabledProp]);
@@ -52,11 +55,12 @@ const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true
       if (v) {
         if (v.enabled === false) setEnabled(false);
         if (Array.isArray(v.items) && v.items.length) {
-          setItems(v.items.filter((it: any) => it?.text && it?.href));
+          setItems(v.items.filter((it: any) => it?.text && it?.href).filter(isActive));
         }
       }
     })();
   }, [fetchRemote]);
+
 
   if (!enabled || items.length === 0) return null;
   const loop = [...items, ...items];
