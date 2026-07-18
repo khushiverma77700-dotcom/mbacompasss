@@ -29,6 +29,8 @@ const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSect
 const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
+const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
+const MBAJourneyStrip = lazy(() => import("@/components/MBAJourneyStrip"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
