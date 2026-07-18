@@ -198,9 +198,9 @@ const BlogPage = () => {
                   className="relative"
                 >
                   <div className="relative bg-white border border-sky-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-sky-500/5 transition-all duration-500">
-                    <div className="grid md:grid-cols-2">
+                    <div className="grid md:grid-cols-2 min-h-[420px] md:min-h-[540px] lg:min-h-[600px]">
                       {/* Image side — fills the card fully, no side borders */}
-                      <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[340px] overflow-hidden bg-sky-50">
+                      <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[420px] lg:min-h-[540px] overflow-hidden bg-sky-50">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id}
@@ -240,7 +240,7 @@ const BlogPage = () => {
                       </div>
 
                       {/* Text side */}
-                      <div className="p-6 md:p-8 flex flex-col justify-center space-y-3 relative">
+                      <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center space-y-5 relative">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id + "-text"}
@@ -452,7 +452,7 @@ const BlogPage = () => {
             <aside className="col-span-12 lg:col-span-4">
               <div className="lg:sticky lg:top-24 space-y-8">
                 {/* Trending */}
-                <div className="bg-sky-50/50 border border-sky-100 rounded-3xl p-8">
+                <div className="bg-sky-50/50 border border-sky-100 rounded-3xl p-8 lg:mt-16">
                   <h3 className="font-editorial italic text-xl text-slate-900 mb-8 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-sky-500 not-italic" />
                     Trending Conversations

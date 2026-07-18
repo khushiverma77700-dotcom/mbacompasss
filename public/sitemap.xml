@@ -1,125 +1,182 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://mbacompass.in/about</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://mbacompass.in/contact</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://mbacompass.in/authors</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://mbacompass.in/authors/mba-compass-editorial-team</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://mbacompass.in/editorial-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://mbacompass.in/review-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://mbacompass.in/fact-check-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://mbacompass.in/privacy-policy</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://mbacompass.in/terms</loc><lastmod>2026-06-22</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
   <url>
     <loc>https://mbacompass.in/</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/blog</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/colleges</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/coaching</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/compare</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/college-finder</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/profile-analyzer</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/college-shortlister</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/cat-score-calculator</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/mba-roi-calculator</loc>
-    <lastmod>2026-06-22</lastmod>
+    <loc>https://mbacompass.in/cat-mock-1</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/roi-calculator</loc>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/about</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/contact</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/business-inquiry</loc>
-    <lastmod>2026-06-22</lastmod>
+    <loc>https://mbacompass.in/business-inquiries</loc>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/list-your-business</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/mocks</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/courses</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/iim-waitlist-movement</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/freebies</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/exams</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/authors</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/formulas</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/bundles</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/editorial-policy</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/fact-check-policy</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/privacy-policy</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/review-policy</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/terms</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/mba-compass</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/mba-compass/compare</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -140,6 +197,186 @@
     <lastmod>2026-03-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/type/iim</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/type/private</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/type/top-mba</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/type/pgdm</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/type/university</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/type/government</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/cat</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/xat</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/cmat</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/mat</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/nmat</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/snap</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/iift</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/gmat</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-exam/atma</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/mumbai</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/delhi</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/bangalore</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/hyderabad</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/pune</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/chennai</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/kolkata</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/ahmedabad</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/gurgaon</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/noida</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/jaipur</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/indore</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/lucknow</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/colleges/by-city/chandigarh</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/article/xat-notification</loc>
+    <lastmod>2026-07-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/article/top-10-mba-coaching-institutes-in-india-2026-fees-reviews-results</loc>
@@ -220,12 +457,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/article/low-fee-high-roi-mba-colleges-india</loc>
-    <lastmod>2026-06-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/article/iim-selection-criteria-2026-cat-weightage-marks-full-guide-for-all-iims</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -238,8 +469,20 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/article/low-fee-high-roi-mba-colleges-india</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/article/mba-coaching-for-working-professionals-weekend-online-2026</loc>
     <lastmod>2026-06-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/article/iim-ahmedabad-vs-iim-bangalore</loc>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -268,14 +511,14 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/article/best-cat-mocks-top-15-guide-2026</loc>
-    <lastmod>2026-06-12</lastmod>
+    <loc>https://mbacompass.in/article/cat-2026-last-minute-tips-stay-calm-maximize-score-on-exam-day</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/article/cat-2026-last-minute-tips-stay-calm-maximize-score-on-exam-day</loc>
-    <lastmod>2026-06-19</lastmod>
+    <loc>https://mbacompass.in/article/best-cat-mocks-top-15-guide-2026</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -306,12 +549,6 @@
   <url>
     <loc>https://mbacompass.in/article/online-vs-offline-mba-coaching</loc>
     <lastmod>2026-06-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/article/imt-ghaziabad-admission-uo9d</loc>
-    <lastmod>2026-06-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -360,6 +597,12 @@
   <url>
     <loc>https://mbacompass.in/article/imt-ghaziabad-admission-2c9n</loc>
     <lastmod>2026-06-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/article/top-10-mba-colleges-accepting-omet-scores-in-india-2026-fees-placements</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -424,6 +667,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/article/cat-prep-timeline</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/article/tapmi-placements-2026</loc>
     <lastmod>2026-06-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -436,8 +685,8 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/article/how-to-prepare-for-cat-without-coaching-self-study-guide</loc>
-    <lastmod>2026-06-19</lastmod>
+    <loc>https://mbacompass.in/article/imt-ghaziabad-admission-mynb</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -456,6 +705,12 @@
   <url>
     <loc>https://mbacompass.in/article/fore-courses-fees</loc>
     <lastmod>2026-06-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/article/how-to-prepare-for-cat-without-coaching-self-study-guide</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -544,14 +799,20 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/article/cat-preparation-plan</loc>
+    <lastmod>2026-06-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/article/welingkar-mumbai-placements-2027-average-salary-recruiters</loc>
     <lastmod>2026-06-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/article/top-10-mba-colleges-accepting-omet-scores-in-india-2026-fees-placements</loc>
-    <lastmod>2026-06-19</lastmod>
+    <loc>https://mbacompass.in/article/cat-strategy-12-week</loc>
+    <lastmod>2026-07-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -586,12 +847,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/article/cat-vs-gmat-2026-which-exam-is-best-for-your-indian-mba</loc>
-    <lastmod>2026-06-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/article/best-online-mba-coaching-in-india-top-rated-platforms-for-cat-prep-2026</loc>
     <lastmod>2026-06-09</lastmod>
     <changefreq>weekly</changefreq>
@@ -616,8 +871,32 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/article/cat-vs-gmat-2026-which-exam-is-best-for-your-indian-mba</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/article/cat-coaching-online</loc>
     <lastmod>2026-06-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/article/xat-registration</loc>
+    <lastmod>2026-07-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/article/iim-ahmedabad-fms-placements</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/article/iim-vs-fms-delhi</loc>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -940,14 +1219,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/atharva-institute-of-management-studies-mumbai</loc>
-    <lastmod>2026-04-26</lastmod>
+    <loc>https://mbacompass.in/college/birla-global-university-bhubaneswar</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/birla-global-university-bhubaneswar</loc>
-    <lastmod>2026-04-25</lastmod>
+    <loc>https://mbacompass.in/college/atharva-institute-of-management-studies-mumbai</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1000,12 +1279,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/ajeenkya-dy-patil-university-mba-pune</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/college/iit-kharagpur-vgsom</loc>
     <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
@@ -1042,12 +1315,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/gl-bajaj-institute-of-management-greater-noida</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/college/iift-delhi</loc>
     <lastmod>2026-03-28</lastmod>
     <changefreq>monthly</changefreq>
@@ -1078,14 +1345,32 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/iim-bodh-gaya</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/college/gl-bajaj-institute-of-management-greater-noida</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/sr-university-warangal-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/iim-bodh-gaya</loc>
-    <lastmod>2026-05-18</lastmod>
+    <loc>https://mbacompass.in/college/ajeenkya-dy-patil-university-mba-pune</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/college/uttarakhand-technical-university-mba</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1114,6 +1399,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/jamia-millia-islamia-mba</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/simsree-mumbai</loc>
     <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
@@ -1134,6 +1425,12 @@
   <url>
     <loc>https://mbacompass.in/college/welingkar-mumbai</loc>
     <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/college/sagar-university-mba</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1181,6 +1478,12 @@
   </url>
   <url>
     <loc>https://mbacompass.in/college/christ-university-school-of-business-delhi-ncr</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/college/devi-ahilya-vishwavidyalaya-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -1234,6 +1537,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/savitribai-phule-pune-university</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/accurate-institute-greater-noida</loc>
     <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
@@ -1252,14 +1561,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/xime-bangalore</loc>
-    <lastmod>2026-04-26</lastmod>
+    <loc>https://mbacompass.in/college/upes-dehradun-mba</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/upes-dehradun-mba</loc>
-    <lastmod>2026-04-25</lastmod>
+    <loc>https://mbacompass.in/college/xime-bangalore</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1290,12 +1599,6 @@
   <url>
     <loc>https://mbacompass.in/college/icfai-hyderabad-mba</loc>
     <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/jamia-millia-islamia-mba</loc>
-    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1360,7 +1663,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/savitribai-phule-pune-university</loc>
+    <loc>https://mbacompass.in/college/niit-university-neemrana-mba</loc>
     <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -1368,12 +1671,6 @@
   <url>
     <loc>https://mbacompass.in/college/xiss-ranchi</loc>
     <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/niit-university-neemrana-mba</loc>
-    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1798,6 +2095,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/university-of-mui-mumbai</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/rajagiri-business-school</loc>
     <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
@@ -1812,12 +2115,6 @@
   <url>
     <loc>https://mbacompass.in/college/iim-ahmedabad</loc>
     <lastmod>2026-03-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/university-of-mui-mumbai</loc>
-    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1974,12 +2271,6 @@
   <url>
     <loc>https://mbacompass.in/college/patna-university</loc>
     <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/sagar-university-mba</loc>
-    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -2302,14 +2593,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/symbiosis-centre-for-management-and-hrd</loc>
-    <lastmod>2026-04-26</lastmod>
+    <loc>https://mbacompass.in/college/st-francis-institute-of-management-mui</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/st-francis-institute-of-management-mui</loc>
-    <lastmod>2026-04-25</lastmod>
+    <loc>https://mbacompass.in/college/symbiosis-centre-for-management-and-hrd</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -2638,12 +2929,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/devi-ahilya-vishwavidyalaya-mba</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/college/rabindranath-tagore-university-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
@@ -2776,14 +3061,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/visvesvaraya-technological-university-mba</loc>
-    <lastmod>2026-04-26</lastmod>
+    <loc>https://mbacompass.in/college/lnct-university-bhopal-mba</loc>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/lnct-university-bhopal-mba</loc>
-    <lastmod>2026-05-18</lastmod>
+    <loc>https://mbacompass.in/college/visvesvaraya-technological-university-mba</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -3082,6 +3367,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/university-of-calcutta-mba</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/iit-palakkad-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
@@ -3089,12 +3380,6 @@
   </url>
   <url>
     <loc>https://mbacompass.in/college/lnmiit-mba-jaipur</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/university-of-calcutta-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -3142,6 +3427,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/srm-university-amaravati-mba</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/pt-ravishankar-shukla-university-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
@@ -3149,12 +3440,6 @@
   </url>
   <url>
     <loc>https://mbacompass.in/college/north-orissa-university-mba</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/srm-university-amaravati-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -3256,13 +3541,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/aryabhatta-knowledge-university-mba</loc>
+    <loc>https://mbacompass.in/college/kolhan-university-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/kolhan-university-mba</loc>
+    <loc>https://mbacompass.in/college/aryabhatta-knowledge-university-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -3358,6 +3643,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/kakatiya-university-warangal</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/north-eastern-hill-university-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
@@ -3366,12 +3657,6 @@
   <url>
     <loc>https://mbacompass.in/college/sikkim-university-mba</loc>
     <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/kakatiya-university-warangal</loc>
-    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -3442,25 +3727,19 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/lal-bahadur-shastri-institute-of-management-delhi</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/college/eternal-university-mba-sirmaur</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/pdm-university-mba-bahadurgarh</loc>
+    <loc>https://mbacompass.in/college/lal-bahadur-shastri-institute-of-management-delhi</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/uttarakhand-technical-university-mba</loc>
+    <loc>https://mbacompass.in/college/pdm-university-mba-bahadurgarh</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -3514,12 +3793,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/shoolini-university-mba</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/college/agnel-institute-of-management-goa</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
@@ -3528,6 +3801,12 @@
   <url>
     <loc>https://mbacompass.in/college/jaipuria-institute-of-management-jaipur</loc>
     <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/college/shoolini-university-mba</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -3544,14 +3823,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/shri-ma-vaishno-devi-university-mba</loc>
-    <lastmod>2026-04-26</lastmod>
+    <loc>https://mbacompass.in/college/ips-academy-indore</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/ips-academy-indore</loc>
-    <lastmod>2026-04-25</lastmod>
+    <loc>https://mbacompass.in/college/shri-ma-vaishno-devi-university-mba</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -3622,13 +3901,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/itm-university-gwalior-mba</loc>
+    <loc>https://mbacompass.in/college/medicaps-university-mba-indore</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/medicaps-university-mba-indore</loc>
+    <loc>https://mbacompass.in/college/itm-university-gwalior-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -3898,6 +4177,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/college/psg-institute-of-management-coimbatore</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/college/icfai-university-ranchi-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
@@ -3905,12 +4190,6 @@
   </url>
   <url>
     <loc>https://mbacompass.in/college/cimp-patna</loc>
-    <lastmod>2026-04-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/college/psg-institute-of-management-coimbatore</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -4060,14 +4339,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/jaipuria-institute-of-management-indore</loc>
-    <lastmod>2026-04-26</lastmod>
+    <loc>https://mbacompass.in/college/iim-shillong</loc>
+    <lastmod>2026-04-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/iim-shillong</loc>
-    <lastmod>2026-04-24</lastmod>
+    <loc>https://mbacompass.in/college/jaipuria-institute-of-management-indore</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4264,13 +4543,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/usha-martin-university-mba-ranchi</loc>
+    <loc>https://mbacompass.in/college/br-ambedkar-bihar-university-mba</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/college/br-ambedkar-bihar-university-mba</loc>
+    <loc>https://mbacompass.in/college/usha-martin-university-mba-ranchi</loc>
     <lastmod>2026-04-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -4289,19 +4568,7 @@
   </url>
   <url>
     <loc>https://mbacompass.in/institute/tathagat-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/institute/vprov-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/institute/takshzila-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4312,8 +4579,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/institute/underdogs-coaching</loc>
-    <lastmod>2026-06-19</lastmod>
+    <loc>https://mbacompass.in/institute/vprov-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4337,13 +4604,13 @@
   </url>
   <url>
     <loc>https://mbacompass.in/institute/oliveboard-coaching</loc>
-    <lastmod>2026-06-19</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/institute/raman-tiwari-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <loc>https://mbacompass.in/institute/underdogs-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4354,8 +4621,20 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/institute/ims-telegram-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/institute/hitbullseye-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/institute/raman-tiwari-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4373,7 +4652,7 @@
   </url>
   <url>
     <loc>https://mbacompass.in/institute/byjus-cat-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4386,6 +4665,12 @@
   <url>
     <loc>https://mbacompass.in/institute/elites-grid-coaching</loc>
     <lastmod>2026-06-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/institute/takshzila-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4433,7 +4718,7 @@
   </url>
   <url>
     <loc>https://mbacompass.in/institute/takshzila-aloha-learning-solutions-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4457,13 +4742,19 @@
   </url>
   <url>
     <loc>https://mbacompass.in/institute/handa-ka-funda-coaching</loc>
-    <lastmod>2026-06-19</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/institute/ims-delhi-barakhamba-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/institute/mba-pathshala-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4474,8 +4765,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/institute/mba-pathshala-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <loc>https://mbacompass.in/institute/shweta-arora-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4486,20 +4777,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/institute/shweta-arora-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/institute/azucation-coaching</loc>
     <lastmod>2026-06-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/institute/time-delhi-connaught-place-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4510,8 +4789,14 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/institute/time-delhi-connaught-place-coaching</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/institute/qds-pro-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4523,7 +4808,7 @@
   </url>
   <url>
     <loc>https://mbacompass.in/institute/mba-guru-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4553,37 +4838,31 @@
   </url>
   <url>
     <loc>https://mbacompass.in/institute/ims-prayagraj-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/institute/2iim-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mbacompass.in/institute/ims-telegram-coaching</loc>
-    <lastmod>2026-06-19</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/institute/aptitude-jab-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/institute/time-mumbai-andheri-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/institute/career-launcher-mumbai-vile-parle-coaching</loc>
-    <lastmod>2026-06-18</lastmod>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -4739,31 +5018,31 @@
   </url>
   <url>
     <loc>https://mbacompass.in/mba-compass/bsb-nmat-series-advance</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/mba-compass/bsb-snap-series-advance</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/mba-compass/bsb-xat-series-advance</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/mba-compass/bsb-cat-series-advance</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://mbacompass.in/mba-compass/bsb-full-series-advance-cat-nmat-xat-snap-other-omets</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-07-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
