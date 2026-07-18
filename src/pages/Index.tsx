@@ -60,9 +60,94 @@ const jsonLdSchemas = [
   ]),
 ];
 
-const SectionPlaceholder = ({ height = 320 }: { height?: number }) => (
-  <div style={{ minHeight: height }} aria-hidden="true" />
-);
+/**
+ * Skeleton placeholder for deferred homepage sections.
+ * Renders a shimmer title + card grid sized by the section's reserved height,
+ * so the page feels populated instantly instead of showing empty gaps while
+ * data loads. Variant is chosen from height so we don't need to touch call sites.
+ *   - height <= 60   → thin bar (news ticker)
+ *   - height <= 240  → title + 2 lines (stats, small strips)
+ *   - height <= 400  → title + 3-card row
+ *   - height >  400  → title + card grid
+ */
+const SectionPlaceholder = ({ height = 320 }: { height?: number }) => {
+  const shimmer = "bg-gradient-to-r from-slate-100 via-slate-200/70 to-slate-100 bg-[length:200%_100%] animate-[skeleton-shimmer_1.4s_ease-in-out_infinite] rounded-md";
+
+  let variant: "bar" | "small" | "row" | "grid" = "grid";
+  if (height <= 60) variant = "bar";
+  else if (height <= 240) variant = "small";
+  else if (height <= 400) variant = "row";
+
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading section"
+      style={{ minHeight: height }}
+      className="w-full"
+    >
+      <span className="sr-only">Loading…</span>
+
+      {variant === "bar" && (
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className={`${shimmer} h-6 w-full`} />
+        </div>
+      )}
+
+      {variant === "small" && (
+        <div className="mx-auto max-w-7xl px-4 py-8 space-y-4">
+          <div className={`${shimmer} h-7 w-64 mx-auto`} />
+          <div className={`${shimmer} h-4 w-96 max-w-full mx-auto`} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className={`${shimmer} h-16`} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {variant === "row" && (
+        <div className="mx-auto max-w-7xl px-4 py-10 space-y-6">
+          <div className="space-y-2">
+            <div className={`${shimmer} h-8 w-72 max-w-full`} />
+            <div className={`${shimmer} h-4 w-96 max-w-full`} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-slate-100 bg-white p-4 space-y-3">
+                <div className={`${shimmer} h-32 w-full`} />
+                <div className={`${shimmer} h-4 w-3/4`} />
+                <div className={`${shimmer} h-3 w-1/2`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {variant === "grid" && (
+        <div className="mx-auto max-w-7xl px-4 py-12 space-y-6">
+          <div className="space-y-2">
+            <div className={`${shimmer} h-8 w-80 max-w-full`} />
+            <div className={`${shimmer} h-4 w-full max-w-xl`} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-slate-100 bg-white p-4 space-y-3">
+                <div className={`${shimmer} h-36 w-full`} />
+                <div className={`${shimmer} h-4 w-4/5`} />
+                <div className={`${shimmer} h-3 w-3/5`} />
+                <div className="flex gap-2 pt-1">
+                  <div className={`${shimmer} h-6 w-16`} />
+                  <div className={`${shimmer} h-6 w-12`} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Deferred = ({ height, rootMargin = "0px", children }: { height: number; rootMargin?: string; children: React.ReactNode }) => (
   <LazyMount rootMargin={rootMargin} minHeight={height} fallback={<SectionPlaceholder height={height} />}>
