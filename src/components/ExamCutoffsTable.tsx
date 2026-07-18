@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Target, Sparkles, ArrowRight, Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type CutoffRow = {
   college: string;
