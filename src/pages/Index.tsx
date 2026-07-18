@@ -71,7 +71,7 @@ const jsonLdSchemas = [
  *   - height >  400  → title + card grid
  */
 const SectionPlaceholder = ({ height = 320 }: { height?: number }) => {
-  const shimmer = "bg-gradient-to-r from-slate-100 via-slate-200/70 to-slate-100 bg-[length:200%_100%] animate-[skeleton-shimmer_1.4s_ease-in-out_infinite] rounded-md";
+  const shimmer = "bg-gradient-to-r from-slate-100 via-slate-200/70 to-slate-100 bg-[length:200%_100%] animate-[shimmer_1.6s_linear_infinite] rounded-md";
 
   let variant: "bar" | "small" | "row" | "grid" = "grid";
   if (height <= 60) variant = "bar";
