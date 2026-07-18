@@ -1,7 +1,13 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const STEPS = [
+const ICONS: Record<string, any> = { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award };
+
+type Step = { n: string; icon: any; title: string; sub: string; link: string; cta: string };
+
+const DEFAULT_STEPS: Step[] = [
   { n: "01", icon: Compass, title: "Discover", sub: "Explore B-schools & specialisations that fit your goals.", link: "/colleges", cta: "Explore Colleges" },
   { n: "02", icon: BookOpenCheck, title: "Prepare", sub: "Coaching, mocks, sectionals — CAT, XAT, GMAT, SNAP.", link: "/mba-compass", cta: "Start Prep" },
   { n: "03", icon: FileEdit, title: "Register", sub: "Track exam windows & never miss a deadline.", link: "/exams", cta: "Exam Calendar" },
