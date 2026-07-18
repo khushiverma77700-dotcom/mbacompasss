@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
 import { Clock, CalendarDays, AlertTriangle, ChevronRight, Bell, ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -43,6 +41,7 @@ const ExamDeadlinesTicker = () => {
   const { data: exams } = useQuery({
     queryKey: ["exam-deadlines-ticker"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("exams")
         .select("name, slug, registration_deadline, exam_date, conducting_body")
@@ -57,12 +56,7 @@ const ExamDeadlinesTicker = () => {
   return (
     <section className="py-16 md:py-20 bg-card">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12 animate-fade-in">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-bold mb-4">
             <Bell className="w-3.5 h-3.5" /> Don't Miss Out
           </span>
@@ -75,7 +69,7 @@ const ExamDeadlinesTicker = () => {
           <p className="text-xs text-muted-foreground/60 mt-2 italic">
             *Dates are tentative and subject to change. Please verify with official exam websites.
           </p>
-        </motion.div>
+        </div>
 
         <div className="relative lg:px-12 max-w-6xl mx-auto">
           <button
@@ -103,13 +97,10 @@ const ExamDeadlinesTicker = () => {
               const style = getUrgencyStyle(regDays);
 
               return (
-                <motion.div
+                <div
                   key={exam.slug || i}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.07 }}
-                  className="snap-start shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
+                  className="snap-start shrink-0 w-[280px] sm:w-[300px] lg:w-[320px] animate-fade-in"
+                  style={{ animationDelay: `${i * 70}ms` }}
                 >
                   <Link
                     to={`/exams/${exam.slug}`}
@@ -163,18 +154,15 @@ const ExamDeadlinesTicker = () => {
                     {regDays !== null && regDays >= 0 && (
                       <div className="mt-4">
                         <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                          <motion.div
+                          <div
                             className={`h-full rounded-full ${style.bar}`}
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${Math.max(5, Math.min(100, ((90 - regDays) / 90) * 100))}%` }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1, delay: i * 0.1 }}
+                            style={{ width: `${Math.max(5, Math.min(100, ((90 - regDays) / 90) * 100))}%` }}
                           />
                         </div>
                       </div>
                     )}
                   </Link>
-                </motion.div>
+                </div>
               );
             })}
           </div>

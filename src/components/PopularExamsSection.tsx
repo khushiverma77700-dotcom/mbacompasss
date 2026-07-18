@@ -1,9 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Calendar, Clock, ArrowRight, BookOpen, Award, FileText } from "lucide-react";
-import { motion } from "framer-motion";
 import { differenceInDays, parse, isValid } from "date-fns";
 
 const ACCENT_COLORS = [
@@ -37,6 +35,7 @@ const PopularExamsSection = () => {
   const { data: exams } = useQuery({
     queryKey: ["popular-exams-countdown"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("exams")
         .select("name, slug, full_name, exam_date, registration_deadline, conducting_body");
@@ -68,12 +67,7 @@ const PopularExamsSection = () => {
     <section className="py-12 md:py-16 bg-muted/20">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+        <div className="text-center mb-8 animate-fade-in">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-3">
             <BookOpen className="w-3.5 h-3.5" />
             MBA Entrance Exams
@@ -87,7 +81,7 @@ const PopularExamsSection = () => {
           <p className="text-xs text-muted-foreground/60 mt-2 italic">
             *Dates are tentative and subject to change. Please verify with official exam websites.
           </p>
-        </motion.div>
+        </div>
 
         {/* Exam Cards — 2x2 visual grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 auto-rows-fr max-w-5xl mx-auto">
@@ -101,13 +95,10 @@ const PopularExamsSection = () => {
             const isUrgent = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
 
             return (
-              <motion.div
+              <div
                 key={exam.slug}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.4 }}
-                className="h-full"
+                className="h-full animate-fade-in"
+                style={{ animationDelay: `${i * 80}ms` }}
               >
                 <Link
                   to={`/exam/${exam.slug}`}
@@ -198,26 +189,20 @@ const PopularExamsSection = () => {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
         </div>
 
         {/* View All */}
-        <motion.div
-          className="text-center mt-8"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-        >
+        <div className="text-center mt-8 animate-fade-in">
           <Link
             to="/blog"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md"
           >
             Explore All Exams <ArrowRight className="w-4 h-4" />
           </Link>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
