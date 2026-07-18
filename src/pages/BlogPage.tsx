@@ -99,63 +99,175 @@ const BlogPage = () => {
         </button>
       </div>
 
-      {/* Masthead */}
-      <header className="pt-14 pb-12 border-b border-sky-50 px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          className="inline-block px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6 border border-sky-100"
-        >
-          MBA Compass by B School Buzz
-        </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          className="font-editorial italic text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-tight text-slate-950 leading-[0.9]"
-        >
-          Journal
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="mt-6 max-w-2xl mx-auto text-slate-500 text-base md:text-lg font-light leading-relaxed"
-        >
-          Expert perspectives on admissions, strategy, and leadership for the next generation of Indian business leaders.
-        </motion.p>
-
-        {/* Category pills */}
-        <nav className="mt-10 flex flex-wrap justify-center gap-2">
-          {blogCategories.slice(0, 8).map((cat) => {
-            const active = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                  active
-                    ? "bg-sky-500 text-white shadow-md shadow-sky-200"
-                    : "bg-white text-slate-500 border border-slate-100 hover:bg-sky-50 hover:border-sky-100 hover:text-sky-700"
-                }`}
-              >
-                {cat === "all" ? "Latest Stories" : cat}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Compact search */}
-        <div className="mt-8 max-w-md mx-auto relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search articles, schools, strategies..."
-            aria-label="Search articles"
-            className="w-full pl-11 pr-5 py-3 bg-sky-50/40 border border-sky-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-sky-200 transition-all placeholder:text-slate-400"
-          />
+      {/* Masthead — Magazine cover */}
+      <header className="relative overflow-hidden border-b border-sky-50">
+        {/* Decorative background */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-40 -left-32 w-[520px] h-[520px] rounded-full bg-sky-100/60 blur-3xl" />
+          <div className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full bg-sky-50 blur-3xl" />
+          <svg className="absolute inset-0 w-full h-full opacity-[0.035]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" className="text-slate-900" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
         </div>
 
-        <div className="mt-5 inline-flex items-center gap-2 text-xs text-slate-500">
-          <BookOpen className="w-3.5 h-3.5 text-sky-500" />
-          <span className="font-medium">{totalArticles}+ expert articles & guides</span>
+        <div className="relative container mx-auto px-6 pt-10 pb-14">
+          {/* Top meta strip */}
+          <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500 border-b border-slate-200/60 pb-4 mb-10">
+            <span>Vol. 04 · {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}</span>
+            <span className="hidden md:inline text-sky-600">MBA Compass · B School Buzz</span>
+            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live</span>
+          </div>
+
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+            {/* Left: editorial wordmark */}
+            <div className="lg:col-span-7">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 backdrop-blur text-sky-700 rounded-full text-[10px] font-bold uppercase tracking-widest border border-sky-100 shadow-sm"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                The MBA Journal · Issue {String(totalArticles || 88).padStart(2, "0")}
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                className="mt-6 font-editorial text-slate-950 leading-[0.85] tracking-tight"
+              >
+                <span className="block italic text-6xl sm:text-7xl md:text-8xl">Journal</span>
+                <span className="block mt-2 text-2xl sm:text-3xl md:text-4xl font-light text-slate-700">
+                  where India's next <span className="italic text-sky-600">business leaders</span> are made.
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                className="mt-6 max-w-xl text-slate-500 text-base md:text-lg font-light leading-relaxed"
+              >
+                Long-form intelligence on admissions, strategy, coaching, and career decisions — written by people who've sat across the table at IIMs, ISB, and top global MBAs.
+              </motion.p>
+
+              {/* Stats strip */}
+              <div className="mt-8 grid grid-cols-3 gap-4 max-w-lg">
+                {[
+                  { k: `${totalArticles || 88}+`, v: "Articles" },
+                  { k: "12", v: "B-School Insiders" },
+                  { k: "Daily", v: "Updates" },
+                ].map((s) => (
+                  <div key={s.v} className="border-l-2 border-sky-200 pl-3">
+                    <div className="font-editorial italic text-3xl text-slate-900">{s.k}</div>
+                    <div className="text-[11px] uppercase tracking-widest text-slate-500 mt-1">{s.v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Search */}
+              <div className="mt-8 max-w-lg relative">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search CAT strategy, ISB essays, IIM cutoffs…"
+                  aria-label="Search articles"
+                  className="w-full pl-12 pr-32 py-4 bg-white border border-slate-200 rounded-full text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300 transition-all placeholder:text-slate-400"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-400 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
+                  ⌘ K
+                </div>
+              </div>
+
+              {/* Category pills */}
+              <nav className="mt-6 flex flex-wrap gap-2">
+                {blogCategories.slice(0, 7).map((cat) => {
+                  const active = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        active
+                          ? "bg-slate-900 text-white shadow-md"
+                          : "bg-white/70 text-slate-600 border border-slate-200 hover:border-sky-300 hover:text-sky-700"
+                      }`}
+                    >
+                      {cat === "all" ? "Latest" : cat}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Right: today's cover story preview */}
+            {featuredArticle && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}
+                className="lg:col-span-5"
+              >
+                <Link to={`/article/${featuredArticle.slug}`} className="group block relative">
+                  {/* stacked "magazine" effect */}
+                  <div className="absolute inset-0 rounded-3xl bg-sky-100 rotate-2 translate-x-2 translate-y-2" aria-hidden />
+                  <div className="absolute inset-0 rounded-3xl bg-white border border-sky-100 rotate-1 translate-x-1 translate-y-1" aria-hidden />
+
+                  <article className="relative rounded-3xl overflow-hidden bg-white border border-slate-200 shadow-2xl shadow-sky-100/60">
+                    <div className="relative aspect-[4/5] bg-sky-50 overflow-hidden">
+                      {(featuredArticle.image_url || featuredArticle.banner_url) && (
+                        <>
+                          <img
+                            src={(featuredArticle.image_url || featuredArticle.banner_url)!}
+                            alt=""
+                            aria-hidden
+                            className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-50"
+                          />
+                          <img
+                            src={(featuredArticle.image_url || featuredArticle.banner_url)!}
+                            alt={featuredArticle.title}
+                            className="relative w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+                            loading="eager"
+                          />
+                        </>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent" />
+
+                      <div className="absolute top-5 left-5 flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur text-sky-700 rounded-full text-[10px] font-bold uppercase tracking-widest shadow">
+                          <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" /> Cover Story
+                        </span>
+                        {featuredArticle.category && (
+                          <span className="px-3 py-1 bg-slate-900/70 text-white rounded-full text-[10px] font-semibold uppercase tracking-widest backdrop-blur">
+                            {featuredArticle.category}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                        <div className="text-[11px] uppercase tracking-[0.25em] text-sky-200 mb-2 flex items-center gap-3">
+                          <Calendar className="w-3 h-3" /> {formatDate(featuredArticle.created_at)}
+                          <span className="opacity-50">·</span>
+                          <Clock className="w-3 h-3" /> {getReadTime(featuredArticle.content)}
+                        </div>
+                        <h2 className="font-editorial text-2xl md:text-3xl leading-tight tracking-tight line-clamp-3">
+                          {featuredArticle.title}
+                        </h2>
+                        <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-white/90 group-hover:text-sky-200 transition-colors">
+                          Read the cover story <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
+
+                <div className="mt-5 flex items-center justify-between text-xs text-slate-500 px-1">
+                  <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5 text-sky-500" />{totalArticles}+ expert guides</span>
+                  <span className="italic font-editorial text-slate-700">— curated weekly</span>
+                </div>
+              </motion.div>
+            )}
+          </div>
         </div>
       </header>
 
