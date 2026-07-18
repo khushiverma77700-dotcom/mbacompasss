@@ -188,8 +188,54 @@ const AdminMBANewsroomBar = () => {
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
+
+              <div className="col-span-12 md:col-span-5 md:col-start-2">
+                <Label className="text-[11px] uppercase text-muted-foreground">Start date & time (optional)</Label>
+                <Input
+                  type="datetime-local"
+                  value={toLocalInput(it.start_at)}
+                  onChange={(e) => update(i, "start_at", fromLocalInput(e.target.value) as any)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="col-span-12 md:col-span-5">
+                <Label className="text-[11px] uppercase text-muted-foreground">End date & time (optional)</Label>
+                <Input
+                  type="datetime-local"
+                  value={toLocalInput(it.end_at)}
+                  onChange={(e) => update(i, "end_at", fromLocalInput(e.target.value) as any)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="col-span-12 md:col-start-2 md:col-span-10 -mt-1">
+                {(() => {
+                  const s = scheduleStatus(it);
+                  const tone =
+                    s.tone === "live" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : s.tone === "pending" ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : s.tone === "expired" ? "bg-rose-50 text-rose-700 border-rose-200"
+                    : "bg-muted text-muted-foreground border-border";
+                  return (
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded border ${tone}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" /> {s.label}
+                      </span>
+                      {(it.start_at || it.end_at) && (
+                        <button
+                          type="button"
+                          onClick={() => { update(i, "start_at", "" as any); update(i, "end_at", "" as any); }}
+                          className="text-[11px] text-muted-foreground hover:text-foreground underline"
+                        >
+                          Clear schedule
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           ))}
+
         </CardContent>
       </Card>
 
