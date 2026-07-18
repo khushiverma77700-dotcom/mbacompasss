@@ -126,7 +126,7 @@ const TestimonialsSection = () => {
                   {current.type === "image" && (
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/2">
-                        <img src={current.image_url} alt={current.name} className="w-full h-full object-cover max-h-[400px]"  loading="lazy" decoding="async" />
+                        <img src={cdnImage(current.image_url, { width: 800, quality: 72 })} srcSet={cdnImageSrcSet(current.image_url, { width: 800, quality: 72 })} sizes="(max-width: 768px) 100vw, 50vw" alt={current.name} width={800} height={533} className="w-full h-full object-cover max-h-[400px]" loading="lazy" decoding="async" />
                       </div>
                       <div className="md:w-1/2 p-6 flex flex-col justify-center">
                         <p className="font-heading font-semibold text-foreground text-lg mb-1">{current.name}</p>
