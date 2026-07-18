@@ -65,14 +65,17 @@ const FeaturedInstitutes = () => {
                 <div className="relative h-40 bg-gradient-to-br from-primary/80 to-primary overflow-hidden">
                   {inst.banner_url ? (
                     <img
-                      src={inst.banner_url}
+                      src={cdnImage(inst.banner_url, { width: 480, quality: 72 })}
+                      srcSet={cdnImageSrcSet(inst.banner_url, { width: 480, quality: 72 })}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 400px"
                       alt={inst.name}
-                      width={400}
-                      height={160}
+                      width={480}
+                      height={192}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       loading="lazy"
                       decoding="async"
                     />
+
                   ) : inst.logo_url ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/90 to-primary">
                       <img src={cdnImage(inst.logo_url, { width: 240, quality: 75 })} srcSet={cdnImageSrcSet(inst.logo_url, { width: 240, quality: 75 })} sizes="240px" alt={inst.name} width={240} height={64} className="h-16 w-auto object-contain drop-shadow-lg" loading="lazy" decoding="async" />

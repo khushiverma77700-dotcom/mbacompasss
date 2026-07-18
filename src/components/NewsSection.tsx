@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
+
 
 const NewsSection = () => {
   const { data: articles, isLoading } = useQuery({
@@ -85,7 +87,7 @@ const NewsSection = () => {
               >
                 <div className="h-48 md:h-56 overflow-hidden relative">
                   {getImage(featured) ? (
-                    <img src={getImage(featured)} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                    <img src={cdnImage(getImage(featured), { width: 720, quality: 72 })} srcSet={cdnImageSrcSet(getImage(featured), { width: 720, quality: 72 })} sizes="(max-width: 768px) 100vw, 640px" alt={featured.title} width={720} height={405} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full hero-gradient flex items-center justify-center">
                       <BookOpen className="w-12 h-12 text-primary-foreground/30" />
@@ -138,7 +140,7 @@ const NewsSection = () => {
                 >
                   <div className="w-28 h-24 rounded-lg overflow-hidden flex-shrink-0">
                     {getImage(item) ? (
-                      <img src={getImage(item)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <img src={cdnImage(getImage(item), { width: 220, quality: 70 })} srcSet={cdnImageSrcSet(getImage(item), { width: 220, quality: 70 })} sizes="112px" alt={item.title} width={112} height={96} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full hero-gradient flex items-center justify-center">
                         <span className="text-primary-foreground/40 text-xs font-bold">{item.category}</span>

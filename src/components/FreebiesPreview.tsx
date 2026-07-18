@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, FileText, Gift, ArrowRight } from "lucide-react";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
+
 
 type Freebie = {
   id: string;
@@ -62,11 +64,17 @@ const FreebiesPreview = () => {
               <div className="aspect-[4/3] bg-gradient-to-br from-sky-100 via-white to-sky-50 relative overflow-hidden">
                 {f.cover_image_url ? (
                   <img
-                    src={f.cover_image_url}
+                    src={cdnImage(f.cover_image_url, { width: 360, quality: 70 })}
+                    srcSet={cdnImageSrcSet(f.cover_image_url, { width: 360, quality: 70 })}
+                    sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 320px"
                     alt={f.title}
+                    width={360}
+                    height={270}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
+
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <FileText className="w-12 h-12 text-primary/40" strokeWidth={1.5} />

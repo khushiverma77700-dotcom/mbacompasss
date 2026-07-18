@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Star, Quote, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
+
 
 const TestimonialsSection = () => {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -104,7 +106,7 @@ const TestimonialsSection = () => {
                       <p className="text-foreground text-lg leading-relaxed mb-6">{current.content}</p>
                       <div className="flex items-center gap-4">
                         {current.image_url && (
-                          <img src={current.image_url} alt={current.name} className="w-12 h-12 rounded-full object-cover"  loading="lazy" decoding="async" />
+                          <img src={cdnImage(current.image_url, { width: 96, quality: 75 })} srcSet={cdnImageSrcSet(current.image_url, { width: 96, quality: 75 })} sizes="48px" alt={current.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover" loading="lazy" decoding="async" />
                         )}
                         <div>
                           <p className="font-heading font-semibold text-foreground">{current.name}</p>
@@ -124,7 +126,7 @@ const TestimonialsSection = () => {
                   {current.type === "image" && (
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/2">
-                        <img src={current.image_url} alt={current.name} className="w-full h-full object-cover max-h-[400px]"  loading="lazy" decoding="async" />
+                        <img src={cdnImage(current.image_url, { width: 800, quality: 72 })} srcSet={cdnImageSrcSet(current.image_url, { width: 800, quality: 72 })} sizes="(max-width: 768px) 100vw, 50vw" alt={current.name} width={800} height={533} className="w-full h-full object-cover max-h-[400px]" loading="lazy" decoding="async" />
                       </div>
                       <div className="md:w-1/2 p-6 flex flex-col justify-center">
                         <p className="font-heading font-semibold text-foreground text-lg mb-1">{current.name}</p>
