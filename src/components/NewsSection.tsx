@@ -1,16 +1,15 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Clock, User, BookOpen, TrendingUp } from "lucide-react";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const NewsSection = () => {
   const { data: articles, isLoading } = useQuery({
     queryKey: ["homepage-news"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("articles")
         .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,content,author")
@@ -59,7 +58,7 @@ const NewsSection = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <div className="animate-fade-in">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-3">
                 <BookOpen className="w-3.5 h-3.5" /> Latest Updates
               </span>
@@ -67,7 +66,7 @@ const NewsSection = () => {
                 MBA News & <span className="text-gradient">Expert Tips</span>
               </h2>
               <p className="text-muted-foreground text-sm">Exam updates, preparation strategies, and career advice from experts</p>
-            </motion.div>
+            </div>
           </div>
           <Link to="/blog">
             <Button variant="outline" size="sm" className="gap-1.5 hidden sm:inline-flex">
@@ -79,7 +78,7 @@ const NewsSection = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Featured Article */}
           {featured && (
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <div className="animate-fade-in">
               <Link
                 to={`/article/${featured.slug}`}
                 className="group block bg-card rounded-2xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 border border-border h-full"
@@ -122,18 +121,16 @@ const NewsSection = () => {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </div>
           )}
 
           {/* Side list */}
           <div className="flex flex-col gap-4">
             {rest.map((item, i) => (
-              <motion.div
+              <div
                 key={item.id}
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
+                className="animate-fade-in"
+                style={{ animationDelay: `${i * 80}ms` }}
               >
                 <Link
                   to={`/article/${item.slug}`}
@@ -170,7 +167,7 @@ const NewsSection = () => {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             ))}
 
             {/* View All Mobile */}
