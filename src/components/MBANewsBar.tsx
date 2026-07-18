@@ -1,19 +1,43 @@
+import { useEffect, useState } from "react";
 import { Newspaper, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
-const NEWS = [
+type NewsItem = { tag: string; text: string; href: string };
+
+const FALLBACK: NewsItem[] = [
   { tag: "CAT 2026", text: "IIM Kozhikode releases official CAT 2026 notification & exam calendar", href: "/exam/cat" },
   { tag: "XAT 2026", text: "XLRI opens XAT 2026 registrations — key dates and syllabus changes", href: "/exam/xat" },
   { tag: "IIM-A", text: "IIM Ahmedabad PGP 2026-28 shortlist criteria & Academic Rating weightage", href: "/college/iim-ahmedabad" },
   { tag: "Placements", text: "ISB Hyderabad Class of 2025 posts highest median CTC of ₹36.5 LPA", href: "/college/isb-hyderabad" },
   { tag: "SNAP", text: "Symbiosis announces 3-slot SNAP 2026 with revised marking scheme", href: "/exam/snap" },
   { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat" },
-  { tag: "GMAT", text: "GMAC confirms GMAT Focus Edition as default from Q1 2026 globally", href: "/exam/gmat" },
-  { tag: "FMS", text: "FMS Delhi shortlist ratio widens for CAT 2025 aspirants across categories", href: "/college/fms-delhi" },
 ];
 
 const MBANewsBar = () => {
-  const loop = [...NEWS, ...NEWS];
+  const [items, setItems] = useState<NewsItem[]>(FALLBACK);
+  const [enabled, setEnabled] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "mba_newsroom_bar")
+        .maybeSingle();
+      const v: any = data?.value;
+      if (v) {
+        if (v.enabled === false) setEnabled(false);
+        if (Array.isArray(v.items) && v.items.length) {
+          setItems(v.items.filter((it: any) => it?.text && it?.href));
+        }
+      }
+    })();
+  }, []);
+
+  if (!enabled || items.length === 0) return null;
+  const loop = [...items, ...items];
+
   return (
     <div className="relative border-y border-primary/15 bg-gradient-to-r from-sky-50 via-white to-sky-50">
       <div className="container mx-auto px-4">
@@ -36,9 +60,11 @@ const MBANewsBar = () => {
                   to={n.href}
                   className="inline-flex items-center gap-2 text-xs md:text-sm text-foreground/80 hover:text-primary transition-colors"
                 >
-                  <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-2 py-0.5 rounded">
-                    {n.tag}
-                  </span>
+                  {n.tag && (
+                    <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-2 py-0.5 rounded">
+                      {n.tag}
+                    </span>
+                  )}
                   <span className="font-medium">{n.text}</span>
                   <ArrowRight className="w-3 h-3 opacity-60" />
                 </Link>
