@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Star, Quote, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
+
 
 const TestimonialsSection = () => {
   const [activeIdx, setActiveIdx] = useState(0);
