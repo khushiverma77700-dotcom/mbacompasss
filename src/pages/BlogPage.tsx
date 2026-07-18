@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Calendar, Clock, TrendingUp, BookOpen, User, Search, Flame, Bookmark, ArrowLeft, Share2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, Calendar, Clock, TrendingUp, BookOpen, User, Search, Flame, Bookmark, ArrowLeft, Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
