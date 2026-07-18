@@ -10,7 +10,29 @@ import { Save, Plus, Trash2, GripVertical, Newspaper, ArrowUp, ArrowDown, Eye } 
 import MBANewsBar from "@/components/MBANewsBar";
 
 
-type NewsItem = { tag: string; text: string; href: string };
+type NewsItem = { tag: string; text: string; href: string; start_at?: string | null; end_at?: string | null };
+
+const toLocalInput = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+const fromLocalInput = (val: string): string | null => {
+  if (!val) return null;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+};
+const scheduleStatus = (it: NewsItem): { label: string; tone: "live" | "pending" | "expired" | "always" } => {
+  const now = Date.now();
+  const s = it.start_at ? Date.parse(it.start_at) : NaN;
+  const e = it.end_at ? Date.parse(it.end_at) : NaN;
+  if (isNaN(s) && isNaN(e)) return { label: "Always visible", tone: "always" };
+  if (!isNaN(s) && now < s) return { label: `Starts ${new Date(s).toLocaleString()}`, tone: "pending" };
+  if (!isNaN(e) && now > e) return { label: `Expired ${new Date(e).toLocaleString()}`, tone: "expired" };
+  return { label: !isNaN(e) ? `Live until ${new Date(e).toLocaleString()}` : "Live now", tone: "live" };
+};
 
 const KEY = "mba_newsroom_bar";
 
@@ -57,8 +79,15 @@ const AdminMBANewsroomBar = () => {
   const save = async () => {
     setSaving(true);
     const clean = items
-      .map((it) => ({ tag: (it.tag || "").trim(), text: (it.text || "").trim(), href: (it.href || "").trim() }))
+      .map((it) => ({
+        tag: (it.tag || "").trim(),
+        text: (it.text || "").trim(),
+        href: (it.href || "").trim(),
+        start_at: it.start_at || null,
+        end_at: it.end_at || null,
+      }))
       .filter((it) => it.text && it.href);
+
     const value = { enabled, items: clean };
 
     const { data: existing } = await supabase.from("site_settings").select("id").eq("key", KEY).maybeSingle();
@@ -159,8 +188,54 @@ const AdminMBANewsroomBar = () => {
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
+
+              <div className="col-span-12 md:col-span-5 md:col-start-2">
+                <Label className="text-[11px] uppercase text-muted-foreground">Start date & time (optional)</Label>
+                <Input
+                  type="datetime-local"
+                  value={toLocalInput(it.start_at)}
+                  onChange={(e) => update(i, "start_at", fromLocalInput(e.target.value) as any)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="col-span-12 md:col-span-5">
+                <Label className="text-[11px] uppercase text-muted-foreground">End date & time (optional)</Label>
+                <Input
+                  type="datetime-local"
+                  value={toLocalInput(it.end_at)}
+                  onChange={(e) => update(i, "end_at", fromLocalInput(e.target.value) as any)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="col-span-12 md:col-start-2 md:col-span-10 -mt-1">
+                {(() => {
+                  const s = scheduleStatus(it);
+                  const tone =
+                    s.tone === "live" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : s.tone === "pending" ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : s.tone === "expired" ? "bg-rose-50 text-rose-700 border-rose-200"
+                    : "bg-muted text-muted-foreground border-border";
+                  return (
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded border ${tone}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" /> {s.label}
+                      </span>
+                      {(it.start_at || it.end_at) && (
+                        <button
+                          type="button"
+                          onClick={() => { update(i, "start_at", "" as any); update(i, "end_at", "" as any); }}
+                          className="text-[11px] text-muted-foreground hover:text-foreground underline"
+                        >
+                          Clear schedule
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           ))}
+
         </CardContent>
       </Card>
 
@@ -177,7 +252,7 @@ const AdminMBANewsroomBar = () => {
           {enabled ? (
             <div className="border rounded-lg overflow-hidden">
               <MBANewsBar
-                key={`${items.length}-${items.map((i) => i.tag + i.text + i.href).join("|")}`}
+                key={`${items.length}-${items.map((i) => i.tag + i.text + i.href + (i.start_at || "") + (i.end_at || "")).join("|")}`}
                 items={items.filter((it) => it.text && it.href)}
                 enabled={enabled}
                 fetchRemote={false}

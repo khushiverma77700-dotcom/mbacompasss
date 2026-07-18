@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Newspaper, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-type NewsItem = { tag: string; text: string; href: string };
+type NewsItem = { tag: string; text: string; href: string; start_at?: string | null; end_at?: string | null };
 
 const FALLBACK: NewsItem[] = [
   { tag: "CAT 2026", text: "IIM Kozhikode releases official CAT 2026 notification & exam calendar", href: "/exam/cat" },
@@ -13,6 +13,15 @@ const FALLBACK: NewsItem[] = [
   { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat" },
 ];
 
+const isActive = (it: NewsItem, now = Date.now()): boolean => {
+  const start = it.start_at ? Date.parse(it.start_at) : NaN;
+  const end = it.end_at ? Date.parse(it.end_at) : NaN;
+  if (!isNaN(start) && now < start) return false;
+  if (!isNaN(end) && now > end) return false;
+  return true;
+};
+
+
 type Props = {
   items?: NewsItem[];
   enabled?: boolean;
@@ -20,12 +29,15 @@ type Props = {
 };
 
 const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true }: Props = {}) => {
-  const [items, setItems] = useState<NewsItem[]>(itemsProp && itemsProp.length ? itemsProp : FALLBACK);
+  const [items, setItems] = useState<NewsItem[]>(
+    itemsProp && itemsProp.length ? itemsProp.filter(isActive) : FALLBACK
+  );
   const [enabled, setEnabled] = useState(enabledProp ?? true);
 
   useEffect(() => {
     if (itemsProp) {
-      setItems(itemsProp.filter((it) => it?.text && it?.href).length ? itemsProp.filter((it) => it?.text && it?.href) : itemsProp);
+      const valid = itemsProp.filter((it) => it?.text && it?.href).filter(isActive);
+      setItems(valid);
     }
     if (typeof enabledProp === "boolean") setEnabled(enabledProp);
   }, [itemsProp, enabledProp]);
@@ -43,11 +55,12 @@ const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true
       if (v) {
         if (v.enabled === false) setEnabled(false);
         if (Array.isArray(v.items) && v.items.length) {
-          setItems(v.items.filter((it: any) => it?.text && it?.href));
+          setItems(v.items.filter((it: any) => it?.text && it?.href).filter(isActive));
         }
       }
     })();
   }, [fetchRemote]);
+
 
   if (!enabled || items.length === 0) return null;
   const loop = [...items, ...items];
