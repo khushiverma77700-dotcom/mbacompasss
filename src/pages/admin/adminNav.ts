@@ -85,6 +85,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     label: "Content & Media",
     items: [
       { label: "Banners", path: "/admin/banners", icon: Image },
+      { label: "MBA Newsroom Bar (Homepage)", path: "/admin/mba-newsroom-bar", icon: Newspaper },
       { label: "Articles", path: "/admin/articles", icon: Newspaper },
       { label: "Testimonials", path: "/admin/testimonials", icon: MessageCircle },
       { label: "Coupons", path: "/admin/coupons", icon: Ticket },
