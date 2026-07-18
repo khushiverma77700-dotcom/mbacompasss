@@ -188,9 +188,9 @@ const BlogPage = () => {
             </div>
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8 lg:gap-12">
+          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8 lg:gap-12 items-start">
             {/* Left column */}
-            <div className="col-span-12 lg:col-span-8 space-y-16">
+            <div className="col-span-12 lg:col-span-9 space-y-14">
               {/* Featured Auto-Slider */}
               {activeFeatured && selectedCategory === "all" && !searchQuery && (
                 <motion.div
@@ -198,9 +198,9 @@ const BlogPage = () => {
                   className="relative"
                 >
                   <div className="relative bg-white border border-sky-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-sky-500/5 transition-all duration-500">
-                    <div className="grid md:grid-cols-2 min-h-[420px] md:min-h-[540px] lg:min-h-[600px]">
-                      {/* Image side — fills the card fully, no side borders */}
-                      <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[420px] lg:min-h-[540px] overflow-hidden bg-sky-50">
+                    <div className="grid md:grid-cols-5 min-h-[360px] md:min-h-[420px] lg:min-h-[460px]">
+                      {/* Image side — wider, shorter, edge-to-edge */}
+                      <div className="relative col-span-3 aspect-[16/10] md:aspect-auto md:min-h-[420px] lg:min-h-[460px] overflow-hidden bg-sky-50">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id}
@@ -240,7 +240,7 @@ const BlogPage = () => {
                       </div>
 
                       {/* Text side */}
-                      <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center space-y-5 relative">
+                      <div className="col-span-2 p-7 md:p-8 lg:p-10 flex flex-col justify-center space-y-4 relative">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id + "-text"}
@@ -449,10 +449,10 @@ const BlogPage = () => {
             </div>
 
             {/* Sidebar */}
-            <aside className="col-span-12 lg:col-span-4">
-              <div className="lg:sticky lg:top-24 space-y-8">
+            <aside className="col-span-12 lg:col-span-3">
+              <div className="lg:sticky lg:top-24 space-y-8 lg:pt-10">
                 {/* Trending */}
-                <div className="bg-sky-50/50 border border-sky-100 rounded-3xl p-8 lg:mt-16">
+                <div className="bg-sky-50/50 border border-sky-100 rounded-3xl p-6">
                   <h3 className="font-editorial italic text-xl text-slate-900 mb-8 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-sky-500 not-italic" />
                     Trending Conversations
