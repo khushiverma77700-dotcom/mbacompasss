@@ -191,69 +191,204 @@ const BlogPage = () => {
           <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8 lg:gap-12">
             {/* Left column */}
             <div className="col-span-12 lg:col-span-8 space-y-16">
-              {/* Featured Article */}
-              {featuredArticle && selectedCategory === "all" && !searchQuery && (
-                <motion.article
+              {/* Featured Auto-Slider */}
+              {activeFeatured && selectedCategory === "all" && !searchQuery && (
+                <motion.div
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                  className="group relative bg-white border border-sky-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-sky-500/5 transition-all duration-500"
+                  className="relative"
                 >
-                  <Link to={`/article/${featuredArticle.slug}`} className="grid md:grid-cols-2">
-                    <div className="h-64 md:h-auto bg-sky-50 relative overflow-hidden">
-                      {(featuredArticle.image_url || featuredArticle.banner_url) ? (
-                        <img
-                          src={(featuredArticle.image_url || featuredArticle.banner_url)!}
-                          alt={featuredArticle.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-sky-100 to-sky-50">
-                          <BookOpen className="w-20 h-20 text-sky-300" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-tr from-sky-900/10 to-transparent pointer-events-none" />
-                      <div className="absolute bottom-6 left-6">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/90 backdrop-blur-sm text-sky-600 text-xs font-bold rounded-lg shadow-sm">
-                          <Flame className="w-3 h-3" /> FEATURED
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-8 md:p-10 flex flex-col justify-center space-y-4">
-                      <div className="text-xs font-bold text-sky-500 tracking-[0.2em] uppercase">
-                        {featuredArticle.category}
-                      </div>
-                      <h2 className="font-editorial text-3xl md:text-4xl leading-[1.1] text-slate-900 group-hover:text-sky-600 transition-colors">
-                        {featuredArticle.title}
-                      </h2>
-                      {featuredArticle.excerpt && (
-                        <p className="text-slate-500 leading-relaxed font-light line-clamp-3">
-                          {featuredArticle.excerpt}
-                        </p>
-                      )}
-                      <div className="pt-3 flex items-center gap-4 text-xs text-slate-500">
-                        {featuredArticle.author && (
-                          <span className="flex items-center gap-2">
-                            <span className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
-                              <User className="w-3.5 h-3.5 text-sky-600" />
-                            </span>
-                            <span>
-                              <span className="block font-semibold text-slate-700">{featuredArticle.author}</span>
-                              <span className="text-[11px] text-slate-400">Senior MBA Mentor</span>
-                            </span>
+                  <div className="relative bg-white border border-sky-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-sky-500/5 transition-all duration-500">
+                    <div className="grid md:grid-cols-5">
+                      {/* Image side with soft blurred backdrop so nothing ever crops awkwardly */}
+                      <div className="relative md:col-span-3 aspect-[16/10] md:aspect-auto md:min-h-[440px] overflow-hidden bg-sky-50">
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={activeFeatured.id}
+                            initial={{ opacity: 0, scale: 1.02 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.7, ease: "easeOut" }}
+                            className="absolute inset-0"
+                          >
+                            {(activeFeatured.image_url || activeFeatured.banner_url) ? (
+                              <>
+                                {/* Blurred backdrop fill */}
+                                <img
+                                  src={(activeFeatured.image_url || activeFeatured.banner_url)!}
+                                  alt=""
+                                  aria-hidden
+                                  className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60"
+                                />
+                                {/* Actual contained image */}
+                                <img
+                                  src={(activeFeatured.image_url || activeFeatured.banner_url)!}
+                                  alt={activeFeatured.title}
+                                  className="relative w-full h-full object-contain"
+                                  loading="lazy"
+                                />
+                              </>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-sky-100 to-sky-50">
+                                <BookOpen className="w-20 h-20 text-sky-300" />
+                              </div>
+                            )}
+                          </motion.div>
+                        </AnimatePresence>
+                        <div className="absolute top-5 left-5 z-10">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/90 backdrop-blur-sm text-sky-600 text-xs font-bold rounded-lg shadow-sm">
+                            <Flame className="w-3 h-3" /> FEATURED
                           </span>
+                        </div>
+                        {/* Slide counter */}
+                        {featuredList.length > 1 && (
+                          <div className="absolute bottom-5 left-5 z-10 flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
+                            <span className="text-sky-600">{String(heroIndex + 1).padStart(2, "0")}</span>
+                            <span className="text-slate-300">/</span>
+                            <span>{String(featuredList.length).padStart(2, "0")}</span>
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
-                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(featuredArticle.created_at)}</span>
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(featuredArticle.content)}</span>
-                      </div>
-                      <div className="pt-2 inline-flex items-center gap-2 text-sm text-sky-600 font-semibold group-hover:gap-3 transition-all">
-                        Read Full Article <ArrowRight className="w-4 h-4" />
+
+                      {/* Text side */}
+                      <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-4 relative">
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={activeFeatured.id + "-text"}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.5 }}
+                            className="space-y-4"
+                          >
+                            <div className="text-xs font-bold text-sky-500 tracking-[0.2em] uppercase">
+                              {activeFeatured.category || "News"}
+                            </div>
+                            <Link to={`/article/${activeFeatured.slug}`} className="block group">
+                              <h2 className="font-editorial text-3xl md:text-4xl leading-[1.1] text-slate-900 group-hover:text-sky-600 transition-colors">
+                                {activeFeatured.title}
+                              </h2>
+                            </Link>
+                            {activeFeatured.excerpt && (
+                              <p className="text-slate-500 leading-relaxed font-light line-clamp-3">
+                                {activeFeatured.excerpt}
+                              </p>
+                            )}
+                            {activeFeatured.author && (
+                              <div className="pt-2 flex items-center gap-2 text-xs text-slate-500">
+                                <span className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
+                                  <User className="w-3.5 h-3.5 text-sky-600" />
+                                </span>
+                                <span>
+                                  <span className="block font-semibold text-slate-700">{activeFeatured.author}</span>
+                                  <span className="text-[11px] text-slate-400">Senior MBA Mentor</span>
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4 text-[11px] text-slate-400">
+                              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(activeFeatured.created_at)}</span>
+                              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(activeFeatured.content)}</span>
+                            </div>
+                            <Link
+                              to={`/article/${activeFeatured.slug}`}
+                              className="pt-1 inline-flex items-center gap-2 text-sm text-sky-600 font-semibold hover:gap-3 transition-all"
+                            >
+                              Read Full Article <ArrowRight className="w-4 h-4" />
+                            </Link>
+                          </motion.div>
+                        </AnimatePresence>
+
+                        {/* Controls */}
+                        {featuredList.length > 1 && (
+                          <div className="pt-6 mt-2 border-t border-sky-100 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              {featuredList.map((_, i) => (
+                                <button
+                                  key={i}
+                                  aria-label={`Go to slide ${i + 1}`}
+                                  onClick={() => setHeroIndex(i)}
+                                  className={`transition-all rounded-full ${
+                                    i === heroIndex
+                                      ? "w-6 h-1.5 bg-sky-500"
+                                      : "w-1.5 h-1.5 bg-sky-200 hover:bg-sky-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                aria-label="Previous slide"
+                                onClick={() => setHeroIndex(i => (i - 1 + featuredList.length) % featuredList.length)}
+                                className="w-9 h-9 rounded-full border border-sky-100 hover:border-sky-300 hover:bg-sky-50 text-slate-600 hover:text-sky-600 flex items-center justify-center transition-all"
+                              >
+                                <ChevronLeft className="w-4 h-4" />
+                              </button>
+                              <button
+                                aria-label="Next slide"
+                                onClick={() => setHeroIndex(i => (i + 1) % featuredList.length)}
+                                className="w-9 h-9 rounded-full border border-sky-100 hover:border-sky-300 hover:bg-sky-50 text-slate-600 hover:text-sky-600 flex items-center justify-center transition-all"
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </Link>
-                </motion.article>
+                  </div>
+                </motion.div>
               )}
+
+              {/* In the Spotlight — auto-scrolling marquee strip */}
+              {spotlight.length > 3 && selectedCategory === "all" && !searchQuery && (
+                <section className="space-y-4">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold tracking-[0.25em] uppercase text-sky-500 mb-1.5">Now Trending</div>
+                      <h3 className="font-editorial text-xl md:text-2xl text-slate-900">
+                        In the <span className="italic text-sky-500">Spotlight</span>
+                      </h3>
+                    </div>
+                  </div>
+                  <div
+                    className="group relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50/60 via-white to-sky-50/60"
+                    style={{
+                      maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+                      WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+                    }}
+                  >
+                    <div className="flex gap-4 py-5 animate-[marquee_40s_linear_infinite] group-hover:[animation-play-state:paused]">
+                      {[...spotlight, ...spotlight].map((item, i) => (
+                        <Link
+                          key={`${item.id}-${i}`}
+                          to={`/article/${item.slug}`}
+                          className="shrink-0 w-[280px] bg-white border border-sky-100 rounded-xl p-3 flex gap-3 items-center hover:border-sky-300 hover:shadow-md hover:shadow-sky-500/5 transition-all"
+                        >
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-sky-50 flex-shrink-0">
+                            {(item.image_url || item.banner_url) ? (
+                              <img
+                                src={(item.image_url || item.banner_url)!}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-sky-100 to-sky-50">
+                                <BookOpen className="w-5 h-5 text-sky-300" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-bold text-sky-500 uppercase tracking-widest truncate">{item.category || "News"}</div>
+                            <div className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">{item.title}</div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+
 
               {/* Latest Intelligence */}
               <section className="space-y-8">
