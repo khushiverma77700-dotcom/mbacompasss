@@ -198,9 +198,9 @@ const BlogPage = () => {
                   className="relative"
                 >
                   <div className="relative bg-white border border-sky-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-sky-500/5 transition-all duration-500">
-                    <div className="grid md:grid-cols-5">
-                      {/* Image side with soft blurred backdrop so nothing ever crops awkwardly */}
-                      <div className="relative md:col-span-3 aspect-[16/10] md:aspect-auto md:min-h-[440px] overflow-hidden bg-sky-50">
+                    <div className="grid md:grid-cols-2">
+                      {/* Image side — fills the card fully, no side borders */}
+                      <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[340px] overflow-hidden bg-sky-50">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id}
@@ -211,22 +211,12 @@ const BlogPage = () => {
                             className="absolute inset-0"
                           >
                             {(activeFeatured.image_url || activeFeatured.banner_url) ? (
-                              <>
-                                {/* Blurred backdrop fill */}
-                                <img
-                                  src={(activeFeatured.image_url || activeFeatured.banner_url)!}
-                                  alt=""
-                                  aria-hidden
-                                  className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60"
-                                />
-                                {/* Actual contained image */}
-                                <img
-                                  src={(activeFeatured.image_url || activeFeatured.banner_url)!}
-                                  alt={activeFeatured.title}
-                                  className="relative w-full h-full object-contain"
-                                  loading="lazy"
-                                />
-                              </>
+                              <img
+                                src={(activeFeatured.image_url || activeFeatured.banner_url)!}
+                                alt={activeFeatured.title}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-sky-100 to-sky-50">
                                 <BookOpen className="w-20 h-20 text-sky-300" />
@@ -250,7 +240,7 @@ const BlogPage = () => {
                       </div>
 
                       {/* Text side */}
-                      <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-4 relative">
+                      <div className="p-6 md:p-8 flex flex-col justify-center space-y-3 relative">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id + "-text"}
