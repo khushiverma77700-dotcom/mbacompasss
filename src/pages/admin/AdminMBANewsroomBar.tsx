@@ -146,10 +146,12 @@ const AdminMBANewsroomBar = () => {
                 <Input
                   value={it.href}
                   onChange={(e) => update(i, "href", e.target.value)}
-                  placeholder="/exam/cat"
+                  placeholder="/exam/cat or https://…"
                   className="mt-1"
                 />
+                <p className="text-[10px] text-muted-foreground mt-1">Internal path (/exam/cat) or full URL (https://…). External links open in a new tab.</p>
               </div>
+
               <div className="col-span-1 flex justify-end pt-5">
                 <Button size="icon" variant="ghost" onClick={() => remove(i)} className="text-destructive hover:text-destructive">
                   <Trash2 className="w-4 h-4" />
