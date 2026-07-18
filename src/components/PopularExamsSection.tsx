@@ -205,7 +205,7 @@ const PopularExamsSection = () => {
 
         {/* View All */}
         <motion.div
-          className="text-center mt-10"
+          className="text-center mt-8"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
