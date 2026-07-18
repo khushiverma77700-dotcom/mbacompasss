@@ -87,7 +87,7 @@ const NewsSection = () => {
               >
                 <div className="h-48 md:h-56 overflow-hidden relative">
                   {getImage(featured) ? (
-                    <img src={getImage(featured)} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                    <img src={cdnImage(getImage(featured), { width: 720, quality: 72 })} srcSet={cdnImageSrcSet(getImage(featured), { width: 720, quality: 72 })} sizes="(max-width: 768px) 100vw, 640px" alt={featured.title} width={720} height={405} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full hero-gradient flex items-center justify-center">
                       <BookOpen className="w-12 h-12 text-primary-foreground/30" />
