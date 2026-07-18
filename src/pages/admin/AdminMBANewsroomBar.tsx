@@ -165,27 +165,53 @@ const AdminMBANewsroomBar = () => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Live Preview</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Eye className="w-4 h-4 text-primary" /> Live Preview
+          </CardTitle>
+          <span className="text-[11px] text-muted-foreground">
+            Reflects unsaved edits · Hover to pause · {enabled ? "Enabled" : "Hidden on homepage"}
+          </span>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-lg overflow-hidden bg-gradient-to-r from-sky-50 via-white to-sky-50 p-3">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-primary shrink-0 pr-3 border-r border-primary/15">
-                MBA Newsroom
-              </span>
-              <div className="flex gap-8 whitespace-nowrap overflow-hidden">
-                {items.slice(0, 6).map((n, i) => (
-                  <span key={i} className="inline-flex items-center gap-2 text-sm">
-                    <span className="text-[10px] font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded">{n.tag || "TAG"}</span>
-                    <span>{n.text || "(empty headline)"}</span>
-                  </span>
-                ))}
-              </div>
+          {enabled ? (
+            <div className="border rounded-lg overflow-hidden">
+              <MBANewsBar
+                key={`${items.length}-${items.map((i) => i.tag + i.text + i.href).join("|")}`}
+                items={items.filter((it) => it.text && it.href)}
+                enabled={enabled}
+                fetchRemote={false}
+              />
+              {items.filter((it) => it.text && it.href).length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground text-center">
+                  Add at least one item with headline and link to see the ticker animation.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-6 text-sm text-muted-foreground text-center border border-dashed rounded-lg">
+              Ticker is disabled and will not appear on the homepage. Toggle "Show on homepage" to preview.
+            </div>
+          )}
+
+          <div className="mt-4">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Static list preview</p>
+            <div className="border rounded-lg bg-muted/30 p-3 space-y-1.5 max-h-56 overflow-auto">
+              {items.filter((it) => it.text && it.href).length === 0 && (
+                <p className="text-xs text-muted-foreground">No valid items yet.</p>
+              )}
+              {items.filter((it) => it.text && it.href).map((n, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <span className="text-[10px] font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0">{n.tag || "TAG"}</span>
+                  <span className="truncate">{n.text}</span>
+                  <span className="text-[10px] text-muted-foreground truncate ml-auto">{n.href}</span>
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>
       </Card>
+
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving} size="lg">
