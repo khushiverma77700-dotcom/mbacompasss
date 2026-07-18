@@ -55,22 +55,28 @@ const MBANewsBar = () => {
           </div>
           <div className="flex-1 overflow-hidden relative min-w-0">
             <div className="flex gap-6 md:gap-10 whitespace-nowrap animate-[marquee_45s_linear_infinite] hover:[animation-play-state:paused]">
-              {loop.map((n, i) => (
-                <Link
-                  key={i}
-                  to={n.href}
-                  className="inline-flex items-center gap-2 shrink-0 whitespace-nowrap text-xs md:text-sm text-foreground/80 hover:text-primary transition-colors"
-                >
-                  {n.tag && (
-                    <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded">
-                      {n.tag}
-                    </span>
-                  )}
-                  <span className="font-medium whitespace-nowrap">{n.text}</span>
-                  <ArrowRight className="w-3 h-3 opacity-60 flex-shrink-0" />
-                </Link>
-              ))}
+              {loop.map((n, i) => {
+                const isExternal = /^https?:\/\//i.test(n.href);
+                const content = (
+                  <>
+                    {n.tag && (
+                      <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded">
+                        {n.tag}
+                      </span>
+                    )}
+                    <span className="font-medium whitespace-nowrap">{n.text}</span>
+                    <ArrowRight className="w-3 h-3 opacity-60 flex-shrink-0" />
+                  </>
+                );
+                const cls = "inline-flex items-center gap-2 shrink-0 whitespace-nowrap text-xs md:text-sm text-foreground/80 hover:text-primary transition-colors";
+                return isExternal ? (
+                  <a key={i} href={n.href} target="_blank" rel="noopener noreferrer" className={cls}>{content}</a>
+                ) : (
+                  <Link key={i} to={n.href} className={cls}>{content}</Link>
+                );
+              })}
             </div>
+
             <div className="pointer-events-none absolute inset-y-0 left-0 w-6 md:w-8 bg-gradient-to-r from-sky-50 to-transparent" />
             <div className="pointer-events-none absolute inset-y-0 right-0 w-6 md:w-8 bg-gradient-to-l from-sky-50 to-transparent" />
           </div>
