@@ -74,6 +74,35 @@ const SECTORS: Sector[] = [
 ];
 
 export default function PlacementsBySectorSection() {
+  const [sectors, setSectors] = useState<Sector[]>(SECTORS);
+
+  // Admin override from site_settings (managed via /admin/tables-manager)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "home_placements_by_sector")
+        .maybeSingle();
+      const items: any[] = Array.isArray((data?.value as any)?.items) ? (data!.value as any).items : [];
+      if (cancelled || items.length === 0) return;
+      const mapped: Sector[] = items
+        .filter((r) => r?.name)
+        .map((r, i) => ({
+          icon: ICONS[r.icon] || SECTORS[i % SECTORS.length]?.icon || Briefcase,
+          name: r.name,
+          share: r.share || "",
+          avgCTC: r.avgCTC || "",
+          topCTC: r.topCTC || "",
+          recruiters: Array.isArray(r.recruiters) ? r.recruiters : String(r.recruiters || "").split(/[,|]/).map((s: string) => s.trim()).filter(Boolean),
+          color: SECTORS[i % SECTORS.length]?.color || DEFAULT_COLOR,
+        }));
+      setSectors(mapped);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <section className="relative py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4">
