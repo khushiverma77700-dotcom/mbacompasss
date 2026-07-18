@@ -101,7 +101,7 @@ const SuccessStoriesSection = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-primary/10">
                     {story.image_url ? (
-                      <img src={cdnImage(story.image_url, { width: 200, quality: 75 })} alt={story.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                      <img src={cdnImage(story.image_url, { width: 112, quality: 75 })} srcSet={cdnImageSrcSet(story.image_url, { width: 112, quality: 75 })} sizes="56px" alt={story.name} width={56} height={56} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <User className="w-7 h-7 text-primary" />
                     )}
