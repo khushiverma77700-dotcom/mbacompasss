@@ -252,7 +252,7 @@ const AdminMBANewsroomBar = () => {
           {enabled ? (
             <div className="border rounded-lg overflow-hidden">
               <MBANewsBar
-                key={`${items.length}-${items.map((i) => i.tag + i.text + i.href).join("|")}`}
+                key={`${items.length}-${items.map((i) => i.tag + i.text + i.href + (i.start_at || "") + (i.end_at || "")).join("|")}`}
                 items={items.filter((it) => it.text && it.href)}
                 enabled={enabled}
                 fetchRemote={false}
