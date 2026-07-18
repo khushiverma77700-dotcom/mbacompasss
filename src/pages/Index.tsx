@@ -30,6 +30,8 @@ const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
+const ExamCutoffsTable = lazy(() => import("@/components/ExamCutoffsTable"));
+const PlacementsBySectorSection = lazy(() => import("@/components/PlacementsBySectorSection"));
 const MBAJourneyStrip = lazy(() => import("@/components/MBAJourneyStrip"));
 
 const homepageFAQs = [
