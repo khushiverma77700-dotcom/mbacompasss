@@ -158,6 +158,24 @@
          spinner on non-prerendered routes and flagging them as Soft 404.
          Real prerendered content in #root paints first now. */
     </style>
+    <script>
+      /* Font-loading race: whichever finishes first wins.
+         - If document.fonts.ready resolves within 1500ms → add `.fonts-loaded`
+           and swap from the metric-matched fallback to the real webfont.
+         - If the network is slow or the font 404s, the timeout fires and we
+           still add `.fonts-loaded` so we're not stuck in fallback forever —
+           `font-display: swap` means the browser will paint the real font
+           whenever it does arrive without blocking anything.
+         Either way, first paint is never blocked on fonts. */
+      (function(){
+        var done = false;
+        function ready(){ if(done) return; done = true; document.documentElement.classList.add('fonts-loaded'); }
+        if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+          document.fonts.ready.then(ready).catch(ready);
+        }
+        setTimeout(ready, 1500);
+      })();
+    </script>
 
     <meta property="og:type" content="website" />
     <!-- og:url is set per-route by the SEOHead component so internal pages don't default to the homepage. -->
