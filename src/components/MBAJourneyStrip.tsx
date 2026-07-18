@@ -77,7 +77,7 @@ const MBAJourneyStrip = () => {
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
               {cta} <ChevronRight className="w-3.5 h-3.5" />
             </span>
-            {i < STEPS.length - 1 && (
+            {i < steps.length - 1 && (
               <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-px bg-gradient-to-r from-primary/30 to-transparent" />
             )}
           </Link>
@@ -85,6 +85,7 @@ const MBAJourneyStrip = () => {
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default MBAJourneyStrip;
