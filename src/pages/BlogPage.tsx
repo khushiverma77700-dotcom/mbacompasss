@@ -240,7 +240,7 @@ const BlogPage = () => {
                       </div>
 
                       {/* Text side */}
-                      <div className="p-6 md:p-8 flex flex-col justify-center space-y-3 relative">
+                      <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center space-y-5 relative">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeFeatured.id + "-text"}
