@@ -216,6 +216,7 @@ const StudentFormulaBook = lazyWithPreload(() => import("./pages/student/formula
 const StudentNewsroom = lazyWithPreload(() => import("./pages/student/StudentNewsroom"));
 const AdminNewsroom = lazyWithPreload(() => import("./pages/admin/AdminNewsroom"));
 const AdminMBANewsroomBar = lazyWithPreload(() => import("./pages/admin/AdminMBANewsroomBar"));
+const AdminCollegeTables = lazyWithPreload(() => import("./pages/admin/AdminCollegeTables"));
 const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
 const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 // Demo Dashboard removed to reduce load
