@@ -356,7 +356,7 @@ const BlogPage = () => {
                       WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
                     }}
                   >
-                    <div className="flex gap-4 py-5 animate-[marquee_40s_linear_infinite] group-hover:[animation-play-state:paused]">
+                    <div className="flex gap-4 py-5 animate-marquee group-hover:[animation-play-state:paused]">
                       {[...spotlight, ...spotlight].map((item, i) => (
                         <Link
                           key={`${item.id}-${i}`}
