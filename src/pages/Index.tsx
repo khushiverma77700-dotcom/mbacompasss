@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
+import HomeQuickAccessStrip from "@/components/HomeQuickAccessStrip";
+import MBANewsBar from "@/components/MBANewsBar";
 import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
 import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
 import SEOHead, {
@@ -27,6 +29,8 @@ const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSect
 const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
+const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
+const MBAJourneyStrip = lazy(() => import("@/components/MBAJourneyStrip"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -84,12 +88,16 @@ const Index = () => {
       <div>
         {/* Above-the-fold: eager, in the initial chunk */}
         <HeroSection />
+        <HomeQuickAccessStrip />
+        <MBANewsBar />
         <ExamDeadlinesTicker />
         <TopRankedCollegesSection />
 
         {/* Below-the-fold: code-split + mount on scroll */}
         <Deferred height={200}><StatsCounterSection /></Deferred>
+        <Deferred height={520}><MBALandscapeSection /></Deferred>
         <Deferred height={360}><PopularExamsSection /></Deferred>
+        <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
         <Deferred height={320}><TopCitiesSection /></Deferred>
         <Deferred height={420}><TopExamComparisonSection /></Deferred>
