@@ -1,0 +1,6 @@
+category,rank,name,slug,city,fees,cutoff,average_package,highest_package,highlight,is_active,sort_order
+iim,1,IIM Ahmedabad,iim-ahmedabad,Ahmedabad,₹28.0 L,99.5%ile,₹34.5 LPA,₹1.15 Cr,Top NIRF #1,true,1
+iim,2,IIM Bangalore,iim-bangalore,Bangalore,₹27.5 L,99.0%ile,₹33.8 LPA,₹1.10 Cr,,true,2
+private,1,XLRI Jamshedpur,xlri-jamshedpur,Jamshedpur,₹27.5 L,94+ XAT,₹32.7 LPA,₹85 LPA,XAT · HR flagship,true,1
+govt,1,FMS Delhi,fms-delhi,Delhi,₹2.0 L,98%ile CAT,₹34.3 LPA,₹75 LPA,Best ROI,true,1
+global,1,ISB Hyderabad,isb-hyderabad,Hyderabad,₹41.8 L,GMAT 710+,₹36.5 LPA,₹1.20 Cr,1-year PGP,true,1

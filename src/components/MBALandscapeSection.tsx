@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trophy, TrendingUp, MapPin, IndianRupee, ArrowRight, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Row = {
   rank: number;
@@ -49,7 +50,7 @@ const GLOBAL: Row[] = [
   { rank: 6, name: "IIFT Delhi", slug: "iift-delhi", city: "Delhi", fees: "₹19.5 L", cutoff: "IIFT Exam", medianCTC: "₹25.1 LPA" },
 ];
 
-const TABS = [
+const DEFAULT_TABS = [
   { id: "iim", label: "Top IIMs", rows: IIMS, note: "Baby & older IIMs · Flagship PGP/MBA" },
   { id: "private", label: "Top Private", rows: PRIVATE, note: "XLRI · SPJIMR · MDI · SIBM · IMT" },
   { id: "govt", label: "Top Government", rows: GOVT, note: "FMS · JBIMS · IITs · Central Univs" },
@@ -57,8 +58,32 @@ const TABS = [
 ];
 
 const MBALandscapeSection = () => {
-  const [active, setActive] = useState(TABS[0].id);
-  const current = TABS.find((t) => t.id === active)!;
+  const [tabs, setTabs] = useState(DEFAULT_TABS);
+  const [active, setActive] = useState(DEFAULT_TABS[0].id);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("landscape_colleges")
+        .select("category,rank,name,slug,city,fees,cutoff,average_package,highlight,is_active,sort_order")
+        .eq("is_active", true)
+        .order("sort_order").order("rank");
+      if (!data || !data.length) return;
+      const grouped: Record<string, Row[]> = { iim: [], private: [], govt: [], global: [] };
+      for (const r of data as any[]) {
+        if (!grouped[r.category]) continue;
+        grouped[r.category].push({
+          rank: r.rank, name: r.name, slug: r.slug,
+          city: r.city || "", fees: r.fees || "", cutoff: r.cutoff || "",
+          medianCTC: r.average_package || "", highlight: r.highlight || undefined,
+        });
+      }
+      setTabs(DEFAULT_TABS.map((t) => grouped[t.id]?.length ? { ...t, rows: grouped[t.id] } : t));
+    })();
+  }, []);
+
+  const current = tabs.find((t) => t.id === active)!;
+
 
   return (
     <section className="relative py-16 md:py-24 bg-gradient-to-b from-white via-sky-50/40 to-white">
@@ -77,7 +102,7 @@ const MBALandscapeSection = () => {
 
         {/* Tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-6">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setActive(t.id)}
