@@ -106,7 +106,7 @@ const TestimonialsSection = () => {
                       <p className="text-foreground text-lg leading-relaxed mb-6">{current.content}</p>
                       <div className="flex items-center gap-4">
                         {current.image_url && (
-                          <img src={current.image_url} alt={current.name} className="w-12 h-12 rounded-full object-cover"  loading="lazy" decoding="async" />
+                          <img src={cdnImage(current.image_url, { width: 96, quality: 75 })} srcSet={cdnImageSrcSet(current.image_url, { width: 96, quality: 75 })} sizes="48px" alt={current.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover" loading="lazy" decoding="async" />
                         )}
                         <div>
                           <p className="font-heading font-semibold text-foreground">{current.name}</p>
