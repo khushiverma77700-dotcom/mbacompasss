@@ -34,6 +34,10 @@ const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"
 const ExamCutoffsTable = lazy(() => import("@/components/ExamCutoffsTable"));
 const PlacementsBySectorSection = lazy(() => import("@/components/PlacementsBySectorSection"));
 const MBAJourneyStrip = lazy(() => import("@/components/MBAJourneyStrip"));
+const FreeToolsShowcase = lazy(() => import("@/components/FreeToolsShowcase"));
+const ROIComparisonTable = lazy(() => import("@/components/ROIComparisonTable"));
+const FreebiesPreview = lazy(() => import("@/components/FreebiesPreview"));
+const TopperWall = lazy(() => import("@/components/TopperWall"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -104,16 +108,20 @@ const Index = () => {
         <Deferred height={520}><MBALandscapeSection /></Deferred>
         <Deferred height={360}><PopularExamsSection /></Deferred>
         <Deferred height={640}><ExamCutoffsTable /></Deferred>
+        <Deferred height={520}><ROIComparisonTable /></Deferred>
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={520}><PlacementsBySectorSection /></Deferred>
+        <Deferred height={560}><FreeToolsShowcase /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
         <Deferred height={320}><TopCitiesSection /></Deferred>
         <Deferred height={420}><TopExamComparisonSection /></Deferred>
+        <Deferred height={520}><TopperWall /></Deferred>
         <Deferred height={420}><WhyChooseUs /></Deferred>
         <Deferred height={160}><AICoachingFinder /></Deferred>
         <Deferred height={360}><HowItWorksSection /></Deferred>
         <Deferred height={420}><SuccessStoriesSection /></Deferred>
         <Deferred height={360}><TestimonialsSection /></Deferred>
+        <Deferred height={480}><FreebiesPreview /></Deferred>
         <Deferred height={360}><LearningResourcesSection /></Deferred>
         <Deferred height={420}><LatestArticlesSection /></Deferred>
         <Deferred height={360}><NewsSection /></Deferred>
