@@ -111,24 +111,24 @@ const PopularExamsSection = () => {
               >
                 <Link
                   to={`/exam/${exam.slug}`}
-                  className={`group relative flex flex-col h-full ${accent.bg} rounded-2xl border ${accent.border} p-5 md:p-6 overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-all duration-300`}
+                  className={`group relative flex flex-col h-full ${accent.bg} rounded-xl border ${accent.border} p-4 md:p-5 overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300`}
                 >
                   {/* Top accent bar */}
-                  <div className={`absolute inset-x-0 top-0 h-1 ${accent.bar}`} />
+                  <div className={`absolute inset-x-0 top-0 h-0.5 ${accent.bar}`} />
 
                   <div className="flex-1 min-h-0">
                     {/* Header row */}
-                    <div className="flex items-start justify-between gap-4 mb-5">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-xl ${accent.iconBg} ${accent.text} flex items-center justify-center flex-shrink-0`}>
-                          <FileText className="w-5 h-5" />
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-10 h-10 rounded-lg ${accent.iconBg} ${accent.text} flex items-center justify-center flex-shrink-0`}>
+                          <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-heading font-bold text-lg md:text-xl text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+                          <h3 className="font-heading font-bold text-base md:text-lg text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
                             {exam.name}
                           </h3>
                           {exam.conducting_body && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
                               <Award className="w-3 h-3 flex-shrink-0" />
                               <span className="truncate">{exam.conducting_body}</span>
                             </p>
@@ -138,32 +138,32 @@ const PopularExamsSection = () => {
 
                       {daysLeft !== null && daysLeft >= 0 && (
                         <div className="text-center flex-shrink-0">
-                          <div className={`text-2xl md:text-3xl font-extrabold ${isUrgent ? "text-destructive" : accent.text} leading-none`}>
+                          <div className={`text-xl md:text-2xl font-extrabold ${isUrgent ? "text-destructive" : accent.text} leading-none`}>
                             {daysLeft}
                           </div>
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">days left</div>
+                          <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">days left</div>
                         </div>
                       )}
                     </div>
 
                     {/* Full name */}
                     {exam.full_name && (
-                      <p className="text-sm text-muted-foreground line-clamp-1 mb-4">
+                      <p className="text-xs text-muted-foreground line-clamp-1 mb-2.5">
                         {exam.full_name}
                       </p>
                     )}
 
                     {/* Date + deadline row */}
-                    <div className="space-y-2.5 mb-5">
+                    <div className="space-y-1.5 mb-3">
                       {exam.exam_date && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className={`w-4 h-4 ${accent.text} flex-shrink-0`} />
+                        <div className="flex items-center gap-2 text-xs">
+                          <Calendar className={`w-3.5 h-3.5 ${accent.text} flex-shrink-0`} />
                           <span className="text-foreground font-medium">{exam.exam_date}</span>
                         </div>
                       )}
                       {exam.registration_deadline && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className={`w-4 h-4 ${isUrgent ? "text-destructive" : accent.text} flex-shrink-0`} />
+                        <div className="flex items-center gap-2 text-xs">
+                          <Clock className={`w-3.5 h-3.5 ${isUrgent ? "text-destructive" : accent.text} flex-shrink-0`} />
                           <span className="text-foreground font-medium">Reg. by {exam.registration_deadline}</span>
                         </div>
                       )}
@@ -173,14 +173,14 @@ const PopularExamsSection = () => {
                   {/* Bottom section: progress + CTA */}
                   <div>
                     {daysLeft !== null && daysLeft >= 0 && (
-                      <div className="mb-5">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Exam countdown</span>
-                          <span className={`text-[10px] font-bold ${isUrgent ? "text-destructive" : accent.text}`}>
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold">Countdown</span>
+                          <span className={`text-[9px] font-bold ${isUrgent ? "text-destructive" : accent.text}`}>
                             {daysLeft === 0 ? "Today" : `${daysLeft} days remaining`}
                           </span>
                         </div>
-                        <div className="w-full h-2 bg-background/70 rounded-full overflow-hidden">
+                        <div className="w-full h-1.5 bg-background/70 rounded-full overflow-hidden">
                           <div
                             className={`h-full ${accent.bar} rounded-full transition-all duration-1000`}
                             style={{ width: `${progressPercent}%` }}
@@ -190,10 +190,10 @@ const PopularExamsSection = () => {
                     )}
 
                     {/* CTA */}
-                    <div className="pt-4 border-t border-border/40 flex items-center justify-between">
-                      <span className={`text-sm font-semibold ${accent.text}`}>View details</span>
-                      <span className={`w-8 h-8 rounded-full ${accent.iconBg} ${accent.text} flex items-center justify-center group-hover:translate-x-1 transition-transform`}>
-                        <ArrowRight className="w-4 h-4" />
+                    <div className="pt-3 border-t border-border/40 flex items-center justify-between">
+                      <span className={`text-xs font-semibold ${accent.text}`}>View details</span>
+                      <span className={`w-7 h-7 rounded-full ${accent.iconBg} ${accent.text} flex items-center justify-center group-hover:translate-x-1 transition-transform`}>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
                   </div>
