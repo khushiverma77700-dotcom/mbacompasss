@@ -13,11 +13,25 @@ const FALLBACK: NewsItem[] = [
   { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat" },
 ];
 
-const MBANewsBar = () => {
-  const [items, setItems] = useState<NewsItem[]>(FALLBACK);
-  const [enabled, setEnabled] = useState(true);
+type Props = {
+  items?: NewsItem[];
+  enabled?: boolean;
+  fetchRemote?: boolean;
+};
+
+const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true }: Props = {}) => {
+  const [items, setItems] = useState<NewsItem[]>(itemsProp && itemsProp.length ? itemsProp : FALLBACK);
+  const [enabled, setEnabled] = useState(enabledProp ?? true);
 
   useEffect(() => {
+    if (itemsProp) {
+      setItems(itemsProp.filter((it) => it?.text && it?.href).length ? itemsProp.filter((it) => it?.text && it?.href) : itemsProp);
+    }
+    if (typeof enabledProp === "boolean") setEnabled(enabledProp);
+  }, [itemsProp, enabledProp]);
+
+  useEffect(() => {
+    if (!fetchRemote) return;
     (async () => {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
@@ -33,10 +47,11 @@ const MBANewsBar = () => {
         }
       }
     })();
-  }, []);
+  }, [fetchRemote]);
 
   if (!enabled || items.length === 0) return null;
   const loop = [...items, ...items];
+
 
   return (
     <div className="relative border-y border-primary/15 bg-gradient-to-r from-sky-50 via-white to-sky-50">
