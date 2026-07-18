@@ -1,9 +1,6 @@
 import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
 import HomeQuickAccessStrip from "@/components/HomeQuickAccessStrip";
-import MBANewsBar from "@/components/MBANewsBar";
-import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
-import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
 import SEOHead, {
   generateWebsiteSchema,
   generateOrganizationSchema,
@@ -12,8 +9,12 @@ import SEOHead, {
 } from "@/components/SEOHead";
 import { LazyMount } from "@/hooks/useInView";
 
-// Below-the-fold sections are code-split (React.lazy) so the initial JS bundle
-// stays tiny — this is the biggest lever for LCP on a React SPA.
+// Everything below the hero is code-split + mount-on-scroll so the initial
+// bundle stays tiny. Blank-screen on slow networks was caused by too much
+// eager code (framer-motion, react-query fetches) in the first paint.
+const MBANewsBar = lazy(() => import("@/components/MBANewsBar"));
+const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
+const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedCollegesSection"));
 const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
 const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
 const CategoryCards = lazy(() => import("@/components/CategoryCards"));
