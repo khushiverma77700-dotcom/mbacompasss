@@ -42,14 +42,15 @@ const MBANewsBar = () => {
     <div className="relative border-y border-primary/15 bg-gradient-to-r from-sky-50 via-white to-sky-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center gap-3 md:gap-4 py-2">
-          <div className="flex items-center gap-2 shrink-0 pr-2 md:pr-4 border-r border-primary/15" aria-label="MBA Newsroom">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0 pr-2 md:pr-4 border-r border-primary/15" aria-label="MBA Newsroom">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
             <Newspaper className="w-4 h-4 text-primary" />
-            <span className="hidden md:inline text-[11px] md:text-xs font-bold uppercase tracking-wider text-primary">
-              MBA Newsroom
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary">
+              <span className="md:hidden">News</span>
+              <span className="hidden md:inline">MBA Newsroom</span>
             </span>
           </div>
           <div className="flex-1 overflow-hidden relative min-w-0">
