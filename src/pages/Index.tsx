@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
-import HomeQuickAccessStrip from "@/components/HomeQuickAccessStrip";
 import SEOHead, {
   generateWebsiteSchema,
   generateOrganizationSchema,
@@ -12,6 +11,7 @@ import { LazyMount } from "@/hooks/useInView";
 // Everything below the hero is code-split + mount-on-scroll so the initial
 // bundle stays tiny. Blank-screen on slow networks was caused by too much
 // eager code (framer-motion, react-query fetches) in the first paint.
+const HomeQuickAccessStrip = lazy(() => import("@/components/HomeQuickAccessStrip"));
 const MBANewsBar = lazy(() => import("@/components/MBANewsBar"));
 const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
 const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedCollegesSection"));
@@ -64,8 +64,8 @@ const SectionPlaceholder = ({ height = 320 }: { height?: number }) => (
   <div style={{ minHeight: height }} aria-hidden="true" />
 );
 
-const Deferred = ({ height, children }: { height: number; children: React.ReactNode }) => (
-  <LazyMount minHeight={height} fallback={<SectionPlaceholder height={height} />}>
+const Deferred = ({ height, rootMargin = "0px", children }: { height: number; rootMargin?: string; children: React.ReactNode }) => (
+  <LazyMount rootMargin={rootMargin} minHeight={height} fallback={<SectionPlaceholder height={height} />}>
     <Suspense fallback={<SectionPlaceholder height={height} />}>{children}</Suspense>
   </LazyMount>
 );
@@ -95,10 +95,12 @@ const Index = () => {
       <div>
         {/* Above-the-fold: eager, in the initial chunk */}
         <HeroSection />
-        <HomeQuickAccessStrip />
+        <Suspense fallback={<SectionPlaceholder height={180} />}>
+          <HomeQuickAccessStrip />
+        </Suspense>
 
         {/* Everything else: code-split + mount on scroll */}
-        <Deferred height={44}><MBANewsBar /></Deferred>
+        <Deferred height={44} rootMargin="120px"><MBANewsBar /></Deferred>
         <Deferred height={320}><ExamDeadlinesTicker /></Deferred>
         <Deferred height={520}><TopRankedCollegesSection /></Deferred>
 
