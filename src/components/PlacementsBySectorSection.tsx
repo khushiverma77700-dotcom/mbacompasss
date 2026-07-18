@@ -1,5 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Briefcase, TrendingUp, Building2, LineChart, ShoppingBag, Cpu, Banknote, Factory } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+const ICONS: Record<string, any> = { Briefcase, TrendingUp, Building2, LineChart, ShoppingBag, Cpu, Banknote, Factory };
+const DEFAULT_COLOR = "from-sky-500/10 to-sky-500/5 border-sky-500/20 text-sky-700";
 
 type Sector = {
   icon: any;
