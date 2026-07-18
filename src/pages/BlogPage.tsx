@@ -41,10 +41,28 @@ const BlogPage = () => {
     return matchesCat && matchesSearch;
   });
 
-  const featuredArticle = (articles || []).find(a => a.featured) || (articles || [])[0];
-  const regularArticles = filtered.filter(a => a.id !== featuredArticle?.id);
+  const featuredList = (() => {
+    const flagged = (articles || []).filter(a => a.featured);
+    const base = flagged.length >= 3 ? flagged : (articles || []);
+    return base.slice(0, 5);
+  })();
+  const featuredArticle = featuredList[0];
+  const featuredIds = new Set(featuredList.map(a => a.id));
+  const regularArticles = filtered.filter(a => !featuredIds.has(a.id));
   const recentArticles = (articles || []).slice(0, 5);
   const totalArticles = (articles || []).length;
+
+  // Hero carousel auto-advance
+  const [heroIndex, setHeroIndex] = useState(0);
+  useEffect(() => {
+    if (featuredList.length < 2) return;
+    const t = setInterval(() => setHeroIndex(i => (i + 1) % featuredList.length), 5500);
+    return () => clearInterval(t);
+  }, [featuredList.length]);
+  const activeFeatured = featuredList[heroIndex] || featuredArticle;
+
+  // Secondary "In the Spotlight" auto-slider (marquee-style, top 8 by recency)
+  const spotlight = (articles || []).slice(0, 8);
 
   const getReadTime = (content: string | null) => {
     if (!content) return "3 min read";
