@@ -10,7 +10,29 @@ import { Save, Plus, Trash2, GripVertical, Newspaper, ArrowUp, ArrowDown, Eye } 
 import MBANewsBar from "@/components/MBANewsBar";
 
 
-type NewsItem = { tag: string; text: string; href: string };
+type NewsItem = { tag: string; text: string; href: string; start_at?: string | null; end_at?: string | null };
+
+const toLocalInput = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+const fromLocalInput = (val: string): string | null => {
+  if (!val) return null;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+};
+const scheduleStatus = (it: NewsItem): { label: string; tone: "live" | "pending" | "expired" | "always" } => {
+  const now = Date.now();
+  const s = it.start_at ? Date.parse(it.start_at) : NaN;
+  const e = it.end_at ? Date.parse(it.end_at) : NaN;
+  if (isNaN(s) && isNaN(e)) return { label: "Always visible", tone: "always" };
+  if (!isNaN(s) && now < s) return { label: `Starts ${new Date(s).toLocaleString()}`, tone: "pending" };
+  if (!isNaN(e) && now > e) return { label: `Expired ${new Date(e).toLocaleString()}`, tone: "expired" };
+  return { label: !isNaN(e) ? `Live until ${new Date(e).toLocaleString()}` : "Live now", tone: "live" };
+};
 
 const KEY = "mba_newsroom_bar";
 
