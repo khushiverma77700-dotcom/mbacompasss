@@ -42,7 +42,13 @@ const ROIComparisonTable = () => {
         .eq("key", "home_roi_comparison")
         .maybeSingle();
       const v: any = data?.value;
-      if (Array.isArray(v?.items) && v.items.length) setRows(v.items);
+      if (Array.isArray(v?.items) && v.items.length) {
+        setRows(v.items.map((r: any) => ({
+          ...r,
+          fees: typeof r.fees === "number" ? r.fees : parseFloat(r.fees) || 0,
+          avgCtc: typeof r.avgCtc === "number" ? r.avgCtc : parseFloat(r.avgCtc) || 0,
+        })));
+      }
     })();
   }, []);
 

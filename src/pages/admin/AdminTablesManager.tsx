@@ -120,6 +120,25 @@ const TABLES: TableCfg[] = [
       ["02", "Prepare", "Coaching, mocks, sectionals — CAT, XAT, GMAT, SNAP.", "/mba-compass", "Start Prep", "BookOpenCheck"],
     ],
   },
+  {
+    id: "roi_comparison",
+    label: "ROI Comparison (Fees vs Avg CTC)",
+    description: "'Fees vs Average CTC — Top B-Schools' table on the homepage.",
+    storageKey: "home_roi_comparison",
+    columns: [
+      { key: "college", label: "B-School", required: true },
+      { key: "slug", label: "Slug", placeholder: "iim-ahmedabad" },
+      { key: "fees", label: "Fees (in Lakhs, number)", type: "number", required: true, placeholder: "24.5" },
+      { key: "avgCtc", label: "Avg CTC (in Lakhs, number)", type: "number", required: true, placeholder: "35.2" },
+      { key: "payback", label: "Payback", placeholder: "0.7 yrs" },
+      { key: "tag", label: "Tier (Elite / Premium / Value)", required: true, placeholder: "Elite" },
+    ],
+    csvSample: [
+      ["college", "slug", "fees", "avgCtc", "payback", "tag"],
+      ["IIM Ahmedabad", "iim-ahmedabad", "24.5", "35.2", "0.7 yrs", "Elite"],
+      ["FMS Delhi", "fms-delhi", "2.0", "34.4", "0.06 yrs", "Value"],
+    ],
+  },
 ];
 
 const EXTERNAL_TABLES = [
@@ -143,6 +162,12 @@ const normalizeRow = (cfg: TableCfg, raw: Record<string, any>): Record<string, a
       else if (typeof v === "string" && v.trim()) {
         out[col.key] = v.split(/[,|]/).map((s) => s.trim()).filter(Boolean);
       } else out[col.key] = [];
+    } else if (col.type === "number") {
+      if (v === "" || v == null) out[col.key] = "";
+      else {
+        const n = typeof v === "number" ? v : parseFloat(String(v));
+        out[col.key] = Number.isFinite(n) ? n : "";
+      }
     } else {
       out[col.key] = v == null ? "" : String(v);
     }
