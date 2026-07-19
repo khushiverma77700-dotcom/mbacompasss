@@ -46,24 +46,34 @@ export const useAllSiteSettings = () => {
 };
 
 export const useSiteSettings = (key: string, options?: { enabled?: boolean }) => {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: ["site_settings", key],
     queryFn: async () => {
-      // This only fires if the batch hasn't seeded this key yet
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", key)
-        .maybeSingle();
-
-      if (error) throw error;
-      return (data?.value as Record<string, any>) ?? null;
+      // Route through the batch query so we never fire a per-key roundtrip.
+      // On the homepage, App.tsx mounts useAllSiteSettings at the root — this
+      // ensures Header/Footer/Hero share ONE request instead of racing three.
+      const batch = await queryClient.fetchQuery({
+        queryKey: ["site_settings_all"],
+        queryFn: async () => {
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data, error } = await supabase
+            .from("site_settings")
+            .select("key, value")
+            .in("key", UI_SETTINGS_KEYS);
+          if (error) throw error;
+          const map: Record<string, any> = {};
+          data?.forEach((row: any) => { map[row.key] = row.value; });
+          return map;
+        },
+        staleTime: SETTINGS_STALE,
+      });
+      return (batch?.[key] as Record<string, any>) ?? null;
     },
     staleTime: SETTINGS_STALE,
     gcTime: 30 * 60 * 1000,
-    // Render immediately with null so components show fallbacks without waiting
     placeholderData: null,
     enabled: options?.enabled ?? true,
   });
 };
+
