@@ -131,10 +131,15 @@ const BrowseByCitySection = () => {
                 className="relative w-full h-[220px] rounded-2xl overflow-hidden shadow-xl"
               >
                 <img
-                  src={featured.image}
+                  src={cdnImage(featured.image, { width: 640, quality: 72 })}
+                  srcSet={cdnImageSrcSet(featured.image, { width: 640, quality: 72 })}
+                  sizes="(max-width: 768px) 100vw, 640px"
                   alt={`MBA colleges in ${featured.name}`}
+                  width={640}
+                  height={220}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-[#2c1810]/25 pointer-events-none" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/90 via-[#2c1810]/40 to-transparent pointer-events-none" />
