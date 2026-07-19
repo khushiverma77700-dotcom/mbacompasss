@@ -271,6 +271,101 @@ const AdminColleges = () => {
     });
   };
 
+  // ── Bulk filter upload: set listing_sort_order, tier, college_category per row ──
+  const csvEscape = (v: any) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const downloadBulkFilterTemplate = () => {
+    const headers = ["slug", "name", "listing_sort_order", "tier", "college_category"];
+    const rows = [...colleges]
+      .sort((a: any, b: any) =>
+        (a.listing_sort_order ?? 9999) - (b.listing_sort_order ?? 9999) ||
+        (a.ranking ?? 9999) - (b.ranking ?? 9999)
+      )
+      .map((c: any) =>
+        [c.slug, c.name, c.listing_sort_order ?? "", c.tier ?? "", c.college_category ?? ""].map(csvEscape).join(",")
+      );
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `college-filters-template-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const parseFilterCSV = (text: string): { slug: string; listing_sort_order?: number | null; tier?: string | null; college_category?: string | null }[] => {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim().length);
+    if (!lines.length) return [];
+    const parseLine = (l: string) => {
+      const out: string[] = []; let cur = ""; let q = false;
+      for (let i = 0; i < l.length; i++) {
+        const c = l[i];
+        if (c === '"') { if (q && l[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+        else if (c === "," && !q) { out.push(cur); cur = ""; }
+        else cur += c;
+      }
+      out.push(cur);
+      return out.map((x) => x.trim());
+    };
+    const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+    const idx = (h: string) => headers.indexOf(h);
+    const slugIdx = idx("slug"); const soIdx = idx("listing_sort_order");
+    const tierIdx = idx("tier"); const catIdx = idx("college_category");
+    if (slugIdx === -1) return [];
+    return lines.slice(1).map((l) => {
+      const cells = parseLine(l);
+      const slug = (cells[slugIdx] || "").trim();
+      if (!slug) return null;
+      const soRaw = soIdx >= 0 ? cells[soIdx]?.trim() : "";
+      const tierRaw = tierIdx >= 0 ? cells[tierIdx]?.trim() : "";
+      const catRaw = catIdx >= 0 ? cells[catIdx]?.trim() : "";
+      return {
+        slug,
+        listing_sort_order: soRaw ? (parseInt(soRaw, 10) || null) : undefined,
+        tier: tierRaw ? tierRaw : undefined,
+        college_category: catRaw ? catRaw : undefined,
+      };
+    }).filter(Boolean) as any;
+  };
+
+  const runBulkFilterUpload = async () => {
+    const rows = parseFilterCSV(bulkFilterCsv);
+    if (!rows.length) { toast({ title: "No valid rows", description: "Need at least a `slug` column with values.", variant: "destructive" }); return; }
+    setBulkFilterRunning(true);
+    setBulkFilterProgress({ done: 0, total: rows.length, failed: 0 });
+    let done = 0, failed = 0;
+    const CONCURRENCY = 5;
+    for (let i = 0; i < rows.length; i += CONCURRENCY) {
+      const batch = rows.slice(i, i + CONCURRENCY);
+      await Promise.all(batch.map(async (r) => {
+        const patch: any = {};
+        if (r.listing_sort_order !== undefined) patch.listing_sort_order = r.listing_sort_order;
+        if (r.tier !== undefined) patch.tier = r.tier;
+        if (r.college_category !== undefined) patch.college_category = r.college_category;
+        if (Object.keys(patch).length === 0) { done++; setBulkFilterProgress({ done, total: rows.length, failed }); return; }
+        const { error } = await supabase.from("colleges").update(patch).eq("slug", r.slug);
+        if (error) failed++;
+        done++;
+        setBulkFilterProgress({ done, total: rows.length, failed });
+      }));
+    }
+    setBulkFilterRunning(false);
+    toast({
+      title: "Bulk filter upload complete",
+      description: `${done - failed}/${rows.length} colleges updated${failed ? ` • ${failed} failed (check slugs)` : ""}.`,
+    });
+    setBulkFilterOpen(false);
+    setBulkFilterCsv("");
+    fetchColleges();
+  };
+
+
+
+
 
   const TagInput = ({ field, label }: { field: keyof typeof tagInputs; label: string }) => (
     <div>
