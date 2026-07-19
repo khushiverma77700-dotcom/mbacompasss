@@ -178,11 +178,13 @@ const normalizeRow = (cfg: TableCfg, raw: Record<string, any>): Record<string, a
 };
 
 const AdminTablesManager = () => {
+  const queryClient = useQueryClient();
   const [tableId, setTableId] = useState(TABLES[0].id);
   const cfg = useMemo(() => TABLES.find((t) => t.id === tableId)!, [tableId]);
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [purging, setPurging] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [preview, setPreview] = useState<{ rows: Record<string, any>[]; mode: "append" | "replace" } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
