@@ -144,9 +144,11 @@ const CollegesPage = () => {
       const sp = specOptions.find(s => s.slug === selectedSpec);
       chips.push({ key: "specialization", label: sp?.name || selectedSpec, value: selectedSpec });
     }
+    if (selectedTier !== "all") chips.push({ key: "tier", label: selectedTier, value: selectedTier });
+    if (selectedCategory !== "all") chips.push({ key: "category", label: selectedCategory, value: selectedCategory });
     if (search) chips.push({ key: "q", label: `"${search}"`, value: search });
     return chips;
-  }, [activeTab, selectedState, selectedCity, selectedExam, selectedFee, selectedSpec, search, specOptions]);
+  }, [activeTab, selectedState, selectedCity, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, search, specOptions]);
 
   // Dynamic SEO based on filters
   const dynamicTitle = useMemo(() => {
