@@ -50,7 +50,12 @@ export default defineConfig(({ mode }) => ({
             if (id.includes("framer-motion")) return "motion";
             if (id.includes("sonner") || id.includes("@radix-ui/react-toast")) return "toast";
             if (id.includes("@radix-ui")) return "radix";
-            if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
+            // Do NOT force-chunk @tiptap/prosemirror. Forcing them into a
+            // manual "editor" chunk was causing a side-effect import of the
+            // 400 KB editor bundle to leak into the entry chunk (added ~4 s
+            // to mobile TTI on the homepage). Let Rollup place these modules
+            // with their real importer (RichTextEditor, only used on admin
+            // pages) — the admin lazy chunks pull them in on demand.
             // Let Rollup keep charting libs together with their import graph.
             // Splitting recharts/d3 into a forced manual chunk can produce runtime
             // initialization-order errors in the published bundle.
