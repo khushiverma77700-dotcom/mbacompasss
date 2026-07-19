@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Trophy, MapPin, IndianRupee, TrendingUp, ChevronRight, Star, GraduationCap } from "lucide-react";
+import { MapPin, IndianRupee, TrendingUp, ChevronRight, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +12,18 @@ const fallbackColleges = [
   { name: "IIM Kozhikode", slug: "iim-kozhikode", city: "Kozhikode", state: "Kerala", ranking: 5, fees: "₹20L", placement_avg: "₹29.5 LPA", type: "IIM", logo_url: null },
   { name: "XLRI Jamshedpur", slug: "xlri-jamshedpur", city: "Jamshedpur", state: "Jharkhand", ranking: 6, fees: "₹25.5L", placement_avg: "₹28 LPA", type: "Top Management", logo_url: null },
 ];
+
+const getInitials = (name: string) => {
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return words.map((w) => w[0]?.toUpperCase()).join("").slice(0, 3);
+  return (words[0]?.[0] + words[1]?.[0] + words[words.length - 1]?.[0]).toUpperCase();
+};
+
+const formatBadge = (ranking?: number | null, type?: string) => {
+  if (ranking) return `NIRF #${ranking}`;
+  if (type) return type;
+  return "Top College";
+};
 
 const TopRankedCollegesSection = () => {
   const { data: colleges } = useQuery({
@@ -27,7 +40,7 @@ const TopRankedCollegesSection = () => {
     },
   });
 
-  const items = colleges || fallbackColleges;
+  const items = useMemo(() => (colleges || fallbackColleges).filter((c) => c.name?.trim() && c.slug?.trim()), [colleges]);
 
   return (
     <section className="py-20 md:py-24 bg-background border-y border-border/60">
@@ -46,69 +59,60 @@ const TopRankedCollegesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
-          {items.map((college: any, i: number) => (
-            <div
-              key={college.slug || i}
-              className="h-full animate-fade-in"
-              style={{ animationDelay: `${Math.min(i * 50, 250)}ms` }}
-            >
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+          {items.map((college: any, i: number) => {
+            const badge = formatBadge(college.ranking, college.type);
+            const initials = getInitials(college.name);
+            return (
               <Link
+                key={college.slug || i}
                 to={`/colleges/${college.slug}`}
-                className="group relative flex flex-col h-full bg-card rounded-2xl border border-border/70 p-6 hover:border-primary/40 hover:shadow-[0_18px_50px_-20px_hsl(207_90%_54%_/_0.25)] transition-all duration-300 overflow-hidden"
+                className="group block break-inside-avoid bg-card rounded-2xl border border-border/70 p-6 card-shadow hover:border-primary/40 card-shadow-hover transition-all duration-300 overflow-hidden animate-fade-in"
+                style={{ animationDelay: `${Math.min(i * 60, 300)}ms` }}
               >
-                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                <div className="flex items-start gap-4 flex-1">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex items-center justify-center">
-                    {college.ranking ? (
-                      <div className="text-center leading-none">
-                        <div className="text-[9px] uppercase tracking-wider text-primary/60 font-semibold">Rank</div>
-                        <div className="text-xl font-editorial italic text-primary mt-0.5">#{college.ranking}</div>
-                      </div>
-                    ) : (
-                      <GraduationCap className="w-6 h-6 text-primary" />
-                    )}
+                <div className="flex items-start justify-between gap-4 mb-5">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-secondary border border-primary/10 flex items-center justify-center">
+                    <span className="font-heading font-bold text-lg text-primary">{initials}</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-heading font-bold text-lg text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
-                      {college.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
-                      <MapPin className="w-3 h-3 flex-shrink-0" />
-                      <span className="truncate">{college.city}{college.state ? `, ${college.state}` : ""}</span>
+                  <span className="inline-flex items-center text-[10px] md:text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/10">
+                    {badge}
+                  </span>
+                </div>
+
+                <h3 className="font-heading font-bold text-lg md:text-xl text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                  {college.name}
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5 truncate">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{college.city}{college.state ? `, ${college.state}` : ""}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-6 py-4 border-y border-border/60">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Fees</p>
+                    <div className="flex items-start gap-1">
+                      <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-bold text-foreground line-clamp-2 break-words">{college.fees || "N/A"}</p>
                     </div>
-                    {college.type && (
-                      <span className="inline-block mt-2 text-[10px] font-semibold uppercase tracking-wider bg-accent text-accent-foreground px-2 py-0.5 rounded-full">
-                        {college.type}
-                      </span>
-                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Avg Package</p>
+                    <div className="flex items-start gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600/70 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-bold text-emerald-600 line-clamp-2 break-words">{college.placement_avg || "N/A"}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-5 border-t border-border/60">
-                  <div className="flex flex-col">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Fees</p>
-                    <div className="flex items-start gap-1 min-h-[2.5rem] max-h-[2.5rem] overflow-hidden">
-                      <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm font-semibold text-foreground line-clamp-2 break-words">
-                        {college.fees || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Avg Package</p>
-                    <div className="flex items-start gap-1 min-h-[2.5rem] max-h-[2.5rem] overflow-hidden">
-                      <TrendingUp className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm font-semibold text-foreground line-clamp-2 break-words">
-                        {college.placement_avg || "N/A"}
-                      </p>
-                    </div>
+                <div className="mt-5 flex items-center justify-between">
+                  <div className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-lg group-hover:bg-primary/90 transition-colors">
+                    View Details
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </div>
               </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center mt-12">
