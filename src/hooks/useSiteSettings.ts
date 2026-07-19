@@ -75,15 +75,28 @@ export const useSiteSettings = (key: string, options?: { enabled?: boolean }) =>
 /**
  * Admin-only: clears the server cache and refetches the homepage batch so
  * changes go live immediately after saves.
+ *
+ * Pass `keys` to purge only specific homepage sections (e.g. a single table);
+ * omit to fall back to a full purge.
  */
-export async function purgeHomepageCache(queryClient?: ReturnType<typeof useQueryClient>) {
+export async function purgeHomepageCache(
+  queryClient?: ReturnType<typeof useQueryClient>,
+  keys?: string[],
+) {
   try {
     const { supabase } = await import("@/integrations/supabase/client");
     await supabase.functions.invoke("homepage-cache", {
       method: "POST",
-      body: { action: "purge" },
+      body: keys && keys.length ? { action: "purge", keys } : { action: "purge" },
     });
   } catch { /* non-fatal */ }
+
   queryClient?.invalidateQueries({ queryKey: ["site_settings_all"] });
-  queryClient?.invalidateQueries({ queryKey: ["site_settings"] });
+  if (keys && keys.length) {
+    for (const k of keys) {
+      queryClient?.invalidateQueries({ queryKey: ["site_settings", k] });
+    }
+  } else {
+    queryClient?.invalidateQueries({ queryKey: ["site_settings"] });
+  }
 }
