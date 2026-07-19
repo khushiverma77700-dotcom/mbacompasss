@@ -82,13 +82,13 @@ const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true
             </span>
           </div>
           <div className="flex-1 overflow-hidden relative min-w-0">
-            <div className="flex gap-6 md:gap-10 whitespace-nowrap animate-[marquee_45s_linear_infinite] hover:[animation-play-state:paused]">
+            <div className="marquee-track flex gap-8 md:gap-12 whitespace-nowrap hover:[animation-play-state:paused]">
               {loop.map((n, i) => {
                 const isExternal = /^https?:\/\//i.test(n.href);
                 const content = (
                   <>
                     {n.tag && (
-                      <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded">
+                      <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded shrink-0">
                         {n.tag}
                       </span>
                     )}
@@ -110,7 +110,17 @@ const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true
           </div>
         </div>
       </div>
-      <style>{`@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+      <style>{`
+        @keyframes marquee { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+        .marquee-track {
+          animation: marquee 25s linear infinite;
+          will-change: transform;
+          transform: translate3d(0,0,0);
+          backface-visibility: hidden;
+        }
+        @media (min-width: 768px) { .marquee-track { animation-duration: 40s; } }
+        @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+      `}</style>
     </div>
   );
 };
