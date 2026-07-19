@@ -68,7 +68,9 @@ export function cdnImageSrcSet(
   opts: { width?: number; height?: number; quality?: number; version?: string | number | null } = {}
 ): string {
   if (!url) return "";
-  if (!/\/storage\/v1\/object\/public\//.test(url)) return "";
+  const isSupabase = /\/storage\/v1\/object\/public\//.test(url);
+  const isUnsplash = /images\.unsplash\.com\//.test(url);
+  if (!isSupabase && !isUnsplash) return "";
   const { width = 400 } = opts;
   return [
     `${cdnImage(url, { ...opts, dpr: 1 })} ${width}w`,
