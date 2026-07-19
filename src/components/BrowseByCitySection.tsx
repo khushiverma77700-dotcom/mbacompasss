@@ -301,10 +301,15 @@ const BrowseByCitySection = () => {
               style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
             >
               <img
-                src={featured.image}
+                src={cdnImage(featured.image, { width: 560, quality: 72 })}
+                srcSet={cdnImageSrcSet(featured.image, { width: 560, quality: 72 })}
+                sizes="(max-width: 1024px) 100vw, 480px"
                 alt={`MBA colleges in ${featured.name}`}
+                width={560}
+                height={400}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/90 via-[#2c1810]/50 to-transparent pointer-events-none" />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
