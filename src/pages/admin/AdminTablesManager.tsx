@@ -257,13 +257,14 @@ const AdminTablesManager = () => {
       return;
     }
     setDirty(false);
-    // Bust server cache so the change is visible on the live homepage immediately.
-    await purgeHomepageCache(queryClient);
+    // Fine-grained purge: only this table's key is evicted server-side.
+    await purgeHomepageCache(queryClient, [cfg.storageKey]);
     toast.success(`${cfg.label} saved (${rows.length} rows) — cache refreshed`);
   };
 
   const manualPurge = async () => {
     setPurging(true);
+    // Manual button = full refresh across all homepage sections.
     await purgeHomepageCache(queryClient);
     setPurging(false);
     toast.success("Homepage cache refreshed");
