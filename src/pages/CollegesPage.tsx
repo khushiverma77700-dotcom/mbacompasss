@@ -349,6 +349,24 @@ const CollegesPage = () => {
                 </SelectContent>
               </Select>
             )}
+            <Select value={selectedTier} onValueChange={(v) => setFilter("tier", v)}>
+              <SelectTrigger className="w-full sm:w-36 rounded-xl"><SelectValue placeholder="Tier" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tiers</SelectItem>
+                <SelectItem value="Tier 1">Tier 1</SelectItem>
+                <SelectItem value="Tier 2">Tier 2</SelectItem>
+                <SelectItem value="Tier 3">Tier 3</SelectItem>
+                <SelectItem value="Tier 4">Tier 4</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedCategory} onValueChange={(v) => setFilter("category", v)}>
+              <SelectTrigger className="w-full sm:w-36 rounded-xl"><SelectValue placeholder="IIM / Non-IIM" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="IIM">IIMs</SelectItem>
+                <SelectItem value="Non-IIM">Non-IIMs</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
