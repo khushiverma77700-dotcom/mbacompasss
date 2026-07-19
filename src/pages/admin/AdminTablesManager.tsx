@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { purgeHomepageCache } from "@/hooks/useSiteSettings";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -176,11 +178,13 @@ const normalizeRow = (cfg: TableCfg, raw: Record<string, any>): Record<string, a
 };
 
 const AdminTablesManager = () => {
+  const queryClient = useQueryClient();
   const [tableId, setTableId] = useState(TABLES[0].id);
   const cfg = useMemo(() => TABLES.find((t) => t.id === tableId)!, [tableId]);
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [purging, setPurging] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [preview, setPreview] = useState<{ rows: Record<string, any>[]; mode: "append" | "replace" } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -253,8 +257,18 @@ const AdminTablesManager = () => {
       return;
     }
     setDirty(false);
-    toast.success(`${cfg.label} saved (${rows.length} rows)`);
+    // Bust server cache so the change is visible on the live homepage immediately.
+    await purgeHomepageCache(queryClient);
+    toast.success(`${cfg.label} saved (${rows.length} rows) — cache refreshed`);
   };
+
+  const manualPurge = async () => {
+    setPurging(true);
+    await purgeHomepageCache(queryClient);
+    setPurging(false);
+    toast.success("Homepage cache refreshed");
+  };
+
 
   const downloadTemplate = () => {
     const csv = Papa.unparse(cfg.csvSample);
@@ -405,6 +419,9 @@ const AdminTablesManager = () => {
         <span className="text-xs text-muted-foreground">
           {rows.length} row{rows.length === 1 ? "" : "s"} {dirty && <span className="text-orange-600 font-semibold">· unsaved</span>}
         </span>
+        <Button size="sm" variant="outline" onClick={manualPurge} disabled={purging}>
+          {purging ? "Refreshing…" : "Refresh homepage cache"}
+        </Button>
         <Button size="sm" onClick={save} disabled={saving || !dirty}>
           <Save className="w-4 h-4 mr-1.5" /> {saving ? "Saving…" : "Save"}
         </Button>
