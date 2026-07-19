@@ -121,7 +121,9 @@ const MBALandscapeSection = () => {
 
         {/* Table */}
         <div className="max-w-5xl mx-auto rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-15px_rgba(14,165,233,0.2)] overflow-hidden">
-          <div className="hidden md:grid grid-cols-[60px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 px-4 py-2.5 bg-sky-50/70 border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80">
+          <div className="max-h-[540px] overflow-y-auto">
+          <div className="hidden md:grid grid-cols-[60px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 px-4 py-2.5 bg-sky-50/95 backdrop-blur border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80 sticky top-0 z-10">
+
             <div>Rank</div>
             <div>B-School</div>
             <div><MapPin className="inline w-3 h-3 mr-1" />Location</div>
