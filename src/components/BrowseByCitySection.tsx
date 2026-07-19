@@ -227,10 +227,15 @@ const BrowseByCitySection = () => {
                   }`}
                 >
                   <img
-                    src={city.image}
+                    src={cdnImage(city.image, { width: 128, quality: 65 })}
+                    srcSet={cdnImageSrcSet(city.image, { width: 128, quality: 65 })}
+                    sizes="64px"
                     alt={city.name}
+                    width={64}
+                    height={64}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-[#2c1810]/30 pointer-events-none" />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1">
