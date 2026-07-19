@@ -257,8 +257,18 @@ const AdminTablesManager = () => {
       return;
     }
     setDirty(false);
-    toast.success(`${cfg.label} saved (${rows.length} rows)`);
+    // Bust server cache so the change is visible on the live homepage immediately.
+    await purgeHomepageCache(queryClient);
+    toast.success(`${cfg.label} saved (${rows.length} rows) — cache refreshed`);
   };
+
+  const manualPurge = async () => {
+    setPurging(true);
+    await purgeHomepageCache(queryClient);
+    setPurging(false);
+    toast.success("Homepage cache refreshed");
+  };
+
 
   const downloadTemplate = () => {
     const csv = Papa.unparse(cfg.csvSample);
