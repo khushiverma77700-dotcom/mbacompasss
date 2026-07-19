@@ -59,7 +59,7 @@ const TopRankedCollegesSection = () => {
           </p>
         </div>
 
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
           {items.map((college: any, i: number) => {
             const badge = formatBadge(college.ranking, college.type);
             const initials = getInitials(college.name);
@@ -67,45 +67,49 @@ const TopRankedCollegesSection = () => {
               <Link
                 key={college.slug || i}
                 to={`/colleges/${college.slug}`}
-                className="group block break-inside-avoid bg-card rounded-2xl border border-border/70 p-6 card-shadow hover:border-primary/40 card-shadow-hover transition-all duration-300 overflow-hidden animate-fade-in"
+                className="group relative flex flex-col h-full bg-card rounded-2xl border border-border/70 p-6 card-shadow hover:border-primary/40 card-shadow-hover hover:-translate-y-0.5 transition-all duration-300 overflow-hidden animate-fade-in"
                 style={{ animationDelay: `${Math.min(i * 60, 300)}ms` }}
               >
-                <div className="flex items-start justify-between gap-4 mb-5">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-secondary border border-primary/10 flex items-center justify-center">
-                    <span className="font-heading font-bold text-lg text-primary">{initials}</span>
+                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-primary/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                <div className="flex items-start justify-between gap-3 mb-5">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-sky-50 border border-primary/15 flex items-center justify-center">
+                    <span className="font-heading font-bold text-base text-primary tracking-tight">{initials}</span>
                   </div>
-                  <span className="inline-flex items-center text-[10px] md:text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/10">
+                  <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/10 whitespace-nowrap">
                     {badge}
                   </span>
                 </div>
 
-                <h3 className="font-heading font-bold text-lg md:text-xl text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
-                  {college.name}
-                </h3>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5 truncate">
+                <div className="min-h-[3.5rem]">
+                  <h3 className="font-heading font-bold text-[17px] md:text-lg text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                    {college.name}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
                   <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate">{college.city}{college.state ? `, ${college.state}` : ""}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-6 py-4 border-y border-border/60">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Fees</p>
-                    <div className="flex items-start gap-1">
-                      <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm font-bold text-foreground line-clamp-2 break-words">{college.fees || "N/A"}</p>
+                <div className="grid grid-cols-2 gap-3 mt-5 py-4 border-y border-border/60">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Total Fees</p>
+                    <div className="flex items-center gap-1">
+                      <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
+                      <p className="text-sm font-bold text-foreground truncate">{college.fees || "N/A"}</p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Avg Package</p>
-                    <div className="flex items-start gap-1">
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600/70 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm font-bold text-emerald-600 line-clamp-2 break-words">{college.placement_avg || "N/A"}</p>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Avg Package</p>
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600/70 flex-shrink-0" />
+                      <p className="text-sm font-bold text-emerald-600 truncate">{college.placement_avg || "N/A"}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between">
-                  <div className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-lg group-hover:bg-primary/90 transition-colors">
+                <div className="mt-auto pt-5">
+                  <div className="inline-flex w-full items-center justify-center gap-2 bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-lg group-hover:bg-primary/90 transition-colors">
                     View Details
                     <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                   </div>
