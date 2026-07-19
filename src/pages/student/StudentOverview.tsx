@@ -224,8 +224,18 @@ export default function StudentOverview() {
   // Sectional Average Performance card shows readable names (e.g. "VARC", "DILR")
   // instead of raw UUID keys from sectional_scores.
   useEffect(() => {
-    const testIds = Array.from(new Set(submitted.map((a: any) => a.test_id).filter(Boolean)));
+    const testIds = Array.from(new Set(submitted.map((a: any) => a.test_id).filter(Boolean))).sort();
     if (testIds.length === 0) { setSectionNameMap({}); return; }
+    const cacheKey = `sp-section-names-v1:${testIds.join(",")}`;
+    // Instant paint from sessionStorage; stays valid for the browser session
+    // since section names virtually never change.
+    try {
+      const raw = typeof window !== "undefined" ? sessionStorage.getItem(cacheKey) : null;
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (cached && typeof cached === "object") { setSectionNameMap(cached); return; }
+      }
+    } catch {}
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -238,9 +248,11 @@ export default function StudentOverview() {
         map[s.id] = s.name || (s as any).code || s.id;
       }
       setSectionNameMap(map);
+      try { sessionStorage.setItem(cacheKey, JSON.stringify(map)); } catch {}
     })();
     return () => { cancelled = true; };
   }, [submitted]);
+
 
   const stats = useMemo(() => {
     const inProgress = attempts.filter((x) => x.status === "in_progress");
