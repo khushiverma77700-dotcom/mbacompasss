@@ -224,9 +224,11 @@ export default function ExamCutoffsTable() {
         </div>
 
         {/* Table */}
-        <div className="max-w-6xl mx-auto rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-15px_rgba(14,165,233,0.2)] overflow-x-auto">
+        <div className="max-w-6xl mx-auto rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-15px_rgba(14,165,233,0.2)] overflow-hidden">
+          <div className="max-h-[560px] overflow-auto">
           {/* Desktop header */}
-          <div className="hidden md:grid grid-cols-[1.6fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr_0.9fr_0.9fr] gap-3 px-5 py-3 bg-sky-50/70 border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80 sticky top-0">
+          <div className="hidden md:grid grid-cols-[1.6fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr_0.9fr_0.9fr] gap-3 px-5 py-3 bg-sky-50/95 backdrop-blur border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80 sticky top-0 z-10">
+
             <div>B-School</div>
             <div className="text-center">General</div>
             <div className="text-center">EWS</div>
