@@ -1558,6 +1558,7 @@ export type Database = {
           keywords: string[] | null
           last_seo_refresh: string | null
           last_updated_by: string | null
+          listing_sort_order: number | null
           logo_url: string | null
           meta_description: string | null
           meta_title: string | null
@@ -1605,6 +1606,7 @@ export type Database = {
           keywords?: string[] | null
           last_seo_refresh?: string | null
           last_updated_by?: string | null
+          listing_sort_order?: number | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -1652,6 +1654,7 @@ export type Database = {
           keywords?: string[] | null
           last_seo_refresh?: string | null
           last_updated_by?: string | null
+          listing_sort_order?: number | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -8717,12 +8720,14 @@ export type Database = {
           accreditations: string[]
           campus_size: string
           city: string
+          college_category: string
           description: string
           established: number
           exams_accepted: string[]
           fees: string
           fees_lakhs: number
           id: string
+          listing_sort_order: number
           logo_url: string
           name: string
           placement_avg: string

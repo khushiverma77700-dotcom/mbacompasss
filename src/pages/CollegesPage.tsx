@@ -41,6 +41,8 @@ const CollegesPage = () => {
   const selectedExam = searchParams.get("exam") || "all";
   const selectedFee = searchParams.get("fee") || "all";
   const selectedSpec = searchParams.get("specialization") || "all";
+  const selectedTier = searchParams.get("tier") || "all";
+  const selectedCategory = searchParams.get("category") || "all";
   const sortBy = searchParams.get("sort") || "ranking";
 
   // Local search input — debounced into URL so each keystroke doesn't re-render 600+ cards
@@ -106,15 +108,25 @@ const CollegesPage = () => {
       if (selectedExam !== "all" && !(c.exams_accepted || []).includes(selectedExam)) return false;
       if (selectedFee !== "all" && !matchesFeeBucket(getEffectiveFeesLakhs(c), selectedFee)) return false;
       if (selectedSpec !== "all" && !specMatches((c as any).specializations, selectedSpec)) return false;
+      if (selectedTier !== "all" && c.tier !== selectedTier) return false;
+      if (selectedCategory !== "all" && c.college_category !== selectedCategory) return false;
       if (search) { const q = search.toLowerCase(); return c.name.toLowerCase().includes(q) || (c.city || "").toLowerCase().includes(q); }
       return true;
     });
-    if (sortBy === "fees") result = [...result].sort((a: any, b: any) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
+    if (sortBy === "fees") {
+      result = [...result].sort((a: any, b: any) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
+    } else {
+      // Default sort: admin-defined listing_sort_order first, then ranking
+      result = [...result].sort((a: any, b: any) =>
+        (a.listing_sort_order ?? 99999) - (b.listing_sort_order ?? 99999) ||
+        (a.ranking ?? 99999) - (b.ranking ?? 99999)
+      );
+    }
     return result;
-  }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
+  }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, sortBy]);
 
   // Reset pagination whenever the filter set changes
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, sortBy]);
 
   const regions = (cityPages || []).slice(0, 12);
   const totalColleges = colleges.length;
@@ -132,9 +144,11 @@ const CollegesPage = () => {
       const sp = specOptions.find(s => s.slug === selectedSpec);
       chips.push({ key: "specialization", label: sp?.name || selectedSpec, value: selectedSpec });
     }
+    if (selectedTier !== "all") chips.push({ key: "tier", label: selectedTier, value: selectedTier });
+    if (selectedCategory !== "all") chips.push({ key: "category", label: selectedCategory, value: selectedCategory });
     if (search) chips.push({ key: "q", label: `"${search}"`, value: search });
     return chips;
-  }, [activeTab, selectedState, selectedCity, selectedExam, selectedFee, selectedSpec, search, specOptions]);
+  }, [activeTab, selectedState, selectedCity, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, search, specOptions]);
 
   // Dynamic SEO based on filters
   const dynamicTitle = useMemo(() => {
@@ -335,6 +349,24 @@ const CollegesPage = () => {
                 </SelectContent>
               </Select>
             )}
+            <Select value={selectedTier} onValueChange={(v) => setFilter("tier", v)}>
+              <SelectTrigger className="w-full sm:w-36 rounded-xl"><SelectValue placeholder="Tier" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tiers</SelectItem>
+                <SelectItem value="Tier 1">Tier 1</SelectItem>
+                <SelectItem value="Tier 2">Tier 2</SelectItem>
+                <SelectItem value="Tier 3">Tier 3</SelectItem>
+                <SelectItem value="Tier 4">Tier 4</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedCategory} onValueChange={(v) => setFilter("category", v)}>
+              <SelectTrigger className="w-full sm:w-36 rounded-xl"><SelectValue placeholder="IIM / Non-IIM" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="IIM">IIMs</SelectItem>
+                <SelectItem value="Non-IIM">Non-IIMs</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>

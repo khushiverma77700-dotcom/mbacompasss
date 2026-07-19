@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles, Upload, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles, Upload, RefreshCw, Loader2, Download, ListOrdered } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
@@ -101,8 +103,14 @@ const AdminColleges = () => {
 
   const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(filteredColleges);
 
+  const [bulkFilterOpen, setBulkFilterOpen] = useState(false);
+  const [bulkFilterCsv, setBulkFilterCsv] = useState("");
+  const [bulkFilterRunning, setBulkFilterRunning] = useState(false);
+  const [bulkFilterProgress, setBulkFilterProgress] = useState({ done: 0, total: 0, failed: 0 });
+  const bulkFileRef = (typeof window !== "undefined") ? { current: null as HTMLInputElement | null } : { current: null };
+
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at, source, last_updated_by").order("ranking", { ascending: true });
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, listing_sort_order, established, created_at, source, last_updated_by").order("listing_sort_order", { ascending: true, nullsFirst: false }).order("ranking", { ascending: true });
     if (data) setColleges(data);
   };
 
@@ -262,6 +270,101 @@ const AdminColleges = () => {
       description: `${done - failed}/${ids.length} succeeded${failed ? ` • ${failed} failed` : ""}. Open Content Refresh Queue to review & approve.`,
     });
   };
+
+  // ── Bulk filter upload: set listing_sort_order, tier, college_category per row ──
+  const csvEscape = (v: any) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const downloadBulkFilterTemplate = () => {
+    const headers = ["slug", "name", "listing_sort_order", "tier", "college_category"];
+    const rows = [...colleges]
+      .sort((a: any, b: any) =>
+        (a.listing_sort_order ?? 9999) - (b.listing_sort_order ?? 9999) ||
+        (a.ranking ?? 9999) - (b.ranking ?? 9999)
+      )
+      .map((c: any) =>
+        [c.slug, c.name, c.listing_sort_order ?? "", c.tier ?? "", c.college_category ?? ""].map(csvEscape).join(",")
+      );
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `college-filters-template-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const parseFilterCSV = (text: string): { slug: string; listing_sort_order?: number | null; tier?: string | null; college_category?: string | null }[] => {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim().length);
+    if (!lines.length) return [];
+    const parseLine = (l: string) => {
+      const out: string[] = []; let cur = ""; let q = false;
+      for (let i = 0; i < l.length; i++) {
+        const c = l[i];
+        if (c === '"') { if (q && l[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+        else if (c === "," && !q) { out.push(cur); cur = ""; }
+        else cur += c;
+      }
+      out.push(cur);
+      return out.map((x) => x.trim());
+    };
+    const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+    const idx = (h: string) => headers.indexOf(h);
+    const slugIdx = idx("slug"); const soIdx = idx("listing_sort_order");
+    const tierIdx = idx("tier"); const catIdx = idx("college_category");
+    if (slugIdx === -1) return [];
+    return lines.slice(1).map((l) => {
+      const cells = parseLine(l);
+      const slug = (cells[slugIdx] || "").trim();
+      if (!slug) return null;
+      const soRaw = soIdx >= 0 ? cells[soIdx]?.trim() : "";
+      const tierRaw = tierIdx >= 0 ? cells[tierIdx]?.trim() : "";
+      const catRaw = catIdx >= 0 ? cells[catIdx]?.trim() : "";
+      return {
+        slug,
+        listing_sort_order: soRaw ? (parseInt(soRaw, 10) || null) : undefined,
+        tier: tierRaw ? tierRaw : undefined,
+        college_category: catRaw ? catRaw : undefined,
+      };
+    }).filter(Boolean) as any;
+  };
+
+  const runBulkFilterUpload = async () => {
+    const rows = parseFilterCSV(bulkFilterCsv);
+    if (!rows.length) { toast({ title: "No valid rows", description: "Need at least a `slug` column with values.", variant: "destructive" }); return; }
+    setBulkFilterRunning(true);
+    setBulkFilterProgress({ done: 0, total: rows.length, failed: 0 });
+    let done = 0, failed = 0;
+    const CONCURRENCY = 5;
+    for (let i = 0; i < rows.length; i += CONCURRENCY) {
+      const batch = rows.slice(i, i + CONCURRENCY);
+      await Promise.all(batch.map(async (r) => {
+        const patch: any = {};
+        if (r.listing_sort_order !== undefined) patch.listing_sort_order = r.listing_sort_order;
+        if (r.tier !== undefined) patch.tier = r.tier;
+        if (r.college_category !== undefined) patch.college_category = r.college_category;
+        if (Object.keys(patch).length === 0) { done++; setBulkFilterProgress({ done, total: rows.length, failed }); return; }
+        const { error } = await supabase.from("colleges").update(patch).eq("slug", r.slug);
+        if (error) failed++;
+        done++;
+        setBulkFilterProgress({ done, total: rows.length, failed });
+      }));
+    }
+    setBulkFilterRunning(false);
+    toast({
+      title: "Bulk filter upload complete",
+      description: `${done - failed}/${rows.length} colleges updated${failed ? ` • ${failed} failed (check slugs)` : ""}.`,
+    });
+    setBulkFilterOpen(false);
+    setBulkFilterCsv("");
+    fetchColleges();
+  };
+
+
+
 
 
   const TagInput = ({ field, label }: { field: keyof typeof tagInputs; label: string }) => (
@@ -434,6 +537,14 @@ const AdminColleges = () => {
           </Button>
           <Button
             variant="outline"
+            onClick={() => setBulkFilterOpen(true)}
+            className="border-sky-500/40 text-sky-700 hover:bg-sky-50"
+            title="Bulk set Sort Order, Tier and IIM/Non-IIM tag via CSV"
+          >
+            <ListOrdered className="w-4 h-4 mr-2" /> Bulk Filters (Sort / Tier / IIM)
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => navigate("/admin/colleges/generate-ai")}
             className="border-primary/40 text-primary hover:bg-primary/5"
           >
@@ -564,6 +675,63 @@ const AdminColleges = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={bulkFilterOpen} onOpenChange={(o) => { if (!bulkFilterRunning) { setBulkFilterOpen(o); if (!o) setBulkFilterCsv(""); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Filters — Sort Order, Tier & IIM Tag</DialogTitle>
+            <DialogDescription>
+              Download the template (all colleges pre-filled), edit the <b>listing_sort_order</b> (1, 2, 3…), <b>tier</b> (Tier 1 / Tier 2 / Tier 3 / Tier 4) and <b>college_category</b> (IIM / Non-IIM) columns, then upload it back. Colleges are matched by <code>slug</code>. Empty cells are ignored.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={downloadBulkFilterTemplate} disabled={bulkFilterRunning}>
+                <Download className="w-4 h-4 mr-1" /> Download Template ({colleges.length} rows)
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => document.getElementById("bulk-filter-file")?.click()} disabled={bulkFilterRunning}>
+                <Upload className="w-4 h-4 mr-1" /> Choose CSV file
+              </Button>
+              <input
+                id="bulk-filter-file"
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setBulkFilterCsv(await f.text());
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <Textarea
+              rows={10}
+              placeholder="Or paste CSV contents here…&#10;slug,name,listing_sort_order,tier,college_category&#10;iim-ahmedabad,IIM Ahmedabad,1,Tier 1,IIM"
+              value={bulkFilterCsv}
+              onChange={(e) => setBulkFilterCsv(e.target.value)}
+              disabled={bulkFilterRunning}
+              className="font-mono text-xs"
+            />
+
+            {bulkFilterRunning && (
+              <div className="text-sm text-muted-foreground">
+                Updating… {bulkFilterProgress.done}/{bulkFilterProgress.total}
+                {bulkFilterProgress.failed ? ` • ${bulkFilterProgress.failed} failed` : ""}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkFilterOpen(false)} disabled={bulkFilterRunning}>Cancel</Button>
+            <Button onClick={runBulkFilterUpload} disabled={bulkFilterRunning || !bulkFilterCsv.trim()}>
+              {bulkFilterRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+              Apply to {parseFilterCSV(bulkFilterCsv).length || 0} colleges
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
