@@ -283,7 +283,9 @@ export default function ExamCutoffsTable() {
               </div>
             </div>
           ))}
+          </div>
         </div>
+
 
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 mt-5 px-1">
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
