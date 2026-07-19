@@ -76,9 +76,10 @@ const ROIComparisonTable = () => {
         </div>
 
         <div className="rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-20px_rgba(14,165,233,0.35)] overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="max-h-[520px] overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-sky-50/70 border-b border-primary/10">
+              <thead className="bg-sky-50/95 backdrop-blur border-b border-primary/10 sticky top-0 z-10">
+
                 <tr className="text-left text-[11px] uppercase tracking-wider text-primary/80">
                   <th className="py-3 px-4 font-semibold">B-School</th>
                   <th className="py-3 px-4 font-semibold text-right"><span className="inline-flex items-center gap-1"><IndianRupee className="w-3 h-3" /> Fees</span></th>
