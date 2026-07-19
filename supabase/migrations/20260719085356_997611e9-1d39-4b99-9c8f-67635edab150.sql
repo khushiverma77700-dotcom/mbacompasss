@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.colleges_listing() TO anon, authenticated, service_role;
