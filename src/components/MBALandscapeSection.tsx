@@ -165,7 +165,9 @@ const MBALandscapeSection = () => {
               <div className="hidden md:flex items-center text-xs md:text-sm font-bold text-emerald-700">{row.medianCTC}</div>
             </Link>
           ))}
+          </div>
         </div>
+
 
         <div className="text-center mt-6">
           <Link
