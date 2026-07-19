@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { purgeHomepageCache } from "@/hooks/useSiteSettings";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
