@@ -108,15 +108,25 @@ const CollegesPage = () => {
       if (selectedExam !== "all" && !(c.exams_accepted || []).includes(selectedExam)) return false;
       if (selectedFee !== "all" && !matchesFeeBucket(getEffectiveFeesLakhs(c), selectedFee)) return false;
       if (selectedSpec !== "all" && !specMatches((c as any).specializations, selectedSpec)) return false;
+      if (selectedTier !== "all" && c.tier !== selectedTier) return false;
+      if (selectedCategory !== "all" && c.college_category !== selectedCategory) return false;
       if (search) { const q = search.toLowerCase(); return c.name.toLowerCase().includes(q) || (c.city || "").toLowerCase().includes(q); }
       return true;
     });
-    if (sortBy === "fees") result = [...result].sort((a: any, b: any) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
+    if (sortBy === "fees") {
+      result = [...result].sort((a: any, b: any) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
+    } else {
+      // Default sort: admin-defined listing_sort_order first, then ranking
+      result = [...result].sort((a: any, b: any) =>
+        (a.listing_sort_order ?? 99999) - (b.listing_sort_order ?? 99999) ||
+        (a.ranking ?? 99999) - (b.ranking ?? 99999)
+      );
+    }
     return result;
-  }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
+  }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, sortBy]);
 
   // Reset pagination whenever the filter set changes
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, sortBy]);
 
   const regions = (cityPages || []).slice(0, 12);
   const totalColleges = colleges.length;
