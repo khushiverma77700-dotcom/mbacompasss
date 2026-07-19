@@ -365,9 +365,10 @@ const GlobalNavigationPrefetch = () => {
     document.addEventListener("focusin", handlePointer, true);
 
     // Warm up the most-visited public chunks at idle so the first navigation
-    // is instant. Skip on admin/student to avoid wasting bandwidth.
+    // is instant. Skip on admin/student/dashboard-host to avoid wasting bandwidth.
     const path = window.location.pathname;
-    const skipIdleWarm = path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/demo") || path.startsWith("/mocks/attempt");
+    const onDashHost = window.location.hostname === "dashboard.mbacompass.in";
+    const skipIdleWarm = onDashHost || path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/demo") || path.startsWith("/mocks/attempt");
     let idleHandle: number | undefined;
     if (!skipIdleWarm) {
       const w = window as any;
@@ -449,6 +450,13 @@ const SettingsPrefetcher = () => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const path = window.location.pathname;
+    const onDashHost =
+      typeof window !== "undefined" &&
+      window.location.hostname === "dashboard.mbacompass.in";
+    // Dashboard subdomain + LMS/admin/demo/mock-attempt routes don't use any
+    // homepage/site settings — skip the fetch entirely so the LMS bootstrap
+    // has all network parallelism to itself.
+    if (onDashHost) return;
     if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/demo") || path.startsWith("/mocks/attempt")) return;
     const w = window as any;
     let idleHandle: number | undefined;
@@ -468,6 +476,7 @@ const SettingsPrefetcher = () => {
   }, []);
   return ready ? <SettingsPrefetcherInner /> : null;
 };
+
 const SettingsPrefetcherInner = () => {
   useAllSiteSettings();
   return null;
