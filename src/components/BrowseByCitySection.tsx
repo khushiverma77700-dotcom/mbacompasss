@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useCollegesLight } from "@/hooks/useInstitutes";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const BrowseByCitySection = () => {
