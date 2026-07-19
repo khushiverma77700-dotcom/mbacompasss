@@ -121,7 +121,12 @@ const MBALandscapeSection = () => {
 
         {/* Table */}
         <div className="max-w-5xl mx-auto rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-15px_rgba(14,165,233,0.2)] overflow-hidden">
-          <div className="max-h-[540px] overflow-y-auto">
+          <div
+            className="max-h-[540px] overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-b-2xl"
+            tabIndex={0}
+            role="region"
+            aria-label="B-Schools table, scrollable"
+          >
           <div className="hidden md:grid grid-cols-[60px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 px-4 py-2.5 bg-sky-50/95 backdrop-blur border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80 sticky top-0 z-10">
 
             <div>Rank</div>
