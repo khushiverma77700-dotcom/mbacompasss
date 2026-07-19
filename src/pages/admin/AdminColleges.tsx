@@ -537,6 +537,13 @@ const AdminColleges = () => {
           </Button>
           <Button
             variant="outline"
+            onClick={() => setBulkFilterOpen(true)}
+            className="border-sky-500/40 text-sky-700 hover:bg-sky-50"
+            title="Bulk set Sort Order, Tier and IIM/Non-IIM tag via CSV"
+          >
+            <ListOrdered className="w-4 h-4 mr-2" /> Bulk Filters (Sort / Tier / IIM)
+          <Button
+            variant="outline"
             onClick={() => navigate("/admin/colleges/generate-ai")}
             className="border-primary/40 text-primary hover:bg-primary/5"
           >
