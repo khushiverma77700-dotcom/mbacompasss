@@ -675,6 +675,63 @@ const AdminColleges = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={bulkFilterOpen} onOpenChange={(o) => { if (!bulkFilterRunning) { setBulkFilterOpen(o); if (!o) setBulkFilterCsv(""); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Filters — Sort Order, Tier & IIM Tag</DialogTitle>
+            <DialogDescription>
+              Download the template (all colleges pre-filled), edit the <b>listing_sort_order</b> (1, 2, 3…), <b>tier</b> (Tier 1 / Tier 2 / Tier 3 / Tier 4) and <b>college_category</b> (IIM / Non-IIM) columns, then upload it back. Colleges are matched by <code>slug</code>. Empty cells are ignored.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={downloadBulkFilterTemplate} disabled={bulkFilterRunning}>
+                <Download className="w-4 h-4 mr-1" /> Download Template ({colleges.length} rows)
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => document.getElementById("bulk-filter-file")?.click()} disabled={bulkFilterRunning}>
+                <Upload className="w-4 h-4 mr-1" /> Choose CSV file
+              </Button>
+              <input
+                id="bulk-filter-file"
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setBulkFilterCsv(await f.text());
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <Textarea
+              rows={10}
+              placeholder="Or paste CSV contents here…&#10;slug,name,listing_sort_order,tier,college_category&#10;iim-ahmedabad,IIM Ahmedabad,1,Tier 1,IIM"
+              value={bulkFilterCsv}
+              onChange={(e) => setBulkFilterCsv(e.target.value)}
+              disabled={bulkFilterRunning}
+              className="font-mono text-xs"
+            />
+
+            {bulkFilterRunning && (
+              <div className="text-sm text-muted-foreground">
+                Updating… {bulkFilterProgress.done}/{bulkFilterProgress.total}
+                {bulkFilterProgress.failed ? ` • ${bulkFilterProgress.failed} failed` : ""}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkFilterOpen(false)} disabled={bulkFilterRunning}>Cancel</Button>
+            <Button onClick={runBulkFilterUpload} disabled={bulkFilterRunning || !bulkFilterCsv.trim()}>
+              {bulkFilterRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+              Apply to {parseFilterCSV(bulkFilterCsv).length || 0} colleges
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
