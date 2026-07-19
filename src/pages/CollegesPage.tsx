@@ -41,6 +41,8 @@ const CollegesPage = () => {
   const selectedExam = searchParams.get("exam") || "all";
   const selectedFee = searchParams.get("fee") || "all";
   const selectedSpec = searchParams.get("specialization") || "all";
+  const selectedTier = searchParams.get("tier") || "all";
+  const selectedCategory = searchParams.get("category") || "all";
   const sortBy = searchParams.get("sort") || "ranking";
 
   // Local search input — debounced into URL so each keystroke doesn't re-render 600+ cards
