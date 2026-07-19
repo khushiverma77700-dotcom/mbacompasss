@@ -12,9 +12,25 @@ export function cdnImage(
   opts: { width?: number; height?: number; quality?: number; dpr?: number; version?: string | number | null } = {}
 ): string {
   if (!url) return "";
+  const { width = 400, height, quality = 70, dpr = 1, version } = opts;
+
+  // Unsplash on-the-fly transformer: request the exact size + WebP so
+  // 1200px-wide originals aren't shipped when we render a 170px card.
+  if (/images\.unsplash\.com\//.test(url)) {
+    try {
+      const u = new URL(url);
+      u.searchParams.set("w", String(Math.round(width * dpr)));
+      if (height) u.searchParams.set("h", String(Math.round(height * dpr)));
+      u.searchParams.set("q", String(quality));
+      u.searchParams.set("fm", "webp");
+      u.searchParams.set("auto", "format,compress");
+      if (!u.searchParams.get("fit")) u.searchParams.set("fit", "crop");
+      return u.toString();
+    } catch { return url; }
+  }
+
   // Only rewrite Supabase public object URLs
   if (!/\/storage\/v1\/object\/public\//.test(url)) return url;
-  const { width = 400, height, quality = 70, dpr = 1, version } = opts;
   const rendered = url.replace(
     "/storage/v1/object/public/",
     "/storage/v1/render/image/public/"
@@ -52,7 +68,9 @@ export function cdnImageSrcSet(
   opts: { width?: number; height?: number; quality?: number; version?: string | number | null } = {}
 ): string {
   if (!url) return "";
-  if (!/\/storage\/v1\/object\/public\//.test(url)) return "";
+  const isSupabase = /\/storage\/v1\/object\/public\//.test(url);
+  const isUnsplash = /images\.unsplash\.com\//.test(url);
+  if (!isSupabase && !isUnsplash) return "";
   const { width = 400 } = opts;
   return [
     `${cdnImage(url, { ...opts, dpr: 1 })} ${width}w`,

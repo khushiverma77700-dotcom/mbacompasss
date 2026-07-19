@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useCollegesLight } from "@/hooks/useInstitutes";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const BrowseByCitySection = () => {
@@ -130,10 +131,15 @@ const BrowseByCitySection = () => {
                 className="relative w-full h-[220px] rounded-2xl overflow-hidden shadow-xl"
               >
                 <img
-                  src={featured.image}
+                  src={cdnImage(featured.image, { width: 640, quality: 72 })}
+                  srcSet={cdnImageSrcSet(featured.image, { width: 640, quality: 72 })}
+                  sizes="(max-width: 768px) 100vw, 640px"
                   alt={`MBA colleges in ${featured.name}`}
+                  width={640}
+                  height={220}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-[#2c1810]/25 pointer-events-none" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/90 via-[#2c1810]/40 to-transparent pointer-events-none" />
@@ -221,10 +227,15 @@ const BrowseByCitySection = () => {
                   }`}
                 >
                   <img
-                    src={city.image}
+                    src={cdnImage(city.image, { width: 128, quality: 65 })}
+                    srcSet={cdnImageSrcSet(city.image, { width: 128, quality: 65 })}
+                    sizes="64px"
                     alt={city.name}
+                    width={64}
+                    height={64}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-[#2c1810]/30 pointer-events-none" />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1">
@@ -290,10 +301,15 @@ const BrowseByCitySection = () => {
               style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
             >
               <img
-                src={featured.image}
+                src={cdnImage(featured.image, { width: 560, quality: 72 })}
+                srcSet={cdnImageSrcSet(featured.image, { width: 560, quality: 72 })}
+                sizes="(max-width: 1024px) 100vw, 480px"
                 alt={`MBA colleges in ${featured.name}`}
+                width={560}
+                height={400}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/90 via-[#2c1810]/50 to-transparent pointer-events-none" />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
@@ -392,10 +408,15 @@ const BrowseByCitySection = () => {
                       }`}
                   >
                     <img
-                      src={city.image}
+                      src={cdnImage(city.image, { width: 340, quality: 70 })}
+                      srcSet={cdnImageSrcSet(city.image, { width: 340, quality: 70 })}
+                      sizes="(max-width: 768px) 150px, 170px"
                       alt={`MBA coaching in ${city.name}`}
+                      width={170}
+                      height={330}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
                       loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-[#2c1810]/25 pointer-events-none" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/85 via-[#2c1810]/35 to-transparent pointer-events-none" />
