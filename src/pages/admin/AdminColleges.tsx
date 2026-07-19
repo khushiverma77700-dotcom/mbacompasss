@@ -542,6 +542,7 @@ const AdminColleges = () => {
             title="Bulk set Sort Order, Tier and IIM/Non-IIM tag via CSV"
           >
             <ListOrdered className="w-4 h-4 mr-2" /> Bulk Filters (Sort / Tier / IIM)
+          </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/admin/colleges/generate-ai")}
