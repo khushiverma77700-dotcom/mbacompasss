@@ -162,6 +162,12 @@ const normalizeRow = (cfg: TableCfg, raw: Record<string, any>): Record<string, a
       else if (typeof v === "string" && v.trim()) {
         out[col.key] = v.split(/[,|]/).map((s) => s.trim()).filter(Boolean);
       } else out[col.key] = [];
+    } else if (col.type === "number") {
+      if (v === "" || v == null) out[col.key] = "";
+      else {
+        const n = typeof v === "number" ? v : parseFloat(String(v));
+        out[col.key] = Number.isFinite(n) ? n : "";
+      }
     } else {
       out[col.key] = v == null ? "" : String(v);
     }
