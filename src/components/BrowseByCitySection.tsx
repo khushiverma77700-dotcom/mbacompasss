@@ -408,10 +408,15 @@ const BrowseByCitySection = () => {
                       }`}
                   >
                     <img
-                      src={city.image}
+                      src={cdnImage(city.image, { width: 340, quality: 70 })}
+                      srcSet={cdnImageSrcSet(city.image, { width: 340, quality: 70 })}
+                      sizes="(max-width: 768px) 150px, 170px"
                       alt={`MBA coaching in ${city.name}`}
+                      width={170}
+                      height={330}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
                       loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-[#2c1810]/25 pointer-events-none" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/85 via-[#2c1810]/35 to-transparent pointer-events-none" />
