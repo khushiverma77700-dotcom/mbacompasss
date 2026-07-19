@@ -419,6 +419,9 @@ const AdminTablesManager = () => {
         <span className="text-xs text-muted-foreground">
           {rows.length} row{rows.length === 1 ? "" : "s"} {dirty && <span className="text-orange-600 font-semibold">· unsaved</span>}
         </span>
+        <Button size="sm" variant="outline" onClick={manualPurge} disabled={purging}>
+          {purging ? "Refreshing…" : "Refresh homepage cache"}
+        </Button>
         <Button size="sm" onClick={save} disabled={saving || !dirty}>
           <Save className="w-4 h-4 mr-1.5" /> {saving ? "Saving…" : "Save"}
         </Button>
