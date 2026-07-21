@@ -120,8 +120,11 @@ async function callMeritto(secret: string, lead: LeadInput, cid: string) {
   } else if (
     merittoStatus === "error" ||
     merittoStatus === "invalid" ||
+    merittoStatus === "fail" ||
+    merittoStatus === "failed" ||
     msgLower.includes("invalid") ||
     msgLower.includes("required") ||
+    msgLower.includes("mandatory") ||
     msgLower.includes("missing")
   ) {
     outcome = "invalid";
