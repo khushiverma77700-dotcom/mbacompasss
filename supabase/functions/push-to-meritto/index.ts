@@ -240,8 +240,8 @@ Deno.serve(async (req) => {
 
     const result = await callMeritto(secret, lead, cid);
 
-    const finalStatus = result.ok ? "success" : "failed";
-    const errMsg = result.ok
+    const finalStatus = result.outcome; // success | duplicate | invalid | failed
+    const errMsg = result.outcome === "success"
       ? null
       : ((result.json as any)?.message
           ? `Meritto: ${(result.json as any).message}`
