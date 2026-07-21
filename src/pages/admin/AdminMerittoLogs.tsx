@@ -697,7 +697,7 @@ export default function AdminMerittoLogs() {
                   </thead>
                   <tbody>
                     {bulkResults.map((r) => (
-                      <tr key={r.row} className={`border-t ${r.status === "failed" ? "bg-red-50" : r.status === "invalid" ? "bg-amber-50" : r.status === "success" ? "bg-emerald-50/40" : ""}`}>
+                      <tr key={r.row} className={`border-t ${r.status === "failed" ? "bg-red-50" : r.status === "invalid" ? "bg-amber-50" : r.status === "duplicate" ? "bg-sky-50/60" : r.status === "success" ? "bg-emerald-50/40" : ""}`}>
                         <td className="px-2 py-1">{r.row}</td>
                         <td className="px-2 py-1">{r.mapped.name || "-"}</td>
                         <td className="px-2 py-1">{r.mapped.email || "-"}</td>
@@ -705,6 +705,7 @@ export default function AdminMerittoLogs() {
                         <td className="px-2 py-1">
                           <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] border ${
                             r.status === "success" ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            : r.status === "duplicate" ? "bg-sky-100 text-sky-800 border-sky-200"
                             : r.status === "failed" ? "bg-red-100 text-red-800 border-red-200"
                             : r.status === "invalid" ? "bg-amber-100 text-amber-800 border-amber-200"
                             : "bg-muted text-muted-foreground"
