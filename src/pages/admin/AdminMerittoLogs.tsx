@@ -163,7 +163,7 @@ export default function AdminMerittoLogs() {
     });
   };
 
-  const pushOne = async (mapped: Record<string, string>): Promise<{ ok: boolean; error?: string; http?: number }> => {
+  const pushOne = async (mapped: Record<string, string>): Promise<{ ok: boolean; outcome: BulkResult["status"]; error?: string; http?: number }> => {
     try {
       const { data, error } = await supabase.functions.invoke("push-to-meritto", {
         body: {
