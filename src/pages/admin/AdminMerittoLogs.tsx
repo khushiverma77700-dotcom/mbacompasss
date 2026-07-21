@@ -181,11 +181,15 @@ export default function AdminMerittoLogs() {
           origin_domain: originDomain,
         },
       });
-      if (error) return { ok: false, error: error.message };
-      if (!data?.ok) return { ok: false, error: `Meritto rejected (HTTP ${data?.status ?? "?"})`, http: data?.status };
-      return { ok: true, http: data?.status };
+      if (error) return { ok: false, outcome: "failed" as const, error: error.message };
+      const outcome = (data?.outcome as BulkResult["status"]) ?? (data?.ok ? "success" : "failed");
+      if (!data?.ok && outcome !== "duplicate") {
+        const msg = data?.response?.message ? `Meritto: ${data.response.message}` : `Meritto rejected (HTTP ${data?.status ?? "?"})`;
+        return { ok: false, outcome, error: msg, http: data?.status };
+      }
+      return { ok: true, outcome, http: data?.status };
     } catch (e: any) {
-      return { ok: false, error: e?.message ?? "Network error" };
+      return { ok: false, outcome: "failed" as const, error: e?.message ?? "Network error" };
     }
   };
 
