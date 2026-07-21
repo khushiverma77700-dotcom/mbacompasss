@@ -218,8 +218,10 @@ export default function AdminMerittoLogs() {
     }
     setBulkBusy(false);
     const s = next.filter((x) => x.status === "success").length;
+    const d = next.filter((x) => x.status === "duplicate").length;
+    const inv = next.filter((x) => x.status === "invalid").length;
     const f = next.filter((x) => x.status === "failed").length;
-    toast.success(`Bulk push complete — ${s} delivered, ${f} failed`);
+    toast.success(`Bulk push complete — ${s} delivered · ${d} duplicate · ${inv} invalid · ${f} failed`);
     await load();
   };
 
