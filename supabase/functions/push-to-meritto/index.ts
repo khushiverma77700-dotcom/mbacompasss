@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
     console.log(`[meritto][${cid}] done`, { log_id: logId, status: finalStatus, http: result.status, ms: result.durationMs, error: errMsg });
 
     return new Response(
-      JSON.stringify({ ok: result.ok, status: result.status, log_id: logId, response: result.json, correlation_id: cid }),
+      JSON.stringify({ ok: result.ok, outcome: result.outcome, status: result.status, log_id: logId, response: result.json, correlation_id: cid }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
