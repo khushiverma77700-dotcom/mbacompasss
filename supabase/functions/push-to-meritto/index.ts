@@ -102,17 +102,44 @@ async function callMeritto(secret: string, lead: LeadInput, cid: string) {
     json = { raw: text };
   }
   const merittoStatus = (json?.status ?? "").toString().toLowerCase();
-  const businessOk = merittoStatus === "" || merittoStatus === "success" || merittoStatus === "ok";
-  const ok = res.ok && businessOk;
+  const merittoMessage = (json?.message ?? "").toString();
+  const msgLower = merittoMessage.toLowerCase();
+
+  // Classify Meritto's business response into an outcome.
+  //  - success  : lead accepted
+  //  - duplicate: mobile/email already in Meritto (not an error, still logged)
+  //  - invalid  : validation error (bad mobile, missing field, invalid source, etc.)
+  //  - failed   : HTTP/network or unknown provider error
+  let outcome: "success" | "duplicate" | "invalid" | "failed";
+  if (!res.ok) {
+    outcome = "failed";
+  } else if (merittoStatus === "" || merittoStatus === "success" || merittoStatus === "ok") {
+    outcome = "success";
+  } else if (merittoStatus === "duplicate" || msgLower.includes("already registered") || msgLower.includes("duplicate")) {
+    outcome = "duplicate";
+  } else if (
+    merittoStatus === "error" ||
+    merittoStatus === "invalid" ||
+    msgLower.includes("invalid") ||
+    msgLower.includes("required") ||
+    msgLower.includes("missing")
+  ) {
+    outcome = "invalid";
+  } else {
+    outcome = "failed";
+  }
+
+  const ok = outcome === "success" || outcome === "duplicate";
 
   console.log(`[meritto][${cid}] ← HTTP ${res.status} in ${durationMs}ms`, {
     ok,
+    outcome,
     meritto_status: json?.status ?? null,
     meritto_message: json?.message ?? null,
     response_preview: text.slice(0, 500),
   });
 
-  return { ok, status: res.status, json, body, durationMs };
+  return { ok, outcome, status: res.status, json, body, durationMs };
 }
 
 
