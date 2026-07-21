@@ -29,7 +29,7 @@ const MERITTO_FIELDS: { key: string; label: string; required?: boolean }[] = [
 type BulkResult = {
   row: number;
   mapped: Record<string, string>;
-  status: "pending" | "success" | "failed" | "invalid";
+  status: "pending" | "success" | "duplicate" | "failed" | "invalid";
   error?: string;
   http?: number;
 };
@@ -57,8 +57,10 @@ type Log = {
 
 const statusColor = (s: string) => {
   if (s === "success") return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  if (s === "duplicate") return "bg-sky-100 text-sky-800 border-sky-200";
+  if (s === "invalid") return "bg-amber-100 text-amber-800 border-amber-200";
   if (s === "failed") return "bg-red-100 text-red-800 border-red-200";
-  return "bg-amber-100 text-amber-800 border-amber-200";
+  return "bg-slate-100 text-slate-700 border-slate-200";
 };
 
 export default function AdminMerittoLogs() {
@@ -161,7 +163,7 @@ export default function AdminMerittoLogs() {
     });
   };
 
-  const pushOne = async (mapped: Record<string, string>): Promise<{ ok: boolean; error?: string; http?: number }> => {
+  const pushOne = async (mapped: Record<string, string>): Promise<{ ok: boolean; outcome: BulkResult["status"]; error?: string; http?: number }> => {
     try {
       const { data, error } = await supabase.functions.invoke("push-to-meritto", {
         body: {
@@ -179,11 +181,15 @@ export default function AdminMerittoLogs() {
           origin_domain: originDomain,
         },
       });
-      if (error) return { ok: false, error: error.message };
-      if (!data?.ok) return { ok: false, error: `Meritto rejected (HTTP ${data?.status ?? "?"})`, http: data?.status };
-      return { ok: true, http: data?.status };
+      if (error) return { ok: false, outcome: "failed" as const, error: error.message };
+      const outcome = (data?.outcome as BulkResult["status"]) ?? (data?.ok ? "success" : "failed");
+      if (!data?.ok && outcome !== "duplicate") {
+        const msg = data?.response?.message ? `Meritto: ${data.response.message}` : `Meritto rejected (HTTP ${data?.status ?? "?"})`;
+        return { ok: false, outcome, error: msg, http: data?.status };
+      }
+      return { ok: true, outcome, http: data?.status };
     } catch (e: any) {
-      return { ok: false, error: e?.message ?? "Network error" };
+      return { ok: false, outcome: "failed" as const, error: e?.message ?? "Network error" };
     }
   };
 
@@ -205,15 +211,17 @@ export default function AdminMerittoLogs() {
     const next = [...initial];
     for (const { r, idx } of toSend) {
       const res = await pushOne(r.mapped);
-      next[idx] = { ...r, status: res.ok ? "success" : "failed", error: res.error, http: res.http };
+      next[idx] = { ...r, status: res.outcome, error: res.error, http: res.http };
       done++;
       setBulkResults([...next]);
       setBulkProgress({ done, total: toSend.length });
     }
     setBulkBusy(false);
     const s = next.filter((x) => x.status === "success").length;
+    const d = next.filter((x) => x.status === "duplicate").length;
+    const inv = next.filter((x) => x.status === "invalid").length;
     const f = next.filter((x) => x.status === "failed").length;
-    toast.success(`Bulk push complete — ${s} delivered, ${f} failed`);
+    toast.success(`Bulk push complete — ${s} delivered · ${d} duplicate · ${inv} invalid · ${f} failed`);
     await load();
   };
 
@@ -228,7 +236,7 @@ export default function AdminMerittoLogs() {
       next[i] = { ...next[i], status: "pending", error: undefined };
       setBulkResults([...next]);
       const res = await pushOne(next[i].mapped);
-      next[i] = { ...next[i], status: res.ok ? "success" : "failed", error: res.error, http: res.http };
+      next[i] = { ...next[i], status: res.outcome, error: res.error, http: res.http };
       done++;
       setBulkResults([...next]);
       setBulkProgress({ done, total: failedIdx.length });
@@ -301,11 +309,13 @@ export default function AdminMerittoLogs() {
   const stats = useMemo(() => {
     const total = rows.length;
     const success = rows.filter(r => r.status === "success").length;
+    const duplicate = rows.filter(r => r.status === "duplicate").length;
+    const invalid = rows.filter(r => r.status === "invalid").length;
     const failed = rows.filter(r => r.status === "failed").length;
     const pending = rows.filter(r => r.status === "pending").length;
     const today = rows.filter(r => new Date(r.created_at).toDateString() === new Date().toDateString()).length;
-    const rate = total ? Math.round((success / total) * 100) : 0;
-    return { total, success, failed, pending, today, rate };
+    const rate = total ? Math.round(((success + duplicate) / total) * 100) : 0;
+    return { total, success, duplicate, invalid, failed, pending, today, rate };
   }, [rows]);
 
   const sources = useMemo(() => {
@@ -358,7 +368,11 @@ export default function AdminMerittoLogs() {
         },
       });
       if (error) throw error;
-      toast.success(data?.ok ? "Lead pushed to Meritto ✅" : `Sent — Meritto responded HTTP ${data?.status}`);
+      const oc = data?.outcome as string | undefined;
+      if (oc === "success") toast.success("Lead pushed to Meritto ✅");
+      else if (oc === "duplicate") toast.info(`Already in Meritto — ${data?.response?.message ?? "duplicate"}`);
+      else if (oc === "invalid") toast.error(`Invalid — ${data?.response?.message ?? "validation error"}`);
+      else toast.error(`Failed — ${data?.response?.message ?? `HTTP ${data?.status}`}`);
       setManualOpen(false);
       setManual({ ...manual, name: "", email: "", mobile: "", state: "", city: "", campus: "", course: "", extraJson: "" });
       await load();
@@ -405,6 +419,8 @@ export default function AdminMerittoLogs() {
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="success">Delivered</SelectItem>
+              <SelectItem value="duplicate">Duplicate</SelectItem>
+              <SelectItem value="invalid">Invalid</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
             </SelectContent>
@@ -660,11 +676,12 @@ export default function AdminMerittoLogs() {
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-4 gap-2 text-xs">
+              <div className="grid grid-cols-5 gap-2 text-xs">
                 <ResultChip label="Total" value={bulkResults.length} />
                 <ResultChip label="Delivered" value={bulkResults.filter((r) => r.status === "success").length} tone="emerald" />
-                <ResultChip label="Failed" value={bulkResults.filter((r) => r.status === "failed").length} tone="red" />
+                <ResultChip label="Duplicate" value={bulkResults.filter((r) => r.status === "duplicate").length} tone="sky" />
                 <ResultChip label="Invalid" value={bulkResults.filter((r) => r.status === "invalid").length} tone="amber" />
+                <ResultChip label="Failed" value={bulkResults.filter((r) => r.status === "failed").length} tone="red" />
               </div>
               <div className="overflow-x-auto max-h-80 border rounded">
                 <table className="w-full text-xs">
@@ -680,7 +697,7 @@ export default function AdminMerittoLogs() {
                   </thead>
                   <tbody>
                     {bulkResults.map((r) => (
-                      <tr key={r.row} className={`border-t ${r.status === "failed" ? "bg-red-50" : r.status === "invalid" ? "bg-amber-50" : r.status === "success" ? "bg-emerald-50/40" : ""}`}>
+                      <tr key={r.row} className={`border-t ${r.status === "failed" ? "bg-red-50" : r.status === "invalid" ? "bg-amber-50" : r.status === "duplicate" ? "bg-sky-50/60" : r.status === "success" ? "bg-emerald-50/40" : ""}`}>
                         <td className="px-2 py-1">{r.row}</td>
                         <td className="px-2 py-1">{r.mapped.name || "-"}</td>
                         <td className="px-2 py-1">{r.mapped.email || "-"}</td>
@@ -688,6 +705,7 @@ export default function AdminMerittoLogs() {
                         <td className="px-2 py-1">
                           <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] border ${
                             r.status === "success" ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            : r.status === "duplicate" ? "bg-sky-100 text-sky-800 border-sky-200"
                             : r.status === "failed" ? "bg-red-100 text-red-800 border-red-200"
                             : r.status === "invalid" ? "bg-amber-100 text-amber-800 border-amber-200"
                             : "bg-muted text-muted-foreground"
@@ -762,7 +780,7 @@ function Field({ label, value }: { label: string; value: string | null | undefin
 }
 
 function ResultChip({ label, value, tone }: { label: string; value: number; tone?: string }) {
-  const cls = tone === "emerald" ? "text-emerald-600" : tone === "red" ? "text-red-600" : tone === "amber" ? "text-amber-600" : "";
+  const cls = tone === "emerald" ? "text-emerald-600" : tone === "red" ? "text-red-600" : tone === "amber" ? "text-amber-600" : tone === "sky" ? "text-sky-600" : "";
   return (
     <div className="rounded-md border p-2">
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>

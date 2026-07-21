@@ -102,17 +102,47 @@ async function callMeritto(secret: string, lead: LeadInput, cid: string) {
     json = { raw: text };
   }
   const merittoStatus = (json?.status ?? "").toString().toLowerCase();
-  const businessOk = merittoStatus === "" || merittoStatus === "success" || merittoStatus === "ok";
-  const ok = res.ok && businessOk;
+  const merittoMessage = (json?.message ?? "").toString();
+  const msgLower = merittoMessage.toLowerCase();
+
+  // Classify Meritto's business response into an outcome.
+  //  - success  : lead accepted
+  //  - duplicate: mobile/email already in Meritto (not an error, still logged)
+  //  - invalid  : validation error (bad mobile, missing field, invalid source, etc.)
+  //  - failed   : HTTP/network or unknown provider error
+  let outcome: "success" | "duplicate" | "invalid" | "failed";
+  if (!res.ok) {
+    outcome = "failed";
+  } else if (merittoStatus === "" || merittoStatus === "success" || merittoStatus === "ok") {
+    outcome = "success";
+  } else if (merittoStatus === "duplicate" || msgLower.includes("already registered") || msgLower.includes("duplicate")) {
+    outcome = "duplicate";
+  } else if (
+    merittoStatus === "error" ||
+    merittoStatus === "invalid" ||
+    merittoStatus === "fail" ||
+    merittoStatus === "failed" ||
+    msgLower.includes("invalid") ||
+    msgLower.includes("required") ||
+    msgLower.includes("mandatory") ||
+    msgLower.includes("missing")
+  ) {
+    outcome = "invalid";
+  } else {
+    outcome = "failed";
+  }
+
+  const ok = outcome === "success" || outcome === "duplicate";
 
   console.log(`[meritto][${cid}] ← HTTP ${res.status} in ${durationMs}ms`, {
     ok,
+    outcome,
     meritto_status: json?.status ?? null,
     meritto_message: json?.message ?? null,
     response_preview: text.slice(0, 500),
   });
 
-  return { ok, status: res.status, json, body, durationMs };
+  return { ok, outcome, status: res.status, json, body, durationMs };
 }
 
 
@@ -150,9 +180,9 @@ Deno.serve(async (req) => {
     // Ephemeral mode: push to Meritto WITHOUT persisting anything to our DB.
     if (skipLog && !input.retry_log_id) {
       const result = await callMeritto(secret, input, cid);
-      console.log(`[meritto][${cid}] ephemeral done`, { ok: result.ok, http: result.status, ms: result.durationMs });
+      console.log(`[meritto][${cid}] ephemeral done`, { ok: result.ok, outcome: result.outcome, http: result.status, ms: result.durationMs });
       return new Response(
-        JSON.stringify({ ok: result.ok, status: result.status, log_id: null, response: result.json, correlation_id: cid, ephemeral: true }),
+        JSON.stringify({ ok: result.ok, outcome: result.outcome, status: result.status, log_id: null, response: result.json, correlation_id: cid, ephemeral: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -213,8 +243,8 @@ Deno.serve(async (req) => {
 
     const result = await callMeritto(secret, lead, cid);
 
-    const finalStatus = result.ok ? "success" : "failed";
-    const errMsg = result.ok
+    const finalStatus = result.outcome; // success | duplicate | invalid | failed
+    const errMsg = result.outcome === "success"
       ? null
       : ((result.json as any)?.message
           ? `Meritto: ${(result.json as any).message}`
@@ -242,7 +272,7 @@ Deno.serve(async (req) => {
     console.log(`[meritto][${cid}] done`, { log_id: logId, status: finalStatus, http: result.status, ms: result.durationMs, error: errMsg });
 
     return new Response(
-      JSON.stringify({ ok: result.ok, status: result.status, log_id: logId, response: result.json, correlation_id: cid }),
+      JSON.stringify({ ok: result.ok, outcome: result.outcome, status: result.status, log_id: logId, response: result.json, correlation_id: cid }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
