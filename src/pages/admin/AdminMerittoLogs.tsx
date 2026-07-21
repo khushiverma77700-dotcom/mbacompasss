@@ -419,6 +419,8 @@ export default function AdminMerittoLogs() {
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="success">Delivered</SelectItem>
+              <SelectItem value="duplicate">Duplicate</SelectItem>
+              <SelectItem value="invalid">Invalid</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
             </SelectContent>
