@@ -780,7 +780,7 @@ function Field({ label, value }: { label: string; value: string | null | undefin
 }
 
 function ResultChip({ label, value, tone }: { label: string; value: number; tone?: string }) {
-  const cls = tone === "emerald" ? "text-emerald-600" : tone === "red" ? "text-red-600" : tone === "amber" ? "text-amber-600" : "";
+  const cls = tone === "emerald" ? "text-emerald-600" : tone === "red" ? "text-red-600" : tone === "amber" ? "text-amber-600" : tone === "sky" ? "text-sky-600" : "";
   return (
     <div className="rounded-md border p-2">
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
