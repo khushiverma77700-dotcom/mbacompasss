@@ -177,9 +177,9 @@ Deno.serve(async (req) => {
     // Ephemeral mode: push to Meritto WITHOUT persisting anything to our DB.
     if (skipLog && !input.retry_log_id) {
       const result = await callMeritto(secret, input, cid);
-      console.log(`[meritto][${cid}] ephemeral done`, { ok: result.ok, http: result.status, ms: result.durationMs });
+      console.log(`[meritto][${cid}] ephemeral done`, { ok: result.ok, outcome: result.outcome, http: result.status, ms: result.durationMs });
       return new Response(
-        JSON.stringify({ ok: result.ok, status: result.status, log_id: null, response: result.json, correlation_id: cid, ephemeral: true }),
+        JSON.stringify({ ok: result.ok, outcome: result.outcome, status: result.status, log_id: null, response: result.json, correlation_id: cid, ephemeral: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
