@@ -211,7 +211,7 @@ export default function AdminMerittoLogs() {
     const next = [...initial];
     for (const { r, idx } of toSend) {
       const res = await pushOne(r.mapped);
-      next[idx] = { ...r, status: res.ok ? "success" : "failed", error: res.error, http: res.http };
+      next[idx] = { ...r, status: res.outcome, error: res.error, http: res.http };
       done++;
       setBulkResults([...next]);
       setBulkProgress({ done, total: toSend.length });
