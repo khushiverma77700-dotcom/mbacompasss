@@ -309,11 +309,13 @@ export default function AdminMerittoLogs() {
   const stats = useMemo(() => {
     const total = rows.length;
     const success = rows.filter(r => r.status === "success").length;
+    const duplicate = rows.filter(r => r.status === "duplicate").length;
+    const invalid = rows.filter(r => r.status === "invalid").length;
     const failed = rows.filter(r => r.status === "failed").length;
     const pending = rows.filter(r => r.status === "pending").length;
     const today = rows.filter(r => new Date(r.created_at).toDateString() === new Date().toDateString()).length;
-    const rate = total ? Math.round((success / total) * 100) : 0;
-    return { total, success, failed, pending, today, rate };
+    const rate = total ? Math.round(((success + duplicate) / total) * 100) : 0;
+    return { total, success, duplicate, invalid, failed, pending, today, rate };
   }, [rows]);
 
   const sources = useMemo(() => {
