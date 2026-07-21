@@ -366,7 +366,11 @@ export default function AdminMerittoLogs() {
         },
       });
       if (error) throw error;
-      toast.success(data?.ok ? "Lead pushed to Meritto ✅" : `Sent — Meritto responded HTTP ${data?.status}`);
+      const oc = data?.outcome as string | undefined;
+      if (oc === "success") toast.success("Lead pushed to Meritto ✅");
+      else if (oc === "duplicate") toast.info(`Already in Meritto — ${data?.response?.message ?? "duplicate"}`);
+      else if (oc === "invalid") toast.error(`Invalid — ${data?.response?.message ?? "validation error"}`);
+      else toast.error(`Failed — ${data?.response?.message ?? `HTTP ${data?.status}`}`);
       setManualOpen(false);
       setManual({ ...manual, name: "", email: "", mobile: "", state: "", city: "", campus: "", course: "", extraJson: "" });
       await load();
