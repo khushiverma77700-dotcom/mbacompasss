@@ -676,11 +676,12 @@ export default function AdminMerittoLogs() {
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-4 gap-2 text-xs">
+              <div className="grid grid-cols-5 gap-2 text-xs">
                 <ResultChip label="Total" value={bulkResults.length} />
                 <ResultChip label="Delivered" value={bulkResults.filter((r) => r.status === "success").length} tone="emerald" />
-                <ResultChip label="Failed" value={bulkResults.filter((r) => r.status === "failed").length} tone="red" />
+                <ResultChip label="Duplicate" value={bulkResults.filter((r) => r.status === "duplicate").length} tone="sky" />
                 <ResultChip label="Invalid" value={bulkResults.filter((r) => r.status === "invalid").length} tone="amber" />
+                <ResultChip label="Failed" value={bulkResults.filter((r) => r.status === "failed").length} tone="red" />
               </div>
               <div className="overflow-x-auto max-h-80 border rounded">
                 <table className="w-full text-xs">
