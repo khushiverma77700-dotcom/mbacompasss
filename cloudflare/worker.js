@@ -22,7 +22,9 @@
  *
  * Staging: bind this worker to both mbacompass.in/* AND
  * staging.mbacompass.in/* so you can click through the merged output
- * on the staging subdomain BEFORE swapping DNS on the live domain.
+ * on the staging subdomain BEFORE swapping DNS on the live domain. Static
+ * assets requested from staging are proxied to the canonical origin so React
+ * can actually boot and take over the SSR shell.
  */
 
 const SUPABASE_PROJECT = "mttoiqruzzxooveooldo";
@@ -125,6 +127,7 @@ function buildHeadTags(meta) {
 <meta name="twitter:title" content="${esc(meta.title)}">
 <meta name="twitter:description" content="${esc(meta.description)}">
 <meta name="twitter:image" content="${esc(image)}">
+<style id="__ssr_handoff_style">html.app-mounted [data-ssr-shell="1"]{display:none!important}</style>
 ${ldTags}`;
 }
 
@@ -172,6 +175,36 @@ ${body}
 </div>`;
 }
 
+function replaceRootContent(shellHtml, replacementHtml) {
+  const openRe = /<div\b[^>]*\bid=["']root["'][^>]*>/i;
+  const openMatch = openRe.exec(shellHtml);
+  if (!openMatch) return shellHtml;
+
+  const openStart = openMatch.index;
+  const openEnd = openStart + openMatch[0].length;
+  const tail = shellHtml.slice(openEnd);
+  const divRe = /<\/?div\b[^>]*>/gi;
+  let depth = 1;
+  let match;
+
+  while ((match = divRe.exec(tail))) {
+    const tag = match[0];
+    if (/^<\s*\/\s*div/i.test(tag)) {
+      depth -= 1;
+      if (depth === 0) {
+        const closeStart = openEnd + match.index;
+        return shellHtml.slice(0, openEnd) + replacementHtml + shellHtml.slice(closeStart);
+      }
+    } else if (!/\/\s*>$/.test(tag)) {
+      depth += 1;
+    }
+  }
+
+  // Fallback for malformed shells: keep the document usable rather than
+  // emitting a broken response.
+  return shellHtml.replace(openRe, (openTag) => `${openTag}${replacementHtml}`);
+}
+
 // Rewrite the shell's <head> — strip existing <title>, description,
 // canonical, robots and og/twitter meta tags, then inject our set just
 // before </head>. Everything else (viewport, favicon, preloads, module
@@ -194,15 +227,30 @@ function mergeShell(shellHtml, meta) {
   const headTags = buildHeadTags(meta);
   html = html.replace(/<\/head>/i, `${headTags}\n</head>`);
 
-  // Inject SEO body inside <div id="root">…</div>. Handle both empty
-  // and non-empty root nodes (Vite ships an empty one by default).
+  // Inject SEO body inside <div id="root">…</div>. The published shell may
+  // already contain an inline prerender placeholder with nested <div> nodes,
+  // so do not use a non-greedy regex here — it stops at the first nested
+  // </div> and leaves duplicate content stacked on the page. Parse enough of
+  // the div nesting to replace the whole #root payload atomically.
   const seo = buildSeoBody(meta);
-  html = html.replace(
-    /<div\s+id=["']root["'][^>]*>([\s\S]*?)<\/div>/i,
-    (m, inner) => m.replace(inner, seo + inner),
-  );
+  html = replaceRootContent(html, seo);
 
   return html;
+}
+
+function originUrlFor(request) {
+  const url = new URL(request.url);
+  url.protocol = "https:";
+  url.hostname = ORIGIN_HOST;
+  return url.toString();
+}
+
+function fetchOriginPath(request, cacheTtl = 300) {
+  return fetch(originUrlFor(request), {
+    method: request.method,
+    headers: request.headers,
+    cf: { cacheTtl, cacheEverything: true },
+  });
 }
 
 async function fetchSsrMeta(pathAndQuery) {
@@ -264,13 +312,16 @@ export default {
           : accept.includes("image/webp")
           ? "webp"
           : "auto";
-        return fetch(request, {
+        return fetch(host === ORIGIN_HOST ? request : originUrlFor(request), {
           cf: {
             image: { format, quality: 72, fit: "scale-down" },
             cacheTtl: 31536000,
             cacheEverything: true,
           },
         });
+      }
+      if (host !== ORIGIN_HOST && (isAssetPath(path) || isPassthrough(path))) {
+        return fetchOriginPath(request, isAssetPath(path) ? 31536000 : 300);
       }
       return fetch(request);
     }
