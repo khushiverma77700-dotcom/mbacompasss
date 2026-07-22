@@ -701,11 +701,11 @@ function renderCollege(c: any): PageMeta {
   const url = `${SITE}/college/${c.slug}`;
   const title = c.meta_title || `${c.name} — Fees, Placements, Cutoffs & Reviews 2026`;
   const description = clamp(
-    stripHtml(c.meta_description || c.short_description || c.description || ""),
+    stripHtml(c.meta_description || c.description || ""),
     200,
   );
-  const image = c.image_url || c.banner_url || c.logo_url || OG_DEFAULT;
-  const body = sanitizeContent(c.description || c.short_description || "");
+  const image = c.banner_url || c.logo_url || OG_DEFAULT;
+  const body = sanitizeContent(c.description || "");
 
   const collegeLd: any = {
     "@context": "https://schema.org",
@@ -725,28 +725,115 @@ function renderCollege(c: any): PageMeta {
   }
   if (c.established) collegeLd.foundingDate = String(c.established);
 
+  // Helpers to render heterogenous DB shapes (string | string[] | object) as
+  // real, visible HTML sections that mirror what the live React page shows.
+  const listify = (v: any): string[] => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v.map((x) => String(x)).filter(Boolean);
+    if (typeof v === "string") return v.split(/\n|,|;|\u2022|\|/).map((s) => s.trim()).filter(Boolean);
+    if (typeof v === "object") return Object.entries(v).map(([k, val]) => `${k}: ${val}`);
+    return [String(v)];
+  };
+  const renderList = (items: string[]) =>
+    items.length
+      ? `<ul class="list-disc pl-6 space-y-1 text-slate-700">${items
+          .map((x) => `<li>${esc(x)}</li>`)
+          .join("")}</ul>`
+      : "";
+  const renderKV = (rows: Array<[string, any]>) => {
+    const filtered = rows.filter(([, v]) => v !== null && v !== undefined && v !== "");
+    if (!filtered.length) return "";
+    return `<div class="overflow-x-auto"><table class="w-full text-left border border-slate-200 rounded-md"><tbody>${filtered
+      .map(
+        ([k, v]) =>
+          `<tr class="border-b border-slate-100 last:border-0"><th class="px-4 py-2 bg-slate-50 font-medium text-slate-700 w-1/3">${esc(k)}</th><td class="px-4 py-2 text-slate-800">${esc(String(v))}</td></tr>`,
+      )
+      .join("")}</tbody></table></div>`;
+  };
+
+  const overviewTable = renderKV([
+    ["Location", [c.city, c.state].filter(Boolean).join(", ")],
+    ["Type", c.type],
+    ["Category", c.college_category],
+    ["Tier", c.tier],
+    ["Established", c.established],
+    ["Accreditations", Array.isArray(c.accreditations) ? c.accreditations.join(", ") : c.accreditations],
+    ["Campus Size", c.campus_size],
+    ["Total Students", c.total_students],
+    ["Website", c.website],
+  ]);
+
+  const feesTable = renderKV([
+    ["Total Fees", c.fees],
+    ["Fees (₹ Lakhs)", c.fees_lakhs],
+  ]);
+
+  const placementsTable = renderKV([
+    ["Average Package", c.placement_avg],
+    ["Median Package", c.placement_median],
+    ["Highest Package", c.placement_highest],
+  ]);
+
+  const recruiters = listify(c.top_recruiters);
+  const highlights = listify(c.highlights);
+  const specializations = listify(c.specializations);
+  const examsAccepted = listify(c.exams_accepted);
+  const courses = listify(c.courses);
+
+  const cutoffsHtml = c.cutoff_info
+    ? typeof c.cutoff_info === "string"
+      ? `<div class="text-slate-700 leading-relaxed">${sanitizeContent(c.cutoff_info)}</div>`
+      : renderKV(Object.entries(c.cutoff_info))
+    : "";
+
+  const rankingLine = c.ranking
+    ? `<p class="text-slate-800"><strong>Current Ranking:</strong> #${esc(c.ranking)}</p>`
+    : "";
+
+  const admissionHtml = c.admission_process
+    ? `<div class="text-slate-700 leading-relaxed">${sanitizeContent(String(c.admission_process))}</div>`
+    : "";
+
+  const faqs = Array.isArray(c.faqs) ? c.faqs : [];
+  const faqsHtml = faqs.length
+    ? `<dl class="space-y-4">${faqs
+        .map(
+          (f: any) =>
+            `<div><dt class="font-semibold text-slate-900">${esc(f.question || f.q || "")}</dt><dd class="mt-1 text-slate-700">${esc(f.answer || f.a || "")}</dd></div>`,
+        )
+        .join("")}</dl>`
+    : "";
+
+  const section = (title: string, html: string) =>
+    html ? `<section class="mt-8"><h2 class="text-2xl font-bold text-slate-900 mb-3">${esc(title)}</h2>${html}</section>` : "";
+
+  const bodyHtml = `${body ? `<section class="prose prose-slate max-w-none">${body}</section>` : ""}
+${section("Overview", overviewTable)}
+${section("Rankings", rankingLine)}
+${section("Fees", feesTable)}
+${section("Placements", placementsTable)}
+${section("Top Recruiters", renderList(recruiters))}
+${section("Cutoffs", cutoffsHtml)}
+${section("Admission Process", admissionHtml)}
+${section("Specializations", renderList(specializations))}
+${section("Exams Accepted", renderList(examsAccepted))}
+${section("Courses Offered", renderList(courses))}
+${section("Highlights", renderList(highlights))}
+${section("Frequently Asked Questions", faqsHtml)}`;
+
   return {
     url,
     title,
     description,
     image,
-    h1: c.name,
+    h1: c.h1_tag || c.name,
     jsonLd: collegeLd,
     breadcrumbs: [
       { name: "Home", url: `${SITE}/` },
       { name: "Colleges", url: `${SITE}/colleges` },
       { name: c.name, url },
     ],
-    bodyHtml: `<section>
-      ${c.city ? `<p><strong>Location:</strong> ${esc(c.city)}${c.state ? ", " + esc(c.state) : ""}</p>` : ""}
-      ${c.tier ? `<p><strong>Tier:</strong> ${esc(c.tier)}</p>` : ""}
-      ${c.type ? `<p><strong>Type:</strong> ${esc(c.type)}</p>` : ""}
-      ${c.established ? `<p><strong>Established:</strong> ${esc(c.established)}</p>` : ""}
-      ${c.fees ? `<p><strong>Fees:</strong> ${esc(c.fees)}</p>` : ""}
-      ${c.placement_avg ? `<p><strong>Average Placement:</strong> ${esc(c.placement_avg)}</p>` : ""}
-      ${c.placement_highest ? `<p><strong>Highest Placement:</strong> ${esc(c.placement_highest)}</p>` : ""}
-      <article>${body}</article>
-    </section>`,
+    bodyHtml,
   };
 }
 
