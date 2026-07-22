@@ -129,37 +129,46 @@ ${ldTags}`;
 }
 
 function buildSeoBody(meta) {
-  // Injected inside <div id="root"> so crawlers see real content in
-  // the initial HTML. React blows this away on first render because
-  // main.tsx uses createRoot(...).render(...) (not hydrateRoot), so
-  // no hydration mismatch warning. Hidden from humans via inline
-  // style — Vite's #root child paints on top instantly, but even if
-  // there's a delay, the hidden text won't flash.
+  // Injected inside <div id="root"> as a genuinely VISIBLE loading shell.
+  // React's createRoot(...).render(...) replaces #root's children on first
+  // mount, so this is naturally swapped by the real interactive UI. No
+  // off-screen positioning, no 1px boxes, no display/visibility hiding,
+  // no aria-hidden. Same Tailwind classes as the site's own hero/section
+  // patterns so the pre-hydration paint looks like a real page loading,
+  // not a distinct cloaked payload.
   const breadcrumbHtml =
     Array.isArray(meta.breadcrumbs) && meta.breadcrumbs.length > 1
-      ? `<nav aria-label="Breadcrumb"><ol>${meta.breadcrumbs
+      ? `<nav aria-label="Breadcrumb" class="mx-auto max-w-7xl px-4 pt-6 text-sm text-slate-600"><ol class="flex flex-wrap gap-2">${meta.breadcrumbs
           .map((b, i) =>
             i === meta.breadcrumbs.length - 1
-              ? `<li>${esc(b.name)}</li>`
-              : `<li><a href="${esc(b.url)}">${esc(b.name)}</a></li>`,
+              ? `<li aria-current="page" class="text-slate-900 font-medium">${esc(b.name)}</li>`
+              : `<li><a href="${esc(b.url)}" class="hover:underline">${esc(b.name)}</a><span class="mx-2 text-slate-400">/</span></li>`,
           )
           .join("")}</ol></nav>`
       : "";
 
-  return `<div data-ssr-seo="1" style="position:absolute;left:-99999px;top:-99999px;width:1px;height:1px;overflow:hidden;">
-<header><a href="https://mbacompass.in/"><strong>MBA Compass</strong></a> — India's MBA Discovery Platform</header>
+  const h1 = esc(meta.h1 || meta.title);
+  const sub = esc(meta.description || "");
+  const body = meta.bodyHtml || `<p class="text-base text-slate-700 leading-relaxed">${sub}</p>`;
+
+  return `<div data-ssr-shell="1" class="min-h-screen bg-white text-slate-900">
 ${breadcrumbHtml}
-<main>
-<h1>${esc(meta.h1 || meta.title)}</h1>
-${meta.bodyHtml || `<p>${esc(meta.description)}</p>`}
-<p><a href="${esc(meta.canonical || meta.url)}">View the full interactive page on MBA Compass →</a></p>
+<header class="mx-auto max-w-7xl px-4 pt-8 pb-6">
+  <h1 class="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">${h1}</h1>
+  ${sub ? `<p class="mt-4 max-w-3xl text-base sm:text-lg text-slate-600 leading-relaxed">${sub}</p>` : ""}
+</header>
+<main class="mx-auto max-w-7xl px-4 pb-16 prose prose-slate max-w-none">
+${body}
 </main>
-<footer><nav>
-<a href="https://mbacompass.in/colleges">Top MBA Colleges</a> ·
-<a href="https://mbacompass.in/coaching">MBA Coaching</a> ·
-<a href="https://mbacompass.in/blog">Articles</a> ·
-<a href="https://mbacompass.in/mocks">Mock Tests</a>
-</nav></footer>
+<footer class="mx-auto max-w-7xl px-4 py-8 border-t border-slate-200 text-sm text-slate-600">
+  <nav class="flex flex-wrap gap-x-4 gap-y-2">
+    <a href="https://mbacompass.in/colleges" class="hover:underline">Top MBA Colleges</a>
+    <a href="https://mbacompass.in/coaching" class="hover:underline">MBA Coaching</a>
+    <a href="https://mbacompass.in/blog" class="hover:underline">Articles</a>
+    <a href="https://mbacompass.in/mocks" class="hover:underline">Mock Tests</a>
+    <a href="https://mbacompass.in/about" class="hover:underline">About</a>
+  </nav>
+</footer>
 </div>`;
 }
 
