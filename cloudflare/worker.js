@@ -127,7 +127,24 @@ function buildHeadTags(meta) {
 <meta name="twitter:title" content="${esc(meta.title)}">
 <meta name="twitter:description" content="${esc(meta.description)}">
 <meta name="twitter:image" content="${esc(image)}">
-<style id="__ssr_handoff_style">html.app-mounted [data-ssr-shell="1"]{display:none!important}</style>
+<style id="__ssr_handoff_style">
+html.app-mounted [data-ssr-shell="1"]{display:none!important}
+#root>[data-ssr-shell="1"]+section[style*="min-height:520px"]{display:none!important}
+[data-ssr-shell="1"]{min-height:100vh;background:#fff;color:#0f172a;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+[data-ssr-shell="1"] header,[data-ssr-shell="1"] main,[data-ssr-shell="1"] footer,[data-ssr-shell="1"] nav[aria-label="Breadcrumb"]{max-width:1120px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px;box-sizing:border-box}
+[data-ssr-shell="1"] header{padding-top:56px;padding-bottom:22px}
+[data-ssr-shell="1"] h1{margin:0;color:#0f172a;font-size:clamp(32px,5vw,58px);line-height:1.08;font-weight:850;letter-spacing:0}
+[data-ssr-shell="1"] header p{max-width:760px;margin:18px 0 0;color:#475569;font-size:18px;line-height:1.65}
+[data-ssr-shell="1"] main{padding-bottom:64px;font-size:16px;color:#334155}
+[data-ssr-shell="1"] main p{max-width:880px;margin:0 0 18px}
+[data-ssr-shell="1"] ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 18px;margin:24px 0 0;padding-left:22px}
+[data-ssr-shell="1"] li{margin:0}
+[data-ssr-shell="1"] a{color:#2563eb;text-decoration:none;font-weight:650}
+[data-ssr-shell="1"] a:hover{text-decoration:underline}
+[data-ssr-shell="1"] footer{border-top:1px solid #e2e8f0;padding-top:26px;padding-bottom:34px;color:#64748b;font-size:14px}
+[data-ssr-shell="1"] footer nav{display:flex;flex-wrap:wrap;gap:12px 18px;padding:0}
+@media(max-width:640px){[data-ssr-shell="1"] header,[data-ssr-shell="1"] main,[data-ssr-shell="1"] footer,[data-ssr-shell="1"] nav[aria-label="Breadcrumb"]{padding-left:16px;padding-right:16px}[data-ssr-shell="1"] header{padding-top:36px}[data-ssr-shell="1"] ul{grid-template-columns:1fr}}
+</style>
 ${ldTags}`;
 }
 
@@ -226,6 +243,15 @@ function mergeShell(shellHtml, meta) {
 
   const headTags = buildHeadTags(meta);
   html = html.replace(/<\/head>/i, `${headTags}\n</head>`);
+
+  // Staging runs on staging.mbacompass.in, but the built JS/CSS assets live on
+  // the canonical origin. Make the asset URLs absolute so React can boot even
+  // if the Cloudflare route for /assets/* is not attached to staging yet.
+  html = html
+    .replace(/\b(src|href)=(['"])\/assets\//gi, `$1=$2https://${ORIGIN_HOST}/assets/`)
+    .replace(/\b(src|href)=(['"])\/fonts\//gi, `$1=$2https://${ORIGIN_HOST}/fonts/`)
+    .replace(/\b(src|href)=(['"])\/favicon\.png/gi, `$1=$2https://${ORIGIN_HOST}/favicon.png`)
+    .replace(/\b(src|href)=(['"])\/apple-touch-icon\.png/gi, `$1=$2https://${ORIGIN_HOST}/apple-touch-icon.png`);
 
   // Inject SEO body inside <div id="root">…</div>. The published shell may
   // already contain an inline prerender placeholder with nested <div> nodes,

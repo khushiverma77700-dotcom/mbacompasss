@@ -97,6 +97,35 @@ function wantsJsonFormat(req: Request, url: URL): boolean {
   return accept.includes("application/json") && !accept.includes("text/html");
 }
 
+function workerFallbackStyle(): string {
+  // Defensive CSS for the Cloudflare merge path. Older Worker code used a
+  // non-greedy #root replacement and could leave the static Hostinger fallback
+  // hero stacked below the prerender shell. This hides only that leftover
+  // hardcoded fallback section, while keeping the real prerender content fully
+  // visible and styled even if the app CSS/JS assets are slow on staging.
+  return `<style id="__ssr_visual_guard">
+#root>section[style*="min-height:520px"]{display:none!important}
+[data-ssr-shell="1"]{min-height:100vh;background:#fff;color:#0f172a;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+[data-ssr-shell="1"] header,[data-ssr-shell="1"] main,[data-ssr-shell="1"] footer,[data-ssr-shell="1"] nav[aria-label="Breadcrumb"]{max-width:1120px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px;box-sizing:border-box}
+[data-ssr-shell="1"] header{padding-top:56px;padding-bottom:22px}
+[data-ssr-shell="1"] h1{margin:0;color:#0f172a;font-size:clamp(32px,5vw,58px);line-height:1.08;font-weight:850;letter-spacing:0}
+[data-ssr-shell="1"] header p{max-width:760px;margin:18px 0 0;color:#475569;font-size:18px;line-height:1.65}
+[data-ssr-shell="1"] main{padding-bottom:64px;font-size:16px;color:#334155}
+[data-ssr-shell="1"] main p{max-width:880px;margin:0 0 18px}
+[data-ssr-shell="1"] ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 18px;margin:24px 0 0;padding-left:22px}
+[data-ssr-shell="1"] li{margin:0}
+[data-ssr-shell="1"] a{color:#2563eb;text-decoration:none;font-weight:650}
+[data-ssr-shell="1"] a:hover{text-decoration:underline}
+[data-ssr-shell="1"] footer{border-top:1px solid #e2e8f0;padding-top:26px;padding-bottom:34px;color:#64748b;font-size:14px}
+[data-ssr-shell="1"] footer nav{display:flex;flex-wrap:wrap;gap:12px 18px;padding:0}
+@media(max-width:640px){[data-ssr-shell="1"] header,[data-ssr-shell="1"] main,[data-ssr-shell="1"] footer,[data-ssr-shell="1"] nav[aria-label="Breadcrumb"]{padding-left:16px;padding-right:16px}[data-ssr-shell="1"] header{padding-top:36px}[data-ssr-shell="1"] ul{grid-template-columns:1fr}}
+</style>`;
+}
+
+function bodyForWorkerMerge(bodyHtml: string): string {
+  return `${workerFallbackStyle()}${bodyHtml || ""}`;
+}
+
 function emit(meta: PageMeta, status: number, asJson: boolean): Response {
   if (asJson) {
     // JSON contract used by the Cloudflare Worker merge (Plan B1). The
@@ -114,7 +143,7 @@ function emit(meta: PageMeta, status: number, asJson: boolean): Response {
         h1: meta.h1 || meta.title,
         breadcrumbs: meta.breadcrumbs || [],
         jsonLd: meta.jsonLd || null,
-        bodyHtml: meta.bodyHtml || "",
+        bodyHtml: bodyForWorkerMerge(meta.bodyHtml || ""),
       }),
       {
         status,
