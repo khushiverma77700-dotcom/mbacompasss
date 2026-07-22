@@ -146,8 +146,9 @@ createRoot(document.getElementById("root")!).render(
     });
   };
   const hasRealContent = () => {
-    const el = root.firstElementChild as HTMLElement | null;
-    return !!(el && el.getBoundingClientRect().height > 0);
+    const children = Array.from(root.children) as HTMLElement[];
+    const realChild = children.find((el) => !el.hasAttribute("data-ssr-shell"));
+    return !!(realChild && realChild.getBoundingClientRect().height > 0);
   };
   if (hasRealContent()) {
     hide();
