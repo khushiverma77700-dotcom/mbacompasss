@@ -243,9 +243,20 @@ const STATIC_ROUTES: RouteTemplate[] = [
     build: () => ({
       title: "MBA Compass: Top MBA Colleges, Coaching & CAT Prep in India",
       description:
-        "Discover top MBA colleges, coaching institutes and exam prep for CAT, GMAT, XAT, SNAP & NMAT. Compare fees, rankings, placements and reviews — all in one place.",
-      h1: "Find & Compare India's Top MBA Colleges and Coaching",
+        "Compare top MBA coaching institutes, read reviews, and make informed decisions",
+      h1: "Find the Best MBA Coaching",
       breadcrumbs: [{ name: "Home", url: `${SITE}/` }],
+      bodyHtml: `<p class="text-base sm:text-lg text-slate-700 leading-relaxed">Compare top MBA coaching institutes, read reviews, and make informed decisions. Explore India's leading business schools, entrance exams like CAT, XAT, NMAT and SNAP, and free tools to plan your MBA journey.</p>
+<ul class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-800">
+  <li><a href="${SITE}/colleges" class="hover:underline">Browse top MBA colleges in India</a></li>
+  <li><a href="${SITE}/coaching" class="hover:underline">Compare MBA coaching institutes</a></li>
+  <li><a href="${SITE}/exams" class="hover:underline">CAT, XAT, NMAT, SNAP exam guides</a></li>
+  <li><a href="${SITE}/mocks" class="hover:underline">Free CAT mock tests & practice</a></li>
+  <li><a href="${SITE}/cat-score-calculator" class="hover:underline">CAT score & percentile calculator</a></li>
+  <li><a href="${SITE}/roi-calculator" class="hover:underline">MBA ROI calculator</a></li>
+  <li><a href="${SITE}/college-shortlister" class="hover:underline">Personalised college shortlister</a></li>
+  <li><a href="${SITE}/blog" class="hover:underline">Latest MBA news & articles</a></li>
+</ul>`,
     }),
   },
   {
