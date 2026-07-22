@@ -77,9 +77,62 @@ const HTML_HEADERS = {
   ...corsHeaders,
   "Content-Type": "text/html; charset=utf-8",
   "Cache-Control": "public, max-age=600, s-maxage=3600",
+  "Vary": "Cookie, Accept-Encoding, Accept",
   "X-Robots-Tag": "index, follow, max-image-preview:large",
   "X-Prerender-Source": "ssr-prerender",
 };
+
+const JSON_HEADERS = {
+  ...corsHeaders,
+  "Content-Type": "application/json; charset=utf-8",
+  "Cache-Control": "public, max-age=600, s-maxage=3600",
+  "Vary": "Cookie, Accept-Encoding, Accept",
+  "X-Prerender-Source": "ssr-prerender",
+};
+
+function wantsJsonFormat(req: Request, url: URL): boolean {
+  const fmt = url.searchParams.get("format");
+  if (fmt === "json") return true;
+  const accept = req.headers.get("accept") || "";
+  return accept.includes("application/json") && !accept.includes("text/html");
+}
+
+function emit(meta: PageMeta, status: number, asJson: boolean): Response {
+  if (asJson) {
+    // JSON contract used by the Cloudflare Worker merge (Plan B1). The
+    // worker injects `bodyHtml` into <div id="root"> and rewrites the
+    // <head> of the Hostinger-served SPA shell with these fields.
+    return new Response(
+      JSON.stringify({
+        status,
+        url: meta.url,
+        title: meta.title,
+        description: meta.description || "",
+        image: meta.image || OG_DEFAULT,
+        canonical: meta.url,
+        noindex: !!meta.noindex,
+        h1: meta.h1 || meta.title,
+        breadcrumbs: meta.breadcrumbs || [],
+        jsonLd: meta.jsonLd || null,
+        bodyHtml: meta.bodyHtml || "",
+      }),
+      {
+        status,
+        headers: {
+          ...JSON_HEADERS,
+          ...(meta.noindex ? { "X-Robots-Tag": "noindex, follow" } : {}),
+        },
+      },
+    );
+  }
+  return new Response(buildHtml(meta), {
+    status,
+    headers: {
+      ...HTML_HEADERS,
+      ...(meta.noindex ? { "X-Robots-Tag": "noindex, follow" } : {}),
+    },
+  });
+}
 
 interface PageMeta {
   url: string;
@@ -580,7 +633,7 @@ const FACETED_ROUTES: RouteTemplate[] = [
 // Dynamic content renderers (DB-backed)
 // ──────────────────────────────────────────────────────────────────────────────
 
-function renderArticle(a: any): string {
+function renderArticle(a: any): PageMeta {
   const url = `${SITE}/article/${a.slug}`;
   const title = a.meta_title || a.title || "MBA Compass Article";
   const description = clamp(
@@ -613,7 +666,7 @@ function renderArticle(a: any): string {
     inLanguage: "en-IN",
   };
 
-  return buildHtml({
+  return {
     url,
     title,
     description,
@@ -630,10 +683,10 @@ function renderArticle(a: any): string {
       ${a.excerpt ? `<p class="lead">${esc(a.excerpt)}</p>` : ""}
       ${body}
     </article>`,
-  });
+  };
 }
 
-function renderCollege(c: any): string {
+function renderCollege(c: any): PageMeta {
   const url = `${SITE}/college/${c.slug}`;
   const title = c.meta_title || `${c.name} — Fees, Placements, Cutoffs & Reviews 2026`;
   const description = clamp(
@@ -661,7 +714,7 @@ function renderCollege(c: any): string {
   }
   if (c.established) collegeLd.foundingDate = String(c.established);
 
-  return buildHtml({
+  return {
     url,
     title,
     description,
@@ -683,10 +736,10 @@ function renderCollege(c: any): string {
       ${c.placement_highest ? `<p><strong>Highest Placement:</strong> ${esc(c.placement_highest)}</p>` : ""}
       <article>${body}</article>
     </section>`,
-  });
+  };
 }
 
-function renderInstitute(i: any): string {
+function renderInstitute(i: any): PageMeta {
   const url = `${SITE}/institute/${i.slug}`;
   const name = i.name || slugToTitle(i.slug);
   const title = i.meta_title || `${name} — Courses, Fees, Faculty & Reviews | MBA Compass`;
@@ -714,7 +767,7 @@ function renderInstitute(i: any): string {
     };
   }
 
-  return buildHtml({
+  return {
     url,
     title,
     description,
@@ -731,10 +784,10 @@ function renderInstitute(i: any): string {
       ${i.established_year ? `<p><strong>Established:</strong> ${esc(i.established_year)}</p>` : ""}
       <article>${body}</article>
     </section>`,
-  });
+  };
 }
 
-function renderExam(e: any): string {
+function renderExam(e: any): PageMeta {
   const url = `${SITE}/exam/${e.slug}`;
   const name = e.name || slugToTitle(e.slug);
   const title = e.meta_title || `${name} 2026: Exam Pattern, Syllabus, Dates & Eligibility`;
@@ -744,7 +797,7 @@ function renderExam(e: any): string {
   );
   const body = sanitizeContent(e.description || "");
 
-  return buildHtml({
+  return {
     url,
     title,
     description,
@@ -756,48 +809,42 @@ function renderExam(e: any): string {
       { name, url },
     ],
     bodyHtml: `<article>${body}</article>`,
-  });
+  };
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Router
 // ──────────────────────────────────────────────────────────────────────────────
 
-function spaFallback(path: string): Response {
-  // Last-resort fallback: indexable shell so the route doesn't 404. Google's
-  // second-pass JS rendering will then resolve the per-route Helmet tags.
-  const url = `${SITE}${path}`;
-  const html = buildHtml({
-    url,
+function spaFallbackMeta(path: string): PageMeta {
+  return {
+    url: `${SITE}${path}`,
     title: "MBA Compass — India's MBA Discovery Platform",
     description:
       "MBA Compass helps you find, compare and choose the best MBA colleges, coaching institutes and prep courses in India.",
     h1: "MBA Compass",
-  });
-  return new Response(html, { status: 200, headers: HTML_HEADERS });
+  };
 }
 
-function notFound(path: string): Response {
+function notFoundMeta(path: string): PageMeta {
   const safe = esc(path).slice(0, 200);
-  const html = buildHtml({
+  return {
     url: `${SITE}${path}`,
     title: "404 — Page Not Found | MBA Compass",
     description: `The page ${safe} does not exist on MBA Compass.`,
     h1: "Page Not Found",
     noindex: true,
     bodyHtml: `<p>The page <code>${safe}</code> was not found. Try the <a href="${SITE}/">homepage</a>, <a href="${SITE}/colleges">colleges</a>, or <a href="${SITE}/blog">blog</a>.</p>`,
-  });
-  return new Response(html, {
-    status: 404,
-    headers: { ...HTML_HEADERS, "X-Robots-Tag": "noindex, follow" },
-  });
+  };
 }
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const url = new URL(req.url);
+  const asJson = wantsJsonFormat(req, url);
+
   try {
-    const url = new URL(req.url);
     const path = (url.searchParams.get("path") || "/").trim().replace(/\/+$/, "") || "/";
     const fullUrl = `${SITE}${path === "/" ? "/" : path}`;
 
@@ -806,20 +853,14 @@ Deno.serve(async (req: Request) => {
       const m = path.match(r.match);
       if (m) {
         const meta = r.build(m);
-        return new Response(buildHtml({ url: fullUrl, ...meta }), {
-          status: 200,
-          headers: HTML_HEADERS,
-        });
+        return emit({ url: fullUrl, ...meta }, 200, asJson);
       }
     }
     for (const r of FACETED_ROUTES) {
       const m = path.match(r.match);
       if (m) {
         const meta = r.build(m);
-        return new Response(buildHtml({ url: fullUrl, ...meta }), {
-          status: 200,
-          headers: HTML_HEADERS,
-        });
+        return emit({ url: fullUrl, ...meta }, 200, asJson);
       }
     }
 
@@ -833,13 +874,9 @@ Deno.serve(async (req: Request) => {
     if (articleMatch) {
       const slug = decodeURIComponent(articleMatch[1]);
       const { data } = await supabase
-        .from("articles")
-        .select("*")
-        .eq("slug", slug)
-        .eq("published", true)
-        .maybeSingle();
-      if (!data) return notFound(path);
-      return new Response(renderArticle(data), { status: 200, headers: HTML_HEADERS });
+        .from("articles").select("*").eq("slug", slug).eq("published", true).maybeSingle();
+      if (!data) return emit(notFoundMeta(path), 404, asJson);
+      return emit(renderArticle(data), 200, asJson);
     }
 
     const collegeMatch = path.match(/^\/college\/([^/?#]+)/);
@@ -847,8 +884,8 @@ Deno.serve(async (req: Request) => {
       const slug = decodeURIComponent(collegeMatch[1]);
       const { data } = await supabase
         .from("colleges").select("*").eq("slug", slug).maybeSingle();
-      if (!data) return notFound(path);
-      return new Response(renderCollege(data), { status: 200, headers: HTML_HEADERS });
+      if (!data) return emit(notFoundMeta(path), 404, asJson);
+      return emit(renderCollege(data), 200, asJson);
     }
 
     const instituteMatch = path.match(/^\/institute\/([^/?#]+)/);
@@ -856,8 +893,8 @@ Deno.serve(async (req: Request) => {
       const slug = decodeURIComponent(instituteMatch[1]);
       const { data } = await supabase
         .from("institutes").select("*").eq("slug", slug).maybeSingle();
-      if (!data) return notFound(path);
-      return new Response(renderInstitute(data), { status: 200, headers: HTML_HEADERS });
+      if (!data) return emit(notFoundMeta(path), 404, asJson);
+      return emit(renderInstitute(data), 200, asJson);
     }
 
     const coachingMatch = path.match(/^\/coaching\/([^/?#]+)/);
@@ -865,8 +902,8 @@ Deno.serve(async (req: Request) => {
       const slug = decodeURIComponent(coachingMatch[1]);
       const { data } = await supabase
         .from("institutes").select("*").eq("slug", slug).maybeSingle();
-      if (!data) return notFound(path);
-      return new Response(renderInstitute(data), { status: 200, headers: HTML_HEADERS });
+      if (!data) return emit(notFoundMeta(path), 404, asJson);
+      return emit(renderInstitute(data), 200, asJson);
     }
 
     const examMatch = path.match(/^\/exam\/([^/?#]+)/);
@@ -874,22 +911,23 @@ Deno.serve(async (req: Request) => {
       const slug = decodeURIComponent(examMatch[1]);
       const { data } = await supabase
         .from("exams").select("*").eq("slug", slug).maybeSingle();
-      if (!data) return notFound(path);
-      return new Response(renderExam(data), { status: 200, headers: HTML_HEADERS });
+      if (!data) return emit(notFoundMeta(path), 404, asJson);
+      return emit(renderExam(data), 200, asJson);
     }
 
     // 3. Unknown route — fall back to an indexable SPA shell rather than 404.
-    return spaFallback(path);
+    return emit(spaFallbackMeta(path), 200, asJson);
   } catch (err) {
     console.error("ssr-prerender error", err);
-    return new Response(
-      buildHtml({
+    return emit(
+      {
         url: `${SITE}/`,
         title: "MBA Compass",
         description: "MBA Compass — India's MBA discovery platform.",
         h1: "MBA Compass",
-      }),
-      { status: 200, headers: HTML_HEADERS },
+      },
+      200,
+      asJson,
     );
   }
 });

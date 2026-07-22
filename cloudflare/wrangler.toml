@@ -2,9 +2,11 @@ name = "mbacompass-edge"
 main = "worker.js"
 compatibility_date = "2025-01-01"
 
-# Bind to both the apex and www hosts. Sitewide — the worker filters
-# by request type internally (bot vs human, HTML vs asset).
+# Bind to the live apex + www AND the staging subdomain. Staging routes
+# through the same worker so you can click through the merged output on
+# staging.mbacompass.in BEFORE swapping nameservers on the live domain.
 routes = [
   { pattern = "mbacompass.in/*", zone_name = "mbacompass.in" },
   { pattern = "www.mbacompass.in/*", zone_name = "mbacompass.in" },
+  { pattern = "staging.mbacompass.in/*", zone_name = "mbacompass.in" },
 ]
