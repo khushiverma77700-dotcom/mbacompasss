@@ -77,9 +77,62 @@ const HTML_HEADERS = {
   ...corsHeaders,
   "Content-Type": "text/html; charset=utf-8",
   "Cache-Control": "public, max-age=600, s-maxage=3600",
+  "Vary": "Cookie, Accept-Encoding, Accept",
   "X-Robots-Tag": "index, follow, max-image-preview:large",
   "X-Prerender-Source": "ssr-prerender",
 };
+
+const JSON_HEADERS = {
+  ...corsHeaders,
+  "Content-Type": "application/json; charset=utf-8",
+  "Cache-Control": "public, max-age=600, s-maxage=3600",
+  "Vary": "Cookie, Accept-Encoding, Accept",
+  "X-Prerender-Source": "ssr-prerender",
+};
+
+function wantsJsonFormat(req: Request, url: URL): boolean {
+  const fmt = url.searchParams.get("format");
+  if (fmt === "json") return true;
+  const accept = req.headers.get("accept") || "";
+  return accept.includes("application/json") && !accept.includes("text/html");
+}
+
+function emit(meta: PageMeta, status: number, asJson: boolean): Response {
+  if (asJson) {
+    // JSON contract used by the Cloudflare Worker merge (Plan B1). The
+    // worker injects `bodyHtml` into <div id="root"> and rewrites the
+    // <head> of the Hostinger-served SPA shell with these fields.
+    return new Response(
+      JSON.stringify({
+        status,
+        url: meta.url,
+        title: meta.title,
+        description: meta.description || "",
+        image: meta.image || OG_DEFAULT,
+        canonical: meta.url,
+        noindex: !!meta.noindex,
+        h1: meta.h1 || meta.title,
+        breadcrumbs: meta.breadcrumbs || [],
+        jsonLd: meta.jsonLd || null,
+        bodyHtml: meta.bodyHtml || "",
+      }),
+      {
+        status,
+        headers: {
+          ...JSON_HEADERS,
+          ...(meta.noindex ? { "X-Robots-Tag": "noindex, follow" } : {}),
+        },
+      },
+    );
+  }
+  return new Response(buildHtml(meta), {
+    status,
+    headers: {
+      ...HTML_HEADERS,
+      ...(meta.noindex ? { "X-Robots-Tag": "noindex, follow" } : {}),
+    },
+  });
+}
 
 interface PageMeta {
   url: string;
