@@ -1342,6 +1342,9 @@ const AdminSEODashboard = () => {
             <p className="text-sm text-muted-foreground mt-1">Keyword research, competitor intelligence, content audit, backlink strategy — all AI-powered.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/reseo-audit-log")} title="Immutable log of every Re-SEO event with per-URL diffs">
+              <FileText className="h-4 w-4 mr-2" />Audit Log
+            </Button>
             <Button variant="outline" onClick={fetchDashboardData} disabled={loading || bulkLoading} size="sm">
               {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}Refresh
             </Button>
