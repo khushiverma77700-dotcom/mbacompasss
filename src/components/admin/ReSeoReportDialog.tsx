@@ -105,22 +105,28 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [actionLoading, setActionLoading] = useState<null | "apply" | "discard">(null);
+  const { toast } = useToast();
+
+  const reload = async () => {
+    if (!slug) return;
+    const { data } = await supabase
+      .from("seo_reoptimization_items")
+      .select("*")
+      .eq("slug", slug)
+      .order("created_at", { ascending: false })
+      .limit(15);
+    setItems((data || []) as any);
+  };
 
   useEffect(() => {
     if (!open || !slug) return;
     setLoading(true);
     setActiveIdx(0);
-    (async () => {
-      const { data } = await supabase
-        .from("seo_reoptimization_items")
-        .select("*")
-        .eq("slug", slug)
-        .order("created_at", { ascending: false })
-        .limit(15);
-      setItems((data || []) as any);
-      setLoading(false);
-    })();
+    (async () => { await reload(); setLoading(false); })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, slug]);
+
 
   const active = items[activeIdx];
   const before = active?.before_snapshot || {};
