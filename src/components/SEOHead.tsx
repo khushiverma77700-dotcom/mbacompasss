@@ -459,3 +459,40 @@ export const generateBreadcrumbSchema = (items: { name: string; url: string }[])
     item: `${SITE_URL}${item.url}`,
   })),
 });
+
+/**
+ * Google Review rich results — attach up to N recent reviews to an
+ * EducationalOrganization so each review can render in SERP. We embed the
+ * reviews inside the parent organization node (via `review` on the institute
+ * schema) rather than as standalone Review objects, because standalone Review
+ * items require the itemReviewed subject inline anyway.
+ */
+export const generateReviewSchema = (
+  subject: { name: string; url?: string },
+  reviews: { author?: string; rating?: number; title?: string; content?: string; created_at?: string }[],
+) => {
+  const clean = (reviews || [])
+    .filter((r) => r && typeof r.rating === "number" && r.rating > 0 && (r.content || r.title))
+    .slice(0, 10);
+  if (!clean.length) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: subject.name,
+    url: subject.url,
+    review: clean.map((r) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.author || "Verified student" },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: String(r.rating),
+        bestRating: "5",
+        worstRating: "1",
+      },
+      name: r.title || undefined,
+      reviewBody: r.content || r.title || "",
+      datePublished: r.created_at,
+    })),
+  };
+};
+

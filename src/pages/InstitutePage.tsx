@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useToast } from "@/hooks/use-toast";
-import SEOHead, { generateInstituteSchema, generateBreadcrumbSchema, generateFAQSchema } from "@/components/SEOHead";
+import SEOHead, { generateInstituteSchema, generateBreadcrumbSchema, generateFAQSchema, generateReviewSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 import {
   ArrowLeft, MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
@@ -64,6 +64,21 @@ const InstitutePage = () => {
       return data;
     },
     enabled: !!slug,
+  });
+
+  const { data: instituteReviews = [] } = useQuery({
+    queryKey: ["institute_reviews_seo", (institute as any)?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reviews")
+        .select("rating, title, content, created_at")
+        .eq("institute_id", (institute as any).id)
+        .gt("rating", 0)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return data || [];
+    },
+    enabled: !!(institute as any)?.id,
   });
 
   const linkedCourses = useMemo(() => {
@@ -161,7 +176,11 @@ const InstitutePage = () => {
     { name: institute.name, url: `/institute/${institute.slug}` },
   ]);
   const faqSchema = generateFAQSchema(instituteFaqs);
-  const combinedJsonLd = [seoSchema, faqSchema, breadcrumbSchema];
+  const reviewSchema = generateReviewSchema(
+    { name: institute.name, url: canonicalUrl(`/institute/${institute.slug}`) },
+    instituteReviews as any[],
+  );
+  const combinedJsonLd = [seoSchema, faqSchema, breadcrumbSchema, reviewSchema].filter(Boolean);
 
   // Quick stat cards based on available data
   const heroStats = [

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 
 /**
@@ -62,7 +62,19 @@ export default function CoachingCategoryRedirect({ kind }: { kind: "exam" | "mod
 
   return (
     <>
-      <SEOHead title={title} description={description} canonical={canonical} />
+      <SEOHead
+        title={title}
+        description={description}
+        canonical={canonical}
+        jsonLd={[
+          generateBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Coaching", url: "/coaching" },
+            { name: kind === "exam" ? "By Exam" : "By Mode", url: `/coaching/${kind}/${normalizedSlug}` },
+            { name: pretty, url: `/coaching/${kind}/${normalizedSlug}` },
+          ]),
+        ]}
+      />
       <div className="min-h-[40vh] flex items-center justify-center text-slate-500">
         Loading coaching institutes…
       </div>
