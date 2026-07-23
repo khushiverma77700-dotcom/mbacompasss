@@ -244,7 +244,43 @@ const AdminSEODashboard = () => {
   const [previousKeys, setPreviousKeys] = useState<Set<string>>(new Set());
   const [newRows, setNewRows] = useState<DashboardRow[]>([]);
   const [newLinksDismissed, setNewLinksDismissed] = useState(false);
+  const [reseoOpen, setReseoOpen] = useState(false);
+  const [reseoRunId, setReseoRunId] = useState<string | null>(null);
+  const [reseoLaunching, setReseoLaunching] = useState(false);
   const { toast } = useToast();
+
+  const launchReseo = async (targetRows: DashboardRow[], scope: string) => {
+    if (!targetRows.length) {
+      toast({ title: "Nothing to re-optimize", description: "Select or filter pages first.", variant: "destructive" });
+      return;
+    }
+    setReseoLaunching(true);
+    try {
+      const pages = targetRows.slice(0, 500).map((r) => ({
+        page_type: r.contentType,
+        page_id: r.isStatic ? null : r.id,
+        slug: r.slug || r.key,
+        url: r.isStatic && r.path ? `https://mbacompass.in${r.path}` : `https://mbacompass.in/${contentTypeConfig[r.contentType].urlPrefix || r.contentType}/${r.slug}`,
+        page_name: r.name,
+        old_primary_keyword: r.snapshot?.keywords?.[0] || null,
+        score_before: r.audit?.score ?? null,
+      }));
+      const { data, error } = await supabase.functions.invoke("seo-reoptimize", {
+        body: { scope, pages },
+      });
+      if (error) throw error;
+      const runId = data?.run_id;
+      if (!runId) throw new Error("No run_id returned");
+      setReseoRunId(runId);
+      setReseoOpen(true);
+      toast({ title: "Re-SEO started", description: `Processing ${pages.length} page${pages.length > 1 ? "s" : ""}. This runs in the background.` });
+    } catch (e: any) {
+      toast({ title: "Re-SEO failed to start", description: String(e?.message || e), variant: "destructive" });
+    } finally {
+      setReseoLaunching(false);
+    }
+  };
+
 
   // Keyword Research State
   const [kwQuery, setKwQuery] = useState("MBA coaching India");
