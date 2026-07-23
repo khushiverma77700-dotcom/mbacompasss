@@ -1,5 +1,6 @@
 // Shared: apply a Re-SEO result to page_seo_overrides + source table mirror.
 // Used by the worker (for immediate-apply runs) and by seo-reoptimize (Apply button after preview).
+import { diffSnapshots, logReseoAudit } from "./reseoAudit.ts";
 
 export const SOURCE_TABLE_BY_TYPE: Record<string, string> = {
   college: "colleges",
