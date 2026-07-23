@@ -76,7 +76,13 @@ Deno.serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const segment = url.searchParams.get("segment"); // e.g. "pages" | "blogs" | "colleges" | "institutes" | "exams" | "categories" | "courses" | "mocks"
+    // Segment can arrive as ?segment=coaching-hubs OR via a path like
+    // /sitemap-coaching-hubs.xml (the .htaccess rewrite maps the latter
+    // to this function). Also accept the raw pathname suffix for
+    // Cloudflare/edge routing that preserves the request path.
+    const segmentFromQuery = url.searchParams.get("segment");
+    const pathMatch = url.pathname.match(/sitemap-([a-z0-9-]+)\.xml$/i);
+    const segment = segmentFromQuery || (pathMatch ? pathMatch[1] : null);
 
     const today = fmtDate(new Date());
 
@@ -120,7 +126,7 @@ Deno.serve(async (req) => {
       fetchAll("colleges", "id, slug, updated_at"),
       fetchAll("exams", "slug, created_at"),
       fetchAll("categories", "slug, updated_at"),
-      fetchAll("articles", "slug, updated_at", (q) => q.eq("published", true)),
+      fetchAll("articles", "slug, title, category, updated_at", (q) => q.eq("published", true)),
       fetchAll("city_pages", "slug, updated_at", (q) => q.eq("active", true)),
       fetchAll("mock_bundles", "slug, updated_at", (q) => q.eq("is_published", true)),
       fetchAll("mock_tests", "slug, updated_at", (q) => q.eq("is_published", true)),
@@ -152,13 +158,26 @@ Deno.serve(async (req) => {
       }];
     });
 
-    const blogs: Entry[] = (articles ?? []).flatMap((a: any) => a.slug
-      ? [{ loc: `/article/${a.slug}`, lastmod: fmtDate(a.updated_at), changefreq: "weekly" as const, priority: 0.6 }] : []);
+    // ---- Article buckets: general blog vs coaching-specific ----
+    const isCoachingArticle = (a: any) => {
+      const bag = `${a.category || ""} ${a.title || ""} ${a.slug || ""}`.toLowerCase();
+      return /coaching|cat[\s-]?prep|mba[\s-]?prep|test[\s-]?prep|ipmat|xat|gmat|nmat|snap|cmat|iift/.test(bag);
+    };
+    const coachingArticles: Entry[] = (articles ?? []).flatMap((a: any) =>
+      a.slug && isCoachingArticle(a)
+        ? [{ loc: `/article/${a.slug}`, lastmod: fmtDate(a.updated_at), changefreq: "weekly" as const, priority: 0.7 }]
+        : []);
+    const blogs: Entry[] = (articles ?? []).flatMap((a: any) =>
+      a.slug && !isCoachingArticle(a)
+        ? [{ loc: `/article/${a.slug}`, lastmod: fmtDate(a.updated_at), changefreq: "weekly" as const, priority: 0.6 }]
+        : []);
+
     const cats: Entry[] = (categories ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/category/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.8 }] : []);
     const collegeEntries: Entry[] = (colleges ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/college/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
-    const instEntries: Entry[] = (institutes ?? []).flatMap((i: any) => i.slug
+    // Institutes in this project == coaching institutes (routed under /institute/:slug)
+    const coachingInstituteEntries: Entry[] = (institutes ?? []).flatMap((i: any) => i.slug
       ? [{ loc: `/institute/${i.slug}`, lastmod: fmtDate(i.updated_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
     const examEntries: Entry[] = (exams ?? []).flatMap((e: any) => e.slug
       ? [{ loc: `/exam/${e.slug}`, lastmod: fmtDate(e.created_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
@@ -171,35 +190,38 @@ Deno.serve(async (req) => {
     const compassEntries: Entry[] = (mbaCompass ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/mba-compass/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
 
-    // H5: SEO hub pages — by type, city, and exam. Static lists, high priority
-    //     because each is a topical landing that feeds /college/:slug detail pages.
+    // College hub landings (unchanged)
     const TYPE_HUBS = ["iim", "private", "top-mba", "pgdm", "university", "government"];
     const EXAM_HUBS = ["cat", "xat", "cmat", "mat", "nmat", "snap", "iift", "gmat", "atma"];
     const CITY_HUBS = ["mumbai", "delhi", "bangalore", "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "gurgaon", "noida", "jaipur", "indore", "lucknow", "chandigarh"];
-    // Coaching-institute category hubs — city, exam, and mode landings under /coaching.
-    // /coaching/:region resolves to city pages via CoachingFilterPage.
-    const COACHING_CITY_HUBS = CITY_HUBS;
-    const COACHING_EXAM_HUBS = ["cat", "xat", "nmat", "snap", "iift", "cmat", "mat", "ipmat", "gmat"];
-    const COACHING_MODE_HUBS = ["online", "offline", "weekend", "crash-course", "classroom", "self-paced"];
-    const hubEntries: Entry[] = [
+    const collegeHubEntries: Entry[] = [
       ...TYPE_HUBS.map((s) => ({ loc: `/colleges/type/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
       ...EXAM_HUBS.map((s) => ({ loc: `/colleges/by-exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
       ...CITY_HUBS.map((s) => ({ loc: `/colleges/by-city/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+    ];
+
+    // Coaching hub landings — city, exam, and mode. Split into its own segment
+    // so the coaching-hubs sitemap grows independently of the college hubs and
+    // the coaching-institutes sitemap.
+    const COACHING_CITY_HUBS = CITY_HUBS;
+    const COACHING_EXAM_HUBS = ["cat", "xat", "nmat", "snap", "iift", "cmat", "mat", "ipmat", "gmat"];
+    const COACHING_MODE_HUBS = ["online", "offline", "weekend", "crash-course", "classroom", "self-paced"];
+    const coachingHubEntries: Entry[] = [
+      { loc: `/coaching`, lastmod: today, changefreq: "weekly" as const, priority: 0.9 },
       ...COACHING_CITY_HUBS.map((s) => ({ loc: `/coaching/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
-      ...COACHING_EXAM_HUBS.map((s) => ({ loc: `/coaching/exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+      ...COACHING_EXAM_HUBS.map((s) => ({ loc: `/coaching/exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
       ...COACHING_MODE_HUBS.map((s) => ({ loc: `/coaching/mode/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.6 })),
     ];
 
-    // C1: /mocks/* slugs removed — auth-gated, paywalled, near-duplicate test templates.
-    //     Keep only the /mocks hub (already in STATIC_PAGES).
-    // C2: /institute/{slug}/course/{slug} removed — thin/duplicate templates;
-    //     pages now self-canonical to the parent institute, so they shouldn't be in the sitemap.
+    // Segments (keys stable — used as `/sitemap-<key>.xml` in the index)
     const segments: Record<string, Entry[]> = {
-      pages: [...STATIC_PAGES, ...cityEntries, ...hubEntries],
+      pages: [...STATIC_PAGES, ...cityEntries, ...collegeHubEntries],
       blogs,
       categories: cats,
       colleges: collegeEntries,
-      institutes: instEntries,
+      "coaching-hubs": coachingHubEntries,
+      "coaching-institutes": coachingInstituteEntries,
+      "coaching-articles": coachingArticles,
       exams: examEntries,
       courses: [...courseEntries, ...compassEntries],
       mocks: [],
@@ -217,16 +239,10 @@ Deno.serve(async (req) => {
       return new Response(xml, { headers });
     }
 
-    // Combine all
-    const all: Entry[] = Object.values(segments).flat();
-
-    // If under threshold, return single urlset
-    if (all.length <= MAX_URLS_PER_SITEMAP) {
-      const { xml } = buildUrlset(all);
-      return new Response(xml, { headers });
-    }
-
-    // Otherwise return a sitemap index pointing at child segments (same host via this same function)
+    // Root request → always return a sitemap index that references one
+    // child sitemap per content type. Splitting up-front keeps individual
+    // sitemaps well below the 50k / 50MB limits as the URL count grows and
+    // lets Search Console report per-content-type coverage.
     const children = Object.entries(segments)
       .filter(([_, arr]) => arr.length > 0)
       .map(([key]) => ({
@@ -234,6 +250,7 @@ Deno.serve(async (req) => {
         lastmod: today,
       }));
     return new Response(buildSitemapIndex(children), { headers });
+
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return new Response(
