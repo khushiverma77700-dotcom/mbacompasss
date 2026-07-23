@@ -303,9 +303,10 @@ Deno.serve(async (req) => {
   const runId: string | null = body?.run_id || null;
 
   // Honor cancellation: if the run was cancelled, mark remaining items and stop.
+  let previewOnly = false;
   if (runId) {
     const { data: runRow } = await sb.from("seo_reoptimization_runs")
-      .select("cancel_requested,status,run_at").eq("id", runId).maybeSingle();
+      .select("cancel_requested,status,run_at,options").eq("id", runId).maybeSingle();
     if (runRow?.cancel_requested) {
       await sb.from("seo_reoptimization_items")
         .update({ status: "failed", error: "cancelled", finished_at: nowIso() })
@@ -323,10 +324,12 @@ Deno.serve(async (req) => {
       await sb.from("seo_reoptimization_runs")
         .update({ status: "running", started_at: nowIso() }).eq("id", runId);
     }
+    previewOnly = !!runRow?.options?.preview_only;
   }
 
   await reclaimStale(sb);
   const batch = await claimNext(sb, runId);
+
 
   if (!batch.length) {
     if (runId) await bumpRun(sb, runId);
