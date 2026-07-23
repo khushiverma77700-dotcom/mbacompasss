@@ -1225,6 +1225,16 @@ const AdminSEODashboard = () => {
             <Button onClick={handleBulkOptimize} disabled={bulkLoading || selectedRows.length === 0} size="sm">
               {bulkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Bulk Optimize ({selectedRows.length})
             </Button>
+            <Button
+              onClick={() => launchReseo(selectedRows.length ? selectedRows : filteredRows, selectedRows.length ? "selected" : "filtered")}
+              disabled={reseoLaunching || (filteredRows.length === 0 && selectedRows.length === 0)}
+              size="sm"
+              variant="secondary"
+              title="Read each page → research competitors → pick ONE primary keyword → rewrite if needed → save"
+            >
+              {reseoLaunching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              Re-SEO ({selectedRows.length || filteredRows.length})
+            </Button>
           </div>
         </div>
 
