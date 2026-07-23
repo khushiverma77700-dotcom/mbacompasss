@@ -36,6 +36,7 @@ import { bulkSeoRunner, useBulkSeoRunner } from "@/lib/bulkSeoOptimizer";
 import ReSeoProgressDialog from "@/components/admin/ReSeoProgressDialog";
 import ReSeoReportDialog from "@/components/admin/ReSeoReportDialog";
 import ReSeoJobsPanel from "@/components/admin/ReSeoJobsPanel";
+import IndexingStatusPanel from "@/components/admin/IndexingStatusPanel";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
@@ -1815,6 +1816,27 @@ const AdminSEODashboard = () => {
             </Card>
 
             <ReSeoJobsPanel onOpenRun={(runId) => { setReseoRunId(runId); setReseoOpen(true); }} />
+
+            <IndexingStatusPanel
+              pages={filteredRows.map(r => ({
+                url: r.isStatic && r.path
+                  ? `https://mbacompass.in${r.path}`
+                  : `https://mbacompass.in${contentTypeConfig[r.contentType].getPath(r.item)}`,
+                slug: r.slug,
+                page_type: r.contentType,
+                page_name: r.name,
+              }))}
+              onReseoUrls={(urls) => {
+                const set = new Set(urls);
+                const target = filteredRows.filter(r => {
+                  const u = r.isStatic && r.path
+                    ? `https://mbacompass.in${r.path}`
+                    : `https://mbacompass.in${contentTypeConfig[r.contentType].getPath(r.item)}`;
+                  return set.has(u);
+                });
+                if (target.length) launchReseo(target, "indexing-pending");
+              }}
+            />
 
             <Card>
               <CardContent className="pt-6 space-y-3">
