@@ -1103,6 +1103,26 @@ const AdminSEODashboard = () => {
     };
   }, [rows]);
 
+  const reseoStats = useMemo(() => {
+    const total = rows.length;
+    let completed = 0, running = 0, queued = 0, failed = 0, notOptimized = 0, needsReview = 0;
+    const deltas: number[] = [];
+    for (const r of rows) {
+      const rs = reseoStatusMap[r.slug || r.key];
+      if (!rs) { notOptimized++; continue; }
+      if (rs.status === "done") {
+        completed++;
+        if (rs.score_after != null && rs.score_before != null) deltas.push(rs.score_after - rs.score_before);
+        if (rs.rewrite_applied || (rs.score_after != null && rs.score_before != null && rs.score_after - rs.score_before < 10)) needsReview++;
+      } else if (rs.status === "running") running++;
+      else if (rs.status === "queued") queued++;
+      else if (rs.status === "failed") failed++;
+    }
+    const avgImprovement = deltas.length ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length) : 0;
+    return { total, completed, pending: notOptimized, inProgress: running + queued, failed, needsReview, avgImprovement };
+  }, [rows, reseoStatusMap]);
+
+
   const pct = (v: number) => (stats.total ? Math.round((v / stats.total) * 100) : 0);
   const selectedRows = filteredRows.filter(r => selectedKeys.includes(r.key));
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every(r => selectedKeys.includes(r.key));
