@@ -13,6 +13,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireAdmin } from "../_shared/requireAdmin.ts";
 import { applyReseoResult } from "../_shared/applyReseo.ts";
+import { logReseoAudit, diffSnapshots } from "../_shared/reseoAudit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
