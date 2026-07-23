@@ -290,7 +290,14 @@ const AdminSEODashboard = () => {
       if (!runId) throw new Error("No run_id returned");
       setReseoRunId(runId);
       setReseoOpen(true);
-      toast({ title: "Re-SEO started", description: `Processing ${pages.length} page${pages.length > 1 ? "s" : ""}. This runs in the background.` });
+      // Remember which slugs we just launched so we can auto-pop the detailed report on completion.
+      setLaunchedSlugs((prev) => {
+        const next = { ...prev };
+        for (const p of pages) if (p.slug) next[p.slug] = p.page_name || p.slug;
+        return next;
+      });
+      setAutoReportedSlugs(new Set()); // reset so newly-launched slugs are eligible
+      toast({ title: "Re-SEO started", description: `Processing ${pages.length} page${pages.length > 1 ? "s" : ""}. Detailed reports will pop up as each finishes.` });
     } catch (e: any) {
       toast({ title: "Re-SEO failed to start", description: String(e?.message || e), variant: "destructive" });
     } finally {
@@ -326,6 +333,24 @@ const AdminSEODashboard = () => {
     setReportName(row.name);
     setReportOpen(true);
   };
+
+  // Track slugs launched in the current session so we can auto-open the report on first completion.
+  const [launchedSlugs, setLaunchedSlugs] = useState<Record<string, string>>({}); // slug -> pageName
+  const [autoReportedSlugs, setAutoReportedSlugs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    for (const [slug, name] of Object.entries(launchedSlugs)) {
+      if (autoReportedSlugs.has(slug)) continue;
+      const rs = reseoStatusMap[slug];
+      if (rs && rs.status === "done") {
+        setReportSlug(slug);
+        setReportName(name);
+        setReportOpen(true);
+        setAutoReportedSlugs((prev) => new Set(prev).add(slug));
+        break; // open one at a time
+      }
+    }
+  }, [reseoStatusMap, launchedSlugs, autoReportedSlugs]);
 
 
 
@@ -3202,6 +3227,29 @@ const AdminSEODashboard = () => {
         slug={reportSlug}
         pageName={reportName}
       />
+
+      {/* Sticky multi-select action bar */}
+      {selectedKeys.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-[95vw]">
+          <div className="rounded-full shadow-lg border bg-white/95 backdrop-blur px-4 py-2 flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 text-sm font-medium">
+              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs">{selectedKeys.length}</span>
+              page{selectedKeys.length > 1 ? "s" : ""} selected
+            </span>
+            <div className="h-4 w-px bg-slate-200" />
+            <Button
+              size="sm"
+              onClick={() => launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)), "bulk-selected")}
+              disabled={reseoLaunching}
+              className="h-8"
+            >
+              {reseoLaunching ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+              Run Re-SEO on {selectedKeys.length}
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8" onClick={() => setSelectedKeys([])}>Clear</Button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

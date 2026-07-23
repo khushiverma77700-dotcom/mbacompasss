@@ -56,14 +56,24 @@ async function fetchSource(sb: any, pageType: string, pageId: string | null, slu
 }
 
 function scoreFromResult(r: any): number {
-  let s = 30;
-  if (r.meta_title && r.meta_title.length >= 45 && r.meta_title.length <= 62) s += 15;
-  if (r.meta_description && r.meta_description.length >= 130 && r.meta_description.length <= 165) s += 15;
-  if (r.h1) s += 10;
-  if (r.primary_keyword) s += 10;
-  if (r.faq?.length >= 5) s += 10;
-  if (r.json_ld && Object.keys(r.json_ld).length > 2) s += 10;
+  let s = 20;
+  if (r.meta_title && r.meta_title.length >= 45 && r.meta_title.length <= 62) s += 10;
+  if (r.meta_description && r.meta_description.length >= 130 && r.meta_description.length <= 165) s += 10;
+  if (r.h1) s += 8;
+  if (r.primary_keyword) s += 8;
+  if (r.faq?.length >= 5) s += 8;
+  if (r.json_ld && Object.keys(r.json_ld).length > 2) s += 8;
+  if (r.long_tail_keywords?.length >= 5) s += 6;
+  if (r.related_queries?.length >= 5) s += 4;
+  const pd = r.keyword_density?.[r.primary_keyword];
+  if (typeof pd === "number" && pd >= 2.5 && pd <= 3.5) s += 10;
+  else if (typeof pd === "number" && pd >= 1.5 && pd <= 4.5) s += 5;
+  if (r.body_html && r.body_html.length > 3500) s += 8;
   return Math.min(100, s);
+}
+
+function wordCount(s: string): number {
+  return (s || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).filter(Boolean).length;
 }
 
 function buildContext(pageType: string, slug: string, url: string, src: any): PageContext {
@@ -99,26 +109,28 @@ function buildContext(pageType: string, slug: string, url: string, src: any): Pa
 }
 
 async function saveResult(sb: any, item: any, pageType: string, src: any, result: any) {
-  // 1. Upsert page_seo_overrides (canonical store, read by SSR + admin dashboard)
   const overridePayload: any = {
     slug: item.slug,
     title: result.meta_title,
     description: result.meta_description,
     h1: result.h1,
     intro_html: result.intro_html,
-    keywords: [result.primary_keyword, result.secondary_keyword].filter(Boolean),
+    body_html: result.body_html,
+    keywords: [result.primary_keyword, result.secondary_keyword, ...(result.long_tail_keywords || [])].filter(Boolean),
     faq: result.faq,
     json_ld: result.json_ld,
     primary_keyword: result.primary_keyword,
     secondary_keyword: result.secondary_keyword,
     search_intent: result.search_intent,
+    long_tail_keywords: result.long_tail_keywords || [],
+    related_queries: result.related_queries || [],
+    keyword_density: result.keyword_density || {},
     last_reoptimized_at: nowIso(),
     reoptimization_run_id: item.run_id,
     updated_at: nowIso(),
   };
   await sb.from("page_seo_overrides").upsert(overridePayload, { onConflict: "slug" });
 
-  // 2. Mirror onto source table when it has SEO columns
   if (src && SUPPORTS_SEO_COLUMNS.has(pageType)) {
     const table = SOURCE_TABLE_BY_TYPE[pageType];
     const update: any = {
@@ -165,6 +177,7 @@ async function processItem(sb: any, item: any): Promise<void> {
     await saveResult(sb, item, item.page_type, src, result);
 
     const scoreAfter = scoreFromResult(result);
+    const beforeBody = (ctx.body_text || "");
     await patch({
       status: "done",
       stage: "done",
@@ -172,18 +185,41 @@ async function processItem(sb: any, item: any): Promise<void> {
       secondary_keyword: result.secondary_keyword,
       search_intent: result.search_intent,
       rewrite_applied: result.rewrite_required,
-      before_snapshot: { title: ctx.title, description: ctx.description, h1: ctx.h1, primary_keyword: ctx.existing_primary_keyword },
+      long_tail_keywords: result.long_tail_keywords || [],
+      related_queries: result.related_queries || [],
+      keyword_density: result.keyword_density || {},
+      aeo_notes: result.aeo_notes || null,
+      geo_notes: result.geo_notes || null,
+      readability_score: result.readability_score || null,
+      full_content_before: beforeBody,
+      full_content_after: result.body_html || "",
+      content_word_count_before: wordCount(beforeBody),
+      content_word_count_after: wordCount(result.body_html || ""),
+      before_snapshot: {
+        title: ctx.title,
+        description: ctx.description,
+        h1: ctx.h1,
+        primary_keyword: ctx.existing_primary_keyword,
+        body_html: beforeBody,
+      },
       after_snapshot: {
         title: result.meta_title,
         description: result.meta_description,
         h1: result.h1,
+        intro_html: result.intro_html,
+        body_html: result.body_html,
         outline: result.outline,
+        faq: result.faq,
         faq_count: result.faq?.length || 0,
+        alt_text_suggestions: result.alt_text_suggestions,
+        internal_link_suggestions: result.internal_link_suggestions,
+        eeat_notes: result.eeat_notes,
       },
       competitors: competitors.slice(0, 3).map((c) => ({ url: c.url, title: c.title })),
       score_after: scoreAfter,
       finished_at: nowIso(),
     });
+    
     
   } catch (e: any) {
     const msg = String(e?.message || e).slice(0, 500);
