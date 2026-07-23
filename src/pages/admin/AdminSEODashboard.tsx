@@ -1729,6 +1729,20 @@ const AdminSEODashboard = () => {
                             <div className="flex items-center justify-end gap-1">
                               <Button
                                 size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs"
+                                disabled={reseoRowLoadingKey === row.key || reseoLaunching}
+                                onClick={async () => {
+                                  setReseoRowLoadingKey(row.key);
+                                  try { await launchReseo([row], "single", { preview: true }); } finally { setReseoRowLoadingKey(null); }
+                                }}
+                                title="Preview proposed SEO changes without applying them"
+                              >
+                                <Eye className="h-3 w-3" />
+                                <span className="ml-1">Preview</span>
+                              </Button>
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 className="h-7 text-xs"
                                 disabled={reseoRowLoadingKey === row.key || reseoLaunching}
