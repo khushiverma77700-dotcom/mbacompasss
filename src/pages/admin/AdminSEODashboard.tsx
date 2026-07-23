@@ -1556,6 +1556,17 @@ const AdminSEODashboard = () => {
                       <SelectItem value="gt1000">&gt; 1000 words</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select value={reseoStatusFilter} onValueChange={(v) => setReseoStatusFilter(v as typeof reseoStatusFilter)}>
+                    <SelectTrigger><SelectValue placeholder="Re-SEO status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Re-SEO: any</SelectItem>
+                      <SelectItem value="completed">Re-SEO Completed</SelectItem>
+                      <SelectItem value="not_optimized">Not Optimized</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                      <SelectItem value="needs_review">Needs Review</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => { setMissingFilter("not_optimized"); setSelectedType("all"); setFilterStatus("all"); }}>Not Optimized</Button>
