@@ -1707,6 +1707,116 @@ const AdminSEODashboard = () => {
           </div>
         )}
 
+        {/* ═══ RE-SEO ═══ */}
+        {activeTab === "reseo" && (
+          <div className="space-y-4">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Re-SEO Command Center</CardTitle>
+                    <CardDescription>One-page-one-keyword optimization pipeline. Track, filter and launch Re-SEO runs.</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={fetchReseoStatuses}>Refresh status</Button>
+                    <Button size="sm" onClick={() => startReseoRun(filteredRows.filter(r => selectedKeys.includes(r.key)).length ? filteredRows.filter(r => selectedKeys.includes(r.key)) : filteredRows)} disabled={reseoLaunching}>
+                      <Sparkles className="h-4 w-4 mr-1" /> Run Re-SEO ({selectedKeys.length || filteredRows.length})
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Total Pages</p><p className="text-xl font-bold">{reseoStats.total}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Re-SEO Completed</p><p className="text-xl font-bold text-green-600">{reseoStats.completed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pending</p><p className="text-xl font-bold text-slate-600">{reseoStats.pending}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">In Progress</p><p className="text-xl font-bold text-blue-600">{reseoStats.inProgress}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Failed</p><p className="text-xl font-bold text-red-600">{reseoStats.failed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Avg Score ↑</p><p className={`text-xl font-bold ${reseoStats.avgImprovement >= 0 ? "text-green-600" : "text-red-600"}`}>{reseoStats.avgImprovement >= 0 ? "+" : ""}{reseoStats.avgImprovement}</p></div>
+                </div>
+                {reseoStats.needsReview > 0 && (
+                  <p className="text-xs text-amber-600 mt-2"><AlertTriangle className="inline h-3 w-3 mr-1" />{reseoStats.needsReview} completed pages need review (rewrite applied or small score gain).</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-muted-foreground mr-2">Quick filters:</span>
+                  <Button size="sm" variant={reseoStatusFilter === "all" ? "default" : "outline"} onClick={() => setReseoStatusFilter("all")}>All ({reseoStats.total})</Button>
+                  <Button size="sm" variant={reseoStatusFilter === "completed" ? "default" : "outline"} onClick={() => setReseoStatusFilter("completed")}>Completed ({reseoStats.completed})</Button>
+                  <Button size="sm" variant={reseoStatusFilter === "in_progress" ? "default" : "outline"} onClick={() => setReseoStatusFilter("in_progress")}>In Progress ({reseoStats.inProgress})</Button>
+                  <Button size="sm" variant={reseoStatusFilter === "not_optimized" ? "default" : "outline"} onClick={() => setReseoStatusFilter("not_optimized")}>Not Optimized ({reseoStats.pending})</Button>
+                  <Button size="sm" variant={reseoStatusFilter === "failed" ? "default" : "outline"} onClick={() => setReseoStatusFilter("failed")}>Failed ({reseoStats.failed})</Button>
+                  <Button size="sm" variant={reseoStatusFilter === "needs_review" ? "default" : "outline"} onClick={() => setReseoStatusFilter("needs_review")}>Needs Review ({reseoStats.needsReview})</Button>
+                  <div className="ml-auto relative w-full max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search page…" className="pl-9 h-9" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10"></TableHead>
+                        <TableHead>Page</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Re-SEO Status</TableHead>
+                        <TableHead>Primary Keyword</TableHead>
+                        <TableHead>Score</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRows.map((row) => {
+                        const rs = reseoStatusMap[row.slug || row.key];
+                        const delta = rs ? (rs.score_after ?? 0) - (rs.score_before ?? 0) : 0;
+                        const statusLabel = !rs ? "Not Optimized" : rs.status === "done" ? "Completed" : rs.status;
+                        const tone = !rs ? "bg-slate-100 text-slate-700 border-slate-200"
+                          : rs.status === "done" ? "bg-green-100 text-green-700 border-green-200"
+                          : rs.status === "failed" ? "bg-red-100 text-red-700 border-red-200"
+                          : "bg-blue-100 text-blue-700 border-blue-200";
+                        return (
+                          <TableRow key={row.key}>
+                            <TableCell><Checkbox checked={selectedKeys.includes(row.key)} onCheckedChange={(c) => toggleRow(row.key, Boolean(c))} /></TableCell>
+                            <TableCell>
+                              <p className="font-medium leading-none">{row.name}</p>
+                              <p className="text-xs text-muted-foreground">/{row.slug || "—"}</p>
+                            </TableCell>
+                            <TableCell><Badge variant={row.isStatic ? "secondary" : "outline"} className="text-xs">{row.isStatic ? "Static" : contentTypeConfig[row.contentType].label}</Badge></TableCell>
+                            <TableCell>
+                              <button onClick={() => openReport(row)} className={`inline-flex items-center rounded px-1.5 py-0.5 border text-[10px] font-semibold capitalize hover:opacity-80 ${tone}`}>{statusLabel}</button>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-[200px] truncate">{rs?.new_primary_keyword || <span className="text-muted-foreground">—</span>}</TableCell>
+                            <TableCell className="text-xs whitespace-nowrap">
+                              {rs?.status === "done" && rs.score_after != null
+                                ? <span>{rs.score_before ?? "—"} → {rs.score_after} <span className={delta >= 0 ? "text-green-600" : "text-red-600"}>({delta >= 0 ? "+" : ""}{delta})</span></span>
+                                : <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button size="sm" variant="outline" disabled={reseoRowLoadingKey === row.key} onClick={() => startReseoRun([row])}>
+                                {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-1" /> Re-SEO</>}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* ═══ AUTO-GENERATE ═══ */}
         {activeTab === "auto-generate" && (
           <div className="space-y-4">
