@@ -144,7 +144,7 @@ async function saveResult(sb: any, item: any, pageType: string, src: any, result
   }
 }
 
-async function processItem(sb: any, item: any): Promise<void> {
+async function processItem(sb: any, item: any, previewOnly: boolean): Promise<void> {
   const patch = async (p: any) => {
     await sb.from("seo_reoptimization_items").update({ ...p, updated_at: nowIso() }).eq("id", item.id);
   };
@@ -173,8 +173,13 @@ async function processItem(sb: any, item: any): Promise<void> {
       userId: null,
     });
 
-    await patch({ stage: "saving" });
-    await saveResult(sb, item, item.page_type, src, result);
+    if (!previewOnly) {
+      await patch({ stage: "saving" });
+      await saveResult(sb, item, item.page_type, src, result);
+    } else {
+      await patch({ stage: "preview_ready" });
+    }
+
 
     const scoreAfter = scoreFromResult(result);
     const beforeBody = (ctx.body_text || "");
