@@ -248,6 +248,15 @@ const AdminSEODashboard = () => {
   const [reseoOpen, setReseoOpen] = useState(false);
   const [reseoRunId, setReseoRunId] = useState<string | null>(null);
   const [reseoLaunching, setReseoLaunching] = useState(false);
+  const [reseoRowLoadingKey, setReseoRowLoadingKey] = useState<string | null>(null);
+  const [reseoStatusMap, setReseoStatusMap] = useState<Record<string, {
+    status: string; new_primary_keyword: string | null; score_before: number | null;
+    score_after: number | null; finished_at: string | null; created_at: string; rewrite_applied: boolean | null;
+  }>>({});
+  const [reseoStatusFilter, setReseoStatusFilter] = useState<"all" | "completed" | "not_optimized" | "in_progress" | "failed" | "needs_review">("all");
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSlug, setReportSlug] = useState<string | null>(null);
+  const [reportName, setReportName] = useState<string | null>(null);
   const { toast } = useToast();
 
   const launchReseo = async (targetRows: DashboardRow[], scope: string) => {
