@@ -5616,7 +5616,12 @@ export type Database = {
           intro_html: string | null
           json_ld: Json | null
           keywords: string[] | null
+          last_reoptimized_at: string | null
           og_image: string | null
+          primary_keyword: string | null
+          reoptimization_run_id: string | null
+          search_intent: string | null
+          secondary_keyword: string | null
           slug: string
           source_audit_id: string | null
           title: string | null
@@ -5631,7 +5636,12 @@ export type Database = {
           intro_html?: string | null
           json_ld?: Json | null
           keywords?: string[] | null
+          last_reoptimized_at?: string | null
           og_image?: string | null
+          primary_keyword?: string | null
+          reoptimization_run_id?: string | null
+          search_intent?: string | null
+          secondary_keyword?: string | null
           slug: string
           source_audit_id?: string | null
           title?: string | null
@@ -5646,7 +5656,12 @@ export type Database = {
           intro_html?: string | null
           json_ld?: Json | null
           keywords?: string[] | null
+          last_reoptimized_at?: string | null
           og_image?: string | null
+          primary_keyword?: string | null
+          reoptimization_run_id?: string | null
+          search_intent?: string | null
+          secondary_keyword?: string | null
           slug?: string
           source_audit_id?: string | null
           title?: string | null
@@ -7108,6 +7123,152 @@ export type Database = {
           primary_keyword?: string | null
           record_id?: string
           total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_reoptimization_items: {
+        Row: {
+          after_snapshot: Json | null
+          attempts: number
+          before_snapshot: Json | null
+          competitors: Json | null
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          locked_at: string | null
+          new_primary_keyword: string | null
+          old_primary_keyword: string | null
+          page_id: string | null
+          page_name: string | null
+          page_type: string
+          rewrite_applied: boolean | null
+          run_id: string
+          score_after: number | null
+          score_before: number | null
+          search_intent: string | null
+          secondary_keyword: string | null
+          slug: string
+          stage: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          after_snapshot?: Json | null
+          attempts?: number
+          before_snapshot?: Json | null
+          competitors?: Json | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          locked_at?: string | null
+          new_primary_keyword?: string | null
+          old_primary_keyword?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          page_type: string
+          rewrite_applied?: boolean | null
+          run_id: string
+          score_after?: number | null
+          score_before?: number | null
+          search_intent?: string | null
+          secondary_keyword?: string | null
+          slug: string
+          stage?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          after_snapshot?: Json | null
+          attempts?: number
+          before_snapshot?: Json | null
+          competitors?: Json | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          locked_at?: string | null
+          new_primary_keyword?: string | null
+          old_primary_keyword?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          page_type?: string
+          rewrite_applied?: boolean | null
+          run_id?: string
+          score_after?: number | null
+          score_before?: number | null
+          search_intent?: string | null
+          secondary_keyword?: string | null
+          slug?: string
+          stage?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_reoptimization_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "seo_reoptimization_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_reoptimization_runs: {
+        Row: {
+          created_at: string
+          failed: number
+          finished_at: string | null
+          id: string
+          label: string | null
+          options: Json
+          processed: number
+          scope: string
+          started_at: string
+          started_by: string | null
+          status: string
+          succeeded: number
+          total_items: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          label?: string | null
+          options?: Json
+          processed?: number
+          scope?: string
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          succeeded?: number
+          total_items?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          label?: string | null
+          options?: Json
+          processed?: number
+          scope?: string
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          succeeded?: number
+          total_items?: number
           updated_at?: string
         }
         Relationships: []
