@@ -1875,9 +1875,17 @@ const AdminSEODashboard = () => {
                                 : <span className="text-muted-foreground">—</span>}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button size="sm" variant="outline" disabled={reseoRowLoadingKey === row.key} onClick={() => launchReseoSingle(row)}>
-                                {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-1" /> Re-SEO</>}
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button size="sm" variant="ghost" disabled={reseoRowLoadingKey === row.key} onClick={async () => {
+                                  setReseoRowLoadingKey(row.key);
+                                  try { await launchReseo([row], "single", { preview: true }); } finally { setReseoRowLoadingKey(null); }
+                                }} title="Preview proposed changes without applying">
+                                  <Eye className="h-3 w-3 mr-1" /> Preview
+                                </Button>
+                                <Button size="sm" variant="outline" disabled={reseoRowLoadingKey === row.key} onClick={() => launchReseoSingle(row)}>
+                                  {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-1" /> Re-SEO</>}
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
