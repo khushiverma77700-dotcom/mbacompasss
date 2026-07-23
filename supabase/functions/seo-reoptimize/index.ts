@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   const url = new URL(req.url);
-  const action = url.searchParams.get("action");
+  let action = url.searchParams.get("action");
 
   if (req.method === "GET") {
     const runId = url.searchParams.get("run_id");
