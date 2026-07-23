@@ -179,7 +179,7 @@ const HeroSection = () => {
 
       {/* Main content */}
       <div className="relative container mx-auto px-4 pt-10 pb-24 md:pt-16 md:pb-28 z-10">
-        <div className="text-center max-w-3xl mx-auto animate-fade-in">
+        <div className="text-center max-w-3xl mx-auto">
           {/* Badge */}
           <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full pl-1.5 pr-3 py-1 mb-5 border border-white/30 shadow-lg shadow-black/10">
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-yellow-200 to-amber-400">
