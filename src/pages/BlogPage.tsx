@@ -174,9 +174,9 @@ const BlogPage = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search CAT strategy, ISB essays, IIM cutoffs…"
                   aria-label="Search articles"
-                  className="w-full pl-12 pr-32 py-4 bg-white border border-slate-200 rounded-full text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300 transition-all placeholder:text-slate-400"
+                  className="w-full pl-12 pr-32 py-4 bg-white border border-slate-200 rounded-full text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300 transition-all placeholder:text-slate-500"
                 />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-400 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
                   ⌘ K
                 </div>
               </div>
@@ -319,7 +319,7 @@ const BlogPage = () => {
                       <div className="flex items-center gap-3 text-sky-500 font-semibold text-xs uppercase mb-4 tracking-wider">
                         <span>{featuredArticle.category || "News"}</span>
                         <span className="w-1 h-1 rounded-full bg-sky-200" />
-                        <span className="text-slate-400 normal-case">{formatDate(featuredArticle.created_at)}</span>
+                        <span className="text-slate-500 normal-case">{formatDate(featuredArticle.created_at)}</span>
                       </div>
                       <h2 className="font-editorial text-4xl md:text-5xl font-bold leading-tight text-slate-900 group-hover:text-sky-600 transition-colors">
                         {featuredArticle.title}
@@ -365,7 +365,7 @@ const BlogPage = () => {
                           <h3 className="mt-3 text-xl font-bold leading-snug text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2">
                             {item.title}
                           </h3>
-                          <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-400">
+                          <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(item.created_at)}</span>
                             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content)}</span>
                           </div>
@@ -385,7 +385,7 @@ const BlogPage = () => {
                       Latest <span className="italic text-sky-500">Intelligence</span>
                     </h3>
                   </div>
-                  <span className="text-xs text-slate-400 font-medium">
+                  <span className="text-xs text-slate-500 font-medium">
                     {filtered.length} {filtered.length === 1 ? "story" : "stories"}
                   </span>
                 </div>
@@ -427,7 +427,7 @@ const BlogPage = () => {
                               {item.excerpt}
                             </p>
                           )}
-                          <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-400">
+                          <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(item.created_at)}</span>
                             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content)}</span>
                           </div>
@@ -450,7 +450,7 @@ const BlogPage = () => {
             {/* Sidebar */}
             <aside className="lg:col-span-4 space-y-16">
               <section>
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-8 pb-3 border-b border-sky-50">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-8 pb-3 border-b border-sky-50">
                   Trending Intelligence
                 </h3>
                 <div className="space-y-10">
@@ -467,7 +467,7 @@ const BlogPage = () => {
                         <h4 className="font-bold text-slate-800 leading-tight group-hover:text-sky-600 transition-colors line-clamp-3">
                           {article.title}
                         </h4>
-                        <p className="mt-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                           {article.category || "News"}
                         </p>
                       </div>
@@ -489,7 +489,7 @@ const BlogPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your email"
-                      className="w-full px-5 py-4 bg-white border border-sky-100 rounded-xl text-sm focus:ring-2 focus:ring-sky-300 outline-none placeholder:text-slate-400"
+                      className="w-full px-5 py-4 bg-white border border-sky-100 rounded-xl text-sm focus:ring-2 focus:ring-sky-300 outline-none placeholder:text-slate-500"
                     />
                     <Link
                       to={email ? `/profile-analyzer?email=${encodeURIComponent(email)}` : "/profile-analyzer"}
@@ -505,7 +505,7 @@ const BlogPage = () => {
               {/* Categories */}
               {blogCategories.length > 2 && (
                 <section>
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-6 pb-3 border-b border-sky-50">
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-6 pb-3 border-b border-sky-50">
                     Browse by Topic
                   </h3>
                   <div className="space-y-1">
