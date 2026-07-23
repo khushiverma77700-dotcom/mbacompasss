@@ -78,6 +78,12 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   if (!action && typeof body?.action === "string") action = body.action;
 
+  // Identify the caller for audit rows.
+  const authHeader = req.headers.get("Authorization") || "";
+  const sbUser = createClient(SUPABASE_URL, ANON_KEY);
+  const { data: userData } = await sbUser.auth.getUser(authHeader.replace("Bearer ", ""));
+  const actorId = userData?.user?.id || null;
+
   // ── Cancel a run ───────────────────────────────────────────────
   if (action === "cancel") {
     const runId = body?.run_id;
@@ -86,6 +92,10 @@ Deno.serve(async (req) => {
       .update({ cancel_requested: true })
       .eq("id", runId).in("status", ["queued", "running"]);
     EdgeRuntime.waitUntil(kickWorker(runId)); // wake the worker so it processes the cancel
+    await logReseoAudit(sb, {
+      run_id: runId, url: "-", action: "item_cancelled", actor_id: actorId, actor_role: "admin",
+      notes: "Run cancellation requested",
+    });
     return json(200, { ok: true });
   }
 
