@@ -260,7 +260,7 @@ const AdminSEODashboard = () => {
         page_type: r.contentType,
         page_id: r.isStatic ? null : r.id,
         slug: r.slug || r.key,
-        url: r.isStatic && r.path ? `https://mbacompass.in${r.path}` : `https://mbacompass.in/${contentTypeConfig[r.contentType].urlPrefix || r.contentType}/${r.slug}`,
+        url: r.isStatic && r.path ? `https://mbacompass.in${r.path}` : `https://mbacompass.in${contentTypeConfig[r.contentType].getPath(r.item)}`,
         page_name: r.name,
         old_primary_keyword: r.snapshot?.keywords?.[0] || null,
         score_before: r.audit?.score ?? null,
