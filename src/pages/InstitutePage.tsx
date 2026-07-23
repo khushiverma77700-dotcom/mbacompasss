@@ -176,7 +176,11 @@ const InstitutePage = () => {
     { name: institute.name, url: `/institute/${institute.slug}` },
   ]);
   const faqSchema = generateFAQSchema(instituteFaqs);
-  const combinedJsonLd = [seoSchema, faqSchema, breadcrumbSchema];
+  const reviewSchema = generateReviewSchema(
+    { name: institute.name, url: canonicalUrl(`/institute/${institute.slug}`) },
+    instituteReviews as any[],
+  );
+  const combinedJsonLd = [seoSchema, faqSchema, breadcrumbSchema, reviewSchema].filter(Boolean);
 
   // Quick stat cards based on available data
   const heroStats = [
