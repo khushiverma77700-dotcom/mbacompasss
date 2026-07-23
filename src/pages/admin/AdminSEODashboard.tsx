@@ -1250,7 +1250,7 @@ const AdminSEODashboard = () => {
                 {navItems.map(item => (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => { setActiveTab(item.id); setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set("tab", item.id); return p; }, { replace: true }); }}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
                       activeTab === item.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
