@@ -1774,6 +1774,8 @@ const AdminSEODashboard = () => {
               </CardContent>
             </Card>
 
+            <ReSeoJobsPanel onOpenRun={(runId) => { setReseoRunId(runId); setReseoOpen(true); }} />
+
             <Card>
               <CardContent className="pt-6 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
