@@ -1651,8 +1651,43 @@ const AdminSEODashboard = () => {
                               return <span className="text-muted-foreground">{new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>;
                             })()}
                           </TableCell>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {(() => {
+                              const rs = reseoStatusMap[row.slug || row.key];
+                              if (!rs) return <Badge variant="outline" className="text-[10px]">Not Optimized</Badge>;
+                              const delta = (rs.score_after ?? 0) - (rs.score_before ?? 0);
+                              const tone =
+                                rs.status === "done" ? "bg-green-100 text-green-700 border-green-200" :
+                                rs.status === "failed" ? "bg-red-100 text-red-700 border-red-200" :
+                                rs.status === "running" || rs.status === "queued" ? "bg-blue-100 text-blue-700 border-blue-200" :
+                                "bg-slate-100 text-slate-700 border-slate-200";
+                              return (
+                                <button onClick={() => openReport(row)} className={`inline-flex flex-col items-start rounded px-1.5 py-0.5 border text-left hover:opacity-80 ${tone}`}>
+                                  <span className="text-[10px] font-semibold capitalize">{rs.status === "done" ? "Completed" : rs.status}</span>
+                                  {rs.new_primary_keyword && <span className="text-[10px] text-slate-600 max-w-[140px] truncate">KW: {rs.new_primary_keyword}</span>}
+                                  {rs.status === "done" && rs.score_after != null && (
+                                    <span className="text-[10px]">Score {rs.score_before ?? "—"}→{rs.score_after} <span className={delta >= 0 ? "text-green-700" : "text-red-700"}>({delta >= 0 ? "+" : ""}{delta})</span></span>
+                                  )}
+                                  {rs.finished_at && <span className="text-[10px] text-slate-500">{new Date(rs.finished_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>}
+                                </button>
+                              );
+                            })()}
+                          </TableCell>
                           <TableCell className="text-right">
-                            <AISEOButton contentType={row.contentType} recordId={row.id} data={row.item} onApply={(s) => applySEOFields(row, s)} />
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                disabled={reseoRowLoadingKey === row.key || reseoLaunching}
+                                onClick={() => launchReseoSingle(row)}
+                                title="Run single-keyword Re-SEO pipeline for this page"
+                              >
+                                {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                                <span className="ml-1">Re-SEO</span>
+                              </Button>
+                              <AISEOButton contentType={row.contentType} recordId={row.id} data={row.item} onApply={(s) => applySEOFields(row, s)} />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
