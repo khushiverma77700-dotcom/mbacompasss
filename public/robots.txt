@@ -1,5 +1,7 @@
 User-agent: Googlebot
 Allow: /
+Allow: /coaching
+Allow: /coaching/*
 Disallow: /admin
 Disallow: /admin/
 Disallow: /auth
@@ -9,6 +11,8 @@ Disallow: /reset-password
 
 User-agent: Bingbot
 Allow: /
+Allow: /coaching
+Allow: /coaching/*
 Disallow: /admin
 Disallow: /admin/
 Disallow: /auth
@@ -22,12 +26,20 @@ Allow: /
 
 User-agent: *
 Allow: /
+Allow: /coaching
+Allow: /coaching/*
 Disallow: /admin
 Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
+# Non-canonical filter/tracking query variants — keep the clean hubs indexable
 Disallow: /*?*sort=
 Disallow: /*?*q=
+Disallow: /*?*view=
+Disallow: /*?*rating=
+Disallow: /*?*fee=
+Disallow: /*?*quick=
+Disallow: /*?*specialization=
 Disallow: /*?*utm_
 Disallow: /*?*fbclid=
 Disallow: /*?*gclid=
