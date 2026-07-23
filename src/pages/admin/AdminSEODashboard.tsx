@@ -284,7 +284,13 @@ const AdminSEODashboard = () => {
         score_before: r.audit?.score ?? null,
       }));
       const { data, error } = await supabase.functions.invoke("seo-reoptimize", {
-        body: { scope, pages, run_at: opts?.run_at || null, priority: opts?.priority ?? 100 },
+        body: {
+          scope, pages,
+          run_at: opts?.run_at || null,
+          priority: opts?.priority ?? 100,
+          options: { preview_only: !!opts?.preview },
+          label: opts?.preview ? `Preview ${new Date().toISOString().slice(0, 16)}` : undefined,
+        },
       });
       if (error) throw error;
       const runId = data?.run_id;
@@ -301,10 +307,14 @@ const AdminSEODashboard = () => {
       });
       setAutoReportedSlugs(new Set());
       toast({
-        title: scheduled ? "Re-SEO scheduled" : "Re-SEO started",
+        title: scheduled
+          ? (opts?.preview ? "Preview scheduled" : "Re-SEO scheduled")
+          : (opts?.preview ? "Preview started" : "Re-SEO started"),
         description: scheduled
           ? `${pages.length} page${pages.length > 1 ? "s" : ""} queued for ${new Date(data.run_at).toLocaleString()}. Track it in the Jobs panel.`
-          : `Processing ${pages.length} page${pages.length > 1 ? "s" : ""} in the background. Detailed reports pop up as each finishes.`,
+          : opts?.preview
+            ? `Generating proposed changes for ${pages.length} page${pages.length > 1 ? "s" : ""}. Review the diff and Apply/Discard when it finishes.`
+            : `Processing ${pages.length} page${pages.length > 1 ? "s" : ""} in the background. Detailed reports pop up as each finishes.`,
       });
     } catch (e: any) {
       toast({ title: "Re-SEO failed to start", description: String(e?.message || e), variant: "destructive" });
