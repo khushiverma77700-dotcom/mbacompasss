@@ -46,6 +46,7 @@ export interface SeoPipelineResult {
   h1: string;                      // distinct from title
   outline: Array<{ level: "h2" | "h3"; text: string }>;
   intro_html: string;              // rewritten intro (100-180 words), primary KW in first 100 words
+  body_html: string;               // full rewritten body (~800-1400 words), AEO/SEO/GEO friendly
   faq: Array<{ question: string; answer: string }>;
   json_ld: Record<string, unknown>;
   og_title: string;
@@ -56,11 +57,16 @@ export interface SeoPipelineResult {
   slug_suggestion?: string;
   alt_text_suggestions?: string[];
   internal_link_suggestions?: Array<{ anchor: string; url: string }>;
-  rewrite_required: boolean;       // true when current content did not match chosen KW intent
+  long_tail_keywords: string[];    // 5-10 supporting long-tail keywords, each ≥ 3 words
+  related_queries: string[];       // 5-10 real "People also ask" style queries
+  keyword_density: Record<string, number>; // keyword -> % density in body_html (target 2.5-3.5% for primary)
+  aeo_notes?: string;              // answer-engine optimization notes (schema, direct answers)
+  geo_notes?: string;              // generative-engine optimization notes (entity coverage, citations)
+  rewrite_required: boolean;
   rewrite_reason?: string;
   keyword_stuffing_removed?: string[];
   eeat_notes?: string;
-  readability_score?: number;       // 0-100 self-assessed
+  readability_score?: number;
 }
 
 // ---------- Firecrawl helper (top competitor scrape) ----------
