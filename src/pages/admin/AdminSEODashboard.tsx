@@ -1817,6 +1817,27 @@ const AdminSEODashboard = () => {
 
             <ReSeoJobsPanel onOpenRun={(runId) => { setReseoRunId(runId); setReseoOpen(true); }} />
 
+            <IndexingStatusPanel
+              pages={filteredRows.map(r => ({
+                url: r.isStatic && r.path
+                  ? `https://mbacompass.in${r.path}`
+                  : `https://mbacompass.in${contentTypeConfig[r.contentType].getPath(r.item)}`,
+                slug: r.slug,
+                page_type: r.contentType,
+                page_name: r.name,
+              }))}
+              onReseoUrls={(urls) => {
+                const set = new Set(urls);
+                const target = filteredRows.filter(r => {
+                  const u = r.isStatic && r.path
+                    ? `https://mbacompass.in${r.path}`
+                    : `https://mbacompass.in${contentTypeConfig[r.contentType].getPath(r.item)}`;
+                  return set.has(u);
+                });
+                if (target.length) launchReseo(target, "indexing-pending");
+              }}
+            />
+
             <Card>
               <CardContent className="pt-6 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
