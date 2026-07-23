@@ -106,27 +106,42 @@ function buildPrompt(ctx: PageContext, comps: CompetitorSnapshot[]): string {
       ).join("\n---\n")
     : "(no competitor snapshots available; rely on the page context)";
 
-  return `You are a senior on-page SEO strategist for MBA Compass (India). Optimize ONE page to become the best result for exactly ONE search query in Google India ${year} and in AI answer engines (Google AI Overviews, ChatGPT, Gemini, Perplexity).
+  return `You are a senior on-page SEO + AEO + GEO strategist for MBA Compass (India). Optimize ONE page to become the best result for exactly ONE search query in Google India ${year} and in AI answer engines (Google AI Overviews, ChatGPT, Gemini, Perplexity, Copilot).
 
 STRICT RULES — non-negotiable:
-1. Pick exactly ONE primary_keyword. Add secondary_keyword ONLY IF it shares the SAME search intent and topic cluster as primary. Otherwise return null for secondary_keyword.
-2. NEVER pack multiple unrelated keyword categories into one page. If the current content doesn't match the primary keyword's intent, set rewrite_required=true and REWRITE the intro_html so the topic actually matches.
-3. Remove keyword stuffing and off-topic secondary keywords. List what you removed in keyword_stuffing_removed.
-4. meta_title: 50-60 characters, primary keyword near the start, one power word (Best/Top/2026/Free/Guide) + a qualifier (year/exam/city). Distinct from h1.
-5. meta_description: 140-160 characters, action-oriented, includes primary_keyword + a genuine USP + CTA.
+1. Pick exactly ONE primary_keyword. Add secondary_keyword ONLY IF it shares the SAME search intent and topic cluster. Otherwise return null.
+2. If current content doesn't match the primary keyword's intent, set rewrite_required=true.
+3. Remove keyword stuffing and off-topic secondary keywords. List them in keyword_stuffing_removed.
+4. meta_title: 50-60 chars, primary keyword near the start, one power word (Best/Top/${year}/Guide) + qualifier. Distinct from h1.
+5. meta_description: 140-160 chars, action-oriented, includes primary_keyword + genuine USP + CTA.
 6. h1: single, distinct from meta_title, contains primary_keyword naturally.
-7. Outline: 4-8 H2s that cover the topic in depth (skip H3s unless truly needed). Every heading answers a real sub-question a searcher has.
-8. intro_html: 100-180 words, HTML string, primary_keyword in the first 100 words, definitional first sentence (great for AI Overviews), no fluff, no brand-first opening.
-9. faq: 5-8 unique question/answer pairs (Q ≤ 90 chars, A 30-70 words) — real questions users ask, not restated headings.
-10. json_ld: ONE valid JSON-LD object with @context "https://schema.org" and @type matching the page. Include Breadcrumbs only if URL implies a hierarchy.
-11. og_title/twitter_title ≈ 60 chars, og_description/twitter_description ≈ 140 chars, written differently from meta.
-12. alt_text_suggestions: 3-6 realistic ALT strings for hero/inline images that include the primary keyword or an entity, NEVER stuffed.
-13. internal_link_suggestions: 3-6 anchors that would help this page rank, drawn from natural related topics. Use realistic URLs on mbacompass.in.
-14. E-E-A-T: mention which experience/expertise signals the page should show (author, sources, updated date) in eeat_notes.
-15. Optimize for AI search: first paragraph must answer "What is X?" clearly, use natural semantic entities, keep sentences ≤ 22 words on average.
+7. outline: 5-9 H2s covering the topic in depth. Every heading answers a real sub-question.
+8. intro_html: 100-180 words HTML, primary_keyword in first 100 words, definitional first sentence (AI-Overview friendly).
+9. body_html: FULL rewritten body — 900-1400 words of clean HTML using <h2>, <h3>, <p>, <ul>, <ol>, <table> where useful. This is the content that will be published. Requirements:
+   • Primary keyword density MUST be 2.5%-3.5% of total body words (count natural occurrences — no stuffing).
+   • Include the secondary keyword 3-6 times naturally if present.
+   • Each long_tail_keyword must appear at least once, woven naturally.
+   • First 2-3 sentences of every H2 section directly answer the H2 as a question (AEO — Answer Engine Optimization).
+   • Include a short "Quick answer" / TL;DR block near the top (40-60 words) that a generative engine can quote verbatim.
+   • Include at least ONE comparison table OR bullet-list of concrete data (fees, dates, cutoffs, rankings) — real facts, no fabrication.
+   • Cite authoritative Indian sources by name in text (e.g. "as per the official IIM CAT bulletin") for GEO trust.
+   • Include entity mentions: exam bodies, cities, years, cohort sizes, so LLMs pick this up as an entity-rich page.
+   • Sentences ≤ 22 words average. No fluff, no "In today's fast-paced world" openers.
+   • End body_html with a short "Key takeaways" bullet list (3-5 bullets).
+10. faq: 5-8 unique Q/A pairs (Q ≤ 90 chars, A 30-70 words) — real user questions, distinct from headings.
+11. json_ld: ONE valid JSON-LD object with @context "https://schema.org" and correct @type (EducationalOrganization, Course, FAQPage, Article, etc.).
+12. og_title/twitter_title ≈ 60 chars, og_description/twitter_description ≈ 140 chars, written differently from meta.
+13. alt_text_suggestions: 3-6 realistic ALT strings including the primary keyword or entity, no stuffing.
+14. internal_link_suggestions: 3-6 realistic anchors linking to related URLs on mbacompass.in.
+15. long_tail_keywords: 5-10 supporting long-tail phrases (each ≥ 3 words) that share the primary intent — used inside body_html.
+16. related_queries: 5-10 real "People also ask" style questions the target user actually types.
+17. keyword_density: object mapping EACH keyword (primary + secondary + every long_tail) to its % density in body_html, computed as (occurrences × keyword_word_count / total_body_words) × 100, rounded to 1 decimal. Primary MUST be between 2.5 and 3.5.
+18. aeo_notes: 1-3 sentences on how the page is optimized for answer engines (schema types used, direct-answer paragraphs, table/list blocks).
+19. geo_notes: 1-3 sentences on generative-engine trust signals (named citations, entity coverage, factual specificity, freshness date).
+20. E-E-A-T: mention author/source/updated-date signals in eeat_notes.
 
 Return ONLY minified JSON, no commentary, matching this exact shape:
-{"primary_keyword":"","secondary_keyword":null,"search_intent":"informational|commercial|transactional|navigational","meta_title":"","meta_description":"","h1":"","outline":[{"level":"h2","text":""}],"intro_html":"","faq":[{"question":"","answer":""}],"json_ld":{},"og_title":"","og_description":"","twitter_title":"","twitter_description":"","canonical_url":"","slug_suggestion":"","alt_text_suggestions":[],"internal_link_suggestions":[{"anchor":"","url":""}],"rewrite_required":false,"rewrite_reason":"","keyword_stuffing_removed":[],"eeat_notes":"","readability_score":0}
+{"primary_keyword":"","secondary_keyword":null,"search_intent":"informational|commercial|transactional|navigational","meta_title":"","meta_description":"","h1":"","outline":[{"level":"h2","text":""}],"intro_html":"","body_html":"","faq":[{"question":"","answer":""}],"json_ld":{},"og_title":"","og_description":"","twitter_title":"","twitter_description":"","canonical_url":"","slug_suggestion":"","alt_text_suggestions":[],"internal_link_suggestions":[{"anchor":"","url":""}],"long_tail_keywords":[],"related_queries":[],"keyword_density":{},"aeo_notes":"","geo_notes":"","rewrite_required":false,"rewrite_reason":"","keyword_stuffing_removed":[],"eeat_notes":"","readability_score":0}
 
 PAGE CONTEXT
 URL: ${ctx.url}
@@ -146,7 +161,7 @@ ${(ctx.body_text || "").slice(0, 3500)}
 TOP GOOGLE RESULTS (search intent reference):
 ${compBlock}
 
-Analyze search intent from URL + entities + current content + competitors first, choose ONE primary keyword with the highest ranking opportunity, then produce the JSON.`;
+Analyze search intent from URL + entities + current content + competitors first, choose ONE primary keyword with the best ranking opportunity, then produce the JSON with a full body_html that hits the 2.5-3.5% primary keyword density target.`;
 }
 
 // ---------- Parse & sanitize ----------
