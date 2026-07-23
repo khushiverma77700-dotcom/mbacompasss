@@ -7266,13 +7266,16 @@ export type Database = {
       }
       seo_reoptimization_runs: {
         Row: {
+          cancel_requested: boolean
           created_at: string
           failed: number
           finished_at: string | null
           id: string
           label: string | null
           options: Json
+          priority: number
           processed: number
+          run_at: string | null
           scope: string
           started_at: string
           started_by: string | null
@@ -7282,13 +7285,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancel_requested?: boolean
           created_at?: string
           failed?: number
           finished_at?: string | null
           id?: string
           label?: string | null
           options?: Json
+          priority?: number
           processed?: number
+          run_at?: string | null
           scope?: string
           started_at?: string
           started_by?: string | null
@@ -7298,13 +7304,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancel_requested?: boolean
           created_at?: string
           failed?: number
           finished_at?: string | null
           id?: string
           label?: string | null
           options?: Json
+          priority?: number
           processed?: number
+          run_at?: string | null
           scope?: string
           started_at?: string
           started_by?: string | null

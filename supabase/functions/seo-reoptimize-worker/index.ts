@@ -293,6 +293,29 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const runId: string | null = body?.run_id || null;
 
+  // Honor cancellation: if the run was cancelled, mark remaining items and stop.
+  if (runId) {
+    const { data: runRow } = await sb.from("seo_reoptimization_runs")
+      .select("cancel_requested,status,run_at").eq("id", runId).maybeSingle();
+    if (runRow?.cancel_requested) {
+      await sb.from("seo_reoptimization_items")
+        .update({ status: "failed", error: "cancelled", finished_at: nowIso() })
+        .eq("run_id", runId).in("status", ["queued", "running"]);
+      await sb.from("seo_reoptimization_runs")
+        .update({ status: "cancelled", finished_at: nowIso() }).eq("id", runId);
+      return json(200, { cancelled: true });
+    }
+    // If still queued but not yet due, do nothing — scheduler will kick when due.
+    if (runRow?.status === "queued" && runRow?.run_at && new Date(runRow.run_at) > new Date()) {
+      return json(200, { deferred: true, run_at: runRow.run_at });
+    }
+    // Ensure run is marked running once the worker starts processing it.
+    if (runRow?.status === "queued") {
+      await sb.from("seo_reoptimization_runs")
+        .update({ status: "running", started_at: nowIso() }).eq("id", runId);
+    }
+  }
+
   await reclaimStale(sb);
   const batch = await claimNext(sb, runId);
 
@@ -301,16 +324,26 @@ Deno.serve(async (req) => {
     return json(200, { drained: true });
   }
 
-  // Sequentially process (respect gateway limits + keep model call quality).
   for (const item of batch) {
+    // Re-check cancellation between items so long batches stop promptly.
+    if (runId) {
+      const { data: r } = await sb.from("seo_reoptimization_runs")
+        .select("cancel_requested").eq("id", runId).maybeSingle();
+      if (r?.cancel_requested) {
+        await sb.from("seo_reoptimization_items")
+          .update({ status: "failed", error: "cancelled", finished_at: nowIso() })
+          .eq("run_id", runId).in("status", ["queued", "running"]);
+        await sb.from("seo_reoptimization_runs")
+          .update({ status: "cancelled", finished_at: nowIso() }).eq("id", runId);
+        return json(200, { cancelled: true, processed: 0 });
+      }
+    }
     await sb.from("seo_reoptimization_items").update({ locked_at: nowIso() }).eq("id", item.id);
     await processItem(sb, item);
   }
 
   if (runId) await bumpRun(sb, runId);
-
-  // Self-kick to continue draining
   EdgeRuntime.waitUntil(selfKick(runId));
-
   return json(200, { processed: batch.length });
 });
+

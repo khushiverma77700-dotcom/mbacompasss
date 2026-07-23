@@ -35,6 +35,7 @@ import BulkOptimizeProgressDialog from "@/components/admin/BulkOptimizeProgressD
 import { bulkSeoRunner, useBulkSeoRunner } from "@/lib/bulkSeoOptimizer";
 import ReSeoProgressDialog from "@/components/admin/ReSeoProgressDialog";
 import ReSeoReportDialog from "@/components/admin/ReSeoReportDialog";
+import ReSeoJobsPanel from "@/components/admin/ReSeoJobsPanel";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
@@ -266,7 +267,7 @@ const AdminSEODashboard = () => {
   const [reportName, setReportName] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const launchReseo = async (targetRows: DashboardRow[], scope: string) => {
+  const launchReseo = async (targetRows: DashboardRow[], scope: string, opts?: { run_at?: string | null; priority?: number }) => {
     if (!targetRows.length) {
       toast({ title: "Nothing to re-optimize", description: "Select or filter pages first.", variant: "destructive" });
       return;
@@ -283,27 +284,35 @@ const AdminSEODashboard = () => {
         score_before: r.audit?.score ?? null,
       }));
       const { data, error } = await supabase.functions.invoke("seo-reoptimize", {
-        body: { scope, pages },
+        body: { scope, pages, run_at: opts?.run_at || null, priority: opts?.priority ?? 100 },
       });
       if (error) throw error;
       const runId = data?.run_id;
       if (!runId) throw new Error("No run_id returned");
-      setReseoRunId(runId);
-      setReseoOpen(true);
-      // Remember which slugs we just launched so we can auto-pop the detailed report on completion.
+      const scheduled = !!data?.scheduled;
+      if (!scheduled) {
+        setReseoRunId(runId);
+        setReseoOpen(true);
+      }
       setLaunchedSlugs((prev) => {
         const next = { ...prev };
         for (const p of pages) if (p.slug) next[p.slug] = p.page_name || p.slug;
         return next;
       });
-      setAutoReportedSlugs(new Set()); // reset so newly-launched slugs are eligible
-      toast({ title: "Re-SEO started", description: `Processing ${pages.length} page${pages.length > 1 ? "s" : ""}. Detailed reports will pop up as each finishes.` });
+      setAutoReportedSlugs(new Set());
+      toast({
+        title: scheduled ? "Re-SEO scheduled" : "Re-SEO started",
+        description: scheduled
+          ? `${pages.length} page${pages.length > 1 ? "s" : ""} queued for ${new Date(data.run_at).toLocaleString()}. Track it in the Jobs panel.`
+          : `Processing ${pages.length} page${pages.length > 1 ? "s" : ""} in the background. Detailed reports pop up as each finishes.`,
+      });
     } catch (e: any) {
       toast({ title: "Re-SEO failed to start", description: String(e?.message || e), variant: "destructive" });
     } finally {
       setReseoLaunching(false);
     }
   };
+
 
   const launchReseoSingle = async (row: DashboardRow) => {
     setReseoRowLoadingKey(row.key);
@@ -1764,6 +1773,8 @@ const AdminSEODashboard = () => {
                 )}
               </CardContent>
             </Card>
+
+            <ReSeoJobsPanel onOpenRun={(runId) => { setReseoRunId(runId); setReseoOpen(true); }} />
 
             <Card>
               <CardContent className="pt-6 space-y-3">
@@ -3246,10 +3257,24 @@ const AdminSEODashboard = () => {
               {reseoLaunching ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
               Run Re-SEO on {selectedKeys.length}
             </Button>
+            <input
+              type="datetime-local"
+              className="h-8 text-xs border rounded-md px-2 bg-white"
+              min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) return;
+                const runAt = new Date(v).toISOString();
+                launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)), "scheduled", { run_at: runAt });
+                e.currentTarget.value = "";
+              }}
+              title="Schedule for later"
+            />
             <Button size="sm" variant="ghost" className="h-8" onClick={() => setSelectedKeys([])}>Clear</Button>
           </div>
         </div>
       )}
+
 
     </div>
   );
