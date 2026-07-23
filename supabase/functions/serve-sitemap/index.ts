@@ -176,10 +176,18 @@ Deno.serve(async (req) => {
     const TYPE_HUBS = ["iim", "private", "top-mba", "pgdm", "university", "government"];
     const EXAM_HUBS = ["cat", "xat", "cmat", "mat", "nmat", "snap", "iift", "gmat", "atma"];
     const CITY_HUBS = ["mumbai", "delhi", "bangalore", "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "gurgaon", "noida", "jaipur", "indore", "lucknow", "chandigarh"];
+    // Coaching-institute category hubs — city, exam, and mode landings under /coaching.
+    // /coaching/:region resolves to city pages via CoachingFilterPage.
+    const COACHING_CITY_HUBS = CITY_HUBS;
+    const COACHING_EXAM_HUBS = ["cat", "xat", "nmat", "snap", "iift", "cmat", "mat", "ipmat", "gmat"];
+    const COACHING_MODE_HUBS = ["online", "offline", "weekend", "crash-course", "classroom", "self-paced"];
     const hubEntries: Entry[] = [
       ...TYPE_HUBS.map((s) => ({ loc: `/colleges/type/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
       ...EXAM_HUBS.map((s) => ({ loc: `/colleges/by-exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
       ...CITY_HUBS.map((s) => ({ loc: `/colleges/by-city/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+      ...COACHING_CITY_HUBS.map((s) => ({ loc: `/coaching/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+      ...COACHING_EXAM_HUBS.map((s) => ({ loc: `/coaching/exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+      ...COACHING_MODE_HUBS.map((s) => ({ loc: `/coaching/mode/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.6 })),
     ];
 
     // C1: /mocks/* slugs removed — auth-gated, paywalled, near-duplicate test templates.
