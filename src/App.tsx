@@ -46,6 +46,7 @@ const ComparePage = lazyWithPreload(() => import("./pages/ComparePage"));
 const ArticlePage = lazyWithPreload(() => import("./pages/ArticlePage"));
 const ExamDetailPage = lazyWithPreload(() => import("./pages/ExamDetailPage"));
 const AboutPage = lazyWithPreload(() => import("./pages/AboutPage"));
+const IpmatPreparationGuide = lazyWithPreload(() => import("./pages/guides/IpmatPreparationGuide"));
 const ContactPage = lazyWithPreload(() => import("./pages/ContactPage"));
 const EditorialPolicyPage = lazyWithPreload(() => import("./pages/EditorialPolicyPage"));
 const ReviewPolicyPage = lazyWithPreload(() => import("./pages/ReviewPolicyPage"));
