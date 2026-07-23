@@ -231,6 +231,41 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                 </div>
               )}
 
+              {/* Preview / Apply banner */}
+              {isPreview && (
+                <Card className="border-amber-300 bg-amber-50/60">
+                  <CardContent className="py-3 flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-start gap-2">
+                      <Eye className="h-4 w-4 text-amber-700 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900">Preview — changes not yet applied</p>
+                        <p className="text-xs text-amber-800">Review the before/after diff below, then choose to apply or discard. Nothing on the live page has changed.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={handleDiscard} disabled={!!actionLoading}>
+                        {actionLoading === "discard" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                        Discard
+                      </Button>
+                      <Button size="sm" onClick={handleApply} disabled={!!actionLoading} className="bg-green-600 hover:bg-green-700 text-white">
+                        {actionLoading === "apply" ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
+                        Apply changes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {active.applied && active.applied_at && (
+                <div className="rounded border border-green-200 bg-green-50/60 px-3 py-2 text-xs text-green-800 flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Applied {new Date(active.applied_at).toLocaleString("en-IN")}
+                </div>
+              )}
+              {wasDiscarded && (
+                <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 flex items-center gap-2">
+                  <Trash2 className="h-3.5 w-3.5" /> Preview discarded {active.discarded_at ? new Date(active.discarded_at).toLocaleString("en-IN") : ""}
+                </div>
+              )}
+
               {/* Summary */}
               <Card>
                 <CardHeader className="pb-3">
