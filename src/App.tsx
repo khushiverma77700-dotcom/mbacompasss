@@ -62,6 +62,7 @@ const LegacyCollegeSlugRedirect = lazyWithPreload(() => import("./pages/LegacyCo
 const CollegeFilterPage = lazyWithPreload(() => import("./pages/CollegeFilterPage"));
 const CollegeHubPage = lazyWithPreload(() => import("./pages/CollegeHubPage"));
 const CoachingFilterPage = lazyWithPreload(() => import("./pages/CoachingFilterPage"));
+const CoachingCategoryRedirect = lazyWithPreload(() => import("./pages/CoachingCategoryRedirect"));
 const ProfileAnalyzerPage = lazyWithPreload(() => import("./pages/ProfileAnalyzerPage"));
 const SharedReportPage = lazyWithPreload(() => import("./pages/SharedReportPage"));
 const CollegeFinderPage = lazyWithPreload(() => import("./pages/CollegeFinderPage"));
