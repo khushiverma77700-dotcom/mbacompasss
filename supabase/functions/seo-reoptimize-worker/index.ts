@@ -199,7 +199,6 @@ async function processItem(sb: any, item: any): Promise<void> {
 }
 
 async function bumpRun(sb: any, runId: string) {
-  const { data: agg } = await sb.rpc("__reseo_dummy_noop_v1").catch(() => ({ data: null }));
   const { data: items } = await sb.from("seo_reoptimization_items")
     .select("status")
     .eq("run_id", runId);
