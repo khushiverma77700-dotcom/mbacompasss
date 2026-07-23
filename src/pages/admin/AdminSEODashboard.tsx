@@ -35,6 +35,7 @@ import BulkOptimizeProgressDialog from "@/components/admin/BulkOptimizeProgressD
 import { bulkSeoRunner, useBulkSeoRunner } from "@/lib/bulkSeoOptimizer";
 import ReSeoProgressDialog from "@/components/admin/ReSeoProgressDialog";
 import ReSeoReportDialog from "@/components/admin/ReSeoReportDialog";
+import ReSeoJobsPanel from "@/components/admin/ReSeoJobsPanel";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
