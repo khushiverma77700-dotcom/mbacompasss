@@ -1,115 +1,65 @@
-## Goal
+# Single-Keyword SEO Rebuild + Re-SEO Engine
 
-Every visitor (humans and crawlers) receives the fully-rendered `ssr-prerender` HTML on the FIRST byte from Cloudflare's edge. React then hydrates on top of it, so all interactive features keep working. No content, no design, no URLs, no database, no Hostinger workflow changes.
+Rebuild the SEO logic so every page targets **exactly one primary keyword** (optional 1 secondary), and add a **Re-SEO** batch runner in the SEO Dashboard → All Pages tab. Same workflow will be reused by every AI content module.
 
----
+## 1. Shared SEO Workflow (new Edge Function `seo-reoptimize`)
 
-## 1. Cloudflare Worker changes (`cloudflare/worker.js`)
+A single canonical pipeline that runs per page:
 
-Today the worker only sends bots to `ssr-prerender`; everyone else gets Hostinger's empty SPA shell. The change:
+```text
+Read page  →  Detect topic + search intent  →  Fetch top competitors (Firecrawl/Semrush)
+   →  Keyword research (Semrush keyword_research + serp)
+   →  Pick 1 primary keyword (+ 1 secondary only if same intent cluster)
+   →  Rewrite body if current content ≠ chosen keyword intent
+   →  Regenerate: meta title, meta desc, H1, H2/H3 outline, FAQ, JSON-LD,
+       canonical, OG/Twitter, image ALTs, internal links, URL slug suggestion
+   →  E-E-A-T + readability pass
+   →  Persist to page_seo_overrides + content table, log to seo_reoptimization_runs
+```
 
-- **Remove the `BOT_UA` gate** for HTML navigations. Any request whose path is an HTML route (no asset extension, not `/storage/*`, not `/functions/*`, not `/sitemap.xml`, not `/robots.txt`, not `/assets/*`) is proxied to `ssr-prerender`.
-- **Keep the pass-through** for JS/CSS/images/fonts/sitemap/robots — those must still load from Hostinger so React can hydrate.
-- **Skip prerender for logged-in / dashboard traffic** to avoid caching personalised HTML:
-  - Any request with an `Authorization` header, a Supabase auth cookie (`sb-*-auth-token`), or hostnames `dashboard.mbacompass.in` and `*.lovable.app` → pass straight through to origin, no prerender, no edge cache.
-  - Any path starting with `/student`, `/admin`, `/auth`, `/login` → pass through.
-- **Add a `?nossr=1` escape hatch** so we can debug the raw SPA shell if needed.
-- **Set a `Vary: Cookie, Accept-Encoding` header** on prerendered responses so authenticated users never get a cached anonymous copy.
-- Keep the existing `/storage/v1/render/image/...` AVIF/WebP block unchanged.
+Guardrails baked into the prompt:
+- Reject if candidate keyword doesn't match page intent → force rewrite instead of stuffing.
+- Strip existing keyword stuffing, remove off-topic secondary keywords.
+- Enforce: 1 H1, meta title 50-60ch, meta desc 140-160ch, primary KW in first 100 words + H1 + one H2, natural density.
+- Add FAQPage + Article/Breadcrumb schema, entity mentions, semantic variants.
+- Optimize for AI answer engines (clear Q→A blocks, definitional first paragraph).
 
-Nothing about the SPA bundle, routes, or hydration logic changes — the worker just decides *which* HTML to serve first.
+## 2. Database
 
-## 2. Caching & automatic invalidation
+New tables (migration with GRANTs + RLS admin-only):
+- `seo_reoptimization_runs` — batch job (status, totals, started_by, filters).
+- `seo_reoptimization_items` — one row per page (page_type, page_id, url, old_primary_kw, new_primary_kw, secondary_kw, intent, rewrite_applied, competitors_json, before/after snapshots, status, error).
 
-Two layers, both automatic:
+Add columns to `page_seo_overrides` (if missing): `secondary_keyword`, `search_intent`, `last_reoptimized_at`, `reoptimization_run_id`.
 
-**Cloudflare edge cache (fast, cheap)**
-- `s-maxage=600` (10 min) + `stale-while-revalidate=86400` on prerendered HTML responses.
-- `cacheEverything: true` with a 10-minute edge TTL. Cloudflare serves stale HTML instantly while it revalidates in the background, so publishing new content appears within ~10 minutes worldwide with zero manual purge.
-- Assets (JS/CSS with Vite hashes) keep their existing 1-year immutable cache — hydration always matches whatever HTML was rendered because filenames are hashed.
+## 3. SEO Dashboard → All Pages tab
 
-**Supabase function cache (already exists)**
-- `ssr-prerender` already returns `Cache-Control: public, max-age=600, s-maxage=3600`. We keep it.
+`src/pages/admin/AdminSEODashboard.tsx` (pages tab):
+- New **Re-SEO** button (single row) and **Re-SEO Selected / Re-SEO All Filtered** bulk buttons.
+- Live progress drawer: page-by-page status (queued → reading → researching → keyword-picked → rewriting → saving → done), with old vs new primary keyword diff and score delta. Same UX pattern as existing bulk WIP dialogs.
+- Uses `seo-reoptimize` + a lightweight worker (`seo-reoptimize-worker`) driven by `seo_reoptimization_items` queue, same pattern as `bulk-seo-worker`.
 
-**When new content publishes** (article, college, coaching, exam, homepage change):
-- Nothing manual. Old HTML expires at edge within 10 min AND is served stale-while-revalidate, so the next visitor triggers a background refresh from `ssr-prerender`, which re-queries the database live.
-- Optional (later, only if you want instant): add a "Purge Cloudflare cache" button in `/admin` that calls Cloudflare's purge API for the changed slug. Not required for launch.
+## 4. Unify across all AI content modules
 
-## 3. Files touched — and what stays untouched
+Refactor these to call the shared pipeline (or its `generateSEO(pageContext)` helper) instead of their own prompts:
+- `auto-seo-engine`, `bulk-seo-worker`, `ai-seo-enhance`, `ai-blog-writer`, `ai-edit-content`, `ai-expand-content`, `ai-website-optimizer`, `meta-validator-fix`, `seo-auto-fix`, `deep-seo-audit`, `full-page-seo-audit`, `apply-seo-override`.
+- Admin surfaces: AdminBulkSEO, AdminContentStudio, AdminWriteBlog, AdminWriteCollege, AdminWriteInstitute, AdminPageEditor, AdminMocksLanding, AdminStaticPageSEO, AdminCTROptimizer, AdminMetaValidator, Landing Page generator.
+- Each keeps its own UI; only the SEO generation call changes so output shape (single primary KW, rewrite flag, schema, alts) is identical everywhere.
 
-**Touched (2 files only):**
-- `cloudflare/worker.js` — routing logic change described in §1.
-- `supabase/functions/ssr-prerender/index.ts` — small hardening only (headers for `Vary`, honour `?nossr=1`, ensure logged-in requests aren't cached). No output HTML changes.
+## 5. Model + sources
 
-**Explicitly NOT touched:**
-- No UI, design, layout, Tailwind, or styling files.
-- No article/college/coaching/exam content, no admin editing flows.
-- No database schema, no migrations, no RLS, no data.
-- No route paths, no `App.tsx` router entries, no URL changes.
-- All calculators, filters, forms, comparison tool, favourites, login, cart, Razorpay — all client-side JavaScript continues to run exactly as today after hydration. React hydrates onto the prerendered markup; interactivity is unchanged.
+- Chat: `openai/gpt-5.5` via Lovable AI Gateway for reasoning/rewrites.
+- Competitor + SERP context: Firecrawl (already connected) for top-3 result scrape; Semrush built-in tools for volume/difficulty/intent.
+- Accuracy prioritized over speed; per-page timeout generous, background worker with retry.
 
-## 4. Hydration-safety audit (files that touch `window` / `localStorage` / auth-only fetches)
+## Technical details
 
-The prerender already renders on a Deno server (no `window`), so it doesn't execute React components — it emits handcrafted HTML from database rows. That means the audit is only about what happens **after** the browser receives the HTML and React hydrates on top. Two categories:
+- New files: `supabase/functions/seo-reoptimize/index.ts`, `supabase/functions/seo-reoptimize-worker/index.ts`, `supabase/functions/_shared/seoPipeline.ts` (shared helper), migration for the two new tables + column adds.
+- Modified: `AdminSEODashboard.tsx` (All Pages tab UI + progress drawer component), each existing AI content edge function switched to import `seoPipeline`.
+- Concurrency: worker processes N items sequentially per run (configurable, default 3) to stay within gateway limits; self-kick pattern like `master-refresh-worker` with retry cap.
+- Backwards compatible: old `primary_keyword` column reused; secondary stored in new column; existing rows untouched until Re-SEO runs on them.
 
-**A. Contexts / hooks that read `localStorage` on first render** — these must return a neutral default on the very first client render so hydration doesn't mismatch. Files to guard:
-- `src/contexts/AuthContext.tsx`
-- `src/contexts/StudentThemeContext.tsx`
-- `src/contexts/MockGenDockContext.tsx`
-- `src/contexts/CompassCompareContext.tsx`
-- `src/main.tsx` (React Query persistence bootstrap)
-- `src/hooks/useStudentNavBadges.ts`
-- `src/hooks/useFilteredList.ts`
-- `src/hooks/useAdminFilters.ts`
-- `src/components/student/InstallAppPrompt.tsx`
-- `src/components/student/PersonalizedHubGuide.tsx`
-- `src/pages/ArticlePage.tsx`, `src/pages/ProfileAnalyzerPage.tsx`, `src/pages/student/StudentNotifications.tsx`, `src/pages/student/StudentDayPlanner.tsx`
-- `src/lib/seoAutomation.ts`, `src/lib/profileAnalyzerMetaCheck.ts`, `src/lib/explanationCleanerRunner.ts`
-- Admin utilities: `src/pages/admin/AdminClearCache.tsx`, `src/pages/admin/AdminSafeBrowsingGuide.tsx`
+## Out of scope
 
-Because the prerendered HTML is anonymous (no user state), the fix pattern is simple and non-visual: on first mount, read storage inside a `useEffect` rather than during render, so the first client paint matches the server HTML. No behaviour or UI changes — just the moment the value is read.
-
-**B. Auth-gated fetches** — no change needed. Prerender only runs for public pages. Anything under `/student`, `/admin`, `/auth`, `/login` bypasses prerender entirely (see §1), so authenticated pages behave exactly like today.
-
-I'll walk through each file and confirm no visible change before editing.
-
-## 5. What you do outside Lovable (plain-English Cloudflare steps)
-
-You need Cloudflare in front of your domain. Free plan is enough.
-
-**One-time setup** (~15 min, all in the Cloudflare dashboard — no CLI):
-
-1. Go to `https://dash.cloudflare.com` → **Sign up** (free).
-2. Click **Add a site** → type `mbacompass.in` → choose **Free plan**.
-3. Cloudflare shows you 2 nameservers (e.g. `alice.ns.cloudflare.com`, `bob.ns.cloudflare.com`). Copy them.
-4. Log in to wherever you bought the domain (Hostinger or your registrar) → open the domain's **Nameservers** setting → replace the existing nameservers with the 2 Cloudflare ones → save. This takes 1–24 h to propagate; the site keeps working the whole time.
-5. Back in Cloudflare, it will import your existing DNS records automatically. Confirm you can see `mbacompass.in` and `www` pointing to Hostinger. Make sure the orange cloud icon next to each is **ON (orange)** — that means traffic goes through Cloudflare.
-6. Wait for Cloudflare to send an email saying "your site is active".
-
-**Deploy the Worker** (I'll give you a click-path when we're ready):
-
-7. In Cloudflare dashboard: **Workers & Pages** → **Create application** → **Create Worker** → name it `mbacompass-edge` → paste the worker code I'll provide → **Save and Deploy**.
-8. In that Worker → **Triggers** tab → **Add route** → add three routes:
-   - `mbacompass.in/*`
-   - `www.mbacompass.in/*`
-   - (do NOT add `dashboard.mbacompass.in/*` — that subdomain stays untouched)
-
-That's it. No CLI, no Wrangler, no npm.
-
-## 6. Deployment workflow
-
-Nothing changes. You continue to:
-- Upload the built `dist/` folder to Hostinger via File Manager exactly as today.
-- Publish articles/colleges from the admin panel exactly as today.
-
-The only one-time-only change is the DNS nameserver swap in step 4 above. After that, Hostinger keeps serving the files, Cloudflare sits in front and rewrites HTML responses through `ssr-prerender`, and everything else is automatic.
-
----
-
-## What I need from you to proceed
-
-Reply "go" and I will:
-1. Update `cloudflare/worker.js` with the new routing.
-2. Add the small `Vary` / `?nossr=1` hardening to `ssr-prerender`.
-3. Move `localStorage` reads in the files listed in §4A into `useEffect` (behaviour-preserving).
-4. Give you the exact Worker code + click-path for the Cloudflare dashboard.
+- No changes to public site rendering beyond consuming the updated `page_seo_overrides` rows (already wired).
+- No change to sitemap/robots/SSR — they already read the same overrides.
