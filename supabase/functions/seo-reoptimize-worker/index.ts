@@ -14,6 +14,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { runSeoPipeline, type PageContext } from "../_shared/seoPipeline.ts";
+import { logReseoAudit, diffSnapshots } from "../_shared/reseoAudit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
