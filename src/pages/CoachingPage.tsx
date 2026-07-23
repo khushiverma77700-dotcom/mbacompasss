@@ -232,7 +232,17 @@ const CoachingPage = () => {
           const tail = page && page !== "1" ? `?page=${page}` : "";
           return canonicalUrl(`${window.location.pathname}${tail}`);
         })()}
+        jsonLd={[
+          generateBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Coaching", url: "/coaching" },
+            ...(selectedState !== "all" ? [{ name: selectedState, url: `/coaching?state=${encodeURIComponent(selectedState)}` }] : []),
+            ...(selectedCity !== "all" ? [{ name: selectedCity, url: `/coaching?city=${encodeURIComponent(selectedCity)}` }] : []),
+          ]),
+          generateListingSchema(dynamicH1, filtered.slice(0, 20).map((i: any) => ({ name: i.name, slug: i.slug, city: i.city })), "institute"),
+        ]}
       />
+
 
 
       {/* Hero */}
