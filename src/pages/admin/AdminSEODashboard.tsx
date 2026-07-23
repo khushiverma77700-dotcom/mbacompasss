@@ -267,7 +267,7 @@ const AdminSEODashboard = () => {
   const [reportName, setReportName] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const launchReseo = async (targetRows: DashboardRow[], scope: string, opts?: { run_at?: string | null; priority?: number }) => {
+  const launchReseo = async (targetRows: DashboardRow[], scope: string, opts?: { run_at?: string | null; priority?: number; preview?: boolean }) => {
     if (!targetRows.length) {
       toast({ title: "Nothing to re-optimize", description: "Select or filter pages first.", variant: "destructive" });
       return;
