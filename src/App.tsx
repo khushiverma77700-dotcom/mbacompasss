@@ -994,6 +994,7 @@ const App = () => (
             <Route path="/college-finder" element={<PublicLayout><LazyPage><CollegeFinderPage /></LazyPage></PublicLayout>} />
             <Route path="/college-shortlister" element={<PublicLayout><LazyPage><CollegeShortlisterPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
+            <Route path="/guides/ipmat-preparation" element={<PublicLayout><LazyPage><IpmatPreparationGuide /></LazyPage></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
             <Route path="/editorial-policy" element={<PublicLayout><LazyPage><EditorialPolicyPage /></LazyPage></PublicLayout>} />
             <Route path="/review-policy" element={<PublicLayout><LazyPage><ReviewPolicyPage /></LazyPage></PublicLayout>} />
