@@ -184,7 +184,7 @@ async function processItem(sb: any, item: any): Promise<void> {
       score_after: scoreAfter,
       finished_at: nowIso(),
     });
-    await sb.rpc("noop_seoreseo_bump").catch(() => {});
+    
   } catch (e: any) {
     const msg = String(e?.message || e).slice(0, 500);
     console.error("seo-reoptimize-worker item failed", item.id, msg);
