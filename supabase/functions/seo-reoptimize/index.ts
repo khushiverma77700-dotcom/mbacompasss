@@ -147,6 +147,16 @@ Deno.serve(async (req) => {
         await sb.from("seo_reoptimization_items")
           .update({ applied: true, applied_at: new Date().toISOString(), discarded: false, discarded_at: null })
           .eq("id", it.id);
+        await logReseoAudit(sb, {
+          run_id: it.run_id, item_id: it.id, url: it.url, slug: it.slug,
+          page_type: it.page_type, page_name: it.page_name,
+          action: "item_applied", actor_id: actorId, actor_role: "admin",
+          primary_keyword: it.new_primary_keyword, secondary_keyword: it.secondary_keyword,
+          score_before: it.score_before, score_after: it.score_after,
+          before_snapshot: it.before_snapshot, after_snapshot: it.after_snapshot,
+          changes: diffSnapshots(it.before_snapshot, it.after_snapshot),
+          notes: "Preview applied by admin",
+        });
         results.push({ id: it.id, applied: true });
       } catch (e: any) {
         results.push({ id: it.id, error: String(e?.message || e) });
@@ -159,9 +169,24 @@ Deno.serve(async (req) => {
   if (action === "discard") {
     const itemIds: string[] = Array.isArray(body?.item_ids) ? body.item_ids : (body?.item_id ? [body.item_id] : []);
     if (!itemIds.length) return json(400, { error: "item_id or item_ids required" });
+    const { data: discarding } = await sb.from("seo_reoptimization_items")
+      .select("id,run_id,url,slug,page_type,page_name,new_primary_keyword,secondary_keyword,score_before,score_after,before_snapshot,after_snapshot")
+      .in("id", itemIds).eq("applied", false);
     await sb.from("seo_reoptimization_items")
       .update({ discarded: true, discarded_at: new Date().toISOString() })
       .in("id", itemIds).eq("applied", false);
+    for (const it of discarding || []) {
+      await logReseoAudit(sb, {
+        run_id: it.run_id, item_id: it.id, url: it.url, slug: it.slug,
+        page_type: it.page_type, page_name: it.page_name,
+        action: "item_discarded", actor_id: actorId, actor_role: "admin",
+        primary_keyword: it.new_primary_keyword, secondary_keyword: it.secondary_keyword,
+        score_before: it.score_before, score_after: it.score_after,
+        before_snapshot: it.before_snapshot, after_snapshot: it.after_snapshot,
+        changes: diffSnapshots(it.before_snapshot, it.after_snapshot),
+        notes: "Preview discarded by admin",
+      });
+    }
     return json(200, { ok: true });
   }
 
@@ -170,10 +195,7 @@ Deno.serve(async (req) => {
   const pages = Array.isArray(body.pages) ? body.pages : [];
   if (!pages.length) return json(400, { error: "pages array required" });
 
-  const authHeader = req.headers.get("Authorization")!;
-  const sbUser = createClient(SUPABASE_URL, ANON_KEY);
-  const { data: userData } = await sbUser.auth.getUser(authHeader.replace("Bearer ", ""));
-  const startedBy = userData?.user?.id || null;
+  const startedBy = actorId;
 
   const runAt = body.run_at ? new Date(body.run_at) : null;
   const scheduled = runAt && runAt.getTime() > Date.now() + 5_000;
