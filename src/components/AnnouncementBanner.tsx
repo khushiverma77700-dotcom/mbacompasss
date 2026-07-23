@@ -62,7 +62,7 @@ const AnnouncementBanner = () => {
   return (
     <div className={`border-b ${bgMap[announcement.type] || bgMap.info} py-3`}>
       <div className="container mx-auto px-4 flex items-center justify-between gap-4">
-        <button onClick={() => setCurrent((current - 1 + announcements.length) % announcements.length)} className="p-1 hover:opacity-70 flex-shrink-0">
+        <button aria-label="Previous announcement" onClick={() => setCurrent((current - 1 + announcements.length) % announcements.length)} className="p-1 hover:opacity-70 flex-shrink-0">
           <ChevronLeft className="w-4 h-4" />
         </button>
 
@@ -83,10 +83,10 @@ const AnnouncementBanner = () => {
         </AnimatePresence>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={() => setCurrent((current + 1) % announcements.length)} className="p-1 hover:opacity-70">
+          <button aria-label="Next announcement" onClick={() => setCurrent((current + 1) % announcements.length)} className="p-1 hover:opacity-70">
             <ChevronRight className="w-4 h-4" />
           </button>
-          <button onClick={() => setDismissed(true)} className="p-1 hover:opacity-70">
+          <button aria-label="Dismiss announcement" onClick={() => setDismissed(true)} className="p-1 hover:opacity-70">
             <X className="w-4 h-4" />
           </button>
         </div>
