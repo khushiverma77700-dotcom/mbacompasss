@@ -271,7 +271,7 @@ export async function runSeoPipeline(
       ],
       response_format: { type: "json_object" },
       temperature: 0.3,
-      max_tokens: 3000,
+      max_tokens: 6500,
     },
     { feature: opts.feature, userId: opts.userId, purpose: "long", signal: opts.signal },
   );
