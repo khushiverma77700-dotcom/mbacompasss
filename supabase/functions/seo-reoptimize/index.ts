@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
   const body = await req.json().catch(() => ({}));
+  if (!action && typeof body?.action === "string") action = body.action;
 
   // ── Cancel a run ───────────────────────────────────────────────
   if (action === "cancel") {
