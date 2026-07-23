@@ -129,6 +129,45 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
 
 
   const active = items[activeIdx];
+  const isPreview = !!active && active.status === "done" && active.applied === false && active.discarded === false;
+  const wasDiscarded = !!active?.discarded;
+
+  const handleApply = async () => {
+    if (!active) return;
+    setActionLoading("apply");
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-reoptimize", {
+        body: { action: "apply", item_id: active.id },
+      });
+      if (error) throw error;
+      const first = (data as any)?.results?.[0];
+      if (first?.error) throw new Error(first.error);
+      toast({ title: "Changes applied", description: "The proposed SEO updates are now live." });
+      await reload();
+    } catch (e: any) {
+      toast({ title: "Apply failed", description: String(e?.message || e), variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDiscard = async () => {
+    if (!active) return;
+    setActionLoading("discard");
+    try {
+      const { error } = await supabase.functions.invoke("seo-reoptimize", {
+        body: { action: "discard", item_id: active.id },
+      });
+      if (error) throw error;
+      toast({ title: "Preview discarded", description: "The proposed changes were not applied." });
+      await reload();
+    } catch (e: any) {
+      toast({ title: "Discard failed", description: String(e?.message || e), variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const before = active?.before_snapshot || {};
   const after = active?.after_snapshot || {};
   const competitors: any[] = Array.isArray(active?.competitors) ? active!.competitors : [];
