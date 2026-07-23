@@ -1,9 +1,14 @@
-// seo-reoptimize — enqueue and status endpoint for the Re-SEO workflow.
+// seo-reoptimize — Re-SEO job queue endpoint.
 //
-// POST { pages: [{ page_type, page_id?, slug, url, page_name?, existing_primary_keyword? }], label?, options? }
-//   → creates a run, enqueues one item per page, kicks the worker in the background.
-// GET  ?run_id=...
-//   → returns run + items (for the live progress dialog).
+// POST /                  → enqueue a new run.
+//   body: { pages: [...], label?, scope?, options?, run_at? (ISO), priority? }
+//   • run_at in the future → status='queued', worker not kicked; scheduler picks it up when due.
+//   • run_at omitted / past → status='running', worker kicked immediately (non-blocking).
+//
+// GET  /?run_id=...       → returns run + items (live progress dialog).
+// GET  /?list=1&limit=50  → returns recent runs (jobs panel).
+// POST /?action=cancel    → { run_id } marks run for cancellation.
+// POST /?action=rerun     → { run_id } re-queues failed items of a run.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireAdmin } from "../_shared/requireAdmin.ts";
@@ -43,30 +48,68 @@ Deno.serve(async (req) => {
   if (unauth) return unauth;
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const url = new URL(req.url);
+  const action = url.searchParams.get("action");
 
   if (req.method === "GET") {
-    const url = new URL(req.url);
     const runId = url.searchParams.get("run_id");
-    if (!runId) return json(400, { error: "run_id required" });
-    const { data: run } = await sb.from("seo_reoptimization_runs").select("*").eq("id", runId).maybeSingle();
-    if (!run) return json(404, { error: "run not found" });
-    const { data: items } = await sb.from("seo_reoptimization_items")
-      .select("id,page_type,slug,url,page_name,status,stage,old_primary_keyword,new_primary_keyword,secondary_keyword,search_intent,rewrite_applied,score_before,score_after,error,attempts,started_at,finished_at")
-      .eq("run_id", runId).order("created_at", { ascending: true });
-    return json(200, { run, items: items || [] });
+    if (runId) {
+      const { data: run } = await sb.from("seo_reoptimization_runs").select("*").eq("id", runId).maybeSingle();
+      if (!run) return json(404, { error: "run not found" });
+      const { data: items } = await sb.from("seo_reoptimization_items")
+        .select("id,page_type,slug,url,page_name,status,stage,old_primary_keyword,new_primary_keyword,secondary_keyword,search_intent,rewrite_applied,score_before,score_after,error,attempts,started_at,finished_at")
+        .eq("run_id", runId).order("created_at", { ascending: true });
+      return json(200, { run, items: items || [] });
+    }
+    if (url.searchParams.get("list")) {
+      const limit = Math.min(200, Number(url.searchParams.get("limit") || 50));
+      const { data: runs } = await sb.from("seo_reoptimization_runs")
+        .select("id,label,scope,status,total_items,processed,succeeded,failed,run_at,priority,cancel_requested,started_at,finished_at,created_at")
+        .order("created_at", { ascending: false }).limit(limit);
+      return json(200, { runs: runs || [] });
+    }
+    return json(400, { error: "run_id or list=1 required" });
   }
 
   if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
   const body = await req.json().catch(() => ({}));
+
+  // ── Cancel a run ───────────────────────────────────────────────
+  if (action === "cancel") {
+    const runId = body?.run_id;
+    if (!runId) return json(400, { error: "run_id required" });
+    await sb.from("seo_reoptimization_runs")
+      .update({ cancel_requested: true })
+      .eq("id", runId).in("status", ["queued", "running"]);
+    EdgeRuntime.waitUntil(kickWorker(runId)); // wake the worker so it processes the cancel
+    return json(200, { ok: true });
+  }
+
+  // ── Re-queue failed items in a run ─────────────────────────────
+  if (action === "rerun") {
+    const runId = body?.run_id;
+    if (!runId) return json(400, { error: "run_id required" });
+    const { count } = await sb.from("seo_reoptimization_items")
+      .update({ status: "queued", error: null, started_at: null, finished_at: null, attempts: 0 }, { count: "exact" })
+      .eq("run_id", runId).eq("status", "failed");
+    await sb.from("seo_reoptimization_runs")
+      .update({ status: "running", cancel_requested: false, finished_at: null }).eq("id", runId);
+    EdgeRuntime.waitUntil(kickWorker(runId));
+    return json(200, { requeued: count || 0 });
+  }
+
+  // ── Enqueue a new run ──────────────────────────────────────────
   const pages = Array.isArray(body.pages) ? body.pages : [];
   if (!pages.length) return json(400, { error: "pages array required" });
 
-  // Identify starter user for audit log
   const authHeader = req.headers.get("Authorization")!;
   const sbUser = createClient(SUPABASE_URL, ANON_KEY);
   const { data: userData } = await sbUser.auth.getUser(authHeader.replace("Bearer ", ""));
   const startedBy = userData?.user?.id || null;
+
+  const runAt = body.run_at ? new Date(body.run_at) : null;
+  const scheduled = runAt && runAt.getTime() > Date.now() + 5_000;
 
   const { data: run, error: runErr } = await sb.from("seo_reoptimization_runs").insert({
     label: body.label || `Re-SEO ${new Date().toISOString().slice(0, 16)}`,
@@ -74,7 +117,9 @@ Deno.serve(async (req) => {
     total_items: pages.length,
     started_by: startedBy,
     options: body.options || {},
-    status: "running",
+    status: scheduled ? "queued" : "running",
+    run_at: runAt ? runAt.toISOString() : null,
+    priority: typeof body.priority === "number" ? body.priority : 100,
   }).select("*").single();
   if (runErr) return json(500, { error: runErr.message });
 
@@ -85,14 +130,13 @@ Deno.serve(async (req) => {
     slug: String(p.slug || p.url || ""),
     url: String(p.url || ""),
     page_name: p.page_name ? String(p.page_name) : null,
-    old_primary_keyword: p.existing_primary_keyword || null,
+    old_primary_keyword: p.existing_primary_keyword || p.old_primary_keyword || null,
     score_before: typeof p.score_before === "number" ? p.score_before : null,
   }));
   const { error: itErr } = await sb.from("seo_reoptimization_items").insert(items);
   if (itErr) return json(500, { error: itErr.message });
 
-  // Kick worker in background without awaiting
-  EdgeRuntime.waitUntil(kickWorker(run.id));
+  if (!scheduled) EdgeRuntime.waitUntil(kickWorker(run.id));
 
-  return json(200, { run_id: run.id, total: items.length });
+  return json(200, { run_id: run.id, total: items.length, scheduled, run_at: run.run_at });
 });
