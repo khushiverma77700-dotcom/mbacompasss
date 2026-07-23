@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCityPageBySlug } from "@/hooks/useCityPages";
+import SEOHead from "@/components/SEOHead";
+import { canonicalUrl } from "@/lib/canonical";
 
 /**
  * Legacy /coaching/:region route — redirects to canonical /coaching?city=... or ?state=...
