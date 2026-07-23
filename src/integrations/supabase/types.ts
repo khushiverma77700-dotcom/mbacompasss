@@ -5555,6 +5555,75 @@ export type Database = {
         }
         Relationships: []
       }
+      page_indexing_status: {
+        Row: {
+          checked_at: string
+          coverage_state: string | null
+          created_at: string
+          error: string | null
+          google_canonical: string | null
+          id: string
+          index_status: string | null
+          indexing_state: string | null
+          last_crawl_time: string | null
+          page_fetch_state: string | null
+          page_type: string | null
+          priority: number
+          raw: Json | null
+          robots_txt_state: string | null
+          site_url: string | null
+          slug: string | null
+          updated_at: string
+          url: string
+          user_canonical: string | null
+          verdict: string | null
+        }
+        Insert: {
+          checked_at?: string
+          coverage_state?: string | null
+          created_at?: string
+          error?: string | null
+          google_canonical?: string | null
+          id?: string
+          index_status?: string | null
+          indexing_state?: string | null
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          page_type?: string | null
+          priority?: number
+          raw?: Json | null
+          robots_txt_state?: string | null
+          site_url?: string | null
+          slug?: string | null
+          updated_at?: string
+          url: string
+          user_canonical?: string | null
+          verdict?: string | null
+        }
+        Update: {
+          checked_at?: string
+          coverage_state?: string | null
+          created_at?: string
+          error?: string | null
+          google_canonical?: string | null
+          id?: string
+          index_status?: string | null
+          indexing_state?: string | null
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          page_type?: string | null
+          priority?: number
+          raw?: Json | null
+          robots_txt_state?: string | null
+          site_url?: string | null
+          slug?: string | null
+          updated_at?: string
+          url?: string
+          user_canonical?: string | null
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       page_seo_audits: {
         Row: {
           approved: boolean
