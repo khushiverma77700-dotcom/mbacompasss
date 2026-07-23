@@ -100,6 +100,60 @@ Deno.serve(async (req) => {
     return json(200, { requeued: count || 0 });
   }
 
+  // ── Apply a preview item's proposed changes ────────────────────
+  if (action === "apply") {
+    const itemIds: string[] = Array.isArray(body?.item_ids) ? body.item_ids : (body?.item_id ? [body.item_id] : []);
+    if (!itemIds.length) return json(400, { error: "item_id or item_ids required" });
+    const { data: items, error: itErr } = await sb.from("seo_reoptimization_items")
+      .select("*").in("id", itemIds);
+    if (itErr) return json(500, { error: itErr.message });
+    const results: any[] = [];
+    for (const it of items || []) {
+      if (it.status !== "done") { results.push({ id: it.id, skipped: "not done" }); continue; }
+      if (it.applied) { results.push({ id: it.id, skipped: "already applied" }); continue; }
+      const after = it.after_snapshot || {};
+      try {
+        await applyReseoResult(sb, {
+          slug: it.slug,
+          runId: it.run_id,
+          pageType: it.page_type,
+          pageId: it.page_id,
+          meta_title: after.title,
+          meta_description: after.description,
+          h1: after.h1,
+          intro_html: after.intro_html,
+          body_html: after.body_html || it.full_content_after,
+          primary_keyword: it.new_primary_keyword,
+          secondary_keyword: it.secondary_keyword,
+          search_intent: it.search_intent,
+          long_tail_keywords: it.long_tail_keywords || [],
+          related_queries: it.related_queries || [],
+          keyword_density: it.keyword_density || {},
+          faq: after.faq,
+          json_ld: after.json_ld,
+        });
+        await sb.from("seo_reoptimization_items")
+          .update({ applied: true, applied_at: new Date().toISOString(), discarded: false, discarded_at: null })
+          .eq("id", it.id);
+        results.push({ id: it.id, applied: true });
+      } catch (e: any) {
+        results.push({ id: it.id, error: String(e?.message || e) });
+      }
+    }
+    return json(200, { results });
+  }
+
+  // ── Discard a preview item's proposed changes ──────────────────
+  if (action === "discard") {
+    const itemIds: string[] = Array.isArray(body?.item_ids) ? body.item_ids : (body?.item_id ? [body.item_id] : []);
+    if (!itemIds.length) return json(400, { error: "item_id or item_ids required" });
+    await sb.from("seo_reoptimization_items")
+      .update({ discarded: true, discarded_at: new Date().toISOString() })
+      .in("id", itemIds).eq("applied", false);
+    return json(200, { ok: true });
+  }
+
+
   // ── Enqueue a new run ──────────────────────────────────────────
   const pages = Array.isArray(body.pages) ? body.pages : [];
   if (!pages.length) return json(400, { error: "pages array required" });
