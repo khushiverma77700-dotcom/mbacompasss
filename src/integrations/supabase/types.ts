@@ -5610,15 +5610,19 @@ export type Database = {
         Row: {
           applied_at: string
           applied_by: string | null
+          body_html: string | null
           description: string | null
           faq: Json | null
           h1: string | null
           intro_html: string | null
           json_ld: Json | null
+          keyword_density: Json | null
           keywords: string[] | null
           last_reoptimized_at: string | null
+          long_tail_keywords: Json | null
           og_image: string | null
           primary_keyword: string | null
+          related_queries: Json | null
           reoptimization_run_id: string | null
           search_intent: string | null
           secondary_keyword: string | null
@@ -5630,15 +5634,19 @@ export type Database = {
         Insert: {
           applied_at?: string
           applied_by?: string | null
+          body_html?: string | null
           description?: string | null
           faq?: Json | null
           h1?: string | null
           intro_html?: string | null
           json_ld?: Json | null
+          keyword_density?: Json | null
           keywords?: string[] | null
           last_reoptimized_at?: string | null
+          long_tail_keywords?: Json | null
           og_image?: string | null
           primary_keyword?: string | null
+          related_queries?: Json | null
           reoptimization_run_id?: string | null
           search_intent?: string | null
           secondary_keyword?: string | null
@@ -5650,15 +5658,19 @@ export type Database = {
         Update: {
           applied_at?: string
           applied_by?: string | null
+          body_html?: string | null
           description?: string | null
           faq?: Json | null
           h1?: string | null
           intro_html?: string | null
           json_ld?: Json | null
+          keyword_density?: Json | null
           keywords?: string[] | null
           last_reoptimized_at?: string | null
+          long_tail_keywords?: Json | null
           og_image?: string | null
           primary_keyword?: string | null
+          related_queries?: Json | null
           reoptimization_run_id?: string | null
           search_intent?: string | null
           secondary_keyword?: string | null
@@ -7129,20 +7141,30 @@ export type Database = {
       }
       seo_reoptimization_items: {
         Row: {
+          aeo_notes: string | null
           after_snapshot: Json | null
           attempts: number
           before_snapshot: Json | null
           competitors: Json | null
+          content_word_count_after: number | null
+          content_word_count_before: number | null
           created_at: string
           error: string | null
           finished_at: string | null
+          full_content_after: string | null
+          full_content_before: string | null
+          geo_notes: string | null
           id: string
+          keyword_density: Json | null
           locked_at: string | null
+          long_tail_keywords: Json | null
           new_primary_keyword: string | null
           old_primary_keyword: string | null
           page_id: string | null
           page_name: string | null
           page_type: string
+          readability_score: number | null
+          related_queries: Json | null
           rewrite_applied: boolean | null
           run_id: string
           score_after: number | null
@@ -7157,20 +7179,30 @@ export type Database = {
           url: string
         }
         Insert: {
+          aeo_notes?: string | null
           after_snapshot?: Json | null
           attempts?: number
           before_snapshot?: Json | null
           competitors?: Json | null
+          content_word_count_after?: number | null
+          content_word_count_before?: number | null
           created_at?: string
           error?: string | null
           finished_at?: string | null
+          full_content_after?: string | null
+          full_content_before?: string | null
+          geo_notes?: string | null
           id?: string
+          keyword_density?: Json | null
           locked_at?: string | null
+          long_tail_keywords?: Json | null
           new_primary_keyword?: string | null
           old_primary_keyword?: string | null
           page_id?: string | null
           page_name?: string | null
           page_type: string
+          readability_score?: number | null
+          related_queries?: Json | null
           rewrite_applied?: boolean | null
           run_id: string
           score_after?: number | null
@@ -7185,20 +7217,30 @@ export type Database = {
           url: string
         }
         Update: {
+          aeo_notes?: string | null
           after_snapshot?: Json | null
           attempts?: number
           before_snapshot?: Json | null
           competitors?: Json | null
+          content_word_count_after?: number | null
+          content_word_count_before?: number | null
           created_at?: string
           error?: string | null
           finished_at?: string | null
+          full_content_after?: string | null
+          full_content_before?: string | null
+          geo_notes?: string | null
           id?: string
+          keyword_density?: Json | null
           locked_at?: string | null
+          long_tail_keywords?: Json | null
           new_primary_keyword?: string | null
           old_primary_keyword?: string | null
           page_id?: string | null
           page_name?: string | null
           page_type?: string
+          readability_score?: number | null
+          related_queries?: Json | null
           rewrite_applied?: boolean | null
           run_id?: string
           score_after?: number | null
