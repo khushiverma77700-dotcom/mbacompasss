@@ -1449,6 +1449,31 @@ const AdminSEODashboard = () => {
         {/* ═══ ALL PAGES ═══ */}
         {activeTab === "pages" && (
           <div className="space-y-4">
+            {/* Re-SEO summary dashboard */}
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Re-SEO Progress</CardTitle>
+                    <CardDescription>One-page-one-keyword optimization across the whole site</CardDescription>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={fetchReseoStatuses}>Refresh status</Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Total Pages</p><p className="text-xl font-bold">{reseoStats.total}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Re-SEO Completed</p><p className="text-xl font-bold text-green-600">{reseoStats.completed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pending</p><p className="text-xl font-bold text-slate-600">{reseoStats.pending}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">In Progress</p><p className="text-xl font-bold text-blue-600">{reseoStats.inProgress}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Failed</p><p className="text-xl font-bold text-red-600">{reseoStats.failed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Avg Score ↑</p><p className={`text-xl font-bold ${reseoStats.avgImprovement >= 0 ? "text-green-600" : "text-red-600"}`}>{reseoStats.avgImprovement >= 0 ? "+" : ""}{reseoStats.avgImprovement}</p></div>
+                </div>
+                {reseoStats.needsReview > 0 && (
+                  <p className="text-xs text-amber-600 mt-2"><AlertTriangle className="inline h-3 w-3 mr-1" />{reseoStats.needsReview} completed pages need review (rewrite applied or small score gain).</p>
+                )}
+              </CardContent>
+            </Card>
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="grid gap-3 xl:grid-cols-4 md:grid-cols-2">
