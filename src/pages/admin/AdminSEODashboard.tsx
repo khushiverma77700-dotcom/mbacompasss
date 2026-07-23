@@ -1787,6 +1787,9 @@ const AdminSEODashboard = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="outline" onClick={fetchReseoStatuses}>Refresh status</Button>
+                    <Button size="sm" variant="outline" onClick={() => launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)).length ? filteredRows.filter(r => selectedKeys.includes(r.key)) : filteredRows, selectedKeys.length ? "selected" : "filtered", { preview: true })} disabled={reseoLaunching}>
+                      <Eye className="h-4 w-4 mr-1" /> Preview ({selectedKeys.length || filteredRows.length})
+                    </Button>
                     <Button size="sm" onClick={() => launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)).length ? filteredRows.filter(r => selectedKeys.includes(r.key)) : filteredRows, selectedKeys.length ? "selected" : "filtered")} disabled={reseoLaunching}>
                       <Sparkles className="h-4 w-4 mr-1" /> Run Re-SEO ({selectedKeys.length || filteredRows.length})
                     </Button>
