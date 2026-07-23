@@ -30,7 +30,17 @@ const CoachingFilterPage = () => {
     navigate(`/coaching?${params.toString()}`, { replace: true });
   }, [cityPage, isLoading, region, navigate]);
 
-  return <div className="min-h-[40vh]" />;
+  const pretty = (region || "").replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  return (
+    <>
+      <SEOHead
+        title={`MBA & CAT Coaching Institutes in ${pretty} — Fees, Reviews & Batches`}
+        description={`Find the best MBA and CAT coaching institutes in ${pretty}. Compare fees, faculty, batch schedules and student reviews for top coaching centres in ${pretty}.`}
+        canonical={canonicalUrl(`/coaching/${(region || "").toLowerCase()}`)}
+      />
+      <div className="min-h-[40vh]" />
+    </>
+  );
 };
 
 export default CoachingFilterPage;
