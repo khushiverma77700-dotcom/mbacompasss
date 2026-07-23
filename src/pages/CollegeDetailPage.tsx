@@ -120,7 +120,7 @@ const CollegeDetailPage = () => {
 
   useEffect(() => {
     if (college) {
-      document.title = `${college.name} — Fees, Placements, Admission, Ranking | MBA Compass`;
+      document.title = `${college.name} — Fees & Placements | MBA Compass`;
     }
   }, [college]);
 
@@ -141,7 +141,7 @@ const CollegeDetailPage = () => {
     college?.id,
     college
       ? {
-          title: `${college.name} — Fees, Placements, Admission, Ranking | MBA Compass`,
+          title: `${college.name} — Fees & Placements | MBA Compass`,
           description:
             (college as any).meta_description ||
             `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
