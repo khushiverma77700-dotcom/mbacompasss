@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, ArrowRight, Sparkles, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Target, MessageSquare, FileText } from "lucide-react";
+import { Loader2, ArrowRight, Sparkles, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Target, MessageSquare, FileText, Eye, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   open: boolean;
