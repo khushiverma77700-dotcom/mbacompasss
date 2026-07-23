@@ -1349,6 +1349,16 @@ const AdminSEODashboard = () => {
               {bulkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Bulk Optimize ({selectedRows.length})
             </Button>
             <Button
+              onClick={() => launchReseo(selectedRows.length ? selectedRows : filteredRows, selectedRows.length ? "selected" : "filtered", { preview: true })}
+              disabled={reseoLaunching || (filteredRows.length === 0 && selectedRows.length === 0)}
+              size="sm"
+              variant="outline"
+              title="Preview proposed SEO changes (title / description / H1 / body) without applying them"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview Re-SEO
+            </Button>
+            <Button
               onClick={() => launchReseo(selectedRows.length ? selectedRows : filteredRows, selectedRows.length ? "selected" : "filtered")}
               disabled={reseoLaunching || (filteredRows.length === 0 && selectedRows.length === 0)}
               size="sm"
