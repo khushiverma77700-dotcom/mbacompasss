@@ -55,4 +55,5 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { path: "/terms",                     changefreq: "yearly",  priority: 0.3 },
   { path: "/mba-compass",               changefreq: "weekly",  priority: 0.7 },
   { path: "/mba-compass/compare",       changefreq: "monthly", priority: 0.5 },
+  { path: "/guides/ipmat-preparation",  changefreq: "monthly", priority: 0.7 },
 ];

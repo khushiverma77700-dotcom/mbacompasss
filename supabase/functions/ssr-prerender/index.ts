@@ -394,6 +394,20 @@ const STATIC_ROUTES: RouteTemplate[] = [
     }),
   },
   {
+    match: /^\/guides\/ipmat-preparation\/?$/,
+    build: () => ({
+      title: "IPMAT Preparation Guide 2026 — Syllabus, Pattern & Strategy | MBA Compass",
+      description:
+        "Complete IPMAT 2026 guide — eligibility, IPMAT Indore & Rohtak pattern, section-wise syllabus, month-by-month study plan and top coaching for IIM integrated programme aspirants.",
+      url: `${SITE}/guides/ipmat-preparation`,
+      breadcrumbs: [
+        { name: "Home", url: `${SITE}/` },
+        { name: "Exams", url: `${SITE}/exams` },
+        { name: "IPMAT Preparation Guide", url: `${SITE}/guides/ipmat-preparation` },
+      ],
+    }),
+  },
+  {
     match: /^\/contact\/?$/,
     build: () => ({
       title: "Contact MBA Compass — Get In Touch With Our Team",

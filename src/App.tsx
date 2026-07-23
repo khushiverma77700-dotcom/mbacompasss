@@ -46,6 +46,7 @@ const ComparePage = lazyWithPreload(() => import("./pages/ComparePage"));
 const ArticlePage = lazyWithPreload(() => import("./pages/ArticlePage"));
 const ExamDetailPage = lazyWithPreload(() => import("./pages/ExamDetailPage"));
 const AboutPage = lazyWithPreload(() => import("./pages/AboutPage"));
+const IpmatPreparationGuide = lazyWithPreload(() => import("./pages/guides/IpmatPreparationGuide"));
 const ContactPage = lazyWithPreload(() => import("./pages/ContactPage"));
 const EditorialPolicyPage = lazyWithPreload(() => import("./pages/EditorialPolicyPage"));
 const ReviewPolicyPage = lazyWithPreload(() => import("./pages/ReviewPolicyPage"));
@@ -993,6 +994,7 @@ const App = () => (
             <Route path="/college-finder" element={<PublicLayout><LazyPage><CollegeFinderPage /></LazyPage></PublicLayout>} />
             <Route path="/college-shortlister" element={<PublicLayout><LazyPage><CollegeShortlisterPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
+            <Route path="/guides/ipmat-preparation" element={<PublicLayout><LazyPage><IpmatPreparationGuide /></LazyPage></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
             <Route path="/editorial-policy" element={<PublicLayout><LazyPage><EditorialPolicyPage /></LazyPage></PublicLayout>} />
             <Route path="/review-policy" element={<PublicLayout><LazyPage><ReviewPolicyPage /></LazyPage></PublicLayout>} />
