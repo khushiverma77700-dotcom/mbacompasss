@@ -2928,6 +2928,13 @@ const AdminSEODashboard = () => {
         model="openai/gpt-5-mini"
       />
 
+      <ReSeoProgressDialog
+        open={reseoOpen}
+        onOpenChange={setReseoOpen}
+        runId={reseoRunId}
+        onCompleted={() => { fetchDashboardData(); }}
+      />
+
     </div>
   );
 };
