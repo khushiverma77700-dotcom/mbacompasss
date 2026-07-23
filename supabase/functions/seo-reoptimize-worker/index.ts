@@ -109,26 +109,28 @@ function buildContext(pageType: string, slug: string, url: string, src: any): Pa
 }
 
 async function saveResult(sb: any, item: any, pageType: string, src: any, result: any) {
-  // 1. Upsert page_seo_overrides (canonical store, read by SSR + admin dashboard)
   const overridePayload: any = {
     slug: item.slug,
     title: result.meta_title,
     description: result.meta_description,
     h1: result.h1,
     intro_html: result.intro_html,
-    keywords: [result.primary_keyword, result.secondary_keyword].filter(Boolean),
+    body_html: result.body_html,
+    keywords: [result.primary_keyword, result.secondary_keyword, ...(result.long_tail_keywords || [])].filter(Boolean),
     faq: result.faq,
     json_ld: result.json_ld,
     primary_keyword: result.primary_keyword,
     secondary_keyword: result.secondary_keyword,
     search_intent: result.search_intent,
+    long_tail_keywords: result.long_tail_keywords || [],
+    related_queries: result.related_queries || [],
+    keyword_density: result.keyword_density || {},
     last_reoptimized_at: nowIso(),
     reoptimization_run_id: item.run_id,
     updated_at: nowIso(),
   };
   await sb.from("page_seo_overrides").upsert(overridePayload, { onConflict: "slug" });
 
-  // 2. Mirror onto source table when it has SEO columns
   if (src && SUPPORTS_SEO_COLUMNS.has(pageType)) {
     const table = SOURCE_TABLE_BY_TYPE[pageType];
     const update: any = {
