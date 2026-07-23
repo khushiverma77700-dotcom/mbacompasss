@@ -6927,6 +6927,152 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_health_page_results: {
+        Row: {
+          canonical_url: string | null
+          checked_at: string
+          description: string | null
+          description_length: number | null
+          h1_count: number | null
+          has_canonical: boolean | null
+          html_kb: number | null
+          http_status: number | null
+          id: string
+          images_missing_alt: number | null
+          is_indexable: boolean | null
+          issues: Json
+          page_type: string
+          response_ms: number | null
+          robots_meta: string | null
+          run_id: string
+          seo_score: number | null
+          slug: string | null
+          speed_score: number | null
+          status: string
+          title: string | null
+          title_length: number | null
+          url: string
+          x_robots_tag: string | null
+        }
+        Insert: {
+          canonical_url?: string | null
+          checked_at?: string
+          description?: string | null
+          description_length?: number | null
+          h1_count?: number | null
+          has_canonical?: boolean | null
+          html_kb?: number | null
+          http_status?: number | null
+          id?: string
+          images_missing_alt?: number | null
+          is_indexable?: boolean | null
+          issues?: Json
+          page_type: string
+          response_ms?: number | null
+          robots_meta?: string | null
+          run_id: string
+          seo_score?: number | null
+          slug?: string | null
+          speed_score?: number | null
+          status?: string
+          title?: string | null
+          title_length?: number | null
+          url: string
+          x_robots_tag?: string | null
+        }
+        Update: {
+          canonical_url?: string | null
+          checked_at?: string
+          description?: string | null
+          description_length?: number | null
+          h1_count?: number | null
+          has_canonical?: boolean | null
+          html_kb?: number | null
+          http_status?: number | null
+          id?: string
+          images_missing_alt?: number | null
+          is_indexable?: boolean | null
+          issues?: Json
+          page_type?: string
+          response_ms?: number | null
+          robots_meta?: string | null
+          run_id?: string
+          seo_score?: number | null
+          slug?: string | null
+          speed_score?: number | null
+          status?: string
+          title?: string | null
+          title_length?: number | null
+          url?: string
+          x_robots_tag?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_health_page_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "seo_health_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_health_runs: {
+        Row: {
+          avg_html_kb: number | null
+          avg_response_ms: number | null
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          pages_checked: number
+          pages_failing: number
+          pages_passing: number
+          pages_total: number
+          pages_warning: number
+          scope: string
+          started_at: string
+          status: string
+          summary: Json
+          triggered_by: string | null
+        }
+        Insert: {
+          avg_html_kb?: number | null
+          avg_response_ms?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          pages_checked?: number
+          pages_failing?: number
+          pages_passing?: number
+          pages_total?: number
+          pages_warning?: number
+          scope?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string | null
+        }
+        Update: {
+          avg_html_kb?: number | null
+          avg_response_ms?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          pages_checked?: number
+          pages_failing?: number
+          pages_passing?: number
+          pages_total?: number
+          pages_warning?: number
+          scope?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       seo_keyword_research: {
         Row: {
           content_type: string
