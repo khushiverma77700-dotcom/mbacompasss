@@ -291,6 +291,36 @@ const AdminSEODashboard = () => {
     }
   };
 
+  const launchReseoSingle = async (row: DashboardRow) => {
+    setReseoRowLoadingKey(row.key);
+    try { await launchReseo([row], "single"); } finally { setReseoRowLoadingKey(null); }
+  };
+
+  const fetchReseoStatuses = useCallback(async () => {
+    try {
+      const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("seo_reoptimization_items")
+        .select("slug,status,new_primary_keyword,score_before,score_after,finished_at,created_at,rewrite_applied")
+        .gte("created_at", cutoff)
+        .order("created_at", { ascending: false })
+        .limit(4000);
+      const map: Record<string, any> = {};
+      for (const it of (data || []) as any[]) {
+        if (!it.slug) continue;
+        if (!map[it.slug]) map[it.slug] = it;
+      }
+      setReseoStatusMap(map);
+    } catch (e) { console.warn("fetchReseoStatuses failed", e); }
+  }, []);
+
+  const openReport = (row: DashboardRow) => {
+    setReportSlug(row.slug || row.key);
+    setReportName(row.name);
+    setReportOpen(true);
+  };
+
+
 
   // Keyword Research State
   const [kwQuery, setKwQuery] = useState("MBA coaching India");
