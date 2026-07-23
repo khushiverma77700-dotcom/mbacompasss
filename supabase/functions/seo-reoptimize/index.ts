@@ -225,6 +225,13 @@ Deno.serve(async (req) => {
   const { error: itErr } = await sb.from("seo_reoptimization_items").insert(items);
   if (itErr) return json(500, { error: itErr.message });
 
+  await logReseoAudit(sb, {
+    run_id: run.id, url: `run:${run.id}`,
+    action: "run_created", actor_id: actorId, actor_role: "admin",
+    notes: `${items.length} page(s) queued • scope=${run.scope} • ${scheduled ? "scheduled for " + run.run_at : "running now"}${body.options?.preview_only ? " • preview-only" : ""}`,
+    changes: { pages: { before: null, after: items.map((i: any) => i.url) } },
+  });
+
   if (!scheduled) EdgeRuntime.waitUntil(kickWorker(run.id));
 
   return json(200, { run_id: run.id, total: items.length, scheduled, run_at: run.run_at });
