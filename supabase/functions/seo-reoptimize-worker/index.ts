@@ -351,7 +351,7 @@ Deno.serve(async (req) => {
       }
     }
     await sb.from("seo_reoptimization_items").update({ locked_at: nowIso() }).eq("id", item.id);
-    await processItem(sb, item);
+    await processItem(sb, item, previewOnly);
   }
 
   if (runId) await bumpRun(sb, runId);
