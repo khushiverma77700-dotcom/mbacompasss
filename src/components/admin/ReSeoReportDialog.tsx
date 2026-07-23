@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, ArrowRight, Sparkles, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Target, MessageSquare, FileText } from "lucide-react";
+import { Loader2, ArrowRight, Sparkles, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Target, MessageSquare, FileText, Eye, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   open: boolean;
@@ -48,6 +50,10 @@ interface Item {
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
+  applied?: boolean;
+  applied_at?: string | null;
+  discarded?: boolean;
+  discarded_at?: string | null;
 }
 
 const STATUS_TONE: Record<string, string> = {
@@ -99,24 +105,69 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [actionLoading, setActionLoading] = useState<null | "apply" | "discard">(null);
+  const { toast } = useToast();
+
+  const reload = async () => {
+    if (!slug) return;
+    const { data } = await supabase
+      .from("seo_reoptimization_items")
+      .select("*")
+      .eq("slug", slug)
+      .order("created_at", { ascending: false })
+      .limit(15);
+    setItems((data || []) as any);
+  };
 
   useEffect(() => {
     if (!open || !slug) return;
     setLoading(true);
     setActiveIdx(0);
-    (async () => {
-      const { data } = await supabase
-        .from("seo_reoptimization_items")
-        .select("*")
-        .eq("slug", slug)
-        .order("created_at", { ascending: false })
-        .limit(15);
-      setItems((data || []) as any);
-      setLoading(false);
-    })();
+    (async () => { await reload(); setLoading(false); })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, slug]);
 
+
   const active = items[activeIdx];
+  const isPreview = !!active && active.status === "done" && active.applied === false && active.discarded === false;
+  const wasDiscarded = !!active?.discarded;
+
+  const handleApply = async () => {
+    if (!active) return;
+    setActionLoading("apply");
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-reoptimize", {
+        body: { action: "apply", item_id: active.id },
+      });
+      if (error) throw error;
+      const first = (data as any)?.results?.[0];
+      if (first?.error) throw new Error(first.error);
+      toast({ title: "Changes applied", description: "The proposed SEO updates are now live." });
+      await reload();
+    } catch (e: any) {
+      toast({ title: "Apply failed", description: String(e?.message || e), variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDiscard = async () => {
+    if (!active) return;
+    setActionLoading("discard");
+    try {
+      const { error } = await supabase.functions.invoke("seo-reoptimize", {
+        body: { action: "discard", item_id: active.id },
+      });
+      if (error) throw error;
+      toast({ title: "Preview discarded", description: "The proposed changes were not applied." });
+      await reload();
+    } catch (e: any) {
+      toast({ title: "Discard failed", description: String(e?.message || e), variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const before = active?.before_snapshot || {};
   const after = active?.after_snapshot || {};
   const competitors: any[] = Array.isArray(active?.competitors) ? active!.competitors : [];
@@ -177,6 +228,41 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                       {new Date(it.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} · {it.status}
                     </button>
                   ))}
+                </div>
+              )}
+
+              {/* Preview / Apply banner */}
+              {isPreview && (
+                <Card className="border-amber-300 bg-amber-50/60">
+                  <CardContent className="py-3 flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-start gap-2">
+                      <Eye className="h-4 w-4 text-amber-700 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900">Preview — changes not yet applied</p>
+                        <p className="text-xs text-amber-800">Review the before/after diff below, then choose to apply or discard. Nothing on the live page has changed.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={handleDiscard} disabled={!!actionLoading}>
+                        {actionLoading === "discard" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                        Discard
+                      </Button>
+                      <Button size="sm" onClick={handleApply} disabled={!!actionLoading} className="bg-green-600 hover:bg-green-700 text-white">
+                        {actionLoading === "apply" ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
+                        Apply changes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {active.applied && active.applied_at && (
+                <div className="rounded border border-green-200 bg-green-50/60 px-3 py-2 text-xs text-green-800 flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Applied {new Date(active.applied_at).toLocaleString("en-IN")}
+                </div>
+              )}
+              {wasDiscarded && (
+                <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 flex items-center gap-2">
+                  <Trash2 className="h-3.5 w-3.5" /> Preview discarded {active.discarded_at ? new Date(active.discarded_at).toLocaleString("en-IN") : ""}
                 </div>
               )}
 

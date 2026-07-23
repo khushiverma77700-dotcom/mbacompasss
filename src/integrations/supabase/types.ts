@@ -7143,12 +7143,16 @@ export type Database = {
         Row: {
           aeo_notes: string | null
           after_snapshot: Json | null
+          applied: boolean
+          applied_at: string | null
           attempts: number
           before_snapshot: Json | null
           competitors: Json | null
           content_word_count_after: number | null
           content_word_count_before: number | null
           created_at: string
+          discarded: boolean
+          discarded_at: string | null
           error: string | null
           finished_at: string | null
           full_content_after: string | null
@@ -7181,12 +7185,16 @@ export type Database = {
         Insert: {
           aeo_notes?: string | null
           after_snapshot?: Json | null
+          applied?: boolean
+          applied_at?: string | null
           attempts?: number
           before_snapshot?: Json | null
           competitors?: Json | null
           content_word_count_after?: number | null
           content_word_count_before?: number | null
           created_at?: string
+          discarded?: boolean
+          discarded_at?: string | null
           error?: string | null
           finished_at?: string | null
           full_content_after?: string | null
@@ -7219,12 +7227,16 @@ export type Database = {
         Update: {
           aeo_notes?: string | null
           after_snapshot?: Json | null
+          applied?: boolean
+          applied_at?: string | null
           attempts?: number
           before_snapshot?: Json | null
           competitors?: Json | null
           content_word_count_after?: number | null
           content_word_count_before?: number | null
           created_at?: string
+          discarded?: boolean
+          discarded_at?: string | null
           error?: string | null
           finished_at?: string | null
           full_content_after?: string | null

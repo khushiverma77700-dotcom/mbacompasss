@@ -267,7 +267,7 @@ const AdminSEODashboard = () => {
   const [reportName, setReportName] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const launchReseo = async (targetRows: DashboardRow[], scope: string, opts?: { run_at?: string | null; priority?: number }) => {
+  const launchReseo = async (targetRows: DashboardRow[], scope: string, opts?: { run_at?: string | null; priority?: number; preview?: boolean }) => {
     if (!targetRows.length) {
       toast({ title: "Nothing to re-optimize", description: "Select or filter pages first.", variant: "destructive" });
       return;
@@ -284,7 +284,13 @@ const AdminSEODashboard = () => {
         score_before: r.audit?.score ?? null,
       }));
       const { data, error } = await supabase.functions.invoke("seo-reoptimize", {
-        body: { scope, pages, run_at: opts?.run_at || null, priority: opts?.priority ?? 100 },
+        body: {
+          scope, pages,
+          run_at: opts?.run_at || null,
+          priority: opts?.priority ?? 100,
+          options: { preview_only: !!opts?.preview },
+          label: opts?.preview ? `Preview ${new Date().toISOString().slice(0, 16)}` : undefined,
+        },
       });
       if (error) throw error;
       const runId = data?.run_id;
@@ -301,10 +307,14 @@ const AdminSEODashboard = () => {
       });
       setAutoReportedSlugs(new Set());
       toast({
-        title: scheduled ? "Re-SEO scheduled" : "Re-SEO started",
+        title: scheduled
+          ? (opts?.preview ? "Preview scheduled" : "Re-SEO scheduled")
+          : (opts?.preview ? "Preview started" : "Re-SEO started"),
         description: scheduled
           ? `${pages.length} page${pages.length > 1 ? "s" : ""} queued for ${new Date(data.run_at).toLocaleString()}. Track it in the Jobs panel.`
-          : `Processing ${pages.length} page${pages.length > 1 ? "s" : ""} in the background. Detailed reports pop up as each finishes.`,
+          : opts?.preview
+            ? `Generating proposed changes for ${pages.length} page${pages.length > 1 ? "s" : ""}. Review the diff and Apply/Discard when it finishes.`
+            : `Processing ${pages.length} page${pages.length > 1 ? "s" : ""} in the background. Detailed reports pop up as each finishes.`,
       });
     } catch (e: any) {
       toast({ title: "Re-SEO failed to start", description: String(e?.message || e), variant: "destructive" });
@@ -1339,6 +1349,16 @@ const AdminSEODashboard = () => {
               {bulkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Bulk Optimize ({selectedRows.length})
             </Button>
             <Button
+              onClick={() => launchReseo(selectedRows.length ? selectedRows : filteredRows, selectedRows.length ? "selected" : "filtered", { preview: true })}
+              disabled={reseoLaunching || (filteredRows.length === 0 && selectedRows.length === 0)}
+              size="sm"
+              variant="outline"
+              title="Preview proposed SEO changes (title / description / H1 / body) without applying them"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview Re-SEO
+            </Button>
+            <Button
               onClick={() => launchReseo(selectedRows.length ? selectedRows : filteredRows, selectedRows.length ? "selected" : "filtered")}
               disabled={reseoLaunching || (filteredRows.length === 0 && selectedRows.length === 0)}
               size="sm"
@@ -1719,6 +1739,20 @@ const AdminSEODashboard = () => {
                             <div className="flex items-center justify-end gap-1">
                               <Button
                                 size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs"
+                                disabled={reseoRowLoadingKey === row.key || reseoLaunching}
+                                onClick={async () => {
+                                  setReseoRowLoadingKey(row.key);
+                                  try { await launchReseo([row], "single", { preview: true }); } finally { setReseoRowLoadingKey(null); }
+                                }}
+                                title="Preview proposed SEO changes without applying them"
+                              >
+                                <Eye className="h-3 w-3" />
+                                <span className="ml-1">Preview</span>
+                              </Button>
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 className="h-7 text-xs"
                                 disabled={reseoRowLoadingKey === row.key || reseoLaunching}
@@ -1753,6 +1787,9 @@ const AdminSEODashboard = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="outline" onClick={fetchReseoStatuses}>Refresh status</Button>
+                    <Button size="sm" variant="outline" onClick={() => launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)).length ? filteredRows.filter(r => selectedKeys.includes(r.key)) : filteredRows, selectedKeys.length ? "selected" : "filtered", { preview: true })} disabled={reseoLaunching}>
+                      <Eye className="h-4 w-4 mr-1" /> Preview ({selectedKeys.length || filteredRows.length})
+                    </Button>
                     <Button size="sm" onClick={() => launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)).length ? filteredRows.filter(r => selectedKeys.includes(r.key)) : filteredRows, selectedKeys.length ? "selected" : "filtered")} disabled={reseoLaunching}>
                       <Sparkles className="h-4 w-4 mr-1" /> Run Re-SEO ({selectedKeys.length || filteredRows.length})
                     </Button>
@@ -1838,9 +1875,17 @@ const AdminSEODashboard = () => {
                                 : <span className="text-muted-foreground">—</span>}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button size="sm" variant="outline" disabled={reseoRowLoadingKey === row.key} onClick={() => launchReseoSingle(row)}>
-                                {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-1" /> Re-SEO</>}
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button size="sm" variant="ghost" disabled={reseoRowLoadingKey === row.key} onClick={async () => {
+                                  setReseoRowLoadingKey(row.key);
+                                  try { await launchReseo([row], "single", { preview: true }); } finally { setReseoRowLoadingKey(null); }
+                                }} title="Preview proposed changes without applying">
+                                  <Eye className="h-3 w-3 mr-1" /> Preview
+                                </Button>
+                                <Button size="sm" variant="outline" disabled={reseoRowLoadingKey === row.key} onClick={() => launchReseoSingle(row)}>
+                                  {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-1" /> Re-SEO</>}
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         );

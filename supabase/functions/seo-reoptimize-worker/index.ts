@@ -144,7 +144,7 @@ async function saveResult(sb: any, item: any, pageType: string, src: any, result
   }
 }
 
-async function processItem(sb: any, item: any): Promise<void> {
+async function processItem(sb: any, item: any, previewOnly: boolean): Promise<void> {
   const patch = async (p: any) => {
     await sb.from("seo_reoptimization_items").update({ ...p, updated_at: nowIso() }).eq("id", item.id);
   };
@@ -173,14 +173,23 @@ async function processItem(sb: any, item: any): Promise<void> {
       userId: null,
     });
 
-    await patch({ stage: "saving" });
-    await saveResult(sb, item, item.page_type, src, result);
+    if (!previewOnly) {
+      await patch({ stage: "saving" });
+      await saveResult(sb, item, item.page_type, src, result);
+    } else {
+      await patch({ stage: "preview_ready" });
+    }
+
 
     const scoreAfter = scoreFromResult(result);
     const beforeBody = (ctx.body_text || "");
     await patch({
       status: "done",
       stage: "done",
+      applied: !previewOnly,
+      applied_at: previewOnly ? null : nowIso(),
+      discarded: false,
+
       new_primary_keyword: result.primary_keyword,
       secondary_keyword: result.secondary_keyword,
       search_intent: result.search_intent,
@@ -294,9 +303,10 @@ Deno.serve(async (req) => {
   const runId: string | null = body?.run_id || null;
 
   // Honor cancellation: if the run was cancelled, mark remaining items and stop.
+  let previewOnly = false;
   if (runId) {
     const { data: runRow } = await sb.from("seo_reoptimization_runs")
-      .select("cancel_requested,status,run_at").eq("id", runId).maybeSingle();
+      .select("cancel_requested,status,run_at,options").eq("id", runId).maybeSingle();
     if (runRow?.cancel_requested) {
       await sb.from("seo_reoptimization_items")
         .update({ status: "failed", error: "cancelled", finished_at: nowIso() })
@@ -314,10 +324,12 @@ Deno.serve(async (req) => {
       await sb.from("seo_reoptimization_runs")
         .update({ status: "running", started_at: nowIso() }).eq("id", runId);
     }
+    previewOnly = !!runRow?.options?.preview_only;
   }
 
   await reclaimStale(sb);
   const batch = await claimNext(sb, runId);
+
 
   if (!batch.length) {
     if (runId) await bumpRun(sb, runId);
@@ -339,7 +351,7 @@ Deno.serve(async (req) => {
       }
     }
     await sb.from("seo_reoptimization_items").update({ locked_at: nowIso() }).eq("id", item.id);
-    await processItem(sb, item);
+    await processItem(sb, item, previewOnly);
   }
 
   if (runId) await bumpRun(sb, runId);
