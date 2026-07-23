@@ -72,4 +72,4 @@ User-agent: CCBot
 Allow: /
 
 # Sitemap for project domain
-Sitemap: https://mbacompass.in/sitemap.xml
+Sitemap: https://coach-compass-finder.lovable.app/sitemap.xml
