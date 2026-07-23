@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 
 /**
