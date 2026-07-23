@@ -7139,6 +7139,87 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_reoptimization_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          after_snapshot: Json | null
+          before_snapshot: Json | null
+          changes: Json
+          created_at: string
+          id: string
+          item_id: string | null
+          notes: string | null
+          page_name: string | null
+          page_type: string | null
+          primary_keyword: string | null
+          run_id: string | null
+          score_after: number | null
+          score_before: number | null
+          secondary_keyword: string | null
+          slug: string | null
+          url: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          after_snapshot?: Json | null
+          before_snapshot?: Json | null
+          changes?: Json
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          notes?: string | null
+          page_name?: string | null
+          page_type?: string | null
+          primary_keyword?: string | null
+          run_id?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          secondary_keyword?: string | null
+          slug?: string | null
+          url: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          after_snapshot?: Json | null
+          before_snapshot?: Json | null
+          changes?: Json
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          notes?: string | null
+          page_name?: string | null
+          page_type?: string | null
+          primary_keyword?: string | null
+          run_id?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          secondary_keyword?: string | null
+          slug?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_reoptimization_audit_log_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "seo_reoptimization_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_reoptimization_audit_log_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "seo_reoptimization_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_reoptimization_items: {
         Row: {
           aeo_notes: string | null
