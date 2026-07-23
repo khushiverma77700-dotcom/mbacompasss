@@ -3075,7 +3075,14 @@ const AdminSEODashboard = () => {
         open={reseoOpen}
         onOpenChange={setReseoOpen}
         runId={reseoRunId}
-        onCompleted={() => { fetchDashboardData(); }}
+        onCompleted={() => { fetchDashboardData(); fetchReseoStatuses(); }}
+      />
+
+      <ReSeoReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        slug={reportSlug}
+        pageName={reportName}
       />
 
     </div>
