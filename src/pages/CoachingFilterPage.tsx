@@ -1,13 +1,15 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCityPageBySlug } from "@/hooks/useCityPages";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
+import { getRegionHubSeo } from "@/lib/coachingSeoTemplates";
 
 /**
  * Legacy /coaching/:region route — redirects to canonical /coaching?city=... or ?state=...
- * Ensures 100% UI/functional parity with the colleges module by reusing CoachingPage.
- * Filters auto-apply on landing; no manual city_pages row is required.
+ * SEO metadata (title, description, H1, breadcrumbs, keywords) is sourced from
+ * the shared `getRegionHubSeo` template so every city / state hub gets consistent
+ * category-specific copy.
  */
 const CoachingFilterPage = () => {
   const { region } = useParams<{ region: string }>();
@@ -23,22 +25,28 @@ const CoachingFilterPage = () => {
       params.set("city", cityPage.name);
       if (cityPage.state) params.set("state", cityPage.state);
     } else {
-      // No admin row — derive city from slug
       const derived = (region || "").replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
       if (derived) params.set("city", derived);
     }
     navigate(`/coaching?${params.toString()}`, { replace: true });
   }, [cityPage, isLoading, region, navigate]);
 
-  const pretty = (region || "").replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const template = getRegionHubSeo(region || "", cityPage?.type === "state" ? "state" : "city");
   return (
     <>
       <SEOHead
-        title={`MBA & CAT Coaching Institutes in ${pretty} — Fees, Reviews & Batches`}
-        description={`Find the best MBA and CAT coaching institutes in ${pretty}. Compare fees, faculty, batch schedules and student reviews for top coaching centres in ${pretty}.`}
+        title={template.title}
+        description={template.description}
+        keywords={template.keywords}
         canonical={canonicalUrl(`/coaching/${(region || "").toLowerCase()}`)}
+        jsonLd={[generateBreadcrumbSchema(template.breadcrumbs)]}
       />
-      <div className="min-h-[40vh]" />
+      <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3 text-center px-4">
+        <h1 className="font-heading text-2xl md:text-3xl font-bold text-slate-900">
+          {template.h1}
+        </h1>
+        <p className="text-slate-500 text-sm">Loading coaching institutes…</p>
+      </div>
     </>
   );
 };
