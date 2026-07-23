@@ -34,6 +34,7 @@ import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 import BulkOptimizeProgressDialog from "@/components/admin/BulkOptimizeProgressDialog";
 import { bulkSeoRunner, useBulkSeoRunner } from "@/lib/bulkSeoOptimizer";
 import ReSeoProgressDialog from "@/components/admin/ReSeoProgressDialog";
+import ReSeoReportDialog from "@/components/admin/ReSeoReportDialog";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
