@@ -151,6 +151,13 @@ async function processItem(sb: any, item: any, previewOnly: boolean): Promise<vo
   };
   try {
     await patch({ status: "running", stage: "reading", started_at: nowIso(), attempts: (item.attempts || 0) + 1 });
+    await logReseoAudit(sb, {
+      run_id: item.run_id, item_id: item.id, url: item.url, slug: item.slug,
+      page_type: item.page_type, page_name: item.page_name,
+      action: "item_started", actor_role: "worker",
+      primary_keyword: item.old_primary_keyword, score_before: item.score_before,
+      notes: previewOnly ? "Preview run started" : "Live run started",
+    });
     const src = await fetchSource(sb, item.page_type, item.page_id, item.slug);
     if (!src && item.page_type !== "static") {
       throw new Error(`Source record not found for ${item.page_type}:${item.page_id || item.slug}`);
