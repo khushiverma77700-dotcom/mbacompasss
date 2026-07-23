@@ -3255,10 +3255,24 @@ const AdminSEODashboard = () => {
               {reseoLaunching ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
               Run Re-SEO on {selectedKeys.length}
             </Button>
+            <input
+              type="datetime-local"
+              className="h-8 text-xs border rounded-md px-2 bg-white"
+              min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) return;
+                const runAt = new Date(v).toISOString();
+                launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)), "scheduled", { run_at: runAt });
+                e.currentTarget.value = "";
+              }}
+              title="Schedule for later"
+            />
             <Button size="sm" variant="ghost" className="h-8" onClick={() => setSelectedKeys([])}>Clear</Button>
           </div>
         </div>
       )}
+
 
     </div>
   );
