@@ -186,6 +186,10 @@ async function processItem(sb: any, item: any, previewOnly: boolean): Promise<vo
     await patch({
       status: "done",
       stage: "done",
+      applied: !previewOnly,
+      applied_at: previewOnly ? null : nowIso(),
+      discarded: false,
+
       new_primary_keyword: result.primary_keyword,
       secondary_keyword: result.secondary_keyword,
       search_intent: result.search_intent,
