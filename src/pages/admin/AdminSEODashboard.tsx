@@ -3228,6 +3228,29 @@ const AdminSEODashboard = () => {
         pageName={reportName}
       />
 
+      {/* Sticky multi-select action bar */}
+      {selectedKeys.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-[95vw]">
+          <div className="rounded-full shadow-lg border bg-white/95 backdrop-blur px-4 py-2 flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 text-sm font-medium">
+              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs">{selectedKeys.length}</span>
+              page{selectedKeys.length > 1 ? "s" : ""} selected
+            </span>
+            <div className="h-4 w-px bg-slate-200" />
+            <Button
+              size="sm"
+              onClick={() => launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)), "bulk-selected")}
+              disabled={reseoLaunching}
+              className="h-8"
+            >
+              {reseoLaunching ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+              Run Re-SEO on {selectedKeys.length}
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8" onClick={() => setSelectedKeys([])}>Clear</Button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
