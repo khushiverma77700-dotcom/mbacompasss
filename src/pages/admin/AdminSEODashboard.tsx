@@ -1063,9 +1063,20 @@ const AdminSEODashboard = () => {
         const haystacks = [row.name, row.slug, row.path, fullLink, (row.slug || "").replace(/^\/+/, ""), row.city, row.state, typeLabel];
         return haystacks.filter(Boolean).some((v) => String(v).toLowerCase().includes(q || raw));
       }
+
+      if (reseoStatusFilter !== "all") {
+        const rs = reseoStatusMap[row.slug || row.key];
+        const status = rs?.status;
+        const delta = (rs?.score_after ?? 0) - (rs?.score_before ?? 0);
+        if (reseoStatusFilter === "completed" && status !== "done") return false;
+        if (reseoStatusFilter === "not_optimized" && rs) return false;
+        if (reseoStatusFilter === "in_progress" && !(status === "running" || status === "queued")) return false;
+        if (reseoStatusFilter === "failed" && status !== "failed") return false;
+        if (reseoStatusFilter === "needs_review" && !(status === "done" && (rs?.rewrite_applied || delta < 10))) return false;
+      }
       return true;
     });
-  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, missingFilter, scoreRangeFilter, wordCountFilter, search]);
+  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, missingFilter, scoreRangeFilter, wordCountFilter, search, reseoStatusFilter, reseoStatusMap]);
 
   const stats = useMemo(() => {
     const total = rows.length;
