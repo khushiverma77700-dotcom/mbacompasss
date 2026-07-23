@@ -648,7 +648,7 @@ const AdminSEODashboard = () => {
   };
 
   // Auto-poll for new pages every 90 seconds
-  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); loadRemovedLinks(); }, [fetchDashboardData, loadSavedBlogIdeas, loadRemovedLinks]);
+  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); loadRemovedLinks(); fetchReseoStatuses(); }, [fetchDashboardData, loadSavedBlogIdeas, loadRemovedLinks, fetchReseoStatuses]);
   useEffect(() => {
     const interval = setInterval(() => {
       if (!loading && !bulkLoading) fetchDashboardData();
