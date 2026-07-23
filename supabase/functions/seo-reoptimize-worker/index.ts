@@ -236,8 +236,31 @@ async function processItem(sb: any, item: any, previewOnly: boolean): Promise<vo
       score_after: scoreAfter,
       finished_at: nowIso(),
     });
-    
-    
+
+    const beforeSnap = {
+      title: ctx.title, description: ctx.description, h1: ctx.h1,
+      primary_keyword: ctx.existing_primary_keyword, body_html: beforeBody,
+    };
+    const afterSnap = {
+      title: result.meta_title, description: result.meta_description, h1: result.h1,
+      primary_keyword: result.primary_keyword, secondary_keyword: result.secondary_keyword,
+      body_html: result.body_html, faq: result.faq, json_ld: result.json_ld,
+      long_tail_keywords: result.long_tail_keywords, related_queries: result.related_queries,
+    };
+    await logReseoAudit(sb, {
+      run_id: item.run_id, item_id: item.id, url: item.url, slug: item.slug,
+      page_type: item.page_type, page_name: item.page_name,
+      action: previewOnly ? "item_completed" : "item_applied",
+      actor_role: "worker",
+      primary_keyword: result.primary_keyword, secondary_keyword: result.secondary_keyword,
+      score_before: item.score_before, score_after: scoreAfter,
+      before_snapshot: beforeSnap, after_snapshot: afterSnap,
+      changes: diffSnapshots(beforeSnap, afterSnap),
+      notes: previewOnly
+        ? "Preview generated (not saved to live SEO)"
+        : "Pipeline completed and saved to live SEO",
+    });
+
   } catch (e: any) {
     const msg = String(e?.message || e).slice(0, 500);
     console.error("seo-reoptimize-worker item failed", item.id, msg);
@@ -247,6 +270,12 @@ async function processItem(sb: any, item: any, previewOnly: boolean): Promise<vo
       stage: null,
       error: msg,
       locked_at: null,
+    });
+    await logReseoAudit(sb, {
+      run_id: item.run_id, item_id: item.id, url: item.url, slug: item.slug,
+      page_type: item.page_type, page_name: item.page_name,
+      action: "item_failed", actor_role: "worker",
+      notes: `Attempt ${nextAttempts}/${MAX_ATTEMPTS}: ${msg}`,
     });
   }
 }
