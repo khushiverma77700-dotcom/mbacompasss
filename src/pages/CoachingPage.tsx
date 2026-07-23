@@ -13,7 +13,7 @@ import InstituteGridCard from "@/components/coaching/InstituteGridCard";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateListingSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 import PageKeywords from "@/components/PageKeywords";
 import { getLocationImage } from "@/data/cityImages";
