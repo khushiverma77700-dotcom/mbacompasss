@@ -987,8 +987,11 @@ const App = () => (
             <Route path="/colleges/by-city/:citySlug" element={<PublicLayout><LazyPage><CollegeHubPage kind="city" /></LazyPage></PublicLayout>} />
             <Route path="/colleges/by-exam/:examSlug" element={<PublicLayout><LazyPage><CollegeHubPage kind="exam" /></LazyPage></PublicLayout>} />
             <Route path="/colleges/:region" element={<PublicLayout><LazyPage><CollegeFilterPage /></LazyPage></PublicLayout>} />
+            <Route path="/coaching/exam/:slug" element={<PublicLayout><LazyPage><CoachingCategoryRedirect kind="exam" /></LazyPage></PublicLayout>} />
+            <Route path="/coaching/mode/:slug" element={<PublicLayout><LazyPage><CoachingCategoryRedirect kind="mode" /></LazyPage></PublicLayout>} />
             <Route path="/coaching/:region" element={<PublicLayout><LazyPage><CoachingFilterPage /></LazyPage></PublicLayout>} />
             <Route path="/exam/:slug" element={<PublicLayout><LazyPage><ExamDetailPage /></LazyPage></PublicLayout>} />
+
             <Route path="/dashboard" element={<PublicLayout><LazyPage><DashboardPage /></LazyPage></PublicLayout>} />
             <Route path="/profile-analyzer" element={<PublicLayout><LazyPage><ProfileAnalyzerPage /></LazyPage></PublicLayout>} />
             <Route path="/report/:id" element={<PublicLayout><LazyPage><SharedReportPage /></LazyPage></PublicLayout>} />
