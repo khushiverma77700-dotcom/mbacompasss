@@ -66,6 +66,21 @@ const InstitutePage = () => {
     enabled: !!slug,
   });
 
+  const { data: instituteReviews = [] } = useQuery({
+    queryKey: ["institute_reviews_seo", (institute as any)?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reviews")
+        .select("rating, title, content, created_at")
+        .eq("institute_id", (institute as any).id)
+        .gt("rating", 0)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return data || [];
+    },
+    enabled: !!(institute as any)?.id,
+  });
+
   const linkedCourses = useMemo(() => {
     const fromJoin = (institute?.institute_courses || []).map((r: any) => r.course).filter(Boolean);
     const direct = (institute?.direct_courses || []).filter(Boolean);
