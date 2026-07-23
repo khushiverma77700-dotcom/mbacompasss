@@ -267,7 +267,7 @@ const AdminSEODashboard = () => {
   const [reportName, setReportName] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const launchReseo = async (targetRows: DashboardRow[], scope: string) => {
+  const launchReseo = async (targetRows: DashboardRow[], scope: string, opts?: { run_at?: string | null; priority?: number }) => {
     if (!targetRows.length) {
       toast({ title: "Nothing to re-optimize", description: "Select or filter pages first.", variant: "destructive" });
       return;
@@ -284,27 +284,35 @@ const AdminSEODashboard = () => {
         score_before: r.audit?.score ?? null,
       }));
       const { data, error } = await supabase.functions.invoke("seo-reoptimize", {
-        body: { scope, pages },
+        body: { scope, pages, run_at: opts?.run_at || null, priority: opts?.priority ?? 100 },
       });
       if (error) throw error;
       const runId = data?.run_id;
       if (!runId) throw new Error("No run_id returned");
-      setReseoRunId(runId);
-      setReseoOpen(true);
-      // Remember which slugs we just launched so we can auto-pop the detailed report on completion.
+      const scheduled = !!data?.scheduled;
+      if (!scheduled) {
+        setReseoRunId(runId);
+        setReseoOpen(true);
+      }
       setLaunchedSlugs((prev) => {
         const next = { ...prev };
         for (const p of pages) if (p.slug) next[p.slug] = p.page_name || p.slug;
         return next;
       });
-      setAutoReportedSlugs(new Set()); // reset so newly-launched slugs are eligible
-      toast({ title: "Re-SEO started", description: `Processing ${pages.length} page${pages.length > 1 ? "s" : ""}. Detailed reports will pop up as each finishes.` });
+      setAutoReportedSlugs(new Set());
+      toast({
+        title: scheduled ? "Re-SEO scheduled" : "Re-SEO started",
+        description: scheduled
+          ? `${pages.length} page${pages.length > 1 ? "s" : ""} queued for ${new Date(data.run_at).toLocaleString()}. Track it in the Jobs panel.`
+          : `Processing ${pages.length} page${pages.length > 1 ? "s" : ""} in the background. Detailed reports pop up as each finishes.`,
+      });
     } catch (e: any) {
       toast({ title: "Re-SEO failed to start", description: String(e?.message || e), variant: "destructive" });
     } finally {
       setReseoLaunching(false);
     }
   };
+
 
   const launchReseoSingle = async (row: DashboardRow) => {
     setReseoRowLoadingKey(row.key);
