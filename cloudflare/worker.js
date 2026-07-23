@@ -47,6 +47,7 @@ const PASSTHROUGH_PREFIXES = [
 ];
 
 const PASSTHROUGH_EXACT = new Set(["/sitemap.xml", "/robots.txt", "/manifest.json", "/version.json", "/llms.txt", "/placeholder.svg"]);
+const PASSTHROUGH_REGEX = [/^\/sitemap-[a-z0-9-]+\.xml$/i];
 
 function isAssetPath(p) {
   return ASSET_EXT.test(p);
@@ -58,6 +59,7 @@ function isAppOnly(p) {
 
 function isPassthrough(p) {
   if (PASSTHROUGH_EXACT.has(p)) return true;
+  if (PASSTHROUGH_REGEX.some((re) => re.test(p))) return true;
   return PASSTHROUGH_PREFIXES.some((pref) => p.startsWith(pref));
 }
 
