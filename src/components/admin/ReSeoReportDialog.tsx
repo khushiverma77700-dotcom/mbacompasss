@@ -50,6 +50,10 @@ interface Item {
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
+  applied?: boolean;
+  applied_at?: string | null;
+  discarded?: boolean;
+  discarded_at?: string | null;
 }
 
 const STATUS_TONE: Record<string, string> = {
