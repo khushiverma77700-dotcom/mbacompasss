@@ -290,7 +290,14 @@ const AdminSEODashboard = () => {
       if (!runId) throw new Error("No run_id returned");
       setReseoRunId(runId);
       setReseoOpen(true);
-      toast({ title: "Re-SEO started", description: `Processing ${pages.length} page${pages.length > 1 ? "s" : ""}. This runs in the background.` });
+      // Remember which slugs we just launched so we can auto-pop the detailed report on completion.
+      setLaunchedSlugs((prev) => {
+        const next = { ...prev };
+        for (const p of pages) if (p.slug) next[p.slug] = p.page_name || p.slug;
+        return next;
+      });
+      setAutoReportedSlugs(new Set()); // reset so newly-launched slugs are eligible
+      toast({ title: "Re-SEO started", description: `Processing ${pages.length} page${pages.length > 1 ? "s" : ""}. Detailed reports will pop up as each finishes.` });
     } catch (e: any) {
       toast({ title: "Re-SEO failed to start", description: String(e?.message || e), variant: "destructive" });
     } finally {
