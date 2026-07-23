@@ -1719,7 +1719,7 @@ const AdminSEODashboard = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="outline" onClick={fetchReseoStatuses}>Refresh status</Button>
-                    <Button size="sm" onClick={() => startReseoRun(filteredRows.filter(r => selectedKeys.includes(r.key)).length ? filteredRows.filter(r => selectedKeys.includes(r.key)) : filteredRows)} disabled={reseoLaunching}>
+                    <Button size="sm" onClick={() => launchReseo(filteredRows.filter(r => selectedKeys.includes(r.key)).length ? filteredRows.filter(r => selectedKeys.includes(r.key)) : filteredRows, selectedKeys.length ? "selected" : "filtered")} disabled={reseoLaunching}>
                       <Sparkles className="h-4 w-4 mr-1" /> Run Re-SEO ({selectedKeys.length || filteredRows.length})
                     </Button>
                   </div>
@@ -1802,7 +1802,7 @@ const AdminSEODashboard = () => {
                                 : <span className="text-muted-foreground">—</span>}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button size="sm" variant="outline" disabled={reseoRowLoadingKey === row.key} onClick={() => startReseoRun([row])}>
+                              <Button size="sm" variant="outline" disabled={reseoRowLoadingKey === row.key} onClick={() => launchReseoSingle(row)}>
                                 {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-1" /> Re-SEO</>}
                               </Button>
                             </TableCell>
