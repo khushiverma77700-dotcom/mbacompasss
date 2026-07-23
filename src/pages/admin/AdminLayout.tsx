@@ -140,9 +140,10 @@ const AdminLayout = () => {
   if (loading || (user && adminLoading)) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user || !isAdmin) return <Navigate to="/auth" replace />;
 
-  const isActive = (path: string) => location.pathname === path;
+  const stripQuery = (p: string) => p.split("?")[0].split("#")[0];
+  const isActive = (path: string) => location.pathname === stripQuery(path);
   const isSuperAdmin = allowedSections === null;
-  const hasAccess = (path: string) => isSuperAdmin || (allowedSections?.includes(path) ?? false);
+  const hasAccess = (path: string) => isSuperAdmin || (allowedSections?.includes(stripQuery(path)) ?? false);
 
   const isRouteAllowed = (path: string) => {
     if (isSuperAdmin) return true;
