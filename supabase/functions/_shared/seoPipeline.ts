@@ -186,6 +186,7 @@ function sanitize(result: any, ctx: PageContext): SeoPipelineResult {
     h1: String(result.h1 || "").trim(),
     outline: Array.isArray(result.outline) ? result.outline.slice(0, 10) : [],
     intro_html: String(result.intro_html || "").trim(),
+    body_html: String(result.body_html || "").trim(),
     faq: Array.isArray(result.faq) ? result.faq.slice(0, 10) : [],
     json_ld: (result.json_ld && typeof result.json_ld === "object") ? result.json_ld : {},
     og_title: String(result.og_title || result.meta_title || "").slice(0, 70),
@@ -196,12 +197,37 @@ function sanitize(result: any, ctx: PageContext): SeoPipelineResult {
     slug_suggestion: result.slug_suggestion ? String(result.slug_suggestion) : undefined,
     alt_text_suggestions: Array.isArray(result.alt_text_suggestions) ? result.alt_text_suggestions.slice(0, 8) : [],
     internal_link_suggestions: Array.isArray(result.internal_link_suggestions) ? result.internal_link_suggestions.slice(0, 8) : [],
+    long_tail_keywords: Array.isArray(result.long_tail_keywords) ? result.long_tail_keywords.slice(0, 12).map((k: any) => String(k).trim()).filter(Boolean) : [],
+    related_queries: Array.isArray(result.related_queries) ? result.related_queries.slice(0, 12).map((k: any) => String(k).trim()).filter(Boolean) : [],
+    keyword_density: (result.keyword_density && typeof result.keyword_density === "object") ? result.keyword_density : {},
+    aeo_notes: result.aeo_notes ? String(result.aeo_notes) : undefined,
+    geo_notes: result.geo_notes ? String(result.geo_notes) : undefined,
     rewrite_required: Boolean(result.rewrite_required),
     rewrite_reason: result.rewrite_reason ? String(result.rewrite_reason) : undefined,
     keyword_stuffing_removed: Array.isArray(result.keyword_stuffing_removed) ? result.keyword_stuffing_removed.slice(0, 20) : [],
     eeat_notes: result.eeat_notes ? String(result.eeat_notes) : undefined,
     readability_score: typeof result.readability_score === "number" ? result.readability_score : undefined,
   };
+
+  // Recompute keyword_density from body_html for accuracy (LLM values often drift).
+  const bodyText = out.body_html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const bodyWords = bodyText.split(/\s+/).filter(Boolean);
+  const totalWords = bodyWords.length || 1;
+  const lc = bodyText.toLowerCase();
+  const measure = (kw: string): number => {
+    if (!kw) return 0;
+    const k = kw.toLowerCase().trim();
+    if (!k) return 0;
+    const kWords = k.split(/\s+/).length;
+    let idx = 0, count = 0;
+    while ((idx = lc.indexOf(k, idx)) !== -1) { count++; idx += k.length; }
+    return Math.round(((count * kWords) / totalWords) * 1000) / 10;
+  };
+  const density: Record<string, number> = {};
+  if (out.primary_keyword) density[out.primary_keyword] = measure(out.primary_keyword);
+  if (out.secondary_keyword) density[out.secondary_keyword] = measure(out.secondary_keyword);
+  for (const lt of out.long_tail_keywords) density[lt] = measure(lt);
+  out.keyword_density = density;
 
   // Guardrails: reject the model's output if it snuck two unrelated keywords in.
   if (out.secondary_keyword) {
