@@ -56,14 +56,24 @@ async function fetchSource(sb: any, pageType: string, pageId: string | null, slu
 }
 
 function scoreFromResult(r: any): number {
-  let s = 30;
-  if (r.meta_title && r.meta_title.length >= 45 && r.meta_title.length <= 62) s += 15;
-  if (r.meta_description && r.meta_description.length >= 130 && r.meta_description.length <= 165) s += 15;
-  if (r.h1) s += 10;
-  if (r.primary_keyword) s += 10;
-  if (r.faq?.length >= 5) s += 10;
-  if (r.json_ld && Object.keys(r.json_ld).length > 2) s += 10;
+  let s = 20;
+  if (r.meta_title && r.meta_title.length >= 45 && r.meta_title.length <= 62) s += 10;
+  if (r.meta_description && r.meta_description.length >= 130 && r.meta_description.length <= 165) s += 10;
+  if (r.h1) s += 8;
+  if (r.primary_keyword) s += 8;
+  if (r.faq?.length >= 5) s += 8;
+  if (r.json_ld && Object.keys(r.json_ld).length > 2) s += 8;
+  if (r.long_tail_keywords?.length >= 5) s += 6;
+  if (r.related_queries?.length >= 5) s += 4;
+  const pd = r.keyword_density?.[r.primary_keyword];
+  if (typeof pd === "number" && pd >= 2.5 && pd <= 3.5) s += 10;
+  else if (typeof pd === "number" && pd >= 1.5 && pd <= 4.5) s += 5;
+  if (r.body_html && r.body_html.length > 3500) s += 8;
   return Math.min(100, s);
+}
+
+function wordCount(s: string): number {
+  return (s || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).filter(Boolean).length;
 }
 
 function buildContext(pageType: string, slug: string, url: string, src: any): PageContext {
