@@ -135,6 +135,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Website Optimizer", path: "/admin/website-optimizer", icon: Sparkles },
       { label: "Static Page SEO", path: "/admin/static-seo", icon: Globe },
       { label: "Meta Tag Validator", path: "/admin/meta-validator", icon: ShieldCheck },
+      { label: "Weekly SEO Health Check", path: "/admin/seo-health-check", icon: Activity },
       { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
       { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
       { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
