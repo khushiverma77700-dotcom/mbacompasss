@@ -34,6 +34,7 @@ import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 import BulkOptimizeProgressDialog from "@/components/admin/BulkOptimizeProgressDialog";
 import { bulkSeoRunner, useBulkSeoRunner } from "@/lib/bulkSeoOptimizer";
 import ReSeoProgressDialog from "@/components/admin/ReSeoProgressDialog";
+import ReSeoReportDialog from "@/components/admin/ReSeoReportDialog";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
@@ -247,6 +248,15 @@ const AdminSEODashboard = () => {
   const [reseoOpen, setReseoOpen] = useState(false);
   const [reseoRunId, setReseoRunId] = useState<string | null>(null);
   const [reseoLaunching, setReseoLaunching] = useState(false);
+  const [reseoRowLoadingKey, setReseoRowLoadingKey] = useState<string | null>(null);
+  const [reseoStatusMap, setReseoStatusMap] = useState<Record<string, {
+    status: string; new_primary_keyword: string | null; score_before: number | null;
+    score_after: number | null; finished_at: string | null; created_at: string; rewrite_applied: boolean | null;
+  }>>({});
+  const [reseoStatusFilter, setReseoStatusFilter] = useState<"all" | "completed" | "not_optimized" | "in_progress" | "failed" | "needs_review">("all");
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSlug, setReportSlug] = useState<string | null>(null);
+  const [reportName, setReportName] = useState<string | null>(null);
   const { toast } = useToast();
 
   const launchReseo = async (targetRows: DashboardRow[], scope: string) => {
@@ -280,6 +290,36 @@ const AdminSEODashboard = () => {
       setReseoLaunching(false);
     }
   };
+
+  const launchReseoSingle = async (row: DashboardRow) => {
+    setReseoRowLoadingKey(row.key);
+    try { await launchReseo([row], "single"); } finally { setReseoRowLoadingKey(null); }
+  };
+
+  const fetchReseoStatuses = useCallback(async () => {
+    try {
+      const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("seo_reoptimization_items")
+        .select("slug,status,new_primary_keyword,score_before,score_after,finished_at,created_at,rewrite_applied")
+        .gte("created_at", cutoff)
+        .order("created_at", { ascending: false })
+        .limit(4000);
+      const map: Record<string, any> = {};
+      for (const it of (data || []) as any[]) {
+        if (!it.slug) continue;
+        if (!map[it.slug]) map[it.slug] = it;
+      }
+      setReseoStatusMap(map);
+    } catch (e) { console.warn("fetchReseoStatuses failed", e); }
+  }, []);
+
+  const openReport = (row: DashboardRow) => {
+    setReportSlug(row.slug || row.key);
+    setReportName(row.name);
+    setReportOpen(true);
+  };
+
 
 
   // Keyword Research State
@@ -608,7 +648,7 @@ const AdminSEODashboard = () => {
   };
 
   // Auto-poll for new pages every 90 seconds
-  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); loadRemovedLinks(); }, [fetchDashboardData, loadSavedBlogIdeas, loadRemovedLinks]);
+  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); loadRemovedLinks(); fetchReseoStatuses(); }, [fetchDashboardData, loadSavedBlogIdeas, loadRemovedLinks, fetchReseoStatuses]);
   useEffect(() => {
     const interval = setInterval(() => {
       if (!loading && !bulkLoading) fetchDashboardData();
@@ -1023,9 +1063,20 @@ const AdminSEODashboard = () => {
         const haystacks = [row.name, row.slug, row.path, fullLink, (row.slug || "").replace(/^\/+/, ""), row.city, row.state, typeLabel];
         return haystacks.filter(Boolean).some((v) => String(v).toLowerCase().includes(q || raw));
       }
+
+      if (reseoStatusFilter !== "all") {
+        const rs = reseoStatusMap[row.slug || row.key];
+        const status = rs?.status;
+        const delta = (rs?.score_after ?? 0) - (rs?.score_before ?? 0);
+        if (reseoStatusFilter === "completed" && status !== "done") return false;
+        if (reseoStatusFilter === "not_optimized" && rs) return false;
+        if (reseoStatusFilter === "in_progress" && !(status === "running" || status === "queued")) return false;
+        if (reseoStatusFilter === "failed" && status !== "failed") return false;
+        if (reseoStatusFilter === "needs_review" && !(status === "done" && (rs?.rewrite_applied || delta < 10))) return false;
+      }
       return true;
     });
-  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, missingFilter, scoreRangeFilter, wordCountFilter, search]);
+  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, missingFilter, scoreRangeFilter, wordCountFilter, search, reseoStatusFilter, reseoStatusMap]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -1051,6 +1102,26 @@ const AdminSEODashboard = () => {
       richContent: rows.filter(r => r.audit.wordCount >= 1000).length,
     };
   }, [rows]);
+
+  const reseoStats = useMemo(() => {
+    const total = rows.length;
+    let completed = 0, running = 0, queued = 0, failed = 0, notOptimized = 0, needsReview = 0;
+    const deltas: number[] = [];
+    for (const r of rows) {
+      const rs = reseoStatusMap[r.slug || r.key];
+      if (!rs) { notOptimized++; continue; }
+      if (rs.status === "done") {
+        completed++;
+        if (rs.score_after != null && rs.score_before != null) deltas.push(rs.score_after - rs.score_before);
+        if (rs.rewrite_applied || (rs.score_after != null && rs.score_before != null && rs.score_after - rs.score_before < 10)) needsReview++;
+      } else if (rs.status === "running") running++;
+      else if (rs.status === "queued") queued++;
+      else if (rs.status === "failed") failed++;
+    }
+    const avgImprovement = deltas.length ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length) : 0;
+    return { total, completed, pending: notOptimized, inProgress: running + queued, failed, needsReview, avgImprovement };
+  }, [rows, reseoStatusMap]);
+
 
   const pct = (v: number) => (stats.total ? Math.round((v / stats.total) * 100) : 0);
   const selectedRows = filteredRows.filter(r => selectedKeys.includes(r.key));
@@ -1378,6 +1449,31 @@ const AdminSEODashboard = () => {
         {/* ═══ ALL PAGES ═══ */}
         {activeTab === "pages" && (
           <div className="space-y-4">
+            {/* Re-SEO summary dashboard */}
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Re-SEO Progress</CardTitle>
+                    <CardDescription>One-page-one-keyword optimization across the whole site</CardDescription>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={fetchReseoStatuses}>Refresh status</Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Total Pages</p><p className="text-xl font-bold">{reseoStats.total}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Re-SEO Completed</p><p className="text-xl font-bold text-green-600">{reseoStats.completed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pending</p><p className="text-xl font-bold text-slate-600">{reseoStats.pending}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">In Progress</p><p className="text-xl font-bold text-blue-600">{reseoStats.inProgress}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Failed</p><p className="text-xl font-bold text-red-600">{reseoStats.failed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Avg Score ↑</p><p className={`text-xl font-bold ${reseoStats.avgImprovement >= 0 ? "text-green-600" : "text-red-600"}`}>{reseoStats.avgImprovement >= 0 ? "+" : ""}{reseoStats.avgImprovement}</p></div>
+                </div>
+                {reseoStats.needsReview > 0 && (
+                  <p className="text-xs text-amber-600 mt-2"><AlertTriangle className="inline h-3 w-3 mr-1" />{reseoStats.needsReview} completed pages need review (rewrite applied or small score gain).</p>
+                )}
+              </CardContent>
+            </Card>
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="grid gap-3 xl:grid-cols-4 md:grid-cols-2">
@@ -1460,6 +1556,17 @@ const AdminSEODashboard = () => {
                       <SelectItem value="gt1000">&gt; 1000 words</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select value={reseoStatusFilter} onValueChange={(v) => setReseoStatusFilter(v as typeof reseoStatusFilter)}>
+                    <SelectTrigger><SelectValue placeholder="Re-SEO status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Re-SEO: any</SelectItem>
+                      <SelectItem value="completed">Re-SEO Completed</SelectItem>
+                      <SelectItem value="not_optimized">Not Optimized</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                      <SelectItem value="needs_review">Needs Review</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => { setMissingFilter("not_optimized"); setSelectedType("all"); setFilterStatus("all"); }}>Not Optimized</Button>
@@ -1498,6 +1605,7 @@ const AdminSEODashboard = () => {
                         <TableHead>Score</TableHead>
                         <TableHead>Created</TableHead>
                         <TableHead>SEO Updated</TableHead>
+                        <TableHead>Re-SEO</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1543,8 +1651,43 @@ const AdminSEODashboard = () => {
                               return <span className="text-muted-foreground">{new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>;
                             })()}
                           </TableCell>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {(() => {
+                              const rs = reseoStatusMap[row.slug || row.key];
+                              if (!rs) return <Badge variant="outline" className="text-[10px]">Not Optimized</Badge>;
+                              const delta = (rs.score_after ?? 0) - (rs.score_before ?? 0);
+                              const tone =
+                                rs.status === "done" ? "bg-green-100 text-green-700 border-green-200" :
+                                rs.status === "failed" ? "bg-red-100 text-red-700 border-red-200" :
+                                rs.status === "running" || rs.status === "queued" ? "bg-blue-100 text-blue-700 border-blue-200" :
+                                "bg-slate-100 text-slate-700 border-slate-200";
+                              return (
+                                <button onClick={() => openReport(row)} className={`inline-flex flex-col items-start rounded px-1.5 py-0.5 border text-left hover:opacity-80 ${tone}`}>
+                                  <span className="text-[10px] font-semibold capitalize">{rs.status === "done" ? "Completed" : rs.status}</span>
+                                  {rs.new_primary_keyword && <span className="text-[10px] text-slate-600 max-w-[140px] truncate">KW: {rs.new_primary_keyword}</span>}
+                                  {rs.status === "done" && rs.score_after != null && (
+                                    <span className="text-[10px]">Score {rs.score_before ?? "—"}→{rs.score_after} <span className={delta >= 0 ? "text-green-700" : "text-red-700"}>({delta >= 0 ? "+" : ""}{delta})</span></span>
+                                  )}
+                                  {rs.finished_at && <span className="text-[10px] text-slate-500">{new Date(rs.finished_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>}
+                                </button>
+                              );
+                            })()}
+                          </TableCell>
                           <TableCell className="text-right">
-                            <AISEOButton contentType={row.contentType} recordId={row.id} data={row.item} onApply={(s) => applySEOFields(row, s)} />
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                disabled={reseoRowLoadingKey === row.key || reseoLaunching}
+                                onClick={() => launchReseoSingle(row)}
+                                title="Run single-keyword Re-SEO pipeline for this page"
+                              >
+                                {reseoRowLoadingKey === row.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                                <span className="ml-1">Re-SEO</span>
+                              </Button>
+                              <AISEOButton contentType={row.contentType} recordId={row.id} data={row.item} onApply={(s) => applySEOFields(row, s)} />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -2932,7 +3075,14 @@ const AdminSEODashboard = () => {
         open={reseoOpen}
         onOpenChange={setReseoOpen}
         runId={reseoRunId}
-        onCompleted={() => { fetchDashboardData(); }}
+        onCompleted={() => { fetchDashboardData(); fetchReseoStatuses(); }}
+      />
+
+      <ReSeoReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        slug={reportSlug}
+        pageName={reportName}
       />
 
     </div>
