@@ -177,26 +177,26 @@ const CoachingPage = () => {
     return chips;
   }, [selectedState, selectedCity, selectedMode, selectedCategory, selectedFee, selectedSpec, search, categories, specOptions]);
 
-  // Dynamic SEO
-  const dynamicH1 = useMemo(() => {
-    const parts = ["Best MBA Coaching Institutes"];
-    if (selectedCity !== "all") parts.push(`in ${selectedCity}`);
-    else if (selectedState !== "all") parts.push(`in ${selectedState}`);
-    else parts.push("in India");
-    return parts.join(" ");
-  }, [selectedState, selectedCity]);
+  // Dynamic SEO — sourced from central coaching SEO template library
+  const selectedExam = searchParams.get("exam") || "";
+  const seoTemplate = useMemo(() => {
+    const catName =
+      selectedCategory !== "all"
+        ? (categories.find((c: any) => c.slug === selectedCategory)?.name || "")
+        : "";
+    return getCoachingListingSeo({
+      city: selectedCity,
+      state: selectedState,
+      mode: selectedMode,
+      categoryName: catName,
+      examSlug: selectedExam || undefined,
+      resultCount: filtered.length,
+    });
+  }, [selectedCity, selectedState, selectedMode, selectedCategory, selectedExam, categories, filtered.length]);
 
-  const dynamicTitle = useMemo(() => {
-    const cat = selectedCategory !== "all" ? (categories.find((c: any) => c.slug === selectedCategory)?.name + " " || "") : "";
-    const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
-    const mode = selectedMode !== "all" ? ` (${selectedMode})` : "";
-    return `Best ${cat}MBA Coaching Institutes in ${location}${mode} 2026 | MBA Compass`;
-  }, [selectedState, selectedCity, selectedMode, selectedCategory, categories]);
-
-  const dynamicDescription = useMemo(() => {
-    const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
-    return `Compare ${filtered.length} MBA coaching institutes in ${location}. Ratings, fees, success rates, and reviews.`;
-  }, [selectedState, selectedCity, filtered.length]);
+  const dynamicH1 = seoTemplate.h1;
+  const dynamicTitle = seoTemplate.title;
+  const dynamicDescription = seoTemplate.description;
 
   const totalInstitutes = allInstitutes.length;
 
@@ -217,13 +217,7 @@ const CoachingPage = () => {
       <SEOHead
         title={dynamicTitle}
         description={dynamicDescription}
-        keywords={[
-          "CAT coaching", "MBA preparation", "online MBA coaching", "exam training", "coaching institutes",
-          "best CAT coaching institutes in India fees", "top online coaching for MBA entrance exams",
-          "CAT coaching near me with reviews", "best coaching for GMAT and GRE in India",
-          "weekend CAT coaching for working professionals", "free trial classes for MBA entrance coaching",
-          "online study material for MBA entrance exams", "cheap MBA coaching classes online",
-        ]}
+        keywords={seoTemplate.keywords}
         canonical={(() => {
           if (typeof window === "undefined") return "https://mbacompass.in/coaching";
           // M4: self-canonical paginated pages — keep `page` only.
@@ -233,15 +227,11 @@ const CoachingPage = () => {
           return canonicalUrl(`${window.location.pathname}${tail}`);
         })()}
         jsonLd={[
-          generateBreadcrumbSchema([
-            { name: "Home", url: "/" },
-            { name: "Coaching", url: "/coaching" },
-            ...(selectedState !== "all" ? [{ name: selectedState, url: `/coaching?state=${encodeURIComponent(selectedState)}` }] : []),
-            ...(selectedCity !== "all" ? [{ name: selectedCity, url: `/coaching?city=${encodeURIComponent(selectedCity)}` }] : []),
-          ]),
+          generateBreadcrumbSchema(seoTemplate.breadcrumbs),
           generateListingSchema(dynamicH1, filtered.slice(0, 20).map((i: any) => ({ name: i.name, slug: i.slug, city: i.city })), "institute"),
         ]}
       />
+
 
 
 
