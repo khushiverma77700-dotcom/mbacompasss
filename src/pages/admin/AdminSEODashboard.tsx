@@ -1214,6 +1214,7 @@ const AdminSEODashboard = () => {
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "full-audit", label: "🔥 Full Audit & Fix", icon: FileCheck },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
+    { id: "reseo", label: `Re-SEO (${reseoStats.completed}/${reseoStats.total})`, icon: Sparkles },
     { id: "removed-links", label: "Removed Links", icon: Trash2 },
     { id: "interlinks", label: "Interlink Studio", icon: Link2 },
     { id: "auto-generate", label: "Auto-Generate", icon: Zap },
