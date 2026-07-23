@@ -327,6 +327,24 @@ const AdminSEODashboard = () => {
     setReportOpen(true);
   };
 
+  // Track slugs launched in the current session so we can auto-open the report on first completion.
+  const [launchedSlugs, setLaunchedSlugs] = useState<Record<string, string>>({}); // slug -> pageName
+  const [autoReportedSlugs, setAutoReportedSlugs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    for (const [slug, name] of Object.entries(launchedSlugs)) {
+      if (autoReportedSlugs.has(slug)) continue;
+      const rs = reseoStatusMap[slug];
+      if (rs && rs.status === "done") {
+        setReportSlug(slug);
+        setReportName(name);
+        setReportOpen(true);
+        setAutoReportedSlugs((prev) => new Set(prev).add(slug));
+        break; // open one at a time
+      }
+    }
+  }, [reseoStatusMap, launchedSlugs, autoReportedSlugs]);
+
 
 
   // Keyword Research State
