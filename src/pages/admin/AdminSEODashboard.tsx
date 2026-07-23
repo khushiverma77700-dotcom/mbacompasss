@@ -241,7 +241,14 @@ const AdminSEODashboard = () => {
   const [wordCountFilter, setWordCountFilter] = useState<"all" | "lt250" | "250-500" | "500-1000" | "gt1000">("all");
   const [search, setSearch] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "overview");
+
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && t !== activeTab) setActiveTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [previousKeys, setPreviousKeys] = useState<Set<string>>(new Set());
   const [newRows, setNewRows] = useState<DashboardRow[]>([]);
   const [newLinksDismissed, setNewLinksDismissed] = useState(false);
