@@ -39,8 +39,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     const system = "You are an expert MBA quant tutor specializing in CAT, XAT, NMAT, SNAP, CMAT, and IIFT preparation. Be precise, concise, and exam-focused.";
     const user = [
@@ -52,10 +52,10 @@ Deno.serve(async (req) => {
       formula.explanation ? `Context: ${formula.explanation.slice(0, 400)}` : "",
     ].filter(Boolean).join("\n");
 
-    const model = "openai/gpt-5-mini";
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const model = "gemini-2.5-flash";
+    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model,
         messages: [{ role: "system", content: system }, { role: "user", content: user }],
