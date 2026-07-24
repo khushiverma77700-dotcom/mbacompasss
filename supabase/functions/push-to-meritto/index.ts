@@ -196,6 +196,32 @@ Deno.serve(async (req) => {
   try {
     const input = (await req.json()) as LeadInput & { retry_log_id?: string; skip_log?: boolean };
     const skipLog = !!input.skip_log;
+
+    // Basic validation (skip when retrying an existing log — those were already validated on first insert).
+    if (!input.retry_log_id) {
+      if (input.email && !EMAIL_RE.test(String(input.email))) {
+        return new Response(JSON.stringify({ error: "Invalid email format" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (input.mobile) {
+        const digits = String(input.mobile).replace(/\D/g, "");
+        if (digits.length < 10 || digits.length > 15) {
+          return new Response(JSON.stringify({ error: "Invalid mobile number" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+      if (!input.email && !input.mobile) {
+        return new Response(JSON.stringify({ error: "email or mobile required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     console.log(`[meritto][${cid}] incoming`, {
       source: input.source,
       log_id: input.log_id ?? null,
