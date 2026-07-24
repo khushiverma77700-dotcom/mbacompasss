@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/requireUser.ts";
 // Public edge function: AI-powered waitlist conversion predictor.
 // Uses Lovable AI Gateway with Perplexity-style grounding via the model's training,
 // combined with our internal RTI movement data for a calibrated probability.
@@ -16,6 +17,8 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireUser(req, corsHeaders);
+  if (_authFail) return _authFail;
   try {
     const body = await req.json();
     const { category, institute, waitlist_number, cat_percentile, gender, academic_bg, work_ex_months } = body || {};

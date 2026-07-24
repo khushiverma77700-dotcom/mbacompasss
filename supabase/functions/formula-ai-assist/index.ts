@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/requireUser.ts";
 // Lovable AI assistant for a single formula — explain simpler, derive, shortcut, worked example.
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
 
@@ -22,6 +23,8 @@ const MODE_PROMPT: Record<Mode, string> = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireUser(req, corsHeaders);
+  if (_authFail) return _authFail;
   const started = Date.now();
   try {
     const { mode, formula } = await req.json();

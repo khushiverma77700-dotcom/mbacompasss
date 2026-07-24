@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Route Coverage Check
 // ─────────────────────────────────────────────────────────────────────────────
 // Verifies, for every public route on the site, three SEO-critical guarantees:
@@ -475,6 +476,8 @@ async function checkDuplicateFaqSources(supabase: ReturnType<typeof createClient
 // ─── handler ─────────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

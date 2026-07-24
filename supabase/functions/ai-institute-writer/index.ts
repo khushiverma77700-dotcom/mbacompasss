@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Institute Writer — generates a full coaching-institute profile
 // (basic info, description, courses, faculty, results, SEO, etc.) using
 // Lovable AI Gateway via tool-calling for structured output.
@@ -28,6 +29,8 @@ interface InstituteBrief {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));

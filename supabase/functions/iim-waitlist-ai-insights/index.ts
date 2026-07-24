@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/requireUser.ts";
 // Public edge function: returns AI-generated bite-sized insights for the IIM Waitlist page.
 // Uses Lovable AI Gateway (no extra key needed). Cached in DB by content hash for 6 hours.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
@@ -15,6 +16,8 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireUser(req, corsHeaders);
+  if (_authFail) return _authFail;
   try {
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
 

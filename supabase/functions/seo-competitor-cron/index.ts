@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
@@ -18,6 +19,8 @@ const COMPETITORS = [
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));
