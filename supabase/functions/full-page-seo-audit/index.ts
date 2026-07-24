@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Assembled-page SEO audit + Firecrawl competitor scan.
 // Body: { contentType: "college"|"institute"|"article", recordId: string, runCompetitorScan?: boolean }
 // Returns a complete SEOSuggestionsPayload sized for the FULL assembled page (base + sections/courses/faculty).
@@ -193,6 +194,8 @@ async function runFirecrawlCompetitorScan(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const body = (await req.json()) as AuditBody;

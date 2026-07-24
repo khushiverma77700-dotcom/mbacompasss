@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // AI Course Writer — two-mode endpoint:
 //   mode = "discover"  -> given an institute, return a list of MBA / Masters-in-Management
 //                         related courses that institute is known to offer (CAT, XAT, GMAT,
@@ -393,6 +394,8 @@ For EACH course return:
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     await getCredential("OPENAI_API_KEY");

@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/requireUser.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
@@ -90,6 +91,8 @@ function calculateProfileScore(p: ProfileInput): number {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
+  const _authFail = await requireUser(req, corsHeaders);
+  if (_authFail) return _authFail;
     return new Response(null, { headers: corsHeaders });
   }
 

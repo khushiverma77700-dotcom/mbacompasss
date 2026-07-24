@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/requireUser.ts";
 // Generates a daily vocab quiz from a list of word objects.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,6 +7,8 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireUser(req, corsHeaders);
+  if (_authFail) return _authFail;
   try {
     const { words } = await req.json(); // [{id, word, meaning, synonyms, antonyms, example_business}]
     if (!Array.isArray(words) || words.length === 0 || words.length > 15) {

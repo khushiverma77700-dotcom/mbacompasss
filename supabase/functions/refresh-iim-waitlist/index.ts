@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Refresh IIM Waitlist data via Lovable AI (Gemini Flash).
 // Researches latest result dates / waitlist movement / RTI insights / application funnel
 // and queues a content_refreshes row for admin approval (same flow as articles/colleges).
@@ -193,6 +194,8 @@ function diffRows(current: any[], proposed: any[]) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const body = (await req.json()) as Body;

@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Refresh Content — runs deep-research AI refresh on an existing entity
 // (article / college / institute / course), produces a proposed snapshot + diff,
 // and stores it as a pending content_refreshes row awaiting admin approval.
@@ -261,6 +262,8 @@ function buildSchema(fields: string[]) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireAdmin(req, corsHeaders);
+  if (_authFail) return _authFail;
 
   try {
     const body = (await req.json()) as Body;

@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/requireUser.ts";
 // Generate one practice MCQ for a formula via tool calling.
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
 
@@ -9,6 +10,8 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireUser(req, corsHeaders);
+  if (_authFail) return _authFail;
   const started = Date.now();
   try {
     const { formula, difficulty = "intermediate" } = await req.json();

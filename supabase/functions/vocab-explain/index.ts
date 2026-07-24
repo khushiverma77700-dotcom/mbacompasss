@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/requireUser.ts";
 // Vocabulary explainer: takes a word, returns structured explanation. Caches into vocab_words.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -12,6 +13,8 @@ function slugify(w: string): string {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const _authFail = await requireUser(req, corsHeaders);
+  if (_authFail) return _authFail;
   try {
     const { word, save = true, force = false } = await req.json();
     if (!word || typeof word !== "string" || word.length > 80) {
