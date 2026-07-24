@@ -1,6 +1,7 @@
 import { requireUser } from "../_shared/requireUser.ts";
 // Generate one practice MCQ for a formula via tool calling.
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +21,7 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     const diffLabel = difficulty === "beginner" ? "easy" : difficulty === "advanced" ? "hard CAT-level" : difficulty === "cat" ? "CAT-level" : "medium";

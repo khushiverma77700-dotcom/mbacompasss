@@ -1,4 +1,5 @@
 import { requireUser } from "../_shared/requireUser.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 // Generates a daily vocab quiz from a list of word objects.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +15,7 @@ Deno.serve(async (req) => {
     if (!Array.isArray(words) || words.length === 0 || words.length > 15) {
       return new Response(JSON.stringify({ error: "Provide 1–15 words" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY missing");
 
     const compact = words.map((w: any) => ({

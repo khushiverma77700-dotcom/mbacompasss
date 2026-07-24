@@ -1,5 +1,6 @@
 // Backfill missing fields (meaning_hindi, pronunciation_syllables, examples) for existing words
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +43,7 @@ const TOOL = {
 };
 
 async function enrich(word: string) {
-  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
   const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },

@@ -1,4 +1,5 @@
 import { requireUser } from "../_shared/requireUser.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 // Vocabulary explainer: takes a word, returns structured explanation. Caches into vocab_words.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -20,7 +21,7 @@ Deno.serve(async (req) => {
     if (!word || typeof word !== "string" || word.length > 80) {
       return new Response(JSON.stringify({ error: "Invalid word" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY missing");
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

@@ -1,6 +1,7 @@
 import { requireUser } from "../_shared/requireUser.ts";
 // Lovable AI assistant for a single formula — explain simpler, derive, shortcut, worked example.
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     const system = "You are an expert MBA quant tutor specializing in CAT, XAT, NMAT, SNAP, CMAT, and IIFT preparation. Be precise, concise, and exam-focused.";

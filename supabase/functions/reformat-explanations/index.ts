@@ -2,10 +2,10 @@
 // Admin-only. Processes in batches; call repeatedly until 'remaining' = 0.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
 const SYSTEM_PROMPT = `You are a senior MBA-exam faculty editor. Rewrite messy explanations into clear, student-friendly HTML that an average MBA aspirant can understand without reading raw formulas.
 
@@ -29,6 +29,7 @@ Output rules (NON-NEGOTIABLE):
 - Always emit at least <h4>Concept</h4>, <h4>Step-by-step Solution</h4> and <h4>Answer</h4> sections.`;
 
 async function rewriteOne(html: string): Promise<{ text: string; promptTokens: number; completionTokens: number }> {
+  const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
   const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: {

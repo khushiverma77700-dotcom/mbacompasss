@@ -326,7 +326,7 @@ function runChecklist(p: any) {
 }
 
 async function callAIJSON(_key: string, prompt: string): Promise<any> {
-  const geminiKey = Deno.env.get("GEMINI_API_KEY") || _key;
+  const geminiKey = (await (await import("../_shared/getCredential.ts")).getCredential("GEMINI_API_KEY")) || _key;
   const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${geminiKey}` },

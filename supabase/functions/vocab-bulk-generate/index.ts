@@ -158,7 +158,7 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   const endpoint = provider === "openai"
     ? "https://api.openai.com/v1/chat/completions"
     : "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-  const apiKey = provider === "openai" ? keys.openai : Deno.env.get("GEMINI_API_KEY");
+  const apiKey = provider === "openai" ? keys.openai : (await (await import("../_shared/getCredential.ts")).getCredential("GEMINI_API_KEY"));
   const model = provider === "openai" ? "gpt-4o-mini" : "gemini-2.5-flash";
 
   if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "GEMINI_API_KEY not configured");
