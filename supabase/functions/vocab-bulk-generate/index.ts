@@ -157,11 +157,11 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
 
   const endpoint = provider === "openai"
     ? "https://api.openai.com/v1/chat/completions"
-    : "https://ai.gateway.lovable.dev/v1/chat/completions";
-  const apiKey = provider === "openai" ? keys.openai : keys.lovable;
-  const model = provider === "openai" ? "gpt-4o-mini" : "google/gemini-3-flash-preview";
+    : "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+  const apiKey = provider === "openai" ? keys.openai : (await (await import("../_shared/getCredential.ts")).getCredential("GEMINI_API_KEY"));
+  const model = provider === "openai" ? "gpt-4o-mini" : "gemini-2.5-flash";
 
-  if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "LOVABLE_API_KEY not configured");
+  if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "GEMINI_API_KEY not configured");
 
   const timeoutMs = provider === "openai" ? 55_000 : 50_000;
   const controller = new AbortController();

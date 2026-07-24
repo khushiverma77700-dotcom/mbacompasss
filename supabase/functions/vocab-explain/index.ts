@@ -1,4 +1,5 @@
 import { requireUser } from "../_shared/requireUser.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 // Vocabulary explainer: takes a word, returns structured explanation. Caches into vocab_words.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -20,8 +21,8 @@ Deno.serve(async (req) => {
     if (!word || typeof word !== "string" || word.length > 80) {
       return new Response(JSON.stringify({ error: "Invalid word" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+    const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY missing");
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const slug = slugify(word);
@@ -34,11 +35,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         messages: [
           { role: "system", content: "You are an MBA vocabulary tutor for Indian aspirants preparing for CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT, GDPI, and placements. Always respond using the structured tool. Rules:\n- meaning: clear English explanation, <30 words.\n- meaning_hindi: pure Hindi translation in Devanagari script (no Roman).\n- hinglish_meaning: friendly Hinglish explanation mixing Hindi + English in Roman script, like a senior explaining to a junior.\n- pronunciation: IPA-style phonetic, e.g. /əˈmɔːrtaɪzeɪʃən/.\n- pronunciation_syllables: word broken into easy syllables with hyphens and CAPS on the stressed syllable, e.g. 'uh-MOR-tuh-zay-shun'.\n- 3 example sentences using the EXACT word, in business / interview / professional-email contexts.\n- exam_appearances: list of past Indian MBA entrance exams where this exact word or its variant was known to appear in RC/Verbal sections (format strictly like ['CAT 2019', 'XAT 2021', 'SNAP 2020']). If you are not reasonably sure it has appeared, return an empty array. Do not fabricate." },
           { role: "user", content: `Explain the MBA/business word: "${word}"` },

@@ -325,12 +325,13 @@ function runChecklist(p: any) {
   return { checks, passing, warnings, failing, score };
 }
 
-async function callAIJSON(key: string, prompt: string): Promise<any> {
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+async function callAIJSON(_key: string, prompt: string): Promise<any> {
+  const geminiKey = (await (await import("../_shared/getCredential.ts")).getCredential("GEMINI_API_KEY")) || _key;
+  const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${geminiKey}` },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "gemini-2.5-flash",
       messages: [
         { role: "system", content: "Return ONLY valid JSON. No markdown fences." },
         { role: "user", content: prompt },
