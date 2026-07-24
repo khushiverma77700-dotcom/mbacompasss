@@ -145,9 +145,38 @@ async function callMeritto(secret: string, lead: LeadInput, cid: string) {
   return { ok, outcome, status: res.status, json, body, durationMs };
 }
 
+// Simple in-memory per-IP rate limiter: max 5 requests / 60s window.
+const RL = new Map<string, { count: number; reset: number }>();
+function rateLimit(ip: string, max = 5, windowMs = 60_000): boolean {
+  const now = Date.now();
+  const cur = RL.get(ip);
+  if (!cur || cur.reset < now) {
+    RL.set(ip, { count: 1, reset: now + windowMs });
+    return true;
+  }
+  if (cur.count >= max) return false;
+  cur.count++;
+  return true;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const ip =
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  if (!rateLimit(ip)) {
+    return new Response(JSON.stringify({ error: "Too many requests" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+
 
   const secret = Deno.env.get("MERITTO_SECRET_KEY");
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
