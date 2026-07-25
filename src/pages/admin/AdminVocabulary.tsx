@@ -8,12 +8,48 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Pencil, Sparkles, Upload, BookOpen, Calendar, Wand2, Cpu, DollarSign, Clock3, Gauge, Database, Zap, ShieldCheck } from "lucide-react";
+import { AlertCircle, CheckCircle2, ClipboardList, Loader2, Plus, Trash2, Pencil, Sparkles, Upload, BookOpen, Calendar, Wand2, Cpu, DollarSign, Clock3, Gauge, Database, Zap, ShieldCheck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
 const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
+const VOCAB_LAST_RUN_KEY = "mba-admin-vocab-last-run";
+
+type VocabLastRun = {
+  status: "failed" | "started";
+  completedAt: string;
+  requested: number;
+  error?: string;
+  raw?: string;
+};
+
+const parseFunctionError = async (error: any) => {
+  const context = error?.context;
+  const raw = typeof context?.text === "function" ? await context.text().catch(() => "") : "";
+  if (!raw) return { payload: null, raw: error?.message || "Unknown function error" };
+  try {
+    return { payload: JSON.parse(raw), raw };
+  } catch {
+    return { payload: null, raw };
+  }
+};
+
+const saveVocabLastRun = (run: VocabLastRun) => {
+  try {
+    localStorage.setItem(VOCAB_LAST_RUN_KEY, JSON.stringify(run));
+  } catch {
+    // Ignore browser storage issues.
+  }
+};
+
+const formatJson = (value: unknown) => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value ?? "");
+  }
+};
 
 function slugify(w: string): string {
   return w.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -52,6 +88,7 @@ export default function AdminVocabulary() {
   const [bulkJobId, setBulkJobId] = useState<string | null>(null);
   const [bulkJob, setBulkJob] = useState<any>(null);
   const [bulkStarting, setBulkStarting] = useState(false);
+  const [lastRun, setLastRun] = useState<VocabLastRun | null>(null);
   const autoResumeRef = useRef<Record<string, boolean>>({});
 
   // Backfill state
@@ -71,17 +108,25 @@ export default function AdminVocabulary() {
     const { data } = await supabase
       .from("vocab_generation_jobs")
       .select("*")
-      .in("status", ["running", "pending", "paused", "failed"])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (data && (data.generated || 0) < (data.requested || 0)) {
+    if (data) {
       setBulkJob(data);
       setBulkJobId(data.id);
     }
   };
 
-  useEffect(() => { load(); loadLatestBulkJob(); }, []);
+  useEffect(() => {
+    load();
+    loadLatestBulkJob();
+    try {
+      const saved = localStorage.getItem(VOCAB_LAST_RUN_KEY);
+      if (saved) setLastRun(JSON.parse(saved));
+    } catch {
+      setLastRun(null);
+    }
+  }, []);
 
   const resumeBulkJob = async (job: any, silent = false) => {
     if (!job?.id) return;
@@ -128,6 +173,7 @@ export default function AdminVocabulary() {
   const startBulk = async () => {
     setBulkStarting(true);
     setBulkJob(null);
+    setLastRun(null);
     const { data, error } = await supabase.functions.invoke("vocab-bulk-generate", {
       body: {
         count: Math.max(1, Math.min(5000, Number(bulkCount) || 100)),
@@ -139,9 +185,28 @@ export default function AdminVocabulary() {
     });
     setBulkStarting(false);
     if (error || (data as any)?.error) {
-      toast({ title: "Failed to start", description: error?.message || (data as any)?.error, variant: "destructive" });
+      const parsed = error ? await parseFunctionError(error) : { payload: data, raw: formatJson(data) };
+      const message = parsed.payload?.error || (data as any)?.error || error?.message || parsed.raw || "Failed to start generation.";
+      const run: VocabLastRun = {
+        status: "failed",
+        completedAt: new Date().toISOString(),
+        requested: Math.max(1, Math.min(5000, Number(bulkCount) || 100)),
+        error: message,
+        raw: parsed.raw,
+      };
+      setLastRun(run);
+      saveVocabLastRun(run);
+      toast({ title: "Failed to start", description: message, variant: "destructive" });
       return;
     }
+    const run: VocabLastRun = {
+      status: "started",
+      completedAt: new Date().toISOString(),
+      requested: Math.max(1, Math.min(5000, Number(bulkCount) || 100)),
+      raw: formatJson(data),
+    };
+    setLastRun(run);
+    saveVocabLastRun(run);
     setBulkJobId((data as any).job_id);
     toast({ title: "AI generation started", description: "Running in the background — progress will update live." });
   };
