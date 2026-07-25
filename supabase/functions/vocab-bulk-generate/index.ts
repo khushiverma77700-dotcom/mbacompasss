@@ -221,7 +221,9 @@ async function kickNextInvocation(jobId: string) {
   }
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, providerArg: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
+  let provider: Provider = providerArg;
+  let consecutiveRateLimits = 0;
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
     lovable: Deno.env.get("LOVABLE_API_KEY") || "",
