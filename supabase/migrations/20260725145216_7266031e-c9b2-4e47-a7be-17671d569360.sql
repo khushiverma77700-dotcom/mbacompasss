@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.user_has_mock_access(uuid, uuid) TO anon, authenticated, service_role;
