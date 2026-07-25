@@ -29,22 +29,22 @@ Output rules (NON-NEGOTIABLE):
 - Always emit at least <h4>Concept</h4>, <h4>Step-by-step Solution</h4> and <h4>Answer</h4> sections.`;
 
 async function rewriteOne(html: string): Promise<{ text: string; promptTokens: number; completionTokens: number }> {
-  const GEMINI_API_KEY = await getCredential("GEMINI_API_KEY");
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+  const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY");
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${GEMINI_API_KEY}`,
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gemini-2.5-flash",
+      model: "gpt-5-mini",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `Rewrite this explanation HTML:\n\n${html}` },
       ],
     }),
   });
-  if (!res.ok) throw new Error(`AI gateway ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
   const j = await res.json();
   let out: string = j?.choices?.[0]?.message?.content ?? "";
   out = out.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();

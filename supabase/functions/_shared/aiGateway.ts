@@ -135,7 +135,12 @@ interface LogParams {
 }
 
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
-  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, provider = "openai-mini", purpose } = opts;
+  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, purpose } = opts;
+  // POLICY: All AI traffic (mocks, news & insights, SEO, everything on
+  // dashboard.mbacompass.in) must go through OpenAI. Any legacy provider
+  // hint (gemini / gemini-lite / lovable) is coerced to openai-mini.
+  let provider: AIProvider = "openai-mini";
+  if (opts.provider === "openai-nano") provider = "openai-nano";
   // Loud warning so any caller forgetting to tag itself surfaces in edge logs.
   if (feature === "unknown") {
     console.warn("[aiGateway] UNTAGGED CALL — caller did not pass opts.feature. Please add a feature label so usage can be attributed. Stack:", new Error().stack);
