@@ -133,6 +133,18 @@ category (exactly "${category}"), tags (array of 2-5 strings).`;
   return Array.isArray(parsed?.articles) ? parsed.articles : [];
 }
 
+type CategoryDiagnostic = {
+  category: string;
+  requested: number;
+  ai_returned: number;
+  rows_prepared: number;
+  inserted: number;
+  status: "pending" | "generated" | "inserted" | "failed";
+  error?: string;
+};
+
+const nowIso = () => new Date().toISOString();
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const _authFail = await requireAdmin(req, corsHeaders);
@@ -159,8 +171,19 @@ Deno.serve(async (req) => {
     const safeDate = (d: any): string =>
       typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : dateTo;
 
+    const runStartedAt = nowIso();
+    const logs: string[] = [`${runStartedAt} · Started news generation for ${categories.length} categor${categories.length === 1 ? "y" : "ies"}.`];
     let totalInserted = 0;
     const errors: { category: string; error: string }[] = [];
+    const categoryDiagnostics: CategoryDiagnostic[] = categories.map((category) => ({
+      category,
+      requested: countPerCategory,
+      ai_returned: 0,
+      rows_prepared: 0,
+      inserted: 0,
+      status: "pending",
+    }));
+    const diagnosticByCategory = new Map(categoryDiagnostics.map((item) => [item.category, item]));
 
     // Process categories in parallel batches of 3 to balance speed vs. rate limits.
     const BATCH = 3;
@@ -180,10 +203,22 @@ Deno.serve(async (req) => {
       const rows: any[] = [];
       results.forEach((r, idx) => {
         const cat = slice[idx];
+        const diagnostic = diagnosticByCategory.get(cat);
         if (r.status === "rejected") {
-          errors.push({ category: cat, error: String(r.reason?.message || r.reason) });
+          const error = String(r.reason?.message || r.reason);
+          errors.push({ category: cat, error });
+          logs.push(`${nowIso()} · ${cat}: AI failed — ${error}`);
+          if (diagnostic) {
+            diagnostic.status = "failed";
+            diagnostic.error = error;
+          }
           return;
         }
+        if (diagnostic) {
+          diagnostic.ai_returned = r.value.length;
+          diagnostic.status = "generated";
+        }
+        logs.push(`${nowIso()} · ${cat}: AI returned ${r.value.length}/${countPerCategory} article candidate(s).`);
         for (const a of r.value) {
           // NOTE: News is inherently time-sensitive (exact dates, current-year data, etc.),
           // so the evergreen factual-risk check would filter out every article.
@@ -213,27 +248,77 @@ Deno.serve(async (req) => {
             ai_generated: true,
             published_at: new Date().toISOString(),
           });
+          if (diagnostic) diagnostic.rows_prepared += 1;
         }
       });
 
       if (rows.length) {
         const { error } = await supabase.from("news_articles").insert(rows);
         if (error) {
-          errors.push({ category: slice.join(","), error: `DB: ${error.message}` });
+          const message = `DB: ${error.message}`;
+          errors.push({ category: slice.join(","), error: message });
+          logs.push(`${nowIso()} · ${slice.join(", ")}: database insert failed — ${message}`);
+          for (const cat of slice) {
+            const diagnostic = diagnosticByCategory.get(cat);
+            if (diagnostic && diagnostic.rows_prepared > 0) {
+              diagnostic.status = "failed";
+              diagnostic.error = message;
+            }
+          }
         } else {
           totalInserted += rows.length;
+          const insertedByCategory = rows.reduce((acc: Record<string, number>, row: any) => {
+            acc[row.category] = (acc[row.category] || 0) + 1;
+            return acc;
+          }, {});
+          Object.entries(insertedByCategory).forEach(([cat, count]) => {
+            const diagnostic = diagnosticByCategory.get(cat);
+            if (diagnostic) {
+              diagnostic.inserted += count as number;
+              diagnostic.status = "inserted";
+            }
+          });
+          logs.push(`${nowIso()} · ${slice.join(", ")}: saved ${rows.length} article(s) to news_articles.`);
         }
+      } else {
+        logs.push(`${nowIso()} · ${slice.join(", ")}: no rows were prepared for saving.`);
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true, inserted: totalInserted, errors }),
+      JSON.stringify({
+        success: errors.length === 0,
+        inserted: totalInserted,
+        requested: categories.length * countPerCategory,
+        errors,
+        diagnostics: {
+          started_at: runStartedAt,
+          finished_at: nowIso(),
+          provider: "openai",
+          model: "gpt-4o-mini",
+          date_from: dateFrom,
+          date_to: dateTo,
+          categories_requested: categories,
+          count_per_category: countPerCategory,
+          category_results: categoryDiagnostics,
+          logs,
+        },
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     console.error("generate-news error", e);
+    const message = e instanceof Error ? e.message : String(e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
+      JSON.stringify({
+        error: message,
+        diagnostics: {
+          finished_at: nowIso(),
+          provider: "openai",
+          model: "gpt-4o-mini",
+          logs: [`${nowIso()} · generate-news failed — ${message}`],
+        },
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
