@@ -221,7 +221,9 @@ async function kickNextInvocation(jobId: string) {
   }
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, providerArg: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
+  let provider: Provider = providerArg;
+  let consecutiveRateLimits = 0;
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
     lovable: Deno.env.get("LOVABLE_API_KEY") || "",
@@ -316,6 +318,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     try {
       const generatedBatch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes, targetWords);
       consecutiveTimeouts = 0;
+      consecutiveRateLimits = 0;
       batch = generatedBatch.words;
       batchTokens = { inputTokens: generatedBatch.inputTokens, outputTokens: generatedBatch.outputTokens };
       inputTokens += batchTokens.inputTokens;
@@ -325,8 +328,20 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       const msg = (e as Error).message;
       console.error("Batch error", msg);
       if (msg === "RATE_LIMIT") {
-        await supabase.from("vocab_generation_jobs").update({ current_activity: "Rate limited, sleeping 15s…" }).eq("id", jobId);
-        await new Promise((r) => setTimeout(r, 15000));
+        consecutiveRateLimits = (consecutiveRateLimits || 0) + 1;
+        // After 3 consecutive OpenAI rate limits, fall back to Gemini so the job actually finishes.
+        if (provider === "openai" && consecutiveRateLimits >= 3 && keys.lovable) {
+          provider = "lovable";
+          consecutiveRateLimits = 0;
+          await supabase.from("vocab_generation_jobs").update({
+            provider,
+            current_activity: "OpenAI rate-limited repeatedly — switching to Gemini fallback…",
+          }).eq("id", jobId);
+          continue;
+        }
+        const sleepMs = Math.min(60000, 15000 * consecutiveRateLimits);
+        await supabase.from("vocab_generation_jobs").update({ current_activity: `Rate limited, sleeping ${Math.round(sleepMs/1000)}s…` }).eq("id", jobId);
+        await new Promise((r) => setTimeout(r, sleepMs));
         continue;
       }
       if (msg === "AI_TIMEOUT") {

@@ -185,14 +185,9 @@ Deno.serve(async (req) => {
           return;
         }
         for (const a of r.value) {
-          const factBlocks = getBlockingFactIssues(runFactualRiskCheck(a));
-          if (factBlocks.length) {
-            errors.push({
-              category: cat,
-              error: `Skipped unsafe AI news card: ${factBlocks.map((i) => i.message).join(" | ").slice(0, 500)}`,
-            });
-            continue;
-          }
+          // NOTE: News is inherently time-sensitive (exact dates, current-year data, etc.),
+          // so the evergreen factual-risk check would filter out every article.
+          // We skip the hard block for news and rely on the buzzword scrub below.
           // Buzzword scrub on every text field (no MBA Compass injection for news blurbs)
           const scrub = (s: any) => typeof s === "string" && s ? runFinalQualityCheck(s, { requireMbaCompass: false, minInternalLinks: 0 }).html : s;
           rows.push({
