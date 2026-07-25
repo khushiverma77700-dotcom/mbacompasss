@@ -432,6 +432,47 @@ export default function AdminVocabulary() {
                 })()}
               </div>
 
+              {lastRun && !bulkJob && (
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2">
+                      {lastRun.status === "failed" ? (
+                        <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
+                      ) : (
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" />
+                      )}
+                      <div>
+                        <h3 className="text-sm font-semibold">Last-run start output</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(lastRun.completedAt).toLocaleString()} · Requested {lastRun.requested.toLocaleString()} words · Status: {lastRun.status}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setLastRun(null);
+                        localStorage.removeItem(VOCAB_LAST_RUN_KEY);
+                      }}
+                    >
+                      Clear logs
+                    </Button>
+                  </div>
+                  {lastRun.error && (
+                    <div className="rounded-md border border-destructive/20 bg-destructive/5 p-2 text-xs text-destructive">
+                      {lastRun.error}
+                    </div>
+                  )}
+                  {lastRun.raw && (
+                    <details className="rounded-md border border-border bg-background p-3">
+                      <summary className="cursor-pointer text-xs font-semibold">Raw function response</summary>
+                      <pre className="mt-2 max-h-52 overflow-auto text-xs text-muted-foreground whitespace-pre-wrap">{lastRun.raw}</pre>
+                    </details>
+                  )}
+                </div>
+              )}
 
               {bulkJob && (() => {
                 const req = Math.max(1, bulkJob.requested || 0);
@@ -450,6 +491,8 @@ export default function AdminVocabulary() {
                 const qualityRate = Math.max(0, 100 - Math.round(((bulkJob.rejected || 0) / Math.max(1, (bulkJob.generated || 0) + (bulkJob.rejected || 0))) * 100));
                 const cost = Number(bulkJob.estimated_cost_usd || 0);
                 const tokenTotal = Number(bulkJob.estimated_input_tokens || 0) + Number(bulkJob.estimated_output_tokens || 0);
+                const logs = Array.isArray(details.logs) ? details.logs : [];
+                const lastError = details.last_error || bulkJob.error;
                 const statusColor =
                   bulkJob.status === "completed" ? "text-primary" :
                   bulkJob.status === "failed" ? "text-destructive" :
@@ -521,6 +564,89 @@ export default function AdminVocabulary() {
                         {bulkJob.error}
                       </p>
                     )}
+
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex items-start gap-2">
+                          {bulkJob.status === "failed" || (bulkJob.generated || 0) === 0 ? (
+                            <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
+                          ) : (
+                            <CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" />
+                          )}
+                          <div>
+                            <h3 className="text-sm font-semibold">Last-run logs and error output</h3>
+                            <p className="text-xs text-muted-foreground">
+                              Updated {bulkJob.updated_at ? new Date(bulkJob.updated_at).toLocaleString() : "now"} · {done.toLocaleString()}/{req.toLocaleString()} words saved · Status: {bulkJob.status}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setBulkJob(null);
+                            setBulkJobId(null);
+                            setLastRun(null);
+                            localStorage.removeItem(VOCAB_LAST_RUN_KEY);
+                          }}
+                        >
+                          Clear panel
+                        </Button>
+                      </div>
+
+                      {lastError && (
+                        <div className="rounded-md border border-destructive/20 bg-destructive/5 p-2 text-xs text-destructive">
+                          {lastError}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        {[
+                          ["Last AI returned", details.last_batch_returned || 0],
+                          ["Last candidates", details.last_batch_candidates || 0],
+                          ["Last saved", details.last_batch_added || 0],
+                          ["Last rejected", details.last_batch_rejected || 0],
+                          ["Last duplicates", details.last_batch_duplicates || 0],
+                          ["Zero-save streak", details.consecutive_zero_adds || 0],
+                          ["Phase", details.phase || bulkJob.status],
+                          ["Provider", bulkJob.provider || bulkProvider],
+                        ].map(([label, value]: any) => (
+                          <div key={label} className="rounded-md border border-border bg-background p-2">
+                            <span className="block text-muted-foreground">{label}</span>
+                            <b className="block truncate text-foreground">{value}</b>
+                          </div>
+                        ))}
+                      </div>
+
+                      {logs.length > 0 ? (
+                        <div>
+                          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold"><ClipboardList className="h-3.5 w-3.5" /> Execution log</p>
+                          <pre className="max-h-56 overflow-auto rounded-md border border-border bg-background p-3 text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                            {logs.join("\n")}
+                          </pre>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No detailed execution log has been written for this job yet. Start or resume generation to populate logs.</p>
+                      )}
+
+                      <details className="rounded-md border border-border bg-background p-3">
+                        <summary className="cursor-pointer text-xs font-semibold">Raw job diagnostics</summary>
+                        <pre className="mt-2 max-h-64 overflow-auto text-xs text-muted-foreground whitespace-pre-wrap">{formatJson({
+                          id: bulkJob.id,
+                          status: bulkJob.status,
+                          requested: bulkJob.requested,
+                          generated: bulkJob.generated,
+                          duplicates: bulkJob.duplicates,
+                          rejected: bulkJob.rejected,
+                          failed: bulkJob.failed,
+                          attempts: bulkJob.attempts,
+                          current_activity: bulkJob.current_activity,
+                          error: bulkJob.error,
+                          progress_details: details,
+                        })}</pre>
+                      </details>
+                    </div>
                   </div>
                 );
               })()}
