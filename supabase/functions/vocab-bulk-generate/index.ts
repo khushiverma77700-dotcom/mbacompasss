@@ -325,8 +325,20 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       const msg = (e as Error).message;
       console.error("Batch error", msg);
       if (msg === "RATE_LIMIT") {
-        await supabase.from("vocab_generation_jobs").update({ current_activity: "Rate limited, sleeping 15s…" }).eq("id", jobId);
-        await new Promise((r) => setTimeout(r, 15000));
+        consecutiveRateLimits = (consecutiveRateLimits || 0) + 1;
+        // After 3 consecutive OpenAI rate limits, fall back to Gemini so the job actually finishes.
+        if (provider === "openai" && consecutiveRateLimits >= 3 && keys.lovable) {
+          provider = "lovable";
+          consecutiveRateLimits = 0;
+          await supabase.from("vocab_generation_jobs").update({
+            provider,
+            current_activity: "OpenAI rate-limited repeatedly — switching to Gemini fallback…",
+          }).eq("id", jobId);
+          continue;
+        }
+        const sleepMs = Math.min(60000, 15000 * consecutiveRateLimits);
+        await supabase.from("vocab_generation_jobs").update({ current_activity: `Rate limited, sleeping ${Math.round(sleepMs/1000)}s…` }).eq("id", jobId);
+        await new Promise((r) => setTimeout(r, sleepMs));
         continue;
       }
       if (msg === "AI_TIMEOUT") {
