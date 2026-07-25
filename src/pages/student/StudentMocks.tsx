@@ -282,7 +282,6 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       });
 
     return list.map((t) => {
-      const kind = getKind(t);
       return {
         test: t,
         owned: hasUniversalAccess || enrolledTestIds.has(t.id),
