@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Auto-enroll free tests
+    // Universal student access: every signed-in student can attempt every playable mock.
     const { data: test, error: testErr } = await admin
       .from("mock_tests")
-      .select("id, pricing_type, total_duration_minutes, is_published, is_live, scheduled_start_at, access_validity_days")
+      .select("id, total_duration_minutes, is_published, is_live, scheduled_start_at, access_validity_days")
       .eq("id", test_id)
       .maybeSingle();
     if (testErr || !test) {
@@ -94,21 +94,12 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!existingEnrollment) {
-      if (test.pricing_type !== "free") {
-        return new Response(
-          JSON.stringify({ error: "Payment required" }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
-        );
-      }
       await admin.from("mock_enrollments").insert({
         user_id: user.id,
         test_id,
-        source: "free",
+        source: "universal_student_access",
         expires_at: new Date(
-          Date.now() + (test.access_validity_days ?? 30) * 86400000,
+          Date.now() + (test.access_validity_days ?? 3650) * 86400000,
         ).toISOString(),
       });
     }

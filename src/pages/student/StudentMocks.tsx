@@ -163,11 +163,8 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   }, [user]);
 
   const enrolledTestIds = useMemo(() => new Set(enrollments.map((e) => e.test_id)), [enrollments]);
-  // Any active enrollment (course/bundle/mock) grants access to every mock on the platform.
-  const hasAnyPurchase = useMemo(
-    () => enrollments.some((e) => !e.expires_at || new Date(e.expires_at) > new Date()),
-    [enrollments],
-  );
+  // Platform rule: every signed-in student can access every mock/practice test.
+  const hasUniversalAccess = true;
   const attemptedByTest = useMemo(() => {
     const m: Record<string, Attempt[]> = {};
     attempts.forEach((a) => { (m[a.test_id] = m[a.test_id] || []).push(a); });
@@ -286,12 +283,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
     return list.map((t) => {
       const kind = getKind(t);
-      // Sectional, topic-wise and practice sets are always open to every student.
-      // Any user with an active purchase gets access to every mock.
-      const alwaysOpen = kind === "sectional" || kind === "topic_wise" || kind === "practice_set";
       return {
         test: t,
-        owned: alwaysOpen || hasAnyPurchase || enrolledTestIds.has(t.id),
+        owned: hasUniversalAccess || enrolledTestIds.has(t.id),
         inProgress: attemptedByTest[t.id]?.find((x) => x.status === "in_progress") ?? null,
         latestSubmitted: attemptedByTest[t.id]?.find((x) => x.status === "submitted" || x.status === "auto_submitted") ?? null,
       };
@@ -301,7 +295,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   // Stats for hero strip
   const stats = useMemo(() => {
     const submitted = attempts.filter((a) => a.status === "submitted" || a.status === "auto_submitted");
-    const totalUnlocked = enrolledTestIds.size;
+    const totalUnlocked = Object.values(tests).filter((t) => getKind(t) !== null).length;
     const totalAttempted = new Set(submitted.map((a) => a.test_id)).size;
     const avgPercentile = submitted.length
       ? Math.round(submitted.reduce((s, a) => s + (a.percentile ?? 0), 0) / submitted.length)
@@ -310,7 +304,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       ? Math.max(...submitted.map((a) => a.percentile ?? 0))
       : 0;
     return { totalUnlocked, totalAttempted, avgPercentile, bestPercentile, submittedCount: submitted.length };
-  }, [attempts, enrolledTestIds]);
+  }, [attempts, tests]);
 
   if (!user) return <div className="text-muted-foreground">Please sign in.</div>;
   if (loading) {
