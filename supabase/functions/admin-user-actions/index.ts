@@ -9,7 +9,7 @@ const corsHeaders = {
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-type Action = "reset_password" | "block" | "unblock" | "delete" | "get_emails";
+type Action = "reset_password" | "block" | "unblock" | "delete" | "get_emails" | "impersonate";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
