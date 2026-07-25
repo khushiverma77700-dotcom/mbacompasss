@@ -318,6 +318,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     try {
       const generatedBatch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes, targetWords);
       consecutiveTimeouts = 0;
+      consecutiveRateLimits = 0;
       batch = generatedBatch.words;
       batchTokens = { inputTokens: generatedBatch.inputTokens, outputTokens: generatedBatch.outputTokens };
       inputTokens += batchTokens.inputTokens;
