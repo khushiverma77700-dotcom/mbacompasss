@@ -170,6 +170,7 @@ const AdminBulkMockGeneration = lazyWithPreload(() => import("./pages/admin/Admi
 const AdminExplanationCleaner = lazyWithPreload(() => import("./pages/admin/AdminExplanationCleaner"));
 const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
 const AdminStudentMocks = lazyWithPreload(() => import("./pages/admin/AdminStudentMocks"));
+const AdminUsers = lazyWithPreload(() => import("./pages/admin/AdminUsers"));
 const AdminSupportTickets = lazyWithPreload(() => import("./pages/admin/AdminSupportTickets"));
 
 const StudentLayout = lazyWithPreload(() => import("./pages/student/StudentLayout"));
@@ -941,6 +942,7 @@ const App = () => (
               <Route path="mock-orders" element={<LazyPage><AdminMockOrders /></LazyPage>} />
               <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
               <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
+              <Route path="users" element={<LazyPage><AdminUsers /></LazyPage>} />
               <Route path="support-tickets" element={<LazyPage><AdminSupportTickets /></LazyPage>} />
               <Route path="personalized-hub" element={<LazyPage><AdminPersonalizedHub /></LazyPage>} />
               <Route path="vocabulary" element={<LazyPage><AdminVocabulary /></LazyPage>} />

@@ -9,7 +9,7 @@ const corsHeaders = {
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-type Action = "reset_password" | "block" | "unblock" | "delete" | "get_emails";
+type Action = "reset_password" | "block" | "unblock" | "delete" | "get_emails" | "impersonate";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -93,6 +93,20 @@ Deno.serve(async (req) => {
       const { error } = await admin.auth.admin.deleteUser(user_id);
       if (error) throw error;
       return json(200, { ok: true });
+    }
+
+    if (action === "impersonate") {
+      // Get user's email
+      const { data: u, error: uErr } = await admin.auth.admin.getUserById(user_id);
+      if (uErr || !u?.user?.email) return json(400, { error: "User email not found" });
+      const redirectTo = new URL(req.url).searchParams.get("redirect") ?? undefined;
+      const { data: link, error: linkErr } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: u.user.email,
+        options: redirectTo ? { redirectTo } : undefined,
+      });
+      if (linkErr) throw linkErr;
+      return json(200, { ok: true, action_link: (link as any)?.properties?.action_link ?? null, email: u.user.email });
     }
 
     return json(400, { error: "Unknown action" });
