@@ -163,6 +163,11 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   }, [user]);
 
   const enrolledTestIds = useMemo(() => new Set(enrollments.map((e) => e.test_id)), [enrollments]);
+  // Any active enrollment (course/bundle/mock) grants access to every mock on the platform.
+  const hasAnyPurchase = useMemo(
+    () => enrollments.some((e) => !e.expires_at || new Date(e.expires_at) > new Date()),
+    [enrollments],
+  );
   const attemptedByTest = useMemo(() => {
     const m: Record<string, Attempt[]> = {};
     attempts.forEach((a) => { (m[a.test_id] = m[a.test_id] || []).push(a); });
