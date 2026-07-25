@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { Sparkles, RefreshCw, Trash2, Newspaper, CalendarDays } from "lucide-react";
+import { AlertCircle, CheckCircle2, ClipboardList, Sparkles, RefreshCw, Trash2, Newspaper, CalendarDays } from "lucide-react";
 
 const CATEGORIES = [
   "National", "International", "Economy & Finance", "Politics & Government",
@@ -21,6 +21,44 @@ const CATEGORIES = [
 ];
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
+const NEWS_LAST_RUN_KEY = "mba-admin-news-last-run";
+
+type NewsLastRun = {
+  status: "success" | "partial" | "failed" | "zero";
+  completedAt: string;
+  requested: number;
+  inserted: number;
+  errors: { category: string; error: string }[];
+  diagnostics?: any;
+  raw?: string;
+};
+
+const parseFunctionError = async (error: any) => {
+  const context = error?.context;
+  const raw = typeof context?.text === "function" ? await context.text().catch(() => "") : "";
+  if (!raw) return { payload: null, raw: error?.message || "Unknown function error" };
+  try {
+    return { payload: JSON.parse(raw), raw };
+  } catch {
+    return { payload: null, raw };
+  }
+};
+
+const saveLastRun = (run: NewsLastRun) => {
+  try {
+    localStorage.setItem(NEWS_LAST_RUN_KEY, JSON.stringify(run));
+  } catch {
+    // Ignore local storage failures; the current run still renders from state.
+  }
+};
+
+const formatJson = (value: unknown) => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value ?? "");
+  }
+};
 
 export default function AdminNewsroom() {
   const qc = useQueryClient();
@@ -31,6 +69,16 @@ export default function AdminNewsroom() {
   const [focus, setFocus] = useState("");
   const [busy, setBusy] = useState(false);
   const [filterCat, setFilterCat] = useState<string>("all");
+  const [lastRun, setLastRun] = useState<NewsLastRun | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(NEWS_LAST_RUN_KEY);
+      if (saved) setLastRun(JSON.parse(saved));
+    } catch {
+      setLastRun(null);
+    }
+  }, []);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["admin-news", filterCat],
@@ -65,11 +113,51 @@ export default function AdminNewsroom() {
           focus: focus.trim() || undefined,
         },
       });
-      if (error) throw error;
+      if (error) {
+        const { payload, raw } = await parseFunctionError(error);
+        const failedRun: NewsLastRun = {
+          status: "failed",
+          completedAt: new Date().toISOString(),
+          requested: totalToGenerate,
+          inserted: Number(payload?.inserted || 0),
+          errors: payload?.errors?.length
+            ? payload.errors
+            : [{ category: "Function", error: payload?.error || error.message || raw }],
+          diagnostics: payload?.diagnostics,
+          raw,
+        };
+        setLastRun(failedRun);
+        saveLastRun(failedRun);
+        toast({ title: "Generation failed", description: failedRun.errors[0]?.error || "See last-run logs below.", variant: "destructive" });
+        return;
+      }
+      const inserted = Number(data?.inserted || 0);
+      const errors = Array.isArray(data?.errors) ? data.errors : [];
+      const run: NewsLastRun = {
+        status: inserted === 0 ? "zero" : errors.length ? "partial" : "success",
+        completedAt: new Date().toISOString(),
+        requested: Number(data?.requested || totalToGenerate),
+        inserted,
+        errors,
+        diagnostics: data?.diagnostics,
+        raw: formatJson(data),
+      };
+      setLastRun(run);
+      saveLastRun(run);
       toast({ title: "News generated", description: `${data?.inserted ?? 0} articles added.` });
       qc.invalidateQueries({ queryKey: ["admin-news"] });
     } catch (e: any) {
-      toast({ title: "Generation failed", description: e?.message || "Try again later.", variant: "destructive" });
+      const failedRun: NewsLastRun = {
+        status: "failed",
+        completedAt: new Date().toISOString(),
+        requested: totalToGenerate,
+        inserted: 0,
+        errors: [{ category: "Client", error: e?.message || "Try again later." }],
+        raw: e?.stack || e?.message || String(e),
+      };
+      setLastRun(failedRun);
+      saveLastRun(failedRun);
+      toast({ title: "Generation failed", description: e?.message || "See last-run logs below.", variant: "destructive" });
     } finally {
       setBusy(false);
     }
@@ -161,6 +249,85 @@ export default function AdminNewsroom() {
             {busy ? "Generating…" : "Generate News"}
           </Button>
         </div>
+
+        {lastRun && (
+          <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex items-start gap-2">
+                {lastRun.status === "failed" || lastRun.status === "zero" ? (
+                  <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
+                ) : (
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" />
+                )}
+                <div>
+                  <h3 className="text-sm font-semibold">Last-run logs and error output</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(lastRun.completedAt).toLocaleString()} · {lastRun.inserted}/{lastRun.requested} articles inserted · Status: {lastRun.status}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setLastRun(null);
+                  localStorage.removeItem(NEWS_LAST_RUN_KEY);
+                }}
+              >
+                Clear logs
+              </Button>
+            </div>
+
+            {lastRun.errors.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-destructive">Errors</p>
+                <div className="space-y-2">
+                  {lastRun.errors.map((item, index) => (
+                    <div key={`${item.category}-${index}`} className="rounded-md border border-destructive/20 bg-destructive/5 p-2 text-xs">
+                      <span className="font-semibold">{item.category}:</span> {item.error}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {lastRun.diagnostics?.category_results?.length > 0 && (
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                {lastRun.diagnostics.category_results.map((item: any) => (
+                  <div key={item.category} className="rounded-md border border-border bg-background p-3 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold truncate">{item.category}</span>
+                      <Badge variant={item.inserted > 0 ? "default" : item.status === "failed" ? "destructive" : "secondary"}>{item.status}</Badge>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2 text-muted-foreground">
+                      <span>AI: <b className="text-foreground">{item.ai_returned || 0}</b></span>
+                      <span>Ready: <b className="text-foreground">{item.rows_prepared || 0}</b></span>
+                      <span>Saved: <b className="text-foreground">{item.inserted || 0}</b></span>
+                    </div>
+                    {item.error && <p className="mt-2 text-destructive line-clamp-3">{item.error}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {lastRun.diagnostics?.logs?.length > 0 && (
+              <div>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold"><ClipboardList className="h-3.5 w-3.5" /> Execution log</p>
+                <pre className="max-h-56 overflow-auto rounded-md border border-border bg-background p-3 text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                  {lastRun.diagnostics.logs.join("\n")}
+                </pre>
+              </div>
+            )}
+
+            {lastRun.raw && (
+              <details className="rounded-md border border-border bg-background p-3">
+                <summary className="cursor-pointer text-xs font-semibold">Raw function response</summary>
+                <pre className="mt-2 max-h-64 overflow-auto text-xs text-muted-foreground whitespace-pre-wrap">{lastRun.raw}</pre>
+              </details>
+            )}
+          </div>
+        )}
       </Card>
 
       <Card className="p-5">

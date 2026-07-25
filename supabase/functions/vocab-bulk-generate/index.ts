@@ -221,7 +221,7 @@ async function kickNextInvocation(jobId: string) {
   }
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, providerArg: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, providerArg: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number; logs?: string[] }) {
   let provider: Provider = providerArg;
   let consecutiveRateLimits = 0;
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -240,6 +240,11 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   let costUsd = Number(seed?.estimated_cost_usd || 0);
   const seenSlugs = new Set<string>();
   const recentDupes: string[] = [];
+  const logs = Array.isArray(seed?.logs) ? seed.logs.slice(-25) : [];
+  const addLog = (message: string) => {
+    logs.push(`${new Date().toISOString()} · ${message}`);
+    if (logs.length > 40) logs.splice(0, logs.length - 40);
+  };
 
 
   // Seed exclude list with ALL existing slugs (paginated, so dedupe works for large libraries)
@@ -256,6 +261,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   }
 
   const originalStartedAt = new Date().toISOString();
+  addLog(seed ? `Resuming job at ${generated}/${total} via ${provider}.` : `Started job for ${total} requested word(s) via ${provider}.`);
   // Concurrency lock: bail if another worker has a fresh heartbeat for this job.
   {
     const { data: cur } = await supabase
@@ -297,7 +303,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         estimated_input_tokens: inputTokens,
         estimated_output_tokens: outputTokens,
         estimated_cost_usd: costUsd,
-        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Worker slice ended safely; auto-resume is starting." },
+        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Worker slice ended safely; auto-resume is starting.", logs: logs.slice(-40) },
       }).eq("id", jobId);
       await kickNextInvocation(jobId);
       return;
@@ -306,10 +312,11 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     attempts++;
     const need = Math.min(Math.max(6, BATCH - consecutiveTimeouts * 4), total - generated);
     const targetWords = pickTargetWords(seenSlugs, need, attempts);
+    addLog(`Batch ${attempts}: requesting ${need} candidate(s); saved so far ${generated}/${total}.`);
     await supabase.from("vocab_generation_jobs").update({
       current_activity: `Generating advanced CAT-level batch ${attempts} via ${provider} (${generated}/${total})…`,
       attempts,
-      progress_details: { cpu_proxy: 68, target_words: targetWords.slice(0, 8), phase: "ai_generation" },
+      progress_details: { cpu_proxy: 68, target_words: targetWords.slice(0, 8), phase: "ai_generation", logs: logs.slice(-40) },
     }).eq("id", jobId);
 
     let batch: any[] = [];
@@ -324,9 +331,11 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       inputTokens += batchTokens.inputTokens;
       outputTokens += batchTokens.outputTokens;
       costUsd += estimateCostUsd(provider, batchTokens.inputTokens, batchTokens.outputTokens);
+      addLog(`Batch ${attempts}: AI returned ${batch.length} candidate(s).`);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("Batch error", msg);
+      addLog(`Batch ${attempts}: AI/provider error — ${msg}`);
       if (msg === "RATE_LIMIT") {
         consecutiveRateLimits = (consecutiveRateLimits || 0) + 1;
         // After 3 consecutive OpenAI rate limits, fall back to Gemini so the job actually finishes.
@@ -336,11 +345,12 @@ async function runJob(jobId: string, total: number, category: string | null, dif
           await supabase.from("vocab_generation_jobs").update({
             provider,
             current_activity: "OpenAI rate-limited repeatedly — switching to Gemini fallback…",
+            progress_details: { phase: "provider_fallback", last_error: msg, logs: logs.slice(-40) },
           }).eq("id", jobId);
           continue;
         }
         const sleepMs = Math.min(60000, 15000 * consecutiveRateLimits);
-        await supabase.from("vocab_generation_jobs").update({ current_activity: `Rate limited, sleeping ${Math.round(sleepMs/1000)}s…` }).eq("id", jobId);
+        await supabase.from("vocab_generation_jobs").update({ current_activity: `Rate limited, sleeping ${Math.round(sleepMs/1000)}s…`, progress_details: { phase: "rate_limited", last_error: msg, sleep_seconds: Math.round(sleepMs/1000), logs: logs.slice(-40) } }).eq("id", jobId);
         await new Promise((r) => setTimeout(r, sleepMs));
         continue;
       }
@@ -352,18 +362,18 @@ async function runJob(jobId: string, total: number, category: string | null, dif
             ? `Paused safely after AI timeout at ${generated}/${total}. Resume will continue with smaller batches.`
             : `AI call was slow; retrying with a smaller batch (${generated}/${total})…`,
           generated, duplicates, failed, attempts, rejected,
-          progress_details: { phase: "ai_timeout", cpu_proxy: 92, timeout_count: consecutiveTimeouts, next_batch_size: Math.max(6, BATCH - consecutiveTimeouts * 4) },
+          progress_details: { phase: "ai_timeout", cpu_proxy: 92, timeout_count: consecutiveTimeouts, next_batch_size: Math.max(6, BATCH - consecutiveTimeouts * 4), last_error: msg, logs: logs.slice(-40) },
         }).eq("id", jobId);
         if (consecutiveTimeouts >= 2) return;
         continue;
       }
       if (msg === "CREDITS_EXHAUSTED") {
-        await supabase.from("vocab_generation_jobs").update({ status: "failed", error: "AI credits exhausted." }).eq("id", jobId);
+        await supabase.from("vocab_generation_jobs").update({ status: "failed", error: "AI credits exhausted.", progress_details: { phase: "failed", last_error: "AI credits exhausted.", logs: logs.slice(-40) } }).eq("id", jobId);
         return;
       }
       failed++;
       if (failed > 8) {
-        await supabase.from("vocab_generation_jobs").update({ status: "failed", error: msg, failed }).eq("id", jobId);
+        await supabase.from("vocab_generation_jobs").update({ status: "failed", error: msg, failed, progress_details: { phase: "failed", last_error: msg, logs: logs.slice(-40) } }).eq("id", jobId);
         return;
       }
       continue;
@@ -371,6 +381,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
 
     if (!batch.length) {
       consecutiveEmpty++;
+      addLog(`Batch ${attempts}: AI returned 0 candidates (${consecutiveEmpty} empty batch(es) in a row).`);
       if (consecutiveEmpty >= 3) break;
       continue;
     }
@@ -448,6 +459,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
     if (rejectedIncomplete) {
       console.log(`Rejected ${rejectedIncomplete} incomplete words in batch ${attempts}`);
+      addLog(`Batch ${attempts}: rejected ${rejectedIncomplete} incomplete/basic/invalid candidate(s).`);
     }
 
     let addedNow = 0;
@@ -458,13 +470,17 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         .select("id");
       if (error) {
         console.error("Upsert error", error);
+        addLog(`Batch ${attempts}: database save failed — ${error.message}`);
         failed++;
       } else {
         addedNow = inserted?.length || 0;
         generated += addedNow;
         // any rows that didn't insert were duplicates from a race
         duplicates += rows.length - addedNow;
+        addLog(`Batch ${attempts}: saved ${addedNow}; duplicates ${Math.max(0, rows.length - addedNow)}; total saved ${generated}/${total}.`);
       }
+    } else {
+      addLog(`Batch ${attempts}: 0 candidates survived quality gates/deduplication.`);
     }
     rejected += rejectedIncomplete;
     const elapsedMinutes = Math.max(0.05, (Date.now() - startMs) / 60000);
@@ -500,6 +516,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         output_tokens_last_batch: batchTokens.outputTokens,
         target_words: targetWords.slice(0, 8),
         consecutive_zero_adds: consecutiveZeroAdds,
+        logs: logs.slice(-40),
       },
     }).eq("id", jobId);
 
@@ -507,6 +524,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       await supabase.from("vocab_generation_jobs").update({
         status: "paused",
         current_activity: `Paused at ${generated}/${total}. The last 5 AI batches returned words that were all duplicates or failed quality gates. Try a different category/difficulty or click Resume to try again with a fresh target list.`,
+        progress_details: { phase: "paused_zero_adds", consecutive_zero_adds: consecutiveZeroAdds, generated, duplicates, rejected, failed, logs: logs.slice(-40) },
       }).eq("id", jobId);
       return;
     }
@@ -519,7 +537,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         estimated_input_tokens: inputTokens,
         estimated_output_tokens: outputTokens,
         estimated_cost_usd: costUsd,
-        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: throughput, last_batch_added: addedNow, note: "Worker slice ended safely; auto-resume is starting." },
+        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: throughput, last_batch_added: addedNow, note: "Worker slice ended safely; auto-resume is starting.", logs: logs.slice(-40) },
       }).eq("id", jobId);
       await kickNextInvocation(jobId);
       return;
@@ -527,6 +545,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   }
 
   const finalStatus = generated >= total ? "completed" : "paused";
+  addLog(finalStatus === "completed" ? `Completed job. Added ${generated}; duplicates ${duplicates}; failed batches ${failed}.` : `Paused job at ${generated}/${total}; duplicates ${duplicates}; rejected ${rejected}; failed batches ${failed}.`);
   await supabase.from("vocab_generation_jobs").update({
     status: finalStatus,
     current_activity: generated >= total
@@ -537,7 +556,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     estimated_output_tokens: outputTokens,
     estimated_cost_usd: costUsd,
     finished_at: finalStatus === "completed" ? new Date().toISOString() : null,
-    progress_details: { phase: finalStatus, cpu_proxy: finalStatus === "completed" ? 0 : 10, throughput_per_min: 0 },
+    progress_details: { phase: finalStatus, cpu_proxy: finalStatus === "completed" ? 0 : 10, throughput_per_min: 0, generated, duplicates, rejected, failed, logs: logs.slice(-40) },
   }).eq("id", jobId);
 }
 
@@ -586,6 +605,7 @@ Deno.serve(async (req) => {
       const resumeProvider: Provider = body.provider === "openai" ? "openai" : (body.provider === "lovable" ? "lovable" : (existing.provider === "openai" ? "openai" : "lovable"));
       const resumeExam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
       await supabase.from("vocab_generation_jobs").update({ status: "running", error: null, current_activity: "Resuming…" }).eq("id", existing.id);
+      const existingDetails = existing.progress_details && typeof existing.progress_details === "object" ? existing.progress_details as any : {};
       // @ts-ignore Edge runtime background tasks
       EdgeRuntime.waitUntil(runJob(existing.id, existing.requested, existing.category, existing.difficulty, resumeExam || existing.exam || null, resumeProvider, {
         generated: existing.generated || 0,
@@ -596,6 +616,7 @@ Deno.serve(async (req) => {
         estimated_input_tokens: existing.estimated_input_tokens || 0,
         estimated_output_tokens: existing.estimated_output_tokens || 0,
         estimated_cost_usd: existing.estimated_cost_usd || 0,
+        logs: Array.isArray(existingDetails.logs) ? existingDetails.logs : [],
       }));
       return new Response(JSON.stringify({ job_id: existing.id, resumed: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
