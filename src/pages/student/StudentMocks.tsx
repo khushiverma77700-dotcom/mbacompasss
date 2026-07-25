@@ -284,12 +284,18 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         return a.name.localeCompare(b.name);
       });
 
-    return list.map((t) => ({
-      test: t,
-      owned: enrolledTestIds.has(t.id),
-      inProgress: attemptedByTest[t.id]?.find((x) => x.status === "in_progress") ?? null,
-      latestSubmitted: attemptedByTest[t.id]?.find((x) => x.status === "submitted" || x.status === "auto_submitted") ?? null,
-    }));
+    return list.map((t) => {
+      const kind = getKind(t);
+      // Sectional, topic-wise and practice sets are always open to every student.
+      // Any user with an active purchase gets access to every mock.
+      const alwaysOpen = kind === "sectional" || kind === "topic_wise" || kind === "practice_set";
+      return {
+        test: t,
+        owned: alwaysOpen || hasAnyPurchase || enrolledTestIds.has(t.id),
+        inProgress: attemptedByTest[t.id]?.find((x) => x.status === "in_progress") ?? null,
+        latestSubmitted: attemptedByTest[t.id]?.find((x) => x.status === "submitted" || x.status === "auto_submitted") ?? null,
+      };
+    });
   };
 
   // Stats for hero strip
