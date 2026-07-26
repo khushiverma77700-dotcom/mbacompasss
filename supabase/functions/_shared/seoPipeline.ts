@@ -245,7 +245,7 @@ export async function runSeoPipeline(
     || `${ctx.title || ctx.h1 || ""} ${ctx.location?.city || ""}`.trim()
     || ctx.url;
 
-  const competitors = await firecrawlSearch(seedQuery, opts.competitorLimit ?? 3);
+  const competitors = await runFirecrawlSearch(seedQuery, opts.competitorLimit ?? 3);
 
   const prompt = buildPrompt(ctx, competitors);
   const resp = await callAIGateway(
