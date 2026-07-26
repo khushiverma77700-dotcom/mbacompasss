@@ -184,15 +184,17 @@ export default function AdminUsers() {
               {!loading && filtered.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No enrolled users found.</TableCell></TableRow>
               )}
-              {filtered.map((u) => (
-                <TableRow key={u.user_id}>
+              {filtered.map((u, idx) => (
+                <TableRow key={u.user_id ?? `guest-${u.email}-${idx}`}>
                   <TableCell className="font-medium">{u.display_name || "—"}</TableCell>
                   <TableCell className="whitespace-nowrap">{u.phone || "—"}</TableCell>
                   <TableCell className="whitespace-nowrap">{u.email || "—"}</TableCell>
-                  <TableCell className="max-w-[280px]">
+                  <TableCell className="max-w-[320px]">
                     <div className="flex flex-wrap gap-1">
                       {u.purchases.slice(0, 3).map((p, i) => (
-                        <Badge key={i} variant="secondary" className="text-[10px]">{p.label}</Badge>
+                        <Badge key={i} variant="secondary" className="text-[10px]" title={p.status ? `${p.status}${p.amount ? ` • ₹${p.amount}` : ""}` : undefined}>
+                          {p.label}{p.status && p.status !== "enrolled" ? ` · ${p.status}` : ""}
+                        </Badge>
                       ))}
                       {u.purchases.length > 3 && (
                         <Badge variant="outline" className="text-[10px]">+{u.purchases.length - 3} more</Badge>
@@ -205,21 +207,31 @@ export default function AdminUsers() {
                   <TableCell>
                     {u.status === "blocked" ? (
                       <Badge variant="destructive" className="text-[10px]">Blocked</Badge>
+                    ) : u.status === "guest_paid" ? (
+                      <Badge className="text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-100">Guest · Paid</Badge>
+                    ) : u.status === "guest" ? (
+                      <Badge variant="outline" className="text-[10px]">Guest</Badge>
                     ) : (
                       <Badge className="text-[10px] bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Active</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" className="gap-1" onClick={() => openDashboardAs(u)}>
-                        <ExternalLink className="h-3.5 w-3.5" /> View Dashboard
-                      </Button>
-                      <Button size="sm" variant="ghost" className="gap-1" onClick={() => copyLoginLink(u)} title="Copy sign-in link (for incognito)">
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="gap-1" onClick={() => openReset(u)}>
-                        <KeyRound className="h-3.5 w-3.5" /> Reset
-                      </Button>
+                      {u.user_id ? (
+                        <>
+                          <Button size="sm" variant="outline" className="gap-1" onClick={() => openDashboardAs(u)}>
+                            <ExternalLink className="h-3.5 w-3.5" /> View Dashboard
+                          </Button>
+                          <Button size="sm" variant="ghost" className="gap-1" onClick={() => copyLoginLink(u)} title="Copy sign-in link (for incognito)">
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1" onClick={() => openReset(u)}>
+                            <KeyRound className="h-3.5 w-3.5" /> Reset
+                          </Button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No account yet</span>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
