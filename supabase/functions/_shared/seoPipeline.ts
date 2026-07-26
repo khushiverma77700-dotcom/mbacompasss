@@ -15,6 +15,7 @@
 
 import { callAIGateway } from "./aiGateway.ts";
 import { getCredential } from "./getCredential.ts";
+import { firecrawlSearch } from "./firecrawlGateway.ts";
 
 export interface PageContext {
   page_type: string;              // "college" | "course" | "institute" | "article" | "static" | ...
@@ -71,29 +72,14 @@ export interface SeoPipelineResult {
 
 // ---------- Firecrawl helper (top competitor scrape) ----------
 
-async function firecrawlSearch(query: string, limit = 3): Promise<CompetitorSnapshot[]> {
-  const key = await getCredential("FIRECRAWL_API_KEY").catch(() => null);
-  if (!key) return [];
-  try {
-    const r = await fetch("https://api.firecrawl.dev/v1/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        query,
-        limit,
-        scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
-      }),
-    });
-    if (!r.ok) return [];
-    const j = await r.json();
-    const items = (j?.data || []) as any[];
-    return items.slice(0, limit).map((it) => ({
-      url: it.url,
-      title: it.title,
-      h1: it.metadata?.title,
-      markdown: (it.markdown || "").slice(0, 4000),
-    }));
-  } catch { return []; }
+async function runFirecrawlSearch(query: string, limit = 3): Promise<CompetitorSnapshot[]> {
+  const results = await firecrawlSearch({ query, limit, scrapeOptions: { formats: ["markdown"], onlyMainContent: true } });
+  return results.slice(0, limit).map((it) => ({
+    url: it.url,
+    title: it.title,
+    h1: it.metadata?.title || it.title,
+    markdown: (it.markdown || "").slice(0, 4000),
+  }));
 }
 
 // ---------- Prompt builder ----------
@@ -259,7 +245,7 @@ export async function runSeoPipeline(
     || `${ctx.title || ctx.h1 || ""} ${ctx.location?.city || ""}`.trim()
     || ctx.url;
 
-  const competitors = await firecrawlSearch(seedQuery, opts.competitorLimit ?? 3);
+  const competitors = await runFirecrawlSearch(seedQuery, opts.competitorLimit ?? 3);
 
   const prompt = buildPrompt(ctx, competitors);
   const resp = await callAIGateway(

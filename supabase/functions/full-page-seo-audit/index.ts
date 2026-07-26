@@ -6,6 +6,7 @@ import { requireAdmin } from "../_shared/requireAdmin.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { getCredential } from "../_shared/getCredential.ts";
+import { firecrawlSearch } from "../_shared/firecrawlGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -147,40 +148,23 @@ async function assemblePage(
   };
 }
 
-// ── Firecrawl competitor scan ──
+// ── Firecrawl competitor scan (via Lovable gateway) ──
 async function runFirecrawlCompetitorScan(
   primaryKeyword: string,
   pageTitle: string,
 ): Promise<{ competitors: Array<{ url: string; title: string; snippet: string }>; gapInsights: string[] }> {
-  const apiKey = (await getCredential("FIRECRAWL_API_KEY"));
-  if (!apiKey) {
-    return { competitors: [], gapInsights: ["Firecrawl not configured — competitor scan skipped"] };
-  }
-
   const query = primaryKeyword || pageTitle;
   if (!query) return { competitors: [], gapInsights: [] };
 
   try {
-    const resp = await fetch("https://api.firecrawl.dev/v2/search", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: `${query} India MBA`,
-        limit: 5,
-        country: "in",
-        lang: "en",
-      }),
+    const results = await firecrawlSearch({
+      query: `${query} India MBA`,
+      limit: 5,
+      country: "in",
+      lang: "en",
     });
-
-    if (!resp.ok) {
-      const t = await resp.text();
-      console.warn("[full-page-seo-audit] Firecrawl error", resp.status, t.slice(0, 200));
-      return { competitors: [], gapInsights: [`Firecrawl returned ${resp.status}`] };
-    }
-    const data = await resp.json();
-    const rawResults: any[] = data?.data?.web || data?.data || data?.web || [];
-    const competitors = rawResults.slice(0, 5).map((r: any) => ({
-      url: r.url || r.link || "",
+    const competitors = results.map((r) => ({
+      url: r.url,
       title: r.title || "",
       snippet: (r.description || r.snippet || "").slice(0, 300),
     })).filter((c) => c.url);
