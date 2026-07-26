@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(stripMathDelimiters(r.expression_latex))).filter(Boolean));
     const existingNamesList = (existing || []).map((r: any) => r.name).filter(Boolean);
 
-    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY").catch(() => "") || Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
     const safeCount = Math.min(100, Math.max(1, Number(count) || 8));

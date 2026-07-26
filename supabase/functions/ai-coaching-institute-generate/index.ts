@@ -6,13 +6,14 @@ import { requireAdmin } from "../_shared/requireAdmin.ts";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { getBlockingFactIssues, runFactualRiskCheck } from "../_shared/aiContentRules.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 // Use OpenAI directly with the user's configured API key.
 // gpt-4o-mini = ~20x cheaper than gpt-4o, still excellent with strict tool-calling schema.
 const OPENAI_MODEL = "gpt-4o-mini";
 
 async function callAI(body: Record<string, unknown>): Promise<{ res: Response; model: string; provider: "openai" }> {
-  const openaiKey = Deno.env.get("OPENAI_API_KEY") || Deno.env.get("OPENAI_API_KEY_2");
+  const openaiKey = await getCredential("OPENAI_API_KEY");
   if (!openaiKey) throw new Error("OPENAI_API_KEY is not configured");
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",

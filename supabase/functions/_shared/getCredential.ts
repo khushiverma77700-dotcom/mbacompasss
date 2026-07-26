@@ -1,6 +1,8 @@
 // Shared credential resolver for edge functions.
 // Looks up a key from the api_credentials table (admin-managed),
 // falls back to Deno.env.get() if not in DB or empty.
+// OpenAI is special: secure backend secrets win over DB values so a freshly
+// rotated key takes effect even if Admin → API Keys still contains an older key.
 // In-memory cache with 60s TTL to keep DB load low.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -24,24 +26,35 @@ function getServiceClient() {
  */
 export async function getCredential(name: string, opts?: { required?: boolean }): Promise<string> {
   const required = opts?.required ?? true;
-  const now = Date.now();
 
   // Special case: OPENAI_API_KEY routes to slot 1 or slot 2 based on admin toggle.
   if (name === "OPENAI_API_KEY") {
     const slot = await getOpenAiActiveSlot();
     const effective = slot === 2 ? "OPENAI_API_KEY_2" : "OPENAI_API_KEY";
-    return resolveCredential(effective, required);
+    return resolveCredential(effective, required, { preferEnv: true });
+  }
+
+  if (name === "OPENAI_API_KEY_2") {
+    return resolveCredential(name, required, { preferEnv: true });
   }
 
   return resolveCredential(name, required);
 }
 
-async function resolveCredential(name: string, required: boolean): Promise<string> {
+async function resolveCredential(name: string, required: boolean, options?: { preferEnv?: boolean }): Promise<string> {
   const now = Date.now();
   // 1. Cache hit
   const cached = cache.get(name);
   if (cached && now - cached.fetchedAt < TTL_MS) {
     if (cached.value) return cached.value;
+  }
+
+  if (options?.preferEnv) {
+    const envValue = Deno.env.get(name) || "";
+    if (envValue) {
+      cache.set(name, { value: envValue, fetchedAt: now });
+      return envValue;
+    }
   }
 
   // 2. DB lookup
@@ -67,7 +80,7 @@ async function resolveCredential(name: string, required: boolean): Promise<strin
   }
 
   // 3. Env fallback
-  const envValue = Deno.env.get(name) || "";
+  const envValue = options?.preferEnv ? "" : Deno.env.get(name) || "";
   const value = dbValue || envValue;
 
   cache.set(name, { value, fetchedAt: now });

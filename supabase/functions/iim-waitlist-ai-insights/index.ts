@@ -10,7 +10,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const OPENAI_API_KEY = (await getCredential("OPENAI_API_KEY"));
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -19,6 +18,7 @@ Deno.serve(async (req) => {
   const _authFail = await requireUser(req, corsHeaders);
   if (_authFail) return _authFail;
   try {
+    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY");
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     // Pull current data
