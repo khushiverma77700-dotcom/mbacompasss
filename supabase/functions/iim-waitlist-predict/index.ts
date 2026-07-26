@@ -11,7 +11,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const OPENAI_API_KEY = (await getCredential("OPENAI_API_KEY"));
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -20,6 +19,7 @@ Deno.serve(async (req) => {
   const _authFail = await requireUser(req, corsHeaders);
   if (_authFail) return _authFail;
   try {
+    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY");
     const body = await req.json();
     const { category, institute, waitlist_number, cat_percentile, gender, academic_bg, work_ex_months } = body || {};
 
