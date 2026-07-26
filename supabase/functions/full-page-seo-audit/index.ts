@@ -6,6 +6,7 @@ import { requireAdmin } from "../_shared/requireAdmin.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { getCredential } from "../_shared/getCredential.ts";
+import { firecrawlSearch } from "../_shared/firecrawlGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
