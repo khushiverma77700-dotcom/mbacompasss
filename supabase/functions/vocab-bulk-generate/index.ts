@@ -2,6 +2,7 @@
 // POST { count, category?, difficulty? } -> creates job, runs in background, returns { job_id }
 // GET ?job_id=...                         -> returns job row
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -158,7 +159,7 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   const endpoint = provider === "openai"
     ? "https://api.openai.com/v1/chat/completions"
     : "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-  const apiKey = provider === "openai" ? keys.openai : (await (await import("../_shared/getCredential.ts")).getCredential("GEMINI_API_KEY"));
+  const apiKey = provider === "openai" ? keys.openai : await getCredential("GEMINI_API_KEY");
   const model = provider === "openai" ? "gpt-4o-mini" : "gemini-2.5-flash";
 
   if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "GEMINI_API_KEY not configured");
@@ -227,7 +228,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
     lovable: Deno.env.get("LOVABLE_API_KEY") || "",
-    openai: Deno.env.get("OPENAI_API_KEY") || "",
+    openai: await getCredential("OPENAI_API_KEY", { required: false }),
   };
 
   let generated = seed?.generated || 0;
@@ -629,7 +630,7 @@ Deno.serve(async (req) => {
     const exam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
     const provider: Provider = body.provider === "openai" ? "openai" : "lovable";
 
-    if (provider === "openai" && !Deno.env.get("OPENAI_API_KEY")) {
+    if (provider === "openai" && !(await getCredential("OPENAI_API_KEY", { required: false }))) {
       return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured in backend secrets." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

@@ -3,6 +3,7 @@ import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Generates one category at a time to avoid edge function timeouts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -151,7 +152,7 @@ Deno.serve(async (req) => {
   if (_authFail) return _authFail;
 
   try {
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 
     const supabase = createClient(
