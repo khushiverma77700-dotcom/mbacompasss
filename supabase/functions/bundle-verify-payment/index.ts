@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       })
       .eq("razorpay_order_id", razorpay_order_id)
       .eq("user_id", user.id)
-      .select("id, bundle_id")
+      .select("id, bundle_id, amount")
       .maybeSingle();
     if (oe || !order) throw new Error("Order not found");
 
@@ -61,7 +61,17 @@ Deno.serve(async (req) => {
       .update({ order_id: order.id })
       .eq("user_id", user.id).eq("bundle_id", order.bundle_id);
 
-    // Welcome email automation removed to reduce backend load.
+    const { data: bundle } = await admin
+      .from("mock_bundles").select("title").eq("id", order.bundle_id).maybeSingle();
+
+    await sendPurchaseConfirmation({
+      admin,
+      userId: user.id,
+      productTitle: bundle?.title ?? "Your mock bundle",
+      productKind: "bundle",
+      amount: order.amount ?? null,
+      orderId: order.id,
+    });
 
     return new Response(JSON.stringify({ success: true, bundle_id: order.bundle_id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
