@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
   try {
@@ -64,7 +63,7 @@ Deno.serve(async (req) => {
     const auditId = inserted.id as string;
 
     // @ts-ignore Deno edge runtime global
-    EdgeRuntime.waitUntil(runAudit(admin, auditId, slug, targetKeyword, LOVABLE_API_KEY, FIRECRAWL_API_KEY));
+    EdgeRuntime.waitUntil(runAudit(admin, auditId, slug, targetKeyword, LOVABLE_API_KEY));
 
     return json({ auditId }, 200);
   } catch (e: any) {
@@ -81,7 +80,7 @@ function json(body: any, status = 200) {
 
 async function runAudit(
   admin: any, auditId: string, slug: string, keyword: string,
-  LOVABLE_API_KEY?: string, FIRECRAWL_API_KEY?: string,
+  LOVABLE_API_KEY?: string,
 ) {
   const steps = mkSteps();
   const setStep = async (key: string, patch: Partial<Step>) => {
