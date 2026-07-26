@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
         if (order) {
           const { data: course } = await admin
-            .from("mba_compass_courses").select("validity_months").eq("id", order.course_id).maybeSingle();
+            .from("mba_compass_courses").select("title, price, validity_months").eq("id", order.course_id).maybeSingle();
           const months = course?.validity_months ?? 12;
           const expires = new Date();
           expires.setMonth(expires.getMonth() + months);
@@ -43,6 +43,15 @@ Deno.serve(async (req) => {
             user_id: order.user_id, course_id: order.course_id,
             order_id: order.id, expires_at: expires.toISOString(),
           }, { onConflict: "user_id,course_id" });
+
+          await sendPurchaseConfirmation({
+            admin,
+            userId: order.user_id,
+            productTitle: course?.title ?? "Your course",
+            productKind: "course",
+            amount: course?.price ? Math.round(Number(course.price) * 100) : null,
+            orderId: order.id,
+          });
         }
       }
     } else if (event.event === "payment.failed") {
