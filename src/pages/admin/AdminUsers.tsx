@@ -15,14 +15,14 @@ import { Search, KeyRound, ExternalLink, RefreshCw, Copy, Users as UsersIcon } f
 import { useToast } from "@/hooks/use-toast";
 
 type UserRow = {
-  user_id: string;
+  user_id: string | null;
   display_name: string;
   email: string;
   phone: string | null;
-  purchases: { label: string; kind: string; date: string }[];
+  purchases: { label: string; kind: string; date: string; status?: string; amount?: number | null }[];
   purchase_count: number;
   first_enrolled_at: string | null;
-  status: "active" | "blocked";
+  status: "active" | "blocked" | "guest" | "guest_paid";
 };
 
 export default function AdminUsers() {
