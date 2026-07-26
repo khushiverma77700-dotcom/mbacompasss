@@ -2,6 +2,7 @@
 // Progress is written to page_seo_audits.steps for live polling from the admin UI.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.45/deno-dom-wasm.ts";
+import { firecrawlSearch, firecrawlScrape } from "../_shared/firecrawlGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,6 @@ const corsHeaders = {
 };
 
 const SITE_URL = "https://coach-compass-finder.lovable.app";
-const FIRECRAWL = "https://api.firecrawl.dev/v2";
 
 type Step = { key: string; label: string; status: "pending" | "running" | "done" | "failed"; log?: string; data?: any };
 
@@ -110,21 +110,13 @@ async function runAudit(
 
     // 2. Research keyword
     await setStep("research", { status: "running" });
-    let research: any = { results: [], skipped: !FIRECRAWL_API_KEY };
-    if (FIRECRAWL_API_KEY) {
-      try {
-        const r = await fetch(`${FIRECRAWL}/search`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ query: keyword, limit: 10, lang: "en", country: "in" }),
-        });
-        const j = await r.json();
-        const list = j?.data?.web || j?.web || j?.data || [];
-        research.results = (Array.isArray(list) ? list : []).slice(0, 10).map((x: any) => ({
-          url: x.url, title: x.title, description: x.description,
-        }));
-      } catch (e: any) { research.error = e.message; }
-    }
+    let research: any = { results: [], skipped: false };
+    try {
+      const results = await firecrawlSearch({ query: keyword, limit: 10, lang: "en", country: "in" });
+      research.results = results.map((x) => ({
+        url: x.url, title: x.title, description: x.description,
+      }));
+    } catch (e: any) { research.error = e.message; }
     await setStep("research", { status: "done", data: research });
 
     // 3. Competitors
@@ -133,23 +125,16 @@ async function runAudit(
     const top = (research.results || [])
       .filter((r: any) => r.url && !r.url.includes("mbacompass"))
       .slice(0, 3);
-    if (FIRECRAWL_API_KEY) {
-      for (const c of top) {
-        try {
-          const r = await fetch(`${FIRECRAWL}/scrape`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ url: c.url, formats: ["markdown"], onlyMainContent: true }),
-          });
-          const j = await r.json();
-          const md = j?.data?.markdown || j?.markdown || "";
-          competitors.push({
-            url: c.url, title: c.title,
-            words: countWords(md),
-            snippet: md.slice(0, 1200),
-          });
-        } catch (e: any) { competitors.push({ url: c.url, error: e.message }); }
-      }
+    for (const c of top) {
+      try {
+        const j = await firecrawlScrape(c.url, ["markdown"]);
+        const md = j?.data?.markdown || j?.markdown || "";
+        competitors.push({
+          url: c.url, title: c.title,
+          words: countWords(md),
+          snippet: md.slice(0, 1200),
+        });
+      } catch (e: any) { competitors.push({ url: c.url, error: e.message }); }
     }
     await setStep("competitors", { status: "done", data: competitors.map(c => ({
       url: c.url, title: c.title, words: c.words, error: c.error,
