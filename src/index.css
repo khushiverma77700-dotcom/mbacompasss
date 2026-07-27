@@ -828,32 +828,52 @@
 }
 
 /* === Math (KaTeX) rendering safeguards ===
-   Tailwind Typography ('prose') resets line-height, margins, letter-spacing,
-   and 'position' on descendants -- that destroys KaTeX positioning and
-   un-hides the accessibility-only .katex-mathml twin (which is why formulas
-   render as scattered characters). Reset every touched property on .katex
-   and its descendants globally, with !important to beat prose specificity. */
-.katex, .katex * {
-  line-height: normal !important;
+   Mock questions can contain AI-generated formulas in questions, options and
+   explanations. Keep KaTeX isolated from Tailwind Typography (`prose`) without
+   resetting KaTeX's own positioning metrics. */
+.math-content :where(.katex) {
+  font: normal 1.05em KaTeX_Main, "Times New Roman", serif !important;
+  line-height: 1.2 !important;
+  text-align: left !important;
+  text-indent: 0 !important;
+  text-rendering: auto !important;
+  letter-spacing: normal !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  vertical-align: -0.05em !important;
+  max-width: 100%;
+}
+.math-content :where(.katex *) {
   letter-spacing: normal !important;
   text-indent: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
+  box-sizing: content-box;
 }
-.katex {
-  font-size: 1.05em;
-  text-align: left;
-  white-space: nowrap;
-  display: inline-block;
-  vertical-align: baseline;
-}
-.katex .base {
+.math-content :where(.katex .katex-html) {
   display: inline-block !important;
+  position: relative !important;
   white-space: nowrap !important;
 }
-.katex .katex-mathml {
+.math-content :where(.katex .base) {
+  display: inline-block !important;
+  position: relative !important;
+  white-space: nowrap !important;
+  width: auto !important;
+}
+.math-content :where(.katex .strut) {
+  display: inline-block !important;
+}
+.math-content :where(.katex .mord),
+.math-content :where(.katex .mop),
+.math-content :where(.katex .mbin),
+.math-content :where(.katex .mrel),
+.math-content :where(.katex .mopen),
+.math-content :where(.katex .mclose),
+.math-content :where(.katex .mpunct),
+.math-content :where(.katex .minner) {
+  display: inline-block;
+  white-space: nowrap !important;
+}
+.math-content :where(.katex .katex-mathml) {
   position: absolute !important;
   clip: rect(1px, 1px, 1px, 1px) !important;
   clip-path: inset(50%) !important;
@@ -861,7 +881,7 @@
   width: 1px !important;
   overflow: hidden !important;
 }
-.katex-display {
+.math-content :where(.katex-display) {
   display: block !important;
   margin: 0.75em 0 !important;
   text-align: center !important;
@@ -869,7 +889,7 @@
   overflow-y: hidden;
   padding: 0.25em 0;
 }
-.katex-display > .katex {
+.math-content :where(.katex-display > .katex) {
   display: inline-block !important;
   white-space: nowrap !important;
   text-align: initial !important;

@@ -20,11 +20,33 @@ interface MathContentProps {
  */
 
 // Common LaTeX tokens — used to decide if an unwrapped chunk should be math.
-const LATEX_TOKEN_RE = /\\(?:frac|sqrt|sum|prod|int|lim|cdot|times|div|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|left|right|begin|end|mathbb|mathrm|text|overline|underline|vec)\b/;
+const LATEX_TOKEN_RE = /\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|cdot|times|div|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|left|right|begin|end|mathbb|mathrm|text|overline|underline|vec)\b/;
+const BARE_COMMAND_RE = /\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|overline|underline|vec)\b/g;
+const PLACEHOLDER_START = "\uE100MATH";
+const PLACEHOLDER_END = "\uE101";
+const MATH_SYMBOL_RE = /[=<>≤≥≈^_{}]|\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|cdot|times|div|leq|geq|neq|approx|infty)\b|√|[×÷]/;
+
+const normalizeMathExpression = (expr: string): string =>
+  expr
+    .replace(/[−–—]/g, "-")
+    .replace(/[×]/g, "\\times ")
+    .replace(/[÷]/g, "\\div ")
+    .replace(/[≤]/g, "\\leq ")
+    .replace(/[≥]/g, "\\geq ")
+    .replace(/[≈]/g, "\\approx ")
+    .replace(/√\s*\(([^()]+)\)/g, "\\sqrt{$1}")
+    .replace(/√\s*([A-Za-z0-9]+)/g, "\\sqrt{$1}")
+    .trim();
 
 const renderInline = (expr: string): string => {
   try {
-    return katex.renderToString(expr, { displayMode: false, throwOnError: false, output: "html" });
+    return katex.renderToString(normalizeMathExpression(expr), {
+      displayMode: false,
+      throwOnError: false,
+      output: "html",
+      strict: "ignore",
+      trust: false,
+    });
   } catch {
     return expr;
   }
@@ -32,10 +54,30 @@ const renderInline = (expr: string): string => {
 
 const renderBlock = (expr: string): string => {
   try {
-    return katex.renderToString(expr, { displayMode: true, throwOnError: false, output: "html" });
+    return katex.renderToString(normalizeMathExpression(expr), {
+      displayMode: true,
+      throwOnError: false,
+      output: "html",
+      strict: "ignore",
+      trust: false,
+    });
   } catch {
     return expr;
   }
+};
+
+const makeStash = () => {
+  const items: string[] = [];
+  return {
+    store(value: string) {
+      const token = `${PLACEHOLDER_START}${items.length}${PLACEHOLDER_END}`;
+      items.push(value);
+      return token;
+    },
+    restore(value: string) {
+      return value.replace(new RegExp(`${PLACEHOLDER_START}(\\d+)${PLACEHOLDER_END}`, "g"), (_m, idx) => items[Number(idx)] ?? "");
+    },
+  };
 };
 
 // Strip code fences, JSON wrappers, markdown noise, zero-width chars and
@@ -94,6 +136,147 @@ const sanitizeArtifacts = (input: string): string => {
   return s.trim();
 };
 
+const readBalancedGroup = (text: string, start: number): number => {
+  if (text[start] !== "{") return start;
+  let depth = 0;
+  for (let i = start; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === "{") depth += 1;
+    if (ch === "}") depth -= 1;
+    if (depth === 0) return i + 1;
+  }
+  return start;
+};
+
+const readOptionalScript = (text: string, start: number): number => {
+  let i = start;
+  while (/\s/.test(text[i] ?? "")) i += 1;
+  while (text[i] === "_" || text[i] === "^") {
+    i += 1;
+    while (/\s/.test(text[i] ?? "")) i += 1;
+    if (text[i] === "{") {
+      const next = readBalancedGroup(text, i);
+      if (next === i) return start;
+      i = next;
+    } else {
+      while (/[A-Za-z0-9=+\-.,]/.test(text[i] ?? "")) i += 1;
+    }
+    while (/\s/.test(text[i] ?? "")) i += 1;
+  }
+  return i;
+};
+
+const readLatexCommandExpression = (text: string, start: number): number => {
+  const command = text.slice(start).match(/^\\([A-Za-z]+)/)?.[1] ?? "";
+  if (!command) return start;
+
+  let i = start + command.length + 1;
+  i = readOptionalScript(text, i);
+
+  if (command === "sqrt" && text[i] === "[") {
+    const close = text.indexOf("]", i + 1);
+    if (close > i) i = close + 1;
+  }
+
+  const requiredGroups = command === "frac" || command === "dfrac" || command === "tfrac" || command === "binom" ? 2 : 1;
+  let groupsRead = 0;
+  while (groupsRead < requiredGroups) {
+    while (/\s/.test(text[i] ?? "")) i += 1;
+    if (text[i] !== "{") break;
+    const next = readBalancedGroup(text, i);
+    if (next === i) break;
+    i = next;
+    groupsRead += 1;
+  }
+
+  return groupsRead > 0 || command === "sum" || command === "prod" || command === "int" || command === "lim" ? i : start;
+};
+
+const renderBareLatexCommands = (text: string, store: (value: string) => string): string => {
+  BARE_COMMAND_RE.lastIndex = 0;
+  let out = "";
+  let last = 0;
+  let match: RegExpExecArray | null;
+  while ((match = BARE_COMMAND_RE.exec(text)) !== null) {
+    const start = match.index;
+    const end = readLatexCommandExpression(text, start);
+    if (end <= start) continue;
+    out += text.slice(last, start);
+    out += store(renderInline(text.slice(start, end)));
+    last = end;
+    BARE_COMMAND_RE.lastIndex = end;
+  }
+  return out + text.slice(last);
+};
+
+const renderPlainEquations = (text: string, store: (value: string) => string): string => {
+  let out = text;
+
+  // Complete equation chunks: x^2 - 5x + k = 0, 2x + 3x = 5, S_n = 3n^2 + 2n.
+  out = out.replace(
+    /(^|[\s(:;])([A-Za-z0-9][A-Za-z0-9_{}^+\-*/().\s≤≥≈×÷]*\s*[=<>≤≥≈]\s*[A-Za-z0-9_{}^+\-*/().\s≤≥≈×÷]+?)(?=\s*(?:,|;|\.|:|\)|$))/g,
+    (m, prefix, expr) => {
+      const candidate = String(expr).trim();
+      if (candidate.length < 3 || candidate.length > 120) return m;
+      if (!/[=<>≤≥≈]/.test(candidate)) return m;
+      const leftSide = candidate.split(/[=<>≤≥≈]/)[0]?.trim() ?? "";
+      if (/^[A-Za-z]{2,}\s+[A-Za-z0-9]/.test(leftSide)) return m;
+      return `${prefix}${store(renderInline(candidate))}`;
+    },
+  );
+
+  // Short symbolic fragments after prose markers: "Probability = ...", "k = ...".
+  out = out.replace(
+    /(^|[\s(:;])((?:Probability|P|k|x|y|n|S_n|a_n|A_n)\s*=\s*(?:\\[A-Za-z]+\{[^\n.;]+|[A-Za-z0-9_{}^+\-*/().\s≤≥≈×÷√]+))(?=\s*(?:,|;|\.|:|\)|$))/g,
+    (m, prefix, expr) => {
+      const candidate = String(expr).trim();
+      if (!MATH_SYMBOL_RE.test(candidate)) return m;
+      return `${prefix}${store(renderInline(candidate))}`;
+    },
+  );
+
+  // Common root notation in prose: √(144), √5.
+  out = out.replace(
+    /√\s*(?:\([^()]+\)|[A-Za-z0-9]+)/g,
+    (m) => store(renderInline(m)),
+  );
+
+  // Bare powers/subscripts outside equations: n^2, x_{1}, a_n.
+  out = out.replace(
+    /(^|[^\\\w])([A-Za-z][A-Za-z0-9]?)(\^|_)(\{[^{}]+\}|[A-Za-z0-9]+)/g,
+    (_m, prefix, base, op, exp) => `${prefix}${store(renderInline(`${base}${op}${exp}`))}`,
+  );
+
+  return out;
+};
+
+const transformTextOutsideTags = (html: string, transform: (text: string) => string): string => {
+  const tagRe = /<[^>]*>/g;
+  let out = "";
+  let last = 0;
+  let skipTag: string | null = null;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagRe.exec(html)) !== null) {
+    const tag = match[0];
+    const text = html.slice(last, match.index);
+    out += skipTag ? text : transform(text);
+    out += tag;
+
+    const closing = tag.match(/^<\s*\/\s*([a-z0-9-]+)/i)?.[1]?.toLowerCase();
+    const opening = tag.match(/^<\s*([a-z0-9-]+)/i)?.[1]?.toLowerCase();
+    if (closing && closing === skipTag) skipTag = null;
+    if (!skipTag && opening && ["code", "pre", "script", "style", "svg", "math"].includes(opening) && !/^<\s*\//.test(tag)) {
+      skipTag = opening;
+    }
+    last = match.index + tag.length;
+  }
+
+  const rest = html.slice(last);
+  out += skipTag ? rest : transform(rest);
+  return out;
+};
+
 const renderMath = (input: string): string => {
   if (!input) return "";
 
@@ -101,18 +284,20 @@ const renderMath = (input: string): string => {
   //    a stripped ```html block is still picked up.
   let out = sanitizeArtifacts(input);
 
+  const stash = makeStash();
+
   // Normalize: LLMs sometimes emit \\$ or \\(. Collapse double backslashes
   // that precede math delimiters into a single backslash so our regex matches.
   out = out.replace(/\\\\(\$|\(|\)|\[|\])/g, "\\$1");
 
   // 1. Block math: $$ ... $$
-  out = out.replace(/\$\$([\s\S]+?)\$\$/g, (_m, expr) => renderBlock(String(expr).trim()));
+  out = out.replace(/\$\$([\s\S]+?)\$\$/g, (_m, expr) => stash.store(renderBlock(String(expr).trim())));
 
   // 2. Block math: \[ ... \]
-  out = out.replace(/\\\[([\s\S]+?)\\\]/g, (_m, expr) => renderBlock(String(expr).trim()));
+  out = out.replace(/\\\[([\s\S]+?)\\\]/g, (_m, expr) => stash.store(renderBlock(String(expr).trim())));
 
   // 3. Inline math: \( ... \)
-  out = out.replace(/\\\(([\s\S]+?)\\\)/g, (_m, expr) => renderInline(String(expr).trim()));
+  out = out.replace(/\\\(([\s\S]+?)\\\)/g, (_m, expr) => stash.store(renderInline(String(expr).trim())));
 
   // 4. Inline math: $ ... $  (currency-aware + prose-aware)
   out = out.replace(/\$([^\$\n<>]+?)\$/g, (m, expr) => {
@@ -128,27 +313,22 @@ const renderMath = (input: string): string => {
       const wordCount = (e.match(/\b[A-Za-z]{2,}\b/g) || []).length;
       if (wordCount >= 2) return m;
     }
-    return renderInline(e);
+    return stash.store(renderInline(e));
   });
 
   // 5. Escaped dollar that wasn't part of math — unescape \$ to $
   out = out.replace(/\\\$/g, "$");
 
-  // 6. Auto-wrap obvious unwrapped LaTeX commands like \frac{1}{2}, \sqrt{5},
-  //    \sum_{i=1}^n, \overline{AB} that the model forgot to delimit.
-  out = out.replace(
-    /(\\(?:frac|dfrac|tfrac|sqrt|sum|prod|int|lim|overline|underline|vec|binom)\s*(?:_\{[^{}]*\})?\s*(?:\^\{[^{}]*\})?\s*\{[^{}]*\}(?:\s*\{[^{}]*\})?)/g,
-    (m) => renderInline(m),
+  // 6. Auto-render unwrapped math only in text nodes, never inside HTML tags
+  //    or already-rendered KaTeX placeholders. Handles nested \frac/\binom.
+  out = transformTextOutsideTags(out, (text) =>
+    renderPlainEquations(
+      renderBareLatexCommands(text, (value) => stash.store(value)),
+      (value) => stash.store(value),
+    ),
   );
 
-  // 7. Bare superscripts / subscripts not already in math:  x^2, a_n, x^{n+1}
-  //    Wrap only the token so surrounding text stays plain.
-  out = out.replace(
-    /(?<![\\\w])([A-Za-z0-9])(\^|_)(\{[^{}]+\}|[A-Za-z0-9]+)/g,
-    (_m, base, op, exp) => renderInline(`${base}${op}${exp}`),
-  );
-
-  return out;
+  return stash.restore(out);
 };
 
 const MathContent = ({ html, className }: MathContentProps) => {
