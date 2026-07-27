@@ -34,23 +34,22 @@ Deno.serve(async (req) => {
     }
     const count = Math.min(Math.max(parseInt(num_questions), 5), 100);
 
-    // Access check
+    // Platform rule: Personalized Hub is unlocked for every signed-in student.
+    // Access row is optional and only used to override the daily quota.
     const { data: access } = await admin
       .from("personalized_hub_access")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!access) return json({ error: "no_access" }, 403);
-    if (access.expires_at && new Date(access.expires_at) < new Date()) {
-      return json({ error: "access_expired" }, 403);
-    }
+    const DEFAULT_DAILY_QUOTA = 20;
+    const dailyQuota = (access?.daily_quota as number | undefined) ?? DEFAULT_DAILY_QUOTA;
 
     // Daily quota
     const { data: todayCountData } = await admin.rpc("personalized_hub_today_count", { _user_id: user.id });
     const todayCount = (todayCountData as number) ?? 0;
-    if (todayCount >= access.daily_quota) {
-      return json({ error: "quota_exceeded", limit: access.daily_quota }, 429);
+    if (todayCount >= dailyQuota) {
+      return json({ error: "quota_exceeded", limit: dailyQuota }, 429);
     }
 
     // Pick fresh questions
