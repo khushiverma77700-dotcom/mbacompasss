@@ -91,6 +91,7 @@ export default function MockTestRunnerPage() {
   const navigate = useNavigate();
 
   const [attempt, setAttempt] = useState<any>(null);
+  const [test, setTest] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
