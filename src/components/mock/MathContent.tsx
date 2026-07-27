@@ -219,6 +219,8 @@ const renderPlainEquations = (text: string, store: (value: string) => string): s
       const candidate = String(expr).trim();
       if (candidate.length < 3 || candidate.length > 120) return m;
       if (!/[=<>≤≥≈]/.test(candidate)) return m;
+      const leftSide = candidate.split(/[=<>≤≥≈]/)[0]?.trim() ?? "";
+      if (/^[A-Za-z]{2,}\s+[A-Za-z0-9]/.test(leftSide)) return m;
       return `${prefix}${store(renderInline(candidate))}`;
     },
   );
