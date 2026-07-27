@@ -52,13 +52,11 @@ export default function StudentPersonalizedHub() {
     })();
   }, [user]);
 
-  const hasAccess = useMemo(() => {
-    if (!access) return false;
-    if (access.expires_at && new Date(access.expires_at) < new Date()) return false;
-    return true;
-  }, [access]);
-
-  const remaining = access ? Math.max(0, access.daily_quota - todayCount) : 0;
+  // Platform rule: Personalized Hub is unlocked for every signed-in student.
+  const DEFAULT_DAILY_QUOTA = 20;
+  const hasAccess = !!user;
+  const dailyQuota = access?.daily_quota ?? DEFAULT_DAILY_QUOTA;
+  const remaining = Math.max(0, dailyQuota - todayCount);
 
   const submittedHistory = history.filter((h) => h.status === "submitted");
   const overall = useMemo(() => {
