@@ -25,6 +25,7 @@ const BARE_COMMAND_RE = /\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|overl
 const PLACEHOLDER_START = "\uE100MATH";
 const PLACEHOLDER_END = "\uE101";
 const MATH_SYMBOL_RE = /[=<>≤≥≈^_{}]|\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|cdot|times|div|leq|geq|neq|approx|infty)\b|√|[×÷]/;
+const LONG_FORMULA_RE = /(?:\\sqrt\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|√\s*\([^()]+\)|\\frac\{[^{}]+\}\{[^{}]+\}|[A-Za-z0-9]+(?:_[A-Za-z0-9{}]+|\^[A-Za-z0-9{}]+)?)(?:\s*(?:=|≈|≤|≥|<|>|\+|-|\\cdot|\\times|×|÷|\/|\*)\s*(?:\\sqrt\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|√\s*\([^()]+\)|\\frac\{[^{}]+\}\{[^{}]+\}|[A-Za-z0-9().{}_^+\-*/\\]+)){2,}/g;
 
 const normalizeMathExpression = (expr: string): string =>
   expr
@@ -209,6 +210,17 @@ const renderBareLatexCommands = (text: string, store: (value: string) => string)
   return out + text.slice(last);
 };
 
+const renderLongFormulaChains = (text: string, store: (value: string) => string): string => {
+  return text.replace(LONG_FORMULA_RE, (match) => {
+    const candidate = String(match).trim();
+    if (candidate.length < 12 || candidate.length > 240) return match;
+    if (!/[=≈≤≥<>+\-*/×÷]|\\(?:sqrt|frac|cdot|times)/.test(candidate)) return match;
+    const wordCount = (candidate.match(/\b[A-Za-z]{3,}\b/g) || []).length;
+    if (wordCount > 1 && !LATEX_TOKEN_RE.test(candidate)) return match;
+    return store(renderBlock(candidate));
+  });
+};
+
 const renderPlainEquations = (text: string, store: (value: string) => string): string => {
   let out = text;
 
@@ -320,10 +332,15 @@ const renderMath = (input: string): string => {
   out = out.replace(/\\\$/g, "$");
 
   // 6. Auto-render unwrapped math only in text nodes, never inside HTML tags
-  //    or already-rendered KaTeX placeholders. Handles nested \frac/\binom.
+  //    or already-rendered KaTeX placeholders. Long Heron/algebra chains are
+  //    promoted first so they render as one clean display equation instead of
+  //    scattered roots/fractions.
   out = transformTextOutsideTags(out, (text) =>
     renderPlainEquations(
-      renderBareLatexCommands(text, (value) => stash.store(value)),
+      renderBareLatexCommands(
+        renderLongFormulaChains(text, (value) => stash.store(value)),
+        (value) => stash.store(value),
+      ),
       (value) => stash.store(value),
     ),
   );
