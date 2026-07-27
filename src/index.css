@@ -828,26 +828,46 @@
 }
 
 /* === Math (KaTeX) rendering safeguards ===
-   The `prose` typography plugin and other content wrappers can override
-   KaTeX font-family / line-height which breaks fractions, powers, and
-   square roots. Force KaTeX glyphs to keep their own metrics. */
-.math-content .katex,
-.math-content .katex * {
-  font-family: KaTeX_Main, "Times New Roman", serif;
-  line-height: 1.2;
-  white-space: normal;
+   NEVER override .katex descendants' font-family, line-height, or white-space.
+   KaTeX uses multiple internal fonts (KaTeX_Math, Size1/2/3, AMS, Caligraphic)
+   and relies on white-space: nowrap + its own line-height for correct
+   positioning of fractions, subscripts, superscripts, and roots.
+   The `prose` typography plugin resets those properties; we re-scope them
+   ONLY on the .katex wrapper, letting KaTeX's own stylesheet drive internals. */
+.math-content .katex {
+  font-size: 1.05em;
   text-indent: 0;
+  text-align: left;
+  white-space: nowrap;
 }
 .math-content .katex-display {
   margin: 0.75em 0;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.25em 0;
+  text-align: center;
 }
 .math-content .katex-display > .katex {
   display: inline-block;
   white-space: nowrap;
+  text-align: initial;
 }
+/* Prose plugin sets line-height on all descendants; reset for math atoms */
+.math-content .katex .base,
+.math-content .katex .strut,
+.math-content .katex .mfrac,
+.math-content .katex .msupsub,
+.math-content .katex .vlist,
+.math-content .katex .vlist-t,
+.math-content .katex .vlist-r,
+.math-content .katex .mord,
+.math-content .katex .mrel,
+.math-content .katex .mbin,
+.math-content .katex .mop,
+.math-content .katex .mopen,
+.math-content .katex .mclose,
+.math-content .katex .minner,
+.math-content .katex .mpunct { line-height: normal; }
 .math-content h4 {
   font-size: 0.95rem;
   font-weight: 600;
