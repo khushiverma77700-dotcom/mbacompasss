@@ -166,24 +166,11 @@ export default function StudentPersonalizedHub() {
       <Card className="border-sky-100">
         <CardHeader>
           <CardTitle className="text-base">Generate a New Mock</CardTitle>
-          {access && (
-            <p className="text-xs text-muted-foreground">
-              {hasAccess ? `${remaining} of ${access.daily_quota} mocks left today` : "Access expired — contact admin"}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            {`${remaining} of ${dailyQuota} mocks left today`}
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!hasAccess && (
-            <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm">
-              <Lock className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <div className="font-medium text-amber-900">No active access</div>
-                <div className="text-amber-800 text-xs mt-0.5">
-                  Personalized Hub is unlocked when you purchase a course. <Link to="/mocks" className="underline">Browse plans</Link>.
-                </div>
-              </div>
-            </div>
-          )}
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <Label>Exam</Label>
