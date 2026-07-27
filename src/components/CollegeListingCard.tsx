@@ -15,11 +15,14 @@ interface Props {
   rank?: number;
 }
 
+const uniq = (arr: unknown): string[] =>
+  Array.from(new Set(((arr as string[]) || []).filter(Boolean).map((s) => String(s).trim())));
+
 const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
-  const exams = college.exams_accepted || [];
-  const specs = college.specializations || [];
-  const recruiters = college.top_recruiters || [];
-  const accreditations = college.accreditations || [];
+  const exams = uniq(college.exams_accepted);
+  const specs = uniq(college.specializations);
+  const recruiters = uniq(college.top_recruiters);
+  const accreditations = uniq(college.accreditations);
   const displayRank = college.ranking || rank;
 
   return (
