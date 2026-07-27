@@ -828,46 +828,52 @@
 }
 
 /* === Math (KaTeX) rendering safeguards ===
-   NEVER override .katex descendants' font-family, line-height, or white-space.
-   KaTeX uses multiple internal fonts (KaTeX_Math, Size1/2/3, AMS, Caligraphic)
-   and relies on white-space: nowrap + its own line-height for correct
-   positioning of fractions, subscripts, superscripts, and roots.
-   The `prose` typography plugin resets those properties; we re-scope them
-   ONLY on the .katex wrapper, letting KaTeX's own stylesheet drive internals. */
-.math-content .katex {
+   Tailwind Typography ('prose') resets line-height, margins, letter-spacing,
+   and 'position' on descendants -- that destroys KaTeX positioning and
+   un-hides the accessibility-only .katex-mathml twin (which is why formulas
+   render as scattered characters). Reset every touched property on .katex
+   and its descendants globally, with !important to beat prose specificity. */
+.katex, .katex * {
+  line-height: normal !important;
+  letter-spacing: normal !important;
+  text-indent: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.katex {
   font-size: 1.05em;
-  text-indent: 0;
   text-align: left;
   white-space: nowrap;
+  display: inline-block;
+  vertical-align: baseline;
 }
-.math-content .katex-display {
-  margin: 0.75em 0;
+.katex .base {
+  display: inline-block !important;
+  white-space: nowrap !important;
+}
+.katex .katex-mathml {
+  position: absolute !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+  clip-path: inset(50%) !important;
+  height: 1px !important;
+  width: 1px !important;
+  overflow: hidden !important;
+}
+.katex-display {
+  display: block !important;
+  margin: 0.75em 0 !important;
+  text-align: center !important;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.25em 0;
-  text-align: center;
 }
-.math-content .katex-display > .katex {
-  display: inline-block;
-  white-space: nowrap;
-  text-align: initial;
+.katex-display > .katex {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  text-align: initial !important;
 }
-/* Prose plugin sets line-height on all descendants; reset for math atoms */
-.math-content .katex .base,
-.math-content .katex .strut,
-.math-content .katex .mfrac,
-.math-content .katex .msupsub,
-.math-content .katex .vlist,
-.math-content .katex .vlist-t,
-.math-content .katex .vlist-r,
-.math-content .katex .mord,
-.math-content .katex .mrel,
-.math-content .katex .mbin,
-.math-content .katex .mop,
-.math-content .katex .mopen,
-.math-content .katex .mclose,
-.math-content .katex .minner,
-.math-content .katex .mpunct { line-height: normal; }
 .math-content h4 {
   font-size: 0.95rem;
   font-weight: 600;
