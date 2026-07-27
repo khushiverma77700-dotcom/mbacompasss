@@ -165,7 +165,7 @@ const ArticlePage = () => {
                 alt={article.title}
                 className="absolute inset-0 h-full w-full object-cover"
                 loading="eager"
-                fetchPriority="high"
+                {...({fetchpriority:"high"} as any)}
               />
             </picture>
           ) : (
