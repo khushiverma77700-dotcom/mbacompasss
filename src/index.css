@@ -839,7 +839,6 @@
   text-rendering: auto !important;
   letter-spacing: normal !important;
   white-space: nowrap !important;
-  display: inline-block !important;
   vertical-align: -0.05em !important;
   max-width: 100%;
 }
@@ -849,29 +848,13 @@
   box-sizing: content-box;
 }
 .math-content :where(.katex .katex-html) {
-  display: inline-block !important;
   position: relative !important;
   white-space: nowrap !important;
 }
 .math-content :where(.katex .base) {
-  display: inline-block !important;
   position: relative !important;
   white-space: nowrap !important;
   width: auto !important;
-}
-.math-content :where(.katex .strut) {
-  display: inline-block !important;
-}
-.math-content :where(.katex .mord),
-.math-content :where(.katex .mop),
-.math-content :where(.katex .mbin),
-.math-content :where(.katex .mrel),
-.math-content :where(.katex .mopen),
-.math-content :where(.katex .mclose),
-.math-content :where(.katex .mpunct),
-.math-content :where(.katex .minner) {
-  display: inline-block;
-  white-space: nowrap !important;
 }
 .math-content :where(.katex .katex-mathml) {
   position: absolute !important;
@@ -884,10 +867,11 @@
 .math-content :where(.katex-display) {
   display: block !important;
   margin: 0.75em 0 !important;
-  text-align: center !important;
+  text-align: left !important;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0.25em 0;
+  padding: 0.25em 0 0.45em;
+  max-width: 100%;
 }
 .math-content :where(.katex-display > .katex) {
   display: inline-block !important;
