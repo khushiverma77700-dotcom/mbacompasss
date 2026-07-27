@@ -24,6 +24,7 @@ const LATEX_TOKEN_RE = /\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|cdot|t
 const BARE_COMMAND_RE = /\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|overline|underline|vec)\b/g;
 const PLACEHOLDER_START = "\uE100MATH";
 const PLACEHOLDER_END = "\uE101";
+const MATH_SYMBOL_RE = /[=<>≤≥≈^_{}]|\\(?:frac|dfrac|tfrac|sqrt|binom|sum|prod|int|lim|cdot|times|div|leq|geq|neq|approx|infty)\b|√|[×÷]/;
 
 const normalizeMathExpression = (expr: string): string =>
   expr
@@ -213,13 +214,29 @@ const renderPlainEquations = (text: string, store: (value: string) => string): s
 
   // Complete equation chunks: x^2 - 5x + k = 0, 2x + 3x = 5, S_n = 3n^2 + 2n.
   out = out.replace(
-    /(^|[\s(:;])([A-Za-z][A-Za-z0-9_{}]*\s*(?:[+\-*/^=<>≤≥≈×÷]|\s+[+\-*/^=<>≤≥≈×÷]\s+|\s*[A-Za-z]?\d)+\s*[=<>≤≥≈]\s*[A-Za-z0-9_{}+\-*/^().\s≤≥≈×÷]+)(?=\s*[,.;:)]|\s|$)/g,
+    /(^|[\s(:;])([A-Za-z0-9][A-Za-z0-9_{}^+\-*/().\s≤≥≈×÷]*\s*[=<>≤≥≈]\s*[A-Za-z0-9_{}^+\-*/().\s≤≥≈×÷]+?)(?=\s*(?:,|;|\.|:|\)|$))/g,
     (m, prefix, expr) => {
       const candidate = String(expr).trim();
       if (candidate.length < 3 || candidate.length > 120) return m;
       if (!/[=<>≤≥≈]/.test(candidate)) return m;
       return `${prefix}${store(renderInline(candidate))}`;
     },
+  );
+
+  // Short symbolic fragments after prose markers: "Probability = ...", "k = ...".
+  out = out.replace(
+    /(^|[\s(:;])((?:Probability|P|k|x|y|n|S_n|a_n|A_n)\s*=\s*(?:\\[A-Za-z]+\{[^\n.;]+|[A-Za-z0-9_{}^+\-*/().\s≤≥≈×÷√]+))(?=\s*(?:,|;|\.|:|\)|$))/g,
+    (m, prefix, expr) => {
+      const candidate = String(expr).trim();
+      if (!MATH_SYMBOL_RE.test(candidate)) return m;
+      return `${prefix}${store(renderInline(candidate))}`;
+    },
+  );
+
+  // Common root notation in prose: √(144), √5.
+  out = out.replace(
+    /√\s*(?:\([^()]+\)|[A-Za-z0-9]+)/g,
+    (m) => store(renderInline(m)),
   );
 
   // Bare powers/subscripts outside equations: n^2, x_{1}, a_n.
