@@ -137,6 +137,12 @@ export default function MockTestRunnerPage() {
         );
         return;
       }
+      const { data: t } = await supabase
+        .from("mock_tests")
+        .select("id, name, slug, total_duration_minutes, exam_code, category, test_type")
+        .eq("id", a.test_id)
+        .maybeSingle();
+      setTest(t ?? null);
       const { data: s } = await supabase
         .from("mock_sections")
         .select("*")
