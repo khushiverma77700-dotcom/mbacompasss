@@ -148,6 +148,10 @@ export interface QualityIssue {
   code: string;
   message: string;
   severity: "warn" | "error";
+  rule?: string;
+  matchedText?: string;
+  field?: string;
+  autoFixed?: boolean;
 }
 
 export interface QualityCheckResult {
@@ -158,6 +162,14 @@ export interface QualityCheckResult {
 }
 
 const stripTags = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+const firstRegexMatch = (regex: RegExp, text: string): RegExpExecArray | null => {
+  const safeFlags = regex.flags.replace(/g/g, "");
+  return new RegExp(regex.source, safeFlags).exec(text);
+};
+
+const matchedSnippet = (value: string, max = 240) =>
+  stripTags(value).replace(/\s+/g, " ").trim().slice(0, max);
 
 const BLOCKING_FACT_CODES = new Set([
   "implausible_average_ctc",
@@ -323,6 +335,31 @@ type FactRule = {
   message: string;
 };
 
+const getRuleMatch = (rule: FactRule, html: string): { matchedText: string; index: number } | null => {
+  const text = stripTags(html);
+  const match = firstRegexMatch(rule.detect, text);
+  if (!match || typeof match.index !== "number") return null;
+  return { matchedText: matchedSnippet(match[0]), index: match.index };
+};
+
+const isSafeCorrectiveFactContext = (code: string, matchedText: string) => {
+  const text = String(matchedText || "").toLowerCase();
+  switch (code) {
+    case "xlri_accepts_cat":
+      return /xat\s+only|does\s+not\s+accept\s+cat|not\s+cat|never\s+cat|no\s+cat/i.test(text);
+    case "iim_accepts_xat_or_nmat":
+      return /cat\s+only|does\s+not\s+accept\s+(?:xat|nmat|snap|cmat|mat)|not\s+(?:xat|nmat|snap|cmat|mat)/i.test(text);
+    case "isb_accepts_cat":
+      return /gmat\s+(?:or|\/)?\s*gre\s+only|does\s+not\s+accept\s+(?:cat|xat|nmat|snap|cmat|mat)|not\s+(?:cat|xat|nmat|snap|cmat|mat)/i.test(text);
+    case "nmims_accepts_cat":
+      return /nmat(?:\s+by\s+gmac)?\s+only|does\s+not\s+accept\s+cat|not\s+cat|never\s+cat/i.test(text);
+    case "symbiosis_accepts_cat":
+      return /snap\s+only|does\s+not\s+accept\s+(?:cat|xat|nmat)|not\s+(?:cat|xat|nmat)|never\s+(?:cat|xat|nmat)/i.test(text);
+    default:
+      return false;
+  }
+};
+
 const MBA_FACT_RULES: FactRule[] = [
   {
     code: "xlri_accepts_cat",
@@ -425,7 +462,6 @@ const MBA_FACT_RULES: FactRule[] = [
 
 function runFactCheck(html: string): { html: string; issues: QualityIssue[]; changed: boolean } {
   const issues: QualityIssue[] = [];
-  const text = stripTags(html);
   let out = html;
   const before = out;
 
@@ -441,6 +477,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "unverified_exact_date",
       message: "Unverified exact exam/admission dates were softened to expected month/year wording before publishing.",
       severity: "warn",
+      rule: "unverified_exact_date",
+      autoFixed: true,
     });
   }
 
@@ -449,11 +487,17 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "exact_unverified_cutoff",
       message: "Unverified exact cutoff percentiles were softened to expected band wording before publishing.",
       severity: "warn",
+      rule: "exact_unverified_cutoff",
+      autoFixed: true,
     });
   }
 
   for (const rule of MBA_FACT_RULES) {
-    if (rule.detect.test(text)) {
+    const initialMatch = getRuleMatch(rule, out);
+    if (initialMatch) {
+      if (isSafeCorrectiveFactContext(rule.code, initialMatch.matchedText)) {
+        continue;
+      }
       const beforeRule = out;
       for (const r of rule.rewrite) {
         out = out.replace(r.pattern, r.replacement);
@@ -462,12 +506,17 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       // Only flag as blocking error when no rewrite was possible (rule.rewrite empty)
       // or nothing matched at all — meaning the falsehood is still present verbatim.
       const rewrote = out !== beforeRule;
-      const stillBad = !rewrote && rule.rewrite.length > 0 && rule.detect.test(stripTags(out));
-      const noRewriter = rule.rewrite.length === 0 && rule.detect.test(stripTags(out));
+      const afterMatch = getRuleMatch(rule, out);
+      const stillUnsafe = Boolean(afterMatch && !isSafeCorrectiveFactContext(rule.code, afterMatch.matchedText));
+      const stillBad = !rewrote && rule.rewrite.length > 0 && stillUnsafe;
+      const noRewriter = rule.rewrite.length === 0 && stillUnsafe;
       issues.push({
         code: rule.code,
         message: rule.message,
         severity: stillBad || noRewriter ? "error" : "warn",
+        rule: rule.code,
+        matchedText: initialMatch.matchedText,
+        autoFixed: rewrote,
       });
     }
   }
@@ -484,6 +533,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "stale_current_data_year",
       message: `Possible old current-cycle data found: "${staleSentence.slice(0, 180)}". Do not publish old cutoffs, dates, fees, rankings or placements as current data.`,
       severity: "error",
+      rule: "stale_current_data_year",
+      matchedText: staleSentence.slice(0, 240),
     });
   }
 
@@ -495,6 +546,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "exact_unverified_cutoff",
       message: `Exact cutoff percentile needs official proof or safe wording: "${riskyCutoffSentence.slice(0, 180)}". Publishing was not blocked; review or soften to expected band/TBA wording if needed.`,
       severity: "warn",
+      rule: "exact_unverified_cutoff",
+      matchedText: riskyCutoffSentence.slice(0, 240),
     });
   }
 
@@ -506,6 +559,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "unverified_exact_date",
       message: `Exact exam/admission date needs official confirmation or tentative wording: "${riskyDateSentence.slice(0, 180)}". Publishing was not blocked; review or soften to expected month/window if needed.`,
       severity: "warn",
+      rule: "unverified_exact_date",
+      matchedText: riskyDateSentence.slice(0, 240),
     });
   }
   return { html: out, issues, changed: out !== before };
@@ -558,7 +613,7 @@ export function runFinalQualityCheck(rawHtml: string, opts?: {
   const text = stripTags(html).toLowerCase();
   for (const phrase of BANNED_PHRASES) {
     if (text.includes(phrase.toLowerCase())) {
-      issues.push({ code: "banned_phrase", message: `Contains banned AI phrase: "${phrase}"`, severity: "warn" });
+      issues.push({ code: "banned_phrase", message: `Contains banned AI phrase: "${phrase}"`, severity: "warn", rule: "banned_phrase", matchedText: phrase });
     }
   }
 
