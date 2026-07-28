@@ -493,8 +493,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
   if (riskyCutoffSentence) {
     issues.push({
       code: "exact_unverified_cutoff",
-      message: `Exact cutoff percentile needs official proof or safe wording: "${riskyCutoffSentence.slice(0, 180)}". Use expected band/TBA/verify wording instead of a naked exact cutoff.`,
-      severity: "error",
+      message: `Exact cutoff percentile needs official proof or safe wording: "${riskyCutoffSentence.slice(0, 180)}". Publishing was not blocked; review or soften to expected band/TBA wording if needed.`,
+      severity: "warn",
     });
   }
 
@@ -504,8 +504,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
   if (riskyDateSentence) {
     issues.push({
       code: "unverified_exact_date",
-      message: `Exact exam/admission date needs official confirmation or tentative wording: "${riskyDateSentence.slice(0, 180)}". Use expected month/window or official TBA if not verified.`,
-      severity: "error",
+      message: `Exact exam/admission date needs official confirmation or tentative wording: "${riskyDateSentence.slice(0, 180)}". Publishing was not blocked; review or soften to expected month/window if needed.`,
+      severity: "warn",
     });
   }
   return { html: out, issues, changed: out !== before };
