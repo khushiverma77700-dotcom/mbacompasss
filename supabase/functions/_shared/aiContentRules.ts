@@ -196,12 +196,56 @@ const getStaleCurrentDataYearRe = () => {
 const CLEAR_HISTORY_RE = /\b(founded|established|started|launched|created|set\s+up|rebranded|formerly|history|historic|historical|legacy|inception|became|converted|renamed|since\s+\d{4}|trends?|year[-\s]on[-\s]year|y-?o-?y|past\s+\d+\s+years?|previous\s+years?|over\s+the\s+years?|from\s+20\d{2}\s*(?:to|–|-|—)\s*20\d{2}|20\d{2}\s*(?:to|–|-|—)\s*20\d{2}|between\s+20\d{2}\s+and\s+20\d{2}|snapshot|last\s+\d+\s+years?|expected|verify|tentative|graduation\s+year|eligibility|final\s+year|projected|forecast)\b/i;
 const EXACT_CUTOFF_RE = /(?:\bcut\s*-?\s*offs?\b[^.!?]{0,140}\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b|\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b[^.!?]{0,140}\bcut\s*-?\s*offs?\b)/i;
 const SAFE_CUTOFF_WORDING_RE = /\b(expected|approx(?:\.|imate|imately)?|range|band|previous|historical|verify|tba|tentative|last\s+published|latest\s+published|target|aim|aiming|buffer|planning|goal|safe|stretch|around|roughly|typically|usually|above|over|below|under|at\s+least|at\s+most|more\s+than|less\s+than|greater\s+than|higher\s+than|lower\s+than|upwards\s+of|north\s+of|minimum|maximum|near|nearly|close\s+to|about|generally|often|mostly|placement\s+reports?|admission\s+data|based\s+on)\b/i;
-const FULL_DATE_RE = /\b(?:\d{1,2}\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},?\s+\d{4})\b/i;
+const MONTH_PATTERN = "jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?";
+const FULL_DATE_RE = new RegExp(`\\b(?:\\d{1,2}\\s+(?:${MONTH_PATTERN})\\s+\\d{4}|(?:${MONTH_PATTERN})\\s+\\d{1,2},?\\s+\\d{4})\\b`, "i");
 const DATE_TERM_RE = /\b(exam|registration|application|deadline|admit\s+card|result|interview|gd\s*-?\s*pi|wat|counselling|counseling|admission)\b/i;
 // Exact full calendar dates are risky because models often invent them. Only
-// pass exact dates when they carry a source marker or clearly refer to a past
-// released/published event; otherwise use month/window/TBA wording.
-const SAFE_DATE_WORDING_RE = /\b(past|historical|history)\b/i;
+// pass exact dates when they carry a clear official source marker or refer to
+// historical events. Tentative exact dates are automatically softened to an
+// expected month/year before blocking checks run.
+const SAFE_DATE_WORDING_RE = /\b(past|historical|history|official(?:ly)?|confirmed|announced|released|published|notification|bulletin|admission\s+notice|information\s+bulletin|official\s+(?:site|website|portal|schedule|notice|brochure))\b/i;
+const TENTATIVE_DATE_WORDING_RE = /\b(expected|tentative|projected|likely|estimated|provisional|to\s+be\s+announced|tba|to\s+be\s+confirmed)\b/i;
+
+const MONTH_NAMES: Record<string, string> = {
+  jan: "January", january: "January",
+  feb: "February", february: "February",
+  mar: "March", march: "March",
+  apr: "April", april: "April",
+  may: "May",
+  jun: "June", june: "June",
+  jul: "July", july: "July",
+  aug: "August", august: "August",
+  sep: "September", sept: "September", september: "September",
+  oct: "October", october: "October",
+  nov: "November", november: "November",
+  dec: "December", december: "December",
+};
+
+const monthName = (raw: string) => MONTH_NAMES[String(raw || "").toLowerCase()] || raw;
+
+const softenTentativeExactDates = (html: string): { html: string; changed: boolean } => {
+  let out = String(html || "");
+  const before = out;
+  const month = MONTH_PATTERN;
+  const dayMonthYear = new RegExp(`\\b(\\d{1,2})\\s+(${month})\\s+(\\d{4})(\\s*\\((?:expected|tentative|projected|likely|estimated|provisional)\\))`, "gi");
+  const monthDayYear = new RegExp(`\\b(${month})\\s+(\\d{1,2}),?\\s+(\\d{4})(\\s*\\((?:expected|tentative|projected|likely|estimated|provisional)\\))`, "gi");
+  const tentativeBeforeDayMonth = new RegExp(`\\b(expected|tentative|projected|likely|estimated|provisional)\\s+(?:on\\s+)?\\d{1,2}\\s+(${month})\\s+(\\d{4})\\b`, "gi");
+  const tentativeBeforeMonthDay = new RegExp(`\\b(expected|tentative|projected|likely|estimated|provisional)\\s+(?:on\\s+)?(${month})\\s+\\d{1,2},?\\s+(\\d{4})\\b`, "gi");
+
+  out = out
+    .replace(dayMonthYear, (_m, _day, mon, year) => `expected ${monthName(mon)} ${year}`)
+    .replace(monthDayYear, (_m, mon, _day, year) => `expected ${monthName(mon)} ${year}`)
+    .replace(tentativeBeforeDayMonth, (match, qualifier, mon, year) => {
+      const safeQualifier = String(qualifier || "expected").toLowerCase();
+      return SAFE_DATE_WORDING_RE.test(match) ? match : `${safeQualifier} ${monthName(mon)} ${year}`;
+    })
+    .replace(tentativeBeforeMonthDay, (match, qualifier, mon, year) => {
+      const safeQualifier = String(qualifier || "expected").toLowerCase();
+      return SAFE_DATE_WORDING_RE.test(match) ? match : `${safeQualifier} ${monthName(mon)} ${year}`;
+    });
+
+  return { html: out, changed: out !== before };
+};
 
 // ===================================================================
 // MBA FACT CHECKER — auto-detects and rewrites common factual errors
@@ -326,6 +370,9 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
   let out = html;
   const before = out;
 
+  const softenedDates = softenTentativeExactDates(out);
+  out = softenedDates.html;
+
   for (const rule of MBA_FACT_RULES) {
     if (rule.detect.test(text)) {
       for (const r of rule.rewrite) {
@@ -368,7 +415,7 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
   }
 
   const riskyDateSentence = sentences.find((sentence) =>
-    FULL_DATE_RE.test(sentence) && DATE_TERM_RE.test(sentence) && !SAFE_DATE_WORDING_RE.test(sentence)
+    FULL_DATE_RE.test(sentence) && DATE_TERM_RE.test(sentence) && !SAFE_DATE_WORDING_RE.test(sentence) && !TENTATIVE_DATE_WORDING_RE.test(sentence)
   );
   if (riskyDateSentence) {
     issues.push({
