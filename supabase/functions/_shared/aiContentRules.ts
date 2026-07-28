@@ -375,15 +375,20 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
 
   for (const rule of MBA_FACT_RULES) {
     if (rule.detect.test(text)) {
+      const beforeRule = out;
       for (const r of rule.rewrite) {
         out = out.replace(r.pattern, r.replacement);
       }
-      // If detection still fires after rewrite (couldn't fix), flag as error.
-      const stillBad = rule.detect.test(stripTags(out));
+      // If any rewrite actually changed the HTML, treat as auto-corrected (warn).
+      // Only flag as blocking error when no rewrite was possible (rule.rewrite empty)
+      // or nothing matched at all — meaning the falsehood is still present verbatim.
+      const rewrote = out !== beforeRule;
+      const stillBad = !rewrote && rule.rewrite.length > 0 && rule.detect.test(stripTags(out));
+      const noRewriter = rule.rewrite.length === 0 && rule.detect.test(stripTags(out));
       issues.push({
         code: rule.code,
         message: rule.message,
-        severity: stillBad ? "error" : "warn",
+        severity: stillBad || noRewriter ? "error" : "warn",
       });
     }
   }
