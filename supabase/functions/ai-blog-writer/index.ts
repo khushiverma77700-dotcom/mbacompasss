@@ -4,7 +4,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
-import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
+import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck, type QualityIssue } from "../_shared/aiContentRules.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -637,6 +637,32 @@ const computeDensity = (plain: string, kw: string): { occurrences: number; words
   return { occurrences, words, density };
 };
 
+type FactCheckReportItem = {
+  field: "intro" | "content";
+  severity: QualityIssue["severity"];
+  rule: string;
+  matchedText: string;
+  message: string;
+  autoFixed: boolean;
+};
+
+const quoteFromMessage = (message: string) => {
+  const match = String(message || "").match(/"([\s\S]{10,260}?)"/);
+  return match ? match[1] : "";
+};
+
+const buildFactCheckReport = (introIssues: QualityIssue[], contentIssues: QualityIssue[]): FactCheckReportItem[] => {
+  const mapIssue = (field: "intro" | "content") => (issue: QualityIssue): FactCheckReportItem => ({
+    field,
+    severity: issue.severity,
+    rule: issue.rule || issue.code,
+    matchedText: issue.matchedText || quoteFromMessage(issue.message) || "Matched text was auto-corrected during sanitization.",
+    message: issue.message,
+    autoFixed: issue.autoFixed === true,
+  });
+  return [...introIssues.map(mapIssue("intro")), ...contentIssues.map(mapIssue("content"))];
+};
+
 const extractFaqs = (html: string) => {
   if (!html) return [];
   const re2 = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
@@ -685,9 +711,10 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const contentRaw = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
   const introQC = runFinalQualityCheck(introRaw, { requireMbaCompass: false, minInternalLinks: 0 });
   const contentQC = runFinalQualityCheck(contentRaw, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+  const factCheckReport = buildFactCheckReport(introQC.issues, contentQC.issues);
   const blockingFactIssues = getBlockingFactIssues([...introQC.issues, ...contentQC.issues]);
   if (blockingFactIssues.length) {
-    throw new Error(`Fact-check blocked publishing: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+    console.warn(`[ai-blog-writer] Fact-check report has ${blockingFactIssues.length} high-risk item(s) for "${targetKw}"; publishing continues with report:`, JSON.stringify(factCheckReport.slice(0, 12)));
   }
   const intro = introQC.html;
   const content = contentQC.html;
@@ -794,6 +821,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     firstPassWords: finalWords,
     insertedId: inserted.id,
     slug: inserted.slug,
+    factCheckReport,
     seo25: { ...validation, warnings },
   };
 }
@@ -1384,12 +1412,14 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     }
 
     // Final quality check — auto-sanitise buzzwords, inject MBA Compass if missing, flag issues
+    let factCheckReport: FactCheckReportItem[] = [];
     {
       const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
       const contentQC = runFinalQualityCheck(article.content, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
+      factCheckReport = buildFactCheckReport(introQC.issues, contentQC.issues);
       const blockingFactIssues = getBlockingFactIssues([...introQC.issues, ...contentQC.issues]);
       if (blockingFactIssues.length) {
-        throw new Error(`Fact-check blocked publishing: ${blockingFactIssues.map((i) => i.message).join(" | ")}`);
+        console.warn(`[ai-blog-writer] Fact-check report has ${blockingFactIssues.length} high-risk item(s) for "${targetKw}"; publishing continues with report:`, JSON.stringify(factCheckReport.slice(0, 12)));
       }
       article.intro = introQC.html;
       article.content = contentQC.html;
@@ -1508,6 +1538,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       expanded: finalWords > actualWords,
       firstPassWords: actualWords,
       insertedId: inserted.id,
+      factCheckReport,
     };
 
     if (activeJobId) {

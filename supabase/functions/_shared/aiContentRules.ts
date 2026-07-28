@@ -148,6 +148,10 @@ export interface QualityIssue {
   code: string;
   message: string;
   severity: "warn" | "error";
+  rule?: string;
+  matchedText?: string;
+  field?: string;
+  autoFixed?: boolean;
 }
 
 export interface QualityCheckResult {
@@ -158,6 +162,14 @@ export interface QualityCheckResult {
 }
 
 const stripTags = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+const firstRegexMatch = (regex: RegExp, text: string): RegExpExecArray | null => {
+  const safeFlags = regex.flags.replace(/g/g, "");
+  return new RegExp(regex.source, safeFlags).exec(text);
+};
+
+const matchedSnippet = (value: string, max = 240) =>
+  stripTags(value).replace(/\s+/g, " ").trim().slice(0, max);
 
 const BLOCKING_FACT_CODES = new Set([
   "implausible_average_ctc",
@@ -323,10 +335,35 @@ type FactRule = {
   message: string;
 };
 
+const getRuleMatch = (rule: FactRule, html: string): { matchedText: string; index: number } | null => {
+  const text = stripTags(html);
+  const match = firstRegexMatch(rule.detect, text);
+  if (!match || typeof match.index !== "number") return null;
+  return { matchedText: matchedSnippet(match[0]), index: match.index };
+};
+
+const isSafeCorrectiveFactContext = (code: string, matchedText: string) => {
+  const text = String(matchedText || "").toLowerCase();
+  switch (code) {
+    case "xlri_accepts_cat":
+      return /xat\s+only|does\s+not\s+accept\s+cat|not\s+cat|never\s+cat|no\s+cat/i.test(text);
+    case "iim_accepts_xat_or_nmat":
+      return /cat\s+only|does\s+not\s+accept\s+(?:xat|nmat|snap|cmat|mat)|not\s+(?:xat|nmat|snap|cmat|mat)/i.test(text);
+    case "isb_accepts_cat":
+      return /gmat\s+(?:or|\/)?\s*gre\s+only|does\s+not\s+accept\s+(?:cat|xat|nmat|snap|cmat|mat)|not\s+(?:cat|xat|nmat|snap|cmat|mat)/i.test(text);
+    case "nmims_accepts_cat":
+      return /nmat(?:\s+by\s+gmac)?\s+only|does\s+not\s+accept\s+cat|not\s+cat|never\s+cat/i.test(text);
+    case "symbiosis_accepts_cat":
+      return /snap\s+only|does\s+not\s+accept\s+(?:cat|xat|nmat)|not\s+(?:cat|xat|nmat)|never\s+(?:cat|xat|nmat)/i.test(text);
+    default:
+      return false;
+  }
+};
+
 const MBA_FACT_RULES: FactRule[] = [
   {
     code: "xlri_accepts_cat",
-    detect: /xlri[^.<]{0,80}\b(accepts?|takes?|considers?|uses?|admits?\s+through|admission\s+through)\b[^.<]{0,40}\bcat\b/i,
+    detect: /(?:xlri[^.<]{0,80}\b(?:accepts?|takes?|considers?|uses?|admits?\s+through|admission\s+through)\b[^.<]{0,40}\bcat\b|\b(?:admission|admissions|entry|selection)\s+to\s+xlri(?:\s+jamshedpur)?[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\bcat\b)/i,
     rewrite: [
       { pattern: /\bxlri(\s+jamshedpur)?\s+(also\s+)?(accepts?|takes?|considers?|uses?)\s+(the\s+)?cat(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "XLRI Jamshedpur accepts XAT only (not CAT)" },
@@ -337,37 +374,45 @@ const MBA_FACT_RULES: FactRule[] = [
   },
   {
     code: "iim_accepts_xat_or_nmat",
-    detect: /\biim\s+(ahmedabad|bangalore|calcutta|lucknow|indore|kozhikode|shillong|rohtak|ranchi|raipur|trichy|udaipur|kashipur|amritsar|jammu|nagpur|sambalpur|sirmaur|visakhapatnam|bodh\s*gaya|mumbai)[^.<]{0,80}\b(accepts?|takes?|considers?)\b[^.<]{0,30}\b(xat|nmat|snap|cmat|mat)\b/i,
+    detect: /(?:\biim\s+(ahmedabad|bangalore|calcutta|lucknow|indore|kozhikode|shillong|rohtak|ranchi|raipur|trichy|udaipur|kashipur|amritsar|jammu|nagpur|sambalpur|sirmaur|visakhapatnam|bodh\s*gaya|mumbai)[^.<]{0,80}\b(?:accepts?|takes?|considers?|through|via|using)\b[^.<]{0,30}\b(xat|nmat|snap|cmat|mat)\b|\b(?:admission|admissions|entry|selection)\s+to\s+iim\s+[a-z\s]+[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\b(xat|nmat|snap|cmat|mat)\b)/i,
     rewrite: [
       { pattern: /\b(iim\s+[a-z]+)\s+(also\s+)?(accepts?|takes?|considers?)\s+(the\s+)?(xat|nmat|snap|cmat|mat)(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "$1 accepts CAT only for its flagship MBA/PGP" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+(iim\s+[a-z\s]+?)\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?(xat|nmat|snap|cmat|mat)\b/gi,
+        replacement: "Admission to $2 is through CAT for its flagship MBA/PGP" },
     ],
     message: "IIMs accept CAT only for the flagship PGP/MBA — not XAT/NMAT/SNAP/CMAT/MAT. Auto-corrected.",
   },
   {
     code: "isb_accepts_cat",
-    detect: /\bisb\s+(hyderabad|mohali)?[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\b(cat|xat|nmat|snap|cmat|mat)\b/i,
+    detect: /(?:\bisb\s+(hyderabad|mohali)?[^.<]{0,60}\b(?:accepts?|takes?|through|via|using)\b[^.<]{0,30}\b(cat|xat|nmat|snap|cmat|mat)\b|\b(?:admission|admissions|entry|selection)\s+to\s+isb(?:\s+hyderabad|\s+mohali)?[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\b(cat|xat|nmat|snap|cmat|mat)\b)/i,
     rewrite: [
       { pattern: /\bisb(\s+hyderabad|\s+mohali)?\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?(cat|xat|nmat|snap|cmat|mat)(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "ISB accepts GMAT or GRE only" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+isb(\s+hyderabad|\s+mohali)?\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?(cat|xat|nmat|snap|cmat|mat)\b/gi,
+        replacement: "Admission to ISB is through GMAT or GRE only" },
     ],
     message: "ISB (Hyderabad/Mohali) accepts GMAT or GRE only — never CAT/XAT/NMAT/SNAP/CMAT/MAT. Auto-corrected.",
   },
   {
     code: "nmims_accepts_cat",
-    detect: /\bnmims[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\bcat\b/i,
+    detect: /(?:\bnmims[^.<]{0,60}\b(?:accepts?|takes?|through|via|using)\b[^.<]{0,30}\bcat\b|\b(?:admission|admissions|entry|selection)\s+to\s+nmims[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\bcat\b)/i,
     rewrite: [
       { pattern: /\bnmims(\s+mumbai)?\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?cat(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "NMIMS Mumbai accepts NMAT by GMAC only for its flagship MBA" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+nmims(\s+mumbai)?\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?cat\b/gi,
+        replacement: "Admission to NMIMS Mumbai flagship MBA is through NMAT by GMAC" },
     ],
     message: "NMIMS Mumbai flagship MBA accepts NMAT only — not CAT. Auto-corrected.",
   },
   {
     code: "symbiosis_accepts_cat",
-    detect: /\b(sibm|scmhrd|siib|symbiosis)[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\b(cat|xat|nmat)\b/i,
+    detect: /(?:\b(sibm|scmhrd|siib|symbiosis)[^.<]{0,60}\b(?:accepts?|takes?|through|via|using)\b[^.<]{0,30}\b(cat|xat|nmat)\b|\b(?:admission|admissions|entry|selection)\s+to\s+(?:sibm|scmhrd|siib|symbiosis)[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\b(cat|xat|nmat)\b)/i,
     rewrite: [
       { pattern: /\b(sibm\s+\w+|scmhrd|siib|symbiosis[^,.<]{0,40})\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?(cat|xat|nmat)(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "$1 accepts SNAP only" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+(sibm\s+\w+|scmhrd|siib|symbiosis[^,.<]{0,40})\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?(cat|xat|nmat)\b/gi,
+        replacement: "Admission to $2 is through SNAP only" },
     ],
     message: "Symbiosis B-schools (SIBM/SCMHRD/SIIB) accept SNAP only. Auto-corrected.",
   },
@@ -425,7 +470,6 @@ const MBA_FACT_RULES: FactRule[] = [
 
 function runFactCheck(html: string): { html: string; issues: QualityIssue[]; changed: boolean } {
   const issues: QualityIssue[] = [];
-  const text = stripTags(html);
   let out = html;
   const before = out;
 
@@ -441,6 +485,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "unverified_exact_date",
       message: "Unverified exact exam/admission dates were softened to expected month/year wording before publishing.",
       severity: "warn",
+      rule: "unverified_exact_date",
+      autoFixed: true,
     });
   }
 
@@ -449,11 +495,17 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "exact_unverified_cutoff",
       message: "Unverified exact cutoff percentiles were softened to expected band wording before publishing.",
       severity: "warn",
+      rule: "exact_unverified_cutoff",
+      autoFixed: true,
     });
   }
 
   for (const rule of MBA_FACT_RULES) {
-    if (rule.detect.test(text)) {
+    const initialMatch = getRuleMatch(rule, out);
+    if (initialMatch) {
+      if (isSafeCorrectiveFactContext(rule.code, initialMatch.matchedText)) {
+        continue;
+      }
       const beforeRule = out;
       for (const r of rule.rewrite) {
         out = out.replace(r.pattern, r.replacement);
@@ -462,12 +514,17 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       // Only flag as blocking error when no rewrite was possible (rule.rewrite empty)
       // or nothing matched at all — meaning the falsehood is still present verbatim.
       const rewrote = out !== beforeRule;
-      const stillBad = !rewrote && rule.rewrite.length > 0 && rule.detect.test(stripTags(out));
-      const noRewriter = rule.rewrite.length === 0 && rule.detect.test(stripTags(out));
+      const afterMatch = getRuleMatch(rule, out);
+      const stillUnsafe = Boolean(afterMatch && !isSafeCorrectiveFactContext(rule.code, afterMatch.matchedText));
+      const stillBad = !rewrote && rule.rewrite.length > 0 && stillUnsafe;
+      const noRewriter = rule.rewrite.length === 0 && stillUnsafe;
       issues.push({
         code: rule.code,
         message: rule.message,
         severity: stillBad || noRewriter ? "error" : "warn",
+        rule: rule.code,
+        matchedText: initialMatch.matchedText,
+        autoFixed: rewrote,
       });
     }
   }
@@ -484,6 +541,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "stale_current_data_year",
       message: `Possible old current-cycle data found: "${staleSentence.slice(0, 180)}". Do not publish old cutoffs, dates, fees, rankings or placements as current data.`,
       severity: "error",
+      rule: "stale_current_data_year",
+      matchedText: staleSentence.slice(0, 240),
     });
   }
 
@@ -495,6 +554,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "exact_unverified_cutoff",
       message: `Exact cutoff percentile needs official proof or safe wording: "${riskyCutoffSentence.slice(0, 180)}". Publishing was not blocked; review or soften to expected band/TBA wording if needed.`,
       severity: "warn",
+      rule: "exact_unverified_cutoff",
+      matchedText: riskyCutoffSentence.slice(0, 240),
     });
   }
 
@@ -506,6 +567,8 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
       code: "unverified_exact_date",
       message: `Exact exam/admission date needs official confirmation or tentative wording: "${riskyDateSentence.slice(0, 180)}". Publishing was not blocked; review or soften to expected month/window if needed.`,
       severity: "warn",
+      rule: "unverified_exact_date",
+      matchedText: riskyDateSentence.slice(0, 240),
     });
   }
   return { html: out, issues, changed: out !== before };
@@ -558,7 +621,7 @@ export function runFinalQualityCheck(rawHtml: string, opts?: {
   const text = stripTags(html).toLowerCase();
   for (const phrase of BANNED_PHRASES) {
     if (text.includes(phrase.toLowerCase())) {
-      issues.push({ code: "banned_phrase", message: `Contains banned AI phrase: "${phrase}"`, severity: "warn" });
+      issues.push({ code: "banned_phrase", message: `Contains banned AI phrase: "${phrase}"`, severity: "warn", rule: "banned_phrase", matchedText: phrase });
     }
   }
 

@@ -44,6 +44,14 @@ const TOOL_URLS: { url: string; label: string }[] = [
 ];
 
 type LinkOption = { url: string; label: string };
+type FactCheckReportItem = {
+  field?: string;
+  severity?: "warn" | "error";
+  rule?: string;
+  matchedText?: string;
+  message?: string;
+  autoFixed?: boolean;
+};
 
 const AdminWriteBlog = () => {
   const [params] = useSearchParams();
@@ -521,6 +529,32 @@ const AdminWriteBlog = () => {
             <p>Words: {stats.actualWords} (target {stats.targetWordsRange?.[0]}-{stats.targetWordsRange?.[1]})</p>
             <p>Keyword density: {stats.actualDensityPct}% (target ~{stats.targetDensityPct}%)</p>
             <p>Primary keyword occurrences: {stats.actualOccurrences} (target ~{stats.targetOccurrences})</p>
+            {Array.isArray(stats.factCheckReport) && stats.factCheckReport.length > 0 && (
+              <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold text-foreground">Fact-check validation report</p>
+                  <Badge variant={stats.factCheckReport.some((item: FactCheckReportItem) => item.severity === "error") ? "destructive" : "secondary"}>
+                    {stats.factCheckReport.length} finding{stats.factCheckReport.length === 1 ? "" : "s"}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {stats.factCheckReport.map((item: FactCheckReportItem, index: number) => (
+                    <div key={`${item.rule || "rule"}-${index}`} className="rounded-md border bg-muted/30 p-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={item.severity === "error" ? "destructive" : "outline"}>{item.severity || "warn"}</Badge>
+                        <Badge variant="secondary">{item.field || "content"}</Badge>
+                        <span className="font-mono text-[11px] text-muted-foreground">{item.rule || "quality_rule"}</span>
+                        {item.autoFixed && <Badge variant="outline">auto-corrected</Badge>}
+                      </div>
+                      <p className="mt-1 text-muted-foreground">{item.message || "Validation warning"}</p>
+                      <p className="mt-1 rounded border bg-background px-2 py-1 font-mono text-[11px] text-foreground break-words">
+                        {item.matchedText || "Matched text was changed during sanitization."}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {stats.insertedId && (
               <Button size="sm" className="mt-2" onClick={() => navigate(`/admin/articles?edit=${stats.insertedId}`)}>
                 Open in editor
