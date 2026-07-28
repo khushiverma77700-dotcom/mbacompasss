@@ -197,7 +197,8 @@ const CLEAR_HISTORY_RE = /\b(founded|established|started|launched|created|set\s+
 const EXACT_CUTOFF_RE = /(?:\bcut\s*-?\s*offs?\b[^.!?]{0,140}\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b|\b(?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile)\b[^.!?]{0,140}\bcut\s*-?\s*offs?\b)/i;
 const SAFE_CUTOFF_WORDING_RE = /\b(expected|approx(?:\.|imate|imately)?|range|band|previous|historical|verify|tba|tentative|last\s+published|latest\s+published|target|aim|aiming|buffer|planning|goal|safe|stretch|around|roughly|typically|usually|above|over|below|under|at\s+least|at\s+most|more\s+than|less\s+than|greater\s+than|higher\s+than|lower\s+than|upwards\s+of|north\s+of|minimum|maximum|near|nearly|close\s+to|about|generally|often|mostly|placement\s+reports?|admission\s+data|based\s+on)\b/i;
 const MONTH_PATTERN = "jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?";
-const FULL_DATE_RE = new RegExp(`\\b(?:\\d{1,2}\\s+(?:${MONTH_PATTERN})\\s+\\d{4}|(?:${MONTH_PATTERN})\\s+\\d{1,2},?\\s+\\d{4})\\b`, "i");
+const FULL_DATE_SOURCE = `(?:\\d{1,2}\\s+(?:${MONTH_PATTERN})\\s+\\d{4}|(?:${MONTH_PATTERN})\\s+\\d{1,2},?\\s+\\d{4})`;
+const FULL_DATE_RE = new RegExp(`\\b${FULL_DATE_SOURCE}\\b`, "i");
 const DATE_TERM_RE = /\b(exam|registration|application|deadline|admit\s+card|result|interview|gd\s*-?\s*pi|wat|counselling|counseling|admission)\b/i;
 // Exact full calendar dates are risky because models often invent them. Only
 // pass exact dates when they carry a clear official source marker or refer to
@@ -223,6 +224,28 @@ const MONTH_NAMES: Record<string, string> = {
 
 const monthName = (raw: string) => MONTH_NAMES[String(raw || "").toLowerCase()] || raw;
 
+const parseFullDate = (raw: string): { month: string; year: number } | null => {
+  const value = String(raw || "").trim();
+  const dayMonth = value.match(new RegExp(`^\\d{1,2}\\s+(${MONTH_PATTERN})\\s+(\\d{4})$`, "i"));
+  if (dayMonth) return { month: monthName(dayMonth[1]), year: Number(dayMonth[2]) };
+
+  const monthDay = value.match(new RegExp(`^(${MONTH_PATTERN})\\s+\\d{1,2},?\\s+(\\d{4})$`, "i"));
+  if (monthDay) return { month: monthName(monthDay[1]), year: Number(monthDay[2]) };
+
+  return null;
+};
+
+const contextAround = (value: string, offset: number, length: number, radius = 220) =>
+  stripTags(value.slice(Math.max(0, offset - radius), Math.min(value.length, offset + length + radius)));
+
+const replacementForExpectedMonth = (preposition: string | undefined, month: string, year: number) => {
+  const phrase = `expected ${month} ${year}`;
+  const prep = String(preposition || "").toLowerCase();
+  if (!prep) return phrase;
+  if (prep === "on") return `in ${phrase}`;
+  return `${prep} ${phrase}`;
+};
+
 const softenTentativeExactDates = (html: string): { html: string; changed: boolean } => {
   let out = String(html || "");
   const before = out;
@@ -243,6 +266,42 @@ const softenTentativeExactDates = (html: string): { html: string; changed: boole
       const safeQualifier = String(qualifier || "expected").toLowerCase();
       return SAFE_DATE_WORDING_RE.test(match) ? match : `${safeQualifier} ${monthName(mon)} ${year}`;
     });
+
+  return { html: out, changed: out !== before };
+};
+
+const softenUnverifiedExactDates = (html: string): { html: string; changed: boolean } => {
+  let out = String(html || "");
+  const before = out;
+  const currentYear = new Date().getFullYear();
+  const exactDateWithOptionalPrep = new RegExp(`\\b(?:(on|by|for|from|around|before|after|until|till)\\s+)?(${FULL_DATE_SOURCE})\\b`, "gi");
+
+  out = out.replace(exactDateWithOptionalPrep, (match, preposition, fullDate, offset) => {
+    const parsed = parseFullDate(fullDate);
+    if (!parsed || parsed.year < currentYear - 1) return match;
+
+    const context = contextAround(out, Number(offset), String(match).length);
+    const isExamOrAdmissionDate = DATE_TERM_RE.test(context);
+    const isAlreadySafe = SAFE_DATE_WORDING_RE.test(context) || TENTATIVE_DATE_WORDING_RE.test(context);
+    const isHistorical = CLEAR_HISTORY_RE.test(context) && /\b(history|historical|past|previous|founded|established|since)\b/i.test(context);
+
+    if (!isExamOrAdmissionDate || isAlreadySafe || isHistorical) return match;
+    return replacementForExpectedMonth(preposition, parsed.month, parsed.year);
+  });
+
+  return { html: out, changed: out !== before };
+};
+
+const softenUnverifiedCutoffs = (html: string): { html: string; changed: boolean } => {
+  let out = String(html || "");
+  const before = out;
+  const exactPercentile = /\b((?:[6-9]\d(?:\.\d+)?|100)\s*(?:%ile|percentile))\b/gi;
+
+  out = out.replace(exactPercentile, (match, percentile, offset) => {
+    const context = contextAround(out, Number(offset), String(match).length);
+    if (!EXACT_CUTOFF_RE.test(context) || SAFE_CUTOFF_WORDING_RE.test(context)) return match;
+    return `expected percentile band around ${percentile}`;
+  });
 
   return { html: out, changed: out !== before };
 };
@@ -370,8 +429,28 @@ function runFactCheck(html: string): { html: string; issues: QualityIssue[]; cha
   let out = html;
   const before = out;
 
-  const softenedDates = softenTentativeExactDates(out);
-  out = softenedDates.html;
+  const softenedTentativeDates = softenTentativeExactDates(out);
+  out = softenedTentativeDates.html;
+  const softenedUnverifiedDates = softenUnverifiedExactDates(out);
+  out = softenedUnverifiedDates.html;
+  const softenedCutoffs = softenUnverifiedCutoffs(out);
+  out = softenedCutoffs.html;
+
+  if (softenedUnverifiedDates.changed) {
+    issues.push({
+      code: "unverified_exact_date",
+      message: "Unverified exact exam/admission dates were softened to expected month/year wording before publishing.",
+      severity: "warn",
+    });
+  }
+
+  if (softenedCutoffs.changed) {
+    issues.push({
+      code: "exact_unverified_cutoff",
+      message: "Unverified exact cutoff percentiles were softened to expected band wording before publishing.",
+      severity: "warn",
+    });
+  }
 
   for (const rule of MBA_FACT_RULES) {
     if (rule.detect.test(text)) {
