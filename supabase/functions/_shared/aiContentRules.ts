@@ -363,7 +363,7 @@ const isSafeCorrectiveFactContext = (code: string, matchedText: string) => {
 const MBA_FACT_RULES: FactRule[] = [
   {
     code: "xlri_accepts_cat",
-    detect: /xlri[^.<]{0,80}\b(accepts?|takes?|considers?|uses?|admits?\s+through|admission\s+through)\b[^.<]{0,40}\bcat\b/i,
+    detect: /(?:xlri[^.<]{0,80}\b(?:accepts?|takes?|considers?|uses?|admits?\s+through|admission\s+through)\b[^.<]{0,40}\bcat\b|\b(?:admission|admissions|entry|selection)\s+to\s+xlri(?:\s+jamshedpur)?[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\bcat\b)/i,
     rewrite: [
       { pattern: /\bxlri(\s+jamshedpur)?\s+(also\s+)?(accepts?|takes?|considers?|uses?)\s+(the\s+)?cat(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "XLRI Jamshedpur accepts XAT only (not CAT)" },
@@ -374,37 +374,45 @@ const MBA_FACT_RULES: FactRule[] = [
   },
   {
     code: "iim_accepts_xat_or_nmat",
-    detect: /\biim\s+(ahmedabad|bangalore|calcutta|lucknow|indore|kozhikode|shillong|rohtak|ranchi|raipur|trichy|udaipur|kashipur|amritsar|jammu|nagpur|sambalpur|sirmaur|visakhapatnam|bodh\s*gaya|mumbai)[^.<]{0,80}\b(accepts?|takes?|considers?)\b[^.<]{0,30}\b(xat|nmat|snap|cmat|mat)\b/i,
+    detect: /(?:\biim\s+(ahmedabad|bangalore|calcutta|lucknow|indore|kozhikode|shillong|rohtak|ranchi|raipur|trichy|udaipur|kashipur|amritsar|jammu|nagpur|sambalpur|sirmaur|visakhapatnam|bodh\s*gaya|mumbai)[^.<]{0,80}\b(?:accepts?|takes?|considers?|through|via|using)\b[^.<]{0,30}\b(xat|nmat|snap|cmat|mat)\b|\b(?:admission|admissions|entry|selection)\s+to\s+iim\s+[a-z\s]+[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\b(xat|nmat|snap|cmat|mat)\b)/i,
     rewrite: [
       { pattern: /\b(iim\s+[a-z]+)\s+(also\s+)?(accepts?|takes?|considers?)\s+(the\s+)?(xat|nmat|snap|cmat|mat)(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "$1 accepts CAT only for its flagship MBA/PGP" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+(iim\s+[a-z\s]+?)\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?(xat|nmat|snap|cmat|mat)\b/gi,
+        replacement: "Admission to $2 is through CAT for its flagship MBA/PGP" },
     ],
     message: "IIMs accept CAT only for the flagship PGP/MBA — not XAT/NMAT/SNAP/CMAT/MAT. Auto-corrected.",
   },
   {
     code: "isb_accepts_cat",
-    detect: /\bisb\s+(hyderabad|mohali)?[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\b(cat|xat|nmat|snap|cmat|mat)\b/i,
+    detect: /(?:\bisb\s+(hyderabad|mohali)?[^.<]{0,60}\b(?:accepts?|takes?|through|via|using)\b[^.<]{0,30}\b(cat|xat|nmat|snap|cmat|mat)\b|\b(?:admission|admissions|entry|selection)\s+to\s+isb(?:\s+hyderabad|\s+mohali)?[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\b(cat|xat|nmat|snap|cmat|mat)\b)/i,
     rewrite: [
       { pattern: /\bisb(\s+hyderabad|\s+mohali)?\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?(cat|xat|nmat|snap|cmat|mat)(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "ISB accepts GMAT or GRE only" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+isb(\s+hyderabad|\s+mohali)?\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?(cat|xat|nmat|snap|cmat|mat)\b/gi,
+        replacement: "Admission to ISB is through GMAT or GRE only" },
     ],
     message: "ISB (Hyderabad/Mohali) accepts GMAT or GRE only — never CAT/XAT/NMAT/SNAP/CMAT/MAT. Auto-corrected.",
   },
   {
     code: "nmims_accepts_cat",
-    detect: /\bnmims[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\bcat\b/i,
+    detect: /(?:\bnmims[^.<]{0,60}\b(?:accepts?|takes?|through|via|using)\b[^.<]{0,30}\bcat\b|\b(?:admission|admissions|entry|selection)\s+to\s+nmims[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\bcat\b)/i,
     rewrite: [
       { pattern: /\bnmims(\s+mumbai)?\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?cat(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "NMIMS Mumbai accepts NMAT by GMAC only for its flagship MBA" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+nmims(\s+mumbai)?\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?cat\b/gi,
+        replacement: "Admission to NMIMS Mumbai flagship MBA is through NMAT by GMAC" },
     ],
     message: "NMIMS Mumbai flagship MBA accepts NMAT only — not CAT. Auto-corrected.",
   },
   {
     code: "symbiosis_accepts_cat",
-    detect: /\b(sibm|scmhrd|siib|symbiosis)[^.<]{0,60}\b(accepts?|takes?)\b[^.<]{0,30}\b(cat|xat|nmat)\b/i,
+    detect: /(?:\b(sibm|scmhrd|siib|symbiosis)[^.<]{0,60}\b(?:accepts?|takes?|through|via|using)\b[^.<]{0,30}\b(cat|xat|nmat)\b|\b(?:admission|admissions|entry|selection)\s+to\s+(?:sibm|scmhrd|siib|symbiosis)[^.<]{0,40}\b(?:through|via|using)\b[^.<]{0,20}\b(cat|xat|nmat)\b)/i,
     rewrite: [
       { pattern: /\b(sibm\s+\w+|scmhrd|siib|symbiosis[^,.<]{0,40})\s+(also\s+)?(accepts?|takes?)\s+(the\s+)?(cat|xat|nmat)(\s+exam|\s+score|\s+scores)?\b/gi,
         replacement: "$1 accepts SNAP only" },
+      { pattern: /\b(admission|admissions|entry|selection)\s+to\s+(sibm\s+\w+|scmhrd|siib|symbiosis[^,.<]{0,40})\s+(?:is\s+)?(?:through|via|using)\s+(?:the\s+)?(cat|xat|nmat)\b/gi,
+        replacement: "Admission to $2 is through SNAP only" },
     ],
     message: "Symbiosis B-schools (SIBM/SCMHRD/SIIB) accept SNAP only. Auto-corrected.",
   },
