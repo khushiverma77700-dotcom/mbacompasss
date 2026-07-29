@@ -535,7 +535,7 @@ const AdminMockTests = () => {
   const [categorySaving, setCategorySaving] = useState<Record<string, boolean>>({});
   const updateCategory = async (id: string, value: string) => {
     setCategorySaving((p) => ({ ...p, [id]: true }));
-    const { error } = await supabase.from("mock_tests").update({ test_type: value, category: value }).eq("id", id);
+    const { error } = await supabase.from("mock_tests").update({ test_type: value as any, category: value as any }).eq("id", id);
     setCategorySaving((p) => { const n = { ...p }; delete n[id]; return n; });
     if (error) {
       toast({ title: "Failed to change category", description: error.message, variant: "destructive" });
