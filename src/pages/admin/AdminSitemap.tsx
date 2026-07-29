@@ -104,6 +104,37 @@ const AdminSitemap = () => {
     }
   };
 
+  const generateImageSitemap = async (opts?: { silent?: boolean }) => {
+    setImgLoading(true);
+    try {
+      // 1. Rescan the library so any new images are in image_assets.
+      await supabase.functions.invoke("image-audit-crawler", { body: {} });
+      // 2. Pull the fresh image sitemap.
+      const res = await fetch(`${LIVE_IMAGE_SITEMAP_URL}?cb=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Image sitemap engine returned ${res.status}`);
+      const xml = await res.text();
+      const total = (xml.match(/<image:image>/g) || []).length;
+      setImageSitemapXml(xml);
+      setImageCount(total);
+      await supabase.from("site_settings").upsert({
+        key: "sitemap_images_xml",
+        value: JSON.stringify({ xml, generated_at: new Date().toISOString(), image_count: total }),
+      }, { onConflict: "key" });
+      if (!opts?.silent) {
+        toast({ title: "Image Sitemap Refreshed", description: `${total} images indexed.` });
+      }
+    } catch (err: any) {
+      toast({ title: "Image sitemap error", description: err.message, variant: "destructive" });
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
+  const refreshAll = async () => {
+    await Promise.all([generateSitemap(), generateImageSitemap({ silent: true })]);
+    toast({ title: "Both sitemaps refreshed" });
+  };
+
   const handleCopy = () => {
     navigator.clipboard.writeText(sitemapXml);
     setCopied(true);
@@ -111,12 +142,14 @@ const AdminSitemap = () => {
     setTimeout(() => setCopied(false), 3000);
   };
 
-  const downloadSitemap = () => {
-    const blob = new Blob([sitemapXml], { type: "application/xml" });
+  const downloadSitemap = (which: "pages" | "images" = "pages") => {
+    const xml = which === "images" ? imageSitemapXml : sitemapXml;
+    const name = which === "images" ? "sitemap-images.xml" : "sitemap.xml";
+    const blob = new Blob([xml], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "sitemap.xml";
+    a.download = name;
     a.click();
     URL.revokeObjectURL(url);
   };
