@@ -1045,9 +1045,20 @@ const AdminMockTests = () => {
                     <div className="text-xs text-muted-foreground">/{t.slug}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {String(t.category || t.test_type).replace("_", " ")}
-                    </Badge>
+                    <Select
+                      value={(t.category || t.test_type) as string}
+                      onValueChange={(v) => updateCategory(t.id, v)}
+                      disabled={!!categorySaving[t.id]}
+                    >
+                      <SelectTrigger className="h-8 w-[140px] text-xs capitalize">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORY_OPTIONS.map((c) => (
+                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell><Badge variant="secondary">{t.exam_code || "CAT"}</Badge></TableCell>
                   <TableCell>{t.total_duration_minutes} min</TableCell>
