@@ -994,6 +994,22 @@ const AdminMockTests = () => {
             <Button size="sm" variant="outline" disabled={bulkBusy} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={() => bulkUpdate({ readiness_status: "ready" }, "marked Ready")}>Mark Ready</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} className="border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => bulkUpdate({ readiness_status: "needs_changes" }, "marked Needs Changes")}>Needs Changes</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} className="border-rose-300 text-rose-700 hover:bg-rose-50" onClick={() => bulkUpdate({ readiness_status: "incomplete" }, "marked Incomplete")}>Incomplete</Button>
+            <div className="w-px h-6 bg-border mx-1" />
+            <Select
+              onValueChange={(v) => {
+                const label = CATEGORY_OPTIONS.find((c) => c.value === (v as any))?.label ?? v;
+                bulkUpdate({ test_type: v as any, category: v as any }, `moved to ${label}`);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[190px] text-xs">
+                <SelectValue placeholder="Change Category to…" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>Move to {c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear</Button>
           </div>
         </div>
