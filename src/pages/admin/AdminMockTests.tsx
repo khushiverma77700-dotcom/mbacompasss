@@ -526,6 +526,25 @@ const AdminMockTests = () => {
     fetchTests();
   };
 
+  const CATEGORY_OPTIONS: { value: "full_length" | "sectional" | "topic_wise" | "practice_set"; label: string }[] = [
+    { value: "full_length", label: "Full Length" },
+    { value: "sectional", label: "Sectional" },
+    { value: "topic_wise", label: "Topic Wise" },
+    { value: "practice_set", label: "Practice Set" },
+  ];
+  const [categorySaving, setCategorySaving] = useState<Record<string, boolean>>({});
+  const updateCategory = async (id: string, value: string) => {
+    setCategorySaving((p) => ({ ...p, [id]: true }));
+    const { error } = await supabase.from("mock_tests").update({ test_type: value, category: value }).eq("id", id);
+    setCategorySaving((p) => { const n = { ...p }; delete n[id]; return n; });
+    if (error) {
+      toast({ title: "Failed to change category", description: error.message, variant: "destructive" });
+      return;
+    }
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, test_type: value, category: value } : x)));
+    toast({ title: "Category updated", description: CATEGORY_OPTIONS.find((c) => c.value === value)?.label });
+  };
+
 
   const fetchTests = async () => {
     setLoading(true);
