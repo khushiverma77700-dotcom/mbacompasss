@@ -1297,7 +1297,15 @@ Deno.serve(async (req: Request) => {
       return emit(renderExam(data), 200, asJson);
     }
 
-    // 3. Unknown route — fall back to an indexable SPA shell rather than 404.
+    const courseMatch = path.match(/^\/(?:courses|mba-compass)\/([^/?#]+)/);
+    if (courseMatch) {
+      const slug = decodeURIComponent(courseMatch[1]);
+      const { data } = await supabase
+        .from("mba_compass_courses").select("*").eq("slug", slug).maybeSingle();
+      if (!data) return emit(notFoundMeta(path), 404, asJson);
+      return emit(renderCourse(data), 200, asJson);
+    }
+
     return emit(spaFallbackMeta(path), 200, asJson);
   } catch (err) {
     console.error("ssr-prerender error", err);
