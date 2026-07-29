@@ -263,6 +263,16 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         return false;
       })
       .sort((a, b) => {
+        const aso = a.sort_order ?? null;
+        const bso = b.sort_order ?? null;
+        // For practice sets, respect admin-defined sort_order first (across all exams).
+        if (typeKey === "practice_set") {
+          if (aso !== null || bso !== null) {
+            const av = aso ?? 9999;
+            const bv = bso ?? 9999;
+            if (av !== bv) return av - bv;
+          }
+        }
         const examRank = (t: Test) => {
           const code = (t.exam_code || t.category || "").toUpperCase();
           const order = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT"];
@@ -272,14 +282,15 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         const ar = examRank(a);
         const br = examRank(b);
         if (ar !== br) return ar - br;
-        const aso = a.sort_order ?? 9999;
-        const bso = b.sort_order ?? 9999;
-        if (aso !== bso) return aso - bso;
+        const av = aso ?? 9999;
+        const bv = bso ?? 9999;
+        if (av !== bv) return av - bv;
         const ao = bundleOrder[a.id] ?? 9999;
         const bo = bundleOrder[b.id] ?? 9999;
         if (ao !== bo) return ao - bo;
         return a.name.localeCompare(b.name);
       });
+
 
     return list.map((t) => {
       return {
