@@ -25,7 +25,7 @@ const SOURCES: Source[] = [
   { table: "courses", cols: ["og_image"], htmlCols: ["description"], slugCol: "slug", nameCol: "name", contextType: "course" },
   { table: "banners", cols: ["image_url", "mobile_image_url"], nameCol: "title", contextType: "banner" },
   { table: "city_pages", cols: ["hero_image_url"], slugCol: "slug", nameCol: "name", contextType: "city" },
-  { table: "exams", cols: ["logo_url"], htmlCols: ["description"], slugCol: "slug", nameCol: "name", contextType: "exam" },
+  { table: "exams", cols: [], htmlCols: ["description"], slugCol: "slug", nameCol: "name", contextType: "exam" },
   { table: "categories", htmlCols: ["description"], cols: [], slugCol: "slug", nameCol: "name", contextType: "category" },
   { table: "freebies", cols: ["cover_image_url"], htmlCols: ["description"], nameCol: "title", contextType: "freebie" },
   { table: "testimonials", cols: ["image_url"], htmlCols: ["content"], nameCol: "name", contextType: "testimonial" },
@@ -37,7 +37,6 @@ const SOURCES: Source[] = [
   { table: "mock_questions", arrayCols: ["image_urls"], cols: [], contextType: "mock-question" },
   { table: "mocks_landing_settings", cols: ["hero_image_url"], arrayCols: ["student_feedback_images"], contextType: "mocks-landing" },
   { table: "student_notifications", cols: ["image_url"], contextType: "notification" },
-  { table: "page_seo_overrides", cols: ["og_image"], slugCol: "slug", nameCol: "title", contextType: "seo-override" },
 ];
 
 const HTML_IMG_RE = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
