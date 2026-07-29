@@ -767,6 +767,15 @@ function renderCollege(c: any): PageMeta {
     };
   }
   if (c.established) collegeLd.foundingDate = String(c.established);
+  if (c.rating && c.total_reviews) {
+    collegeLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(c.rating),
+      reviewCount: String(c.total_reviews),
+      bestRating: "5",
+    };
+  }
+  if (c.website) collegeLd.sameAs = [String(c.website)];
 
   // Helpers to render heterogenous DB shapes (string | string[] | object) as
   // real, visible HTML sections that mirror what the live React page shows.
@@ -888,8 +897,29 @@ function renderInstitute(i: any): PageMeta {
     stripHtml(i.meta_description || i.description || ""),
     200,
   );
-  const image = i.image_url || i.banner_url || i.logo_url || OG_DEFAULT;
+  const image = i.banner_url || i.logo_url || OG_DEFAULT;
   const body = sanitizeContent(i.description || "");
+
+  const listify = (v: any): string[] => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v.map((x) => (typeof x === "string" ? x : x?.name || x?.title || JSON.stringify(x))).filter(Boolean);
+    if (typeof v === "string") return v.split(/\n|,|;|\u2022|\|/).map((s) => s.trim()).filter(Boolean);
+    if (typeof v === "object") return Object.entries(v).map(([k, val]) => `${k}: ${val}`);
+    return [String(v)];
+  };
+  const renderList = (items: string[]) =>
+    items.length
+      ? `<ul class="list-disc pl-6 space-y-1 text-slate-700">${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`
+      : "";
+  const renderKV = (rows: Array<[string, any]>) => {
+    const filtered = rows.filter(([, v]) => v !== null && v !== undefined && v !== "");
+    if (!filtered.length) return "";
+    return `<div class="overflow-x-auto"><table class="w-full text-left border border-slate-200 rounded-md"><tbody>${filtered
+      .map(([k, v]) => `<tr class="border-b border-slate-100 last:border-0"><th class="px-4 py-2 bg-slate-50 font-medium text-slate-700 w-1/3">${esc(k)}</th><td class="px-4 py-2 text-slate-800">${esc(String(v))}</td></tr>`)
+      .join("")}</tbody></table></div>`;
+  };
+  const section = (t: string, html: string) =>
+    html ? `<section class="mt-8"><h2 class="text-2xl font-bold text-slate-900 mb-3">${esc(t)}</h2>${html}</section>` : "";
 
   const orgLd: any = {
     "@context": "https://schema.org",
@@ -907,6 +937,255 @@ function renderInstitute(i: any): PageMeta {
       addressCountry: "IN",
     };
   }
+  if (i.phone) orgLd.telephone = String(i.phone);
+  if (i.email) orgLd.email = String(i.email);
+  if (i.rating && i.total_reviews) {
+    orgLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(i.rating),
+      reviewCount: String(i.total_reviews),
+      bestRating: "5",
+    };
+  }
+
+  const overview = renderKV([
+    ["Location", [i.city, i.state].filter(Boolean).join(", ")],
+    ["Address", i.address],
+    ["Mode", i.mode],
+    ["Type", i.institute_type],
+    ["Fees (₹ Lakhs)", i.fees_lakhs],
+    ["Rating", i.rating ? `${i.rating} / 5 (${i.total_reviews || 0} reviews)` : ""],
+    ["Students", i.students_count],
+    ["Success Rate", i.success_rate ? `${i.success_rate}%` : ""],
+    ["Website", i.website],
+  ]);
+
+  const features = listify(i.features);
+  const specializations = listify(i.specializations);
+  const faqs = Array.isArray(i.faqs) ? i.faqs : [];
+  const faqsHtml = faqs.length
+    ? `<dl class="space-y-4">${faqs.map((f: any) => `<div><dt class="font-semibold text-slate-900">${esc(f.question || f.q || "")}</dt><dd class="mt-1 text-slate-700">${esc(f.answer || f.a || "")}</dd></div>`).join("")}</dl>`
+    : "";
+  const sections = Array.isArray(i.sections) ? i.sections : [];
+  const sectionsHtml = sections.length
+    ? sections.map((s: any) => section(s.title || s.heading || "Details", `<div class="prose prose-slate max-w-none">${sanitizeContent(String(s.content || s.body || ""))}</div>`)).join("")
+    : "";
+
+  const bodyHtml = `${body ? `<section class="prose prose-slate max-w-none">${body}</section>` : ""}
+${section("Overview", overview)}
+${section("Key Features", renderList(features))}
+${section("Specializations", renderList(specializations))}
+${sectionsHtml}
+${section("Frequently Asked Questions", faqsHtml)}`;
+
+  return {
+    url,
+    title,
+    description,
+    image,
+    h1: i.h1_tag || name,
+    jsonLd: orgLd,
+    breadcrumbs: [
+      { name: "Home", url: `${SITE}/` },
+      { name: "Coaching", url: `${SITE}/coaching` },
+      { name, url },
+    ],
+    bodyHtml,
+  };
+}
+
+function renderExam(e: any): PageMeta {
+  const url = `${SITE}/exam/${e.slug}`;
+  const name = e.name || slugToTitle(e.slug);
+  const fullName = e.full_name || name;
+  const title = e.meta_title || `${name} 2026: Exam Pattern, Syllabus, Dates & Eligibility`;
+  const description = clamp(
+    stripHtml(e.meta_description || e.description || `${fullName} exam pattern, syllabus, dates, eligibility and top MBA colleges accepting scores.`),
+    200,
+  );
+  const body = sanitizeContent(e.description || "");
+
+  const listify = (v: any): string[] => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v.map((x) => (typeof x === "string" ? x : x?.name || JSON.stringify(x))).filter(Boolean);
+    if (typeof v === "string") return v.split(/\n|,|;|\u2022|\|/).map((s) => s.trim()).filter(Boolean);
+    if (typeof v === "object") return Object.entries(v).map(([k, val]) => `${k}: ${val}`);
+    return [String(v)];
+  };
+  const renderList = (items: string[]) =>
+    items.length
+      ? `<ul class="list-disc pl-6 space-y-1 text-slate-700">${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`
+      : "";
+  const renderKV = (rows: Array<[string, any]>) => {
+    const filtered = rows.filter(([, v]) => v !== null && v !== undefined && v !== "");
+    if (!filtered.length) return "";
+    return `<div class="overflow-x-auto"><table class="w-full text-left border border-slate-200 rounded-md"><tbody>${filtered
+      .map(([k, v]) => `<tr class="border-b border-slate-100 last:border-0"><th class="px-4 py-2 bg-slate-50 font-medium text-slate-700 w-1/3">${esc(k)}</th><td class="px-4 py-2 text-slate-800">${esc(String(v))}</td></tr>`)
+      .join("")}</tbody></table></div>`;
+  };
+  const section = (t: string, html: string) =>
+    html ? `<section class="mt-8"><h2 class="text-2xl font-bold text-slate-900 mb-3">${esc(t)}</h2>${html}</section>` : "";
+
+  const overview = renderKV([
+    ["Exam", fullName],
+    ["Conducted By", e.conducting_body],
+    ["Frequency", e.frequency],
+    ["Exam Date", e.exam_date],
+    ["Registration Deadline", e.registration_deadline],
+  ]);
+  const eligibility = listify(e.eligibility);
+  const syllabus = listify(e.syllabus);
+  const faqs = Array.isArray(e.faqs) ? e.faqs : [];
+  const faqsHtml = faqs.length
+    ? `<dl class="space-y-4">${faqs.map((f: any) => `<div><dt class="font-semibold text-slate-900">${esc(f.question || f.q || "")}</dt><dd class="mt-1 text-slate-700">${esc(f.answer || f.a || "")}</dd></div>`).join("")}</dl>`
+    : "";
+
+  const examLd: any = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: fullName,
+    description,
+    url,
+    provider: {
+      "@type": "Organization",
+      name: e.conducting_body || "MBA Compass",
+      sameAs: SITE,
+    },
+  };
+  const faqLd = faqs.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f: any) => ({
+          "@type": "Question",
+          name: f.question || f.q || "",
+          acceptedAnswer: { "@type": "Answer", text: f.answer || f.a || "" },
+        })),
+      }
+    : null;
+
+  const bodyHtml = `${body ? `<section class="prose prose-slate max-w-none">${body}</section>` : ""}
+${section("Overview", overview)}
+${section("Eligibility", renderList(eligibility))}
+${section("Syllabus", renderList(syllabus))}
+${section("Frequently Asked Questions", faqsHtml)}`;
+
+  return {
+    url,
+    title,
+    description,
+    image: OG_DEFAULT,
+    h1: e.h1_tag || fullName,
+    jsonLd: faqLd ? [examLd, faqLd] : examLd,
+    breadcrumbs: [
+      { name: "Home", url: `${SITE}/` },
+      { name: "Exams", url: `${SITE}/exams` },
+      { name, url },
+    ],
+    bodyHtml,
+  };
+}
+
+function renderCourse(c: any): PageMeta {
+  const slug = c.slug;
+  const url = `${SITE}/courses/${slug}`;
+  const name = c.title || slugToTitle(slug);
+  const title = c.meta_title || c.seo_title || `${name} — MBA Compass Course`;
+  const description = clamp(
+    stripHtml(c.meta_description || c.seo_description || c.subtitle || c.description || ""),
+    200,
+  );
+  const image = c.banner_url || c.thumbnail_url || OG_DEFAULT;
+  const body = sanitizeContent(c.description || "");
+
+  const listify = (v: any): string[] => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v.map((x) => (typeof x === "string" ? x : x?.title || x?.name || JSON.stringify(x))).filter(Boolean);
+    if (typeof v === "string") return v.split(/\n|,|;|\u2022|\|/).map((s) => s.trim()).filter(Boolean);
+    return [String(v)];
+  };
+  const renderList = (items: string[]) =>
+    items.length
+      ? `<ul class="list-disc pl-6 space-y-1 text-slate-700">${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`
+      : "";
+  const renderKV = (rows: Array<[string, any]>) => {
+    const filtered = rows.filter(([, v]) => v !== null && v !== undefined && v !== "");
+    if (!filtered.length) return "";
+    return `<div class="overflow-x-auto"><table class="w-full text-left border border-slate-200 rounded-md"><tbody>${filtered
+      .map(([k, v]) => `<tr class="border-b border-slate-100 last:border-0"><th class="px-4 py-2 bg-slate-50 font-medium text-slate-700 w-1/3">${esc(k)}</th><td class="px-4 py-2 text-slate-800">${esc(String(v))}</td></tr>`)
+      .join("")}</tbody></table></div>`;
+  };
+  const section = (t: string, html: string) =>
+    html ? `<section class="mt-8"><h2 class="text-2xl font-bold text-slate-900 mb-3">${esc(t)}</h2>${html}</section>` : "";
+
+  const overview = renderKV([
+    ["Exam Focus", c.exam_focus],
+    ["Mode", c.mode],
+    ["Level", c.level],
+    ["Language", c.language],
+    ["Duration", c.duration_weeks ? `${c.duration_weeks} weeks` : ""],
+    ["Validity", c.validity_months ? `${c.validity_months} months` : ""],
+    ["Price", c.price ? `₹${Number(c.price).toLocaleString("en-IN")}` : ""],
+    ["Original Price", c.original_price ? `₹${Number(c.original_price).toLocaleString("en-IN")}` : ""],
+    ["Rating", c.rating ? `${c.rating} / 5 (${c.reviews_count || 0} reviews)` : ""],
+    ["Students Enrolled", c.total_students_enrolled],
+  ]);
+
+  const highlights = listify(c.highlights);
+  const features = listify(c.features);
+  const whatLearn = listify(c.what_youll_learn);
+  const curriculum = listify(c.curriculum);
+  const faqs = Array.isArray(c.faqs) ? c.faqs : [];
+  const faqsHtml = faqs.length
+    ? `<dl class="space-y-4">${faqs.map((f: any) => `<div><dt class="font-semibold text-slate-900">${esc(f.question || f.q || "")}</dt><dd class="mt-1 text-slate-700">${esc(f.answer || f.a || "")}</dd></div>`).join("")}</dl>`
+    : "";
+
+  const courseLd: any = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name,
+    description,
+    url,
+    image,
+    provider: { "@type": "Organization", name: "MBA Compass", sameAs: SITE },
+  };
+  if (c.rating && c.reviews_count) {
+    courseLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(c.rating),
+      reviewCount: String(c.reviews_count),
+      bestRating: "5",
+    };
+  }
+  if (c.price) {
+    courseLd.offers = {
+      "@type": "Offer",
+      price: String(c.price),
+      priceCurrency: "INR",
+      url,
+      availability: "https://schema.org/InStock",
+    };
+  }
+  const faqLd = faqs.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f: any) => ({
+          "@type": "Question",
+          name: f.question || f.q || "",
+          acceptedAnswer: { "@type": "Answer", text: f.answer || f.a || "" },
+        })),
+      }
+    : null;
+
+  const bodyHtml = `${c.subtitle ? `<p class="lead text-lg text-slate-700">${esc(c.subtitle)}</p>` : ""}
+${body ? `<section class="prose prose-slate max-w-none">${body}</section>` : ""}
+${section("Course Overview", overview)}
+${section("What You'll Learn", renderList(whatLearn))}
+${section("Highlights", renderList(highlights))}
+${section("Features", renderList(features))}
+${section("Curriculum", renderList(curriculum))}
+${section("Frequently Asked Questions", faqsHtml)}`;
 
   return {
     url,
@@ -914,42 +1193,13 @@ function renderInstitute(i: any): PageMeta {
     description,
     image,
     h1: name,
-    jsonLd: orgLd,
+    jsonLd: faqLd ? [courseLd, faqLd] : courseLd,
     breadcrumbs: [
       { name: "Home", url: `${SITE}/` },
-      { name: "Coaching", url: `${SITE}/coaching` },
+      { name: "Courses", url: `${SITE}/courses` },
       { name, url },
     ],
-    bodyHtml: `<section>
-      ${i.city ? `<p><strong>City:</strong> ${esc(i.city)}</p>` : ""}
-      ${i.established_year ? `<p><strong>Established:</strong> ${esc(i.established_year)}</p>` : ""}
-      <article>${body}</article>
-    </section>`,
-  };
-}
-
-function renderExam(e: any): PageMeta {
-  const url = `${SITE}/exam/${e.slug}`;
-  const name = e.name || slugToTitle(e.slug);
-  const title = e.meta_title || `${name} 2026: Exam Pattern, Syllabus, Dates & Eligibility`;
-  const description = clamp(
-    stripHtml(e.meta_description || e.description || ""),
-    200,
-  );
-  const body = sanitizeContent(e.description || "");
-
-  return {
-    url,
-    title,
-    description,
-    image: e.banner_url || OG_DEFAULT,
-    h1: name,
-    breadcrumbs: [
-      { name: "Home", url: `${SITE}/` },
-      { name: "Exams", url: `${SITE}/exams` },
-      { name, url },
-    ],
-    bodyHtml: `<article>${body}</article>`,
+    bodyHtml,
   };
 }
 
@@ -1056,7 +1306,15 @@ Deno.serve(async (req: Request) => {
       return emit(renderExam(data), 200, asJson);
     }
 
-    // 3. Unknown route — fall back to an indexable SPA shell rather than 404.
+    const courseMatch = path.match(/^\/(?:courses|mba-compass)\/([^/?#]+)/);
+    if (courseMatch) {
+      const slug = decodeURIComponent(courseMatch[1]);
+      const { data } = await supabase
+        .from("mba_compass_courses").select("*").eq("slug", slug).maybeSingle();
+      if (!data) return emit(notFoundMeta(path), 404, asJson);
+      return emit(renderCourse(data), 200, asJson);
+    }
+
     return emit(spaFallbackMeta(path), 200, asJson);
   } catch (err) {
     console.error("ssr-prerender error", err);
