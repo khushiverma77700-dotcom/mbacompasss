@@ -150,7 +150,7 @@ const ArticlePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead {...resolvedSeo} />
+      <SEOHead {...resolvedSeo} ogType="article" />
       <ReadingProgress />
 
       {/* Cinematic Hero */}
