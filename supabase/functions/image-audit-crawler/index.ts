@@ -22,12 +22,12 @@ const SOURCES: Source[] = [
   { table: "articles", cols: ["image_url", "banner_url", "mobile_banner_url"], htmlCols: ["content"], slugCol: "slug", nameCol: "title", contextType: "article" },
   { table: "college_sections", htmlCols: ["content"], cols: [], contextType: "college-section" },
   { table: "mba_compass_courses", cols: ["banner_url", "thumbnail_url"], arrayCols: ["gallery_images"], htmlCols: ["description"], slugCol: "slug", nameCol: "title", contextType: "course" },
-  { table: "courses", cols: ["og_image", "twitter_image"], htmlCols: ["description"], slugCol: "slug", nameCol: "title", contextType: "course" },
+  { table: "courses", cols: ["og_image"], htmlCols: ["description"], slugCol: "slug", nameCol: "name", contextType: "course" },
   { table: "banners", cols: ["image_url", "mobile_image_url"], nameCol: "title", contextType: "banner" },
-  { table: "city_pages", cols: ["hero_image_url"], slugCol: "slug", nameCol: "city_name", contextType: "city" },
-  { table: "exams", cols: ["banner_url", "logo_url"], htmlCols: ["description"], slugCol: "slug", nameCol: "name", contextType: "exam" },
-  { table: "categories", cols: ["image_url"], htmlCols: ["description"], slugCol: "slug", nameCol: "name", contextType: "category" },
-  { table: "freebies", cols: ["cover_image_url"], htmlCols: ["description"], slugCol: "slug", nameCol: "title", contextType: "freebie" },
+  { table: "city_pages", cols: ["hero_image_url"], slugCol: "slug", nameCol: "name", contextType: "city" },
+  { table: "exams", cols: ["logo_url"], htmlCols: ["description"], slugCol: "slug", nameCol: "name", contextType: "exam" },
+  { table: "categories", htmlCols: ["description"], cols: [], slugCol: "slug", nameCol: "name", contextType: "category" },
+  { table: "freebies", cols: ["cover_image_url"], htmlCols: ["description"], nameCol: "title", contextType: "freebie" },
   { table: "testimonials", cols: ["image_url"], htmlCols: ["content"], nameCol: "name", contextType: "testimonial" },
   { table: "faculty", cols: ["photo_url"], nameCol: "name", contextType: "faculty" },
   { table: "coaching_of_week", cols: ["banner_url"], htmlCols: ["description"], contextType: "coaching-of-week" },
@@ -37,7 +37,7 @@ const SOURCES: Source[] = [
   { table: "mock_questions", arrayCols: ["image_urls"], cols: [], contextType: "mock-question" },
   { table: "mocks_landing_settings", cols: ["hero_image_url"], arrayCols: ["student_feedback_images"], contextType: "mocks-landing" },
   { table: "student_notifications", cols: ["image_url"], contextType: "notification" },
-  { table: "page_seo_overrides", cols: ["og_image"], contextType: "seo-override" },
+  { table: "page_seo_overrides", cols: ["og_image"], slugCol: "slug", nameCol: "title", contextType: "seo-override" },
 ];
 
 const HTML_IMG_RE = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
