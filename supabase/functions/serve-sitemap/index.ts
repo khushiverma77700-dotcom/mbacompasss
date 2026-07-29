@@ -16,8 +16,9 @@ const escapeXml = (v: string) =>
     .replaceAll('"', "&quot;").replaceAll("'", "&apos;");
 
 const fmtDate = (d: string | Date | null | undefined) => {
-  const date = d ? new Date(d) : new Date();
-  if (isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+  if (!d) return undefined;
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return undefined;
   return date.toISOString().slice(0, 10);
 };
 
@@ -52,7 +53,7 @@ const buildUrlset = (entries: Entry[]) => {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${items.map((e) => `  <url>
     <loc>${escapeXml(e.loc)}</loc>
-    <lastmod>${e.lastmod ?? fmtDate(new Date())}</lastmod>
+    ${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}
     <changefreq>${e.changefreq ?? "monthly"}</changefreq>
     <priority>${(e.priority ?? 0.5).toFixed(1)}</priority>
   </url>`).join("\n")}
@@ -84,15 +85,12 @@ Deno.serve(async (req) => {
     const pathMatch = url.pathname.match(/sitemap-([a-z0-9-]+)\.xml$/i);
     const segment = segmentFromQuery || (pathMatch ? pathMatch[1] : null);
 
-    const today = fmtDate(new Date());
-
     // Source of truth: supabase/functions/_shared/staticRoutes.ts
     // Keep sitemap + ssr-prerender aligned by editing that file only.
     const STATIC_PAGES: Entry[] = STATIC_ROUTES.map((r) => ({
       loc: r.path,
       changefreq: r.changefreq,
       priority: r.priority,
-      lastmod: today,
     }));
 
     // Helper: fetch ALL rows (Supabase default limit = 1000)
@@ -124,7 +122,7 @@ Deno.serve(async (req) => {
     ] = await Promise.all([
       fetchAll("institutes", "id, slug, updated_at"),
       fetchAll("colleges", "id, slug, updated_at"),
-      fetchAll("exams", "slug, created_at"),
+      fetchAll("exams", "slug, updated_at, created_at"),
       fetchAll("categories", "slug, updated_at"),
       fetchAll("articles", "slug, title, category, updated_at", (q) => q.eq("published", true)),
       fetchAll("city_pages", "slug, updated_at", (q) => q.eq("active", true)),
@@ -180,7 +178,7 @@ Deno.serve(async (req) => {
     const coachingInstituteEntries: Entry[] = (institutes ?? []).flatMap((i: any) => i.slug
       ? [{ loc: `/institute/${i.slug}`, lastmod: fmtDate(i.updated_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
     const examEntries: Entry[] = (exams ?? []).flatMap((e: any) => e.slug
-      ? [{ loc: `/exam/${e.slug}`, lastmod: fmtDate(e.created_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
+      ? [{ loc: `/exam/${e.slug}`, lastmod: fmtDate(e.updated_at ?? e.created_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
     const cityEntries: Entry[] = (cityPages ?? []).flatMap((cp: any) => cp.slug
       ? [{ loc: `/colleges/${cp.slug}`, lastmod: fmtDate(cp.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
     const courseEntries: Entry[] = (mockBundles ?? []).flatMap((b: any) => b.slug
@@ -195,9 +193,9 @@ Deno.serve(async (req) => {
     const EXAM_HUBS = ["cat", "xat", "cmat", "mat", "nmat", "snap", "iift", "gmat", "atma"];
     const CITY_HUBS = ["mumbai", "delhi", "bangalore", "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "gurgaon", "noida", "jaipur", "indore", "lucknow", "chandigarh"];
     const collegeHubEntries: Entry[] = [
-      ...TYPE_HUBS.map((s) => ({ loc: `/colleges/type/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
-      ...EXAM_HUBS.map((s) => ({ loc: `/colleges/by-exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
-      ...CITY_HUBS.map((s) => ({ loc: `/colleges/by-city/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+      ...TYPE_HUBS.map((s) => ({ loc: `/colleges/type/${s}`, changefreq: "weekly" as const, priority: 0.8 })),
+      ...EXAM_HUBS.map((s) => ({ loc: `/colleges/by-exam/${s}`, changefreq: "weekly" as const, priority: 0.8 })),
+      ...CITY_HUBS.map((s) => ({ loc: `/colleges/by-city/${s}`, changefreq: "weekly" as const, priority: 0.7 })),
     ];
 
     // Coaching hub landings — city, exam, and mode. Split into its own segment
@@ -207,10 +205,10 @@ Deno.serve(async (req) => {
     const COACHING_EXAM_HUBS = ["cat", "xat", "nmat", "snap", "iift", "cmat", "mat", "ipmat", "gmat"];
     const COACHING_MODE_HUBS = ["online", "offline", "weekend", "crash-course", "classroom", "self-paced"];
     const coachingHubEntries: Entry[] = [
-      { loc: `/coaching`, lastmod: today, changefreq: "weekly" as const, priority: 0.9 },
-      ...COACHING_CITY_HUBS.map((s) => ({ loc: `/coaching/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
-      ...COACHING_EXAM_HUBS.map((s) => ({ loc: `/coaching/exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
-      ...COACHING_MODE_HUBS.map((s) => ({ loc: `/coaching/mode/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.6 })),
+      { loc: `/coaching`, changefreq: "weekly" as const, priority: 0.9 },
+      ...COACHING_CITY_HUBS.map((s) => ({ loc: `/coaching/${s}`, changefreq: "weekly" as const, priority: 0.7 })),
+      ...COACHING_EXAM_HUBS.map((s) => ({ loc: `/coaching/exam/${s}`, changefreq: "weekly" as const, priority: 0.8 })),
+      ...COACHING_MODE_HUBS.map((s) => ({ loc: `/coaching/mode/${s}`, changefreq: "weekly" as const, priority: 0.6 })),
     ];
 
     // Segments (keys stable — used as `/sitemap-<key>.xml` in the index)
@@ -239,17 +237,12 @@ Deno.serve(async (req) => {
       return new Response(xml, { headers });
     }
 
-    // Root request → always return a sitemap index that references one
-    // child sitemap per content type. Splitting up-front keeps individual
-    // sitemaps well below the 50k / 50MB limits as the URL count grows and
-    // lets Search Console report per-content-type coverage.
-    const children = Object.entries(segments)
-      .filter(([_, arr]) => arr.length > 0)
-      .map(([key]) => ({
-        loc: `${SITE_URL}/sitemap-${key}.xml`,
-        lastmod: today,
-      }));
-    return new Response(buildSitemapIndex(children), { headers });
+    // Root request → single canonical sitemap, per current project SEO setup.
+    // Segment URLs remain supported for diagnostics, but robots/Search Console
+    // should use only /sitemap.xml.
+    const allEntries = Object.values(segments).flat();
+    const { xml } = buildUrlset(allEntries);
+    return new Response(xml, { headers });
 
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

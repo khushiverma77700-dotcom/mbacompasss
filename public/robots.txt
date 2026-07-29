@@ -85,4 +85,3 @@ Allow: /
 
 # Sitemaps for project domain
 Sitemap: https://mbacompass.in/sitemap.xml
-Sitemap: https://mbacompass.in/sitemap-images.xml
