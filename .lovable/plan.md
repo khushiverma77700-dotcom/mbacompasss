@@ -1,80 +1,80 @@
-# MBA Compass — Full SEO / GEO / AEO Overhaul Plan
+# Image SEO Automation System
 
-Goal: raise organic + AI-Overview visibility for mbacompass.in without regressing existing SSR, sitemap, or Cloudflare pipelines. Work is phased so each step ships value and is independently verifiable.
+Ship a site-wide image optimization pipeline that fixes every existing image and auto-processes every future upload, without changing how any image looks on screen.
 
----
+## Scope guardrails
 
-## Phase 0 — Audit (read-only, no code)
+- No visual changes: same dimensions, same aspect ratio, same crop, same rendered size. Only bytes, filenames, `alt`/`title`/`loading`/`width`/`height`, `srcset`/`sizes`, schema, and sitemap change.
+- Originals are preserved. Every optimization writes a new derivative; the original URL keeps working as a fallback.
 
-Deliverable: an `reports/seo-audit-<date>.md` file summarising findings. Nothing else changes in this phase.
+## 1. Storage & derivatives
 
-1. Trigger a fresh SEO scan (`seo--trigger_scan`) and read `seo--list_findings` + existing `reports/seo-metadata-audit.md`.
-2. Crawl top templates via the SSR pipeline and record for each: `<title>`, meta description, canonical, `og:*`, `twitter:*`, H1, JSON-LD types, word count, internal-link count, image alt coverage, robots/index status.
-   - Routes sampled: `/`, `/colleges`, `/college/:slug` (3 samples), `/coaching`, `/coaching/:slug`, `/exam/:slug`, `/article/:slug`, `/blog`, `/profile-analyzer`, `/college-shortlister`, `/iim-waitlist-movement`, `/freebies`, `/formulas`, `/formulas/:slug`, `/guides/ipmat-preparation`, category pages, city pages.
-3. Cross-check `public/sitemap.xml` + `serve-sitemap` output vs actual routable pages; flag orphans and 404-prone legacy slugs.
-4. Run Lighthouse mobile on 5 representative URLs; log LCP/CLS/INP + render-blocking JS/CSS.
-5. Pull Semrush snapshot (`domain_analysis`, `top_pages`, `competitive_analysis`) for `mbacompass.in` to identify highest-opportunity clusters and keyword gaps.
+- New private bucket `image-derivatives` holding WebP/AVIF variants at responsive widths (320, 640, 960, 1280, 1600) plus a compressed original.
+- New table `image_assets` — one row per canonical image URL found on the site. Columns: source URL, bucket/key (if native), width, height, bytes, format, sha256 hash (dedupe), alt, title, caption, seo_filename, page_context (jsonb: which tables/rows reference it), variants (jsonb with webp/avif URLs per width), lcp_candidate boolean, status, last_optimized_at, issues (jsonb).
+- New table `image_seo_issues` — normalized findings per asset (missing_alt, duplicate_alt, oversized, broken, no_sitemap_entry, etc.) so the dashboard can filter/count.
+- New table `image_optimization_jobs` — background queue rows with per-step status for the upload checklist UI.
 
-## Phase 1 — Technical SEO Fixes
+## 2. Background workers (edge functions)
 
-Highest-leverage, lowest-risk fixes first.
+- `image-audit-crawler` — walks every content table with image columns (`colleges`, `institutes`, `articles`, `news_articles`, `mba_compass_courses`, `banners`, `city_pages`, `exams`, `categories`, `freebies`, `authors`/profiles, `mocks_landing_settings`, homepage `site_settings`, plus rendered HTML in `description`/`content` fields) and upserts `image_assets` rows with page_context.
+- `image-optimizer-worker` — for each asset: fetch bytes, compute hash, decode dimensions, produce compressed original + WebP + AVIF at responsive widths using `sharp` (Deno-compatible via `npm:sharp-wasm` or a Node runtime edge function; if unavailable in Deno, run through an existing Node-capable path — decide at build time and document the fallback).
+- `image-seo-writer` — calls Lovable AI Gateway (`google/gemini-2.5-flash`) with page_context to generate alt, title, caption, and SEO filename. Deduplicates alt within the same page. Never overwrites human-written alt unless flagged generic/duplicate.
+- `image-sitemap-builder` — writes `/sitemap-images.xml` served by an extended `serve-sitemap`; referenced from `robots.txt` and the sitemap index.
+- `image-dashboard-stats` — aggregates counts for the admin dashboard.
 
-1. **Canonical hygiene**: audit every `useResolvedSeo`/`SEOHead` consumer for self-referencing canonical using `CANONICAL_HOST`. Kill any absolute canonicals that leak preview / www / lovable.app hosts. Confirm `og:url` matches canonical per route.
-2. **Duplicate/singleton JSON-LD**: extend `useResolvedSeo` singleton dedupe list (already covers FAQPage/BreadcrumbList/WebPage/Organization) to also include `ItemList`, `CollectionPage`, `Course`, `EducationalOrganization` where currently over-emitted.
-3. **Sitemap**: split into index + child sitemaps (`colleges`, `coaching`, `articles`, `exams`, `cities`, `categories`, `static`) via the existing `serve-sitemap` function; strip query-string URLs; drop synthetic `<lastmod>` values derived from build time (per sitemap-lastmod policy). Refresh `public/sitemap.xml` snapshot.
-4. **robots.txt**: verify only one `Sitemap:` directive, matches active host, no accidental `Disallow: /admin` leaks of paths we do want crawled (none currently should be).
-5. **Legacy redirects**: audit `LegacyCollegeSlugRedirect` + `CollegeProgrammeRedirect` coverage against GSC Soft-404 list; add missing patterns.
-6. **Image SEO**: run `scripts/audit-seo-metadata.ts` extension to flag missing `alt`, non-descriptive alts, and non-lazy above-the-fold images. Fix top 20 offenders.
-7. **Core Web Vitals**: preload LCP hero image on `/`, `/colleges`, `/college/:slug`; convert remaining PNG heroes to WebP via `imagetools`; audit `MBANewsBar` + newly-added home sections for CLS.
+Queued via existing `pg_cron` pattern used by `sitemap-refresh-cron`/`seo-health-check`.
 
-## Phase 2 — On-Page + Programmatic SEO
+## 3. Runtime delivery (no visual changes)
 
-1. **Templates**: harden meta title/description templates for `CollegesPage`, `CoachingPage`, `CategoryPage`, `ExamDetailPage`, `CollegeHubPage`, `CityPage`. Enforce one primary keyword + one secondary per template, driven by existing `coachingSeoTemplates.ts` pattern. Extend that helper for the college side.
-2. **Programmatic internal linking**: reuse `InternalLinksSection` pattern on college, coaching, category, exam, and city pages so every leaf page exposes 6–12 crawlable neighbour links (related exams / nearby cities / popular specialisations / top colleges by tier).
-3. **Breadcrumbs**: ensure every leaf template renders visible breadcrumbs + `BreadcrumbList` JSON-LD.
-4. **Content gaps** (from Phase 0 Semrush pull): draft brief for top 5 missing clusters (e.g. "IIM cutoffs 2026", "GMAT vs CAT", "MBA fees comparison") and stub programmatic pages where DB rows already support them.
+- New `<SmartImage>` component wrapping `<img>`. It:
+  - Looks up the URL in `image_assets` (in-memory map hydrated at page load, one query per route).
+  - If variants exist, emits `<picture>` with AVIF → WebP → original `<source>`s plus responsive `srcset` on the fallback `<img>`.
+  - Injects `width`/`height` (intrinsic, unchanged) so CLS drops to 0.
+  - Sets `loading="lazy"` and `decoding="async"` by default; `loading="eager"` + `fetchpriority="high"` when the row is marked `lcp_candidate` (homepage hero, article hero, college banner top-of-page).
+  - Uses stored alt/title. Renders exactly the same box — sizing stays governed by the existing wrapper's CSS.
+- Codemod-style sweep: replace `<img>` in shared UI (`ArticleCard`, `CollegeListingCard`, `Hero*`, `CityBanner`, `AuthorAvatar`, blog TipTap render, homepage banners) with `<SmartImage>`. Do NOT touch admin-only images.
 
-## Phase 3 — GEO / AEO Content Upgrade
+## 4. Upload automation
 
-Optimise for ChatGPT / Gemini / Perplexity / Google AI Overview.
+- Extend `src/components/admin/FileUpload.tsx` (single central component) so every existing admin upload flows through it. On upload:
+  1. PUT original into current bucket (behavior unchanged).
+  2. Insert `image_optimization_jobs` row with the 17 checklist steps.
+  3. Invoke `image-optimizer-worker` in background; UI subscribes via Realtime and renders the checklist popover.
+  4. On completion, `image_assets` row is populated; the returned URL in the admin form still points at the original — `<SmartImage>` handles delivery on the public site.
+- Callers that upload outside this component (`AdminFreebies`, `AdminDatabaseBackup` — backup is out of scope; `StudentSupport` attachments — out of scope) either route through `FileUpload` or get a small `enqueueImageOptimization(url)` helper.
 
-1. Add an `AeoAnswerBlock` component (short factual paragraph + entity list + stat table) used at the top of `/college/:slug`, `/exam/:slug`, `/article/:slug`, `/iim-waitlist-movement`, `/guides/*`.
-2. Standardise FAQ generation: every leaf template renders 5–8 entity-anchored Q&As sourced from DB fields (fees, eligibility, cutoff, placements, ranking). Wire into existing FAQPage JSON-LD path in `useResolvedSeo`.
-3. Add "Key facts" schema (`DefinedTerm` + `Table`) to guides + articles so AI engines can extract citations.
-4. Update `public/llms.txt` with the refreshed sitemap sections and top canonical URLs per cluster.
+## 5. Structured data & Open Graph
 
-## Phase 4 — Validation & Monitoring
+- `SEOHead` / `useResolvedSeo` already emit JSON-LD. Extend the schema generators (`generateCollegeSchema`, `generateArticleSchema`, `generateExamSchema`, `generateOrganizationSchema`, breadcrumb) to include `image` arrays sourced from `image_assets` for the current record. Never emit empty/duplicate image URLs.
+- Sitewide `og:image` fallback in `index.html` stays. Per-route Helmet already resolves `ogImage`; extend `useResolvedSeo` to auto-select the first `image_assets` row tagged as hero for the current record when no explicit OG image is set.
+- `sitemap-images.xml` follows Google's `image:image` spec; referenced from `robots.txt` (`Sitemap:` line) and the SSR prerender output.
 
-1. Extend `scripts/audit-seo-metadata.ts` to enforce: single canonical, unique title, unique meta description, one H1, ≥3 internal links, ≥1 JSON-LD, valid OG image. Fail CI on regression.
-2. Add a nightly `seo-health-check` run over the top 200 URLs (already scaffolded) and surface diffs on `/admin/seo-health-check`.
-3. Re-run Lighthouse + Semrush snapshot and diff vs Phase 0 baseline; write `reports/seo-audit-after.md`.
-4. Submit refreshed sitemaps to GSC + IndexNow (auto-run cron already exists).
+## 6. Admin — Image SEO Dashboard
 
----
+New route `/admin/image-seo` with:
+- Header stats: total images, SEO health score, AI-readiness score, broken, duplicates, missing alt, missing schema, missing sitemap.
+- Filterable table of `image_assets` with per-row "Re-optimize" and "Edit metadata" actions.
+- "Rescan entire library" button → enqueues `image-audit-crawler` + reprocesses all assets.
+- Sidebar entry under SEO & AI Tools.
 
-## Files likely to change
+## 7. Rollout & validation
 
-- `src/lib/canonical.ts`, `src/lib/seoAutomation.ts`, `src/hooks/useResolvedSeo.ts`, `src/components/SEOHead.tsx` (canonical + JSON-LD singleton hardening)
-- `src/lib/coachingSeoTemplates.ts` + new `collegeSeoTemplates.ts`, `examSeoTemplates.ts`
-- Page templates: `CollegesPage`, `CoachingPage`, `CategoryPage`, `ExamDetailPage`, `CollegeHubPage`, `ArticlePage`, `BlogPage`, `CityPage`
-- New: `src/components/seo/AeoAnswerBlock.tsx`, generic `RelatedLinksSection` (generalised from `InternalLinksSection`)
-- `supabase/functions/serve-sitemap/index.ts` (split + lastmod policy)
-- `public/robots.txt`, `public/sitemap.xml`, `public/llms.txt`
-- `scripts/audit-seo-metadata.ts` (stricter checks), CI workflow
-- `reports/seo-audit-*.md` (new)
+1. Migration: create tables, bucket, RLS, cron.
+2. Deploy workers; run first full audit in a dry-run mode that only records issues.
+3. Ship `<SmartImage>` + swap in shared components behind a feature flag `image_seo_enabled` in `site_settings`.
+4. Flip flag on, monitor `image_optimization_jobs` and Core Web Vitals via existing `AdminWebsiteOptimizer`.
+5. Final report: emit a Markdown report to `reports/image-seo-YYYY-MM-DD.md` (totals, fixes, remaining issues, rollback = flip flag off + revert component swap).
 
-## Risk & rollback
+## Technical details
 
-- Each phase is a separate PR/commit. Canonical + sitemap changes are reversible by reverting the two files above.
-- SSR pipeline, Cloudflare worker, and existing indexing cron are untouched.
-- No DB schema changes.
+- Image processing runtime: Deno edge functions can't run native `sharp`. Two options — (a) `npm:@jsquash/webp` + `@jsquash/avif` + `@jsquash/resize` (pure WASM, works on Deno), or (b) run the worker as a Node-based Supabase edge function. Recommendation: `@jsquash/*` for portability; document fallback if AVIF times out.
+- Hash-based dedupe stores each unique binary once; multiple `image_assets` rows can point at the same variant set.
+- AI cost control: alt generation runs only when alt is missing/generic (heuristic list + duplicate detection). Cached forever after; regeneration only via admin action.
+- Never rewrite URLs stored in `colleges.image_url`, `articles.thumbnail_url`, etc. — delivery layer picks variants at render time.
+- Accessibility: decorative images (detected via zero-context, e.g. background decoration divs) get `alt=""`; content images always get meaningful alt.
 
-## Out of scope (ask before doing)
+## Open questions (will confirm before build)
 
-- Migrating stack to TanStack Start / SSR framework swap.
-- Rewriting existing DB-backed content copy in bulk (would go through Re-SEO pipeline, not this plan).
-- Changing admin UX beyond surfacing the new audit report.
-
----
-
-Approve this and I'll start with **Phase 0 audit** — no code changes until findings are on the table.
+1. Confirm target bucket name `image-derivatives` (private, served via signed short-lived URLs or made public — public is simpler; ask before enabling).
+2. Confirm `<SmartImage>` should replace `<img>` in the specific components listed, or across all `src/**` (broader = riskier).
+3. Alt-text language: English only, or mirror page locale where present.
