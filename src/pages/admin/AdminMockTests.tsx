@@ -383,9 +383,27 @@ const AdminMockTests = () => {
         } catch {/* non-fatal — dock just won't show progress */}
       }
 
-      jobIdsToKick.forEach((jobId) => {
-        supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId, auto: true } }).catch(() => {});
-      });
+      const kickErrors: string[] = [];
+      await Promise.all(jobIdsToKick.map(async (jobId) => {
+        try {
+          const { error: invErr } = await supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId, auto: true } });
+          if (invErr) {
+            const detail = (invErr as any)?.context?.text ? await (invErr as any).context.text().catch(() => "") : "";
+            kickErrors.push(detail || invErr.message || String(invErr));
+          }
+        } catch (e: any) {
+          kickErrors.push(e?.message || String(e));
+        }
+      }));
+      if (kickErrors.length && kickErrors.length === jobIdsToKick.length) {
+        toast({
+          title: "Worker refused to start",
+          description: kickErrors[0].slice(0, 240),
+          variant: "destructive",
+        });
+      } else if (kickErrors.length) {
+        console.warn("[top-up] some worker kickoffs failed", kickErrors);
+      }
 
       openDock();
       await refreshDock();
