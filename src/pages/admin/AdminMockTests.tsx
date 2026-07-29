@@ -554,15 +554,21 @@ const AdminMockTests = () => {
     { value: "practice_set", label: "Practice Set" },
   ];
   const [categorySaving, setCategorySaving] = useState<Record<string, boolean>>({});
+  const categoryFor = (testType: string): string => {
+    if (testType === "topic_wise") return "topic";
+    if (testType === "practice_set") return "practice";
+    return testType;
+  };
   const updateCategory = async (id: string, value: string) => {
     setCategorySaving((p) => ({ ...p, [id]: true }));
-    const { error } = await supabase.from("mock_tests").update({ test_type: value as any, category: value as any }).eq("id", id);
+    const cat = categoryFor(value);
+    const { error } = await supabase.from("mock_tests").update({ test_type: value as any, category: cat as any }).eq("id", id);
     setCategorySaving((p) => { const n = { ...p }; delete n[id]; return n; });
     if (error) {
       toast({ title: "Failed to change category", description: error.message, variant: "destructive" });
       return;
     }
-    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, test_type: value, category: value } : x)));
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, test_type: value, category: cat } : x)));
     toast({ title: "Category updated", description: CATEGORY_OPTIONS.find((c) => c.value === value)?.label });
   };
 
@@ -1019,7 +1025,7 @@ const AdminMockTests = () => {
             <Select
               onValueChange={(v) => {
                 const label = CATEGORY_OPTIONS.find((c) => c.value === (v as any))?.label ?? v;
-                bulkUpdate({ test_type: v as any, category: v as any }, `moved to ${label}`);
+                bulkUpdate({ test_type: v as any, category: categoryFor(v) as any }, `moved to ${label}`);
               }}
             >
               <SelectTrigger className="h-8 w-[190px] text-xs">
