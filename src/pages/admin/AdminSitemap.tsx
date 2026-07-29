@@ -266,7 +266,7 @@ const AdminSitemap = () => {
                     {copied ? <CheckCircle className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
                     {copied ? "Copied!" : "Copy XML"}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={downloadSitemap}>
+                  <Button variant="outline" size="sm" onClick={() => downloadSitemap("pages")}>
                     <Download className="w-4 h-4 mr-1" />
                     Download .xml
                   </Button>
