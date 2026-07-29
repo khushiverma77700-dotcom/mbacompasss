@@ -1025,7 +1025,7 @@ const AdminMockTests = () => {
             <Select
               onValueChange={(v) => {
                 const label = CATEGORY_OPTIONS.find((c) => c.value === (v as any))?.label ?? v;
-                bulkUpdate({ test_type: v as any, category: v as any }, `moved to ${label}`);
+                bulkUpdate({ test_type: v as any, category: categoryFor(v) as any }, `moved to ${label}`);
               }}
             >
               <SelectTrigger className="h-8 w-[190px] text-xs">
