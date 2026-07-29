@@ -98,7 +98,10 @@ const AdminMockTests = () => {
     setRepairing(true);
     try {
       const { data, error } = await supabase.functions.invoke("repair-sectional-passages", { body: { dry_run: dryRun } });
-      if (error) throw error;
+      if (error) {
+        const detail = (error as any)?.context?.text ? await (error as any).context.text().catch(() => "") : "";
+        throw new Error(detail || error.message || String(error));
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       if (dryRun) {
         toast({ title: `Scan complete`, description: `${(data as any).total ?? 0} sectional sections missing passages.` });
