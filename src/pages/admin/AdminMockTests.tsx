@@ -554,6 +554,25 @@ const AdminMockTests = () => {
     { value: "practice_set", label: "Practice Set" },
   ];
   const [categorySaving, setCategorySaving] = useState<Record<string, boolean>>({});
+  const [nameDraft, setNameDraft] = useState<Record<string, string>>({});
+  const [nameSaving, setNameSaving] = useState<Record<string, boolean>>({});
+  const updateName = async (id: string, current: string) => {
+    const next = (nameDraft[id] ?? "").trim();
+    if (!next || next === current) {
+      setNameDraft((p) => { const n = { ...p }; delete n[id]; return n; });
+      return;
+    }
+    setNameSaving((p) => ({ ...p, [id]: true }));
+    const { error } = await supabase.from("mock_tests").update({ name: next }).eq("id", id);
+    setNameSaving((p) => { const n = { ...p }; delete n[id]; return n; });
+    if (error) {
+      toast({ title: "Failed to rename mock", description: error.message, variant: "destructive" });
+      return;
+    }
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, name: next } : x)));
+    setNameDraft((p) => { const n = { ...p }; delete n[id]; return n; });
+    toast({ title: "Mock renamed" });
+  };
   const categoryFor = (testType: string): string => {
     if (testType === "topic_wise") return "topic";
     if (testType === "practice_set") return "practice";
