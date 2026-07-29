@@ -1,4 +1,4 @@
-// Crawls known content tables for image URLs and upserts image_assets rows.
+// Crawls known content tables for image URLs and upserts image_assets rows. v3
 // Any admin can trigger a full rescan; results feed the Image SEO Dashboard.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
