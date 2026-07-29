@@ -1100,11 +1100,22 @@ const AdminMockTests = () => {
                   </TableCell>
 
                   <TableCell>
-                    <div className="font-medium flex items-center gap-1.5">
-                      {t.name}
-                      {t.generated_by_ai && <Sparkles className="w-3 h-3 text-primary" />}
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        value={nameDraft[t.id] ?? t.name ?? ""}
+                        onChange={(e) => setNameDraft((p) => ({ ...p, [t.id]: e.target.value }))}
+                        onBlur={() => { if (nameDraft[t.id] !== undefined) updateName(t.id, t.name); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+                          if (e.key === "Escape") { setNameDraft((p) => { const n = { ...p }; delete n[t.id]; return n; }); (e.target as HTMLInputElement).blur(); }
+                        }}
+                        disabled={!!nameSaving[t.id]}
+                        className="h-8 text-sm font-medium min-w-[220px]"
+                      />
+                      {nameSaving[t.id] && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                      {t.generated_by_ai && <Sparkles className="w-3 h-3 text-primary shrink-0" />}
                     </div>
-                    <div className="text-xs text-muted-foreground">/{t.slug}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">/{t.slug}</div>
                   </TableCell>
                   <TableCell>
                     <Select
