@@ -9,6 +9,13 @@ type Entry = {
   lastmod?: string;
   changefreq?: "daily" | "weekly" | "monthly" | "yearly";
   priority?: number;
+  images?: ImageEntry[];
+};
+
+type ImageEntry = {
+  loc: string;
+  title?: string;
+  caption?: string;
 };
 
 const escapeXml = (v: string) =>
@@ -33,6 +40,23 @@ const normalizePath = (p: string) => {
   return path;
 };
 
+const pagePathForImageContext = (ctx: any): string | null => {
+  if (!ctx || !ctx.slug) return null;
+  switch (ctx.type) {
+    case "college": return `/college/${ctx.slug}`;
+    case "institute": return `/institute/${ctx.slug}`;
+    case "article":
+    case "article-inline": return `/article/${ctx.slug}`;
+    case "news": return `/news/${ctx.slug}`;
+    case "course": return `/courses/${ctx.slug}`;
+    case "city": return `/colleges/${ctx.slug}`;
+    case "exam": return `/exam/${ctx.slug}`;
+    case "category": return `/category/${ctx.slug}`;
+    case "freebie": return `/freebies/${ctx.slug}`;
+    default: return null;
+  }
+};
+
 const buildUrlset = (entries: Entry[]) => {
   const seen = new Map<string, Entry>();
   for (const e of entries) {
@@ -44,18 +68,39 @@ const buildUrlset = (entries: Entry[]) => {
     // `seen` covers that case.
     if (!path || /\/\//.test(path)) continue;
     const full = `${SITE_URL}${path}`;
-    if (!seen.has(full)) seen.set(full, { ...e, loc: full });
+    const existing = seen.get(full);
+    if (!existing) {
+      seen.set(full, { ...e, loc: full });
+      continue;
+    }
+    if (e.images?.length) {
+      const imageKeys = new Set((existing.images ?? []).map((img) => img.loc));
+      existing.images = [
+        ...(existing.images ?? []),
+        ...e.images.filter((img) => {
+          if (imageKeys.has(img.loc)) return false;
+          imageKeys.add(img.loc);
+          return true;
+        }),
+      ];
+    }
   }
   const items = Array.from(seen.values());
+  const hasImages = items.some((e) => e.images?.length);
   return {
     count: items.length,
     xml: `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${hasImages ? ` xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"` : ""}>
 ${items.map((e) => `  <url>
     <loc>${escapeXml(e.loc)}</loc>
     ${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}
     <changefreq>${e.changefreq ?? "monthly"}</changefreq>
     <priority>${(e.priority ?? 0.5).toFixed(1)}</priority>
+    ${(e.images ?? []).map((img) => `<image:image>
+      <image:loc>${escapeXml(img.loc)}</image:loc>${img.title ? `
+      <image:title>${escapeXml(img.title)}</image:title>` : ""}${img.caption ? `
+      <image:caption>${escapeXml(img.caption)}</image:caption>` : ""}
+    </image:image>`).join("\n    ")}
   </url>`).join("\n")}
 </urlset>`,
   };
@@ -211,18 +256,43 @@ Deno.serve(async (req) => {
       ...COACHING_MODE_HUBS.map((s) => ({ loc: `/coaching/mode/${s}`, changefreq: "weekly" as const, priority: 0.6 })),
     ];
 
+    const imageEntriesByPath = new Map<string, ImageEntry[]>();
+    const imageRows = await fetchAll(
+      "image_assets",
+      "source_url, alt, title, page_context, variants, status",
+      (q) => q.in("status", ["optimized", "discovered"]),
+    );
+    for (const row of imageRows ?? []) {
+      const contexts = Array.isArray(row.page_context) ? row.page_context : [];
+      const imageLoc = row?.variants?.webp || row.source_url;
+      if (!imageLoc) continue;
+      for (const ctx of contexts) {
+        const path = pagePathForImageContext(ctx);
+        if (!path) continue;
+        const bucket = imageEntriesByPath.get(path) ?? [];
+        if (bucket.length >= 1000 || bucket.some((img) => img.loc === imageLoc)) continue;
+        bucket.push({ loc: imageLoc, title: row.title, caption: row.alt });
+        imageEntriesByPath.set(path, bucket);
+      }
+    }
+
+    const withImages = (entries: Entry[]) => entries.map((entry) => ({
+      ...entry,
+      images: imageEntriesByPath.get(normalizePath(entry.loc)),
+    }));
+
     // Segments (keys stable — used as `/sitemap-<key>.xml` in the index)
     const segments: Record<string, Entry[]> = {
-      pages: [...STATIC_PAGES, ...cityEntries, ...collegeHubEntries],
-      blogs,
-      categories: cats,
-      colleges: collegeEntries,
-      "coaching-hubs": coachingHubEntries,
-      "coaching-institutes": coachingInstituteEntries,
-      "coaching-articles": coachingArticles,
-      exams: examEntries,
-      courses: [...courseEntries, ...compassEntries],
-      mocks: [],
+      pages: withImages([...STATIC_PAGES, ...cityEntries, ...collegeHubEntries]),
+      blogs: withImages(blogs),
+      categories: withImages(cats),
+      colleges: withImages(collegeEntries),
+      "coaching-hubs": withImages(coachingHubEntries),
+      "coaching-institutes": withImages(coachingInstituteEntries),
+      "coaching-articles": withImages(coachingArticles),
+      exams: withImages(examEntries),
+      courses: withImages([...courseEntries, ...compassEntries]),
+      mocks: withImages([]),
     };
 
     const headers = {

@@ -8,9 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const SITE_URL = "https://mbacompass.in";
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
-const IMAGE_SITEMAP_URL = `${SITE_URL}/sitemap-images.xml`;
 const LIVE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-sitemap`;
-const LIVE_IMAGE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-image-sitemap`;
 
 // 13:30 UTC = 19:00 IST. Next occurrence from `from`.
 function nextRefreshAt(from = new Date()): Date {
@@ -34,9 +32,7 @@ type SitemapReport = {
 
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");
-  const [imageSitemapXml, setImageSitemapXml] = useState("");
   const [loading, setLoading] = useState(false);
-  const [imgLoading, setImgLoading] = useState(false);
   const [urlCount, setUrlCount] = useState(0);
   const [imageCount, setImageCount] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -77,62 +73,35 @@ const AdminSitemap = () => {
   const generateSitemap = async () => {
     setLoading(true);
     try {
-      // 1. Pull the freshest sitemap straight from the live engine (DB-backed)
+      // 1. Rescan images first so the single sitemap includes fresh media.
+      await supabase.functions.invoke("image-audit-crawler", { body: {} });
+      // 2. Pull the freshest single sitemap straight from the live engine (DB-backed)
       const res = await fetch(`${LIVE_SITEMAP_URL}?cb=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`Sitemap engine returned ${res.status}`);
       const xml = await res.text();
       const totalUrls = (xml.match(/<url>/g) || []).length;
+      const totalImages = (xml.match(/<image:image>/g) || []).length;
 
       setSitemapXml(xml);
       setUrlCount(totalUrls);
+      setImageCount(totalImages);
 
-      // 2. Snapshot it into site_settings for download/audit
+      // 3. Snapshot it into site_settings for download/audit
       await supabase.from("site_settings").upsert({
         key: "sitemap_xml",
-        value: JSON.stringify({ xml, generated_at: new Date().toISOString(), url_count: totalUrls }),
+        value: JSON.stringify({ xml, generated_at: new Date().toISOString(), url_count: totalUrls, image_count: totalImages }),
       }, { onConflict: "key" });
 
       // Google Indexing API integration removed to reduce backend load.
       toast({
         title: "Sitemap Refreshed",
-        description: `${totalUrls} URLs in sitemap.`,
+        description: `${totalUrls} URLs and ${totalImages} images in one sitemap.`,
       });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateImageSitemap = async (opts?: { silent?: boolean }) => {
-    setImgLoading(true);
-    try {
-      // 1. Rescan the library so any new images are in image_assets.
-      await supabase.functions.invoke("image-audit-crawler", { body: {} });
-      // 2. Pull the fresh image sitemap.
-      const res = await fetch(`${LIVE_IMAGE_SITEMAP_URL}?cb=${Date.now()}`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Image sitemap engine returned ${res.status}`);
-      const xml = await res.text();
-      const total = (xml.match(/<image:image>/g) || []).length;
-      setImageSitemapXml(xml);
-      setImageCount(total);
-      await supabase.from("site_settings").upsert({
-        key: "sitemap_images_xml",
-        value: JSON.stringify({ xml, generated_at: new Date().toISOString(), image_count: total }),
-      }, { onConflict: "key" });
-      if (!opts?.silent) {
-        toast({ title: "Image Sitemap Refreshed", description: `${total} images indexed.` });
-      }
-    } catch (err: any) {
-      toast({ title: "Image sitemap error", description: err.message, variant: "destructive" });
-    } finally {
-      setImgLoading(false);
-    }
-  };
-
-  const refreshAll = async () => {
-    await Promise.all([generateSitemap(), generateImageSitemap({ silent: true })]);
-    toast({ title: "Both sitemaps refreshed" });
   };
 
   const handleCopy = () => {
@@ -142,9 +111,9 @@ const AdminSitemap = () => {
     setTimeout(() => setCopied(false), 3000);
   };
 
-  const downloadSitemap = (which: "pages" | "images" = "pages") => {
-    const xml = which === "images" ? imageSitemapXml : sitemapXml;
-    const name = which === "images" ? "sitemap-images.xml" : "sitemap.xml";
+  const downloadSitemap = () => {
+    const xml = sitemapXml;
+    const name = "sitemap.xml";
     const blob = new Blob([xml], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -161,15 +130,7 @@ const AdminSitemap = () => {
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={generateSitemap} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            {loading ? "Refreshing…" : "Pages Sitemap"}
-          </Button>
-          <Button variant="outline" onClick={() => generateImageSitemap()} disabled={imgLoading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${imgLoading ? "animate-spin" : ""}`} />
-            {imgLoading ? "Refreshing…" : "Image Sitemap"}
-          </Button>
-          <Button onClick={refreshAll} disabled={loading || imgLoading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${(loading || imgLoading) ? "animate-spin" : ""}`} />
-            Refresh Both
+            {loading ? "Refreshing…" : "Refresh Sitemap"}
           </Button>
         </div>
       </div>
@@ -180,7 +141,7 @@ const AdminSitemap = () => {
           <div className="space-y-1">
             <p className="font-semibold text-foreground">How publishing works</p>
             <p className="text-muted-foreground">
-              The live sitemap engine returns fresh URLs from your database, and <code className="text-primary">{SITEMAP_URL}</code> is the same-domain file Google should read. This page checks the latest count; frontend sitemap file changes go live after publishing the app.
+              The live sitemap engine now returns page URLs and image entries together in <code className="text-primary">{SITEMAP_URL}</code>. Submit only this one URL in Google Search Console.
             </p>
           </div>
         </CardContent>
@@ -268,6 +229,10 @@ const AdminSitemap = () => {
                   <span className="font-bold text-foreground">{urlCount}</span>
                 </div>
                 <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Images included</span>
+                  <span className="font-bold text-foreground">{imageCount}</span>
+                </div>
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Last Generated</span>
                   <span className="font-bold text-foreground">{new Date().toLocaleString()}</span>
                 </div>
@@ -276,59 +241,23 @@ const AdminSitemap = () => {
                     {copied ? <CheckCircle className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
                     {copied ? "Copied!" : "Copy XML"}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => downloadSitemap("pages")}>
+                  <Button variant="outline" size="sm" onClick={downloadSitemap}>
                     <Download className="w-4 h-4 mr-1" />
                     Download .xml
                   </Button>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Click "Generate Sitemap" to fetch the latest URLs from your database.</p>
+              <p className="text-sm text-muted-foreground">Click "Refresh Sitemap" to fetch the latest URLs and images from your database.</p>
             )}
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg"><Globe className="w-5 h-5" /> Image Sitemap</CardTitle>
-          <CardDescription>
-            Google-compliant image sitemap grouped by page. Rescans the image library then rebuilds <code>{IMAGE_SITEMAP_URL}</code>. Refreshing both sitemaps updates pages and images together.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-2 bg-background border border-border rounded-md px-3 py-2">
-            <code className="text-sm text-primary flex-1 break-all">{IMAGE_SITEMAP_URL}</code>
-            <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(IMAGE_SITEMAP_URL); toast({ title: "URL copied!" }); }}>
-              <Copy className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <div className="text-muted-foreground text-xs">Images in sitemap</div>
-              <div className="font-semibold">{imageCount || "—"}</div>
-            </div>
-            <div className="flex gap-2 flex-wrap justify-end">
-              {imageSitemapXml && (
-                <Button variant="outline" size="sm" onClick={() => downloadSitemap("images")}>
-                  <Download className="w-4 h-4 mr-1" /> Download .xml
-                </Button>
-              )}
-              <Button variant="outline" size="sm" onClick={() => generateImageSitemap()} disabled={imgLoading}>
-                <RefreshCw className={`w-4 h-4 mr-1 ${imgLoading ? "animate-spin" : ""}`} /> Refresh
-              </Button>
-            </div>
-          </div>
-          {imageSitemapXml && (
-            <Textarea value={imageSitemapXml} readOnly className="font-mono text-xs min-h-[240px]" />
-          )}
-        </CardContent>
-      </Card>
-
       {sitemapXml && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Pages Sitemap Preview</CardTitle>
+            <CardTitle className="text-lg">Sitemap Preview</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
