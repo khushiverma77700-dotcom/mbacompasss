@@ -8,7 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 const SITE_URL = "https://mbacompass.in";
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
+const IMAGE_SITEMAP_URL = `${SITE_URL}/sitemap-images.xml`;
 const LIVE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-sitemap`;
+const LIVE_IMAGE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-image-sitemap`;
 
 // 13:30 UTC = 19:00 IST. Next occurrence from `from`.
 function nextRefreshAt(from = new Date()): Date {
@@ -32,8 +34,11 @@ type SitemapReport = {
 
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");
+  const [imageSitemapXml, setImageSitemapXml] = useState("");
   const [loading, setLoading] = useState(false);
+  const [imgLoading, setImgLoading] = useState(false);
   const [urlCount, setUrlCount] = useState(0);
+  const [imageCount, setImageCount] = useState(0);
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<SitemapReport | null>(null);
   const lastReportAt = useRef<string | null>(null);
