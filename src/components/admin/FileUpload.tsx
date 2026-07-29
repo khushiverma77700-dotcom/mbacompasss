@@ -41,6 +41,10 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
       onChange(urlData.publicUrl);
+      // Automatic image SEO pipeline — non-blocking
+      if (file.type.startsWith("image/")) {
+        enqueueImageOptimization(urlData.publicUrl);
+      }
       toast({ title: "File uploaded successfully" });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
