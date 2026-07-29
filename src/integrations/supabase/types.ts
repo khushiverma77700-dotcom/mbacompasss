@@ -2963,6 +2963,131 @@ export type Database = {
         }
         Relationships: []
       }
+      image_assets: {
+        Row: {
+          alt: string | null
+          bytes: number | null
+          caption: string | null
+          content_hash: string | null
+          created_at: string
+          format: string | null
+          height: number | null
+          id: string
+          issues: Json
+          last_audited_at: string | null
+          last_optimized_at: string | null
+          lcp_candidate: boolean
+          page_context: Json
+          seo_filename: string | null
+          source_url: string
+          status: string
+          status_reason: string | null
+          title: string | null
+          updated_at: string
+          variants: Json
+          width: number | null
+        }
+        Insert: {
+          alt?: string | null
+          bytes?: number | null
+          caption?: string | null
+          content_hash?: string | null
+          created_at?: string
+          format?: string | null
+          height?: number | null
+          id?: string
+          issues?: Json
+          last_audited_at?: string | null
+          last_optimized_at?: string | null
+          lcp_candidate?: boolean
+          page_context?: Json
+          seo_filename?: string | null
+          source_url: string
+          status?: string
+          status_reason?: string | null
+          title?: string | null
+          updated_at?: string
+          variants?: Json
+          width?: number | null
+        }
+        Update: {
+          alt?: string | null
+          bytes?: number | null
+          caption?: string | null
+          content_hash?: string | null
+          created_at?: string
+          format?: string | null
+          height?: number | null
+          id?: string
+          issues?: Json
+          last_audited_at?: string | null
+          last_optimized_at?: string | null
+          lcp_candidate?: boolean
+          page_context?: Json
+          seo_filename?: string | null
+          source_url?: string
+          status?: string
+          status_reason?: string | null
+          title?: string | null
+          updated_at?: string
+          variants?: Json
+          width?: number | null
+        }
+        Relationships: []
+      }
+      image_optimization_jobs: {
+        Row: {
+          asset_id: string | null
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          source_url: string
+          started_at: string | null
+          status: string
+          steps: Json
+          trigger_source: string
+          triggered_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          source_url: string
+          started_at?: string | null
+          status?: string
+          steps?: Json
+          trigger_source?: string
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          source_url?: string
+          started_at?: string | null
+          status?: string
+          steps?: Json
+          trigger_source?: string
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_optimization_jobs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imported_students: {
         Row: {
           course: string | null
