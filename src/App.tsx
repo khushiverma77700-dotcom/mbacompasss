@@ -898,6 +898,7 @@ const App = () => (
               <Route path="seo-dashboard" element={<LazyPage><AdminSEODashboard /></LazyPage>} />
               <Route path="reseo-audit-log" element={<LazyPage><AdminReseoAuditLog /></LazyPage>} />
               <Route path="seo-health-check" element={<LazyPage><AdminSEOHealthCheck /></LazyPage>} />
+              <Route path="image-seo" element={<LazyPage><AdminImageSeo /></LazyPage>} />
               <Route path="page-editor" element={<LazyPage><AdminPageEditor /></LazyPage>} />
               <Route path="pages/:slug" element={<LazyPage><AdminPageSEOReview /></LazyPage>} />
               <Route path="profile-analyzer" element={<LazyPage><AdminProfileAnalyzer /></LazyPage>} />
