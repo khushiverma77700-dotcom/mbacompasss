@@ -8,7 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 const SITE_URL = "https://mbacompass.in";
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
+const IMAGE_SITEMAP_URL = `${SITE_URL}/sitemap-images.xml`;
 const LIVE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-sitemap`;
+const LIVE_IMAGE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-image-sitemap`;
 
 // 13:30 UTC = 19:00 IST. Next occurrence from `from`.
 function nextRefreshAt(from = new Date()): Date {
@@ -32,8 +34,11 @@ type SitemapReport = {
 
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");
+  const [imageSitemapXml, setImageSitemapXml] = useState("");
   const [loading, setLoading] = useState(false);
+  const [imgLoading, setImgLoading] = useState(false);
   const [urlCount, setUrlCount] = useState(0);
+  const [imageCount, setImageCount] = useState(0);
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<SitemapReport | null>(null);
   const lastReportAt = useRef<string | null>(null);
@@ -99,6 +104,37 @@ const AdminSitemap = () => {
     }
   };
 
+  const generateImageSitemap = async (opts?: { silent?: boolean }) => {
+    setImgLoading(true);
+    try {
+      // 1. Rescan the library so any new images are in image_assets.
+      await supabase.functions.invoke("image-audit-crawler", { body: {} });
+      // 2. Pull the fresh image sitemap.
+      const res = await fetch(`${LIVE_IMAGE_SITEMAP_URL}?cb=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Image sitemap engine returned ${res.status}`);
+      const xml = await res.text();
+      const total = (xml.match(/<image:image>/g) || []).length;
+      setImageSitemapXml(xml);
+      setImageCount(total);
+      await supabase.from("site_settings").upsert({
+        key: "sitemap_images_xml",
+        value: JSON.stringify({ xml, generated_at: new Date().toISOString(), image_count: total }),
+      }, { onConflict: "key" });
+      if (!opts?.silent) {
+        toast({ title: "Image Sitemap Refreshed", description: `${total} images indexed.` });
+      }
+    } catch (err: any) {
+      toast({ title: "Image sitemap error", description: err.message, variant: "destructive" });
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
+  const refreshAll = async () => {
+    await Promise.all([generateSitemap(), generateImageSitemap({ silent: true })]);
+    toast({ title: "Both sitemaps refreshed" });
+  };
+
   const handleCopy = () => {
     navigator.clipboard.writeText(sitemapXml);
     setCopied(true);
@@ -106,24 +142,36 @@ const AdminSitemap = () => {
     setTimeout(() => setCopied(false), 3000);
   };
 
-  const downloadSitemap = () => {
-    const blob = new Blob([sitemapXml], { type: "application/xml" });
+  const downloadSitemap = (which: "pages" | "images" = "pages") => {
+    const xml = which === "images" ? imageSitemapXml : sitemapXml;
+    const name = which === "images" ? "sitemap-images.xml" : "sitemap.xml";
+    const blob = new Blob([xml], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "sitemap.xml";
+    a.download = name;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">Sitemap Manager</h1>
-        <Button onClick={generateSitemap} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          {loading ? "Generating..." : "Generate Sitemap"}
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={generateSitemap} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Refreshing…" : "Pages Sitemap"}
+          </Button>
+          <Button variant="outline" onClick={() => generateImageSitemap()} disabled={imgLoading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${imgLoading ? "animate-spin" : ""}`} />
+            {imgLoading ? "Refreshing…" : "Image Sitemap"}
+          </Button>
+          <Button onClick={refreshAll} disabled={loading || imgLoading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${(loading || imgLoading) ? "animate-spin" : ""}`} />
+            Refresh Both
+          </Button>
+        </div>
       </div>
 
       <Card className="border-border bg-muted/30">
@@ -228,7 +276,7 @@ const AdminSitemap = () => {
                     {copied ? <CheckCircle className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
                     {copied ? "Copied!" : "Copy XML"}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={downloadSitemap}>
+                  <Button variant="outline" size="sm" onClick={() => downloadSitemap("pages")}>
                     <Download className="w-4 h-4 mr-1" />
                     Download .xml
                   </Button>
@@ -241,10 +289,46 @@ const AdminSitemap = () => {
         </Card>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg"><Globe className="w-5 h-5" /> Image Sitemap</CardTitle>
+          <CardDescription>
+            Google-compliant image sitemap grouped by page. Rescans the image library then rebuilds <code>{IMAGE_SITEMAP_URL}</code>. Refreshing both sitemaps updates pages and images together.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2 bg-background border border-border rounded-md px-3 py-2">
+            <code className="text-sm text-primary flex-1 break-all">{IMAGE_SITEMAP_URL}</code>
+            <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(IMAGE_SITEMAP_URL); toast({ title: "URL copied!" }); }}>
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-muted-foreground text-xs">Images in sitemap</div>
+              <div className="font-semibold">{imageCount || "—"}</div>
+            </div>
+            <div className="flex gap-2 flex-wrap justify-end">
+              {imageSitemapXml && (
+                <Button variant="outline" size="sm" onClick={() => downloadSitemap("images")}>
+                  <Download className="w-4 h-4 mr-1" /> Download .xml
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => generateImageSitemap()} disabled={imgLoading}>
+                <RefreshCw className={`w-4 h-4 mr-1 ${imgLoading ? "animate-spin" : ""}`} /> Refresh
+              </Button>
+            </div>
+          </div>
+          {imageSitemapXml && (
+            <Textarea value={imageSitemapXml} readOnly className="font-mono text-xs min-h-[240px]" />
+          )}
+        </CardContent>
+      </Card>
+
       {sitemapXml && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Sitemap Preview</CardTitle>
+            <CardTitle className="text-lg">Pages Sitemap Preview</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
