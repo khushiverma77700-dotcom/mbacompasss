@@ -526,6 +526,25 @@ const AdminMockTests = () => {
     fetchTests();
   };
 
+  const CATEGORY_OPTIONS: { value: "full_length" | "sectional" | "topic_wise" | "practice_set"; label: string }[] = [
+    { value: "full_length", label: "Full Length" },
+    { value: "sectional", label: "Sectional" },
+    { value: "topic_wise", label: "Topic Wise" },
+    { value: "practice_set", label: "Practice Set" },
+  ];
+  const [categorySaving, setCategorySaving] = useState<Record<string, boolean>>({});
+  const updateCategory = async (id: string, value: string) => {
+    setCategorySaving((p) => ({ ...p, [id]: true }));
+    const { error } = await supabase.from("mock_tests").update({ test_type: value as any, category: value as any }).eq("id", id);
+    setCategorySaving((p) => { const n = { ...p }; delete n[id]; return n; });
+    if (error) {
+      toast({ title: "Failed to change category", description: error.message, variant: "destructive" });
+      return;
+    }
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, test_type: value, category: value } : x)));
+    toast({ title: "Category updated", description: CATEGORY_OPTIONS.find((c) => c.value === value)?.label });
+  };
+
 
   const fetchTests = async () => {
     setLoading(true);
@@ -975,6 +994,22 @@ const AdminMockTests = () => {
             <Button size="sm" variant="outline" disabled={bulkBusy} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={() => bulkUpdate({ readiness_status: "ready" }, "marked Ready")}>Mark Ready</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} className="border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => bulkUpdate({ readiness_status: "needs_changes" }, "marked Needs Changes")}>Needs Changes</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} className="border-rose-300 text-rose-700 hover:bg-rose-50" onClick={() => bulkUpdate({ readiness_status: "incomplete" }, "marked Incomplete")}>Incomplete</Button>
+            <div className="w-px h-6 bg-border mx-1" />
+            <Select
+              onValueChange={(v) => {
+                const label = CATEGORY_OPTIONS.find((c) => c.value === (v as any))?.label ?? v;
+                bulkUpdate({ test_type: v as any, category: v as any }, `moved to ${label}`);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[190px] text-xs">
+                <SelectValue placeholder="Change Category to…" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>Move to {c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear</Button>
           </div>
         </div>
@@ -1026,9 +1061,20 @@ const AdminMockTests = () => {
                     <div className="text-xs text-muted-foreground">/{t.slug}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {String(t.category || t.test_type).replace("_", " ")}
-                    </Badge>
+                    <Select
+                      value={(t.category || t.test_type) as string}
+                      onValueChange={(v) => updateCategory(t.id, v)}
+                      disabled={!!categorySaving[t.id]}
+                    >
+                      <SelectTrigger className="h-8 w-[140px] text-xs capitalize">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORY_OPTIONS.map((c) => (
+                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell><Badge variant="secondary">{t.exam_code || "CAT"}</Badge></TableCell>
                   <TableCell>{t.total_duration_minutes} min</TableCell>
