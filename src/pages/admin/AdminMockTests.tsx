@@ -554,6 +554,25 @@ const AdminMockTests = () => {
     { value: "practice_set", label: "Practice Set" },
   ];
   const [categorySaving, setCategorySaving] = useState<Record<string, boolean>>({});
+  const [nameDraft, setNameDraft] = useState<Record<string, string>>({});
+  const [nameSaving, setNameSaving] = useState<Record<string, boolean>>({});
+  const updateName = async (id: string, current: string) => {
+    const next = (nameDraft[id] ?? "").trim();
+    if (!next || next === current) {
+      setNameDraft((p) => { const n = { ...p }; delete n[id]; return n; });
+      return;
+    }
+    setNameSaving((p) => ({ ...p, [id]: true }));
+    const { error } = await supabase.from("mock_tests").update({ name: next }).eq("id", id);
+    setNameSaving((p) => { const n = { ...p }; delete n[id]; return n; });
+    if (error) {
+      toast({ title: "Failed to rename mock", description: error.message, variant: "destructive" });
+      return;
+    }
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, name: next } : x)));
+    setNameDraft((p) => { const n = { ...p }; delete n[id]; return n; });
+    toast({ title: "Mock renamed" });
+  };
   const categoryFor = (testType: string): string => {
     if (testType === "topic_wise") return "topic";
     if (testType === "practice_set") return "practice";
@@ -1081,11 +1100,22 @@ const AdminMockTests = () => {
                   </TableCell>
 
                   <TableCell>
-                    <div className="font-medium flex items-center gap-1.5">
-                      {t.name}
-                      {t.generated_by_ai && <Sparkles className="w-3 h-3 text-primary" />}
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        value={nameDraft[t.id] ?? t.name ?? ""}
+                        onChange={(e) => setNameDraft((p) => ({ ...p, [t.id]: e.target.value }))}
+                        onBlur={() => { if (nameDraft[t.id] !== undefined) updateName(t.id, t.name); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+                          if (e.key === "Escape") { setNameDraft((p) => { const n = { ...p }; delete n[t.id]; return n; }); (e.target as HTMLInputElement).blur(); }
+                        }}
+                        disabled={!!nameSaving[t.id]}
+                        className="h-8 text-sm font-medium min-w-[220px]"
+                      />
+                      {nameSaving[t.id] && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                      {t.generated_by_ai && <Sparkles className="w-3 h-3 text-primary shrink-0" />}
                     </div>
-                    <div className="text-xs text-muted-foreground">/{t.slug}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">/{t.slug}</div>
                   </TableCell>
                   <TableCell>
                     <Select
