@@ -8,20 +8,24 @@
 import { writeFileSync, existsSync, statSync, readFileSync } from "fs";
 import { resolve } from "path";
 
-const SITEMAP_URL =
-  "https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap";
-const OUT = resolve("public/sitemap.xml");
+const FN_BASE = "https://mttoiqruzzxooveooldo.supabase.co/functions/v1";
 
-(async () => {
+async function refresh(
+  label: string,
+  url: string,
+  outPath: string,
+  minUrls: number,
+) {
+  const OUT = resolve(outPath);
   try {
-    console.log(`[sitemap] fetching ${SITEMAP_URL} ...`);
-    const res = await fetch(`${SITEMAP_URL}?cb=${Date.now()}`, {
+    console.log(`[${label}] fetching ${url} ...`);
+    const res = await fetch(`${url}?cb=${Date.now()}`, {
       headers: { "cache-control": "no-cache" },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const xml = await res.text();
     const count = (xml.match(/<url>/g) || []).length;
-    if (count < 50) throw new Error(`Suspicious URL count: ${count}`);
+    if (count < minUrls) throw new Error(`Suspicious URL count: ${count}`);
 
     const prevCount = existsSync(OUT)
       ? (readFileSync(OUT, "utf8").match(/<url>/g) || []).length
@@ -29,11 +33,21 @@ const OUT = resolve("public/sitemap.xml");
 
     writeFileSync(OUT, xml, "utf8");
     console.log(
-      `[sitemap] wrote ${OUT} — ${count} URLs (was ${prevCount}, ${(statSync(OUT).size / 1024).toFixed(1)} KB)`,
+      `[${label}] wrote ${OUT} — ${count} URLs (was ${prevCount}, ${(statSync(OUT).size / 1024).toFixed(1)} KB)`,
     );
   } catch (err) {
     console.warn(
-      `[sitemap] refresh failed, keeping existing public/sitemap.xml — ${(err as Error).message}`,
+      `[${label}] refresh failed, keeping existing ${outPath} — ${(err as Error).message}`,
     );
   }
+}
+
+(async () => {
+  await refresh("sitemap", `${FN_BASE}/serve-sitemap`, "public/sitemap.xml", 50);
+  await refresh(
+    "image-sitemap",
+    `${FN_BASE}/serve-image-sitemap`,
+    "public/sitemap-images.xml",
+    1,
+  );
 })();
