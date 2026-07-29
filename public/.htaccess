@@ -38,13 +38,8 @@
   #      URL in Search Console. Googlebot follows redirects on sitemap fetches.
   RewriteRule ^sitemap\.xml$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap [R=302,L,NC]
 
-  # 0.6) Segmented sitemaps: /sitemap-<segment>.xml → serve-sitemap?segment=<segment>.
-  #      Referenced from the sitemap index at /sitemap.xml. Splitting by
-  #      content type (coaching-hubs, coaching-institutes, coaching-articles,
-  #      colleges, blogs, exams, courses, categories, pages) keeps each child
-  #      well under the 50k URL / 50MB limits as inventory grows.
-  # Image sitemap: /sitemap-images.xml → serve-image-sitemap (must precede generic segment rule).
-  RewriteRule ^sitemap-images\.xml$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-image-sitemap [R=302,L,NC]
+  # 0.6) Optional segmented diagnostics: /sitemap-<segment>.xml → serve-sitemap?segment=<segment>.
+  #      Google/Search Console should use only /sitemap.xml, which now includes images.
   RewriteRule ^sitemap-([a-z0-9-]+)\.xml$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap?segment=$1 [R=302,L,NC]
 
   # 0.6) L7: RSS feed for /articles, served by the serve-feed edge function.

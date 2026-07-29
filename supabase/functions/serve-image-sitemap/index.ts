@@ -20,9 +20,9 @@ function pageUrlForContext(ctx: any): string | null {
     case "article-inline": return `${SITE}/article/${ctx.slug}`;
     case "news": return `${SITE}/news/${ctx.slug}`;
     case "course": return `${SITE}/courses/${ctx.slug}`;
-    case "city": return `${SITE}/city/${ctx.slug}`;
+    case "city": return `${SITE}/colleges/${ctx.slug}`;
     case "exam": return `${SITE}/exam/${ctx.slug}`;
-    case "category": return `${SITE}/coaching/${ctx.slug}`;
+    case "category": return `${SITE}/category/${ctx.slug}`;
     case "freebie": return `${SITE}/freebies/${ctx.slug}`;
     default: return null;
   }

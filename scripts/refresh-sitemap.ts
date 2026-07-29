@@ -1,6 +1,5 @@
-// Fetches the live sitemap (built from the DB by the serve-sitemap edge function)
-// and writes it to public/sitemap.xml so the deployed Hostinger static file stays
-// in sync with the database on every publish/build.
+// Fetches the live sitemap (page URLs + image entries) and writes it to
+// public/sitemap.xml. Search Console should only submit this one URL.
 //
 // Runs via the `prebuild` npm hook. Fails soft — if the fetch errors, the existing
 // public/sitemap.xml is left untouched so a build can still ship.
@@ -10,13 +9,9 @@ import { resolve } from "path";
 
 const FN_BASE = "https://mttoiqruzzxooveooldo.supabase.co/functions/v1";
 
-async function refresh(
-  label: string,
-  url: string,
-  outPath: string,
-  minUrls: number,
-) {
-  const OUT = resolve(outPath);
+const SITEMAP_OUT = "public/sitemap.xml";
+
+async function fetchXml(label: string, url: string, minUrls: number, fallbackPath?: string) {
   try {
     console.log(`[${label}] fetching ${url} ...`);
     const res = await fetch(`${url}?cb=${Date.now()}`, {
@@ -26,28 +21,39 @@ async function refresh(
     const xml = await res.text();
     const count = (xml.match(/<url>/g) || []).length;
     if (count < minUrls) throw new Error(`Suspicious URL count: ${count}`);
+    return xml;
+  } catch (err) {
+    if (fallbackPath && existsSync(resolve(fallbackPath))) {
+      console.warn(
+        `[${label}] fetch failed, using ${fallbackPath} — ${(err as Error).message}`,
+      );
+      return readFileSync(resolve(fallbackPath), "utf8");
+    }
+    throw err;
+  }
+}
 
-    const prevCount = existsSync(OUT)
+async function refreshCombinedSitemap() {
+  const OUT = resolve(SITEMAP_OUT);
+  try {
+    const previousCount = existsSync(OUT)
       ? (readFileSync(OUT, "utf8").match(/<url>/g) || []).length
       : 0;
 
-    writeFileSync(OUT, xml, "utf8");
+    const merged = await fetchXml("sitemap", `${FN_BASE}/serve-sitemap`, 50, SITEMAP_OUT);
+    const urlCount = (merged.match(/<url>/g) || []).length;
+    const imageCount = (merged.match(/<image:image>/g) || []).length;
+    if (urlCount < 50) throw new Error(`Suspicious merged URL count: ${urlCount}`);
+
+    writeFileSync(OUT, merged, "utf8");
     console.log(
-      `[${label}] wrote ${OUT} — ${count} URLs (was ${prevCount}, ${(statSync(OUT).size / 1024).toFixed(1)} KB)`,
+      `[sitemap] wrote ${OUT} — ${urlCount} URLs + ${imageCount} images (was ${previousCount}, ${(statSync(OUT).size / 1024).toFixed(1)} KB)`,
     );
   } catch (err) {
     console.warn(
-      `[${label}] refresh failed, keeping existing ${outPath} — ${(err as Error).message}`,
+      `[sitemap] refresh failed, keeping existing ${SITEMAP_OUT} — ${(err as Error).message}`,
     );
   }
 }
 
-(async () => {
-  await refresh("sitemap", `${FN_BASE}/serve-sitemap`, "public/sitemap.xml", 50);
-  await refresh(
-    "image-sitemap",
-    `${FN_BASE}/serve-image-sitemap`,
-    "public/sitemap-images.xml",
-    1,
-  );
-})();
+refreshCombinedSitemap();

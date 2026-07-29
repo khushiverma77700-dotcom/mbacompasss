@@ -9,6 +9,13 @@ type Entry = {
   lastmod?: string;
   changefreq?: "daily" | "weekly" | "monthly" | "yearly";
   priority?: number;
+  images?: ImageEntry[];
+};
+
+type ImageEntry = {
+  loc: string;
+  title?: string;
+  caption?: string;
 };
 
 const escapeXml = (v: string) =>
@@ -16,8 +23,9 @@ const escapeXml = (v: string) =>
     .replaceAll('"', "&quot;").replaceAll("'", "&apos;");
 
 const fmtDate = (d: string | Date | null | undefined) => {
-  const date = d ? new Date(d) : new Date();
-  if (isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+  if (!d) return undefined;
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return undefined;
   return date.toISOString().slice(0, 10);
 };
 
@@ -32,6 +40,23 @@ const normalizePath = (p: string) => {
   return path;
 };
 
+const pagePathForImageContext = (ctx: any): string | null => {
+  if (!ctx || !ctx.slug) return null;
+  switch (ctx.type) {
+    case "college": return `/college/${ctx.slug}`;
+    case "institute": return `/institute/${ctx.slug}`;
+    case "article":
+    case "article-inline": return `/article/${ctx.slug}`;
+    case "news": return `/news/${ctx.slug}`;
+    case "course": return `/courses/${ctx.slug}`;
+    case "city": return `/colleges/${ctx.slug}`;
+    case "exam": return `/exam/${ctx.slug}`;
+    case "category": return `/category/${ctx.slug}`;
+    case "freebie": return `/freebies/${ctx.slug}`;
+    default: return null;
+  }
+};
+
 const buildUrlset = (entries: Entry[]) => {
   const seen = new Map<string, Entry>();
   for (const e of entries) {
@@ -43,18 +68,39 @@ const buildUrlset = (entries: Entry[]) => {
     // `seen` covers that case.
     if (!path || /\/\//.test(path)) continue;
     const full = `${SITE_URL}${path}`;
-    if (!seen.has(full)) seen.set(full, { ...e, loc: full });
+    const existing = seen.get(full);
+    if (!existing) {
+      seen.set(full, { ...e, loc: full });
+      continue;
+    }
+    if (e.images?.length) {
+      const imageKeys = new Set((existing.images ?? []).map((img) => img.loc));
+      existing.images = [
+        ...(existing.images ?? []),
+        ...e.images.filter((img) => {
+          if (imageKeys.has(img.loc)) return false;
+          imageKeys.add(img.loc);
+          return true;
+        }),
+      ];
+    }
   }
   const items = Array.from(seen.values());
+  const hasImages = items.some((e) => e.images?.length);
   return {
     count: items.length,
     xml: `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${hasImages ? ` xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"` : ""}>
 ${items.map((e) => `  <url>
     <loc>${escapeXml(e.loc)}</loc>
-    <lastmod>${e.lastmod ?? fmtDate(new Date())}</lastmod>
+    ${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}
     <changefreq>${e.changefreq ?? "monthly"}</changefreq>
     <priority>${(e.priority ?? 0.5).toFixed(1)}</priority>
+    ${(e.images ?? []).map((img) => `<image:image>
+      <image:loc>${escapeXml(img.loc)}</image:loc>${img.title ? `
+      <image:title>${escapeXml(img.title)}</image:title>` : ""}${img.caption ? `
+      <image:caption>${escapeXml(img.caption)}</image:caption>` : ""}
+    </image:image>`).join("\n    ")}
   </url>`).join("\n")}
 </urlset>`,
   };
@@ -84,15 +130,12 @@ Deno.serve(async (req) => {
     const pathMatch = url.pathname.match(/sitemap-([a-z0-9-]+)\.xml$/i);
     const segment = segmentFromQuery || (pathMatch ? pathMatch[1] : null);
 
-    const today = fmtDate(new Date());
-
     // Source of truth: supabase/functions/_shared/staticRoutes.ts
     // Keep sitemap + ssr-prerender aligned by editing that file only.
     const STATIC_PAGES: Entry[] = STATIC_ROUTES.map((r) => ({
       loc: r.path,
       changefreq: r.changefreq,
       priority: r.priority,
-      lastmod: today,
     }));
 
     // Helper: fetch ALL rows (Supabase default limit = 1000)
@@ -124,7 +167,7 @@ Deno.serve(async (req) => {
     ] = await Promise.all([
       fetchAll("institutes", "id, slug, updated_at"),
       fetchAll("colleges", "id, slug, updated_at"),
-      fetchAll("exams", "slug, created_at"),
+      fetchAll("exams", "slug, updated_at, created_at"),
       fetchAll("categories", "slug, updated_at"),
       fetchAll("articles", "slug, title, category, updated_at", (q) => q.eq("published", true)),
       fetchAll("city_pages", "slug, updated_at", (q) => q.eq("active", true)),
@@ -180,7 +223,7 @@ Deno.serve(async (req) => {
     const coachingInstituteEntries: Entry[] = (institutes ?? []).flatMap((i: any) => i.slug
       ? [{ loc: `/institute/${i.slug}`, lastmod: fmtDate(i.updated_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
     const examEntries: Entry[] = (exams ?? []).flatMap((e: any) => e.slug
-      ? [{ loc: `/exam/${e.slug}`, lastmod: fmtDate(e.created_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
+      ? [{ loc: `/exam/${e.slug}`, lastmod: fmtDate(e.updated_at ?? e.created_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
     const cityEntries: Entry[] = (cityPages ?? []).flatMap((cp: any) => cp.slug
       ? [{ loc: `/colleges/${cp.slug}`, lastmod: fmtDate(cp.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
     const courseEntries: Entry[] = (mockBundles ?? []).flatMap((b: any) => b.slug
@@ -195,9 +238,9 @@ Deno.serve(async (req) => {
     const EXAM_HUBS = ["cat", "xat", "cmat", "mat", "nmat", "snap", "iift", "gmat", "atma"];
     const CITY_HUBS = ["mumbai", "delhi", "bangalore", "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "gurgaon", "noida", "jaipur", "indore", "lucknow", "chandigarh"];
     const collegeHubEntries: Entry[] = [
-      ...TYPE_HUBS.map((s) => ({ loc: `/colleges/type/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
-      ...EXAM_HUBS.map((s) => ({ loc: `/colleges/by-exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
-      ...CITY_HUBS.map((s) => ({ loc: `/colleges/by-city/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
+      ...TYPE_HUBS.map((s) => ({ loc: `/colleges/type/${s}`, changefreq: "weekly" as const, priority: 0.8 })),
+      ...EXAM_HUBS.map((s) => ({ loc: `/colleges/by-exam/${s}`, changefreq: "weekly" as const, priority: 0.8 })),
+      ...CITY_HUBS.map((s) => ({ loc: `/colleges/by-city/${s}`, changefreq: "weekly" as const, priority: 0.7 })),
     ];
 
     // Coaching hub landings — city, exam, and mode. Split into its own segment
@@ -207,24 +250,49 @@ Deno.serve(async (req) => {
     const COACHING_EXAM_HUBS = ["cat", "xat", "nmat", "snap", "iift", "cmat", "mat", "ipmat", "gmat"];
     const COACHING_MODE_HUBS = ["online", "offline", "weekend", "crash-course", "classroom", "self-paced"];
     const coachingHubEntries: Entry[] = [
-      { loc: `/coaching`, lastmod: today, changefreq: "weekly" as const, priority: 0.9 },
-      ...COACHING_CITY_HUBS.map((s) => ({ loc: `/coaching/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.7 })),
-      ...COACHING_EXAM_HUBS.map((s) => ({ loc: `/coaching/exam/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.8 })),
-      ...COACHING_MODE_HUBS.map((s) => ({ loc: `/coaching/mode/${s}`, lastmod: today, changefreq: "weekly" as const, priority: 0.6 })),
+      { loc: `/coaching`, changefreq: "weekly" as const, priority: 0.9 },
+      ...COACHING_CITY_HUBS.map((s) => ({ loc: `/coaching/${s}`, changefreq: "weekly" as const, priority: 0.7 })),
+      ...COACHING_EXAM_HUBS.map((s) => ({ loc: `/coaching/exam/${s}`, changefreq: "weekly" as const, priority: 0.8 })),
+      ...COACHING_MODE_HUBS.map((s) => ({ loc: `/coaching/mode/${s}`, changefreq: "weekly" as const, priority: 0.6 })),
     ];
+
+    const imageEntriesByPath = new Map<string, ImageEntry[]>();
+    const imageRows = await fetchAll(
+      "image_assets",
+      "source_url, alt, title, page_context, variants, status",
+      (q) => q.in("status", ["optimized", "discovered"]),
+    );
+    for (const row of imageRows ?? []) {
+      const contexts = Array.isArray(row.page_context) ? row.page_context : [];
+      const imageLoc = row?.variants?.webp || row.source_url;
+      if (!imageLoc) continue;
+      for (const ctx of contexts) {
+        const path = pagePathForImageContext(ctx);
+        if (!path) continue;
+        const bucket = imageEntriesByPath.get(path) ?? [];
+        if (bucket.length >= 1000 || bucket.some((img) => img.loc === imageLoc)) continue;
+        bucket.push({ loc: imageLoc, title: row.title, caption: row.alt });
+        imageEntriesByPath.set(path, bucket);
+      }
+    }
+
+    const withImages = (entries: Entry[]) => entries.map((entry) => ({
+      ...entry,
+      images: imageEntriesByPath.get(normalizePath(entry.loc)),
+    }));
 
     // Segments (keys stable — used as `/sitemap-<key>.xml` in the index)
     const segments: Record<string, Entry[]> = {
-      pages: [...STATIC_PAGES, ...cityEntries, ...collegeHubEntries],
-      blogs,
-      categories: cats,
-      colleges: collegeEntries,
-      "coaching-hubs": coachingHubEntries,
-      "coaching-institutes": coachingInstituteEntries,
-      "coaching-articles": coachingArticles,
-      exams: examEntries,
-      courses: [...courseEntries, ...compassEntries],
-      mocks: [],
+      pages: withImages([...STATIC_PAGES, ...cityEntries, ...collegeHubEntries]),
+      blogs: withImages(blogs),
+      categories: withImages(cats),
+      colleges: withImages(collegeEntries),
+      "coaching-hubs": withImages(coachingHubEntries),
+      "coaching-institutes": withImages(coachingInstituteEntries),
+      "coaching-articles": withImages(coachingArticles),
+      exams: withImages(examEntries),
+      courses: withImages([...courseEntries, ...compassEntries]),
+      mocks: withImages([]),
     };
 
     const headers = {
@@ -239,17 +307,12 @@ Deno.serve(async (req) => {
       return new Response(xml, { headers });
     }
 
-    // Root request → always return a sitemap index that references one
-    // child sitemap per content type. Splitting up-front keeps individual
-    // sitemaps well below the 50k / 50MB limits as the URL count grows and
-    // lets Search Console report per-content-type coverage.
-    const children = Object.entries(segments)
-      .filter(([_, arr]) => arr.length > 0)
-      .map(([key]) => ({
-        loc: `${SITE_URL}/sitemap-${key}.xml`,
-        lastmod: today,
-      }));
-    return new Response(buildSitemapIndex(children), { headers });
+    // Root request → single canonical sitemap, per current project SEO setup.
+    // Segment URLs remain supported for diagnostics, but robots/Search Console
+    // should use only /sitemap.xml.
+    const allEntries = Object.values(segments).flat();
+    const { xml } = buildUrlset(allEntries);
+    return new Response(xml, { headers });
 
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
