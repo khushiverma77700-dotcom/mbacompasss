@@ -113,6 +113,7 @@ const AdminCoachingResults = lazyWithPreload(() => import("./pages/admin/AdminCo
 const AdminSEODashboard = lazyWithPreload(() => import("./pages/admin/AdminSEODashboard"));
 const AdminReseoAuditLog = lazyWithPreload(() => import("./pages/admin/AdminReseoAuditLog"));
 const AdminSEOHealthCheck = lazyWithPreload(() => import("./pages/admin/AdminSEOHealthCheck"));
+const AdminImageSeo = lazyWithPreload(() => import("./pages/admin/AdminImageSeo"));
 const AdminPageEditor = lazyWithPreload(() => import("./pages/admin/AdminPageEditor"));
 const AdminPageSEOReview = lazyWithPreload(() => import("./pages/admin/AdminPageSEOReview"));
 const AdminProfileAnalyzer = lazyWithPreload(() => import("./pages/admin/AdminProfileAnalyzer"));
