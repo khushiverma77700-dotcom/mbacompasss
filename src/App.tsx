@@ -113,6 +113,7 @@ const AdminCoachingResults = lazyWithPreload(() => import("./pages/admin/AdminCo
 const AdminSEODashboard = lazyWithPreload(() => import("./pages/admin/AdminSEODashboard"));
 const AdminReseoAuditLog = lazyWithPreload(() => import("./pages/admin/AdminReseoAuditLog"));
 const AdminSEOHealthCheck = lazyWithPreload(() => import("./pages/admin/AdminSEOHealthCheck"));
+const AdminImageSeo = lazyWithPreload(() => import("./pages/admin/AdminImageSeo"));
 const AdminPageEditor = lazyWithPreload(() => import("./pages/admin/AdminPageEditor"));
 const AdminPageSEOReview = lazyWithPreload(() => import("./pages/admin/AdminPageSEOReview"));
 const AdminProfileAnalyzer = lazyWithPreload(() => import("./pages/admin/AdminProfileAnalyzer"));
@@ -897,6 +898,7 @@ const App = () => (
               <Route path="seo-dashboard" element={<LazyPage><AdminSEODashboard /></LazyPage>} />
               <Route path="reseo-audit-log" element={<LazyPage><AdminReseoAuditLog /></LazyPage>} />
               <Route path="seo-health-check" element={<LazyPage><AdminSEOHealthCheck /></LazyPage>} />
+              <Route path="image-seo" element={<LazyPage><AdminImageSeo /></LazyPage>} />
               <Route path="page-editor" element={<LazyPage><AdminPageEditor /></LazyPage>} />
               <Route path="pages/:slug" element={<LazyPage><AdminPageSEOReview /></LazyPage>} />
               <Route path="profile-analyzer" element={<LazyPage><AdminProfileAnalyzer /></LazyPage>} />

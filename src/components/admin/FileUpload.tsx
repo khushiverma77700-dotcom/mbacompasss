@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, X, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { enqueueImageOptimization } from "@/lib/enqueueImageOptimization";
 
 interface FileUploadProps {
   bucket: string;
@@ -40,6 +41,10 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
       onChange(urlData.publicUrl);
+      // Automatic image SEO pipeline — non-blocking
+      if (file.type.startsWith("image/")) {
+        enqueueImageOptimization(urlData.publicUrl);
+      }
       toast({ title: "File uploaded successfully" });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
