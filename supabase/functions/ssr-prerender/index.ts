@@ -767,6 +767,15 @@ function renderCollege(c: any): PageMeta {
     };
   }
   if (c.established) collegeLd.foundingDate = String(c.established);
+  if (c.rating && c.total_reviews) {
+    collegeLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(c.rating),
+      reviewCount: String(c.total_reviews),
+      bestRating: "5",
+    };
+  }
+  if (c.website) collegeLd.sameAs = [String(c.website)];
 
   // Helpers to render heterogenous DB shapes (string | string[] | object) as
   // real, visible HTML sections that mirror what the live React page shows.
