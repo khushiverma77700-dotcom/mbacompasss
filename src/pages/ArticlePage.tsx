@@ -154,21 +154,32 @@ const ArticlePage = () => {
       <ReadingProgress />
 
       {/* Cinematic Hero */}
-      <div className="relative overflow-hidden min-h-[340px] md:min-h-[420px] lg:min-h-[460px] flex items-end">
+      <div className="relative overflow-hidden aspect-[16/9] max-h-[620px] min-h-[340px] md:min-h-[420px] flex items-end bg-[hsl(210,45%,12%)]">
         {/* Background */}
         <div className="absolute inset-0">
           {heroImage ? (
-            <picture>
-              {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+            <>
+              {/* Blurred fill so no letterbox bars, while the real image stays fully visible */}
               <img
                 src={heroImage}
-                alt={article.title}
-                className="absolute inset-0 h-full w-full object-cover"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full object-cover scale-110 blur-2xl opacity-60 pointer-events-none"
                 loading="eager"
-                {...({fetchpriority:"high"} as any)}
               />
-            </picture>
+              <picture>
+                {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+                <img
+                  src={heroImage}
+                  alt={article.title}
+                  className="absolute inset-0 h-full w-full object-contain"
+                  loading="eager"
+                  {...({fetchpriority:"high"} as any)}
+                />
+              </picture>
+            </>
           ) : (
+
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
           )}
           <div className="absolute inset-0 pointer-events-none" style={{
