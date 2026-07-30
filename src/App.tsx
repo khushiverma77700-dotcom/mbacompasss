@@ -887,6 +887,7 @@ const App = () => (
               <Route path="college-sections/bulk-generate" element={<LazyPage><AdminBulkGenerateSections /></LazyPage>} />
               <Route path="institute-results" element={<LazyPage><AdminInstituteResults /></LazyPage>} />
               <Route path="sitemap" element={<LazyPage><AdminSitemap /></LazyPage>} />
+              <Route path="sitemap-health" element={<LazyPage><AdminSitemapHealth /></LazyPage>} />
               <Route path="clear-cache" element={<LazyPage><AdminClearCache /></LazyPage>} />
               <Route path="cache-diagnostics" element={<LazyPage><AdminCacheDiagnostics /></LazyPage>} />
               <Route path="leads" element={<LazyPage><AdminLeads /></LazyPage>} />
