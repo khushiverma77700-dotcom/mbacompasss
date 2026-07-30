@@ -103,6 +103,7 @@ const AdminCollegeSections = lazyWithPreload(() => import("./pages/admin/AdminCo
 const AdminBulkGenerateSections = lazyWithPreload(() => import("./pages/admin/AdminBulkGenerateSections"));
 const AdminInstituteResults = lazyWithPreload(() => import("./pages/admin/AdminInstituteResults"));
 const AdminSitemap = lazyWithPreload(() => import("./pages/admin/AdminSitemap"));
+const AdminSitemapHealth = lazyWithPreload(() => import("./pages/admin/AdminSitemapHealth"));
 const AdminClearCache = lazyWithPreload(() => import("./pages/admin/AdminClearCache"));
 const AdminCacheDiagnostics = lazyWithPreload(() => import("./pages/admin/AdminCacheDiagnostics"));
 const AdminLeads = lazyWithPreload(() => import("./pages/admin/AdminLeads"));
