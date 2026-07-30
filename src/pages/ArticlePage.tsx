@@ -154,37 +154,50 @@ const ArticlePage = () => {
       <ReadingProgress />
 
       {/* Cinematic Hero */}
-      <div className="relative overflow-hidden min-h-[340px] md:min-h-[420px] lg:min-h-[460px] flex items-end">
+      <div className="relative overflow-hidden aspect-[16/9] max-h-[620px] min-h-[340px] md:min-h-[420px] flex items-end bg-[hsl(210,45%,12%)]">
         {/* Background */}
         <div className="absolute inset-0">
           {heroImage ? (
-            <picture>
-              {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+            <>
+              {/* Blurred fill so no letterbox bars, while the real image stays fully visible */}
               <img
                 src={heroImage}
-                alt={article.title}
-                className="absolute inset-0 h-full w-full object-cover"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full object-cover scale-110 blur-2xl opacity-60 pointer-events-none"
                 loading="eager"
-                {...({fetchpriority:"high"} as any)}
               />
-            </picture>
+              <picture>
+                {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+                <img
+                  src={heroImage}
+                  alt={article.title}
+                  className="absolute inset-0 h-full w-full object-contain"
+                  loading="eager"
+                  {...({fetchpriority:"high"} as any)}
+                />
+              </picture>
+            </>
           ) : (
+
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
           )}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
-          }} />
-          <div className="absolute top-12 right-[12%] hidden w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none sm:block" />
-          <div className="absolute bottom-16 right-[30%] hidden w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none sm:block" />
-          <div className="absolute top-[30%] left-[8%] hidden w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none sm:block" />
-          <div className="absolute top-[20%] right-[25%] w-2 h-2 bg-white/20 rounded-full pointer-events-none" />
-          <div className="absolute bottom-[35%] left-[25%] w-1.5 h-1.5 bg-white/15 rounded-full pointer-events-none" />
-          <div className="absolute top-[55%] right-[10%] w-1 h-1 bg-white/25 rounded-full pointer-events-none" />
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          {!heroImage && (
+            <>
+              <div className="absolute inset-0 pointer-events-none" style={{
+                background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
+              }} />
+              <div className="absolute top-12 right-[12%] hidden w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none sm:block" />
+              <div className="absolute bottom-16 right-[30%] hidden w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none sm:block" />
+              <div className="absolute top-[30%] left-[8%] hidden w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none sm:block" />
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+            </>
+          )}
         </div>
 
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/5 pointer-events-none" />
+        {/* Overlay gradient — only under the text band so the banner stays visible */}
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none" />
+
 
         {/* Content */}
         <div className="relative z-10 w-full pt-24 pb-10 md:pt-32 md:pb-14">
