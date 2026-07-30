@@ -1,15 +1,20 @@
-// Fetches the live sitemap (page URLs + image entries) and writes it to
-// public/sitemap.xml. Search Console should only submit this one URL.
+// Fetches the live sitemaps and writes them to public/.
+//   - public/sitemap.xml        page URLs + inline image entries (canonical submission)
+//   - public/sitemap-images.xml image-only sitemap
+// Also keeps the `Sitemap:` block in public/robots.txt pointing at both files.
 //
-// Runs via the `prebuild` npm hook. Fails soft — if the fetch errors, the existing
-// public/sitemap.xml is left untouched so a build can still ship.
+// Runs via the `prebuild` npm hook. Fails soft — if a fetch errors, the existing
+// file on disk is left untouched so a build can still ship.
 
 import { writeFileSync, existsSync, statSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 const FN_BASE = "https://mttoiqruzzxooveooldo.supabase.co/functions/v1";
+const SITE_URL = "https://mbacompass.in";
 
 const SITEMAP_OUT = "public/sitemap.xml";
+const IMAGE_SITEMAP_OUT = "public/sitemap-images.xml";
+const ROBOTS_OUT = "public/robots.txt";
 
 async function fetchXml(label: string, url: string, minUrls: number, fallbackPath?: string) {
   try {
@@ -33,27 +38,61 @@ async function fetchXml(label: string, url: string, minUrls: number, fallbackPat
   }
 }
 
-async function refreshCombinedSitemap() {
-  const OUT = resolve(SITEMAP_OUT);
+async function writeSitemap(label: string, fnPath: string, outPath: string, minUrls: number) {
+  const OUT = resolve(outPath);
   try {
     const previousCount = existsSync(OUT)
       ? (readFileSync(OUT, "utf8").match(/<url>/g) || []).length
       : 0;
 
-    const merged = await fetchXml("sitemap", `${FN_BASE}/serve-sitemap`, 50, SITEMAP_OUT);
-    const urlCount = (merged.match(/<url>/g) || []).length;
-    const imageCount = (merged.match(/<image:image>/g) || []).length;
-    if (urlCount < 50) throw new Error(`Suspicious merged URL count: ${urlCount}`);
+    const xml = await fetchXml(label, `${FN_BASE}/${fnPath}`, minUrls, outPath);
+    const urlCount = (xml.match(/<url>/g) || []).length;
+    const imageCount = (xml.match(/<image:image>/g) || []).length;
+    if (urlCount < minUrls) throw new Error(`Suspicious URL count: ${urlCount}`);
 
-    writeFileSync(OUT, merged, "utf8");
+    writeFileSync(OUT, xml, "utf8");
     console.log(
-      `[sitemap] wrote ${OUT} — ${urlCount} URLs + ${imageCount} images (was ${previousCount}, ${(statSync(OUT).size / 1024).toFixed(1)} KB)`,
+      `[${label}] wrote ${outPath} — ${urlCount} URLs + ${imageCount} images (was ${previousCount}, ${(statSync(OUT).size / 1024).toFixed(1)} KB)`,
     );
   } catch (err) {
     console.warn(
-      `[sitemap] refresh failed, keeping existing ${SITEMAP_OUT} — ${(err as Error).message}`,
+      `[${label}] refresh failed, keeping existing ${outPath} — ${(err as Error).message}`,
     );
   }
 }
 
-refreshCombinedSitemap();
+// Rewrites the trailing `Sitemap:` directives so both sitemaps are always declared.
+function syncRobots() {
+  const OUT = resolve(ROBOTS_OUT);
+  if (!existsSync(OUT)) {
+    console.warn(`[robots] ${ROBOTS_OUT} missing — skipped`);
+    return;
+  }
+  const wanted = [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/sitemap-images.xml`];
+  const original = readFileSync(OUT, "utf8");
+  const body = original
+    .split(/\r?\n/)
+    .filter((line) => !/^\s*sitemap\s*:/i.test(line))
+    .join("\n")
+    .replace(/# Sitemaps for project domain\s*$/i, "")
+    .trimEnd();
+
+  const next = `${body}\n\n# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)\n${wanted
+    .map((u) => `Sitemap: ${u}`)
+    .join("\n")}\n`;
+
+  if (next === original) {
+    console.log("[robots] already in sync");
+    return;
+  }
+  writeFileSync(OUT, next, "utf8");
+  console.log(`[robots] updated ${ROBOTS_OUT} — ${wanted.length} sitemap directives`);
+}
+
+async function main() {
+  await writeSitemap("sitemap", "serve-sitemap", SITEMAP_OUT, 50);
+  await writeSitemap("sitemap-images", "serve-image-sitemap", IMAGE_SITEMAP_OUT, 1);
+  syncRobots();
+}
+
+main();
