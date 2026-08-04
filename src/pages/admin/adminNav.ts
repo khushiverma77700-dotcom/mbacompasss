@@ -151,6 +151,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Master Refresh (All Content)", path: "/admin/master-refresh", icon: Sparkles },
       { label: "Content Pruning (AI Auditor)", path: "/admin/content-pruning", icon: Trash2 },
       { label: "Reverse Siloing Engine", path: "/admin/reverse-siloing", icon: Link2 },
+      { label: "AI SEO Automation Suite", path: "/admin/seo-engines", icon: Activity },
       { label: "Official Source Domains", path: "/admin/source-domains", icon: ShieldCheck },
       { label: "Bulk Refresh Content", path: "/admin/bulk-refresh", icon: Sparkles },
       { label: "Bulk AI Editor", path: "/admin/bulk-ai-edit", icon: Sparkles },
