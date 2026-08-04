@@ -6538,6 +6538,472 @@ export type Database = {
         }
         Relationships: []
       }
+      pruning_actions: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          error: string | null
+          id: string
+          recommendation_id: string | null
+          revert_payload: Json | null
+          reverted_at: string | null
+          run_id: string | null
+          status: string
+          url: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          error?: string | null
+          id?: string
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          status?: string
+          url: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          error?: string | null
+          id?: string
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          status?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pruning_actions_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "pruning_recommendations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pruning_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "pruning_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pruning_duplicate_clusters: {
+        Row: {
+          cluster_type: string
+          created_at: string
+          id: string
+          member_urls: string[]
+          notes: string | null
+          run_id: string | null
+          signature: string | null
+          similarity: number | null
+          survivor_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          cluster_type?: string
+          created_at?: string
+          id?: string
+          member_urls?: string[]
+          notes?: string | null
+          run_id?: string | null
+          signature?: string | null
+          similarity?: number | null
+          survivor_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cluster_type?: string
+          created_at?: string
+          id?: string
+          member_urls?: string[]
+          notes?: string | null
+          run_id?: string | null
+          signature?: string | null
+          similarity?: number | null
+          survivor_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pruning_duplicate_clusters_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "pruning_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pruning_pages: {
+        Row: {
+          analyzed_at: string | null
+          author: string | null
+          authority_score: number | null
+          avg_position: number | null
+          backlinks: number
+          broken_links: number
+          canonical_url: string | null
+          city: string | null
+          clicks: number
+          clicks_prev: number
+          content_hash: string | null
+          content_score: number | null
+          content_updated_at: string | null
+          created_at: string
+          ctr: number
+          days_since_update: number | null
+          duplicate_cluster_id: string | null
+          engagement_rate: number | null
+          faq_count: number
+          freshness_score: number | null
+          h1: string | null
+          has_schema: boolean
+          heading_count: number
+          id: string
+          impressions: number
+          impressions_prev: number
+          in_sitemap: boolean
+          index_state: string | null
+          internal_links_in: number
+          internal_links_out: number
+          is_orphan: boolean
+          meta_description: string | null
+          meta_title: string | null
+          opportunity_score: number | null
+          page_name: string | null
+          page_type: string
+          path: string
+          primary_keyword: string | null
+          psi_score: number | null
+          published_at: string | null
+          readability: number | null
+          repetition_score: number | null
+          robots: string | null
+          run_id: string | null
+          secondary_keyword: string | null
+          seo_score: number | null
+          sessions: number
+          shingles: string[] | null
+          signals: Json
+          signals_at: string | null
+          slug: string | null
+          source_id: string | null
+          source_table: string | null
+          stale_facts: Json
+          state: string | null
+          thin_content: boolean
+          updated_at: string
+          url: string
+          word_count: number
+        }
+        Insert: {
+          analyzed_at?: string | null
+          author?: string | null
+          authority_score?: number | null
+          avg_position?: number | null
+          backlinks?: number
+          broken_links?: number
+          canonical_url?: string | null
+          city?: string | null
+          clicks?: number
+          clicks_prev?: number
+          content_hash?: string | null
+          content_score?: number | null
+          content_updated_at?: string | null
+          created_at?: string
+          ctr?: number
+          days_since_update?: number | null
+          duplicate_cluster_id?: string | null
+          engagement_rate?: number | null
+          faq_count?: number
+          freshness_score?: number | null
+          h1?: string | null
+          has_schema?: boolean
+          heading_count?: number
+          id?: string
+          impressions?: number
+          impressions_prev?: number
+          in_sitemap?: boolean
+          index_state?: string | null
+          internal_links_in?: number
+          internal_links_out?: number
+          is_orphan?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          opportunity_score?: number | null
+          page_name?: string | null
+          page_type?: string
+          path: string
+          primary_keyword?: string | null
+          psi_score?: number | null
+          published_at?: string | null
+          readability?: number | null
+          repetition_score?: number | null
+          robots?: string | null
+          run_id?: string | null
+          secondary_keyword?: string | null
+          seo_score?: number | null
+          sessions?: number
+          shingles?: string[] | null
+          signals?: Json
+          signals_at?: string | null
+          slug?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          stale_facts?: Json
+          state?: string | null
+          thin_content?: boolean
+          updated_at?: string
+          url: string
+          word_count?: number
+        }
+        Update: {
+          analyzed_at?: string | null
+          author?: string | null
+          authority_score?: number | null
+          avg_position?: number | null
+          backlinks?: number
+          broken_links?: number
+          canonical_url?: string | null
+          city?: string | null
+          clicks?: number
+          clicks_prev?: number
+          content_hash?: string | null
+          content_score?: number | null
+          content_updated_at?: string | null
+          created_at?: string
+          ctr?: number
+          days_since_update?: number | null
+          duplicate_cluster_id?: string | null
+          engagement_rate?: number | null
+          faq_count?: number
+          freshness_score?: number | null
+          h1?: string | null
+          has_schema?: boolean
+          heading_count?: number
+          id?: string
+          impressions?: number
+          impressions_prev?: number
+          in_sitemap?: boolean
+          index_state?: string | null
+          internal_links_in?: number
+          internal_links_out?: number
+          is_orphan?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          opportunity_score?: number | null
+          page_name?: string | null
+          page_type?: string
+          path?: string
+          primary_keyword?: string | null
+          psi_score?: number | null
+          published_at?: string | null
+          readability?: number | null
+          repetition_score?: number | null
+          robots?: string | null
+          run_id?: string | null
+          secondary_keyword?: string | null
+          seo_score?: number | null
+          sessions?: number
+          shingles?: string[] | null
+          signals?: Json
+          signals_at?: string | null
+          slug?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          stale_facts?: Json
+          state?: string | null
+          thin_content?: boolean
+          updated_at?: string
+          url?: string
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pruning_pages_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "pruning_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pruning_recommendations: {
+        Row: {
+          ai_summary: string | null
+          approved_at: string | null
+          approved_by: string | null
+          competing_urls: string[]
+          confidence: number | null
+          created_at: string
+          difficulty: string | null
+          error: string | null
+          executed_at: string | null
+          expected_improvement: string | null
+          id: string
+          page_id: string | null
+          page_type: string | null
+          priority: string
+          problem: string | null
+          reason: string | null
+          recommendation: string
+          run_id: string | null
+          sections: Json
+          seo_impact: string | null
+          solution: string | null
+          status: string
+          target_url: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          competing_urls?: string[]
+          confidence?: number | null
+          created_at?: string
+          difficulty?: string | null
+          error?: string | null
+          executed_at?: string | null
+          expected_improvement?: string | null
+          id?: string
+          page_id?: string | null
+          page_type?: string | null
+          priority?: string
+          problem?: string | null
+          reason?: string | null
+          recommendation: string
+          run_id?: string | null
+          sections?: Json
+          seo_impact?: string | null
+          solution?: string | null
+          status?: string
+          target_url?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          ai_summary?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          competing_urls?: string[]
+          confidence?: number | null
+          created_at?: string
+          difficulty?: string | null
+          error?: string | null
+          executed_at?: string | null
+          expected_improvement?: string | null
+          id?: string
+          page_id?: string | null
+          page_type?: string | null
+          priority?: string
+          problem?: string | null
+          reason?: string | null
+          recommendation?: string
+          run_id?: string | null
+          sections?: Json
+          seo_impact?: string | null
+          solution?: string | null
+          status?: string
+          target_url?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pruning_recommendations_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pruning_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pruning_recommendations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "pruning_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pruning_runs: {
+        Row: {
+          analyzed_count: number
+          created_at: string
+          error: string | null
+          executed_count: number
+          failed_count: number
+          finished_at: string | null
+          id: string
+          impact_report: Json | null
+          inventoried_count: number
+          logs: Json
+          phase: string
+          scope: Json
+          signals_count: number
+          started_at: string | null
+          status: string
+          summary: Json
+          total_pages: number
+          triggered_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          analyzed_count?: number
+          created_at?: string
+          error?: string | null
+          executed_count?: number
+          failed_count?: number
+          finished_at?: string | null
+          id?: string
+          impact_report?: Json | null
+          inventoried_count?: number
+          logs?: Json
+          phase?: string
+          scope?: Json
+          signals_count?: number
+          started_at?: string | null
+          status?: string
+          summary?: Json
+          total_pages?: number
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          analyzed_count?: number
+          created_at?: string
+          error?: string | null
+          executed_count?: number
+          failed_count?: number
+          finished_at?: string | null
+          id?: string
+          impact_report?: Json | null
+          inventoried_count?: number
+          logs?: Json
+          phase?: string
+          scope?: Json
+          signals_count?: number
+          started_at?: string | null
+          status?: string
+          summary?: Json
+          total_pages?: number
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quant_formula_progress: {
         Row: {
           accuracy_pct: number | null
@@ -7329,6 +7795,48 @@ export type Database = {
           primary_keyword?: string | null
           record_id?: string
           total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_redirects: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_path: string
+          hit_count: number
+          id: string
+          is_active: boolean
+          reason: string | null
+          source: string
+          status_code: number
+          to_path: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_path: string
+          hit_count?: number
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          source?: string
+          status_code?: number
+          to_path: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_path?: string
+          hit_count?: number
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          source?: string
+          status_code?: number
+          to_path?: string
           updated_at?: string
         }
         Relationships: []
