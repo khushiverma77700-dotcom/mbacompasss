@@ -135,6 +135,7 @@ const AdminApiKeys = lazyWithPreload(() => import("./pages/admin/AdminApiKeys"))
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
 const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
 const AdminMasterRefresh = lazyWithPreload(() => import("./pages/admin/AdminMasterRefresh"));
+const AdminContentPruning = lazyWithPreload(() => import("./pages/admin/AdminContentPruning"));
 const AdminSourceDomains = lazyWithPreload(() => import("./pages/admin/AdminSourceDomains"));
 const AdminContentStudio = lazyWithPreload(() => import("./pages/admin/AdminContentStudio"));
 const AdminCourseCategories = lazyWithPreload(() => import("./pages/admin/AdminCourseCategories"));
@@ -919,6 +920,7 @@ const App = () => (
               <Route path="content-refreshes" element={<LazyPage><AdminContentRefreshes /></LazyPage>} />
               <Route path="bulk-refresh" element={<LazyPage><AdminBulkRefresh /></LazyPage>} />
               <Route path="master-refresh" element={<LazyPage><AdminMasterRefresh /></LazyPage>} />
+              <Route path="content-pruning" element={<LazyPage><AdminContentPruning /></LazyPage>} />
               <Route path="source-domains" element={<LazyPage><AdminSourceDomains /></LazyPage>} />
               <Route path="content-studio" element={<LazyPage><AdminContentStudio /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
