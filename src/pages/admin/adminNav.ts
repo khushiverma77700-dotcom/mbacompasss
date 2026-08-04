@@ -149,6 +149,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Content Studio (All-in-one)", path: "/admin/content-studio", icon: Sparkles },
       { label: "Content Refresh Queue", path: "/admin/content-refreshes", icon: RefreshCw },
       { label: "Master Refresh (All Content)", path: "/admin/master-refresh", icon: Sparkles },
+      { label: "Content Pruning (AI Auditor)", path: "/admin/content-pruning", icon: Trash2 },
       { label: "Official Source Domains", path: "/admin/source-domains", icon: ShieldCheck },
       { label: "Bulk Refresh Content", path: "/admin/bulk-refresh", icon: Sparkles },
       { label: "Bulk AI Editor", path: "/admin/bulk-ai-edit", icon: Sparkles },
