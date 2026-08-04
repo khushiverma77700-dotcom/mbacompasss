@@ -166,30 +166,46 @@ const applyOverrides = (built: Built[], overrideBySlug: Map<string, any>) => {
   return built;
 };
 
-const GROUPS: { name: string; run: GroupFn }[] = [
-  {
-    name: "colleges",
-    run: async (client) => {
-      const rows = await fetchAll(client, "colleges", "id, slug, name, description, admission_process, cutoff_info, highlights, fees, placement_avg, meta_title, meta_description, h1_tag, primary_keyword, faqs, city, state, tier, college_category, created_at, updated_at");
-      const ov = await loadOverrides(client);
-      const built: Built[] = [];
-      for (const c of rows) {
-        if (!c.slug || !c.name) continue;
-        built.push(build({
-          path: `/college/${c.slug}`, page_type: "college", source_table: "colleges", source_id: c.id,
-          slug: c.slug, page_name: c.name,
-          htmlFields: [c.description, c.admission_process, c.cutoff_info],
-          textFields: [c.highlights, c.fees, c.placement_avg],
-          meta_title: c.meta_title, meta_description: c.meta_description, h1: c.h1_tag,
-          faq: c.faqs, schema: true, primary_keyword: c.primary_keyword,
-          city: c.city, state: c.state,
-          published_at: c.created_at, content_updated_at: c.updated_at,
-          extra: { tier: c.tier, category: c.college_category },
-        }));
-      }
-      return applyOverrides(built, ov);
-    },
+const collegeGroup = (part: number, size = 220): { name: string; run: GroupFn } => ({
+  name: `colleges (${part + 1})`,
+  run: async (client) => {
+    const { data, error } = await client.from("colleges")
+      .select("id, slug, name, description, admission_process, cutoff_info, highlights, fees, placement_avg, meta_title, meta_description, h1_tag, primary_keyword, faqs, city, state, tier, college_category, created_at, updated_at")
+      .order("id", { ascending: true })
+      .range(part * size, part * size + size - 1);
+    if (error) {
+      console.error(`[pruning-inventory] colleges part ${part}: ${error.message}`);
+      return [];
+    }
+    const rows = data ?? [];
+    if (!rows.length) return [];
+    const ov = await loadOverrides(client);
+    const built: Built[] = [];
+    for (const c of rows) {
+      if (!c.slug || !c.name) continue;
+      built.push(build({
+        path: `/college/${c.slug}`, page_type: "college", source_table: "colleges", source_id: c.id,
+        slug: c.slug, page_name: c.name,
+        htmlFields: [c.description, c.admission_process, c.cutoff_info],
+        textFields: [c.highlights, c.fees, c.placement_avg],
+        meta_title: c.meta_title, meta_description: c.meta_description, h1: c.h1_tag,
+        faq: c.faqs, schema: true, primary_keyword: c.primary_keyword,
+        city: c.city, state: c.state,
+        published_at: c.created_at, content_updated_at: c.updated_at,
+        extra: { tier: c.tier, category: c.college_category },
+      }));
+    }
+    return applyOverrides(built, ov);
   },
+});
+
+const GROUPS: { name: string; run: GroupFn }[] = [
+  collegeGroup(0),
+  collegeGroup(1),
+  collegeGroup(2),
+  collegeGroup(3),
+  collegeGroup(4),
+
   {
     name: "institutes",
     run: async (client) => {
