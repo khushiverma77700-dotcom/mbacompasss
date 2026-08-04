@@ -1,80 +1,111 @@
-# Image SEO Automation System
+# Content Pruning Module for the AI SEO Dashboard
 
-Ship a site-wide image optimization pipeline that fixes every existing image and auto-processes every future upload, without changing how any image looks on screen.
+An AI-powered pruning engine that audits every URL on the site, assigns one of ten
+recommendations with a written rationale, and — after admin approval — executes the
+approved actions (including redirects, canonicals, noindex, and deletion).
 
-## Scope guardrails
+Built in three phases so the decision engine can be validated on real data before any
+write action is allowed to run.
 
-- No visual changes: same dimensions, same aspect ratio, same crop, same rendered size. Only bytes, filenames, `alt`/`title`/`loading`/`width`/`height`, `srcset`/`sizes`, schema, and sitemap change.
-- Originals are preserved. Every optimization writes a new derivative; the original URL keeps working as a fallback.
+## Phase 1 — Signals & engine (no writes)
 
-## 1. Storage & derivatives
+**Page inventory.** One row per public URL, built from the same source the sitemap
+generator already uses (colleges, institutes, courses, programmes, exams, articles,
+news, city pages, category/coaching pages, static routes). Runs incrementally so new
+pages join the inventory automatically as the site grows.
 
-- New private bucket `image-derivatives` holding WebP/AVIF variants at responsive widths (320, 640, 960, 1280, 1600) plus a compressed original.
-- New table `image_assets` — one row per canonical image URL found on the site. Columns: source URL, bucket/key (if native), width, height, bytes, format, sha256 hash (dedupe), alt, title, caption, seo_filename, page_context (jsonb: which tables/rows reference it), variants (jsonb with webp/avif URLs per width), lcp_candidate boolean, status, last_optimized_at, issues (jsonb).
-- New table `image_seo_issues` — normalized findings per asset (missing_alt, duplicate_alt, oversized, broken, no_sitemap_entry, etc.) so the dashboard can filter/count.
-- New table `image_optimization_jobs` — background queue rows with per-step status for the upload checklist UI.
+**Signals collected per URL**
 
-## 2. Background workers (edge functions)
+- Content: word count, heading structure, FAQ presence, schema/JSON-LD present, entity
+  coverage, readability, thin-content flags, AI-repetition score.
+- Freshness: published date, last updated, and detection of stale facts (old fees,
+  cutoffs, placements, rankings, admission dates, expired references).
+- Duplication: near-duplicate and exact-duplicate clustering across pages, plus
+  duplicate titles, descriptions, H1s, FAQs, and schema blocks.
+- Cannibalization: pages competing on the same primary keyword or search intent,
+  reusing the existing one-keyword-per-page data.
+- Links: orphan pages, inbound internal link count, outbound link count, anchor-text
+  quality, broken links, link-equity distribution.
+- Index/crawl: canonical target, robots directives, sitemap membership, and the
+  discovered/indexed state already tracked by the indexing status panel.
+- Search Console: clicks, impressions, CTR, average position, and their 28-day and
+  90-day trend per URL.
+- Analytics: sessions and engagement per URL.
+- Performance: page speed and Core Web Vitals from the existing health-check data.
 
-- `image-audit-crawler` — walks every content table with image columns (`colleges`, `institutes`, `articles`, `news_articles`, `mba_compass_courses`, `banners`, `city_pages`, `exams`, `categories`, `freebies`, `authors`/profiles, `mocks_landing_settings`, homepage `site_settings`, plus rendered HTML in `description`/`content` fields) and upserts `image_assets` rows with page_context.
-- `image-optimizer-worker` — for each asset: fetch bytes, compute hash, decode dimensions, produce compressed original + WebP + AVIF at responsive widths using `sharp` (Deno-compatible via `npm:sharp-wasm` or a Node runtime edge function; if unavailable in Deno, run through an existing Node-capable path — decide at build time and document the fallback).
-- `image-seo-writer` — calls Lovable AI Gateway (`google/gemini-2.5-flash`) with page_context to generate alt, title, caption, and SEO filename. Deduplicates alt within the same page. Never overwrites human-written alt unless flagged generic/duplicate.
-- `image-sitemap-builder` — writes `/sitemap-images.xml` served by an extended `serve-sitemap`; referenced from `robots.txt` and the sitemap index.
-- `image-dashboard-stats` — aggregates counts for the admin dashboard.
+**AI decision engine.** For each page (and each duplicate cluster) the engine produces
+exactly one recommendation — Keep, Update, Merge, Redirect, Delete, Noindex,
+Add Canonical, Rewrite, Expand, or Refresh — together with: problem, reason, SEO impact,
+recommended solution, priority, expected improvement, and estimated difficulty. Merge and
+Redirect recommendations name the specific target URL. Refresh recommendations name only
+the outdated sections, not the whole page.
 
-Queued via existing `pg_cron` pattern used by `sitemap-refresh-cron`/`seo-health-check`.
+Four scores per page: SEO health, content quality, freshness, authority/internal-link.
+An opportunity score combines impressions with position to surface pages that are close
+to ranking.
 
-## 3. Runtime delivery (no visual changes)
+Phase 1 ends with a validation run over the full inventory whose output is reviewed
+before any execution code is enabled.
 
-- New `<SmartImage>` component wrapping `<img>`. It:
-  - Looks up the URL in `image_assets` (in-memory map hydrated at page load, one query per route).
-  - If variants exist, emits `<picture>` with AVIF → WebP → original `<source>`s plus responsive `srcset` on the fallback `<img>`.
-  - Injects `width`/`height` (intrinsic, unchanged) so CLS drops to 0.
-  - Sets `loading="lazy"` and `decoding="async"` by default; `loading="eager"` + `fetchpriority="high"` when the row is marked `lcp_candidate` (homepage hero, article hero, college banner top-of-page).
-  - Uses stored alt/title. Renders exactly the same box — sizing stays governed by the existing wrapper's CSS.
-- Codemod-style sweep: replace `<img>` in shared UI (`ArticleCard`, `CollegeListingCard`, `Hero*`, `CityBanner`, `AuthorAvatar`, blog TipTap render, homepage banners) with `<SmartImage>`. Do NOT touch admin-only images.
+## Phase 2 — Dashboard
 
-## 4. Upload automation
+A new **Content Pruning** module inside the AI SEO Dashboard.
 
-- Extend `src/components/admin/FileUpload.tsx` (single central component) so every existing admin upload flows through it. On upload:
-  1. PUT original into current bucket (behavior unchanged).
-  2. Insert `image_optimization_jobs` row with the 17 checklist steps.
-  3. Invoke `image-optimizer-worker` in background; UI subscribes via Realtime and renders the checklist popover.
-  4. On completion, `image_assets` row is populated; the returned URL in the admin form still points at the original — `<SmartImage>` handles delivery on the public site.
-- Callers that upload outside this component (`AdminFreebies`, `AdminDatabaseBackup` — backup is out of scope; `StudentSupport` attachments — out of scope) either route through `FileUpload` or get a small `enqueueImageOptimization(url)` helper.
+- Summary tiles: total pages, healthy, to update, to merge, to delete, to redirect,
+  cannibalization conflicts, thin content, duplicates, high-opportunity, recently
+  improved, estimated organic growth.
+- Charts: recommendation distribution, health-score distribution, traffic before/after
+  for actioned pages, indexing status, crawl-health trend, score trends over runs.
+- Filters: page type (college, blog, tool, landing, course, exam, category), state, city,
+  traffic band, index status, priority, recommendation, last-updated window, author.
+- Page detail drawer: the four scores, AI summary, problems found, recommended actions,
+  suggested improvements, duplicate cluster members, competing keywords, internal links
+  in/out, and a before-vs-after impact estimate.
+- Live run panel showing per-page progress, throughput, failures, and retries — matching
+  the existing bulk-job panels.
+- Bulk selection with Approve, Reject, Update, Merge, Redirect, Noindex, Canonical, and
+  CSV export. Nothing executes without explicit approval.
 
-## 5. Structured data & Open Graph
+## Phase 3 — Execution & one-click run
 
-- `SEOHead` / `useResolvedSeo` already emit JSON-LD. Extend the schema generators (`generateCollegeSchema`, `generateArticleSchema`, `generateExamSchema`, `generateOrganizationSchema`, breadcrumb) to include `image` arrays sourced from `image_assets` for the current record. Never emit empty/duplicate image URLs.
-- Sitewide `og:image` fallback in `index.html` stays. Per-route Helmet already resolves `ogImage`; extend `useResolvedSeo` to auto-select the first `image_assets` row tagged as hero for the current record when no explicit OG image is set.
-- `sitemap-images.xml` follows Google's `image:image` spec; referenced from `robots.txt` (`Sitemap:` line) and the SSR prerender output.
+An executor that applies only approved items, one action type at a time, with every
+change written to an audit log and a revert payload stored for each item.
 
-## 6. Admin — Image SEO Dashboard
+- Update / Rewrite / Expand / Refresh → queued into the existing Re-SEO and
+  content-refresh pipelines rather than duplicating that logic.
+- Add Canonical / Noindex → written to the per-page SEO override layer so the SPA head
+  tags and the prerendered HTML both reflect it.
+- Redirect / Merge → a redirect table consulted by the prerender/edge layer, which
+  issues a real 301 for crawlers and users; merged pages redirect to the surviving URL.
+- Delete → hard delete of the source row, preceded by a stored snapshot for restore, an
+  automatic 301 to the chosen replacement URL, and removal from the sitemap. Requires a
+  typed confirmation and is blocked for any page with inbound backlinks or non-trivial
+  traffic unless the admin overrides.
 
-New route `/admin/image-seo` with:
-- Header stats: total images, SEO health score, AI-readiness score, broken, duplicates, missing alt, missing schema, missing sitemap.
-- Filterable table of `image_assets` with per-row "Re-optimize" and "Edit metadata" actions.
-- "Rescan entire library" button → enqueues `image-audit-crawler` + reprocesses all assets.
-- Sidebar entry under SEO & AI Tools.
+After execution: sitemap and robots refresh, affected URLs submitted for indexing, and a
+final SEO impact report comparing before/after signals for the run.
 
-## 7. Rollout & validation
+**Run Content Pruning** then performs the whole sequence — scan, analyse, detect,
+recommend, report, wait for approval, execute, report impact — in one click, and a
+scheduled run keeps the inventory and recommendations current as new pages are added.
 
-1. Migration: create tables, bucket, RLS, cron.
-2. Deploy workers; run first full audit in a dry-run mode that only records issues.
-3. Ship `<SmartImage>` + swap in shared components behind a feature flag `image_seo_enabled` in `site_settings`.
-4. Flip flag on, monitor `image_optimization_jobs` and Core Web Vitals via existing `AdminWebsiteOptimizer`.
-5. Final report: emit a Markdown report to `reports/image-seo-YYYY-MM-DD.md` (totals, fixes, remaining issues, rollback = flip flag off + revert component swap).
+## Technical notes
 
-## Technical details
-
-- Image processing runtime: Deno edge functions can't run native `sharp`. Two options — (a) `npm:@jsquash/webp` + `@jsquash/avif` + `@jsquash/resize` (pure WASM, works on Deno), or (b) run the worker as a Node-based Supabase edge function. Recommendation: `@jsquash/*` for portability; document fallback if AVIF times out.
-- Hash-based dedupe stores each unique binary once; multiple `image_assets` rows can point at the same variant set.
-- AI cost control: alt generation runs only when alt is missing/generic (heuristic list + duplicate detection). Cached forever after; regeneration only via admin action.
-- Never rewrite URLs stored in `colleges.image_url`, `articles.thumbnail_url`, etc. — delivery layer picks variants at render time.
-- Accessibility: decorative images (detected via zero-context, e.g. background decoration divs) get `alt=""`; content images always get meaningful alt.
-
-## Open questions (will confirm before build)
-
-1. Confirm target bucket name `image-derivatives` (private, served via signed short-lived URLs or made public — public is simpler; ask before enabling).
-2. Confirm `<SmartImage>` should replace `<img>` in the specific components listed, or across all `src/**` (broader = riskier).
-3. Alt-text language: English only, or mirror page locale where present.
+- New tables: `pruning_runs`, `pruning_pages` (inventory + signals + scores),
+  `pruning_recommendations` (decision, rationale, target URL, priority, approval state),
+  `pruning_duplicate_clusters`, `pruning_actions` (execution log + revert payload),
+  `seo_redirects` (from path, to path, type, reason, source item). Admin-only RLS,
+  service_role access for the workers.
+- New edge functions: `pruning-inventory` (build/refresh inventory),
+  `pruning-signals` (GSC, Analytics, links, duplicates, freshness),
+  `pruning-analyze-worker` (AI decisions, queue-driven like the existing Re-SEO worker),
+  `pruning-execute` (approved actions only). All admin-guarded via `requireAdmin`.
+- Search Console and Analytics are read through their connectors from server-side code
+  only; a per-URL metrics cache avoids re-querying on every run.
+- `ssr-prerender` gains a redirect lookup that returns 301 before rendering, and
+  `serve-sitemap` / `refresh-sitemap` exclude deleted, redirected, and noindexed URLs.
+- AI calls reuse the shared gateway helper and existing usage logging.
+- Duplicate detection uses content shingling/embeddings computed server-side and cached
+  per page revision so full-site comparison stays cheap at 1000+ pages.
+- Search Console and Analytics connectors must be linked in this workspace before Phase 1
+  signal collection can run; the engine degrades to on-page signals until then.
