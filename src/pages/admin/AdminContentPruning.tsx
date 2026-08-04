@@ -132,7 +132,7 @@ const AdminContentPruning = () => {
         const step = await invoke("pruning-inventory", { run_id: runId, stage: "pages", group: nextGroup });
         runId = step.run_id;
         setPhase(`Inventorying ${step.group_name ?? "pages"}…`);
-        setProgress(5 + Math.round(((nextGroup + 1) / 6) * 15));
+        setProgress(5 + Math.round(((nextGroup + 1) / 11) * 20));
         nextGroup = step.next_group ?? null;
       }
       const inv = await invoke("pruning-inventory", { run_id: runId, stage: "graph" });

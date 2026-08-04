@@ -32,7 +32,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 /** Hard cap on the text we analyse per page — keeps CPU per page predictable. */
-const ANALYSIS_CHARS = 12000;
+const ANALYSIS_CHARS = 8000;
 
 const fetchAll = async (client: any, table: string, columns: string, filters?: (q: any) => any) => {
   const all: any[] = [];
