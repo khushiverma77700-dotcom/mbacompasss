@@ -125,10 +125,20 @@ const AdminContentPruning = () => {
     setProgress(5);
     try {
       setPhase("Building page inventory…");
-      const inv = await invoke("pruning-inventory", {});
-      const runId = inv.run_id;
+      let runId: string | null = null;
+      let nextGroup: number | null = 0;
+      let invGuard = 0;
+      while (nextGroup !== null && invGuard++ < 30) {
+        const step = await invoke("pruning-inventory", { run_id: runId, stage: "pages", group: nextGroup });
+        runId = step.run_id;
+        setPhase(`Inventorying ${step.group_name ?? "pages"}…`);
+        setProgress(5 + Math.round(((nextGroup + 1) / 6) * 15));
+        nextGroup = step.next_group ?? null;
+      }
+      const inv = await invoke("pruning-inventory", { run_id: runId, stage: "graph" });
       setProgress(30);
       toast.success(`Inventory: ${inv.total_pages} pages, ${inv.duplicate_clusters} duplicate clusters`);
+
 
       setPhase("Collecting Search Console, index and speed signals…");
       const sig = await invoke("pruning-signals", { run_id: runId });
