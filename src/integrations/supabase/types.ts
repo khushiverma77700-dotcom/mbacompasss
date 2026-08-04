@@ -8161,6 +8161,414 @@ export type Database = {
         }
         Relationships: []
       }
+      silo_actions: {
+        Row: {
+          action: string
+          anchor_text: string | null
+          created_at: string
+          from_path: string | null
+          id: string
+          notes: string | null
+          performed_by: string | null
+          recommendation_id: string | null
+          revert_payload: Json | null
+          reverted_at: string | null
+          run_id: string | null
+          source_field: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          to_path: string | null
+        }
+        Insert: {
+          action: string
+          anchor_text?: string | null
+          created_at?: string
+          from_path?: string | null
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          to_path?: string | null
+        }
+        Update: {
+          action?: string
+          anchor_text?: string | null
+          created_at?: string
+          from_path?: string | null
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          to_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "silo_actions_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "silo_link_recommendations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "silo_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "silo_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      silo_link_recommendations: {
+        Row: {
+          anchor_text: string
+          applied_at: string | null
+          authority_after: number | null
+          authority_before: number | null
+          auto_applied: boolean
+          context_snippet: string | null
+          created_at: string
+          error: string | null
+          expected_impact: string | null
+          id: string
+          opportunity_score: number
+          priority: string
+          problem: string | null
+          rationale: string | null
+          reviewed_by: string | null
+          run_id: string
+          seo_impact: string | null
+          source_field: string | null
+          source_id: string | null
+          source_name: string | null
+          source_path: string
+          source_table: string | null
+          status: string
+          target_name: string | null
+          target_path: string
+          target_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          anchor_text: string
+          applied_at?: string | null
+          authority_after?: number | null
+          authority_before?: number | null
+          auto_applied?: boolean
+          context_snippet?: string | null
+          created_at?: string
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          opportunity_score?: number
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          reviewed_by?: string | null
+          run_id: string
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_name?: string | null
+          source_path: string
+          source_table?: string | null
+          status?: string
+          target_name?: string | null
+          target_path: string
+          target_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anchor_text?: string
+          applied_at?: string | null
+          authority_after?: number | null
+          authority_before?: number | null
+          auto_applied?: boolean
+          context_snippet?: string | null
+          created_at?: string
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          opportunity_score?: number
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          reviewed_by?: string | null
+          run_id?: string
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_name?: string | null
+          source_path?: string
+          source_table?: string | null
+          status?: string
+          target_name?: string | null
+          target_path?: string
+          target_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "silo_link_recommendations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "silo_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      silo_links: {
+        Row: {
+          anchor_text: string | null
+          created_at: string
+          from_path: string
+          id: string
+          run_id: string
+          source_id: string | null
+          source_table: string | null
+          to_path: string
+        }
+        Insert: {
+          anchor_text?: string | null
+          created_at?: string
+          from_path: string
+          id?: string
+          run_id: string
+          source_id?: string | null
+          source_table?: string | null
+          to_path: string
+        }
+        Update: {
+          anchor_text?: string | null
+          created_at?: string
+          from_path?: string
+          id?: string
+          run_id?: string
+          source_id?: string | null
+          source_table?: string | null
+          to_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "silo_links_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "silo_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      silo_pages: {
+        Row: {
+          anchor_diversity: number | null
+          authority_score: number
+          avg_position: number | null
+          clicks: number
+          created_at: string
+          hub_score: number
+          id: string
+          impressions: number
+          is_commercial: boolean
+          is_hub: boolean
+          is_orphan: boolean
+          links_in: number
+          links_out: number
+          opportunity_score: number
+          page_name: string | null
+          page_type: string
+          pagerank: number
+          path: string
+          primary_keyword: string | null
+          run_id: string
+          signals: Json
+          slug: string | null
+          source_id: string | null
+          source_table: string | null
+          topic: string | null
+          unique_sources: number
+          updated_at: string
+          url: string
+          word_count: number
+        }
+        Insert: {
+          anchor_diversity?: number | null
+          authority_score?: number
+          avg_position?: number | null
+          clicks?: number
+          created_at?: string
+          hub_score?: number
+          id?: string
+          impressions?: number
+          is_commercial?: boolean
+          is_hub?: boolean
+          is_orphan?: boolean
+          links_in?: number
+          links_out?: number
+          opportunity_score?: number
+          page_name?: string | null
+          page_type?: string
+          pagerank?: number
+          path: string
+          primary_keyword?: string | null
+          run_id: string
+          signals?: Json
+          slug?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          topic?: string | null
+          unique_sources?: number
+          updated_at?: string
+          url: string
+          word_count?: number
+        }
+        Update: {
+          anchor_diversity?: number | null
+          authority_score?: number
+          avg_position?: number | null
+          clicks?: number
+          created_at?: string
+          hub_score?: number
+          id?: string
+          impressions?: number
+          is_commercial?: boolean
+          is_hub?: boolean
+          is_orphan?: boolean
+          links_in?: number
+          links_out?: number
+          opportunity_score?: number
+          page_name?: string | null
+          page_type?: string
+          pagerank?: number
+          path?: string
+          primary_keyword?: string | null
+          run_id?: string
+          signals?: Json
+          slug?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          topic?: string | null
+          unique_sources?: number
+          updated_at?: string
+          url?: string
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "silo_pages_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "silo_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      silo_runs: {
+        Row: {
+          applied: number
+          created_at: string
+          edges_found: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          orphans: number
+          pages_scanned: number
+          recommendations: number
+          scope: Json
+          stage: string | null
+          started_at: string
+          status: string
+          summary: Json
+          triggered_by: string | null
+          updated_at: string
+          weak_hubs: number
+        }
+        Insert: {
+          applied?: number
+          created_at?: string
+          edges_found?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          orphans?: number
+          pages_scanned?: number
+          recommendations?: number
+          scope?: Json
+          stage?: string | null
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string | null
+          updated_at?: string
+          weak_hubs?: number
+        }
+        Update: {
+          applied?: number
+          created_at?: string
+          edges_found?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          orphans?: number
+          pages_scanned?: number
+          recommendations?: number
+          scope?: Json
+          stage?: string | null
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string | null
+          updated_at?: string
+          weak_hubs?: number
+        }
+        Relationships: []
+      }
+      silo_settings: {
+        Row: {
+          auto_apply_links: boolean
+          automation_enabled: boolean
+          created_at: string
+          id: boolean
+          max_links_per_page: number
+          max_links_per_run: number
+          min_opportunity_score: number
+          updated_at: string
+        }
+        Insert: {
+          auto_apply_links?: boolean
+          automation_enabled?: boolean
+          created_at?: string
+          id?: boolean
+          max_links_per_page?: number
+          max_links_per_run?: number
+          min_opportunity_score?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_apply_links?: boolean
+          automation_enabled?: boolean
+          created_at?: string
+          id?: boolean
+          max_links_per_page?: number
+          max_links_per_run?: number
+          min_opportunity_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
