@@ -135,6 +135,7 @@ const AdminApiKeys = lazyWithPreload(() => import("./pages/admin/AdminApiKeys"))
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
 const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
 const AdminMasterRefresh = lazyWithPreload(() => import("./pages/admin/AdminMasterRefresh"));
+const AdminContentPruning = lazyWithPreload(() => import("./pages/admin/AdminContentPruning"));
 const AdminSourceDomains = lazyWithPreload(() => import("./pages/admin/AdminSourceDomains"));
 const AdminContentStudio = lazyWithPreload(() => import("./pages/admin/AdminContentStudio"));
 const AdminCourseCategories = lazyWithPreload(() => import("./pages/admin/AdminCourseCategories"));
