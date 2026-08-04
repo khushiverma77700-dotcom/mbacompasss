@@ -137,6 +137,7 @@ const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRe
 const AdminMasterRefresh = lazyWithPreload(() => import("./pages/admin/AdminMasterRefresh"));
 const AdminContentPruning = lazyWithPreload(() => import("./pages/admin/AdminContentPruning"));
 const AdminReverseSiloing = lazyWithPreload(() => import("./pages/admin/AdminReverseSiloing"));
+const AdminSEOEngines = lazyWithPreload(() => import("./pages/admin/AdminSEOEngines"));
 const AdminSourceDomains = lazyWithPreload(() => import("./pages/admin/AdminSourceDomains"));
 const AdminContentStudio = lazyWithPreload(() => import("./pages/admin/AdminContentStudio"));
 const AdminCourseCategories = lazyWithPreload(() => import("./pages/admin/AdminCourseCategories"));
@@ -923,6 +924,7 @@ const App = () => (
               <Route path="master-refresh" element={<LazyPage><AdminMasterRefresh /></LazyPage>} />
               <Route path="content-pruning" element={<LazyPage><AdminContentPruning /></LazyPage>} />
               <Route path="reverse-siloing" element={<LazyPage><AdminReverseSiloing /></LazyPage>} />
+              <Route path="seo-engines" element={<LazyPage><AdminSEOEngines /></LazyPage>} />
               <Route path="source-domains" element={<LazyPage><AdminSourceDomains /></LazyPage>} />
               <Route path="content-studio" element={<LazyPage><AdminContentStudio /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
