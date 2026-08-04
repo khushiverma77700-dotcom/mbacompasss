@@ -2330,6 +2330,263 @@ export type Database = {
           },
         ]
       }
+      decay_pages: {
+        Row: {
+          click_change_pct: number | null
+          clicks_current: number
+          clicks_previous: number
+          created_at: string
+          ctr_current: number
+          ctr_previous: number
+          days_since_update: number | null
+          decay_state: string
+          decay_type: string | null
+          first_detected_at: string | null
+          id: string
+          impression_change_pct: number | null
+          impressions_current: number
+          impressions_previous: number
+          monitoring: boolean
+          page_name: string | null
+          page_type: string | null
+          path: string
+          position_change: number | null
+          position_current: number | null
+          position_previous: number | null
+          recovery_potential: number
+          run_id: string | null
+          severity: string
+          source_field: string | null
+          source_id: string | null
+          source_table: string | null
+          stale_signals: Json
+          updated_at: string
+        }
+        Insert: {
+          click_change_pct?: number | null
+          clicks_current?: number
+          clicks_previous?: number
+          created_at?: string
+          ctr_current?: number
+          ctr_previous?: number
+          days_since_update?: number | null
+          decay_state?: string
+          decay_type?: string | null
+          first_detected_at?: string | null
+          id?: string
+          impression_change_pct?: number | null
+          impressions_current?: number
+          impressions_previous?: number
+          monitoring?: boolean
+          page_name?: string | null
+          page_type?: string | null
+          path: string
+          position_change?: number | null
+          position_current?: number | null
+          position_previous?: number | null
+          recovery_potential?: number
+          run_id?: string | null
+          severity?: string
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          stale_signals?: Json
+          updated_at?: string
+        }
+        Update: {
+          click_change_pct?: number | null
+          clicks_current?: number
+          clicks_previous?: number
+          created_at?: string
+          ctr_current?: number
+          ctr_previous?: number
+          days_since_update?: number | null
+          decay_state?: string
+          decay_type?: string | null
+          first_detected_at?: string | null
+          id?: string
+          impression_change_pct?: number | null
+          impressions_current?: number
+          impressions_previous?: number
+          monitoring?: boolean
+          page_name?: string | null
+          page_type?: string | null
+          path?: string
+          position_change?: number | null
+          position_current?: number | null
+          position_previous?: number | null
+          recovery_potential?: number
+          run_id?: string | null
+          severity?: string
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          stale_signals?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decay_pages_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "decay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decay_recommendations: {
+        Row: {
+          action: string
+          applied_at: string | null
+          approved_at: string | null
+          confidence: number | null
+          created_at: string
+          decay_page_id: string | null
+          error: string | null
+          expected_impact: string | null
+          id: string
+          keyword_gaps: Json
+          outdated_facts: Json
+          page_name: string | null
+          path: string
+          priority: string
+          problem: string | null
+          rationale: string | null
+          refresh_brief: string | null
+          refresh_id: string | null
+          run_id: string | null
+          score: number
+          sections: Json
+          seo_impact: string | null
+          source_field: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          applied_at?: string | null
+          approved_at?: string | null
+          confidence?: number | null
+          created_at?: string
+          decay_page_id?: string | null
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          keyword_gaps?: Json
+          outdated_facts?: Json
+          page_name?: string | null
+          path: string
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          refresh_brief?: string | null
+          refresh_id?: string | null
+          run_id?: string | null
+          score?: number
+          sections?: Json
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          applied_at?: string | null
+          approved_at?: string | null
+          confidence?: number | null
+          created_at?: string
+          decay_page_id?: string | null
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          keyword_gaps?: Json
+          outdated_facts?: Json
+          page_name?: string | null
+          path?: string
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          refresh_brief?: string | null
+          refresh_id?: string | null
+          run_id?: string | null
+          score?: number
+          sections?: Json
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decay_recommendations_decay_page_id_fkey"
+            columns: ["decay_page_id"]
+            isOneToOne: false
+            referencedRelation: "decay_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decay_recommendations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "decay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decay_runs: {
+        Row: {
+          approved: number
+          created_at: string
+          declining: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          notes: Json
+          pages_checked: number
+          queued_refreshes: number
+          recommendations: number
+          stage: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          approved?: number
+          created_at?: string
+          declining?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          notes?: Json
+          pages_checked?: number
+          queued_refreshes?: number
+          recommendations?: number
+          stage?: string | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          approved?: number
+          created_at?: string
+          declining?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          notes?: Json
+          pages_checked?: number
+          queued_refreshes?: number
+          recommendations?: number
+          stage?: string | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       demo_leads: {
         Row: {
           created_at: string
@@ -2450,6 +2707,201 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      entity_actions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          notes: string | null
+          path: string | null
+          recommendation_id: string | null
+          revert_payload: Json | null
+          reverted_at: string | null
+          run_id: string | null
+          source_field: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          path?: string | null
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          path?: string | null
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      entity_recommendations: {
+        Row: {
+          action: string
+          applied_at: string | null
+          auto_applied: boolean
+          confidence: number | null
+          created_at: string
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string | null
+          error: string | null
+          expected_impact: string | null
+          id: string
+          page_name: string | null
+          page_type: string | null
+          path: string
+          payload: Json
+          priority: string
+          problem: string | null
+          rationale: string | null
+          run_id: string | null
+          score: number
+          seo_impact: string | null
+          source_field: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          applied_at?: string | null
+          auto_applied?: boolean
+          confidence?: number | null
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          page_name?: string | null
+          page_type?: string | null
+          path: string
+          payload?: Json
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          run_id?: string | null
+          score?: number
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          applied_at?: string | null
+          auto_applied?: boolean
+          confidence?: number | null
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          page_name?: string | null
+          page_type?: string | null
+          path?: string
+          payload?: Json
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          run_id?: string | null
+          score?: number
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_recommendations_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "seo_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_recommendations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "entity_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_runs: {
+        Row: {
+          applied: number
+          created_at: string
+          entities_total: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          notes: Json
+          pages_scanned: number
+          recommendations: number
+          stage: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          applied?: number
+          created_at?: string
+          entities_total?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          notes?: Json
+          pages_scanned?: number
+          recommendations?: number
+          stage?: string | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          applied?: number
+          created_at?: string
+          entities_total?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          notes?: Json
+          pages_scanned?: number
+          recommendations?: number
+          stage?: string | null
+          started_at?: string
+          status?: string
         }
         Relationships: []
       }
@@ -2696,6 +3148,132 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      gsc_ingest_runs: {
+        Row: {
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          notes: Json
+          pages_ingested: number
+          queries_ingested: number
+          site_url: string | null
+          stage: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          notes?: Json
+          pages_ingested?: number
+          queries_ingested?: number
+          site_url?: string | null
+          stage?: string | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          notes?: Json
+          pages_ingested?: number
+          queries_ingested?: number
+          site_url?: string | null
+          stage?: string | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      gsc_page_metrics: {
+        Row: {
+          avg_position: number | null
+          captured_at: string
+          clicks: number
+          created_at: string
+          ctr: number
+          end_date: string | null
+          id: string
+          impressions: number
+          path: string
+          start_date: string | null
+          updated_at: string
+          window_label: string
+        }
+        Insert: {
+          avg_position?: number | null
+          captured_at?: string
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          end_date?: string | null
+          id?: string
+          impressions?: number
+          path: string
+          start_date?: string | null
+          updated_at?: string
+          window_label: string
+        }
+        Update: {
+          avg_position?: number | null
+          captured_at?: string
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          end_date?: string | null
+          id?: string
+          impressions?: number
+          path?: string
+          start_date?: string | null
+          updated_at?: string
+          window_label?: string
+        }
+        Relationships: []
+      }
+      gsc_query_metrics: {
+        Row: {
+          avg_position: number | null
+          captured_at: string
+          clicks: number
+          created_at: string
+          ctr: number
+          id: string
+          impressions: number
+          path: string
+          query: string
+          window_label: string
+        }
+        Insert: {
+          avg_position?: number | null
+          captured_at?: string
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          id?: string
+          impressions?: number
+          path: string
+          query: string
+          window_label?: string
+        }
+        Update: {
+          avg_position?: number | null
+          captured_at?: string
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          id?: string
+          impressions?: number
+          path?: string
+          query?: string
+          window_label?: string
         }
         Relationships: []
       }
@@ -3522,6 +4100,287 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      intent_actions: {
+        Row: {
+          action: string
+          created_at: string
+          from_path: string | null
+          id: string
+          notes: string | null
+          recommendation_id: string | null
+          revert_payload: Json | null
+          reverted_at: string | null
+          run_id: string | null
+          source_field: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          to_path: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          from_path?: string | null
+          id?: string
+          notes?: string | null
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          to_path?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          from_path?: string | null
+          id?: string
+          notes?: string | null
+          recommendation_id?: string | null
+          revert_payload?: Json | null
+          reverted_at?: string | null
+          run_id?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          to_path?: string | null
+        }
+        Relationships: []
+      }
+      intent_clusters: {
+        Row: {
+          ai_summary: string | null
+          best_position: number | null
+          cluster_key: string
+          competing_paths: Json
+          created_at: string
+          id: string
+          intent_type: string
+          is_cannibalized: boolean
+          keywords: Json
+          needs_new_page: boolean
+          page_count: number
+          primary_keyword: string
+          run_id: string | null
+          severity: string
+          sub_intents: Json
+          total_clicks: number
+          total_impressions: number
+          updated_at: string
+          winner_path: string | null
+          winner_reason: string | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          best_position?: number | null
+          cluster_key: string
+          competing_paths?: Json
+          created_at?: string
+          id?: string
+          intent_type?: string
+          is_cannibalized?: boolean
+          keywords?: Json
+          needs_new_page?: boolean
+          page_count?: number
+          primary_keyword: string
+          run_id?: string | null
+          severity?: string
+          sub_intents?: Json
+          total_clicks?: number
+          total_impressions?: number
+          updated_at?: string
+          winner_path?: string | null
+          winner_reason?: string | null
+        }
+        Update: {
+          ai_summary?: string | null
+          best_position?: number | null
+          cluster_key?: string
+          competing_paths?: Json
+          created_at?: string
+          id?: string
+          intent_type?: string
+          is_cannibalized?: boolean
+          keywords?: Json
+          needs_new_page?: boolean
+          page_count?: number
+          primary_keyword?: string
+          run_id?: string | null
+          severity?: string
+          sub_intents?: Json
+          total_clicks?: number
+          total_impressions?: number
+          updated_at?: string
+          winner_path?: string | null
+          winner_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intent_clusters_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "intent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intent_recommendations: {
+        Row: {
+          action: string
+          anchor_text: string | null
+          applied_at: string | null
+          auto_applied: boolean
+          brief: Json | null
+          cluster_id: string | null
+          confidence: number | null
+          created_at: string
+          error: string | null
+          expected_impact: string | null
+          id: string
+          intent_type: string | null
+          keyword: string | null
+          priority: string
+          problem: string | null
+          rationale: string | null
+          run_id: string | null
+          score: number
+          seo_impact: string | null
+          source_field: string | null
+          source_id: string | null
+          source_path: string | null
+          source_table: string | null
+          status: string
+          target_path: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          anchor_text?: string | null
+          applied_at?: string | null
+          auto_applied?: boolean
+          brief?: Json | null
+          cluster_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          intent_type?: string | null
+          keyword?: string | null
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          run_id?: string | null
+          score?: number
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_path?: string | null
+          source_table?: string | null
+          status?: string
+          target_path?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          anchor_text?: string | null
+          applied_at?: string | null
+          auto_applied?: boolean
+          brief?: Json | null
+          cluster_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          error?: string | null
+          expected_impact?: string | null
+          id?: string
+          intent_type?: string | null
+          keyword?: string | null
+          priority?: string
+          problem?: string | null
+          rationale?: string | null
+          run_id?: string | null
+          score?: number
+          seo_impact?: string | null
+          source_field?: string | null
+          source_id?: string | null
+          source_path?: string | null
+          source_table?: string | null
+          status?: string
+          target_path?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intent_recommendations_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "intent_clusters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intent_recommendations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "intent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intent_runs: {
+        Row: {
+          applied: number
+          clusters_found: number
+          conflicts_found: number
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          keywords_analyzed: number
+          notes: Json
+          recommendations: number
+          stage: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          applied?: number
+          clusters_found?: number
+          conflicts_found?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          keywords_analyzed?: number
+          notes?: Json
+          recommendations?: number
+          stage?: string | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          applied?: number
+          clusters_found?: number
+          conflicts_found?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          keywords_analyzed?: number
+          notes?: Json
+          recommendations?: number
+          stage?: string | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
       }
       landscape_colleges: {
         Row: {
@@ -5680,6 +6539,53 @@ export type Database = {
         }
         Relationships: []
       }
+      page_entities: {
+        Row: {
+          created_at: string
+          entity_id: string
+          id: string
+          in_faq: boolean
+          in_meta: boolean
+          in_schema: boolean
+          mentions: number
+          path: string
+          prominence: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          id?: string
+          in_faq?: boolean
+          in_meta?: boolean
+          in_schema?: boolean
+          mentions?: number
+          path: string
+          prominence?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          id?: string
+          in_faq?: boolean
+          in_meta?: boolean
+          in_schema?: boolean
+          mentions?: number
+          path?: string
+          prominence?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_entities_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "seo_entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_indexing_status: {
         Row: {
           checked_at: string
@@ -7614,6 +8520,99 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_engine_settings: {
+        Row: {
+          auto_apply_safe_actions: boolean
+          cannibalization_min_overlap: number
+          created_at: string
+          decay_click_drop_pct: number
+          decay_enabled: boolean
+          decay_min_impressions: number
+          entity_enabled: boolean
+          gsc_site_url: string | null
+          id: boolean
+          intent_enabled: boolean
+          max_actions_per_run: number
+          postpublish_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          auto_apply_safe_actions?: boolean
+          cannibalization_min_overlap?: number
+          created_at?: string
+          decay_click_drop_pct?: number
+          decay_enabled?: boolean
+          decay_min_impressions?: number
+          entity_enabled?: boolean
+          gsc_site_url?: string | null
+          id?: boolean
+          intent_enabled?: boolean
+          max_actions_per_run?: number
+          postpublish_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          auto_apply_safe_actions?: boolean
+          cannibalization_min_overlap?: number
+          created_at?: string
+          decay_click_drop_pct?: number
+          decay_enabled?: boolean
+          decay_min_impressions?: number
+          entity_enabled?: boolean
+          gsc_site_url?: string | null
+          id?: boolean
+          intent_enabled?: boolean
+          max_actions_per_run?: number
+          postpublish_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_entities: {
+        Row: {
+          aliases: Json
+          created_at: string
+          description: string | null
+          entity_type: string
+          id: string
+          importance: number
+          name: string
+          normalized_name: string
+          official_url: string | null
+          page_count: number
+          same_as: Json
+          updated_at: string
+        }
+        Insert: {
+          aliases?: Json
+          created_at?: string
+          description?: string | null
+          entity_type?: string
+          id?: string
+          importance?: number
+          name: string
+          normalized_name: string
+          official_url?: string | null
+          page_count?: number
+          same_as?: Json
+          updated_at?: string
+        }
+        Update: {
+          aliases?: Json
+          created_at?: string
+          description?: string | null
+          entity_type?: string
+          id?: string
+          importance?: number
+          name?: string
+          normalized_name?: string
+          official_url?: string | null
+          page_count?: number
+          same_as?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seo_health_page_results: {
         Row: {
           canonical_url: string | null
@@ -7795,6 +8794,180 @@ export type Database = {
           primary_keyword?: string | null
           record_id?: string
           total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_page_health: {
+        Row: {
+          avg_position: number | null
+          clicks: number
+          content_score: number
+          created_at: string
+          ctr: number
+          decay_state: string
+          detected_intent: string | null
+          duplicate_of: string | null
+          duplicate_similarity: number | null
+          duplication_score: number
+          entity_coverage: number | null
+          entity_score: number
+          health_score: number
+          id: string
+          impressions: number
+          index_state: string | null
+          intent_score: number
+          issues: Json
+          last_checked_at: string | null
+          missing_entities: Json
+          page_name: string | null
+          page_type: string | null
+          path: string
+          primary_keyword: string | null
+          schema_issues: Json
+          schema_score: number
+          schema_valid: boolean | null
+          signals: Json
+          source_id: string | null
+          source_table: string | null
+          updated_at: string
+          url: string | null
+          word_count: number
+        }
+        Insert: {
+          avg_position?: number | null
+          clicks?: number
+          content_score?: number
+          created_at?: string
+          ctr?: number
+          decay_state?: string
+          detected_intent?: string | null
+          duplicate_of?: string | null
+          duplicate_similarity?: number | null
+          duplication_score?: number
+          entity_coverage?: number | null
+          entity_score?: number
+          health_score?: number
+          id?: string
+          impressions?: number
+          index_state?: string | null
+          intent_score?: number
+          issues?: Json
+          last_checked_at?: string | null
+          missing_entities?: Json
+          page_name?: string | null
+          page_type?: string | null
+          path: string
+          primary_keyword?: string | null
+          schema_issues?: Json
+          schema_score?: number
+          schema_valid?: boolean | null
+          signals?: Json
+          source_id?: string | null
+          source_table?: string | null
+          updated_at?: string
+          url?: string | null
+          word_count?: number
+        }
+        Update: {
+          avg_position?: number | null
+          clicks?: number
+          content_score?: number
+          created_at?: string
+          ctr?: number
+          decay_state?: string
+          detected_intent?: string | null
+          duplicate_of?: string | null
+          duplicate_similarity?: number | null
+          duplication_score?: number
+          entity_coverage?: number | null
+          entity_score?: number
+          health_score?: number
+          id?: string
+          impressions?: number
+          index_state?: string | null
+          intent_score?: number
+          issues?: Json
+          last_checked_at?: string | null
+          missing_entities?: Json
+          page_name?: string | null
+          page_type?: string | null
+          path?: string
+          primary_keyword?: string | null
+          schema_issues?: Json
+          schema_score?: number
+          schema_valid?: boolean | null
+          signals?: Json
+          source_id?: string | null
+          source_table?: string | null
+          updated_at?: string
+          url?: string | null
+          word_count?: number
+        }
+        Relationships: []
+      }
+      seo_pipeline_queue: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          duplication_found: boolean | null
+          error: string | null
+          event: string
+          health_score: number | null
+          id: string
+          page_name: string | null
+          page_type: string | null
+          path: string | null
+          result: Json
+          schema_valid: boolean | null
+          source_id: string
+          source_table: string
+          stages_done: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          duplication_found?: boolean | null
+          error?: string | null
+          event?: string
+          health_score?: number | null
+          id?: string
+          page_name?: string | null
+          page_type?: string | null
+          path?: string | null
+          result?: Json
+          schema_valid?: boolean | null
+          source_id: string
+          source_table: string
+          stages_done?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          duplication_found?: boolean | null
+          error?: string | null
+          event?: string
+          health_score?: number | null
+          id?: string
+          page_name?: string | null
+          page_type?: string | null
+          path?: string | null
+          result?: Json
+          schema_valid?: boolean | null
+          source_id?: string
+          source_table?: string
+          stages_done?: Json
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -10273,6 +11446,36 @@ export type Database = {
           to: "personalized_bulk_items"
           isOneToOne: true
           isSetofReturn: false
+        }
+      }
+      claim_seo_pipeline_items: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          duplication_found: boolean | null
+          error: string | null
+          event: string
+          health_score: number | null
+          id: string
+          page_name: string | null
+          page_type: string | null
+          path: string | null
+          result: Json
+          schema_valid: boolean | null
+          source_id: string
+          source_table: string
+          stages_done: Json
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "seo_pipeline_queue"
+          isOneToOne: false
+          isSetofReturn: true
         }
       }
       colleges_listing: {
