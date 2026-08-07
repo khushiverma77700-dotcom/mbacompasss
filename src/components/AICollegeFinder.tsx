@@ -447,7 +447,10 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-base">Your AI College Report</h3>
-                    <p className="text-[11px] text-muted-foreground">{aiResult.recommendations?.length || 0} colleges matched from 80+ database</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {aiResult.stats?.total_matches ?? aiResult.recommendations?.length ?? 0} matching colleges from our verified database of {aiResult.stats?.total_in_database ?? 0} B-Schools
+                    </p>
+
                   </div>
                 </div>
                 <Button onClick={reset} variant="outline" size="sm" className="gap-1.5 text-xs rounded-xl">
