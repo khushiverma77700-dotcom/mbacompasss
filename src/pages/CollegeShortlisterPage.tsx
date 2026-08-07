@@ -952,6 +952,18 @@ const CollegeShortlisterPage = () => {
             )}
           </div>
         </div>
+
+        <LoginRequiredDialog
+          open={showLogin}
+          onOpenChange={(open) => {
+            setShowLogin(open);
+            if (!open && user) {
+              setInsightsUnlocked(true);
+              setTimeout(() => handleSubmit(), 300);
+            }
+          }}
+          message="Create a free account or sign in to view your personalized college shortlist with AI insights and score comparison."
+        />
       </div>
     );
   }
