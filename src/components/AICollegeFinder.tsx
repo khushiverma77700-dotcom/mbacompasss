@@ -69,7 +69,7 @@ const DEFAULT_VISIBLE = 8;
 
 
 const LOADING_STAGES = [
-  { icon: Search, text: "Scanning 80+ MBA colleges...", duration: 1500 },
+  { icon: Search, text: "Scanning every college in our database...", duration: 1500 },
   { icon: Brain, text: "Analyzing your profile match...", duration: 2000 },
   { icon: Database, text: "Computing ROI & placement data...", duration: 2000 },
   { icon: BarChart3, text: "Ranking best-fit B-Schools...", duration: 1500 },
