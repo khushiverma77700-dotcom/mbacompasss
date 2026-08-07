@@ -48,6 +48,45 @@ const MAT_SCORE_RANGES = [
   "800+", "750 - 800", "700 - 750", "650 - 700", "600 - 650", "Below 600"
 ];
 
+// Academic percentage bands — dropdown instead of typing
+const PERCENT_BANDS: { label: string; value: string }[] = [
+  { label: "95% and above", value: "96" },
+  { label: "90% - 95%", value: "92.5" },
+  { label: "85% - 90%", value: "87.5" },
+  { label: "80% - 85%", value: "82.5" },
+  { label: "75% - 80%", value: "77.5" },
+  { label: "70% - 75%", value: "72.5" },
+  { label: "65% - 70%", value: "67.5" },
+  { label: "60% - 65%", value: "62.5" },
+  { label: "55% - 60%", value: "57.5" },
+  { label: "50% - 55%", value: "52.5" },
+  { label: "Below 50%", value: "45" },
+];
+
+const WORK_EXP_OPTIONS: { label: string; value: string }[] = [
+  { label: "Fresher (no experience)", value: "0" },
+  { label: "0 - 6 months", value: "3" },
+  { label: "6 - 12 months", value: "9" },
+  { label: "1 - 2 years", value: "18" },
+  { label: "2 - 3 years", value: "30" },
+  { label: "3 - 5 years", value: "48" },
+  { label: "5 - 8 years", value: "78" },
+  { label: "More than 8 years", value: "108" },
+];
+
+const CATEGORY_OPTIONS = ["General", "EWS", "OBC-NCL", "SC", "ST", "PwD"];
+const TARGET_YEAR_OPTIONS = ["2026 Intake", "2027 Intake", "2028 Intake", "Not decided yet"];
+const MBA_GOAL_OPTIONS = ["Consulting", "Investment Banking / Finance", "Product Management", "Marketing / Brand", "Operations / Supply Chain", "Analytics / Data", "General Management", "Family Business / Startup", "Still exploring"];
+const PROGRAM_TYPE_OPTIONS = ["Full-time 2-year MBA/PGDM", "Executive MBA (1-year)", "Part-time / Weekend MBA", "Online / Distance MBA", "Integrated / Dual Degree"];
+const CAMPUS_TYPE_OPTIONS = ["Government / IIM / Autonomous", "Private (top-rated)", "University affiliated", "No preference"];
+const WORK_DOMAIN_OPTIONS = ["IT / Software", "Core Engineering", "BFSI / Finance", "Consulting", "Sales & Marketing", "Operations / Manufacturing", "Government / PSU", "Startup", "Family Business", "Not applicable"];
+const PREP_STAGE_OPTIONS = ["Just started preparation", "Mid-way through syllabus", "Revision + mocks stage", "Exam already attempted", "Awaiting results"];
+const BACKLOG_OPTIONS = ["No backlogs", "1 - 2 cleared backlogs", "3+ cleared backlogs", "Active backlogs", "Education gap of 1+ year"];
+const FUNDING_OPTIONS = ["Self / family funded", "Education loan planned", "Scholarship dependent", "Employer sponsored", "Not decided yet"];
+const RELOCATE_OPTIONS = ["Anywhere in India", "Only metro cities", "Only my home state", "Open to abroad campuses too"];
+const INTERVIEW_PREP_OPTIONS = ["Not started", "Self preparing", "Enrolled in GD-PI program", "Already faced interviews"];
+const ACADEMIC_CONSISTENCY_OPTIONS = ["Consistent 80%+ throughout", "Strong in school, average in graduation", "Average in school, strong in graduation", "Average throughout", "Prefer not to say"];
+
 const BENEFITS = [
   { icon: Zap, title: "AI-Powered Analysis", desc: "Advanced scoring using real college data, cutoffs & placements from 100+ MBA colleges", color: "from-blue-500 to-cyan-500", stat: "100+" },
   { icon: Target, title: "Personalized Results", desc: "Dream, Target & Safe colleges matched to YOUR exact academic & exam profile", color: "from-amber-500 to-orange-500", stat: "3 Buckets" },
@@ -116,6 +155,10 @@ interface FormData {
   budgetRange: [number, number]; expectedSalaryRange: [number, number];
   preferredStates: string[]; preferredColleges: string;
   collegeTier: string[]; specializations: string[]; roiPreference: string;
+  // Extended MBA profile questions (all dropdown-driven)
+  category: string; targetYear: string; mbaGoal: string; programType: string;
+  campusType: string; workDomain: string; prepStage: string; backlogs: string;
+  funding: string; relocation: string; interviewPrep: string; academicConsistency: string;
 }
 
 const initialForm: FormData = {
@@ -128,7 +171,11 @@ const initialForm: FormData = {
   budgetRange: [200000, 2500000], expectedSalaryRange: [500000, 3000000],
   preferredStates: [], preferredColleges: "",
   collegeTier: [], specializations: [], roiPreference: "balanced",
+  category: "", targetYear: "", mbaGoal: "", programType: "",
+  campusType: "", workDomain: "", prepStage: "", backlogs: "",
+  funding: "", relocation: "", interviewPrep: "", academicConsistency: "",
 };
+
 
 const bucketConfig = {
   dream: { label: "Dream Colleges", desc: "Aspirational — aim high!", icon: Star, color: "text-amber-500", gradient: "from-amber-500 to-orange-500", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", chance: "20-40%", ring: "ring-amber-500/20", progressColor: "bg-amber-500" },
@@ -241,15 +288,21 @@ const CollegeShortlisterPage = () => {
       }
     }
     if (s === 2) {
-      if (!form.tenth || !form.twelfth) { toast({ title: "Enter 10th and 12th scores", variant: "destructive" }); return false; }
-      if (!form.graduation) { toast({ title: "Enter graduation percentage", variant: "destructive" }); return false; }
+      if (!form.tenth || !form.twelfth) { toast({ title: "Select your 10th and 12th score range", variant: "destructive" }); return false; }
+      if (!form.graduation) { toast({ title: "Select your graduation score range", variant: "destructive" }); return false; }
       if (!form.graduationStream) { toast({ title: "Select graduation stream", variant: "destructive" }); return false; }
+      if (!form.category) { toast({ title: "Select your category", variant: "destructive" }); return false; }
+    }
+    if (s === 4) {
+      if (!form.targetYear) { toast({ title: "Select your target intake year", variant: "destructive" }); return false; }
+      if (!form.mbaGoal) { toast({ title: "Select your post-MBA goal", variant: "destructive" }); return false; }
+      if (!form.programType) { toast({ title: "Select the program type you want", variant: "destructive" }); return false; }
     }
     return true;
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(3)) return;
+    if (!validateStep(4)) return;
 
     // Gate behind login — must be logged in to see results
     if (!user) {
@@ -257,7 +310,8 @@ const CollegeShortlisterPage = () => {
       return;
     }
 
-    setStep(4);
+    setStep(5);
+
     setLoading(true);
     try {
       // Build numeric scores from dropdown values
@@ -292,6 +346,18 @@ const CollegeShortlisterPage = () => {
         collegeTier: form.collegeTier,
         specializations: form.specializations,
         roiPreference: form.roiPreference,
+        category: form.category || undefined,
+        targetYear: form.targetYear || undefined,
+        mbaGoal: form.mbaGoal || undefined,
+        programType: form.programType || undefined,
+        campusType: form.campusType || undefined,
+        workDomain: form.workDomain || undefined,
+        prepStage: form.prepStage || undefined,
+        backlogs: form.backlogs || undefined,
+        funding: form.funding || undefined,
+        relocation: form.relocation || undefined,
+        interviewPrep: form.interviewPrep || undefined,
+        academicConsistency: form.academicConsistency || undefined,
       };
       const { data, error } = await supabase.functions.invoke("college-shortlister", { body: payload });
       if (error) throw error;
@@ -299,11 +365,12 @@ const CollegeShortlisterPage = () => {
       setAiInsights(data.aiInsights || "");
       setStrategy(data.strategy || "");
       setStats(data.stats || { totalAnalyzed: 0, dreamCount: 0, targetCount: 0, safeCount: 0 });
-      setStep(5);
+      setStep(6);
     } catch (err: any) {
       console.error(err);
       toast({ title: "Error", description: err.message || "Failed to generate recommendations", variant: "destructive" });
-      setStep(3);
+      setStep(4);
+
     } finally {
       setLoading(false);
     }
@@ -693,9 +760,9 @@ const CollegeShortlisterPage = () => {
     );
   }
 
-  // ─── FORM STEPS 1-3 ────────────────────────────────────────
-  if (step >= 1 && step <= 3) {
-    const progress = (step / 3) * 100;
+  // ─── FORM STEPS 1-4 ────────────────────────────────────────
+  if (step >= 1 && step <= 4) {
+    const progress = (step / 4) * 100;
     return (
       <div className="min-h-screen bg-background">
         <SEOHead title={`Step ${step} — AI College Shortlister`} description="Enter your profile for personalized MBA college recommendations." />
@@ -703,7 +770,8 @@ const CollegeShortlisterPage = () => {
           {/* Progress */}
           <div className="mb-8">
             <div className="flex justify-between text-sm font-medium text-muted-foreground mb-3">
-              {["Exam & Score", "Academic Profile", "Preferences & Budget"].map((label, i) => (
+              {["Exam & Score", "Academic Profile", "Preferences & Budget", "MBA Goals & Background"].map((label, i) => (
+
                 <div key={i} className="flex items-center gap-1.5">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step > i + 1 ? "bg-primary text-primary-foreground" : step === i + 1 ? "bg-primary text-primary-foreground ring-4 ring-primary/20" : "bg-muted text-muted-foreground"}`}>
                     {step > i + 1 ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
@@ -799,18 +867,28 @@ const CollegeShortlisterPage = () => {
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">10th % <span className="text-destructive">*</span></label>
-                        <Input type="number" placeholder="92" value={form.tenth} onChange={e => updateField("tenth", e.target.value)} max={100} className="rounded-xl" />
+                        <label className="text-sm font-medium text-foreground mb-2 block">10th Score <span className="text-destructive">*</span></label>
+                        <Select value={form.tenth} onValueChange={(v) => updateField("tenth", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select range" /></SelectTrigger>
+                          <SelectContent>
+                            {PERCENT_BANDS.map(b => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">12th % <span className="text-destructive">*</span></label>
-                        <Input type="number" placeholder="88" value={form.twelfth} onChange={e => updateField("twelfth", e.target.value)} max={100} className="rounded-xl" />
+                        <label className="text-sm font-medium text-foreground mb-2 block">12th Score <span className="text-destructive">*</span></label>
+                        <Select value={form.twelfth} onValueChange={(v) => updateField("twelfth", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select range" /></SelectTrigger>
+                          <SelectContent>
+                            {PERCENT_BANDS.map(b => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-foreground">Graduation % <span className="text-destructive">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Graduation Score <span className="text-destructive">*</span></label>
                         <button
                           onClick={() => updateField("graduationPursuing", !form.graduationPursuing)}
                           className={`text-xs px-3 py-1 rounded-full border transition-all ${form.graduationPursuing ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
@@ -818,16 +896,14 @@ const CollegeShortlisterPage = () => {
                           {form.graduationPursuing ? "✓ Pursuing" : "Pursuing?"}
                         </button>
                       </div>
-                      <Input
-                        type="number"
-                        placeholder={form.graduationPursuing ? "e.g. 78 (till last semester)" : "e.g. 75"}
-                        value={form.graduation}
-                        onChange={e => updateField("graduation", e.target.value)}
-                        max={100}
-                        className="rounded-xl"
-                      />
+                      <Select value={form.graduation} onValueChange={(v) => updateField("graduation", v)}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select range" /></SelectTrigger>
+                        <SelectContent>
+                          {PERCENT_BANDS.map(b => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                       {form.graduationPursuing && (
-                        <p className="text-xs text-muted-foreground mt-1">Enter your percentage/CGPA average till the last completed semester</p>
+                        <p className="text-xs text-muted-foreground mt-1">Select the range matching your average till the last completed semester</p>
                       )}
                     </div>
 
@@ -843,10 +919,56 @@ const CollegeShortlisterPage = () => {
                       </div>
                     </div>
 
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Academic Consistency</label>
+                      <Select value={form.academicConsistency} onValueChange={(v) => updateField("academicConsistency", v)}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          {ACADEMIC_CONSISTENCY_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Backlogs / Education Gap</label>
+                      <Select value={form.backlogs} onValueChange={(v) => updateField("backlogs", v)}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          {BACKLOG_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Work Experience (months)</label>
-                        <Input type="number" placeholder="e.g. 24" value={form.workExperienceMonths} onChange={e => updateField("workExperienceMonths", e.target.value)} className="rounded-xl" />
+                        <label className="text-sm font-medium text-foreground mb-2 block">Work Experience</label>
+                        <Select value={form.workExperienceMonths} onValueChange={(v) => updateField("workExperienceMonths", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select experience" /></SelectTrigger>
+                          <SelectContent>
+                            {WORK_EXP_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Work Domain</label>
+                        <Select value={form.workDomain} onValueChange={(v) => updateField("workDomain", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select domain" /></SelectTrigger>
+                          <SelectContent>
+                            {WORK_DOMAIN_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Category</label>
+                        <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select category" /></SelectTrigger>
+                          <SelectContent>
+                            {CATEGORY_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">Gender (optional)</label>
@@ -860,6 +982,7 @@ const CollegeShortlisterPage = () => {
                         </Select>
                       </div>
                     </div>
+
                   </CardContent>
                 </Card>
               )}
@@ -947,6 +1070,95 @@ const CollegeShortlisterPage = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Step 4: MBA Goals & Background */}
+              {step === 4 && (
+                <Card className="shadow-lg border-border/50">
+                  <CardHeader>
+                    <CardTitle className="font-heading flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Sparkles className="w-5 h-5 text-primary" /></div>
+                      MBA Goals & Background
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">A few last questions — just select from the dropdowns</p>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Target Intake Year <span className="text-destructive">*</span></label>
+                        <Select value={form.targetYear} onValueChange={(v) => updateField("targetYear", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select year" /></SelectTrigger>
+                          <SelectContent>
+                            {TARGET_YEAR_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Program Type <span className="text-destructive">*</span></label>
+                        <Select value={form.programType} onValueChange={(v) => updateField("programType", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select program" /></SelectTrigger>
+                          <SelectContent>
+                            {PROGRAM_TYPE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Post-MBA Career Goal <span className="text-destructive">*</span></label>
+                        <Select value={form.mbaGoal} onValueChange={(v) => updateField("mbaGoal", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select goal" /></SelectTrigger>
+                          <SelectContent>
+                            {MBA_GOAL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">College Ownership Preference</label>
+                        <Select value={form.campusType} onValueChange={(v) => updateField("campusType", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {CAMPUS_TYPE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Exam Preparation Stage</label>
+                        <Select value={form.prepStage} onValueChange={(v) => updateField("prepStage", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select stage" /></SelectTrigger>
+                          <SelectContent>
+                            {PREP_STAGE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">GD / PI Preparation</label>
+                        <Select value={form.interviewPrep} onValueChange={(v) => updateField("interviewPrep", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {INTERVIEW_PREP_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">How will you fund the MBA?</label>
+                        <Select value={form.funding} onValueChange={(v) => updateField("funding", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {FUNDING_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Relocation Willingness</label>
+                        <Select value={form.relocation} onValueChange={(v) => updateField("relocation", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {RELOCATE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </motion.div>
           </AnimatePresence>
 
@@ -955,7 +1167,8 @@ const CollegeShortlisterPage = () => {
             <Button variant="outline" className="rounded-xl" onClick={() => setStep(step === 1 ? 0 : step - 1)}>
               {step === 1 ? "← Back" : "← Previous"}
             </Button>
-            {step < 3 ? (
+            {step < 4 ? (
+
               <Button className="rounded-xl" onClick={() => { if (validateStep(step)) setStep(step + 1); }}>
                 Next Step <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
@@ -983,7 +1196,7 @@ const CollegeShortlisterPage = () => {
   }
 
   // ─── LOADING ───────────────────────────────────────────────
-  if (step === 4) {
+  if (step === 5) {
     const stages = [
       { text: "Scanning 100+ MBA colleges...", icon: Building2 },
       { text: "Matching your profile against cutoffs...", icon: Target },
