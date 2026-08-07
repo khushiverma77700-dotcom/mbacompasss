@@ -916,11 +916,11 @@ const CollegeShortlisterPage = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-foreground mb-2.5 block">Preferred Specialization</label>
+                      <label className="text-sm font-medium text-foreground mb-2.5 block">Preferred Specialization <span className="text-xs text-muted-foreground">(select multiple)</span></label>
                       <div className="grid grid-cols-3 gap-2">
                         {SPECIALIZATIONS.map(spec => (
-                          <button key={spec} onClick={() => updateField("specialization", spec)}
-                            className={`px-3 py-2 rounded-xl border text-xs font-medium transition-all duration-200 ${form.specialization === spec ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-foreground"}`}>
+                          <button key={spec} onClick={() => toggleSpecialization(spec)}
+                            className={`px-3 py-2 rounded-xl border text-xs font-medium transition-all duration-200 ${form.specializations.includes(spec) ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-foreground"}`}>
                             {spec}
                           </button>
                         ))}
