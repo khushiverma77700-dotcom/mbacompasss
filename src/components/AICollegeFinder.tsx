@@ -14,6 +14,10 @@ interface CollegeRecommendation {
   college_name: string;
   college_slug: string;
   tier: string;
+  category?: string;
+  group_label?: string;
+  difficulty?: string;
+  required_percentile?: number;
   match_score: number;
   why_best_fit: string;
   key_strengths: string[];
@@ -24,8 +28,12 @@ interface CollegeRecommendation {
   roi: string;
   location: string;
   exams_accepted: string[];
+  specializations?: string[];
   specialization_strength: string;
   logo_url?: string;
+  website?: string;
+  admission_process?: string;
+  ranking?: number | null;
   established?: string;
   campus_size?: string;
   total_students?: string;
@@ -37,6 +45,15 @@ interface CollegeRecommendation {
 interface AICollegeResult {
   summary: string;
   recommendations: CollegeRecommendation[];
+  groups?: { label: string; colleges: CollegeRecommendation[] }[];
+  stats?: {
+    total_in_database: number;
+    total_matches: number;
+    safe: number;
+    target: number;
+    ambitious: number;
+    best_match: number;
+  };
   pro_tips: string[];
   strategy?: {
     priority_targets: string;
@@ -44,6 +61,7 @@ interface AICollegeResult {
     budget_alternatives: string;
   };
 }
+
 
 const EXAMS = ["CAT", "XAT", "GMAT", "MAT", "CMAT", "SNAP", "NMAT", "IIFT", "ATMA"];
 
