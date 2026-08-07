@@ -346,6 +346,18 @@ const CollegeShortlisterPage = () => {
         collegeTier: form.collegeTier,
         specializations: form.specializations,
         roiPreference: form.roiPreference,
+        category: form.category || undefined,
+        targetYear: form.targetYear || undefined,
+        mbaGoal: form.mbaGoal || undefined,
+        programType: form.programType || undefined,
+        campusType: form.campusType || undefined,
+        workDomain: form.workDomain || undefined,
+        prepStage: form.prepStage || undefined,
+        backlogs: form.backlogs || undefined,
+        funding: form.funding || undefined,
+        relocation: form.relocation || undefined,
+        interviewPrep: form.interviewPrep || undefined,
+        academicConsistency: form.academicConsistency || undefined,
       };
       const { data, error } = await supabase.functions.invoke("college-shortlister", { body: payload });
       if (error) throw error;
@@ -353,11 +365,12 @@ const CollegeShortlisterPage = () => {
       setAiInsights(data.aiInsights || "");
       setStrategy(data.strategy || "");
       setStats(data.stats || { totalAnalyzed: 0, dreamCount: 0, targetCount: 0, safeCount: 0 });
-      setStep(5);
+      setStep(6);
     } catch (err: any) {
       console.error(err);
       toast({ title: "Error", description: err.message || "Failed to generate recommendations", variant: "destructive" });
-      setStep(3);
+      setStep(4);
+
     } finally {
       setLoading(false);
     }
