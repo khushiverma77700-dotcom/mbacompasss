@@ -208,6 +208,8 @@ const getScoreRanges = (exam: string) => {
   return { label: "Percentile", ranges: PERCENTILE_RANGES };
 };
 
+const DRAFT_KEY = "shortlister_draft_v1";
+
 const CollegeShortlisterPage = () => {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initialForm);
@@ -225,7 +227,44 @@ const CollegeShortlisterPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // ─── Draft persistence (survives Google login redirect) ───
+  const submissionIdRef = useRef<string | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const pendingSubmitRef = useRef(false);
+  const autoRanRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.form) setForm({ ...initialForm, ...saved.form });
+        if (typeof saved?.step === "number" && saved.step >= 1 && saved.step <= 4) setStep(saved.step);
+        if (saved?.submissionId) submissionIdRef.current = saved.submissionId;
+        if (saved?.pendingSubmit) pendingSubmitRef.current = true;
+      }
+    } catch { /* ignore corrupt draft */ }
+    setDraftLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+    if (step < 1 || step > 4) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        form, step, submissionId: submissionIdRef.current, pendingSubmit: pendingSubmitRef.current,
+      }));
+    } catch { /* storage full / blocked */ }
+  }, [form, step, draftLoaded]);
+
+  const clearDraft = () => {
+    pendingSubmitRef.current = false;
+    submissionIdRef.current = null;
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* noop */ }
+  };
+
   const updateField = <K extends keyof FormData>(key: K, val: FormData[K]) => setForm(prev => ({ ...prev, [key]: val }));
+
 
   const toggleExam = (exam: string) => {
     // CAT is always selected
