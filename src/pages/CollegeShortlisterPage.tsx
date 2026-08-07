@@ -48,6 +48,45 @@ const MAT_SCORE_RANGES = [
   "800+", "750 - 800", "700 - 750", "650 - 700", "600 - 650", "Below 600"
 ];
 
+// Academic percentage bands — dropdown instead of typing
+const PERCENT_BANDS: { label: string; value: string }[] = [
+  { label: "95% and above", value: "96" },
+  { label: "90% - 95%", value: "92.5" },
+  { label: "85% - 90%", value: "87.5" },
+  { label: "80% - 85%", value: "82.5" },
+  { label: "75% - 80%", value: "77.5" },
+  { label: "70% - 75%", value: "72.5" },
+  { label: "65% - 70%", value: "67.5" },
+  { label: "60% - 65%", value: "62.5" },
+  { label: "55% - 60%", value: "57.5" },
+  { label: "50% - 55%", value: "52.5" },
+  { label: "Below 50%", value: "45" },
+];
+
+const WORK_EXP_OPTIONS: { label: string; value: string }[] = [
+  { label: "Fresher (no experience)", value: "0" },
+  { label: "0 - 6 months", value: "3" },
+  { label: "6 - 12 months", value: "9" },
+  { label: "1 - 2 years", value: "18" },
+  { label: "2 - 3 years", value: "30" },
+  { label: "3 - 5 years", value: "48" },
+  { label: "5 - 8 years", value: "78" },
+  { label: "More than 8 years", value: "108" },
+];
+
+const CATEGORY_OPTIONS = ["General", "EWS", "OBC-NCL", "SC", "ST", "PwD"];
+const TARGET_YEAR_OPTIONS = ["2026 Intake", "2027 Intake", "2028 Intake", "Not decided yet"];
+const MBA_GOAL_OPTIONS = ["Consulting", "Investment Banking / Finance", "Product Management", "Marketing / Brand", "Operations / Supply Chain", "Analytics / Data", "General Management", "Family Business / Startup", "Still exploring"];
+const PROGRAM_TYPE_OPTIONS = ["Full-time 2-year MBA/PGDM", "Executive MBA (1-year)", "Part-time / Weekend MBA", "Online / Distance MBA", "Integrated / Dual Degree"];
+const CAMPUS_TYPE_OPTIONS = ["Government / IIM / Autonomous", "Private (top-rated)", "University affiliated", "No preference"];
+const WORK_DOMAIN_OPTIONS = ["IT / Software", "Core Engineering", "BFSI / Finance", "Consulting", "Sales & Marketing", "Operations / Manufacturing", "Government / PSU", "Startup", "Family Business", "Not applicable"];
+const PREP_STAGE_OPTIONS = ["Just started preparation", "Mid-way through syllabus", "Revision + mocks stage", "Exam already attempted", "Awaiting results"];
+const BACKLOG_OPTIONS = ["No backlogs", "1 - 2 cleared backlogs", "3+ cleared backlogs", "Active backlogs", "Education gap of 1+ year"];
+const FUNDING_OPTIONS = ["Self / family funded", "Education loan planned", "Scholarship dependent", "Employer sponsored", "Not decided yet"];
+const RELOCATE_OPTIONS = ["Anywhere in India", "Only metro cities", "Only my home state", "Open to abroad campuses too"];
+const INTERVIEW_PREP_OPTIONS = ["Not started", "Self preparing", "Enrolled in GD-PI program", "Already faced interviews"];
+const ACADEMIC_CONSISTENCY_OPTIONS = ["Consistent 80%+ throughout", "Strong in school, average in graduation", "Average in school, strong in graduation", "Average throughout", "Prefer not to say"];
+
 const BENEFITS = [
   { icon: Zap, title: "AI-Powered Analysis", desc: "Advanced scoring using real college data, cutoffs & placements from 100+ MBA colleges", color: "from-blue-500 to-cyan-500", stat: "100+" },
   { icon: Target, title: "Personalized Results", desc: "Dream, Target & Safe colleges matched to YOUR exact academic & exam profile", color: "from-amber-500 to-orange-500", stat: "3 Buckets" },
