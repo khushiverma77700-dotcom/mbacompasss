@@ -115,7 +115,7 @@ interface FormData {
   workExperienceMonths: string; gender: string;
   budgetRange: [number, number]; expectedSalaryRange: [number, number];
   preferredStates: string[]; preferredColleges: string;
-  collegeTier: string[]; specialization: string; roiPreference: string;
+  collegeTier: string[]; specializations: string[]; roiPreference: string;
 }
 
 const initialForm: FormData = {
@@ -127,7 +127,7 @@ const initialForm: FormData = {
   workExperienceMonths: "", gender: "",
   budgetRange: [200000, 2500000], expectedSalaryRange: [500000, 3000000],
   preferredStates: [], preferredColleges: "",
-  collegeTier: [], specialization: "", roiPreference: "balanced",
+  collegeTier: [], specializations: [], roiPreference: "balanced",
 };
 
 const bucketConfig = {
@@ -217,6 +217,20 @@ const CollegeShortlisterPage = () => {
     }));
   };
 
+  const toggleSpecialization = (spec: string) => {
+    setForm(prev => {
+      if (spec === "Open to All") {
+        return { ...prev, specializations: prev.specializations.includes("Open to All") ? [] : ["Open to All"] };
+      }
+      let next = prev.specializations.includes(spec)
+        ? prev.specializations.filter(s => s !== spec)
+        : [...prev.specializations, spec];
+      // Selecting any specific specialization clears "Open to All"
+      next = next.filter(s => s !== "Open to All");
+      return { ...prev, specializations: next };
+    });
+  };
+
   const validateStep = (s: number): boolean => {
     if (s === 1) {
       if (form.exams.length === 0) { toast({ title: "Select at least one exam", variant: "destructive" }); return false; }
@@ -276,7 +290,7 @@ const CollegeShortlisterPage = () => {
         preferredStates: form.preferredStates.filter(s => s !== "Pan India"),
         preferredColleges: form.preferredColleges ? form.preferredColleges.split(",").map(c => c.trim()).filter(Boolean) : [],
         collegeTier: form.collegeTier,
-        specialization: form.specialization,
+        specializations: form.specializations,
         roiPreference: form.roiPreference,
       };
       const { data, error } = await supabase.functions.invoke("college-shortlister", { body: payload });
@@ -902,11 +916,11 @@ const CollegeShortlisterPage = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-foreground mb-2.5 block">Preferred Specialization</label>
+                      <label className="text-sm font-medium text-foreground mb-2.5 block">Preferred Specialization <span className="text-xs text-muted-foreground">(select multiple)</span></label>
                       <div className="grid grid-cols-3 gap-2">
                         {SPECIALIZATIONS.map(spec => (
-                          <button key={spec} onClick={() => updateField("specialization", spec)}
-                            className={`px-3 py-2 rounded-xl border text-xs font-medium transition-all duration-200 ${form.specialization === spec ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-foreground"}`}>
+                          <button key={spec} onClick={() => toggleSpecialization(spec)}
+                            className={`px-3 py-2 rounded-xl border text-xs font-medium transition-all duration-200 ${form.specializations.includes(spec) ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-foreground"}`}>
                             {spec}
                           </button>
                         ))}
