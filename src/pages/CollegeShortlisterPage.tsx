@@ -115,7 +115,7 @@ interface FormData {
   workExperienceMonths: string; gender: string;
   budgetRange: [number, number]; expectedSalaryRange: [number, number];
   preferredStates: string[]; preferredColleges: string;
-  collegeTier: string[]; specialization: string; roiPreference: string;
+  collegeTier: string[]; specializations: string[]; roiPreference: string;
 }
 
 const initialForm: FormData = {
