@@ -217,6 +217,20 @@ const CollegeShortlisterPage = () => {
     }));
   };
 
+  const toggleSpecialization = (spec: string) => {
+    setForm(prev => {
+      if (spec === "Open to All") {
+        return { ...prev, specializations: prev.specializations.includes("Open to All") ? [] : ["Open to All"] };
+      }
+      let next = prev.specializations.includes(spec)
+        ? prev.specializations.filter(s => s !== spec)
+        : [...prev.specializations, spec];
+      // Selecting any specific specialization clears "Open to All"
+      next = next.filter(s => s !== "Open to All");
+      return { ...prev, specializations: next };
+    });
+  };
+
   const validateStep = (s: number): boolean => {
     if (s === 1) {
       if (form.exams.length === 0) { toast({ title: "Select at least one exam", variant: "destructive" }); return false; }
