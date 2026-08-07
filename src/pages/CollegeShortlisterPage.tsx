@@ -155,6 +155,10 @@ interface FormData {
   budgetRange: [number, number]; expectedSalaryRange: [number, number];
   preferredStates: string[]; preferredColleges: string;
   collegeTier: string[]; specializations: string[]; roiPreference: string;
+  // Extended MBA profile questions (all dropdown-driven)
+  category: string; targetYear: string; mbaGoal: string; programType: string;
+  campusType: string; workDomain: string; prepStage: string; backlogs: string;
+  funding: string; relocation: string; interviewPrep: string; academicConsistency: string;
 }
 
 const initialForm: FormData = {
@@ -167,7 +171,11 @@ const initialForm: FormData = {
   budgetRange: [200000, 2500000], expectedSalaryRange: [500000, 3000000],
   preferredStates: [], preferredColleges: "",
   collegeTier: [], specializations: [], roiPreference: "balanced",
+  category: "", targetYear: "", mbaGoal: "", programType: "",
+  campusType: "", workDomain: "", prepStage: "", backlogs: "",
+  funding: "", relocation: "", interviewPrep: "", academicConsistency: "",
 };
+
 
 const bucketConfig = {
   dream: { label: "Dream Colleges", desc: "Aspirational — aim high!", icon: Star, color: "text-amber-500", gradient: "from-amber-500 to-orange-500", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", chance: "20-40%", ring: "ring-amber-500/20", progressColor: "bg-amber-500" },
