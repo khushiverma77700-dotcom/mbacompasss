@@ -480,8 +480,6 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
               </motion.div>
             )}
 
-            {/* Recommendation cards */}
-            <div className="space-y-4">
             {/* Stats strip */}
             {aiResult.stats && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
