@@ -14,6 +14,10 @@ interface CollegeRecommendation {
   college_name: string;
   college_slug: string;
   tier: string;
+  category?: string;
+  group_label?: string;
+  difficulty?: string;
+  required_percentile?: number;
   match_score: number;
   why_best_fit: string;
   key_strengths: string[];
@@ -24,8 +28,12 @@ interface CollegeRecommendation {
   roi: string;
   location: string;
   exams_accepted: string[];
+  specializations?: string[];
   specialization_strength: string;
   logo_url?: string;
+  website?: string;
+  admission_process?: string;
+  ranking?: number | null;
   established?: string;
   campus_size?: string;
   total_students?: string;
@@ -37,6 +45,15 @@ interface CollegeRecommendation {
 interface AICollegeResult {
   summary: string;
   recommendations: CollegeRecommendation[];
+  groups?: { label: string; colleges: CollegeRecommendation[] }[];
+  stats?: {
+    total_in_database: number;
+    total_matches: number;
+    safe: number;
+    target: number;
+    ambitious: number;
+    best_match: number;
+  };
   pro_tips: string[];
   strategy?: {
     priority_targets: string;
@@ -45,10 +62,14 @@ interface AICollegeResult {
   };
 }
 
+
 const EXAMS = ["CAT", "XAT", "GMAT", "MAT", "CMAT", "SNAP", "NMAT", "IIFT", "ATMA"];
 
+const DEFAULT_VISIBLE = 8;
+
+
 const LOADING_STAGES = [
-  { icon: Search, text: "Scanning 80+ MBA colleges...", duration: 1500 },
+  { icon: Search, text: "Scanning every college in our database...", duration: 1500 },
   { icon: Brain, text: "Analyzing your profile match...", duration: 2000 },
   { icon: Database, text: "Computing ROI & placement data...", duration: 2000 },
   { icon: BarChart3, text: "Ranking best-fit B-Schools...", duration: 1500 },
@@ -84,12 +105,17 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
   const [error, setError] = useState("");
   const [loadingStage, setLoadingStage] = useState(0);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState<Record<string, number>>({});
+
+  const groupedList = aiResult?.groups?.filter((g) => g.colleges?.length) ?? [];
 
   const reset = () => {
     setStep("tier"); setCollegeTier(""); setSelectedExams([]); setExpectedScore("");
     setBudget(""); setLocation(""); setSpecialization(""); setExperience("");
     setCareerGoal(""); setAiResult(null); setError(""); setLoadingStage(0); setExpandedCard(null);
+    setVisibleCount({});
   };
+
 
   const allSteps: Step[] = ["tier", "exam", "score", "budget", "location", "specialization", "experience", "career"];
   const currentIdx = allSteps.indexOf(step);
@@ -216,6 +242,12 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-semibold">{rec.tier}</Badge>
                 {rec.type && <Badge variant="outline" className="text-[10px] px-2 py-0.5">{rec.type}</Badge>}
+                {rec.difficulty && rec.difficulty !== "Unknown" && (
+                  <Badge className={`text-[10px] px-2 py-0.5 border-0 ${rec.difficulty === "Safe" ? "bg-emerald-100 text-emerald-800" : rec.difficulty === "Target" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
+                    {rec.difficulty}
+                  </Badge>
+                )}
+
                 <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                   <MapPin className="w-3 h-3" /> {rec.location}
                 </span>
@@ -343,14 +375,33 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
             )}
           </AnimatePresence>
 
-          {/* Footer CTA */}
-          <div className="p-4 pt-3">
+          {/* Footer CTAs */}
+          <div className="p-4 pt-3 grid grid-cols-3 gap-2">
+            <Link to={`/college/${rec.college_slug}#admission`}>
+              <Button size="sm" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                <BadgeCheck className="w-3.5 h-3.5" /> Apply Now
+              </Button>
+            </Link>
+            {rec.website ? (
+              <a href={rec.website} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="outline" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                  <Globe2 className="w-3.5 h-3.5" /> Visit College
+                </Button>
+              </a>
+            ) : (
+              <Link to={`/college/${rec.college_slug}`}>
+                <Button size="sm" variant="outline" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                  <Globe2 className="w-3.5 h-3.5" /> Visit College
+                </Button>
+              </Link>
+            )}
             <Link to={`/college/${rec.college_slug}`}>
-              <Button size="sm" className="w-full gap-2 text-xs h-10 font-semibold rounded-xl">
-                <ExternalLink className="w-3.5 h-3.5" /> View Full College Profile
+              <Button size="sm" variant="secondary" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                <ExternalLink className="w-3.5 h-3.5" /> See More
               </Button>
             </Link>
           </div>
+
         </div>
       </motion.div>
     );
@@ -410,7 +461,10 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-base">Your AI College Report</h3>
-                    <p className="text-[11px] text-muted-foreground">{aiResult.recommendations?.length || 0} colleges matched from 80+ database</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {aiResult.stats?.total_matches ?? aiResult.recommendations?.length ?? 0} matching colleges from our verified database of {aiResult.stats?.total_in_database ?? 0} B-Schools
+                    </p>
+
                   </div>
                 </div>
                 <Button onClick={reset} variant="outline" size="sm" className="gap-1.5 text-xs rounded-xl">
@@ -440,15 +494,62 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
               </motion.div>
             )}
 
-            {/* Recommendation cards */}
-            <div className="space-y-4">
-              {aiResult.recommendations?.map((rec) => (
-                <RecommendationCard key={rec.rank} rec={rec} />
-              ))}
-            </div>
+            {/* Stats strip */}
+            {aiResult.stats && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+                {[
+                  { label: "Total Matches", value: aiResult.stats.total_matches, cls: "bg-primary/5 border-primary/15 text-primary" },
+                  { label: "Safe Options", value: aiResult.stats.safe, cls: "bg-emerald-50 border-emerald-100 text-emerald-700" },
+                  { label: "Target", value: aiResult.stats.target, cls: "bg-blue-50 border-blue-100 text-blue-700" },
+                  { label: "Ambitious", value: aiResult.stats.ambitious, cls: "bg-amber-50 border-amber-100 text-amber-700" },
+                ].map((s) => (
+                  <div key={s.label} className={`rounded-xl border p-3 text-center ${s.cls}`}>
+                    <div className="text-xl font-black">{s.value}</div>
+                    <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Grouped recommendation cards */}
+            {groupedList.length > 0 ? (
+              <div className="space-y-7">
+                {groupedList.map((g) => {
+                  const shown = visibleCount[g.label] ?? DEFAULT_VISIBLE;
+                  return (
+                    <div key={g.label}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-bold text-foreground text-sm flex items-center gap-2">
+                          <Medal className="w-4 h-4 text-primary" /> {g.label}
+                          <Badge variant="secondary" className="text-[10px]">{g.colleges.length} colleges</Badge>
+                        </h4>
+                      </div>
+                      <div className="space-y-4">
+                        {g.colleges.slice(0, shown).map((rec) => (
+                          <RecommendationCard key={rec.college_slug} rec={rec} />
+                        ))}
+                      </div>
+                      {g.colleges.length > shown && (
+                        <Button variant="outline" size="sm" className="mt-3 w-full rounded-xl text-xs"
+                          onClick={() => setVisibleCount((p) => ({ ...p, [g.label]: shown + 10 }))}>
+                          Show {Math.min(10, g.colleges.length - shown)} more in {g.label}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {aiResult.recommendations?.map((rec) => (
+                  <RecommendationCard key={rec.college_slug || rec.rank} rec={rec} />
+                ))}
+              </div>
+            )}
 
             {/* Strategy Panel */}
             {aiResult.strategy && (
+
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
                 className="mt-5 bg-gradient-to-br from-primary/[0.04] to-violet-500/[0.04] rounded-2xl p-5 border border-primary/15">
                 <h4 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
