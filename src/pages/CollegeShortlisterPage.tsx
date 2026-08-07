@@ -291,9 +291,9 @@ const CollegeShortlisterPage = () => {
       if (!form.tenth || !form.twelfth) { toast({ title: "Select your 10th and 12th score range", variant: "destructive" }); return false; }
       if (!form.graduation) { toast({ title: "Select your graduation score range", variant: "destructive" }); return false; }
       if (!form.graduationStream) { toast({ title: "Select graduation stream", variant: "destructive" }); return false; }
+      if (!form.category) { toast({ title: "Select your category", variant: "destructive" }); return false; }
     }
     if (s === 4) {
-      if (!form.category) { toast({ title: "Select your category", variant: "destructive" }); return false; }
       if (!form.targetYear) { toast({ title: "Select your target intake year", variant: "destructive" }); return false; }
       if (!form.mbaGoal) { toast({ title: "Select your post-MBA goal", variant: "destructive" }); return false; }
       if (!form.programType) { toast({ title: "Select the program type you want", variant: "destructive" }); return false; }
@@ -1196,7 +1196,7 @@ const CollegeShortlisterPage = () => {
   }
 
   // ─── LOADING ───────────────────────────────────────────────
-  if (step === 4) {
+  if (step === 5) {
     const stages = [
       { text: "Scanning 100+ MBA colleges...", icon: Building2 },
       { text: "Matching your profile against cutoffs...", icon: Target },
