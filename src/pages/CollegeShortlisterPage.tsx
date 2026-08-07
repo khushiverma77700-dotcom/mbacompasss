@@ -127,7 +127,7 @@ const initialForm: FormData = {
   workExperienceMonths: "", gender: "",
   budgetRange: [200000, 2500000], expectedSalaryRange: [500000, 3000000],
   preferredStates: [], preferredColleges: "",
-  collegeTier: [], specialization: "", roiPreference: "balanced",
+  collegeTier: [], specializations: [], roiPreference: "balanced",
 };
 
 const bucketConfig = {
