@@ -1070,6 +1070,95 @@ const CollegeShortlisterPage = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Step 4: MBA Goals & Background */}
+              {step === 4 && (
+                <Card className="shadow-lg border-border/50">
+                  <CardHeader>
+                    <CardTitle className="font-heading flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Sparkles className="w-5 h-5 text-primary" /></div>
+                      MBA Goals & Background
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">A few last questions — just select from the dropdowns</p>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Target Intake Year <span className="text-destructive">*</span></label>
+                        <Select value={form.targetYear} onValueChange={(v) => updateField("targetYear", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select year" /></SelectTrigger>
+                          <SelectContent>
+                            {TARGET_YEAR_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Program Type <span className="text-destructive">*</span></label>
+                        <Select value={form.programType} onValueChange={(v) => updateField("programType", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select program" /></SelectTrigger>
+                          <SelectContent>
+                            {PROGRAM_TYPE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Post-MBA Career Goal <span className="text-destructive">*</span></label>
+                        <Select value={form.mbaGoal} onValueChange={(v) => updateField("mbaGoal", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select goal" /></SelectTrigger>
+                          <SelectContent>
+                            {MBA_GOAL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">College Ownership Preference</label>
+                        <Select value={form.campusType} onValueChange={(v) => updateField("campusType", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {CAMPUS_TYPE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Exam Preparation Stage</label>
+                        <Select value={form.prepStage} onValueChange={(v) => updateField("prepStage", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select stage" /></SelectTrigger>
+                          <SelectContent>
+                            {PREP_STAGE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">GD / PI Preparation</label>
+                        <Select value={form.interviewPrep} onValueChange={(v) => updateField("interviewPrep", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {INTERVIEW_PREP_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">How will you fund the MBA?</label>
+                        <Select value={form.funding} onValueChange={(v) => updateField("funding", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {FUNDING_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Relocation Willingness</label>
+                        <Select value={form.relocation} onValueChange={(v) => updateField("relocation", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {RELOCATE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </motion.div>
           </AnimatePresence>
 
@@ -1078,7 +1167,8 @@ const CollegeShortlisterPage = () => {
             <Button variant="outline" className="rounded-xl" onClick={() => setStep(step === 1 ? 0 : step - 1)}>
               {step === 1 ? "← Back" : "← Previous"}
             </Button>
-            {step < 3 ? (
+            {step < 4 ? (
+
               <Button className="rounded-xl" onClick={() => { if (validateStep(step)) setStep(step + 1); }}>
                 Next Step <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
