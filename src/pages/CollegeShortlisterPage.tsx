@@ -760,9 +760,9 @@ const CollegeShortlisterPage = () => {
     );
   }
 
-  // ─── FORM STEPS 1-3 ────────────────────────────────────────
-  if (step >= 1 && step <= 3) {
-    const progress = (step / 3) * 100;
+  // ─── FORM STEPS 1-4 ────────────────────────────────────────
+  if (step >= 1 && step <= 4) {
+    const progress = (step / 4) * 100;
     return (
       <div className="min-h-screen bg-background">
         <SEOHead title={`Step ${step} — AI College Shortlister`} description="Enter your profile for personalized MBA college recommendations." />
@@ -770,7 +770,8 @@ const CollegeShortlisterPage = () => {
           {/* Progress */}
           <div className="mb-8">
             <div className="flex justify-between text-sm font-medium text-muted-foreground mb-3">
-              {["Exam & Score", "Academic Profile", "Preferences & Budget"].map((label, i) => (
+              {["Exam & Score", "Academic Profile", "Preferences & Budget", "MBA Goals & Background"].map((label, i) => (
+
                 <div key={i} className="flex items-center gap-1.5">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step > i + 1 ? "bg-primary text-primary-foreground" : step === i + 1 ? "bg-primary text-primary-foreground ring-4 ring-primary/20" : "bg-muted text-muted-foreground"}`}>
                     {step > i + 1 ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
