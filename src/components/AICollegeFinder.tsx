@@ -361,14 +361,33 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
             )}
           </AnimatePresence>
 
-          {/* Footer CTA */}
-          <div className="p-4 pt-3">
+          {/* Footer CTAs */}
+          <div className="p-4 pt-3 grid grid-cols-3 gap-2">
+            <Link to={`/college/${rec.college_slug}#admission`}>
+              <Button size="sm" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                <BadgeCheck className="w-3.5 h-3.5" /> Apply Now
+              </Button>
+            </Link>
+            {rec.website ? (
+              <a href={rec.website} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="outline" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                  <Globe2 className="w-3.5 h-3.5" /> Visit College
+                </Button>
+              </a>
+            ) : (
+              <Link to={`/college/${rec.college_slug}`}>
+                <Button size="sm" variant="outline" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                  <Globe2 className="w-3.5 h-3.5" /> Visit College
+                </Button>
+              </Link>
+            )}
             <Link to={`/college/${rec.college_slug}`}>
-              <Button size="sm" className="w-full gap-2 text-xs h-10 font-semibold rounded-xl">
-                <ExternalLink className="w-3.5 h-3.5" /> View Full College Profile
+              <Button size="sm" variant="secondary" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                <ExternalLink className="w-3.5 h-3.5" /> See More
               </Button>
             </Link>
           </div>
+
         </div>
       </motion.div>
     );
