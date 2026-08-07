@@ -9334,6 +9334,45 @@ export type Database = {
         }
         Relationships: []
       }
+      shortlister_submissions: {
+        Row: {
+          created_at: string
+          email: string | null
+          form_data: Json
+          full_name: string | null
+          id: string
+          payload: Json | null
+          results_count: number | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          form_data?: Json
+          full_name?: string | null
+          id?: string
+          payload?: Json | null
+          results_count?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          form_data?: Json
+          full_name?: string | null
+          id?: string
+          payload?: Json | null
+          results_count?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       silo_actions: {
         Row: {
           action: string
