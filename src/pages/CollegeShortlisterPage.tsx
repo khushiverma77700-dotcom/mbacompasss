@@ -340,80 +340,129 @@ const CollegeShortlisterPage = () => {
     return true;
   };
 
+  const buildPayload = () => {
+    const examScoresNumeric: Record<string, number> = {};
+    let bestScore = 0;
+    for (const exam of form.exams) {
+      const val = percentileToNum(form.examScores[exam] || "");
+      if (val > 0) {
+        examScoresNumeric[exam] = val;
+        if (val > bestScore) bestScore = val;
+      }
+    }
+    return {
+      exams: form.exams,
+      scoreType: "percentile" as const,
+      overallScore: bestScore,
+      examScores: Object.keys(examScoresNumeric).length > 0 ? examScoresNumeric : undefined,
+      tenth: parseFloat(form.tenth),
+      twelfth: parseFloat(form.twelfth),
+      graduation: parseFloat(form.graduation),
+      graduationStream: form.graduationStream,
+      graduationPursuing: form.graduationPursuing,
+      workExperienceMonths: parseInt(form.workExperienceMonths) || 0,
+      gender: form.gender || undefined,
+      budgetMin: form.budgetRange[0],
+      budgetMax: form.budgetRange[1],
+      expectedSalaryMin: form.expectedSalaryRange[0],
+      expectedSalaryMax: form.expectedSalaryRange[1],
+      preferredStates: form.preferredStates.filter(s => s !== "Pan India"),
+      preferredColleges: form.preferredColleges ? form.preferredColleges.split(",").map(c => c.trim()).filter(Boolean) : [],
+      collegeTier: form.collegeTier,
+      specializations: form.specializations,
+      roiPreference: form.roiPreference,
+      category: form.category || undefined,
+      targetYear: form.targetYear || undefined,
+      mbaGoal: form.mbaGoal || undefined,
+      programType: form.programType || undefined,
+      campusType: form.campusType || undefined,
+      workDomain: form.workDomain || undefined,
+      prepStage: form.prepStage || undefined,
+      backlogs: form.backlogs || undefined,
+      funding: form.funding || undefined,
+      relocation: form.relocation || undefined,
+      interviewPrep: form.interviewPrep || undefined,
+      academicConsistency: form.academicConsistency || undefined,
+    };
+  };
+
+  /** Persists every submission — even when login is never completed. */
+  const saveSubmission = async (payload: Record<string, any>, status: "login_incomplete" | "completed", resultsCount?: number) => {
+    try {
+      const row = {
+        user_id: user?.id ?? null,
+        status,
+        form_data: form as any,
+        payload: payload as any,
+        results_count: resultsCount ?? null,
+        email: (user as any)?.email ?? null,
+        full_name: (user as any)?.user_metadata?.display_name ?? (user as any)?.user_metadata?.full_name ?? null,
+      };
+      if (submissionIdRef.current) {
+        await supabase.from("shortlister_submissions").update(row).eq("id", submissionIdRef.current);
+      } else {
+        const { data } = await supabase.from("shortlister_submissions").insert(row).select("id").maybeSingle();
+        if (data?.id) submissionIdRef.current = data.id;
+      }
+    } catch (e) {
+      console.error("[shortlister] save submission failed", e);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateStep(4)) return;
 
-    // Gate behind login — must be logged in to see results
+    const payload = buildPayload();
+
+    // Always persist the answers first — before any login gate.
     if (!user) {
+      pendingSubmitRef.current = true;
+      await saveSubmission(payload, "login_incomplete");
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+          form, step: 4, submissionId: submissionIdRef.current, pendingSubmit: true,
+        }));
+      } catch { /* noop */ }
       setShowLogin(true);
       return;
     }
 
     setStep(5);
-
     setLoading(true);
     try {
-      // Build numeric scores from dropdown values
-      const examScoresNumeric: Record<string, number> = {};
-      let bestScore = 0;
-      for (const exam of form.exams) {
-        const val = percentileToNum(form.examScores[exam] || "");
-        if (val > 0) {
-          examScoresNumeric[exam] = val;
-          if (val > bestScore) bestScore = val;
-        }
-      }
-
-      const payload = {
-        exams: form.exams,
-        scoreType: "percentile" as const,
-        overallScore: bestScore,
-        examScores: Object.keys(examScoresNumeric).length > 0 ? examScoresNumeric : undefined,
-        tenth: parseFloat(form.tenth),
-        twelfth: parseFloat(form.twelfth),
-        graduation: parseFloat(form.graduation),
-        graduationStream: form.graduationStream,
-        graduationPursuing: form.graduationPursuing,
-        workExperienceMonths: parseInt(form.workExperienceMonths) || 0,
-        gender: form.gender || undefined,
-        budgetMin: form.budgetRange[0],
-        budgetMax: form.budgetRange[1],
-        expectedSalaryMin: form.expectedSalaryRange[0],
-        expectedSalaryMax: form.expectedSalaryRange[1],
-        preferredStates: form.preferredStates.filter(s => s !== "Pan India"),
-        preferredColleges: form.preferredColleges ? form.preferredColleges.split(",").map(c => c.trim()).filter(Boolean) : [],
-        collegeTier: form.collegeTier,
-        specializations: form.specializations,
-        roiPreference: form.roiPreference,
-        category: form.category || undefined,
-        targetYear: form.targetYear || undefined,
-        mbaGoal: form.mbaGoal || undefined,
-        programType: form.programType || undefined,
-        campusType: form.campusType || undefined,
-        workDomain: form.workDomain || undefined,
-        prepStage: form.prepStage || undefined,
-        backlogs: form.backlogs || undefined,
-        funding: form.funding || undefined,
-        relocation: form.relocation || undefined,
-        interviewPrep: form.interviewPrep || undefined,
-        academicConsistency: form.academicConsistency || undefined,
-      };
       const { data, error } = await supabase.functions.invoke("college-shortlister", { body: payload });
       if (error) throw error;
       setResults(data.colleges || []);
       setAiInsights(data.aiInsights || "");
       setStrategy(data.strategy || "");
       setStats(data.stats || { totalAnalyzed: 0, dreamCount: 0, targetCount: 0, safeCount: 0 });
+      await saveSubmission(payload, "completed", (data.colleges || []).length);
+      clearDraft();
       setStep(6);
     } catch (err: any) {
       console.error(err);
+      await saveSubmission(payload, "completed", 0);
       toast({ title: "Error", description: err.message || "Failed to generate recommendations", variant: "destructive" });
       setStep(4);
-
     } finally {
       setLoading(false);
     }
   };
+
+  // Resume automatically after the user returns from Google login
+  const submitRef = useRef(handleSubmit);
+  submitRef.current = handleSubmit;
+  useEffect(() => {
+    if (!draftLoaded || !user || autoRanRef.current) return;
+    if (!pendingSubmitRef.current) return;
+    autoRanRef.current = true;
+    setInsightsUnlocked(true);
+    setShowLogin(false);
+    pendingSubmitRef.current = false;
+    const t = setTimeout(() => submitRef.current(), 300);
+    return () => clearTimeout(t);
+  }, [draftLoaded, user]);
+
 
   const handleUnlockInsights = () => {
     if (user) { setInsightsUnlocked(true); } else { setShowLogin(true); }
