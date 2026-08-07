@@ -102,12 +102,17 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
   const [error, setError] = useState("");
   const [loadingStage, setLoadingStage] = useState(0);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState<Record<string, number>>({});
+
+  const groupedList = aiResult?.groups?.filter((g) => g.colleges?.length) ?? [];
 
   const reset = () => {
     setStep("tier"); setCollegeTier(""); setSelectedExams([]); setExpectedScore("");
     setBudget(""); setLocation(""); setSpecialization(""); setExperience("");
     setCareerGoal(""); setAiResult(null); setError(""); setLoadingStage(0); setExpandedCard(null);
+    setVisibleCount({});
   };
+
 
   const allSteps: Step[] = ["tier", "exam", "score", "budget", "location", "specialization", "experience", "career"];
   const currentIdx = allSteps.indexOf(step);
