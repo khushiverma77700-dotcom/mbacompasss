@@ -1699,7 +1699,7 @@ const CollegeShortlisterPage = () => {
 
         {/* Retry */}
         <div className="text-center mt-10 mb-8">
-          <Button variant="outline" size="lg" className="rounded-xl" onClick={() => { setStep(0); setResults([]); setForm(initialForm); }}>
+          <Button variant="outline" size="lg" className="rounded-xl" onClick={() => { clearDraft(); autoRanRef.current = false; setStep(0); setResults([]); setForm(initialForm); }}>
             Try Again with Different Profile
           </Button>
         </div>
@@ -1709,12 +1709,9 @@ const CollegeShortlisterPage = () => {
         open={showLogin}
         onOpenChange={(open) => {
           setShowLogin(open);
-          if (!open && user) {
-            // User just logged in — auto-submit the form
-            setInsightsUnlocked(true);
-            setTimeout(() => handleSubmit(), 300);
-          }
+          if (!open && user) setInsightsUnlocked(true);
         }}
+
         message="Create a free account or sign in to view your personalized college shortlist with AI insights and score comparison."
       />
 
