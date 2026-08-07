@@ -65,6 +65,9 @@ interface AICollegeResult {
 
 const EXAMS = ["CAT", "XAT", "GMAT", "MAT", "CMAT", "SNAP", "NMAT", "IIFT", "ATMA"];
 
+const DEFAULT_VISIBLE = 8;
+
+
 const LOADING_STAGES = [
   { icon: Search, text: "Scanning 80+ MBA colleges...", duration: 1500 },
   { icon: Brain, text: "Analyzing your profile match...", duration: 2000 },
