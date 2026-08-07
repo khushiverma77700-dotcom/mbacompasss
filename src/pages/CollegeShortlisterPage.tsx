@@ -867,18 +867,28 @@ const CollegeShortlisterPage = () => {
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">10th % <span className="text-destructive">*</span></label>
-                        <Input type="number" placeholder="92" value={form.tenth} onChange={e => updateField("tenth", e.target.value)} max={100} className="rounded-xl" />
+                        <label className="text-sm font-medium text-foreground mb-2 block">10th Score <span className="text-destructive">*</span></label>
+                        <Select value={form.tenth} onValueChange={(v) => updateField("tenth", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select range" /></SelectTrigger>
+                          <SelectContent>
+                            {PERCENT_BANDS.map(b => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">12th % <span className="text-destructive">*</span></label>
-                        <Input type="number" placeholder="88" value={form.twelfth} onChange={e => updateField("twelfth", e.target.value)} max={100} className="rounded-xl" />
+                        <label className="text-sm font-medium text-foreground mb-2 block">12th Score <span className="text-destructive">*</span></label>
+                        <Select value={form.twelfth} onValueChange={(v) => updateField("twelfth", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select range" /></SelectTrigger>
+                          <SelectContent>
+                            {PERCENT_BANDS.map(b => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-foreground">Graduation % <span className="text-destructive">*</span></label>
+                        <label className="text-sm font-medium text-foreground">Graduation Score <span className="text-destructive">*</span></label>
                         <button
                           onClick={() => updateField("graduationPursuing", !form.graduationPursuing)}
                           className={`text-xs px-3 py-1 rounded-full border transition-all ${form.graduationPursuing ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
@@ -886,16 +896,14 @@ const CollegeShortlisterPage = () => {
                           {form.graduationPursuing ? "✓ Pursuing" : "Pursuing?"}
                         </button>
                       </div>
-                      <Input
-                        type="number"
-                        placeholder={form.graduationPursuing ? "e.g. 78 (till last semester)" : "e.g. 75"}
-                        value={form.graduation}
-                        onChange={e => updateField("graduation", e.target.value)}
-                        max={100}
-                        className="rounded-xl"
-                      />
+                      <Select value={form.graduation} onValueChange={(v) => updateField("graduation", v)}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select range" /></SelectTrigger>
+                        <SelectContent>
+                          {PERCENT_BANDS.map(b => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                       {form.graduationPursuing && (
-                        <p className="text-xs text-muted-foreground mt-1">Enter your percentage/CGPA average till the last completed semester</p>
+                        <p className="text-xs text-muted-foreground mt-1">Select the range matching your average till the last completed semester</p>
                       )}
                     </div>
 
@@ -911,10 +919,56 @@ const CollegeShortlisterPage = () => {
                       </div>
                     </div>
 
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Academic Consistency</label>
+                      <Select value={form.academicConsistency} onValueChange={(v) => updateField("academicConsistency", v)}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          {ACADEMIC_CONSISTENCY_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Backlogs / Education Gap</label>
+                      <Select value={form.backlogs} onValueChange={(v) => updateField("backlogs", v)}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          {BACKLOG_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Work Experience (months)</label>
-                        <Input type="number" placeholder="e.g. 24" value={form.workExperienceMonths} onChange={e => updateField("workExperienceMonths", e.target.value)} className="rounded-xl" />
+                        <label className="text-sm font-medium text-foreground mb-2 block">Work Experience</label>
+                        <Select value={form.workExperienceMonths} onValueChange={(v) => updateField("workExperienceMonths", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select experience" /></SelectTrigger>
+                          <SelectContent>
+                            {WORK_EXP_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Work Domain</label>
+                        <Select value={form.workDomain} onValueChange={(v) => updateField("workDomain", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select domain" /></SelectTrigger>
+                          <SelectContent>
+                            {WORK_DOMAIN_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Category</label>
+                        <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
+                          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select category" /></SelectTrigger>
+                          <SelectContent>
+                            {CATEGORY_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">Gender (optional)</label>
@@ -928,6 +982,7 @@ const CollegeShortlisterPage = () => {
                         </Select>
                       </div>
                     </div>
+
                   </CardContent>
                 </Card>
               )}
