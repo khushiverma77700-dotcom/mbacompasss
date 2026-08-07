@@ -482,13 +482,62 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
 
             {/* Recommendation cards */}
             <div className="space-y-4">
-              {aiResult.recommendations?.map((rec) => (
-                <RecommendationCard key={rec.rank} rec={rec} />
-              ))}
-            </div>
+            {/* Stats strip */}
+            {aiResult.stats && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+                {[
+                  { label: "Total Matches", value: aiResult.stats.total_matches, cls: "bg-primary/5 border-primary/15 text-primary" },
+                  { label: "Safe Options", value: aiResult.stats.safe, cls: "bg-emerald-50 border-emerald-100 text-emerald-700" },
+                  { label: "Target", value: aiResult.stats.target, cls: "bg-blue-50 border-blue-100 text-blue-700" },
+                  { label: "Ambitious", value: aiResult.stats.ambitious, cls: "bg-amber-50 border-amber-100 text-amber-700" },
+                ].map((s) => (
+                  <div key={s.label} className={`rounded-xl border p-3 text-center ${s.cls}`}>
+                    <div className="text-xl font-black">{s.value}</div>
+                    <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Grouped recommendation cards */}
+            {groupedList.length > 0 ? (
+              <div className="space-y-7">
+                {groupedList.map((g) => {
+                  const shown = visibleCount[g.label] ?? DEFAULT_VISIBLE;
+                  return (
+                    <div key={g.label}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-bold text-foreground text-sm flex items-center gap-2">
+                          <Medal className="w-4 h-4 text-primary" /> {g.label}
+                          <Badge variant="secondary" className="text-[10px]">{g.colleges.length} colleges</Badge>
+                        </h4>
+                      </div>
+                      <div className="space-y-4">
+                        {g.colleges.slice(0, shown).map((rec) => (
+                          <RecommendationCard key={rec.college_slug} rec={rec} />
+                        ))}
+                      </div>
+                      {g.colleges.length > shown && (
+                        <Button variant="outline" size="sm" className="mt-3 w-full rounded-xl text-xs"
+                          onClick={() => setVisibleCount((p) => ({ ...p, [g.label]: shown + 10 }))}>
+                          Show {Math.min(10, g.colleges.length - shown)} more in {g.label}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {aiResult.recommendations?.map((rec) => (
+                  <RecommendationCard key={rec.college_slug || rec.rank} rec={rec} />
+                ))}
+              </div>
+            )}
 
             {/* Strategy Panel */}
             {aiResult.strategy && (
+
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
                 className="mt-5 bg-gradient-to-br from-primary/[0.04] to-violet-500/[0.04] rounded-2xl p-5 border border-primary/15">
                 <h4 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
