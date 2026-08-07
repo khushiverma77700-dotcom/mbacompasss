@@ -276,7 +276,7 @@ const CollegeShortlisterPage = () => {
         preferredStates: form.preferredStates.filter(s => s !== "Pan India"),
         preferredColleges: form.preferredColleges ? form.preferredColleges.split(",").map(c => c.trim()).filter(Boolean) : [],
         collegeTier: form.collegeTier,
-        specialization: form.specialization,
+        specializations: form.specializations,
         roiPreference: form.roiPreference,
       };
       const { data, error } = await supabase.functions.invoke("college-shortlister", { body: payload });
