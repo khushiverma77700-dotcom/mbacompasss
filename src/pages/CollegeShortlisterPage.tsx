@@ -1272,11 +1272,10 @@ const CollegeShortlisterPage = () => {
           open={showLogin}
           onOpenChange={(open) => {
             setShowLogin(open);
-            if (!open && user) {
-              setInsightsUnlocked(true);
-              setTimeout(() => handleSubmit(), 300);
-            }
+            if (!open && user) setInsightsUnlocked(true);
+            // Resume + submit is handled by the pending-submit effect (answers are already saved)
           }}
+
           message="Create a free account or sign in to view your personalized college shortlist with AI insights and score comparison."
         />
       </div>
