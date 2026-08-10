@@ -234,7 +234,7 @@ async function callStructuredAI(args: {
   }
 }
 
-function writerSystemPrompt(brief: BlogBrief) {
+function writerSystemPrompt(brief: BlogBrief, facts?: VerifiedFacts | null) {
   const { currentYear, todayIso } = getTargets(brief);
   const allowed = Array.isArray(brief.allowedInternalUrls) ? brief.allowedInternalUrls.filter(u => u && u.url && u.url.startsWith("/")) : [];
   const allowedBlock = allowed.length
@@ -405,17 +405,18 @@ Final quality checklist (self-verify before returning):
 ✓ 5-10 FAQs, each answer 40-80 words.
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
 ✓ "About MBA Compass" present after the Conclusion (LAST H2).
-✓ Reads like a human MBA mentor.`;
+✓ Reads like a human MBA mentor.
+${factGroundingRules(facts || null)}`;
 }
 
-async function createOutlineDraft(brief: BlogBrief) {
+async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null) {
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const fallback = fallbackSections(brief, targets.sectionCount);
   try {
     const outline = await callStructuredAI({
       feature: "ai-blog-writer-outline",
-      system: writerSystemPrompt(brief),
+      system: writerSystemPrompt(brief, facts),
       maxTokens: 5000,
       toolName: "plan_blog_article",
       description: "Plan the SEO article and write only the introduction metadata.",
@@ -496,12 +497,12 @@ function fallbackSectionHtml(brief: BlogBrief, heading: string) {
   return `<h2>${h}</h2><p><strong>Direct answer:</strong> For ${kw}, students should evaluate the latest admission cycle, total cost, cutoffs, placement strength and fit before making a decision. The safest approach is to compare official school data, exam requirements and recent salary outcomes together rather than relying on one metric.</p><p>The most useful way to read this topic is through ROI and selection probability. Applicants should check whether the programme accepts CAT, XAT, NMAT, SNAP, CMAT, MAT or GMAT scores, then compare fees, average package, median package and recruiter quality. A college with a slightly lower average package may still be better if fees are controlled and role quality is strong.</p><table><thead><tr><th>Metric</th><th>What to check</th><th>Good benchmark</th></tr></thead><tbody><tr><td>Fees</td><td>Total two-year MBA/PGDM cost</td><td>INR 8-28 lakh</td></tr><tr><td>Placements</td><td>Average and median CTC</td><td>INR 10-35 LPA</td></tr><tr><td>Cutoff</td><td>Entrance percentile range</td><td>75-99+ percentile</td></tr><tr><td>Recruiters</td><td>Consulting, BFSI, FMCG, tech roles</td><td>30-150+ recruiters</td></tr><tr><td>Batch profile</td><td>Freshers and work-ex students</td><td>Balanced cohort</td></tr></tbody></table><ul><li>Check official admission notices for ${y}-${y + 1} before applying.</li><li>Compare average package with median package to avoid inflated outcomes.</li><li>Use <a href="/college-shortlister">the college shortlister</a> to compare fit and ROI.</li><li>Prioritise programmes with consistent recruiter participation.</li><li>Keep backup options if your expected percentile is below the safe range.</li></ul><h3>Advisor view</h3><p>For most Indian MBA aspirants, ${kw} should be judged through a shortlist of reach, match and safe options. This keeps ambition high while protecting the application cycle from avoidable risk. <strong>The best decision is data-led, not brand-led alone.</strong></p>`;
 }
 
-async function createSectionHtml(brief: BlogBrief, draft: any, section: any, index: number) {
+async function createSectionHtml(brief: BlogBrief, draft: any, section: any, index: number, facts?: VerifiedFacts | null) {
   try {
     const targets = getTargets(brief);
     const result = await callStructuredAI({
       feature: "ai-blog-writer-section",
-      system: writerSystemPrompt(brief),
+      system: writerSystemPrompt(brief, facts),
       maxTokens: 7000,
       toolName: "write_blog_section",
       description: "Write one detailed HTML article section.",
@@ -565,11 +566,11 @@ function fallbackClosingHtml(brief: BlogBrief) {
   };
 }
 
-async function createClosingHtml(brief: BlogBrief, draft: any) {
+async function createClosingHtml(brief: BlogBrief, draft: any, facts?: VerifiedFacts | null) {
   try {
     const result = await callStructuredAI({
       feature: "ai-blog-writer-closing",
-      system: writerSystemPrompt(brief),
+      system: writerSystemPrompt(brief, facts),
       maxTokens: 8000,
       toolName: "write_blog_closing",
       description: "Write key takeaways, detailed FAQs and final CTA.",
