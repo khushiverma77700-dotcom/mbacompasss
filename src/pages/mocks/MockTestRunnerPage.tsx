@@ -414,6 +414,10 @@ export default function MockTestRunnerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptId]);
 
+  useEffect(() => {
+    flushRef.current = flushAllResponses;
+  }, [flushAllResponses]);
+
 
   // Mark visited on question change
   useEffect(() => {
