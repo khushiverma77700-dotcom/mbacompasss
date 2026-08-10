@@ -328,11 +328,27 @@ export default function MockTestRunnerPage() {
   }, [sectionRemaining]);
 
   // ---------- AUTO-SAVE ----------
+  const responsesRef = useRef<Record<string, ResponseRow>>({});
+  useEffect(() => {
+    responsesRef.current = responses;
+  }, [responses]);
+
+  const rowFor = (qid: string, r: ResponseRow) => ({
+    attempt_id: attemptId,
+    question_id: qid,
+    section_id: r.section_id,
+    selected_option_id: r.selected_option_id,
+    tita_answer: r.tita_answer,
+    status: r.status,
+    visit_count: r.visit_count,
+    last_updated_at: new Date().toISOString(),
+  });
+
   const persistResponse = useCallback(
     async (qid: string, patch: Partial<ResponseRow>) => {
       const q = questions.find((qq) => qq.id === qid);
       if (!q || !attemptId) return;
-      const existing = responses[qid];
+      const existing = responsesRef.current[qid];
       const merged: ResponseRow = {
         ...(existing ?? {
           question_id: qid,
@@ -344,26 +360,52 @@ export default function MockTestRunnerPage() {
         }),
         ...patch,
       };
+      responsesRef.current = { ...responsesRef.current, [qid]: merged };
       setResponses((prev) => ({ ...prev, [qid]: merged }));
-      await supabase
+
+      const row: any = rowFor(qid, merged);
+      if (!existing?.id) row.first_visited_at = new Date().toISOString();
+
+      let { error } = await supabase
         .from("mock_responses")
-        .upsert(
-          {
-            attempt_id: attemptId,
-            question_id: qid,
-            section_id: q.section_id,
-            selected_option_id: merged.selected_option_id,
-            tita_answer: merged.tita_answer,
-            status: merged.status,
-            visit_count: merged.visit_count,
-            last_updated_at: new Date().toISOString(),
-            first_visited_at: existing?.id ? undefined : new Date().toISOString(),
-          },
-          { onConflict: "attempt_id,question_id" },
-        );
+        .upsert(row, { onConflict: "attempt_id,question_id" });
+      if (error) {
+        // one retry — transient network / conflict
+        const retry = await supabase
+          .from("mock_responses")
+          .upsert(rowFor(qid, merged), { onConflict: "attempt_id,question_id" });
+        error = retry.error;
+      }
+      if (error) {
+        setSaveFailed(true);
+        console.error("[mock] failed to save answer", qid, error);
+      } else {
+        setSaveFailed(false);
+      }
     },
-    [attemptId, questions, responses],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [attemptId, questions],
   );
+
+  /** Re-upserts every locally known answer so nothing is lost at submit time. */
+  const flushAllResponses = useCallback(async () => {
+    if (!attemptId) return;
+    const rows = Object.entries(responsesRef.current)
+      .filter(([, r]) => r.status !== "not_visited")
+      .map(([qid, r]) => rowFor(qid, r));
+    if (rows.length === 0) return;
+    for (let i = 0; i < rows.length; i += 200) {
+      const chunk = rows.slice(i, i + 200);
+      const { error } = await supabase
+        .from("mock_responses")
+        .upsert(chunk, { onConflict: "attempt_id,question_id" });
+      if (error) {
+        await supabase.from("mock_responses").upsert(chunk, { onConflict: "attempt_id,question_id" });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attemptId]);
+
 
   // Mark visited on question change
   useEffect(() => {
