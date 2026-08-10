@@ -560,6 +560,13 @@ export default function MockTestRunnerPage() {
     <div className="fixed inset-0 bg-white text-slate-900 flex flex-col select-none">
       {/* Screen-reader-only H1 so the page has a heading landmark for a11y / crawlers. */}
       <h1 className="sr-only">{test?.name ? `${test.name} — Mock Test` : "CAT Mock Test"}</h1>
+      {saveFailed && (
+        <div className="bg-amber-100 text-amber-900 text-xs sm:text-sm px-3 py-1.5 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>Your last answer could not be saved. Check your connection — answers are re-saved automatically when you submit.</span>
+        </div>
+      )}
+
       {/* Top bar */}
       <header className="bg-slate-900 text-white px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
         <div className="font-semibold text-xs sm:text-sm truncate">CAT Mock Test</div>
