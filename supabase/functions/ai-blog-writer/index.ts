@@ -5,6 +5,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck, type QualityIssue } from "../_shared/aiContentRules.ts";
+import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
