@@ -696,7 +696,7 @@ function clampMeta(s: string, min: number, max: number, fallback: string): strin
   return v;
 }
 
-async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: BlogBrief, draft: any) {
+async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: BlogBrief, draft: any, facts?: VerifiedFacts | null) {
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
@@ -718,8 +718,14 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (blockingFactIssues.length) {
     console.warn(`[ai-blog-writer] Fact-check report has ${blockingFactIssues.length} high-risk item(s) for "${targetKw}"; publishing continues with report:`, JSON.stringify(factCheckReport.slice(0, 12)));
   }
-  const intro = introQC.html;
-  const content = contentQC.html;
+  const introAudit = auditVerifiedFacts(introQC.html, facts || null);
+  const contentAudit = auditVerifiedFacts(contentQC.html, facts || null);
+  const dataViolations = [...introAudit.violations, ...contentAudit.violations];
+  if (dataViolations.length || introAudit.removedBlocks || contentAudit.removedBlocks) {
+    console.warn(`[ai-blog-writer] verified-data audit for "${targetKw}": removed ${introAudit.removedBlocks + contentAudit.removedBlocks} unverified block(s), ${dataViolations.length} unresolved violation(s)`);
+  }
+  const intro = introAudit.html;
+  const content = contentAudit.html;
   if (contentQC.issues.length) {
     console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
   }
@@ -790,8 +796,8 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     h1_tag: String(draft.h1Tag || draft.title || brief.title).slice(0, 65),
     author: draft.author || "MBA Compass Editorial",
     category: brief.category || "news",
-    status: "published",
-    published: true,
+    status: dataViolations.length ? "draft" : "published",
+    published: dataViolations.length === 0,
     featured: false,
     priority: 0,
     faqs: extractedFaqs,
@@ -824,6 +830,15 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     insertedId: inserted.id,
     slug: inserted.slug,
     factCheckReport,
+    dataVerification: {
+      grounded: !!facts?.constraints?.isCollegeTopic,
+      allowedColleges: facts?.allowed?.length || 0,
+      excludedColleges: facts?.excluded?.length || 0,
+      constraints: facts?.constraints || null,
+      removedUnverifiedBlocks: introAudit.removedBlocks + contentAudit.removedBlocks,
+      violations: dataViolations,
+      heldForReview: dataViolations.length > 0,
+    },
     seo25: { ...validation, warnings },
   };
 }
@@ -838,7 +853,9 @@ async function processBlogJobStep(adminClient: any, job: any) {
 
   if (phase === "outline") {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 10, current_step: "Creating SEO outline and intro" }).eq("id", jobId);
-    const draft = await createOutlineDraft(brief);
+    const facts = await fetchVerifiedFacts(adminClient, brief);
+    const draft = await createOutlineDraft(brief, facts);
+    stats.facts = facts;
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "queued",
       progress: 18,
@@ -848,13 +865,14 @@ async function processBlogJobStep(adminClient: any, job: any) {
     return;
   }
 
-  const draft = stats.draft || await createOutlineDraft(brief);
+  const jobFacts: VerifiedFacts | null = (stats.facts as VerifiedFacts | undefined) || await fetchVerifiedFacts(adminClient, brief).catch(() => null);
+  const draft = stats.draft || await createOutlineDraft(brief, jobFacts);
   if (phase === "sections") {
     const sections = Array.isArray(draft.sections) && draft.sections.length ? draft.sections : fallbackSections(brief, getTargets(brief).sectionCount);
     const idx = Math.max(0, Number(stats.sectionIndex || 0));
     if (idx < sections.length) {
       await adminClient.from("ai_blog_generation_jobs").update({ progress: Math.round(20 + (idx / sections.length) * 55), current_step: `Writing section ${idx + 1} of ${sections.length}: ${sections[idx].heading}` }).eq("id", jobId);
-      sections[idx] = { ...sections[idx], html: await createSectionHtml(brief, { ...draft, sections }, sections[idx], idx) };
+      sections[idx] = { ...sections[idx], html: await createSectionHtml(brief, { ...draft, sections }, sections[idx], idx, jobFacts) };
       const nextIndex = idx + 1;
       await adminClient.from("ai_blog_generation_jobs").update({
         status: "queued",
@@ -868,7 +886,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
 
   if (phase === "closing") {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 82, current_step: "Writing takeaways, FAQs and CTA" }).eq("id", jobId);
-    const closing = await createClosingHtml(brief, draft);
+    const closing = await createClosingHtml(brief, draft, jobFacts);
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "queued",
       progress: 90,
@@ -880,7 +898,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
 
   if (phase === "finalize") {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 94, current_step: "Saving article and FAQ schema" }).eq("id", jobId);
-    const finalStats = await finalizeChunkedArticle(adminClient, jobId, brief, draft);
+    const finalStats = await finalizeChunkedArticle(adminClient, jobId, brief, draft, jobFacts);
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "completed",
       progress: 100,
