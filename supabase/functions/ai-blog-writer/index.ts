@@ -5,6 +5,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck, type QualityIssue } from "../_shared/aiContentRules.ts";
+import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -233,7 +234,7 @@ async function callStructuredAI(args: {
   }
 }
 
-function writerSystemPrompt(brief: BlogBrief) {
+function writerSystemPrompt(brief: BlogBrief, facts?: VerifiedFacts | null) {
   const { currentYear, todayIso } = getTargets(brief);
   const allowed = Array.isArray(brief.allowedInternalUrls) ? brief.allowedInternalUrls.filter(u => u && u.url && u.url.startsWith("/")) : [];
   const allowedBlock = allowed.length
@@ -404,17 +405,18 @@ Final quality checklist (self-verify before returning):
 ✓ 5-10 FAQs, each answer 40-80 words.
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
 ✓ "About MBA Compass" present after the Conclusion (LAST H2).
-✓ Reads like a human MBA mentor.`;
+✓ Reads like a human MBA mentor.
+${factGroundingRules(facts || null)}`;
 }
 
-async function createOutlineDraft(brief: BlogBrief) {
+async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null) {
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const fallback = fallbackSections(brief, targets.sectionCount);
   try {
     const outline = await callStructuredAI({
       feature: "ai-blog-writer-outline",
-      system: writerSystemPrompt(brief),
+      system: writerSystemPrompt(brief, facts),
       maxTokens: 5000,
       toolName: "plan_blog_article",
       description: "Plan the SEO article and write only the introduction metadata.",
@@ -495,12 +497,12 @@ function fallbackSectionHtml(brief: BlogBrief, heading: string) {
   return `<h2>${h}</h2><p><strong>Direct answer:</strong> For ${kw}, students should evaluate the latest admission cycle, total cost, cutoffs, placement strength and fit before making a decision. The safest approach is to compare official school data, exam requirements and recent salary outcomes together rather than relying on one metric.</p><p>The most useful way to read this topic is through ROI and selection probability. Applicants should check whether the programme accepts CAT, XAT, NMAT, SNAP, CMAT, MAT or GMAT scores, then compare fees, average package, median package and recruiter quality. A college with a slightly lower average package may still be better if fees are controlled and role quality is strong.</p><table><thead><tr><th>Metric</th><th>What to check</th><th>Good benchmark</th></tr></thead><tbody><tr><td>Fees</td><td>Total two-year MBA/PGDM cost</td><td>INR 8-28 lakh</td></tr><tr><td>Placements</td><td>Average and median CTC</td><td>INR 10-35 LPA</td></tr><tr><td>Cutoff</td><td>Entrance percentile range</td><td>75-99+ percentile</td></tr><tr><td>Recruiters</td><td>Consulting, BFSI, FMCG, tech roles</td><td>30-150+ recruiters</td></tr><tr><td>Batch profile</td><td>Freshers and work-ex students</td><td>Balanced cohort</td></tr></tbody></table><ul><li>Check official admission notices for ${y}-${y + 1} before applying.</li><li>Compare average package with median package to avoid inflated outcomes.</li><li>Use <a href="/college-shortlister">the college shortlister</a> to compare fit and ROI.</li><li>Prioritise programmes with consistent recruiter participation.</li><li>Keep backup options if your expected percentile is below the safe range.</li></ul><h3>Advisor view</h3><p>For most Indian MBA aspirants, ${kw} should be judged through a shortlist of reach, match and safe options. This keeps ambition high while protecting the application cycle from avoidable risk. <strong>The best decision is data-led, not brand-led alone.</strong></p>`;
 }
 
-async function createSectionHtml(brief: BlogBrief, draft: any, section: any, index: number) {
+async function createSectionHtml(brief: BlogBrief, draft: any, section: any, index: number, facts?: VerifiedFacts | null) {
   try {
     const targets = getTargets(brief);
     const result = await callStructuredAI({
       feature: "ai-blog-writer-section",
-      system: writerSystemPrompt(brief),
+      system: writerSystemPrompt(brief, facts),
       maxTokens: 7000,
       toolName: "write_blog_section",
       description: "Write one detailed HTML article section.",
@@ -564,11 +566,11 @@ function fallbackClosingHtml(brief: BlogBrief) {
   };
 }
 
-async function createClosingHtml(brief: BlogBrief, draft: any) {
+async function createClosingHtml(brief: BlogBrief, draft: any, facts?: VerifiedFacts | null) {
   try {
     const result = await callStructuredAI({
       feature: "ai-blog-writer-closing",
-      system: writerSystemPrompt(brief),
+      system: writerSystemPrompt(brief, facts),
       maxTokens: 8000,
       toolName: "write_blog_closing",
       description: "Write key takeaways, detailed FAQs and final CTA.",
@@ -694,7 +696,7 @@ function clampMeta(s: string, min: number, max: number, fallback: string): strin
   return v;
 }
 
-async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: BlogBrief, draft: any) {
+async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: BlogBrief, draft: any, facts?: VerifiedFacts | null) {
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
@@ -716,8 +718,14 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (blockingFactIssues.length) {
     console.warn(`[ai-blog-writer] Fact-check report has ${blockingFactIssues.length} high-risk item(s) for "${targetKw}"; publishing continues with report:`, JSON.stringify(factCheckReport.slice(0, 12)));
   }
-  const intro = introQC.html;
-  const content = contentQC.html;
+  const introAudit = auditVerifiedFacts(introQC.html, facts || null);
+  const contentAudit = auditVerifiedFacts(contentQC.html, facts || null);
+  const dataViolations = [...introAudit.violations, ...contentAudit.violations];
+  if (dataViolations.length || introAudit.removedBlocks || contentAudit.removedBlocks) {
+    console.warn(`[ai-blog-writer] verified-data audit for "${targetKw}": removed ${introAudit.removedBlocks + contentAudit.removedBlocks} unverified block(s), ${dataViolations.length} unresolved violation(s)`);
+  }
+  const intro = introAudit.html;
+  const content = contentAudit.html;
   if (contentQC.issues.length) {
     console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
   }
@@ -788,8 +796,8 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     h1_tag: String(draft.h1Tag || draft.title || brief.title).slice(0, 65),
     author: draft.author || "MBA Compass Editorial",
     category: brief.category || "news",
-    status: "published",
-    published: true,
+    status: dataViolations.length ? "draft" : "published",
+    published: dataViolations.length === 0,
     featured: false,
     priority: 0,
     faqs: extractedFaqs,
@@ -822,6 +830,15 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     insertedId: inserted.id,
     slug: inserted.slug,
     factCheckReport,
+    dataVerification: {
+      grounded: !!facts?.constraints?.isCollegeTopic,
+      allowedColleges: facts?.allowed?.length || 0,
+      excludedColleges: facts?.excluded?.length || 0,
+      constraints: facts?.constraints || null,
+      removedUnverifiedBlocks: introAudit.removedBlocks + contentAudit.removedBlocks,
+      violations: dataViolations,
+      heldForReview: dataViolations.length > 0,
+    },
     seo25: { ...validation, warnings },
   };
 }
@@ -836,7 +853,9 @@ async function processBlogJobStep(adminClient: any, job: any) {
 
   if (phase === "outline") {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 10, current_step: "Creating SEO outline and intro" }).eq("id", jobId);
-    const draft = await createOutlineDraft(brief);
+    const facts = await fetchVerifiedFacts(adminClient, brief);
+    const draft = await createOutlineDraft(brief, facts);
+    stats.facts = facts;
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "queued",
       progress: 18,
@@ -846,13 +865,14 @@ async function processBlogJobStep(adminClient: any, job: any) {
     return;
   }
 
-  const draft = stats.draft || await createOutlineDraft(brief);
+  const jobFacts: VerifiedFacts | null = (stats.facts as VerifiedFacts | undefined) || await fetchVerifiedFacts(adminClient, brief).catch(() => null);
+  const draft = stats.draft || await createOutlineDraft(brief, jobFacts);
   if (phase === "sections") {
     const sections = Array.isArray(draft.sections) && draft.sections.length ? draft.sections : fallbackSections(brief, getTargets(brief).sectionCount);
     const idx = Math.max(0, Number(stats.sectionIndex || 0));
     if (idx < sections.length) {
       await adminClient.from("ai_blog_generation_jobs").update({ progress: Math.round(20 + (idx / sections.length) * 55), current_step: `Writing section ${idx + 1} of ${sections.length}: ${sections[idx].heading}` }).eq("id", jobId);
-      sections[idx] = { ...sections[idx], html: await createSectionHtml(brief, { ...draft, sections }, sections[idx], idx) };
+      sections[idx] = { ...sections[idx], html: await createSectionHtml(brief, { ...draft, sections }, sections[idx], idx, jobFacts) };
       const nextIndex = idx + 1;
       await adminClient.from("ai_blog_generation_jobs").update({
         status: "queued",
@@ -866,7 +886,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
 
   if (phase === "closing") {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 82, current_step: "Writing takeaways, FAQs and CTA" }).eq("id", jobId);
-    const closing = await createClosingHtml(brief, draft);
+    const closing = await createClosingHtml(brief, draft, jobFacts);
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "queued",
       progress: 90,
@@ -878,7 +898,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
 
   if (phase === "finalize") {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 94, current_step: "Saving article and FAQ schema" }).eq("id", jobId);
-    const finalStats = await finalizeChunkedArticle(adminClient, jobId, brief, draft);
+    const finalStats = await finalizeChunkedArticle(adminClient, jobId, brief, draft, jobFacts);
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "completed",
       progress: 100,
@@ -1205,6 +1225,11 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       },
     };
 
+    const singleShotFacts: VerifiedFacts | null = await fetchVerifiedFacts(adminClient, brief).catch((e) => {
+      console.warn("[ai-blog-writer] verified-facts fetch failed:", e instanceof Error ? e.message : e);
+      return null;
+    });
+
     // Scale tokens with target word count. Cap at 32K to stay within edge wall-clock limits.
     const dynamicMaxTokens = Math.min(32000, Math.max(12000, Math.round(wmax * 3) + 3000));
 
@@ -1214,7 +1239,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         model,
         max_tokens: dynamicMaxTokens,
         messages: [
-          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES + factGroundingRules(singleShotFacts) },
 
           { role: "user", content: userPrompt },
         ],
@@ -1413,6 +1438,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
     // Final quality check — auto-sanitise buzzwords, inject MBA Compass if missing, flag issues
     let factCheckReport: FactCheckReportItem[] = [];
+    let singleShotDataViolations: { code: string; message: string }[] = [];
     {
       const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
       const contentQC = runFinalQualityCheck(article.content, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
@@ -1421,8 +1447,14 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       if (blockingFactIssues.length) {
         console.warn(`[ai-blog-writer] Fact-check report has ${blockingFactIssues.length} high-risk item(s) for "${targetKw}"; publishing continues with report:`, JSON.stringify(factCheckReport.slice(0, 12)));
       }
-      article.intro = introQC.html;
-      article.content = contentQC.html;
+      const introAudit = auditVerifiedFacts(introQC.html, singleShotFacts);
+      const contentAudit = auditVerifiedFacts(contentQC.html, singleShotFacts);
+      singleShotDataViolations = [...introAudit.violations, ...contentAudit.violations];
+      if (singleShotDataViolations.length || introAudit.removedBlocks || contentAudit.removedBlocks) {
+        console.warn(`[ai-blog-writer] verified-data audit for "${targetKw}": removed ${introAudit.removedBlocks + contentAudit.removedBlocks} unverified block(s), ${singleShotDataViolations.length} unresolved violation(s)`);
+      }
+      article.intro = introAudit.html;
+      article.content = contentAudit.html;
       if (contentQC.issues.length) {
         console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
       }
@@ -1482,8 +1514,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       h1_tag: article.h1Tag || article.title || brief.title,
       author: article.author || "MBA Compass Editorial",
       category: brief.category || "news",
-      status: "published",
-      published: true,
+      status: singleShotDataViolations.length ? "draft" : "published",
+      published: singleShotDataViolations.length === 0,
       featured: false,
       priority: 0,
       faqs: extractedFaqs,
@@ -1539,6 +1571,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       firstPassWords: actualWords,
       insertedId: inserted.id,
       factCheckReport,
+      dataVerification: {
+        grounded: !!singleShotFacts?.constraints?.isCollegeTopic,
+        allowedColleges: singleShotFacts?.allowed?.length || 0,
+        excludedColleges: singleShotFacts?.excluded?.length || 0,
+        violations: singleShotDataViolations,
+        heldForReview: singleShotDataViolations.length > 0,
+      },
     };
 
     if (activeJobId) {
