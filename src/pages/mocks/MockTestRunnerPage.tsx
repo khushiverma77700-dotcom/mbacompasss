@@ -194,11 +194,16 @@ export default function MockTestRunnerPage() {
   }, []);
 
   // ---------- ANTI-CHEAT ----------
+  const flushRef = useRef<null | (() => Promise<void>)>(null);
+
   const handleAutoSubmit = useCallback(async (reason: string) => {
     if (submitRef.current) return;
     submitRef.current = true;
     setSubmitting(true);
     toast.error(`Auto-submitting: ${reason}`);
+    try {
+      await flushRef.current?.();
+    } catch {}
     try {
       await supabase.functions.invoke("mock-submit-attempt", {
         body: { attempt_id: attemptId, reason },
@@ -212,6 +217,7 @@ export default function MockTestRunnerPage() {
       { replace: true }
     );
   }, [attemptId, navigate]);
+
 
   useEffect(() => {
     if (loading) return;
