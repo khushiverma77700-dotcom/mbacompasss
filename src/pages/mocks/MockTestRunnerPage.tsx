@@ -499,9 +499,13 @@ export default function MockTestRunnerPage() {
     submitRef.current = true;
     setSubmitting(true);
     try {
-      await supabase.functions.invoke("mock-submit-attempt", {
+      // Make sure every answer is on the server before scoring runs
+      await flushAllResponses();
+      const { data, error } = await supabase.functions.invoke("mock-submit-attempt", {
         body: { attempt_id: attemptId },
       });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       if (document.fullscreenElement) {
         try { await document.exitFullscreen(); } catch {}
       }
@@ -510,11 +514,12 @@ export default function MockTestRunnerPage() {
         { replace: true }
       );
     } catch (e: any) {
-      toast.error(e.message ?? "Submit failed");
+      toast.error(e.message ?? "Submit failed. Please try again.");
       setSubmitting(false);
       submitRef.current = false;
     }
   };
+
 
   // Overall summary across all sections (for confirm dialog)
   const submitSummary = useMemo(() => {
