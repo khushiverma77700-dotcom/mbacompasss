@@ -1225,6 +1225,11 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       },
     };
 
+    const singleShotFacts: VerifiedFacts | null = await fetchVerifiedFacts(adminClient, brief).catch((e) => {
+      console.warn("[ai-blog-writer] verified-facts fetch failed:", e instanceof Error ? e.message : e);
+      return null;
+    });
+
     // Scale tokens with target word count. Cap at 32K to stay within edge wall-clock limits.
     const dynamicMaxTokens = Math.min(32000, Math.max(12000, Math.round(wmax * 3) + 3000));
 
@@ -1234,7 +1239,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         model,
         max_tokens: dynamicMaxTokens,
         messages: [
-          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES + factGroundingRules(singleShotFacts) },
 
           { role: "user", content: userPrompt },
         ],
@@ -1433,6 +1438,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 
     // Final quality check — auto-sanitise buzzwords, inject MBA Compass if missing, flag issues
     let factCheckReport: FactCheckReportItem[] = [];
+    let singleShotDataViolations: { code: string; message: string }[] = [];
     {
       const introQC = runFinalQualityCheck(article.intro, { requireMbaCompass: false, minInternalLinks: 0 });
       const contentQC = runFinalQualityCheck(article.content, { requireMbaCompass: true, requireFaq: true, requireTable: true, minInternalLinks: 8 });
@@ -1441,8 +1447,14 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       if (blockingFactIssues.length) {
         console.warn(`[ai-blog-writer] Fact-check report has ${blockingFactIssues.length} high-risk item(s) for "${targetKw}"; publishing continues with report:`, JSON.stringify(factCheckReport.slice(0, 12)));
       }
-      article.intro = introQC.html;
-      article.content = contentQC.html;
+      const introAudit = auditVerifiedFacts(introQC.html, singleShotFacts);
+      const contentAudit = auditVerifiedFacts(contentQC.html, singleShotFacts);
+      singleShotDataViolations = [...introAudit.violations, ...contentAudit.violations];
+      if (singleShotDataViolations.length || introAudit.removedBlocks || contentAudit.removedBlocks) {
+        console.warn(`[ai-blog-writer] verified-data audit for "${targetKw}": removed ${introAudit.removedBlocks + contentAudit.removedBlocks} unverified block(s), ${singleShotDataViolations.length} unresolved violation(s)`);
+      }
+      article.intro = introAudit.html;
+      article.content = contentAudit.html;
       if (contentQC.issues.length) {
         console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
       }
@@ -1502,8 +1514,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       h1_tag: article.h1Tag || article.title || brief.title,
       author: article.author || "MBA Compass Editorial",
       category: brief.category || "news",
-      status: "published",
-      published: true,
+      status: singleShotDataViolations.length ? "draft" : "published",
+      published: singleShotDataViolations.length === 0,
       featured: false,
       priority: 0,
       faqs: extractedFaqs,
@@ -1559,6 +1571,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       firstPassWords: actualWords,
       insertedId: inserted.id,
       factCheckReport,
+      dataVerification: {
+        grounded: !!singleShotFacts?.constraints?.isCollegeTopic,
+        allowedColleges: singleShotFacts?.allowed?.length || 0,
+        excludedColleges: singleShotFacts?.excluded?.length || 0,
+        violations: singleShotDataViolations,
+        heldForReview: singleShotDataViolations.length > 0,
+      },
     };
 
     if (activeJobId) {
