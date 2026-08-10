@@ -106,6 +106,8 @@ export default function MockTestRunnerPage() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(isMobileDevice);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+
 
   const submitRef = useRef(false);
   const violationToastShown = useRef(false);
@@ -192,11 +194,16 @@ export default function MockTestRunnerPage() {
   }, []);
 
   // ---------- ANTI-CHEAT ----------
+  const flushRef = useRef<null | (() => Promise<void>)>(null);
+
   const handleAutoSubmit = useCallback(async (reason: string) => {
     if (submitRef.current) return;
     submitRef.current = true;
     setSubmitting(true);
     toast.error(`Auto-submitting: ${reason}`);
+    try {
+      await flushRef.current?.();
+    } catch {}
     try {
       await supabase.functions.invoke("mock-submit-attempt", {
         body: { attempt_id: attemptId, reason },
@@ -210,6 +217,7 @@ export default function MockTestRunnerPage() {
       { replace: true }
     );
   }, [attemptId, navigate]);
+
 
   useEffect(() => {
     if (loading) return;
@@ -328,11 +336,27 @@ export default function MockTestRunnerPage() {
   }, [sectionRemaining]);
 
   // ---------- AUTO-SAVE ----------
+  const responsesRef = useRef<Record<string, ResponseRow>>({});
+  useEffect(() => {
+    responsesRef.current = responses;
+  }, [responses]);
+
+  const rowFor = (qid: string, r: ResponseRow) => ({
+    attempt_id: attemptId,
+    question_id: qid,
+    section_id: r.section_id,
+    selected_option_id: r.selected_option_id,
+    tita_answer: r.tita_answer,
+    status: r.status,
+    visit_count: r.visit_count,
+    last_updated_at: new Date().toISOString(),
+  });
+
   const persistResponse = useCallback(
     async (qid: string, patch: Partial<ResponseRow>) => {
       const q = questions.find((qq) => qq.id === qid);
       if (!q || !attemptId) return;
-      const existing = responses[qid];
+      const existing = responsesRef.current[qid];
       const merged: ResponseRow = {
         ...(existing ?? {
           question_id: qid,
@@ -344,26 +368,56 @@ export default function MockTestRunnerPage() {
         }),
         ...patch,
       };
+      responsesRef.current = { ...responsesRef.current, [qid]: merged };
       setResponses((prev) => ({ ...prev, [qid]: merged }));
-      await supabase
+
+      const row: any = rowFor(qid, merged);
+      if (!existing?.id) row.first_visited_at = new Date().toISOString();
+
+      let { error } = await supabase
         .from("mock_responses")
-        .upsert(
-          {
-            attempt_id: attemptId,
-            question_id: qid,
-            section_id: q.section_id,
-            selected_option_id: merged.selected_option_id,
-            tita_answer: merged.tita_answer,
-            status: merged.status,
-            visit_count: merged.visit_count,
-            last_updated_at: new Date().toISOString(),
-            first_visited_at: existing?.id ? undefined : new Date().toISOString(),
-          },
-          { onConflict: "attempt_id,question_id" },
-        );
+        .upsert(row, { onConflict: "attempt_id,question_id" });
+      if (error) {
+        // one retry — transient network / conflict
+        const retry = await supabase
+          .from("mock_responses")
+          .upsert(rowFor(qid, merged), { onConflict: "attempt_id,question_id" });
+        error = retry.error;
+      }
+      if (error) {
+        setSaveFailed(true);
+        console.error("[mock] failed to save answer", qid, error);
+      } else {
+        setSaveFailed(false);
+      }
     },
-    [attemptId, questions, responses],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [attemptId, questions],
   );
+
+  /** Re-upserts every locally known answer so nothing is lost at submit time. */
+  const flushAllResponses = useCallback(async () => {
+    if (!attemptId) return;
+    const rows = Object.entries(responsesRef.current)
+      .filter(([, r]) => r.status !== "not_visited")
+      .map(([qid, r]) => rowFor(qid, r));
+    if (rows.length === 0) return;
+    for (let i = 0; i < rows.length; i += 200) {
+      const chunk = rows.slice(i, i + 200);
+      const { error } = await supabase
+        .from("mock_responses")
+        .upsert(chunk, { onConflict: "attempt_id,question_id" });
+      if (error) {
+        await supabase.from("mock_responses").upsert(chunk, { onConflict: "attempt_id,question_id" });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attemptId]);
+
+  useEffect(() => {
+    flushRef.current = flushAllResponses;
+  }, [flushAllResponses]);
+
 
   // Mark visited on question change
   useEffect(() => {
@@ -445,9 +499,13 @@ export default function MockTestRunnerPage() {
     submitRef.current = true;
     setSubmitting(true);
     try {
-      await supabase.functions.invoke("mock-submit-attempt", {
+      // Make sure every answer is on the server before scoring runs
+      await flushAllResponses();
+      const { data, error } = await supabase.functions.invoke("mock-submit-attempt", {
         body: { attempt_id: attemptId },
       });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       if (document.fullscreenElement) {
         try { await document.exitFullscreen(); } catch {}
       }
@@ -456,11 +514,12 @@ export default function MockTestRunnerPage() {
         { replace: true }
       );
     } catch (e: any) {
-      toast.error(e.message ?? "Submit failed");
+      toast.error(e.message ?? "Submit failed. Please try again.");
       setSubmitting(false);
       submitRef.current = false;
     }
   };
+
 
   // Overall summary across all sections (for confirm dialog)
   const submitSummary = useMemo(() => {
@@ -501,6 +560,13 @@ export default function MockTestRunnerPage() {
     <div className="fixed inset-0 bg-white text-slate-900 flex flex-col select-none">
       {/* Screen-reader-only H1 so the page has a heading landmark for a11y / crawlers. */}
       <h1 className="sr-only">{test?.name ? `${test.name} — Mock Test` : "CAT Mock Test"}</h1>
+      {saveFailed && (
+        <div className="bg-amber-100 text-amber-900 text-xs sm:text-sm px-3 py-1.5 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>Your last answer could not be saved. Check your connection — answers are re-saved automatically when you submit.</span>
+        </div>
+      )}
+
       {/* Top bar */}
       <header className="bg-slate-900 text-white px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
         <div className="font-semibold text-xs sm:text-sm truncate">CAT Mock Test</div>
