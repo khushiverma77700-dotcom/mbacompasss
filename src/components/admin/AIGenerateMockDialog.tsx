@@ -93,6 +93,16 @@ const EXAM_PROFILES: Record<string, {
       { code: "IGE", name: "Indian & Global Environment", duration: 30, questions: 30 },
     ],
   },
+  MICAT: {
+    name: "MICAT — MICA Ahmedabad",
+    default_total: 105,
+    sections: [
+      { code: "DCR", name: "Divergent-Convergent Reasoning", duration: 25, questions: 30 },
+      { code: "VA", name: "Verbal Ability", duration: 20, questions: 25 },
+      { code: "QADI", name: "Quantitative Ability & Data Interpretation", duration: 20, questions: 25 },
+      { code: "GK", name: "General Awareness (incl. Advertising & Media)", duration: 15, questions: 25 },
+    ],
+  },
 };
 
 const EXAMS = Object.entries(EXAM_PROFILES).map(([code, p]) => ({ code, name: p.name, default_total: p.default_total }));
@@ -105,6 +115,7 @@ const DAILY_MIX_LABELS: Record<string, string> = {
   CMAT: "Quant/DI, Logical Reasoning and Language Comprehension",
   IIFT: "VARC, DILR and Quantitative Analysis",
   MAT: "Language Comprehension, Intelligence & Critical Reasoning and Data Analysis",
+  MICAT: "Divergent-Convergent Reasoning, Verbal Ability and Quantitative Ability & DI",
 };
 
 const CATEGORIES = [
@@ -146,6 +157,8 @@ const SECTION_CODES = [
   { value: "DA", label: "DA — Data Analysis" },
   { value: "ICR", label: "ICR — Intelligence & Critical Reasoning" },
   { value: "IGE", label: "IGE — Indian & Global Environment" },
+  { value: "DCR", label: "DCR — Divergent-Convergent Reasoning" },
+  { value: "VA", label: "VA — Verbal Ability" },
 ];
 
 interface Props {
@@ -174,6 +187,7 @@ const DEFAULT_SETS: Record<string, Record<string, number>> = {
   CMAT: { QADI: 0, LR: 0, LC: 0, GA: 0, IE: 0 },
   IIFT: { VARC: 3, QA: 0, DILR: 4, GK: 0 },
   MAT: { LC: 0, ICR: 0, DA: 0, MS: 0, IGE: 0 },
+  MICAT: { DCR: 2, VA: 2, QADI: 0, GK: 0 },
 };
 
 type BatchDraft = {

@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Trash2, Copy, Pencil, Pause, Play, RefreshCw, Send, Layers } from "lucide-react";
 
-type ExamCode = "CAT" | "NMAT" | "XAT" | "SNAP" | "IIFT" | "CMAT" | "MAT";
+type ExamCode = "CAT" | "NMAT" | "XAT" | "SNAP" | "IIFT" | "CMAT" | "MAT" | "MICAT";
 type Category = "full_length" | "sectional" | "topic" | "daily" | "practice";
 type Level = "easy" | "moderate" | "hard" | "mixed";
 
@@ -22,6 +22,7 @@ const EXAM_SECTIONS: Record<ExamCode, { code: string; name: string }[]> = {
   IIFT: [{ code: "VARC", name: "Verbal Ability & RC" }, { code: "QA", name: "Quantitative Analysis" }, { code: "DILR", name: "Data Interpretation & LR" }, { code: "GK", name: "GK" }],
   CMAT: [{ code: "QADI", name: "Quantitative Techniques" }, { code: "LR", name: "Logical Reasoning" }, { code: "LC", name: "Language Comprehension" }, { code: "GA", name: "General Awareness" }, { code: "IE", name: "Innovation & Entrepreneurship" }],
   MAT:  [{ code: "LC", name: "Language Comprehension" }, { code: "MS", name: "Mathematical Skills" }, { code: "DA", name: "Data Analysis" }, { code: "ICR", name: "Intelligence & Critical Reasoning" }, { code: "IGE", name: "Indian & Global Environment" }],
+  MICAT: [{ code: "DCR", name: "Divergent-Convergent Reasoning" }, { code: "VA", name: "Verbal Ability" }, { code: "QADI", name: "Quantitative Ability & DI" }, { code: "GK", name: "General Awareness" }],
 };
 
 const CATEGORIES: { value: Category; label: string }[] = [
