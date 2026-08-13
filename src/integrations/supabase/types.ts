@@ -11832,6 +11832,8 @@ export type Database = {
         | "IGE"
         | "VARC_DI"
         | "DILR_GK"
+        | "DCR"
+        | "VA"
       mock_test_type:
         | "full_length"
         | "sectional"
@@ -12028,6 +12030,8 @@ export const Constants = {
         "IGE",
         "VARC_DI",
         "DILR_GK",
+        "DCR",
+        "VA",
       ],
       mock_test_type: [
         "full_length",
