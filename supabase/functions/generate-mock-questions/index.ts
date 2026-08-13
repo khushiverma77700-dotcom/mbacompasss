@@ -174,6 +174,17 @@ const EXAM_PROFILES: Record<string, {
     ],
     default_positive: 1, default_negative: 0.25,
   },
+  MICAT: {
+    full_name: "MICA Admission Test (MICA Ahmedabad)",
+    default_total: 105,
+    sections: [
+      { code: "DCR", name: "Divergent-Convergent Reasoning", duration: 25, questions: 30 },
+      { code: "VA", name: "Verbal Ability", duration: 20, questions: 25 },
+      { code: "QADI", name: "Quantitative Ability & Data Interpretation", duration: 20, questions: 25 },
+      { code: "GK", name: "General Awareness (incl. Advertising & Media)", duration: 15, questions: 25 },
+    ],
+    default_positive: 1, default_negative: 0.25,
+  },
 };
 
 const BATCH_SIZE = 5; // optimized: generate 5 questions per AI call to reduce prompt overhead ~80%
@@ -211,6 +222,7 @@ const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
   IIFT: { VARC: "Verbal Ability & RC", QA: "Quantitative Analysis", DILR: "Data Interpretation & LR", GK: "GK" },
   CMAT: { QADI: "Quantitative Techniques", LR: "Logical Reasoning", LC: "Language Comprehension", GA: "GK", IE: "Innovation & Entrepreneurship" },
   MAT:  { LC: "Language Comprehension", MS: "Mathematical Skills", DA: "Data Analysis", ICR: "Intelligence & Critical Reasoning", IGE: "Indian & Global Environment" },
+  MICAT: { DCR: "Logical Reasoning", VA: "Verbal Ability & RC", QADI: "Quantitative Ability", GK: "GK" },
 };
 
 function mapPersonalizedDifficulty(d: string): "easy" | "moderate" | "difficult" {
