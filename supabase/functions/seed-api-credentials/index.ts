@@ -17,8 +17,8 @@ const SEED_KEYS: Record<string, { category: string; description: string }> = {
   RAZORPAY_KEY_SECRET: { category: "payments", description: "Razorpay secret used to verify payments" },
   RAZORPAY_WEBHOOK_SECRET: { category: "payments", description: "Razorpay webhook signing secret" },
 
-  OPENAI_API_KEY: { category: "ai", description: "OpenAI API key (GPT models)" },
-  OPENAI_API_KEY_2: { category: "ai", description: "Backup OpenAI API key (GPT models)" },
+  OPENAI_API_KEY: { category: "ai", description: "Suyash — primary OpenAI API key (GPT models)" },
+  OPENAI_API_KEY_2: { category: "ai", description: "Vaibhav — secondary OpenAI API key (GPT models)" },
   GEMINI_API_KEY: { category: "ai", description: "Google Gemini API key" },
   LOVABLE_API_KEY: { category: "ai", description: "Lovable AI Gateway key" },
 
