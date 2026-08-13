@@ -389,7 +389,6 @@ const EXAM_BLUEPRINTS: Record<string, {
     styleNotes: "MICAT is the creativity-first exam. DCR must mix lateral-thinking items (associations, analogies, odd-one-out, story/idea logic) with tight convergent data sets — never plain CAT-style LR puzzles only. GK must lean on advertising, media, brands, taglines, films and pop culture alongside standard current affairs. Aptitude difficulty stays moderate; the challenge is breadth and creative framing, not heavy computation. Note: the real MICAT also has a qualifying Psychometric test and a Descriptive (essay) test — these are not MCQ and are not generated here.",
   },
 };
-};
 
 function getBlueprint(examCode: string) {
   const code = String(examCode || "").toUpperCase();
