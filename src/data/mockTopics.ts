@@ -87,6 +87,12 @@ export const MOCK_TOPIC_CATALOG: Record<string, Record<string, string[]>> = {
     ICR: ["Arrangements", "Coding-Decoding", "Blood Relations", "Syllogisms", "Critical Reasoning"],
     IGE: ["Static GK", "Current Affairs", "Business & Economy", "International Affairs", "Awards & Sports"],
   },
+  MICAT: {
+    DCR: ["Divergent Thinking (Story / Idea Completion)", "Convergent Reasoning — Data-based Sets", "Odd One Out & Word Association", "Visual & Pattern Reasoning", "Statement-based Logic Sets", "Assumption & Inference Sets"],
+    VA: ["Reading Comprehension", "Vocabulary & Usage", "Grammar & Sentence Correction", "Para Jumbles", "Idioms & Phrases", "Fill in the Blanks"],
+    QADI: ["Arithmetic", "Algebra", "Geometry & Mensuration", "Number System", "Data Interpretation — Tables & Charts", "Data Sufficiency"],
+    GK: ["Current Affairs", "Advertising & Media", "Brands, Taglines & Logos", "Business & Economy", "Static GK", "Awards, Sports & Entertainment"],
+  },
 };
 
 export function getTopicsFor(examCode: string, sectionCode: string): string[] {

@@ -174,6 +174,17 @@ const EXAM_PROFILES: Record<string, {
     ],
     default_positive: 1, default_negative: 0.25,
   },
+  MICAT: {
+    full_name: "MICA Admission Test (MICA Ahmedabad)",
+    default_total: 105,
+    sections: [
+      { code: "DCR", name: "Divergent-Convergent Reasoning", duration: 25, questions: 30 },
+      { code: "VA", name: "Verbal Ability", duration: 20, questions: 25 },
+      { code: "QADI", name: "Quantitative Ability & Data Interpretation", duration: 20, questions: 25 },
+      { code: "GK", name: "General Awareness (incl. Advertising & Media)", duration: 15, questions: 25 },
+    ],
+    default_positive: 1, default_negative: 0.25,
+  },
 };
 
 const BATCH_SIZE = 5; // optimized: generate 5 questions per AI call to reduce prompt overhead ~80%
@@ -211,6 +222,7 @@ const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
   IIFT: { VARC: "Verbal Ability & RC", QA: "Quantitative Analysis", DILR: "Data Interpretation & LR", GK: "GK" },
   CMAT: { QADI: "Quantitative Techniques", LR: "Logical Reasoning", LC: "Language Comprehension", GA: "GK", IE: "Innovation & Entrepreneurship" },
   MAT:  { LC: "Language Comprehension", MS: "Mathematical Skills", DA: "Data Analysis", ICR: "Intelligence & Critical Reasoning", IGE: "Indian & Global Environment" },
+  MICAT: { DCR: "Logical Reasoning", VA: "Verbal Ability & RC", QADI: "Quantitative Ability", GK: "GK" },
 };
 
 function mapPersonalizedDifficulty(d: string): "easy" | "moderate" | "difficult" {
@@ -366,6 +378,16 @@ const EXAM_BLUEPRINTS: Record<string, {
     sections: "LC 40Q (Language Comprehension); MS 40Q (Mathematical Skills — basic arithmetic & algebra); DA 40Q (Data Analysis & Sufficiency); ICR 40Q (Intelligence & Critical Reasoning); IGE 40Q (Indian & Global Environment — current affairs + static GK)",
     styleNotes: "MAT questions are direct, formula-based, low-trap. Avoid CAT-style elegant traps. IGE needs straightforward current-affairs and GK questions on India/world.",
   },
+  MICAT: {
+    full: "MICA Admission Test (MICA Ahmedabad)",
+    baselineDifficulty: "MODERATE with a strong CREATIVITY + MEDIA-AWARENESS slant (Section C aptitude is easier than CAT, but GK is unusually wide and advertising-heavy)",
+    totalQuestions: 105,
+    totalDuration: 80,
+    sectionalTiming: false,
+    marking: "+1 correct, -0.25 wrong",
+    sections: "DCR 30Q (Divergent-Convergent Reasoning — unique MICAT section: word association, odd-one-out, visual/pattern logic, data-based convergent sets, assumption-inference sets); VA 25Q (Verbal Ability — RC, vocabulary, grammar, para jumbles); QADI 25Q (Quantitative Ability & DI — arithmetic, algebra, tables/charts, data sufficiency); GK 25Q (General Awareness — current affairs plus advertising, media, brands, taglines, entertainment)",
+    styleNotes: "MICAT is the creativity-first exam. DCR must mix lateral-thinking items (associations, analogies, odd-one-out, story/idea logic) with tight convergent data sets — never plain CAT-style LR puzzles only. GK must lean on advertising, media, brands, taglines, films and pop culture alongside standard current affairs. Aptitude difficulty stays moderate; the challenge is breadth and creative framing, not heavy computation. Note: the real MICAT also has a qualifying Psychometric test and a Descriptive (essay) test — these are not MCQ and are not generated here.",
+  },
 };
 
 function getBlueprint(examCode: string) {
@@ -442,6 +464,12 @@ const SECTION_SCOPE_GEN: Record<string, Record<string, { allowed: string; forbid
     DA: { allowed: "Data Analysis & Sufficiency.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
     ICR: { allowed: "Intelligence & Critical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "geometry", "current affairs"] },
     IGE: { allowed: "Indian & Global Environment.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage"] },
+  },
+  MICAT: {
+    DCR: { allowed: "Divergent-Convergent Reasoning — word association, odd-one-out, analogy/lateral-thinking items, visual & pattern logic, convergent data-based sets, assumption-inference sets.", forbiddenKeywords: ["reading comprehension passage", "vocabulary in context", "algebra equation", "geometry", "current affairs"] },
+    VA: { allowed: "Verbal Ability — RC, vocabulary, grammar, para jumbles, idioms, fill in the blanks.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "data interpretation chart", "current affairs"] },
+    QADI: { allowed: "Quantitative Ability + Data Interpretation + Data Sufficiency.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs", "brand tagline"] },
+    GK: { allowed: "General Awareness — current affairs plus advertising, media, brands, taglines, films and entertainment.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage", "data interpretation chart"] },
   },
 };
 
@@ -1371,6 +1399,7 @@ function planSections(
       CMAT: ["QADI", "LR", "LC"],
       IIFT: ["VARC", "DILR", "QA"],
       MAT: ["LC", "ICR", "DA"],
+      MICAT: ["DCR", "VA", "QADI"],
     };
     const desired = dailySectionCodesByExam[String(examCode || "").toUpperCase()]
       || profile.sections.slice(0, 3).map((s) => s.code);

@@ -316,6 +316,7 @@ const EXAM_BASELINE: Record<string, string> = {
   IIFT: "HIGH baseline. CAT-level Quant + heavy multi-table DI + real GK section (current affairs, business, sports). Variable marking by section.",
   CMAT: "MODERATE baseline (closer to NMAT). Broader syllabus including Innovation & Entrepreneurship (Indian startups, business jargon, government schemes) and General Awareness.",
   MAT: "EASY-TO-MODERATE baseline. Direct, formula-based, low-trap. Includes Indian & Global Environment (current affairs + static GK).",
+  MICAT: "MODERATE baseline with a creativity + media slant. Unique Divergent-Convergent Reasoning section (word association, odd-one-out, lateral thinking, convergent data sets). GK leans on advertising, media, brands and taglines alongside current affairs. Aptitude is moderate, not computation-heavy.",
 };
 
 function buildExamCalibration(examCode: string, level: string): string {
@@ -386,6 +387,12 @@ const SECTION_SCOPE: Record<string, Record<string, { allowed: string; forbiddenK
     DA: { allowed: "Data Analysis & Sufficiency.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
     ICR: { allowed: "Intelligence & Critical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "geometry", "current affairs"] },
     IGE: { allowed: "Indian & Global Environment — current affairs + static GK.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage"] },
+  },
+  MICAT: {
+    DCR: { allowed: "Divergent-Convergent Reasoning — word association, odd-one-out, analogy/lateral-thinking items, visual & pattern logic, convergent data-based sets, assumption-inference sets.", forbiddenKeywords: ["reading comprehension passage", "vocabulary in context", "algebra equation", "geometry", "current affairs"] },
+    VA: { allowed: "Verbal Ability — RC, vocabulary, grammar, para jumbles, idioms, fill in the blanks.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "data interpretation chart", "current affairs"] },
+    QADI: { allowed: "Quantitative Ability + Data Interpretation + Data Sufficiency.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs", "brand tagline"] },
+    GK: { allowed: "General Awareness — current affairs plus advertising, media, brands, taglines, films and entertainment.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage", "data interpretation chart"] },
   },
 };
 
