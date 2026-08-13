@@ -80,8 +80,8 @@ Deno.serve(async (req) => {
   const [suyash, vaibhav, monthUsage, allUsage, activeSlotRow] = await Promise.all([
     inspectKey(1, "Suyash", "OPENAI_API_KEY"),
     inspectKey(2, "Vaibhav", "OPENAI_API_KEY_2"),
-    admin.from("ai_usage_logs").select("estimated_cost").eq("provider", "openai").gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
-    admin.from("ai_usage_logs").select("estimated_cost").eq("provider", "openai"),
+    admin.from("ai_usage_logs").select("estimated_cost").or("provider.ilike.openai%,model.ilike.gpt%").gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
+    admin.from("ai_usage_logs").select("estimated_cost").or("provider.ilike.openai%,model.ilike.gpt%"),
     admin.from("site_settings").select("value").eq("key", "openai_active_slot").maybeSingle(),
   ]);
 
