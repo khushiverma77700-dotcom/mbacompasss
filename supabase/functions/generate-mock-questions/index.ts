@@ -472,7 +472,6 @@ const SECTION_SCOPE_GEN: Record<string, Record<string, { allowed: string; forbid
     GK: { allowed: "General Awareness — current affairs plus advertising, media, brands, taglines, films and entertainment.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage", "data interpretation chart"] },
   },
 };
-};
 
 function buildSectionScopeLockGen(examCode: string, sectionCode: string, sectionName: string): string {
   const ex = String(examCode || "").toUpperCase();
