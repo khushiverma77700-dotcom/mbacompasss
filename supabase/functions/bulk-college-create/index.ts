@@ -371,8 +371,9 @@ async function processOne(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: authHeader,
+          Authorization: authHeader || `Bearer ${ANON_KEY}`,
           apikey: ANON_KEY,
+          "x-worker-key": SERVICE_ROLE,
           "X-AI-Provider": aiProvider,
         },
         body: aiRequestBody,

@@ -5,6 +5,11 @@ export async function requireAdmin(
   req: Request,
   corsHeaders: Record<string, string> = {},
 ): Promise<Response | null> {
+  // Trusted internal server-to-server call (background workers, cron jobs):
+  // the service-role key is never exposed to browsers, so this is admin-equivalent.
+  const workerKey = req.headers.get("x-worker-key");
+  if (workerKey && workerKey === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return null;
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
