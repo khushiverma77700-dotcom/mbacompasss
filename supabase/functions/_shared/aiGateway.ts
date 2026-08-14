@@ -224,10 +224,25 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     const openaiModel = isExplicitGpt5 ? callerModel : (provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano");
     const payload = buildOpenAICompatPayload(body, openaiModel);
     try {
-      const resp = await withRetry(
+      let resp = await withRetry(
         () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload, signal),
-        { maxRetries, label: `${provider}[${feature}]` },
+        { maxRetries: Math.max(maxRetries, 3), label: `${provider}[${feature}]` },
       );
+      // Still rate-limited / out of quota on the active key? Fail over to the
+      // other configured OpenAI slot (Suyash ⇄ Vaibhav) before giving up.
+      if (resp.status === 429) {
+        const alt = await getCredential("OPENAI_API_KEY_2").catch(() => "");
+        const altKey = alt && alt !== openaiKey
+          ? alt
+          : await getCredential("OPENAI_API_KEY_1").catch(() => "");
+        if (altKey && altKey !== openaiKey) {
+          console.warn(`[aiGateway][${feature}] 429 on active OpenAI slot — failing over to backup key`);
+          resp = await withRetry(
+            () => callUpstream(OPENAI_CHAT_URL, altKey, payload, signal),
+            { maxRetries: 2, label: `${provider}-failover[${feature}]` },
+          );
+        }
+      }
       if (!skipLog) {
         if (resp.ok) logSuccess(resp, isStream, feature, openaiModel, userId, provider, startedAt);
         else await logErrorFromResp(resp, feature, openaiModel, userId, provider, startedAt);
