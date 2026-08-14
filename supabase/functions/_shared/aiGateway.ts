@@ -416,14 +416,26 @@ async function withRetry(
   fn: () => Promise<Response>,
   opts: { maxRetries: number; label: string },
 ): Promise<Response> {
-  const RETRYABLE = new Set([408, 425, 500, 502, 503, 504]);
+  // 429 = provider rate limit (TPM/RPM). It is retryable with a longer wait,
+  // UNLESS the body says insufficient_quota (billing) — that never self-heals.
+  const RETRYABLE = new Set([408, 425, 429, 500, 502, 503, 504]);
   let lastResp: Response | undefined;
   let lastErr: unknown;
+  let retryAfterMs = 0;
 
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
+    retryAfterMs = 0;
     try {
       const resp = await fn();
       if (!RETRYABLE.has(resp.status)) return resp;
+      if (resp.status === 429) {
+        const peek = await resp.clone().text().catch(() => "");
+        if (/insufficient_quota|billing|exceeded your current quota/i.test(peek)) {
+          return resp; // hard quota error — surface immediately
+        }
+        const ra = Number(resp.headers.get("retry-after"));
+        retryAfterMs = Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 30_000) : 0;
+      }
       lastResp = resp;
       console.warn(`[aiGateway:retry] ${opts.label} attempt ${attempt + 1} got ${resp.status}`);
     } catch (e) {
@@ -432,8 +444,10 @@ async function withRetry(
     }
 
     if (attempt < opts.maxRetries) {
-      const base = 300 * Math.pow(2, attempt);
-      const jitter = Math.random() * 150;
+      const base = retryAfterMs || (lastResp?.status === 429
+        ? 4000 * Math.pow(2, attempt)   // 4s, 8s, 16s… for rate limits
+        : 300 * Math.pow(2, attempt));
+      const jitter = Math.random() * 400;
       await new Promise((resolve) => setTimeout(resolve, base + jitter));
     }
   }
