@@ -16,7 +16,7 @@
 //   • No artificial timeouts on the upstream call.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential } from "./getCredential.ts";
+import { getCredential, getOpenAiKeyForSlot } from "./getCredential.ts";
 
 const GEMINI_OPENAI_COMPAT_URL =
   "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
@@ -231,10 +231,9 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       // Still rate-limited / out of quota on the active key? Fail over to the
       // other configured OpenAI slot (Suyash ⇄ Vaibhav) before giving up.
       if (resp.status === 429) {
-        const alt = await getCredential("OPENAI_API_KEY_2").catch(() => "");
-        const altKey = alt && alt !== openaiKey
-          ? alt
-          : await getCredential("OPENAI_API_KEY_1").catch(() => "");
+        const slot2 = await getOpenAiKeyForSlot(2);
+        const slot1 = await getOpenAiKeyForSlot(1);
+        const altKey = slot2 && slot2 !== openaiKey ? slot2 : (slot1 !== openaiKey ? slot1 : "");
         if (altKey && altKey !== openaiKey) {
           console.warn(`[aiGateway][${feature}] 429 on active OpenAI slot — failing over to backup key`);
           resp = await withRetry(
