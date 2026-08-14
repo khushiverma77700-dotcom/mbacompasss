@@ -41,6 +41,16 @@ export async function getCredential(name: string, opts?: { required?: boolean })
   return resolveCredential(name, required);
 }
 
+/** Resolve a specific OpenAI slot key (1 = Suyash, 2 = Vaibhav), ignoring the active-slot toggle. */
+export async function getOpenAiKeyForSlot(slot: 1 | 2): Promise<string> {
+  const name = slot === 2 ? "OPENAI_API_KEY_2" : "OPENAI_API_KEY";
+  try {
+    return await resolveCredential(name, false, { preferEnv: true });
+  } catch {
+    return "";
+  }
+}
+
 async function resolveCredential(name: string, required: boolean, options?: { preferEnv?: boolean }): Promise<string> {
   const now = Date.now();
   // 1. Cache hit

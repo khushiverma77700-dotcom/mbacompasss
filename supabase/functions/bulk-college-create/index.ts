@@ -17,7 +17,7 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
 const CONCURRENCY = 1;
-const AI_WRITER_MAX_ATTEMPTS = 1;
+const AI_WRITER_MAX_ATTEMPTS = 3;
 const AI_RETRY_BASE_DELAY_MS = 2500;
 const ROWS_PER_INVOCATION = 10; // matches POOL_MAX so live concurrency 1–10 has real effect
 const AI_WRITER_TIMEOUT_MS = 125_000;
@@ -405,7 +405,10 @@ async function processOne(
       }
 
       if (attempt < AI_WRITER_MAX_ATTEMPTS) {
-        await sleep(AI_RETRY_BASE_DELAY_MS * attempt);
+        // Provider rate limit (429) needs a much longer cool-off than a parse retry.
+        const isRateLimited = aiRes.status === 429;
+        await updateRow({ step: isRateLimited ? "AI rate limited — cooling off" : `retrying AI writer (${attempt + 1}/${AI_WRITER_MAX_ATTEMPTS})` });
+        await sleep(isRateLimited ? 20_000 * attempt : AI_RETRY_BASE_DELAY_MS * attempt);
       }
     }
 
