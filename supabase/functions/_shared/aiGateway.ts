@@ -235,6 +235,8 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       if (![400, 403, 404].includes(r.status)) return false;
       return /model_not_found|does not exist|do not have access|unsupported_model|invalid[_ ]model/i.test(await peek(r));
     };
+    const payload = (model: string) => buildOpenAICompatPayload(body, model);
+
     try {
       let resp = await withRetry(
         () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload(openaiModel), signal),
