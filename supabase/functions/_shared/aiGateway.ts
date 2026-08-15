@@ -303,6 +303,25 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         }
       }
 
+      // A billing exhaustion is NOT a rate limit — never tell the admin to
+      // "try again in a minute". Re-map it to 402 with an actionable message.
+      if (!resp.ok) {
+        const bodyText = await peek(resp);
+        if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota|Not enough credits/i.test(bodyText)) {
+          resp = new Response(
+            JSON.stringify({
+              error: {
+                code: "ai_credits_exhausted",
+                message:
+                  "AI credits are exhausted. Both OpenAI keys (Suyash and Vaibhav) report a zero credit balance, and the Lovable AI fallback has no credits either. Top up an OpenAI account (or Lovable AI credits) — switching slots will not help until then.",
+              },
+            }),
+            { status: 402, headers: { "Content-Type": "application/json" } },
+          );
+        }
+      }
+
+
       if (!skipLog) {
         if (resp.ok) logSuccess(resp, isStream, feature, openaiModel, userId, provider, startedAt);
         else await logErrorFromResp(resp, feature, openaiModel, userId, provider, startedAt);
