@@ -3,7 +3,7 @@ import { requireAdmin } from "../_shared/requireAdmin.ts";
 // Generates one category at a time to avoid edge function timeouts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFactualRiskCheck, runFinalQualityCheck } from "../_shared/aiContentRules.ts";
-import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,14 +77,13 @@ const schema = {
 };
 
 async function generateForCategory(opts: {
-  apiKey: string;
   category: string;
   count: number;
   dateFrom: string;
   dateTo: string;
   focus: string;
 }) {
-  const { apiKey, category, count, dateFrom, dateTo, focus } = opts;
+  const { category, count, dateFrom, dateTo, focus } = opts;
 
   const sys = `You are an MBA current-affairs editor for Indian B-school aspirants (CAT/XAT/SNAP/NMAT/GDPI/WAT).
 Generate concise, factually-grounded, exam-focused news cards covering the date range ${dateFrom} to ${dateTo}.
@@ -104,13 +103,7 @@ importance (high/medium/low), reading_seconds (30-90),
 source_name, source_url (real verified URL only if confidently known, otherwise empty string), news_date (YYYY-MM-DD within ${dateFrom}..${dateTo}),
 category (exactly "${category}"), tags (array of 2-5 strings).`;
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const res = await callAIGateway({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: sys + MBA_COMPASS_SECTION_RULES },
@@ -120,8 +113,7 @@ category (exactly "${category}"), tags (array of 2-5 strings).`;
         type: "json_schema",
         json_schema: { name: "news_batch", strict: true, schema },
       },
-    }),
-  });
+    }, { feature: "generate-news", purpose: "structured" });
 
   if (!res.ok) {
     const t = await res.text();
@@ -152,9 +144,6 @@ Deno.serve(async (req) => {
   if (_authFail) return _authFail;
 
   try {
-    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -193,7 +182,6 @@ Deno.serve(async (req) => {
       const results = await Promise.allSettled(
         slice.map((cat) =>
           generateForCategory({
-            apiKey: OPENAI_API_KEY,
             category: cat,
             count: countPerCategory,
             dateFrom, dateTo, focus,

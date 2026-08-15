@@ -4,7 +4,7 @@
 // Invoked from the admin progress panel "Retry section" button.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
 
 const corsHeaders = {
@@ -474,9 +474,6 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. EVERY question MUST be strictly from this section's syllabus — DO NOT include any topic that belongs to another section of ${opts.exam_code}. Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
   }
 
-  const apiKey = (await getCredential("OPENAI_API_KEY"));
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
-
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
   const modelId = "gpt-4o-mini";
@@ -494,65 +491,16 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     temperature: temp,
   };
 
-  // Inline retry with exponential backoff for transient errors (429 / 5xx).
-  const MAX_INLINE_RETRIES = 6;
-  let resp: Response | null = null;
-  let lastErr: string | null = null;
-  let rateLimitedAttempts = 0;
-  for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
-    try {
-      resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
-        signal: ctrl.signal,
-      });
-      clearTimeout(timer);
-      if (resp.ok) break;
-      const txt = await resp.text();
-      const quotaBlocked = resp.status === 401 || resp.status === 402 || resp.status === 403 || /invalid_api_key|payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
-      await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: quotaBlocked ? "credit_exhausted" : "error", errorMsg: `HTTP ${resp.status}: ${txt.slice(0, 220)}`, latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
-      if (quotaBlocked) throw new Error(`OpenAI API blocked: ${txt.slice(0, 240)}`);
-      if (resp.status === 429 && rateLimitedAttempts < 4) {
-        rateLimitedAttempts++;
-        const waitMs = parseOpenAI429Wait(resp.headers, txt);
-        lastErr = `OpenAI 429: ${txt.slice(0, 200)}`;
-        console.warn(`[retry-mock-section] 429 rate-limited, sleeping ${waitMs}ms (attempt ${rateLimitedAttempts}/4)`);
-        await new Promise((r) => setTimeout(r, waitMs));
-        resp = null;
-        attempt--; // don't consume a generic retry on a 429
-        continue;
-      }
-      if ([408, 425, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
-        lastErr = `OpenAI ${resp.status}: ${txt.slice(0, 200)}`;
-        console.warn(`[retry-mock-section] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
-        const backoff = Math.min(20000, 2000 * Math.pow(2, attempt - 1)) + Math.random() * 1500;
-        await new Promise((r) => setTimeout(r, backoff));
-        resp = null;
-        continue;
-      }
-      throw new Error(`OpenAI ${resp.status}: ${txt.slice(0, 200)}`);
-    } catch (e) {
-      clearTimeout(timer);
-      const msg = (e as Error)?.name === "AbortError" ? `OpenAI request aborted after ${AI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
-      lastErr = msg;
-      if (isAIQuotaBlockedError(msg)) {
-        await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: "credit_exhausted", errorMsg: msg.slice(0, 220), latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
-        throw new Error(msg);
-      }
-      if (attempt < MAX_INLINE_RETRIES) {
-        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
-        await new Promise((r) => setTimeout(r, backoff));
-        resp = null;
-        continue;
-      }
-      await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: "error", errorMsg: msg.slice(0, 220), latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
-      throw new Error(msg);
-    }
+  const resp = await callAIGateway(reqBody as any, {
+    feature: "retry-mock-section",
+    userId: opts.userId ?? null,
+    purpose: "long",
+    maxRetries: 2,
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`AI call failed (${resp.status}): ${txt.slice(0, 240)}`);
   }
-  if (!resp || !resp.ok) throw new Error(lastErr || "AI call failed after retries");
   const data = await resp.json();
   await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, aiData: data, status: "success", latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
   const content = data?.choices?.[0]?.message?.content;

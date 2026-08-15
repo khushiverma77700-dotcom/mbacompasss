@@ -2,7 +2,7 @@
 // Strict pedagogical schema: Formula (LaTeX), Explanation, Usage (when/how to apply), Sample Usage (worked examples).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
-import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -125,9 +125,6 @@ Deno.serve(async (req) => {
     const existingSlugs = new Set((existing || []).map((r: any) => String(r.slug || "").toLowerCase()).filter(Boolean));
     const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(stripMathDelimiters(r.expression_latex))).filter(Boolean));
     const existingNamesList = (existing || []).map((r: any) => r.name).filter(Boolean);
-
-    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
     const safeCount = Math.min(100, Math.max(1, Number(count) || 8));
     const BATCH_SIZE = 10;
@@ -255,17 +252,14 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         },
       };
 
-      return fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      return callAIGateway({
           model,
           messages: [{ role: "system", content: system }, { role: "user", content: user }],
           tools: [tool],
           tool_choice: { type: "function", function: { name: "emit_formulas" } },
           temperature: 0.7,
-        }),
-      }).then(async (resp) => ({ resp, batchIndex }));
+        }, { feature: "formula-topic-generate", userId, purpose: "structured" })
+        .then(async (resp) => ({ resp, batchIndex }));
     };
 
     const batchPromises: Promise<{ resp: Response; batchIndex: number }>[] = [];
