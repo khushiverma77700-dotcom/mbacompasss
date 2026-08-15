@@ -223,40 +223,105 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     // Honor caller's gpt-5 / gpt-5.2 model if explicitly set; otherwise pick mini/nano based on provider tier.
     const callerModel = (body.model || "").trim().replace(/^openai\//, "");
     const isExplicitGpt5 = /^gpt-5(\.\d+)?(-mini|-nano)?$/i.test(callerModel) || /^gpt-5\.2$/i.test(callerModel);
-    const openaiModel = isExplicitGpt5 ? callerModel : (provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano");
-    const payload = buildOpenAICompatPayload(body, openaiModel);
+    let openaiModel = isExplicitGpt5 ? callerModel : (provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano");
+    // Some OpenAI accounts / project keys have no access to the gpt-5 family.
+    // In that case OpenAI answers 403/404 `model_not_found` and the key is
+    // perfectly fine — so downgrade the model instead of killing the slot.
+    const MODEL_CHAIN = provider === "openai-nano"
+      ? ["gpt-4.1-nano", "gpt-4o-mini"]
+      : ["gpt-4.1-mini", "gpt-4o-mini"];
+    const peek = async (r: Response) => (await r.clone().text().catch(() => "")).slice(0, 400);
+    const isModelAccessError = async (r: Response) => {
+      if (![400, 403, 404].includes(r.status)) return false;
+      return /model_not_found|does not exist|do not have access|unsupported_model|invalid[_ ]model/i.test(await peek(r));
+    };
+    const payload = (model: string) => buildOpenAICompatPayload(body, model);
+
     try {
       let resp = await withRetry(
-        () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload, signal),
+        () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload(openaiModel), signal),
         { maxRetries: Math.max(maxRetries, 3), label: `${provider}[${feature}]` },
       );
-      // Fail over on quota/rate-limit/auth failures. The selected slot is read
-      // on every call, so the Admin switcher takes effect immediately.
+
+      // 1) Model not available on this account → try known-good models, same key.
+      for (const alt of MODEL_CHAIN) {
+        if (!(await isModelAccessError(resp))) break;
+        console.warn(`[aiGateway][${feature}] OpenAI model ${openaiModel} unavailable on slot ${activeSlot} (${resp.status}); retrying with ${alt}`);
+        openaiModel = alt;
+        resp = await withRetry(
+          () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload(openaiModel), signal),
+          { maxRetries: 1, label: `${provider}-model-downgrade[${feature}]` },
+        );
+      }
+
+      // 2) Auth/quota/rate-limit on the active slot → try the other slot.
       if ([401, 403, 429].includes(resp.status)) {
+        console.warn(`[aiGateway][${feature}] OpenAI slot ${activeSlot} (${openaiModel}) returned ${resp.status}: ${await peek(resp)}`);
         const altKey = await getOpenAiKeyForSlot(backupSlot);
         if (altKey && altKey !== openaiKey) {
-          console.warn(`[aiGateway][${feature}] OpenAI slot ${activeSlot} returned ${resp.status}; trying slot ${backupSlot}`);
+          console.warn(`[aiGateway][${feature}] Failing over to OpenAI slot ${backupSlot}`);
           resp = await withRetry(
-            () => callUpstream(OPENAI_CHAT_URL, altKey, payload, signal),
+            () => callUpstream(OPENAI_CHAT_URL, altKey, payload(openaiModel), signal),
             { maxRetries: 2, label: `${provider}-failover[${feature}]` },
           );
+          for (const alt of MODEL_CHAIN) {
+            if (!(await isModelAccessError(resp))) break;
+            openaiModel = alt;
+            resp = await withRetry(
+              () => callUpstream(OPENAI_CHAT_URL, altKey, payload(openaiModel), signal),
+              { maxRetries: 1, label: `${provider}-failover-downgrade[${feature}]` },
+            );
+          }
         }
       }
-      // Keep dashboard AI operational if both private OpenAI accounts are
-      // unavailable. Lovable AI uses a separate workspace-managed balance.
+
+      // 3) Both OpenAI slots unusable → last-resort Lovable AI. If that has no
+      // credits either, surface the real OpenAI error instead of Lovable's 402.
       if ([401, 402, 403, 429].includes(resp.status)) {
+        const openaiError = await peek(resp);
+        const openaiStatus = resp.status;
+        console.warn(`[aiGateway][${feature}] Both OpenAI slots unavailable (${openaiStatus}): ${openaiError}`);
         const lovableKey = Deno.env.get("LOVABLE_API_KEY") || "";
         if (lovableKey) {
           const fallbackModel = purpose === "short" || purpose === "structured"
             ? "google/gemini-2.5-flash-lite"
             : "google/gemini-2.5-flash";
-          console.warn(`[aiGateway][${feature}] Both OpenAI slots unavailable; using Lovable AI fallback`);
-          resp = await withRetry(
+          const lovableResp = await withRetry(
             () => callLovableUpstream(lovableKey, buildLovablePayload({ ...body, model: fallbackModel }), signal),
             { maxRetries: 2, label: `lovable-fallback[${feature}]` },
           );
+          resp = lovableResp.ok
+            ? lovableResp
+            : new Response(
+                JSON.stringify({
+                  error: {
+                    message: `OpenAI (${openaiStatus}) failed and the Lovable AI fallback is unavailable (${lovableResp.status}). OpenAI said: ${openaiError}`,
+                  },
+                }),
+                { status: openaiStatus, headers: { "Content-Type": "application/json" } },
+              );
         }
       }
+
+      // A billing exhaustion is NOT a rate limit — never tell the admin to
+      // "try again in a minute". Re-map it to 402 with an actionable message.
+      if (!resp.ok) {
+        const bodyText = await peek(resp);
+        if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota|Not enough credits/i.test(bodyText)) {
+          resp = new Response(
+            JSON.stringify({
+              error: {
+                code: "ai_credits_exhausted",
+                message:
+                  "AI credits are exhausted. Both OpenAI keys (Suyash and Vaibhav) report a zero credit balance, and the Lovable AI fallback has no credits either. Top up an OpenAI account (or Lovable AI credits) — switching slots will not help until then.",
+              },
+            }),
+            { status: 402, headers: { "Content-Type": "application/json" } },
+          );
+        }
+      }
+
+
       if (!skipLog) {
         if (resp.ok) logSuccess(resp, isStream, feature, openaiModel, userId, provider, startedAt);
         else await logErrorFromResp(resp, feature, openaiModel, userId, provider, startedAt);
