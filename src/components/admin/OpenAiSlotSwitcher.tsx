@@ -69,13 +69,9 @@ export default function OpenAiSlotSwitcher() {
       setSaving(false);
       return;
     }
-    // Flush server-side credential cache so the change applies immediately
-    try {
-      await supabase.functions.invoke("flush-credentials-cache");
-    } catch (_) {/* non-fatal */}
     setSlot(next);
     setSaving(false);
-    toast.success(`Switched to OpenAI API ${next}. Active site-wide.`);
+    toast.success(`Switched to ${SLOT_NAMES[next]}. The next AI request will use this account first.`);
   }
 
   return (
@@ -89,7 +85,7 @@ export default function OpenAiSlotSwitcher() {
         <p className="text-xs text-muted-foreground mt-1">
           Choose which OpenAI key powers every AI feature — admin tools, student dashboard,
           AI writers, mock generation, profile analyzer, vocabulary, formulas, IIM insights and more.
-          Changes propagate within ~30 seconds.
+          The selected account is used for the next AI request. If it is unavailable, the backup account is tried automatically.
         </p>
       </CardHeader>
       <CardContent>

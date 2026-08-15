@@ -3,7 +3,8 @@
 // falls back to Deno.env.get() if not in DB or empty.
 // OpenAI is special: secure backend secrets win over DB values so a freshly
 // rotated key takes effect even if Admin → API Keys still contains an older key.
-// In-memory cache with 60s TTL to keep DB load low.
+// Credential values are cached, but the active OpenAI slot is intentionally
+// read for every generation so an admin switch applies across warm workers.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -48,6 +49,24 @@ export async function getOpenAiKeyForSlot(slot: 1 | 2): Promise<string> {
     return await resolveCredential(name, false, { preferEnv: true });
   } catch {
     return "";
+  }
+}
+
+/** Return the currently selected OpenAI slot. Do not cache this setting. */
+export async function getOpenAiActiveSlot(): Promise<1 | 2> {
+  try {
+    const sb = getServiceClient();
+    const { data, error } = await sb
+      .from("site_settings")
+      .select("value")
+      .eq("key", "openai_active_slot")
+      .maybeSingle();
+    if (error) console.warn("[credentials] Could not read active OpenAI slot:", error.message);
+    const value = (data?.value as { slot?: number | string } | null)?.slot;
+    return value === 2 || value === "2" ? 2 : 1;
+  } catch (error) {
+    console.warn("[credentials] Active OpenAI slot lookup failed; using slot 1:", error instanceof Error ? error.message : error);
+    return 1;
   }
 }
 
@@ -104,30 +123,5 @@ async function resolveCredential(name: string, required: boolean, options?: { pr
 /** Clear the in-memory cache (called by flush-credentials-cache function). */
 export function flushCredentialCache() {
   cache.clear();
-  slotCache = null;
-}
-
-// ── OpenAI slot switcher ─────────────────────────────────────────────────────
-let slotCache: { slot: 1 | 2; fetchedAt: number } | null = null;
-const SLOT_TTL_MS = 30 * 1000;
-
-async function getOpenAiActiveSlot(): Promise<1 | 2> {
-  const now = Date.now();
-  if (slotCache && now - slotCache.fetchedAt < SLOT_TTL_MS) return slotCache.slot;
-  let slot: 1 | 2 = 1;
-  try {
-    const sb = getServiceClient();
-    const { data } = await sb
-      .from("site_settings")
-      .select("value")
-      .eq("key", "openai_active_slot")
-      .maybeSingle();
-    const v = (data?.value as any)?.slot;
-    if (v === 2 || v === "2") slot = 2;
-  } catch (_) {
-    slot = 1;
-  }
-  slotCache = { slot, fetchedAt: now };
-  return slot;
 }
 
