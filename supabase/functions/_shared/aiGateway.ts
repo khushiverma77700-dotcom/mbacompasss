@@ -16,7 +16,7 @@
 //   • No artificial timeouts on the upstream call.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential, getOpenAiKeyForSlot } from "./getCredential.ts";
+import { getCredential, getOpenAiActiveSlot, getOpenAiKeyForSlot } from "./getCredential.ts";
 
 const GEMINI_OPENAI_COMPAT_URL =
   "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
@@ -209,7 +209,9 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
 
   // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
   if (provider === "openai-mini" || provider === "openai-nano") {
-    const openaiKey = (await getCredential("OPENAI_API_KEY"));
+    const activeSlot = await getOpenAiActiveSlot();
+    const backupSlot: 1 | 2 = activeSlot === 1 ? 2 : 1;
+    const openaiKey = await getOpenAiKeyForSlot(activeSlot);
     if (!openaiKey) {
       const err = "OPENAI_API_KEY is not configured.";
       console.error(`[aiGateway][${feature}] ${err}`);
@@ -228,17 +230,30 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload, signal),
         { maxRetries: Math.max(maxRetries, 3), label: `${provider}[${feature}]` },
       );
-      // Still rate-limited / out of quota on the active key? Fail over to the
-      // other configured OpenAI slot (Suyash ⇄ Vaibhav) before giving up.
-      if (resp.status === 429) {
-        const slot2 = await getOpenAiKeyForSlot(2);
-        const slot1 = await getOpenAiKeyForSlot(1);
-        const altKey = slot2 && slot2 !== openaiKey ? slot2 : (slot1 !== openaiKey ? slot1 : "");
+      // Fail over on quota/rate-limit/auth failures. The selected slot is read
+      // on every call, so the Admin switcher takes effect immediately.
+      if ([401, 403, 429].includes(resp.status)) {
+        const altKey = await getOpenAiKeyForSlot(backupSlot);
         if (altKey && altKey !== openaiKey) {
-          console.warn(`[aiGateway][${feature}] 429 on active OpenAI slot — failing over to backup key`);
+          console.warn(`[aiGateway][${feature}] OpenAI slot ${activeSlot} returned ${resp.status}; trying slot ${backupSlot}`);
           resp = await withRetry(
             () => callUpstream(OPENAI_CHAT_URL, altKey, payload, signal),
             { maxRetries: 2, label: `${provider}-failover[${feature}]` },
+          );
+        }
+      }
+      // Keep dashboard AI operational if both private OpenAI accounts are
+      // unavailable. Lovable AI uses a separate workspace-managed balance.
+      if ([401, 402, 403, 429].includes(resp.status)) {
+        const lovableKey = Deno.env.get("LOVABLE_API_KEY") || "";
+        if (lovableKey) {
+          const fallbackModel = purpose === "short" || purpose === "structured"
+            ? "google/gemini-2.5-flash-lite"
+            : "google/gemini-2.5-flash";
+          console.warn(`[aiGateway][${feature}] Both OpenAI slots unavailable; using Lovable AI fallback`);
+          resp = await withRetry(
+            () => callLovableUpstream(lovableKey, buildLovablePayload({ ...body, model: fallbackModel }), signal),
+            { maxRetries: 2, label: `lovable-fallback[${feature}]` },
           );
         }
       }
@@ -423,6 +438,30 @@ async function callUpstream(
     headers: {
       "Content-Type": upstream.headers.get("content-type") || "application/json",
     },
+  });
+}
+
+async function callLovableUpstream(
+  apiKey: string,
+  payload: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<Response> {
+  const upstream = await fetch(LOVABLE_GATEWAY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+    body: JSON.stringify(payload),
+    signal,
+  });
+  if (payload.stream === true && upstream.ok && upstream.body) {
+    return new Response(upstream.body, {
+      status: 200,
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+    });
+  }
+  const text = await upstream.text();
+  return new Response(text, {
+    status: upstream.status,
+    headers: { "Content-Type": upstream.headers.get("content-type") || "application/json" },
   });
 }
 
