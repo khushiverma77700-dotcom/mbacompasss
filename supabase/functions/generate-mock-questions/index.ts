@@ -7,7 +7,7 @@
 // Auth: admin only (verifies JWT in code; verify_jwt = false in config.toml).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 import { firecrawlSearch } from "../_shared/firecrawlGateway.ts";
 
 // Service-role admin client used for fire-and-forget telemetry writes.
@@ -729,9 +729,6 @@ async function callOpenAIBatch(args: {
     positive: args.positive, negative: args.negative,
   }) + avoidLine + seedLine;
 
-  const apiKey = (await getCredential("OPENAI_API_KEY"));
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
-
   const lvlLower = String(args.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
   // Using gpt-4o-mini for cost efficiency. Formatting/LaTeX quality is maintained via
@@ -751,91 +748,16 @@ async function callOpenAIBatch(args: {
     temperature: temp,
   };
 
-  // Inline retry with exponential backoff for transient errors (429 / 5xx / network).
-  // OpenAI 502s in the field were causing whole batches to be discarded.
-  const MAX_INLINE_RETRIES = 6;
-  let resp: Response | null = null;
-  let lastErr: string | null = null;
   const callStart = Date.now();
-  let attemptsUsed = 0;
-  let rateLimitedAttempts = 0;
-  for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
-    attemptsUsed = attempt;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
-    try {
-      resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
-        signal: ctrl.signal,
-      });
-      clearTimeout(timer);
-      if (resp.ok) break;
-      // 429 — respect Retry-After / OpenAI "try again in Xs" hint, don't burn budget.
-      if (resp.status === 429 && rateLimitedAttempts < 4) {
-        rateLimitedAttempts++;
-        const txt = await resp.text();
-        const waitMs = parseOpenAI429Wait(resp.headers, txt);
-        lastErr = `AI 429: ${txt.slice(0, 200)}`;
-        console.warn(`[callOpenAIBatch] 429 rate-limited, sleeping ${waitMs}ms (rl ${rateLimitedAttempts}/4)`);
-        await new Promise((r) => setTimeout(r, waitMs));
-        resp = null;
-        attempt--; // don't consume a generic retry slot
-        continue;
-      }
-      // Other transient errors
-      if ([408, 425, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
-        const txt = await resp.text();
-        lastErr = `AI call failed (${resp.status}): ${txt.slice(0, 200)}`;
-        console.warn(`[callOpenAIBatch] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
-        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
-        await new Promise((r) => setTimeout(r, backoff));
-        resp = null;
-        continue;
-      }
-      // non-retryable
-      const txt = await resp.text();
-      // log failure
-      logAIUsage({
-        feature: "mock_question_generator",
-        model: `openai/${modelId}`,
-        provider: "openai",
-        prompt_tokens: 0, completion_tokens: 0, total_tokens: 0,
-        latency_ms: Date.now() - callStart,
-        status: "error",
-        error_message: `HTTP ${resp.status}: ${txt.slice(0, 200)}`,
-        user_id: args.userId,
-      });
-      throw new Error(`AI call failed (${resp.status}): ${txt.slice(0, 300)}`);
-    } catch (e) {
-      clearTimeout(timer);
-      const msg = (e as Error)?.name === "AbortError"
-        ? `OpenAI request aborted after ${OPENAI_TIMEOUT_MS}ms`
-        : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
-      lastErr = msg;
-      if (attempt < MAX_INLINE_RETRIES) {
-        console.warn(`[callOpenAIBatch] network error, retry ${attempt}/${MAX_INLINE_RETRIES - 1}: ${msg}`);
-        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
-        await new Promise((r) => setTimeout(r, backoff));
-        resp = null;
-        continue;
-      }
-      logAIUsage({
-        feature: "mock_question_generator",
-        model: `openai/${modelId}`,
-        provider: "openai",
-        prompt_tokens: 0, completion_tokens: 0, total_tokens: 0,
-        latency_ms: Date.now() - callStart,
-        status: "error",
-        error_message: msg,
-        user_id: args.userId,
-      });
-      throw new Error(msg);
-    }
-  }
-  if (!resp || !resp.ok) {
-    throw new Error(lastErr || "AI call failed after retries");
+  const resp = await callAIGateway(reqBody as any, {
+    feature: "mock_question_generator",
+    userId: args.userId,
+    purpose: "long",
+    maxRetries: 2,
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`AI call failed (${resp.status}): ${txt.slice(0, 300)}`);
   }
   const data = await resp.json();
   const usage = data?.usage || {};

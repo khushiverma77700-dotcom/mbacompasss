@@ -2,7 +2,7 @@
 // Computes deterministic diagnostics from responses+questions, then asks the
 // AI to produce a structured, human, coach-tone report.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0?target=denonext";
-import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -203,13 +203,6 @@ Deno.serve(async (req) => {
       top_weak_topics: topWeak,
     };
 
-    const apiKey = (await getCredential("OPENAI_API_KEY"));
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const sys = `You are an elite MBA entrance exam mentor (CAT/XAT/SNAP/NMAT/IIFT/CMAT/MAT) with 10+ years coaching toppers. Speak like a sharp, honest human coach — direct, specific, never generic, never robotic. Avoid filler like "keep practicing" or "stay consistent". Reference the student's actual numbers, topics, and patterns. Use Indian MBA exam terminology (RC, PJ, LRDI sets, TITA, percentile, sectional cutoff).
 
 Return STRICT JSON ONLY with this exact shape:
@@ -245,20 +238,16 @@ Rules:
 
     const user_msg = "Diagnostics:\n" + JSON.stringify(diagnostics, null, 2);
 
-    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const aiRes = await callAIGateway({
         model: "gpt-5-mini",
         messages: [
           { role: "system", content: sys },
           { role: "user", content: user_msg },
         ],
         response_format: { type: "json_object" },
-        max_completion_tokens: 8000,
-        reasoning_effort: "minimal",
-      }),
-    });
+        max_tokens: 8000,
+        reasoning: { effort: "minimal" },
+      }, { feature: "generate-mock-insights", userId: user.id, purpose: "long" });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
