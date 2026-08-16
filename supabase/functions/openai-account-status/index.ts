@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { getOpenAiKeyFingerprint, getOpenAiKeyForSlot } from "../_shared/getCredential.ts";
 
 type SlotStatus = {
   slot: 1 | 2;
@@ -9,6 +10,7 @@ type SlotStatus = {
   valid: boolean | null;
   status: "ready" | "missing" | "invalid" | "quota_blocked" | "unavailable";
   message: string;
+    fingerprint?: string;
 };
 
 function json(data: unknown, status = 200) {
@@ -19,17 +21,20 @@ function json(data: unknown, status = 200) {
 }
 
 async function inspectKey(slot: 1 | 2, name: string, secretName: string): Promise<SlotStatus> {
-  const key = Deno.env.get(secretName) || "";
+  const key = await getOpenAiKeyForSlot(slot);
+  const fingerprint = await getOpenAiKeyFingerprint(slot);
   if (!key) {
-    return { slot, name, secret_name: secretName, configured: false, valid: null, status: "missing", message: "Secret is not configured" };
+    return { slot, name, secret_name: secretName, configured: false, valid: null, status: "missing", message: "Secret is not configured", fingerprint };
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/models/gpt-4o-mini", {
-      headers: { Authorization: `Bearer ${key}` },
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: "Reply OK" }], max_tokens: 2 }),
     });
     if (response.ok) {
-      return { slot, name, secret_name: secretName, configured: true, valid: true, status: "ready", message: "Key is valid and can access gpt-4o-mini" };
+      return { slot, name, secret_name: secretName, configured: true, valid: true, status: "ready", message: "Live generation succeeded with gpt-4o-mini", fingerprint };
     }
 
     const body = await response.json().catch(() => ({}));
@@ -44,6 +49,7 @@ async function inspectKey(slot: 1 | 2, name: string, secretName: string): Promis
       valid: quotaBlocked ? true : false,
       status: quotaBlocked ? "quota_blocked" : "invalid",
       message: quotaBlocked ? "Key is valid, but the OpenAI account has no available quota" : errorMessage.slice(0, 180),
+      fingerprint,
     };
   } catch (error) {
     return {
@@ -54,6 +60,7 @@ async function inspectKey(slot: 1 | 2, name: string, secretName: string): Promis
       valid: null,
       status: "unavailable",
       message: error instanceof Error ? error.message : "Could not reach OpenAI",
+      fingerprint,
     };
   }
 }

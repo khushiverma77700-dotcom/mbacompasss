@@ -39,12 +39,6 @@ Deno.serve(async (req) => {
     "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
 
   try {
-    const requiredKey =
-      provider === "lovable" ? "LOVABLE_API_KEY"
-      : (provider === "openai-mini" || provider === "openai-nano") ? "OPENAI_API_KEY"
-      : "GEMINI_API_KEY";
-    if (!Deno.env.get(requiredKey)) throw new Error(`${requiredKey} is not configured`);
-
     const brief = (await req.json()) as CollegeBrief;
     if (!brief?.name) {
       return new Response(

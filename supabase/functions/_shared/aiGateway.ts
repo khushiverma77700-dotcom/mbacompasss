@@ -1,25 +1,7 @@
-// AI Gateway — Google Gemini ONLY.
-//
-// All AI traffic goes directly to Google's OpenAI-compatible Gemini endpoint
-// using GEMINI_API_KEY. The interface is kept identical to the previous
-// Lovable-AI flow (same OpenAI-compatible payload: messages, tools,
-// tool_choice, response_format, stream, reasoning_effort, …) so every edge
-// function continues to work unchanged.
-//
-// Endpoint: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
-// Auth:     Authorization: Bearer ${GEMINI_API_KEY}
-//
-// Speed parity with Lovable AI is achieved by:
-//   • Talking to Google directly (no extra hop).
-//   • Persistent fetch + small, capped retry/backoff on 5xx only.
-//   • Streaming pass-through (no buffering of large generations).
-//   • No artificial timeouts on the upstream call.
+// Shared OpenAI-only gateway. Slot 1 is Suyash and slot 2 is Vaibhav.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { getCredential, getOpenAiActiveSlot, getOpenAiKeyForSlot } from "./getCredential.ts";
-
-const GEMINI_OPENAI_COMPAT_URL =
-  "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 
 const PRICING: Record<string, { input: number; output: number }> = {
   "gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
@@ -186,10 +168,11 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       }
       return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    // Honor caller's gpt-5 / gpt-5.2 model if explicitly set; otherwise pick mini/nano based on provider tier.
+    // Use a broadly available, production-stable model. Legacy Gemini and GPT-5
+    // names passed by callers are intentionally normalized to OpenAI models.
     const callerModel = (body.model || "").trim().replace(/^openai\//, "");
     const isExplicitGpt5 = /^gpt-5(\.\d+)?(-mini|-nano)?$/i.test(callerModel) || /^gpt-5\.2$/i.test(callerModel);
-    let openaiModel = isExplicitGpt5 ? callerModel : (provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano");
+    let openaiModel = isExplicitGpt5 ? callerModel : (provider === "openai-mini" ? "gpt-4.1-mini" : "gpt-4.1-nano");
     // Some OpenAI accounts / project keys have no access to the gpt-5 family.
     // In that case OpenAI answers 403/404 `model_not_found` and the key is
     // perfectly fine — so downgrade the model instead of killing the slot.
@@ -220,11 +203,16 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         );
       }
 
+      const firstSlotStatus = resp.status;
+      const firstSlotBody = resp.ok ? "" : await peek(resp);
+      let attemptedBackup = false;
+
       // 2) Auth/quota/rate-limit on the active slot → try the other slot.
       if ([401, 403, 429].includes(resp.status)) {
         console.warn(`[aiGateway][${feature}] OpenAI slot ${activeSlot} (${openaiModel}) returned ${resp.status}: ${await peek(resp)}`);
         const altKey = await getOpenAiKeyForSlot(backupSlot);
         if (altKey && altKey !== openaiKey) {
+          attemptedBackup = true;
           console.warn(`[aiGateway][${feature}] Failing over to OpenAI slot ${backupSlot}`);
           resp = await withRetry(
             () => callUpstream(OPENAI_CHAT_URL, altKey, payload(openaiModel), signal),
@@ -241,24 +229,31 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         }
       }
 
-      // 3) Both OpenAI slots unusable. There is NO third provider by policy —
-      // only Suyash (slot 1) and Vaibhav (slot 2) are allowed. Surface the real
-      // OpenAI error, and re-map a billing exhaustion to an actionable 402
-      // (it is not a rate limit, so "try again in a minute" is wrong).
+      // 3) Both OpenAI slots unusable. Preserve slot-specific evidence; never
+      // claim that both accounts are exhausted after testing only one key.
       if (!resp.ok) {
         const bodyText = await peek(resp);
-        if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/i.test(bodyText)) {
-          console.warn(`[aiGateway][${feature}] Both OpenAI slots report exhausted credits: ${bodyText}`);
+        const quotaPattern = /insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/i;
+        const firstQuota = quotaPattern.test(firstSlotBody);
+        const secondQuota = quotaPattern.test(bodyText);
+        if (firstQuota && attemptedBackup && secondQuota) {
+          console.warn(`[aiGateway][${feature}] Both configured OpenAI project keys returned insufficient_quota.`);
           resp = new Response(
             JSON.stringify({
               error: {
                 code: "ai_credits_exhausted",
                 message:
-                  "OpenAI credits are exhausted on both keys (Suyash and Vaibhav). Add credits to one of the two OpenAI accounts — switching slots in Admin → API Keys & Secrets will not help until then.",
+                  "OpenAI rejected both configured project keys with insufficient_quota. Check that the funded OpenAI projects' latest keys are saved as Suyash and Vaibhav and that each project's usage limit is enabled.",
+                slots: {
+                  [activeSlot === 1 ? "Suyash" : "Vaibhav"]: firstSlotStatus,
+                  [backupSlot === 1 ? "Suyash" : "Vaibhav"]: resp.status,
+                },
               },
             }),
             { status: 402, headers: { "Content-Type": "application/json" } },
           );
+        } else if (secondQuota) {
+          console.warn(`[aiGateway][${feature}] OpenAI slot ${attemptedBackup ? backupSlot : activeSlot} returned insufficient_quota; the other slot did not return the same billing error.`);
         }
       }
 
