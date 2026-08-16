@@ -3,6 +3,13 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.45/deno-dom-wasm.ts";
 import { firecrawlSearch, firecrawlScrape } from "../_shared/firecrawlGateway.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
+// POLICY: all AI traffic goes through the shared OpenAI-only gateway
+// (Suyash / Vaibhav slots from Admin → API Keys & Secrets). This shim keeps the
+// existing OpenAI-compatible request bodies working.
+const aiChatFetch = (_url: string, init: { body: string }) =>
+  callAIGateway(JSON.parse(init.body), { feature: "deep-seo-audit" });
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -311,7 +318,7 @@ function runChecklist(p: any) {
 
 async function callAIJSON(_key: string, prompt: string): Promise<any> {
   const geminiKey = (await (await import("../_shared/getCredential.ts")).getCredential("GEMINI_API_KEY")) || _key;
-  const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+  const r = await aiChatFetch("ai", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${geminiKey}` },
     body: JSON.stringify({

@@ -1,5 +1,12 @@
 import { requireUser } from "../_shared/requireUser.ts";
 import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
+// POLICY: all AI traffic goes through the shared OpenAI-only gateway
+// (Suyash / Vaibhav slots from Admin → API Keys & Secrets). This shim keeps the
+// existing OpenAI-compatible request bodies working.
+const aiChatFetch = (_url: string, init: { body: string }) =>
+  callAIGateway(JSON.parse(init.body), { feature: "vocab-quiz-generate" });
+
 // Generates a daily vocab quiz from a list of word objects.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,7 +31,7 @@ Deno.serve(async (req) => {
       example: w.example_business,
     }));
 
-    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const resp = await aiChatFetch("ai", {
       method: "POST",
       headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({

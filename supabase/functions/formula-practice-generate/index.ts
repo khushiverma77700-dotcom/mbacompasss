@@ -2,6 +2,13 @@ import { requireUser } from "../_shared/requireUser.ts";
 // Generate one practice MCQ for a formula via tool calling.
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
 import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
+// POLICY: all AI traffic goes through the shared OpenAI-only gateway
+// (Suyash / Vaibhav slots from Admin → API Keys & Secrets). This shim keeps the
+// existing OpenAI-compatible request bodies working.
+const aiChatFetch = (_url: string, init: { body: string }) =>
+  callAIGateway(JSON.parse(init.body), { feature: "formula-practice-generate" });
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,7 +67,7 @@ Rules:
     };
 
     const model = "gemini-2.5-flash";
-    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const resp = await aiChatFetch("ai", {
       method: "POST",
       headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({

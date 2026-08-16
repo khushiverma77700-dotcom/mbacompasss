@@ -2,6 +2,13 @@ import { requireUser } from "../_shared/requireUser.ts";
 import { getCredential } from "../_shared/getCredential.ts";
 // Vocabulary explainer: takes a word, returns structured explanation. Caches into vocab_words.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { callAIGateway } from "../_shared/aiGateway.ts";
+// POLICY: all AI traffic goes through the shared OpenAI-only gateway
+// (Suyash / Vaibhav slots from Admin → API Keys & Secrets). This shim keeps the
+// existing OpenAI-compatible request bodies working.
+const aiChatFetch = (_url: string, init: { body: string }) =>
+  callAIGateway(JSON.parse(init.body), { feature: "vocab-explain" });
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,7 +42,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const resp = await aiChatFetch("ai", {
       method: "POST",
       headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
