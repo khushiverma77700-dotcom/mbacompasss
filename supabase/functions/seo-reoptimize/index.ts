@@ -99,6 +99,21 @@ Deno.serve(async (req) => {
     return json(200, { ok: true });
   }
 
+  // ── Resume / wake up a stuck run ───────────────────────────────
+  if (action === "resume") {
+    const runId = body?.run_id;
+    if (!runId) return json(400, { error: "run_id required" });
+    // Unlock items stuck in "running" so the worker can claim them again.
+    await sb.from("seo_reoptimization_items")
+      .update({ status: "queued", stage: null, locked_at: null })
+      .eq("run_id", runId).eq("status", "running");
+    await sb.from("seo_reoptimization_runs")
+      .update({ status: "running", cancel_requested: false, finished_at: null, updated_at: new Date().toISOString() })
+      .eq("id", runId).in("status", ["queued", "running", "failed"]);
+    EdgeRuntime.waitUntil(kickWorker(runId));
+    return json(200, { ok: true, resumed: true });
+  }
+
   // ── Re-queue failed items in a run ─────────────────────────────
   if (action === "rerun") {
     const runId = body?.run_id;
