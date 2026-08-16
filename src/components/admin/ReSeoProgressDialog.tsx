@@ -107,7 +107,7 @@ export default function ReSeoProgressDialog({ open, onOpenChange, runId, onCompl
             Re-SEO Live Monitor
           </DialogTitle>
           <DialogDescription>
-            Each page: read → research → pick ONE primary keyword → rewrite → save. Runs in background — safe to close, work continues on the server.
+            Each page: read → research → pick ONE primary keyword → metadata + schema + additive AEO block (existing content preserved) → save. Runs in background — safe to close, work continues on the server.
           </DialogDescription>
         </DialogHeader>
 
