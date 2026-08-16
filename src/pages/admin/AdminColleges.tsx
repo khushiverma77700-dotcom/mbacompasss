@@ -110,9 +110,12 @@ const AdminColleges = () => {
   const bulkFileRef = (typeof window !== "undefined") ? { current: null as HTMLInputElement | null } : { current: null };
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, listing_sort_order, established, created_at, source, last_updated_by").order("listing_sort_order", { ascending: true, nullsFirst: false }).order("ranking", { ascending: true });
-    if (data) setColleges(data);
+    const data = await fetchAllRows<any>((from, to) =>
+      supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, listing_sort_order, established, created_at, source, last_updated_by").order("listing_sort_order", { ascending: true, nullsFirst: false }).order("ranking", { ascending: true }).range(from, to) as any,
+    ).catch(() => []);
+    setColleges(data);
   };
+
 
   useEffect(() => { fetchColleges(); }, []);
 
