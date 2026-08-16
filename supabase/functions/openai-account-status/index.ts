@@ -1,10 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { getOpenAiKeyFingerprint, getOpenAiKeyForSlot } from "../_shared/getCredential.ts";
+import { getCredential, getOpenAiKeyFingerprint } from "../_shared/getCredential.ts";
 
 type SlotStatus = {
-  slot: 1 | 2;
-  name: string;
   secret_name: string;
   configured: boolean;
   valid: boolean | null;
@@ -20,11 +18,11 @@ function json(data: unknown, status = 200) {
   });
 }
 
-async function inspectKey(slot: 1 | 2, name: string, secretName: string): Promise<SlotStatus> {
-  const key = await getOpenAiKeyForSlot(slot);
-  const fingerprint = await getOpenAiKeyFingerprint(slot);
+async function inspectKey(): Promise<SlotStatus> {
+  const key = await getCredential("OPENAI_API_KEY", { required: false });
+  const fingerprint = await getOpenAiKeyFingerprint();
   if (!key) {
-    return { slot, name, secret_name: secretName, configured: false, valid: null, status: "missing", message: "Secret is not configured", fingerprint };
+    return { secret_name: "OPENAI_API_KEY", configured: false, valid: null, status: "missing", message: "Secret is not configured", fingerprint };
   }
 
   try {
@@ -34,7 +32,7 @@ async function inspectKey(slot: 1 | 2, name: string, secretName: string): Promis
       body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: "Reply OK" }], max_tokens: 2 }),
     });
     if (response.ok) {
-      return { slot, name, secret_name: secretName, configured: true, valid: true, status: "ready", message: "Live generation succeeded with gpt-4o-mini", fingerprint };
+      return { secret_name: "OPENAI_API_KEY", configured: true, valid: true, status: "ready", message: "Live generation succeeded with gpt-4o-mini", fingerprint };
     }
 
     const body = await response.json().catch(() => ({}));
@@ -42,9 +40,7 @@ async function inspectKey(slot: 1 | 2, name: string, secretName: string): Promis
     const errorMessage = String(body?.error?.message || `OpenAI returned HTTP ${response.status}`);
     const quotaBlocked = response.status === 429 || errorCode === "insufficient_quota";
     return {
-      slot,
-      name,
-      secret_name: secretName,
+      secret_name: "OPENAI_API_KEY",
       configured: true,
       valid: quotaBlocked ? true : false,
       status: quotaBlocked ? "quota_blocked" : "invalid",
@@ -53,9 +49,7 @@ async function inspectKey(slot: 1 | 2, name: string, secretName: string): Promis
     };
   } catch (error) {
     return {
-      slot,
-      name,
-      secret_name: secretName,
+      secret_name: "OPENAI_API_KEY",
       configured: true,
       valid: null,
       status: "unavailable",
@@ -84,21 +78,16 @@ Deno.serve(async (req) => {
   const { data: role } = await admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
   if (!role) return json({ error: "Admin access required" }, 403);
 
-  const [suyash, vaibhav, monthUsage, allUsage, activeSlotRow] = await Promise.all([
-    inspectKey(1, "Suyash", "OPENAI_API_KEY"),
-    inspectKey(2, "Vaibhav", "OPENAI_API_KEY_2"),
+  const [account, monthUsage, allUsage] = await Promise.all([
+    inspectKey(),
     admin.from("ai_usage_logs").select("estimated_cost").or("provider.ilike.openai%,model.ilike.gpt%").gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
     admin.from("ai_usage_logs").select("estimated_cost").or("provider.ilike.openai%,model.ilike.gpt%"),
-    admin.from("site_settings").select("value").eq("key", "openai_active_slot").maybeSingle(),
   ]);
 
   const sumCost = (rows: Array<{ estimated_cost: number | null }> | null) =>
     (rows || []).reduce((sum, row) => sum + Number(row.estimated_cost || 0), 0);
-  const selected = (activeSlotRow.data?.value as { slot?: number | string } | null)?.slot;
-
   return json({
-    slots: [suyash, vaibhav],
-    active_slot: selected === 2 || selected === "2" ? 2 : 1,
+    account,
     tracked_spend: {
       current_month_usd: sumCost(monthUsage.data),
       all_time_usd: sumCost(allUsage.data),

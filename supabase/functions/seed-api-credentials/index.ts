@@ -17,9 +17,6 @@ const SEED_KEYS: Record<string, { category: string; description: string }> = {
   RAZORPAY_KEY_SECRET: { category: "payments", description: "Razorpay secret used to verify payments" },
   RAZORPAY_WEBHOOK_SECRET: { category: "payments", description: "Razorpay webhook signing secret" },
 
-  OPENAI_API_KEY: { category: "ai", description: "Suyash — primary OpenAI API key (GPT models)" },
-  OPENAI_API_KEY_2: { category: "ai", description: "Vaibhav — secondary OpenAI API key (GPT models)" },
-
   MSG91_AUTH_KEY: { category: "sms", description: "MSG91 auth key for OTP delivery" },
   MSG91_TEMPLATE_ID: { category: "sms", description: "MSG91 OTP template ID" },
   FAST2SMS_API_KEY: { category: "sms", description: "Fast2SMS API key (fallback OTP provider)" },

@@ -1,9 +1,9 @@
 // Shared credential resolver for edge functions.
 // Looks up a key from the api_credentials table (admin-managed),
 // falls back to Deno.env.get() if not in DB or empty.
-// OpenAI is special: the two secure backend secrets are the canonical values.
-// Credential values are cached, but the active OpenAI slot is intentionally
-// read for every generation so an admin switch applies across warm workers.
+// OpenAI is special: the secure OPENAI_API_KEY backend secret is the sole
+// canonical AI credential. Database copies and legacy provider keys are never
+// allowed to override it.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -27,37 +27,20 @@ function getServiceClient() {
 export async function getCredential(name: string, opts?: { required?: boolean }): Promise<string> {
   const required = opts?.required ?? true;
 
-  // POLICY: the only AI credentials allowed anywhere in the app are the two
-  // OpenAI keys managed in Admin → API Keys & Secrets → OpenAI API Switcher
-  // (slot 1 = Suyash, slot 2 = Vaibhav). Legacy provider names are aliased to
-  // the active OpenAI slot so no stale Gemini/other key can ever be used.
-  if (name === "OPENAI_API_KEY" || name === "GEMINI_API_KEY" || name === "GOOGLE_AI_API_KEY") {
-    const slot = await getOpenAiActiveSlot();
-    const effective = slot === 2 ? "OPENAI_API_KEY_2" : "OPENAI_API_KEY";
-    return resolveCredential(effective, required, { preferEnv: true });
-  }
-
-  if (name === "OPENAI_API_KEY_2") {
-    return resolveCredential(name, required, { preferEnv: true });
+  // Legacy AI credential names are deliberately routed to the one OpenAI key
+  // while older functions are migrated. This prevents Gemini, Lovable AI, or
+  // a retired second OpenAI key from receiving any generation request.
+  if (["OPENAI_API_KEY", "OPENAI_API_KEY_2", "GEMINI_API_KEY", "GOOGLE_AI_API_KEY"].includes(name)) {
+    return resolveCredential("OPENAI_API_KEY", required, { envOnly: true });
   }
 
 
   return resolveCredential(name, required);
 }
 
-/** Resolve a specific OpenAI slot key (1 = Suyash, 2 = Vaibhav), ignoring the active-slot toggle. */
-export async function getOpenAiKeyForSlot(slot: 1 | 2): Promise<string> {
-  const name = slot === 2 ? "OPENAI_API_KEY_2" : "OPENAI_API_KEY";
-  try {
-    return await resolveCredential(name, false, { preferEnv: true });
-  } catch {
-    return "";
-  }
-}
-
 /** Safe key fingerprint for diagnostics. Never logs or returns the credential. */
-export async function getOpenAiKeyFingerprint(slot: 1 | 2): Promise<string> {
-  const key = await getOpenAiKeyForSlot(slot);
+export async function getOpenAiKeyFingerprint(): Promise<string> {
+  const key = await getCredential("OPENAI_API_KEY", { required: false });
   if (!key) return "missing";
   const bytes = new TextEncoder().encode(key.trim());
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -66,25 +49,7 @@ export async function getOpenAiKeyFingerprint(slot: 1 | 2): Promise<string> {
     .join("");
 }
 
-/** Return the currently selected OpenAI slot. Do not cache this setting. */
-export async function getOpenAiActiveSlot(): Promise<1 | 2> {
-  try {
-    const sb = getServiceClient();
-    const { data, error } = await sb
-      .from("site_settings")
-      .select("value")
-      .eq("key", "openai_active_slot")
-      .maybeSingle();
-    if (error) console.warn("[credentials] Could not read active OpenAI slot:", error.message);
-    const value = (data?.value as { slot?: number | string } | null)?.slot;
-    return value === 2 || value === "2" ? 2 : 1;
-  } catch (error) {
-    console.warn("[credentials] Active OpenAI slot lookup failed; using slot 1:", error instanceof Error ? error.message : error);
-    return 1;
-  }
-}
-
-async function resolveCredential(name: string, required: boolean, options?: { preferEnv?: boolean }): Promise<string> {
+async function resolveCredential(name: string, required: boolean, options?: { envOnly?: boolean }): Promise<string> {
   const now = Date.now();
   // 1. Cache hit
   const cached = cache.get(name);
@@ -92,12 +57,14 @@ async function resolveCredential(name: string, required: boolean, options?: { pr
     if (cached.value) return cached.value;
   }
 
-  if (options?.preferEnv) {
+  if (options?.envOnly) {
     const envValue = Deno.env.get(name) || "";
     if (envValue) {
       cache.set(name, { value: envValue, fetchedAt: now });
       return envValue.trim();
     }
+    if (required) throw new Error(`Missing credential: ${name}. Configure it in Admin → API Keys.`);
+    return "";
   }
 
   // 2. DB lookup
@@ -123,7 +90,7 @@ async function resolveCredential(name: string, required: boolean, options?: { pr
   }
 
   // 3. Env fallback
-  const envValue = options?.preferEnv ? "" : Deno.env.get(name) || "";
+  const envValue = Deno.env.get(name) || "";
   const value = (dbValue || envValue).trim();
 
   cache.set(name, { value, fetchedAt: now });

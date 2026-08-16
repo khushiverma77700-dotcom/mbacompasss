@@ -1,7 +1,7 @@
-// Shared OpenAI-only gateway. Slot 1 is Suyash and slot 2 is Vaibhav.
+// Shared OpenAI-only gateway. Every AI request uses OPENAI_API_KEY.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential, getOpenAiActiveSlot, getOpenAiKeyForSlot } from "./getCredential.ts";
+import { getCredential } from "./getCredential.ts";
 
 const PRICING: Record<string, { input: number; output: number }> = {
   "gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
@@ -157,9 +157,7 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
 
   // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
   if (provider === "openai-mini" || provider === "openai-nano") {
-    const activeSlot = await getOpenAiActiveSlot();
-    const backupSlot: 1 | 2 = activeSlot === 1 ? 2 : 1;
-    const openaiKey = await getOpenAiKeyForSlot(activeSlot);
+    const openaiKey = await getCredential("OPENAI_API_KEY", { required: false });
     if (!openaiKey) {
       const err = "OPENAI_API_KEY is not configured.";
       console.error(`[aiGateway][${feature}] ${err}`);
@@ -195,7 +193,7 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       // 1) Model not available on this account → try known-good models, same key.
       for (const alt of MODEL_CHAIN) {
         if (!(await isModelAccessError(resp))) break;
-        console.warn(`[aiGateway][${feature}] OpenAI model ${openaiModel} unavailable on slot ${activeSlot} (${resp.status}); retrying with ${alt}`);
+        console.warn(`[aiGateway][${feature}] OpenAI model ${openaiModel} unavailable (${resp.status}); retrying with ${alt}`);
         openaiModel = alt;
         resp = await withRetry(
           () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload(openaiModel), signal),
@@ -203,57 +201,22 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         );
       }
 
-      const firstSlotStatus = resp.status;
-      const firstSlotBody = resp.ok ? "" : await peek(resp);
-      let attemptedBackup = false;
-
-      // 2) Auth/quota/rate-limit on the active slot → try the other slot.
-      if ([401, 403, 429].includes(resp.status)) {
-        console.warn(`[aiGateway][${feature}] OpenAI slot ${activeSlot} (${openaiModel}) returned ${resp.status}: ${await peek(resp)}`);
-        const altKey = await getOpenAiKeyForSlot(backupSlot);
-        if (altKey && altKey !== openaiKey) {
-          attemptedBackup = true;
-          console.warn(`[aiGateway][${feature}] Failing over to OpenAI slot ${backupSlot}`);
-          resp = await withRetry(
-            () => callUpstream(OPENAI_CHAT_URL, altKey, payload(openaiModel), signal),
-            { maxRetries: 2, label: `${provider}-failover[${feature}]` },
-          );
-          for (const alt of MODEL_CHAIN) {
-            if (!(await isModelAccessError(resp))) break;
-            openaiModel = alt;
-            resp = await withRetry(
-              () => callUpstream(OPENAI_CHAT_URL, altKey, payload(openaiModel), signal),
-              { maxRetries: 1, label: `${provider}-failover-downgrade[${feature}]` },
-            );
-          }
-        }
-      }
-
-      // 3) Both OpenAI slots unusable. Preserve slot-specific evidence; never
-      // claim that both accounts are exhausted after testing only one key.
+      // Return accurate billing information for the one configured key.
       if (!resp.ok) {
         const bodyText = await peek(resp);
         const quotaPattern = /insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/i;
-        const firstQuota = quotaPattern.test(firstSlotBody);
-        const secondQuota = quotaPattern.test(bodyText);
-        if (firstQuota && attemptedBackup && secondQuota) {
-          console.warn(`[aiGateway][${feature}] Both configured OpenAI project keys returned insufficient_quota.`);
+        if (quotaPattern.test(bodyText)) {
+          console.warn(`[aiGateway][${feature}] The configured OPENAI_API_KEY returned insufficient_quota.`);
           resp = new Response(
             JSON.stringify({
               error: {
                 code: "ai_credits_exhausted",
                 message:
-                  "OpenAI rejected both configured project keys with insufficient_quota. Check that the funded OpenAI projects' latest keys are saved as Suyash and Vaibhav and that each project's usage limit is enabled.",
-                slots: {
-                  [activeSlot === 1 ? "Suyash" : "Vaibhav"]: firstSlotStatus,
-                  [backupSlot === 1 ? "Suyash" : "Vaibhav"]: resp.status,
-                },
+                  "OpenAI rejected the configured API key with insufficient_quota. Confirm that this key belongs to the funded OpenAI project and that its project usage limit is enabled.",
               },
             }),
             { status: 402, headers: { "Content-Type": "application/json" } },
           );
-        } else if (secondQuota) {
-          console.warn(`[aiGateway][${feature}] OpenAI slot ${attemptedBackup ? backupSlot : activeSlot} returned insufficient_quota; the other slot did not return the same billing error.`);
         }
       }
 
@@ -275,15 +238,13 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
   }
 
   // POLICY: OpenAI-only. There is no Gemini / Lovable path any more — the only
-  // two credentials the whole dashboard may use are the OpenAI keys managed in
-  // Admin → System & Admin → API Keys & Secrets → OpenAI API Switcher
-  // (slot 1 = Suyash, slot 2 = Vaibhav).
+  // credential the whole dashboard may use is OPENAI_API_KEY.
   return new Response(
     JSON.stringify({
       error: {
         code: "ai_provider_not_allowed",
         message:
-          "Only the two OpenAI keys (Suyash / Vaibhav) from the OpenAI API Switcher are allowed for AI generation.",
+          "Only OPENAI_API_KEY is allowed for AI generation.",
       },
     }),
     { status: 500, headers: { "Content-Type": "application/json" } },
