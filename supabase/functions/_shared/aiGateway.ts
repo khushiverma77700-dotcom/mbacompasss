@@ -172,40 +172,6 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     }
   }
 
-  // ── Provider: Lovable AI Gateway ─────────────────────────────────────────────
-  if (provider === "lovable") {
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableKey) {
-      const err = "LOVABLE_API_KEY is not configured.";
-      console.error(`[aiGateway][${feature}] ${err}`);
-      if (!skipLog) {
-        await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
-      }
-      return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
-    }
-
-    // Lovable AI accepts the model IDs as-is (e.g. "google/gemini-3-flash-preview")
-    // so we pass body.model unchanged. We still strip Gemini-only fields just in case.
-    const payload = buildLovablePayload(body);
-    try {
-      const resp = await withRetry(
-        () => callUpstream(LOVABLE_GATEWAY_URL, lovableKey, payload, signal),
-        { maxRetries, label: `lovable[${feature}]` },
-      );
-      if (!skipLog) {
-        if (resp.ok) logSuccess(resp, isStream, feature, body.model, userId, "lovable", startedAt);
-        else await logErrorFromResp(resp, feature, body.model, userId, "lovable", startedAt);
-      }
-      return resp;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error(`[aiGateway][${feature}] Lovable call threw:`, msg);
-      if (!skipLog) {
-        await logUsage({ feature, model: body.model, userId, provider: "lovable", status: "error", errorMessage: msg, latencyMs: Date.now() - startedAt });
-      }
-      return new Response(JSON.stringify({ error: msg }), { status: 502, headers: { "Content-Type": "application/json" } });
-    }
-  }
 
   // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
   if (provider === "openai-mini" || provider === "openai-nano") {
