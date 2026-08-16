@@ -44,5 +44,36 @@ Deno.serve(async (req) => {
     }).catch((e) => console.warn("scheduler kick failed", r.id, e));
   }
 
-  return json(200, { dispatched: runs.length });
+  // ── Auto wake-up: revive runs marked "running" that have stalled ──
+  // A run is stalled when it still has queued/running items but nothing has
+  // finished in the last 6 minutes (edge function died, quota blip, etc).
+  const stallCutoff = new Date(Date.now() - 6 * 60_000).toISOString();
+  const { data: stuck } = await sb.from("seo_reoptimization_runs")
+    .select("id, updated_at, started_at")
+    .eq("status", "running")
+    .eq("cancel_requested", false)
+    .lt("updated_at", stallCutoff)
+    .limit(MAX_CONCURRENT_DISPATCH);
+
+  let revived = 0;
+  for (const r of stuck || []) {
+    const { count: pending } = await sb.from("seo_reoptimization_items")
+      .select("id", { count: "exact", head: true })
+      .eq("run_id", r.id).in("status", ["queued", "running"]);
+    if (!pending) continue;
+    // Unlock items stranded in "running" so the worker can re-claim them.
+    await sb.from("seo_reoptimization_items")
+      .update({ status: "queued", stage: null, locked_at: null })
+      .eq("run_id", r.id).eq("status", "running").lt("started_at", stallCutoff);
+    await sb.from("seo_reoptimization_runs")
+      .update({ updated_at: new Date().toISOString() }).eq("id", r.id);
+    revived++;
+    fetch(`${SUPABASE_URL}/functions/v1/seo-reoptimize-worker`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${ANON_KEY}`, apikey: ANON_KEY },
+      body: JSON.stringify({ run_id: r.id }),
+    }).catch((e) => console.warn("auto wake-up kick failed", r.id, e));
+  }
+
+  return json(200, { dispatched: runs.length, revived });
 });
