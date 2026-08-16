@@ -337,52 +337,20 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     }
   }
 
-  // ── Provider: Direct Gemini (default `gemini` and `gemini-lite`) ─────────────
-  const geminiKey = (await getCredential("GEMINI_API_KEY"));
-  if (!geminiKey) {
-    const err = "GEMINI_API_KEY is not configured.";
-    console.error(`[aiGateway][${feature}] ${err}`);
-    if (!skipLog) {
-      await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
-    }
-    return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
-  }
-
-  // gemini-lite forces flash-lite regardless of caller's model. `gemini`
-  // honors the caller's model (already cost-routed by purpose above).
-  const geminiModel = provider === "gemini-lite"
-    ? "gemini-2.5-flash-lite"
-    : resolveGeminiModel(body.model);
-  const payload = buildOpenAICompatPayload(body, geminiModel);
-
-  try {
-    const resp = await withRetry(
-      () => callUpstream(GEMINI_OPENAI_COMPAT_URL, geminiKey, payload, signal),
-      { maxRetries, label: `${provider}[${feature}]` },
-    );
-
-    if (!skipLog) {
-      if (resp.ok) {
-        logSuccess(resp, isStream, feature, geminiModel, userId, provider, startedAt);
-      } else {
-        await logErrorFromResp(resp, feature, geminiModel, userId, provider, startedAt);
-      }
-    }
-    return resp;
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error(`[aiGateway][${feature}] Gemini call threw:`, msg);
-    if (!skipLog) {
-      await logUsage({
-        feature, model: geminiModel, userId,
-        provider, status: "error",
-        errorMessage: msg, latencyMs: Date.now() - startedAt,
-      });
-    }
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 502, headers: { "Content-Type": "application/json" },
-    });
-  }
+  // POLICY: OpenAI-only. There is no Gemini / Lovable path any more — the only
+  // two credentials the whole dashboard may use are the OpenAI keys managed in
+  // Admin → System & Admin → API Keys & Secrets → OpenAI API Switcher
+  // (slot 1 = Suyash, slot 2 = Vaibhav).
+  return new Response(
+    JSON.stringify({
+      error: {
+        code: "ai_provider_not_allowed",
+        message:
+          "Only the two OpenAI keys (Suyash / Vaibhav) from the OpenAI API Switcher are allowed for AI generation.",
+      },
+    }),
+    { status: 500, headers: { "Content-Type": "application/json" } },
+  );
 }
 
 function buildLovablePayload(body: ChatBody) {
