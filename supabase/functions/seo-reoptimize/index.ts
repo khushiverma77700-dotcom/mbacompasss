@@ -99,6 +99,23 @@ Deno.serve(async (req) => {
     return json(200, { ok: true });
   }
 
+  // ── Hard stop: halt immediately without waiting for the worker ──
+  if (action === "stop") {
+    const runId = body?.run_id;
+    if (!runId) return json(400, { error: "run_id required" });
+    await sb.from("seo_reoptimization_runs")
+      .update({ cancel_requested: true, status: "cancelled", finished_at: new Date().toISOString() })
+      .eq("id", runId).in("status", ["queued", "running"]);
+    await sb.from("seo_reoptimization_items")
+      .update({ status: "failed", error: "stopped by admin", finished_at: new Date().toISOString() })
+      .eq("run_id", runId).in("status", ["queued", "running"]);
+    await logReseoAudit(sb, {
+      run_id: runId, url: "-", action: "item_cancelled", actor_id: actorId, actor_role: "admin",
+      notes: "Run stopped by admin (hard stop)",
+    });
+    return json(200, { ok: true, stopped: true });
+  }
+
   // ── Resume / wake up a stuck run ───────────────────────────────
   if (action === "resume") {
     const runId = body?.run_id;
