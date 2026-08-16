@@ -67,9 +67,9 @@ function scoreFromResult(r: any): number {
   if (r.long_tail_keywords?.length >= 5) s += 6;
   if (r.related_queries?.length >= 5) s += 4;
   const pd = r.keyword_density?.[r.primary_keyword];
-  if (typeof pd === "number" && pd >= 2.5 && pd <= 3.5) s += 10;
-  else if (typeof pd === "number" && pd >= 1.5 && pd <= 4.5) s += 5;
-  if (r.body_html && r.body_html.length > 3500) s += 8;
+  if (typeof pd === "number" && pd >= 3 && pd <= 4.5) s += 10;
+  else if (typeof pd === "number" && pd >= 2) s += 5;
+  if (r.mode === "full" ? (r.body_html && r.body_html.length > 3500) : !!r.augment_html) s += 8;
   return Math.min(100, s);
 }
 
@@ -110,13 +110,15 @@ function buildContext(pageType: string, slug: string, url: string, src: any): Pa
 }
 
 async function saveResult(sb: any, item: any, pageType: string, src: any, result: any) {
+  const metadataOnly = result.mode !== "full";
   const overridePayload: any = {
     slug: item.slug,
     title: result.meta_title,
     description: result.meta_description,
     h1: result.h1,
-    intro_html: result.intro_html,
-    body_html: result.body_html,
+    // metadata mode: existing page content is preserved. Only the additive
+    // AEO block (quick answer + key takeaways) is stored as intro_html.
+    intro_html: metadataOnly ? (result.augment_html || null) : result.intro_html,
     keywords: [result.primary_keyword, result.secondary_keyword, ...(result.long_tail_keywords || [])].filter(Boolean),
     faq: result.faq,
     json_ld: result.json_ld,
@@ -130,6 +132,7 @@ async function saveResult(sb: any, item: any, pageType: string, src: any, result
     reoptimization_run_id: item.run_id,
     updated_at: nowIso(),
   };
+  if (!metadataOnly) overridePayload.body_html = result.body_html;
   await sb.from("page_seo_overrides").upsert(overridePayload, { onConflict: "slug" });
 
   if (src && SUPPORTS_SEO_COLUMNS.has(pageType)) {
@@ -145,7 +148,7 @@ async function saveResult(sb: any, item: any, pageType: string, src: any, result
   }
 }
 
-async function processItem(sb: any, item: any, previewOnly: boolean): Promise<void> {
+async function processItem(sb: any, item: any, previewOnly: boolean, pipelineMode: "metadata" | "full" = "metadata"): Promise<void> {
   const patch = async (p: any) => {
     await sb.from("seo_reoptimization_items").update({ ...p, updated_at: nowIso() }).eq("id", item.id);
   };
@@ -179,6 +182,7 @@ async function processItem(sb: any, item: any, previewOnly: boolean): Promise<vo
     const { result, competitors } = await runSeoPipeline(ctx, {
       feature: "seo-reoptimize",
       userId: null,
+      mode: pipelineMode,
     });
 
     if (!previewOnly) {
@@ -209,9 +213,11 @@ async function processItem(sb: any, item: any, previewOnly: boolean): Promise<vo
       geo_notes: result.geo_notes || null,
       readability_score: result.readability_score || null,
       full_content_before: beforeBody,
-      full_content_after: result.body_html || "",
+      full_content_after: result.mode === "full" ? (result.body_html || "") : beforeBody,
       content_word_count_before: wordCount(beforeBody),
-      content_word_count_after: wordCount(result.body_html || ""),
+      content_word_count_after: wordCount(
+        result.mode === "full" ? (result.body_html || "") : `${beforeBody} ${result.augment_html || ""}`,
+      ),
       before_snapshot: {
         title: ctx.title,
         description: ctx.description,
@@ -223,8 +229,10 @@ async function processItem(sb: any, item: any, previewOnly: boolean): Promise<vo
         title: result.meta_title,
         description: result.meta_description,
         h1: result.h1,
-        intro_html: result.intro_html,
-        body_html: result.body_html,
+        intro_html: result.mode === "full" ? result.intro_html : (result.augment_html || ""),
+        body_html: result.mode === "full" ? result.body_html : beforeBody,
+        augment_html: result.augment_html || "",
+        content_preserved: result.mode !== "full",
         outline: result.outline,
         faq: result.faq,
         faq_count: result.faq?.length || 0,
@@ -341,6 +349,7 @@ Deno.serve(async (req) => {
 
   // Honor cancellation: if the run was cancelled, mark remaining items and stop.
   let previewOnly = false;
+  let pipelineMode: "metadata" | "full" = "metadata";
   if (runId) {
     const { data: runRow } = await sb.from("seo_reoptimization_runs")
       .select("cancel_requested,status,run_at,options").eq("id", runId).maybeSingle();
@@ -362,6 +371,7 @@ Deno.serve(async (req) => {
         .update({ status: "running", started_at: nowIso() }).eq("id", runId);
     }
     previewOnly = !!runRow?.options?.preview_only;
+    pipelineMode = runRow?.options?.mode === "full" ? "full" : "metadata";
   }
 
   await reclaimStale(sb);
@@ -388,7 +398,7 @@ Deno.serve(async (req) => {
       }
     }
     await sb.from("seo_reoptimization_items").update({ locked_at: nowIso() }).eq("id", item.id);
-    await processItem(sb, item, previewOnly);
+    await processItem(sb, item, previewOnly, pipelineMode);
   }
 
   if (runId) await bumpRun(sb, runId);
