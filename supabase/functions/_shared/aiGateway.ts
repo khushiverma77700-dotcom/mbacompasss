@@ -275,51 +275,27 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         }
       }
 
-      // 3) Both OpenAI slots unusable → last-resort Lovable AI. If that has no
-      // credits either, surface the real OpenAI error instead of Lovable's 402.
-      if ([401, 402, 403, 429].includes(resp.status)) {
-        const openaiError = await peek(resp);
-        const openaiStatus = resp.status;
-        console.warn(`[aiGateway][${feature}] Both OpenAI slots unavailable (${openaiStatus}): ${openaiError}`);
-        const lovableKey = Deno.env.get("LOVABLE_API_KEY") || "";
-        if (lovableKey) {
-          const fallbackModel = purpose === "short" || purpose === "structured"
-            ? "google/gemini-2.5-flash-lite"
-            : "google/gemini-2.5-flash";
-          const lovableResp = await withRetry(
-            () => callLovableUpstream(lovableKey, buildLovablePayload({ ...body, model: fallbackModel }), signal),
-            { maxRetries: 2, label: `lovable-fallback[${feature}]` },
-          );
-          resp = lovableResp.ok
-            ? lovableResp
-            : new Response(
-                JSON.stringify({
-                  error: {
-                    message: `OpenAI (${openaiStatus}) failed and the Lovable AI fallback is unavailable (${lovableResp.status}). OpenAI said: ${openaiError}`,
-                  },
-                }),
-                { status: openaiStatus, headers: { "Content-Type": "application/json" } },
-              );
-        }
-      }
-
-      // A billing exhaustion is NOT a rate limit — never tell the admin to
-      // "try again in a minute". Re-map it to 402 with an actionable message.
+      // 3) Both OpenAI slots unusable. There is NO third provider by policy —
+      // only Suyash (slot 1) and Vaibhav (slot 2) are allowed. Surface the real
+      // OpenAI error, and re-map a billing exhaustion to an actionable 402
+      // (it is not a rate limit, so "try again in a minute" is wrong).
       if (!resp.ok) {
         const bodyText = await peek(resp);
-        if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota|Not enough credits/i.test(bodyText)) {
+        if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/i.test(bodyText)) {
+          console.warn(`[aiGateway][${feature}] Both OpenAI slots report exhausted credits: ${bodyText}`);
           resp = new Response(
             JSON.stringify({
               error: {
                 code: "ai_credits_exhausted",
                 message:
-                  "AI credits are exhausted. Both OpenAI keys (Suyash and Vaibhav) report a zero credit balance, and the Lovable AI fallback has no credits either. Top up an OpenAI account (or Lovable AI credits) — switching slots will not help until then.",
+                  "OpenAI credits are exhausted on both keys (Suyash and Vaibhav). Add credits to one of the two OpenAI accounts — switching slots in Admin → API Keys & Secrets will not help until then.",
               },
             }),
             { status: 402, headers: { "Content-Type": "application/json" } },
           );
         }
       }
+
 
 
       if (!skipLog) {
