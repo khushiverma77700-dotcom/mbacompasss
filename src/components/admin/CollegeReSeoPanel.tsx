@@ -306,6 +306,25 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
           </DialogDescription>
         </DialogHeader>
 
+        {/* Last-optimized filter */}
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border p-3">
+          <span className="text-xs font-medium text-muted-foreground mr-1">Last AI SEO:</span>
+          {([
+            ["any", "All pages"],
+            ["never", "Never optimized"],
+            ["7", "Older than 7 days"],
+            ["15", "Older than 15 days"],
+            ["30", "Older than 30 days"],
+          ] as const).map(([v, label]) => (
+            <Button key={v} size="sm" variant={ageFilter === v ? "default" : "outline"}
+              onClick={() => setAgeFilter(v)}>
+              {label}
+            </Button>
+          ))}
+          <Badge variant="secondary" className="ml-auto">{loadingInv ? "…" : `${inv.total} matching`}</Badge>
+          <Badge variant="outline">{loadingInv ? "…" : `${inv.never} never optimized`}</Badge>
+        </div>
+
         {/* Inventory */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card><CardContent className="p-4">
