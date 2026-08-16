@@ -142,7 +142,7 @@ const AdminCollegeSections = () => {
   const [bulkProgress, setBulkProgress] = useState<{ total: number; done: number; ok: number; fail: number; current: string; results: { type: string; label: string; status: "pending" | "ok" | "fail"; error?: string }[] } | null>(null);
   const { toast } = useToast();
 
-  const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
+  const fetchColleges = async () => { const data = await fetchAllRows<any>((from, to) => supabase.from("colleges").select("id, name, slug, city, state, type, tier, established").order("name").range(from, to) as any).catch(() => []); setColleges(data); };
   const fetchSections = async () => { const query = supabase.from("college_sections").select("*, colleges(name, slug, city, state)").order("sort_order"); const { data } = selectedCollege ? await query.eq("college_id", selectedCollege) : await query; if (data) setSections(data); };
 
   // Extract a college slug from a pasted URL or raw slug. Examples:
