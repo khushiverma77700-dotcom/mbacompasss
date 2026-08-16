@@ -252,15 +252,16 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
     }
   };
 
-  const action = async (act: "resume" | "rerun" | "cancel") => {
+  const action = async (act: "resume" | "rerun" | "cancel" | "stop") => {
     if (!runId) return;
+    if (act === "stop" && !window.confirm("Stop this Re-SEO run now? Pages not yet processed will be skipped.")) return;
     try {
       const resp = await authedFetch(`/seo-reoptimize?action=${act}`, { method: "POST", body: JSON.stringify({ run_id: runId }) });
       const j = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(j?.error || `HTTP ${resp.status}`);
       toast({
-        title: act === "resume" ? "Worker woken up" : act === "rerun" ? "Failed pages re-queued" : "Run cancelled",
-        description: act === "rerun" ? `${j?.requeued ?? 0} page(s) will be retried.` : undefined,
+        title: act === "resume" ? "Worker woken up" : act === "rerun" ? "Failed pages re-queued" : act === "stop" ? "Run stopped" : "Run cancelled",
+        description: act === "rerun" ? `${j?.requeued ?? 0} page(s) will be retried.` : act === "stop" ? "Remaining pages were skipped. Completed pages are kept." : undefined,
       });
       tick();
     } catch (e: any) {
