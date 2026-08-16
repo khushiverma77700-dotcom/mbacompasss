@@ -129,6 +129,7 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
   const [run, setRun] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [credits, setCredits] = useState<{ tokens: number; cost: number; calls: number }>({ tokens: 0, cost: 0, calls: 0 });
+  const [ageFilter, setAgeFilter] = useState<"any" | "never" | "7" | "15" | "30">("any");
   const wakeRef = useRef<number>(0);
 
   // ── Inventory: which college pages have incomplete SEO ───────────
