@@ -515,16 +515,22 @@ function TimelineCard({
           )}
 
           {n.image_url && (
-            <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted/30">
+            <a
+              href={n.image_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 block overflow-hidden rounded-xl border border-border bg-muted/30"
+            >
               <img
                 src={n.image_url}
                 alt={n.title}
                 loading="lazy"
-                className="w-full max-h-[360px] object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                className="w-full h-auto object-contain"
                 style={{ maxWidth: "100%", height: "auto" }}
               />
-            </div>
+            </a>
           )}
+
 
           <div className="mt-4 flex items-center gap-2 flex-wrap">
             {n.link_url && (
