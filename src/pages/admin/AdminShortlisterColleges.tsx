@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { INDIAN_STATES as CENTRALIZED_STATES, INDIAN_STATES_CITIES as CENTRALIZED_STATE_CITIES } from "@/data/indianLocations";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
