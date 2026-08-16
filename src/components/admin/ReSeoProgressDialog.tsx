@@ -35,7 +35,7 @@ interface Props {
 const STAGE_LABEL: Record<string, string> = {
   reading: "Reading page",
   researching: "Researching competitors + keywords",
-  generating: "Picking primary keyword & rewriting",
+  generating: "Picking primary keyword & building SEO layers",
   saving: "Saving optimized SEO",
   done: "Done",
 };
@@ -136,7 +136,7 @@ export default function ReSeoProgressDialog({ open, onOpenChange, runId, onCompl
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">{it.page_name || it.slug}</span>
                       <Badge variant="outline" className="text-xs">{it.page_type}</Badge>
-                      {it.rewrite_applied && <Badge className="text-xs bg-amber-500">rewrite</Badge>}
+                      {it.rewrite_applied && <Badge className="text-xs bg-amber-500">content added</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">{it.url}</div>
                     {it.status === "running" && it.stage && (

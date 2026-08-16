@@ -63,6 +63,8 @@ export interface SeoPipelineResult {
   keyword_density: Record<string, number>; // keyword -> % density in body_html (target 2.5-3.5% for primary)
   aeo_notes?: string;              // answer-engine optimization notes (schema, direct answers)
   geo_notes?: string;              // generative-engine optimization notes (entity coverage, citations)
+  augment_html?: string;           // OPTIONAL additive block (quick answer + FAQ-ish + takeaways) — used in metadata mode instead of rewriting
+  mode?: "metadata" | "full";
   rewrite_required: boolean;
   rewrite_reason?: string;
   keyword_stuffing_removed?: string[];
@@ -150,6 +152,56 @@ ${compBlock}
 Analyze search intent from URL + entities + current content + competitors first, choose ONE primary keyword with the best ranking opportunity, then produce the JSON with a full body_html that hits the 2.5-3.5% primary keyword density target.`;
 }
 
+
+// Credit-light prompt: NO full content rewrite. Only keyword research,
+// metadata, schema, density plan and an OPTIONAL small additive block.
+function buildMetadataPrompt(ctx: PageContext, comps: CompetitorSnapshot[]): string {
+  const year = new Date().getFullYear();
+  const compBlock = comps.length
+    ? comps.map((c, i) => `Competitor ${i + 1}: ${c.url}\nTitle: ${c.title || ""}\nExcerpt: ${(c.markdown || "").slice(0, 700)}`).join("\n---\n")
+    : "(no competitor snapshots)";
+  const existing = (ctx.body_text || "").slice(0, 2500);
+  const existingWords = existing.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+
+  return `You are a senior on-page SEO + AEO + GEO strategist for MBA Compass (India), Google India ${year}.
+
+CRITICAL: DO NOT rewrite or replace the existing page content. Keep it as-is. You only produce SEO layers: keyword research, metadata, schema markup, density plan, and (optionally) a SMALL additive block that is appended context — never a replacement.
+
+DELIVER:
+1. ONE primary_keyword (highest real search demand + ranking opportunity for this page). secondary_keyword only if it shares the SAME intent, else null.
+2. long_tail_keywords: 6-10 long-tail phrases (>= 3 words) people actually search.
+3. short_tail_keywords: 3-5 short head terms (1-2 words).
+4. related_queries: 6-10 real "People also ask" questions.
+5. meta_title 50-60 chars (primary KW near start), meta_description 140-160 chars, h1 distinct from title with primary KW.
+6. json_ld: ONE valid schema.org object, correct @type, plus FAQPage entities where sensible.
+7. faq: 5-8 Q/A pairs (A 30-60 words) — AEO direct answers.
+8. augment_html: OPTIONAL, 120-320 words of clean HTML ONLY (h2/p/ul/table) to ADD to the page. Use it to (a) give a 40-60 word "Quick answer" a generative engine can quote, (b) naturally raise primary-keyword density above 3%, (c) add entity mentions (exam bodies, cities, ${year}) and a Key takeaways list. Never contradict or duplicate the existing content, never fabricate fees/dates/rankings — if a fact is unknown, omit it.
+9. density_plan: how many additional natural occurrences of the primary keyword are needed so total density on the page (existing ${existingWords} words + augment) is >= 3% but <= 4%. Place those occurrences inside augment_html.
+10. aeo_notes, geo_notes, eeat_notes: 1-2 sentences each.
+11. alt_text_suggestions (3-6), internal_link_suggestions (3-6 on mbacompass.in).
+12. rewrite_required MUST be false. body_html MUST be "".
+
+Return ONLY minified JSON:
+{"primary_keyword":"","secondary_keyword":null,"search_intent":"informational|commercial|transactional|navigational","meta_title":"","meta_description":"","h1":"","outline":[{"level":"h2","text":""}],"augment_html":"","body_html":"","faq":[{"question":"","answer":""}],"json_ld":{},"og_title":"","og_description":"","twitter_title":"","twitter_description":"","canonical_url":"","alt_text_suggestions":[],"internal_link_suggestions":[{"anchor":"","url":""}],"long_tail_keywords":[],"short_tail_keywords":[],"related_queries":[],"density_plan":"","aeo_notes":"","geo_notes":"","rewrite_required":false,"eeat_notes":"","readability_score":0}
+
+PAGE CONTEXT
+URL: ${ctx.url}
+Page type: ${ctx.page_type}
+Current title: ${ctx.title || "(none)"}
+Current meta: ${ctx.description || "(none)"}
+Current H1: ${ctx.h1 || "(none)"}
+Existing primary keyword: ${ctx.existing_primary_keyword || "(none)"}
+Location: ${ctx.location?.city || ""} ${ctx.location?.state || ""}
+Entities: ${(ctx.entities || []).join(", ") || "(none)"}
+Facts: ${JSON.stringify(ctx.extras || {}).slice(0, 800)}
+
+EXISTING CONTENT (KEEP — do not rewrite, ${existingWords} words):
+${existing}
+
+TOP GOOGLE RESULTS (intent reference):
+${compBlock}`;
+}
+
 // ---------- Parse & sanitize ----------
 
 function stripFences(s: string): string {
@@ -162,7 +214,7 @@ function clampLen(s: string, min: number, max: number): string {
   return s.slice(0, max).replace(/\s+\S*$/, "").trim();
 }
 
-function sanitize(result: any, ctx: PageContext): SeoPipelineResult {
+function sanitize(result: any, ctx: PageContext, mode: "metadata" | "full" = "full"): SeoPipelineResult {
   const out: SeoPipelineResult = {
     primary_keyword: String(result.primary_keyword || "").trim(),
     secondary_keyword: result.secondary_keyword ? String(result.secondary_keyword).trim() : null,
@@ -188,15 +240,22 @@ function sanitize(result: any, ctx: PageContext): SeoPipelineResult {
     keyword_density: (result.keyword_density && typeof result.keyword_density === "object") ? result.keyword_density : {},
     aeo_notes: result.aeo_notes ? String(result.aeo_notes) : undefined,
     geo_notes: result.geo_notes ? String(result.geo_notes) : undefined,
-    rewrite_required: Boolean(result.rewrite_required),
+    augment_html: String(result.augment_html || "").trim() || undefined,
+    mode,
+    rewrite_required: mode === "metadata" ? false : Boolean(result.rewrite_required),
     rewrite_reason: result.rewrite_reason ? String(result.rewrite_reason) : undefined,
     keyword_stuffing_removed: Array.isArray(result.keyword_stuffing_removed) ? result.keyword_stuffing_removed.slice(0, 20) : [],
     eeat_notes: result.eeat_notes ? String(result.eeat_notes) : undefined,
     readability_score: typeof result.readability_score === "number" ? result.readability_score : undefined,
   };
 
-  // Recompute keyword_density from body_html for accuracy (LLM values often drift).
-  const bodyText = out.body_html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  // Recompute keyword_density for accuracy (LLM values often drift).
+  // metadata mode: measure across existing page content + the additive block,
+  // because the existing content is preserved and NOT rewritten.
+  const densitySource = mode === "metadata"
+    ? `${ctx.body_text || ""} ${out.augment_html || ""}`
+    : out.body_html;
+  const bodyText = densitySource.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   const bodyWords = bodyText.split(/\s+/).filter(Boolean);
   const totalWords = bodyWords.length || 1;
   const lc = bodyText.toLowerCase();
@@ -213,6 +272,10 @@ function sanitize(result: any, ctx: PageContext): SeoPipelineResult {
   if (out.primary_keyword) density[out.primary_keyword] = measure(out.primary_keyword);
   if (out.secondary_keyword) density[out.secondary_keyword] = measure(out.secondary_keyword);
   for (const lt of out.long_tail_keywords) density[lt] = measure(lt);
+  for (const st of (Array.isArray(result.short_tail_keywords) ? result.short_tail_keywords : [])) {
+    const k = String(st).trim();
+    if (k) density[k] = measure(k);
+  }
   out.keyword_density = density;
 
   // Guardrails: reject the model's output if it snuck two unrelated keywords in.
@@ -234,6 +297,9 @@ export interface RunSeoPipelineOptions {
   userId?: string | null;
   competitorLimit?: number;        // default 3
   model?: string;                  // default = flash-class
+  // "metadata" (default) = advanced SEO layers only, no content rewrite, ~4x cheaper.
+  // "full" = legacy full-body rewrite.
+  mode?: "metadata" | "full";
   signal?: AbortSignal;
 }
 
@@ -245,9 +311,11 @@ export async function runSeoPipeline(
     || `${ctx.title || ctx.h1 || ""} ${ctx.location?.city || ""}`.trim()
     || ctx.url;
 
-  const competitors = await runFirecrawlSearch(seedQuery, opts.competitorLimit ?? 3);
+  const mode = opts.mode ?? "metadata";
+  // Credit saving: metadata mode needs only 1 competitor snapshot for intent.
+  const competitors = await runFirecrawlSearch(seedQuery, opts.competitorLimit ?? (mode === "metadata" ? 1 : 3));
 
-  const prompt = buildPrompt(ctx, competitors);
+  const prompt = mode === "metadata" ? buildMetadataPrompt(ctx, competitors) : buildPrompt(ctx, competitors);
   const resp = await callAIGateway(
     {
       model: opts.model || "google/gemini-2.5-flash",
@@ -257,7 +325,7 @@ export async function runSeoPipeline(
       ],
       response_format: { type: "json_object" },
       temperature: 0.3,
-      max_tokens: 6500,
+      max_tokens: mode === "metadata" ? 2200 : 6500,
     },
     { feature: opts.feature, userId: opts.userId, purpose: "long", signal: opts.signal },
   );
@@ -272,7 +340,7 @@ export async function runSeoPipeline(
   try { parsed = JSON.parse(stripFences(raw)); }
   catch { throw new Error(`Pipeline JSON parse failed: ${raw.slice(0, 300)}`); }
 
-  const result = sanitize(parsed, ctx);
+  const result = sanitize(parsed, ctx, mode);
   if (!result.primary_keyword) throw new Error("Pipeline returned no primary_keyword");
   return { result, competitors, raw };
 }
