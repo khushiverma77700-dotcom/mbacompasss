@@ -33,6 +33,7 @@ import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
 import FullPageReauditButton from "@/components/admin/FullPageReauditButton";
+import CollegeReSeoPanel, { CollegeReSeoRowButton } from "@/components/admin/CollegeReSeoPanel";
 
 const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
 const CATEGORY_OPTIONS = ["IIM", "Non-IIM"];
@@ -104,6 +105,7 @@ const AdminColleges = () => {
 
   const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(filteredColleges);
 
+  const [reseoOpen, setReseoOpen] = useState(false);
   const [bulkFilterOpen, setBulkFilterOpen] = useState(false);
   const [bulkFilterCsv, setBulkFilterCsv] = useState("");
   const [bulkFilterRunning, setBulkFilterRunning] = useState(false);
@@ -529,9 +531,17 @@ const AdminColleges = () => {
 
   return (
     <div>
+      <CollegeReSeoPanel open={reseoOpen} onOpenChange={setReseoOpen} selectedIds={Array.from(selectedIds)} />
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Colleges</h1>
         <div className="flex gap-2 flex-wrap">
+          <Button
+            onClick={() => setReseoOpen(true)}
+            className="bg-primary/90 hover:bg-primary"
+            title="Full 68-parameter Re-SEO for college pages (runs in the backend)"
+          >
+            <Sparkles className="w-4 h-4 mr-2" /> Re-SEO Colleges
+          </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/admin/colleges/bulk-create")}
@@ -583,6 +593,9 @@ const AdminColleges = () => {
               <Button size="sm" variant="outline" onClick={() => runBulkRefresh("smart")} disabled={bulkRefreshing} className="border-emerald-500/40 text-emerald-700">
                 {bulkRefreshing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
                 Smart Refresh Selected
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setReseoOpen(true)} className="border-primary/40 text-primary">
+                <Sparkles className="w-4 h-4 mr-2" /> Re-SEO Selected
               </Button>
               <Button size="sm" onClick={() => runBulkRefresh("full")} disabled={bulkRefreshing} className="bg-violet-600 hover:bg-violet-700">
                 {bulkRefreshing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
@@ -664,6 +677,7 @@ const AdminColleges = () => {
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{c.created_at ? new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{c.created_at ? new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1 flex-nowrap whitespace-nowrap">
+                      <CollegeReSeoRowButton college={{ id: c.id, name: c.name, slug: c.slug }} />
                       <FullPageReauditButton kind="college" entityId={c.id} entityName={c.name} />
                       <RefreshContentButton entityType="college" entityId={c.id} entityName={c.name} />
                       <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
