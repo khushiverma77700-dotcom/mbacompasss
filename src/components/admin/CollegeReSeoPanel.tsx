@@ -197,24 +197,45 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
     return () => clearInterval(iv);
   }, [open, runId, tick]);
 
+  // ── Last-optimized age filter ───────────────────────────────────
+  const ageOf = (c: CollegeSeo): number | null => {
+    const t = c.ov?.last_reoptimized_at ? new Date(c.ov.last_reoptimized_at).getTime() : 0;
+    if (!t) return null; // never optimized
+    return Math.floor((Date.now() - t) / 86_400_000);
+  };
+  const matchesAge = useCallback((c: CollegeSeo) => {
+    const days = ageOf(c);
+    switch (ageFilter) {
+      case "never": return days === null;
+      case "7": return days === null || days >= 7;
+      case "15": return days === null || days >= 15;
+      case "30": return days === null || days >= 30;
+      default: return true;
+    }
+  }, [ageFilter]);
+
   // ── Derived stats ───────────────────────────────────────────────
   const inv = useMemo(() => {
-    let complete = 0, checksDone = 0;
+    const scoped = colleges.filter(matchesAge);
+    let complete = 0, checksDone = 0, never = 0;
     const incomplete: CollegeSeo[] = [];
-    for (const c of colleges) {
+    for (const c of scoped) {
+      if (ageOf(c) === null) never++;
       const res = checkPage(c);
       const passed = res.filter(Boolean).length;
       checksDone += passed;
       if (passed === CHECKS.length) complete++; else incomplete.push(c);
     }
     return {
-      total: colleges.length,
+      scoped,
+      never,
+      total: scoped.length,
       complete,
       incomplete,
       checksDone,
-      checksTotal: colleges.length * CHECKS.length,
+      checksTotal: scoped.length * CHECKS.length,
     };
-  }, [colleges]);
+  }, [colleges, matchesAge]);
 
   const runStats = useMemo(() => {
     const total = run?.total_items || items.length || 0;
@@ -232,11 +253,11 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
 
   // ── Actions ─────────────────────────────────────────────────────
   const start = async (mode: "incomplete" | "all" | "selected") => {
-    const pool = mode === "all" ? colleges
+    const pool = mode === "all" ? inv.scoped
       : mode === "incomplete" ? inv.incomplete
       : colleges.filter((c) => selectedIds.includes(c.id));
     if (!pool.length) {
-      toast({ title: "Nothing to optimize", description: mode === "selected" ? "Select colleges in the table first." : "All college pages already pass every SEO parameter.", variant: "destructive" });
+      toast({ title: "Nothing to optimize", description: mode === "selected" ? "Select colleges in the table first." : "No college pages match the current filter.", variant: "destructive" });
       return;
     }
     setLaunching(mode);
