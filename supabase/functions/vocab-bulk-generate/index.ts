@@ -3,6 +3,7 @@
 // GET ?job_id=...                         -> returns job row
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getCredential } from "../_shared/getCredential.ts";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -156,24 +157,16 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
     },
   } as const;
 
-  const endpoint = provider === "openai"
-    ? "https://api.openai.com/v1/chat/completions"
-    : "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-  const apiKey = provider === "openai" ? keys.openai : await getCredential("GEMINI_API_KEY");
-  const model = provider === "openai" ? "gpt-4o-mini" : "gemini-2.5-flash";
-
-  if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "GEMINI_API_KEY not configured");
+  // POLICY: OpenAI only — the two switcher slots (Suyash / Vaibhav) via the shared gateway.
+  const model = "gpt-4o-mini";
+  if (!keys.openai) throw new Error("OPENAI_API_KEY not configured");
 
   const timeoutMs = provider === "openai" ? 55_000 : 50_000;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   let resp: Response;
   try {
-    resp = await fetch(endpoint, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    resp = await callAIGateway({
         model,
         messages: [
           { role: "system", content: system },
@@ -181,10 +174,9 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
         ],
         tools: [toolSchema],
         tool_choice: { type: "function", function: { name: "emit_vocab_batch" } },
-        max_tokens: provider === "openai" ? 6500 : 6000,
-        ...(provider === "openai" ? { temperature: 0.55 } : {}),
-      }),
-    });
+        max_tokens: 6500,
+        temperature: 0.55,
+      }, { feature: "vocab-bulk-generate", signal: controller.signal });
   } catch (e) {
     if ((e as Error)?.name === "AbortError") throw new Error("AI_TIMEOUT");
     throw e;

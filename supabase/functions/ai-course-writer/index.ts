@@ -24,14 +24,16 @@ const corsHeaders = {
 // Course discovery + content generation is structured tool-calling work; flash
 // produces equivalent results at ~1/4 the cost. Pro is reserved for true deep
 // reasoning tasks only (e.g. premium profile reports).
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "gpt-5-mini";
 
 async function callCourseAI(body: Parameters<typeof callAIGateway>[0]) {
-  const primary = await callAIGateway(body, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
-  if (primary.ok || ![401, 402, 403, 429, 500, 502, 503, 504].includes(primary.status)) return primary;
+  // POLICY: OpenAI only (Suyash / Vaibhav slots). The gateway already fails over
+  // between the two slots, so this only retries once on a transient error.
+  const primary = await callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
+  if (primary.ok || ![429, 500, 502, 503, 504].includes(primary.status)) return primary;
 
   const primaryText = await primary.clone().text().catch(() => "");
-  console.warn("ai-course-writer Gemini provider unavailable/quota-limited, falling back to OpenAI:", primary.status, primaryText.slice(0, 300));
+  console.warn("ai-course-writer OpenAI call failed, retrying once:", primary.status, primaryText.slice(0, 300));
   const fallback = await callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
   if (fallback.ok || ![401, 402, 403, 429, 500, 502, 503, 504].includes(fallback.status)) return fallback;
 

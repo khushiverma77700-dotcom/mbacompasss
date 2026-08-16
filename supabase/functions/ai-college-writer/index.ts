@@ -370,7 +370,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       }
       if (message === "GEMINI_QUOTA") {
         return new Response(
-          JSON.stringify({ error: "Google Gemini quota or billing limit reached. Please check the configured API key." }),
+          JSON.stringify({ error: "OpenAI credits are exhausted on both keys (Suyash and Vaibhav). Add credits to one of the two OpenAI accounts in Admin → API Keys & Secrets." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

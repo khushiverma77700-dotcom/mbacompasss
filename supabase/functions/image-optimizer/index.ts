@@ -3,10 +3,16 @@
 // when missing, and update image_assets + image_optimization_jobs.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { callAIGateway } from "../_shared/aiGateway.ts";
+// POLICY: all AI traffic goes through the shared OpenAI-only gateway
+// (Suyash / Vaibhav slots from Admin → API Keys & Secrets). This shim keeps the
+// existing OpenAI-compatible request bodies working.
+const aiChatFetch = (_url: string, init: { body: string }) =>
+  callAIGateway(JSON.parse(init.body), { feature: "image-optimizer" });
+
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 const BUCKET = "image-derivatives";
 
 const STEP_KEYS = [
@@ -109,7 +115,6 @@ async function toWebp(bytes: Uint8Array, format: string | undefined): Promise<Ui
 }
 
 async function generateAlt(context: any[], filename: string): Promise<string | null> {
-  if (!LOVABLE_API_KEY) return null;
   const primary = context.find((c) => c?.name) ?? context[0] ?? {};
   const name = primary?.name ?? "";
   const type = primary?.type ?? "image";
@@ -118,9 +123,8 @@ async function generateAlt(context: any[], filename: string): Promise<string | n
     return `${name} — ${type} on MBA Compass`.slice(0, 120);
   }
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await aiChatFetch("ai", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [

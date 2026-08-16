@@ -172,40 +172,6 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     }
   }
 
-  // ── Provider: Lovable AI Gateway ─────────────────────────────────────────────
-  if (provider === "lovable") {
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableKey) {
-      const err = "LOVABLE_API_KEY is not configured.";
-      console.error(`[aiGateway][${feature}] ${err}`);
-      if (!skipLog) {
-        await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
-      }
-      return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
-    }
-
-    // Lovable AI accepts the model IDs as-is (e.g. "google/gemini-3-flash-preview")
-    // so we pass body.model unchanged. We still strip Gemini-only fields just in case.
-    const payload = buildLovablePayload(body);
-    try {
-      const resp = await withRetry(
-        () => callUpstream(LOVABLE_GATEWAY_URL, lovableKey, payload, signal),
-        { maxRetries, label: `lovable[${feature}]` },
-      );
-      if (!skipLog) {
-        if (resp.ok) logSuccess(resp, isStream, feature, body.model, userId, "lovable", startedAt);
-        else await logErrorFromResp(resp, feature, body.model, userId, "lovable", startedAt);
-      }
-      return resp;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error(`[aiGateway][${feature}] Lovable call threw:`, msg);
-      if (!skipLog) {
-        await logUsage({ feature, model: body.model, userId, provider: "lovable", status: "error", errorMessage: msg, latencyMs: Date.now() - startedAt });
-      }
-      return new Response(JSON.stringify({ error: msg }), { status: 502, headers: { "Content-Type": "application/json" } });
-    }
-  }
 
   // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
   if (provider === "openai-mini" || provider === "openai-nano") {
@@ -275,51 +241,27 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         }
       }
 
-      // 3) Both OpenAI slots unusable → last-resort Lovable AI. If that has no
-      // credits either, surface the real OpenAI error instead of Lovable's 402.
-      if ([401, 402, 403, 429].includes(resp.status)) {
-        const openaiError = await peek(resp);
-        const openaiStatus = resp.status;
-        console.warn(`[aiGateway][${feature}] Both OpenAI slots unavailable (${openaiStatus}): ${openaiError}`);
-        const lovableKey = Deno.env.get("LOVABLE_API_KEY") || "";
-        if (lovableKey) {
-          const fallbackModel = purpose === "short" || purpose === "structured"
-            ? "google/gemini-2.5-flash-lite"
-            : "google/gemini-2.5-flash";
-          const lovableResp = await withRetry(
-            () => callLovableUpstream(lovableKey, buildLovablePayload({ ...body, model: fallbackModel }), signal),
-            { maxRetries: 2, label: `lovable-fallback[${feature}]` },
-          );
-          resp = lovableResp.ok
-            ? lovableResp
-            : new Response(
-                JSON.stringify({
-                  error: {
-                    message: `OpenAI (${openaiStatus}) failed and the Lovable AI fallback is unavailable (${lovableResp.status}). OpenAI said: ${openaiError}`,
-                  },
-                }),
-                { status: openaiStatus, headers: { "Content-Type": "application/json" } },
-              );
-        }
-      }
-
-      // A billing exhaustion is NOT a rate limit — never tell the admin to
-      // "try again in a minute". Re-map it to 402 with an actionable message.
+      // 3) Both OpenAI slots unusable. There is NO third provider by policy —
+      // only Suyash (slot 1) and Vaibhav (slot 2) are allowed. Surface the real
+      // OpenAI error, and re-map a billing exhaustion to an actionable 402
+      // (it is not a rate limit, so "try again in a minute" is wrong).
       if (!resp.ok) {
         const bodyText = await peek(resp);
-        if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota|Not enough credits/i.test(bodyText)) {
+        if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/i.test(bodyText)) {
+          console.warn(`[aiGateway][${feature}] Both OpenAI slots report exhausted credits: ${bodyText}`);
           resp = new Response(
             JSON.stringify({
               error: {
                 code: "ai_credits_exhausted",
                 message:
-                  "AI credits are exhausted. Both OpenAI keys (Suyash and Vaibhav) report a zero credit balance, and the Lovable AI fallback has no credits either. Top up an OpenAI account (or Lovable AI credits) — switching slots will not help until then.",
+                  "OpenAI credits are exhausted on both keys (Suyash and Vaibhav). Add credits to one of the two OpenAI accounts — switching slots in Admin → API Keys & Secrets will not help until then.",
               },
             }),
             { status: 402, headers: { "Content-Type": "application/json" } },
           );
         }
       }
+
 
 
       if (!skipLog) {
@@ -337,52 +279,20 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     }
   }
 
-  // ── Provider: Direct Gemini (default `gemini` and `gemini-lite`) ─────────────
-  const geminiKey = (await getCredential("GEMINI_API_KEY"));
-  if (!geminiKey) {
-    const err = "GEMINI_API_KEY is not configured.";
-    console.error(`[aiGateway][${feature}] ${err}`);
-    if (!skipLog) {
-      await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
-    }
-    return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
-  }
-
-  // gemini-lite forces flash-lite regardless of caller's model. `gemini`
-  // honors the caller's model (already cost-routed by purpose above).
-  const geminiModel = provider === "gemini-lite"
-    ? "gemini-2.5-flash-lite"
-    : resolveGeminiModel(body.model);
-  const payload = buildOpenAICompatPayload(body, geminiModel);
-
-  try {
-    const resp = await withRetry(
-      () => callUpstream(GEMINI_OPENAI_COMPAT_URL, geminiKey, payload, signal),
-      { maxRetries, label: `${provider}[${feature}]` },
-    );
-
-    if (!skipLog) {
-      if (resp.ok) {
-        logSuccess(resp, isStream, feature, geminiModel, userId, provider, startedAt);
-      } else {
-        await logErrorFromResp(resp, feature, geminiModel, userId, provider, startedAt);
-      }
-    }
-    return resp;
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error(`[aiGateway][${feature}] Gemini call threw:`, msg);
-    if (!skipLog) {
-      await logUsage({
-        feature, model: geminiModel, userId,
-        provider, status: "error",
-        errorMessage: msg, latencyMs: Date.now() - startedAt,
-      });
-    }
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 502, headers: { "Content-Type": "application/json" },
-    });
-  }
+  // POLICY: OpenAI-only. There is no Gemini / Lovable path any more — the only
+  // two credentials the whole dashboard may use are the OpenAI keys managed in
+  // Admin → System & Admin → API Keys & Secrets → OpenAI API Switcher
+  // (slot 1 = Suyash, slot 2 = Vaibhav).
+  return new Response(
+    JSON.stringify({
+      error: {
+        code: "ai_provider_not_allowed",
+        message:
+          "Only the two OpenAI keys (Suyash / Vaibhav) from the OpenAI API Switcher are allowed for AI generation.",
+      },
+    }),
+    { status: 500, headers: { "Content-Type": "application/json" } },
+  );
 }
 
 function buildLovablePayload(body: ChatBody) {
