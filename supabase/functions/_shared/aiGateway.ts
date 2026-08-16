@@ -1,7 +1,7 @@
 // Shared OpenAI-only gateway. Every AI request uses OPENAI_API_KEY.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential } from "./getCredential.ts";
+import { getCredential, getOpenAiSlotKeys } from "./getCredential.ts";
 
 const PRICING: Record<string, { input: number; output: number }> = {
   "gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
@@ -155,17 +155,21 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
   }
 
 
-  // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
+  // ── Provider: Direct OpenAI. Only two keys exist project-wide:
+  //    OPENAI_API_KEY   → "Vaibhav"
+  //    OPENAI_API_KEY_2 → "Suyash"
+  // Requests start on Vaibhav and fail over to Suyash on auth/quota/rate errors.
   if (provider === "openai-mini" || provider === "openai-nano") {
-    const openaiKey = await getCredential("OPENAI_API_KEY", { required: false });
-    if (!openaiKey) {
-      const err = "OPENAI_API_KEY is not configured.";
+    const slots = getOpenAiSlotKeys().filter((s) => s.key);
+    if (slots.length === 0) {
+      const err = "No OpenAI key configured. Add OPENAI_API_KEY (Vaibhav) or OPENAI_API_KEY_2 (Suyash) in Admin → API Keys & Secrets.";
       console.error(`[aiGateway][${feature}] ${err}`);
       if (!skipLog) {
         await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
       }
       return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
+
     // Use a broadly available, production-stable model. Legacy Gemini and GPT-5
     // names passed by callers are intentionally normalized to OpenAI models.
     const callerModel = (body.model || "").trim().replace(/^openai\//, "");
@@ -182,37 +186,54 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       if (![400, 403, 404].includes(r.status)) return false;
       return /model_not_found|does not exist|do not have access|unsupported_model|invalid[_ ]model/i.test(await peek(r));
     };
+    const isKeyLevelError = async (r: Response) => {
+      if (![401, 402, 403, 429].includes(r.status)) return false;
+      const text = await peek(r);
+      return /insufficient_quota|invalid_api_key|incorrect api key|billing|quota|rate limit/i.test(text) || r.status === 401;
+    };
     const payload = (model: string) => buildOpenAICompatPayload(body, model);
 
     try {
-      let resp = await withRetry(
-        () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload(openaiModel), signal),
-        { maxRetries: Math.max(maxRetries, 3), label: `${provider}[${feature}]` },
-      );
+      let resp: Response | null = null;
+      let usedSlot = slots[0].label;
 
-      // 1) Model not available on this account → try known-good models, same key.
-      for (const alt of MODEL_CHAIN) {
-        if (!(await isModelAccessError(resp))) break;
-        console.warn(`[aiGateway][${feature}] OpenAI model ${openaiModel} unavailable (${resp.status}); retrying with ${alt}`);
-        openaiModel = alt;
-        resp = await withRetry(
-          () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload(openaiModel), signal),
-          { maxRetries: 1, label: `${provider}-model-downgrade[${feature}]` },
+      for (const slot of slots) {
+        usedSlot = slot.label;
+        let attempt = await withRetry(
+          () => callUpstream(OPENAI_CHAT_URL, slot.key, payload(openaiModel), signal),
+          { maxRetries: Math.max(maxRetries, 2), label: `${provider}/${slot.label}[${feature}]` },
         );
+
+        // Model not available on this account → try known-good models, same key.
+        for (const alt of MODEL_CHAIN) {
+          if (!(await isModelAccessError(attempt))) break;
+          console.warn(`[aiGateway][${feature}] model ${openaiModel} unavailable on ${slot.label} (${attempt.status}); retrying with ${alt}`);
+          openaiModel = alt;
+          attempt = await withRetry(
+            () => callUpstream(OPENAI_CHAT_URL, slot.key, payload(openaiModel), signal),
+            { maxRetries: 1, label: `${provider}-model-downgrade[${feature}]` },
+          );
+        }
+
+        resp = attempt;
+        if (attempt.ok) break;
+        if (await isKeyLevelError(attempt)) {
+          console.warn(`[aiGateway][${feature}] OpenAI key "${slot.label}" failed (${attempt.status}); failing over to next key if available.`);
+          continue;
+        }
+        break; // request-level error (bad payload etc.) — do not burn the other key
       }
 
-      // Return accurate billing information for the one configured key.
-      if (!resp.ok) {
+      if (resp && !resp.ok) {
         const bodyText = await peek(resp);
         const quotaPattern = /insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/i;
         if (quotaPattern.test(bodyText)) {
-          console.warn(`[aiGateway][${feature}] The configured OPENAI_API_KEY returned insufficient_quota.`);
           resp = new Response(
             JSON.stringify({
               error: {
                 code: "ai_credits_exhausted",
                 message:
-                  "OpenAI rejected the configured API key with insufficient_quota. Confirm that this key belongs to the funded OpenAI project and that its project usage limit is enabled.",
+                  "Both OpenAI keys (Vaibhav and Suyash) returned insufficient_quota. Check credits/usage limits on those OpenAI projects in Admin → API Keys & Secrets.",
               },
             }),
             { status: 402, headers: { "Content-Type": "application/json" } },
@@ -220,13 +241,12 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         }
       }
 
-
-
+      const finalResp = resp!;
       if (!skipLog) {
-        if (resp.ok) logSuccess(resp, isStream, feature, openaiModel, userId, provider, startedAt);
-        else await logErrorFromResp(resp, feature, openaiModel, userId, provider, startedAt);
+        if (finalResp.ok) logSuccess(finalResp, isStream, feature, openaiModel, userId, `${provider}/${usedSlot}`, startedAt);
+        else await logErrorFromResp(finalResp, feature, openaiModel, userId, `${provider}/${usedSlot}`, startedAt);
       }
-      return resp;
+      return finalResp;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error(`[aiGateway][${feature}] OpenAI call threw:`, msg);
@@ -236,6 +256,7 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       return new Response(JSON.stringify({ error: msg }), { status: 502, headers: { "Content-Type": "application/json" } });
     }
   }
+
 
   // POLICY: OpenAI-only. There is no Gemini / Lovable path any more — the only
   // credential the whole dashboard may use is OPENAI_API_KEY.

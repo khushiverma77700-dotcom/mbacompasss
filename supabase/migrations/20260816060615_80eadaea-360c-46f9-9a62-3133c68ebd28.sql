@@ -1,0 +1,1 @@
+delete from public.api_credentials where key_name in ('OPENAI_API_KEY','OPENAI_API_KEY_2','GEMINI_API_KEY','GOOGLE_AI_API_KEY','LOVABLE_API_KEY');

@@ -27,27 +27,51 @@ function getServiceClient() {
 export async function getCredential(name: string, opts?: { required?: boolean }): Promise<string> {
   const required = opts?.required ?? true;
 
-  // Legacy AI credential names are deliberately routed to the one OpenAI key
-  // while older functions are migrated. This prevents Gemini, Lovable AI, or
-  // a retired second OpenAI key from receiving any generation request.
+  // Legacy AI credential names are deliberately routed to the two allowed
+  // OpenAI keys (Vaibhav = OPENAI_API_KEY, Suyash = OPENAI_API_KEY_2).
+  // Database copies and any other provider key are never allowed to override.
   if (["OPENAI_API_KEY", "OPENAI_API_KEY_2", "GEMINI_API_KEY", "GOOGLE_AI_API_KEY"].includes(name)) {
-    return resolveCredential("OPENAI_API_KEY", required, { envOnly: true });
+    const primary = await resolveCredential("OPENAI_API_KEY", false, { envOnly: true });
+    if (primary) return primary;
+    const secondary = await resolveCredential("OPENAI_API_KEY_2", false, { envOnly: true });
+    if (secondary) return secondary;
+    if (required) throw new Error("Missing credential: OPENAI_API_KEY. Configure it in Admin → API Keys.");
+    return "";
   }
 
 
   return resolveCredential(name, required);
 }
 
+/** The only two AI credentials allowed anywhere in the project. */
+export const OPENAI_SLOTS = [
+  { secret_name: "OPENAI_API_KEY", label: "Vaibhav" },
+  { secret_name: "OPENAI_API_KEY_2", label: "Suyash" },
+] as const;
+
+/** Env-only values for the two allowed OpenAI slots (empty string when unset). */
+export function getOpenAiSlotKeys(): Array<{ secret_name: string; label: string; key: string }> {
+  return OPENAI_SLOTS.map((slot) => ({
+    ...slot,
+    key: (Deno.env.get(slot.secret_name) || "").trim(),
+  }));
+}
+
 /** Safe key fingerprint for diagnostics. Never logs or returns the credential. */
-export async function getOpenAiKeyFingerprint(): Promise<string> {
-  const key = await getCredential("OPENAI_API_KEY", { required: false });
-  if (!key) return "missing";
-  const bytes = new TextEncoder().encode(key.trim());
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+export async function fingerprint(value: string): Promise<string> {
+  if (!value) return "missing";
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value.trim()));
   return Array.from(new Uint8Array(digest).slice(0, 6))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 }
+
+/** Safe key fingerprint for diagnostics. Never logs or returns the credential. */
+export async function getOpenAiKeyFingerprint(): Promise<string> {
+  const key = await getCredential("OPENAI_API_KEY", { required: false });
+  return fingerprint(key);
+}
+
 
 async function resolveCredential(name: string, required: boolean, options?: { envOnly?: boolean }): Promise<string> {
   const now = Date.now();
