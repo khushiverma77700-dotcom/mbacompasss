@@ -3,7 +3,7 @@
 // seo-reoptimize-worker), so every college page goes through the identical
 // 68-parameter pipeline: technical + on-page SEO, AEO/GEO, schema markup,
 // long-tail keyword research, 3%+ keyword density, meta title/description,
-// content rewrite, internal linking and off-page signals.
+// additive AEO block only (no content rewrite), internal linking and off-page signals.
 //
 // The run lives entirely on the server — closing this dialog or the browser
 // does not stop it. Auto wake-up re-kicks a stalled run, and Restart Failed
@@ -30,7 +30,7 @@ const RUN_KEY = "admin.colleges.reseo.runId";
 const STAGE_LABEL: Record<string, string> = {
   reading: "Reading page content",
   researching: "Researching competitors + long-tail keywords",
-  generating: "Picking primary keyword & rewriting content",
+  generating: "Keyword research + schema (existing content kept)",
   saving: "Saving optimized SEO + schema",
   done: "Done",
 };
@@ -301,7 +301,8 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
           <DialogDescription>
             Full 68-parameter optimization per college page — technical + on-page SEO, AEO/GEO answers,
             schema markup, long-tail keyword research, 3%+ keyword density, meta title/description,
-            content rewrite, internal linking and off-page signals. Runs in the backend; closing this
+            internal linking and off-page signals. Your existing page content is never rewritten —
+            only a short additive AEO block is appended when extra keyword density is needed. Runs in the backend; closing this
             window or the browser does not stop it.
           </DialogDescription>
         </DialogHeader>

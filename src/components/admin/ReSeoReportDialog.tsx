@@ -273,7 +273,7 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                     <CardTitle className="text-base flex items-center gap-2">
                       <span className={`h-2 w-2 rounded-full ${STATUS_TONE[active.status] || "bg-slate-400"}`} />
                       Status: <span className="capitalize">{active.status}</span>
-                      {active.rewrite_applied && <Badge className="bg-amber-500 text-white text-[10px]">Content rewritten</Badge>}
+                      {active.rewrite_applied && <Badge className="bg-amber-500 text-white text-[10px]">Content added</Badge>}
                     </CardTitle>
                     <a href={active.url} target="_blank" rel="noreferrer" className="text-xs text-primary flex items-center gap-1 hover:underline">
                       Visit page <ExternalLink className="h-3 w-3" />
@@ -354,7 +354,7 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                           <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap text-slate-700" dangerouslySetInnerHTML={{ __html: (active.full_content_before || before.body_html || "<span class='italic text-slate-400'>(empty)</span>") }} />
                         </div>
                         <div className="rounded border border-green-200 bg-green-50/50 p-3 text-xs">
-                          <p className="text-[10px] uppercase text-green-700 font-semibold mb-1">After ({active.content_word_count_after ?? 0} words • AEO/SEO/GEO rewrite)</p>
+                          <p className="text-[10px] uppercase text-green-700 font-semibold mb-1">After ({active.content_word_count_after ?? 0} words • AEO/SEO/GEO optimized, original content kept)</p>
                           <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap text-slate-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: (active.full_content_after || after.body_html || "<span class='italic text-slate-400'>(empty)</span>") }} />
                         </div>
                       </div>

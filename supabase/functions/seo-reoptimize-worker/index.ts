@@ -109,16 +109,34 @@ function buildContext(pageType: string, slug: string, url: string, src: any): Pa
   };
 }
 
+const AUG_START = "<!--ai-seo-augment-->";
+const AUG_END = "<!--/ai-seo-augment-->";
+
+/** Merge the additive AEO block into existing intro HTML without destroying it. */
+function mergeAugment(existingIntro: string | null, augment: string | null): string | null {
+  const aug = (augment || "").trim();
+  const base = (existingIntro || "").replace(new RegExp(`${AUG_START}[\\s\\S]*?${AUG_END}`, "g"), "").trim();
+  if (!aug) return base || null;
+  const block = `${AUG_START}${aug}${AUG_END}`;
+  return (base ? `${base}\n${block}` : block);
+}
+
 async function saveResult(sb: any, item: any, pageType: string, src: any, result: any) {
   const metadataOnly = result.mode !== "full";
+  const { data: existingOv } = await sb.from("page_seo_overrides")
+    .select("intro_html").eq("slug", item.slug).maybeSingle();
+
   const overridePayload: any = {
     slug: item.slug,
     title: result.meta_title,
     description: result.meta_description,
     h1: result.h1,
-    // metadata mode: existing page content is preserved. Only the additive
-    // AEO block (quick answer + key takeaways) is stored as intro_html.
-    intro_html: metadataOnly ? (result.augment_html || null) : result.intro_html,
+    // metadata mode: existing page content AND existing intro are preserved.
+    // The additive AEO block is appended inside a marked wrapper so repeat
+    // runs replace only that block — never the human/original content.
+    intro_html: metadataOnly
+      ? mergeAugment(existingOv?.intro_html || null, result.augment_html || null)
+      : result.intro_html,
     keywords: [result.primary_keyword, result.secondary_keyword, ...(result.long_tail_keywords || [])].filter(Boolean),
     faq: result.faq,
     json_ld: result.json_ld,
@@ -132,7 +150,8 @@ async function saveResult(sb: any, item: any, pageType: string, src: any, result
     reoptimization_run_id: item.run_id,
     updated_at: nowIso(),
   };
-  if (!metadataOnly) overridePayload.body_html = result.body_html;
+  // Hard guard: body content is only ever written in explicit "full" mode.
+  if (!metadataOnly && result.body_html) overridePayload.body_html = result.body_html;
   await sb.from("page_seo_overrides").upsert(overridePayload, { onConflict: "slug" });
 
   if (src && SUPPORTS_SEO_COLUMNS.has(pageType)) {
