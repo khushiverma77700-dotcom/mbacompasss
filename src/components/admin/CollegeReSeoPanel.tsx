@@ -348,6 +348,10 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
                   disabled={!["running", "queued"].includes(run?.status)}>
                   <StopCircle className="h-4 w-4 mr-1" /> Cancel
                 </Button>
+                <Button size="sm" variant="destructive" onClick={() => action("stop")}
+                  disabled={!["running", "queued"].includes(run?.status)}>
+                  <StopCircle className="h-4 w-4 mr-1" /> Stop now
+                </Button>
               </div>
             </div>
 
