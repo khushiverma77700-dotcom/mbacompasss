@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/fetchAllRows";
+
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema } from "@/components/SEOHead";
 import AICollegeFinder from "@/components/AICollegeFinder";
 import React from "react";
