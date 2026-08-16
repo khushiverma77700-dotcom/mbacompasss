@@ -28,8 +28,11 @@ function getServiceClient() {
 export async function getCredential(name: string, opts?: { required?: boolean }): Promise<string> {
   const required = opts?.required ?? true;
 
-  // Special case: OPENAI_API_KEY routes to slot 1 or slot 2 based on admin toggle.
-  if (name === "OPENAI_API_KEY") {
+  // POLICY: the only AI credentials allowed anywhere in the app are the two
+  // OpenAI keys managed in Admin → API Keys & Secrets → OpenAI API Switcher
+  // (slot 1 = Suyash, slot 2 = Vaibhav). Legacy provider names are aliased to
+  // the active OpenAI slot so no stale Gemini/other key can ever be used.
+  if (name === "OPENAI_API_KEY" || name === "GEMINI_API_KEY" || name === "GOOGLE_AI_API_KEY") {
     const slot = await getOpenAiActiveSlot();
     const effective = slot === 2 ? "OPENAI_API_KEY_2" : "OPENAI_API_KEY";
     return resolveCredential(effective, required, { preferEnv: true });
@@ -38,6 +41,7 @@ export async function getCredential(name: string, opts?: { required?: boolean })
   if (name === "OPENAI_API_KEY_2") {
     return resolveCredential(name, required, { preferEnv: true });
   }
+
 
   return resolveCredential(name, required);
 }
