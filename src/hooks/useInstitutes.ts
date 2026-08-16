@@ -108,13 +108,25 @@ export const useCategories = () => {
 
 // Listing variant — uses RPC `colleges_listing()` which trims description to 250 chars
 // server-side. Cuts payload from ~4 MB to ~400 KB and dramatically speeds /colleges.
+// NOTE: the Data API caps every response at 1000 rows, so we page through with
+// `.range()` until the full catalogue is loaded (otherwise newer colleges vanish).
+const PAGE_SIZE = 1000;
+
 export const useColleges = () => {
   return useQuery({
     queryKey: ["colleges"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("colleges_listing");
-      if (error) throw error;
-      return data || [];
+      const all: any[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+          .rpc("colleges_listing")
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const page = data || [];
+        all.push(...page);
+        if (page.length < PAGE_SIZE) break;
+      }
+      return all;
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -128,16 +140,24 @@ export const useCollegesLight = () => {
   return useQuery({
     queryKey: ["colleges_light"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("colleges")
-        .select("id, name, slug, city, state, logo_url, fees, placement_avg, placement_highest, ranking, type, exams_accepted")
-        .order("ranking");
-      if (error) throw error;
-      return data || [];
+      const all: any[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+          .from("colleges")
+          .select("id, name, slug, city, state, logo_url, fees, placement_avg, placement_highest, ranking, type, exams_accepted")
+          .order("ranking")
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const page = data || [];
+        all.push(...page);
+        if (page.length < PAGE_SIZE) break;
+      }
+      return all;
     },
     staleTime: 10 * 60 * 1000,
   });
 };
+
 
 export const useCollegeBySlug = (slug?: string) => {
   return useQuery({
