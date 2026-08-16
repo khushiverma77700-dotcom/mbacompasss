@@ -1,7 +1,7 @@
 // Shared OpenAI-only gateway. Every AI request uses OPENAI_API_KEY.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential } from "./getCredential.ts";
+import { getCredential, getOpenAiSlotKeys } from "./getCredential.ts";
 
 const PRICING: Record<string, { input: number; output: number }> = {
   "gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
