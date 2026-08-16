@@ -72,9 +72,12 @@ const AdminShortlisterColleges = () => {
   const { toast } = useToast();
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, fees, placement_avg, ranking, tier, college_category, exams_accepted, established, logo_url, accreditations, cutoff_info").order("ranking", { ascending: true, nullsFirst: false });
-    if (data) setColleges(data);
+    const data = await fetchAllRows<any>((from, to) =>
+      supabase.from("colleges").select("id, name, slug, city, state, fees, placement_avg, ranking, tier, college_category, exams_accepted, established, logo_url, accreditations, cutoff_info").order("ranking", { ascending: true, nullsFirst: false }).range(from, to) as any,
+    ).catch(() => []);
+    setColleges(data);
   };
+
 
   useEffect(() => { fetchColleges(); }, []);
 
