@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/fetchAllRows";
+
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema } from "@/components/SEOHead";
 import AICollegeFinder from "@/components/AICollegeFinder";
 import React from "react";
@@ -65,15 +67,19 @@ const CollegeFinderPage = () => {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const { data } = await supabase
-        .from("colleges")
-        .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, established, accreditations, exams_accepted, courses, total_students, logo_url, banner_url, campus_size, top_recruiters")
-        .order("ranking", { ascending: true });
-      if (data) setColleges(data as DBCollege[]);
+      const data = await fetchAllRows<DBCollege>((from, to) =>
+        supabase
+          .from("colleges")
+          .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, established, accreditations, exams_accepted, courses, total_students, logo_url, banner_url, campus_size, top_recruiters")
+          .order("ranking", { ascending: true })
+          .range(from, to) as any,
+      ).catch(() => [] as DBCollege[]);
+      setColleges(data);
       setLoading(false);
     };
     fetchAll();
   }, []);
+
 
   const handleCollegeSelect = (index: number, value: string) => {
     const found = colleges.find(c => c.id === value);
