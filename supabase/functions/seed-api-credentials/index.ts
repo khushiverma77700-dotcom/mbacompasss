@@ -19,8 +19,6 @@ const SEED_KEYS: Record<string, { category: string; description: string }> = {
 
   OPENAI_API_KEY: { category: "ai", description: "Suyash — primary OpenAI API key (GPT models)" },
   OPENAI_API_KEY_2: { category: "ai", description: "Vaibhav — secondary OpenAI API key (GPT models)" },
-  GEMINI_API_KEY: { category: "ai", description: "Google Gemini API key" },
-  LOVABLE_API_KEY: { category: "ai", description: "Lovable AI Gateway key" },
 
   MSG91_AUTH_KEY: { category: "sms", description: "MSG91 auth key for OTP delivery" },
   MSG91_TEMPLATE_ID: { category: "sms", description: "MSG91 OTP template ID" },

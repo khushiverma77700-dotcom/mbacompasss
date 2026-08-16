@@ -1,8 +1,7 @@
 // Shared credential resolver for edge functions.
 // Looks up a key from the api_credentials table (admin-managed),
 // falls back to Deno.env.get() if not in DB or empty.
-// OpenAI is special: secure backend secrets win over DB values so a freshly
-// rotated key takes effect even if Admin → API Keys still contains an older key.
+// OpenAI is special: the two secure backend secrets are the canonical values.
 // Credential values are cached, but the active OpenAI slot is intentionally
 // read for every generation so an admin switch applies across warm workers.
 
@@ -56,6 +55,17 @@ export async function getOpenAiKeyForSlot(slot: 1 | 2): Promise<string> {
   }
 }
 
+/** Safe key fingerprint for diagnostics. Never logs or returns the credential. */
+export async function getOpenAiKeyFingerprint(slot: 1 | 2): Promise<string> {
+  const key = await getOpenAiKeyForSlot(slot);
+  if (!key) return "missing";
+  const bytes = new TextEncoder().encode(key.trim());
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest).slice(0, 6))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /** Return the currently selected OpenAI slot. Do not cache this setting. */
 export async function getOpenAiActiveSlot(): Promise<1 | 2> {
   try {
@@ -86,7 +96,7 @@ async function resolveCredential(name: string, required: boolean, options?: { pr
     const envValue = Deno.env.get(name) || "";
     if (envValue) {
       cache.set(name, { value: envValue, fetchedAt: now });
-      return envValue;
+      return envValue.trim();
     }
   }
 
@@ -100,7 +110,7 @@ async function resolveCredential(name: string, required: boolean, options?: { pr
       .eq("key_name", name)
       .maybeSingle();
     if (data?.is_active && typeof data.key_value === "string" && data.key_value.length > 0) {
-      dbValue = data.key_value;
+      dbValue = data.key_value.trim();
       // best-effort touch last_used_at
       sb.from("api_credentials")
         .update({ last_used_at: new Date().toISOString() })
@@ -114,7 +124,7 @@ async function resolveCredential(name: string, required: boolean, options?: { pr
 
   // 3. Env fallback
   const envValue = options?.preferEnv ? "" : Deno.env.get(name) || "";
-  const value = dbValue || envValue;
+  const value = (dbValue || envValue).trim();
 
   cache.set(name, { value, fetchedAt: now });
 
