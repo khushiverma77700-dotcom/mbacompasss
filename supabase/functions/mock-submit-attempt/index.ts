@@ -89,21 +89,20 @@ Deno.serve(async (req) => {
         : Promise.resolve({ data: [] }),
       admin.from("mock_responses").select("*").eq("attempt_id", attempt_id),
     ]);
-    const questionIds = (questions ?? []).map((question: any) => question.id);
-    const { data: options } = questionIds.length
+    const selectedOptionIds = (responses ?? [])
+      .map((response: any) => response.selected_option_id)
+      .filter((id: unknown): id is string => typeof id === "string");
+    const { data: options } = selectedOptionIds.length
       ? await admin
         .from("mock_question_options")
-        .select("id, question_id")
-        .in("question_id", questionIds)
-        .eq("is_correct", true)
+        .select("id, question_id, is_correct")
+        .in("id", selectedOptionIds)
       : { data: [] };
 
     const qById = new Map<string, any>((questions ?? []).map((q: any) => [q.id, q]));
-    const correctOptionByQ = new Map<string, string>();
+    const selectedOptionCorrectness = new Map<string, boolean>();
     for (const o of options ?? []) {
-      if (qById.has(o.question_id)) {
-        correctOptionByQ.set(o.question_id, o.id);
-      }
+      if (qById.has(o.question_id)) selectedOptionCorrectness.set(o.id, o.is_correct === true);
     }
     const sectionMap = new Map<string, any>((sections ?? []).map((s: any) => [s.id, s]));
 
@@ -138,8 +137,9 @@ Deno.serve(async (req) => {
 
       if (answered) {
         if (q.question_type === "mcq") {
-          const correctId = correctOptionByQ.get(q.id);
-          isCorrect = !!(correctId && r.selected_option_id === correctId);
+          isCorrect = !!(
+            r.selected_option_id && selectedOptionCorrectness.get(r.selected_option_id) === true
+          );
         } else {
           // TITA
           const ans = normaliseTita(r.tita_answer ?? "");
