@@ -70,34 +70,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load test, sections, questions, options, responses
-    const [{ data: sections }, { data: questions }, { data: options }, { data: responses }] =
-      await Promise.all([
-        admin.from("mock_sections").select("id, code, name").eq("test_id", attempt.test_id),
-        admin
+    // Load only this test's data. The old unfiltered options query silently hit
+    // the database API's 1,000-row cap, so options from newer mocks were absent
+    // and every selected answer in those mocks was evaluated as incorrect.
+    const { data: sections } = await admin
+      .from("mock_sections")
+      .select("id, code, name")
+      .eq("test_id", attempt.test_id);
+    const sectionIds = (sections ?? []).map((section: any) => section.id);
+    const [{ data: questions }, { data: responses }] = await Promise.all([
+      sectionIds.length
+        ? admin
           .from("mock_questions")
           .select(
             "id, section_id, question_type, positive_marks, negative_marks, tita_correct_answers, tita_numeric_tolerance, topic",
           )
-          .in(
-            "section_id",
-            (
-              await admin
-                .from("mock_sections")
-                .select("id")
-                .eq("test_id", attempt.test_id)
-            ).data?.map((s: any) => s.id) ?? [],
-          ),
-        admin
-          .from("mock_question_options")
-          .select("id, question_id, is_correct"),
-        admin.from("mock_responses").select("*").eq("attempt_id", attempt_id),
-      ]);
+          .in("section_id", sectionIds)
+        : Promise.resolve({ data: [] }),
+      admin.from("mock_responses").select("*").eq("attempt_id", attempt_id),
+    ]);
+    const questionIds = (questions ?? []).map((question: any) => question.id);
+    const { data: options } = questionIds.length
+      ? await admin
+        .from("mock_question_options")
+        .select("id, question_id")
+        .in("question_id", questionIds)
+        .eq("is_correct", true)
+      : { data: [] };
 
     const qById = new Map<string, any>((questions ?? []).map((q: any) => [q.id, q]));
     const correctOptionByQ = new Map<string, string>();
     for (const o of options ?? []) {
-      if (o.is_correct && qById.has(o.question_id)) {
+      if (qById.has(o.question_id)) {
         correctOptionByQ.set(o.question_id, o.id);
       }
     }
