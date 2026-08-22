@@ -15,9 +15,11 @@ import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import { useToast } from "@/hooks/use-toast";
 import { format, isToday } from "date-fns";
+import * as XLSX from "xlsx";
 import {
-  Download, Users, CalendarCheck, PhoneCall, PhoneOff, Star, StickyNote, Eye, Trash2,
+  Download, Users, CalendarCheck, PhoneCall, PhoneOff, Star, StickyNote, Eye, Trash2, FileSpreadsheet,
 } from "lucide-react";
+
 
 export const LEAD_STAGES = [
   { value: "not_contacted", label: "Not Contacted" },
@@ -59,8 +61,11 @@ const AdminStudentInquiry = () => {
   const [topic, setTopic] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [specialisation, setSpecialisation] = useState("all");
+  const [gradYear, setGradYear] = useState("all");
   const [notesFilter, setNotesFilter] = useState("all");
   const [todayOnly, setTodayOnly] = useState(false);
+
 
   const [detail, setDetail] = useState<any | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
@@ -96,6 +101,18 @@ const AdminStudentInquiry = () => {
     return Array.from(set).sort();
   }, [rows]);
 
+  const specOptions = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => { if (r.specialisation) set.add(String(r.specialisation)); });
+    return Array.from(set).sort();
+  }, [rows]);
+
+  const yearOptions = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => { if (r.graduation_year) set.add(String(r.graduation_year)); });
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
@@ -115,6 +132,8 @@ const AdminStudentInquiry = () => {
         if (contactState === "potential" && (r.lead_stage || "") !== "potential_lead") return false;
       }
       if (topic !== "all" && !(r.help_topics || []).includes(topic)) return false;
+      if (specialisation !== "all" && String(r.specialisation || "") !== specialisation) return false;
+      if (gradYear !== "all" && String(r.graduation_year || "") !== gradYear) return false;
       if (notesFilter === "with" && !(notesByRequest[r.id]?.length)) return false;
       if (notesFilter === "without" && (notesByRequest[r.id]?.length || 0) > 0) return false;
       const created = new Date(r.created_at);
@@ -123,7 +142,7 @@ const AdminStudentInquiry = () => {
       if (dateTo && created > new Date(`${dateTo}T23:59:59`)) return false;
       return true;
     });
-  }, [rows, search, stage, contactState, topic, notesFilter, todayOnly, dateFrom, dateTo, notesByRequest]);
+  }, [rows, search, stage, contactState, topic, specialisation, gradYear, notesFilter, todayOnly, dateFrom, dateTo, notesByRequest]);
 
   const { sortedItems, sortConfig, handleSort } = useTableSort(filtered);
 
@@ -135,8 +154,19 @@ const AdminStudentInquiry = () => {
       contacted,
       notContacted: rows.length - contacted,
       potential: rows.filter((r) => r.lead_stage === "potential_lead").length,
+      inRange: filtered.length,
     };
-  }, [rows]);
+  }, [rows, filtered]);
+
+  /** Stage-wise counts across the currently filtered set (with all-time reference). */
+  const stageCounts = useMemo(() => {
+    return LEAD_STAGES.map((s) => ({
+      ...s,
+      filtered: filtered.filter((r) => (r.lead_stage || "not_contacted") === s.value).length,
+      total: rows.filter((r) => (r.lead_stage || "not_contacted") === s.value).length,
+    }));
+  }, [filtered, rows]);
+
 
   const updateStage = async (id: string, value: string) => {
     const contacted = CONTACTED_STAGES.includes(value);
@@ -215,18 +245,73 @@ const AdminStudentInquiry = () => {
     URL.revokeObjectURL(url);
   };
 
+  const buildRows = (list: any[]) =>
+    list.map((r) => {
+      const rowNotes = notesByRequest[r.id] || [];
+      return {
+        Name: r.name || "",
+        Email: r.email || "",
+        Phone: r.phone || "",
+        "Graduation Year": r.graduation_year || "",
+        Exam: r.exam || "",
+        "Score / Percentile": r.score || "",
+        "Work Experience": r.work_experience || "",
+        "Specialisation / Sector": r.specialisation || "",
+        "Help Topics": (r.help_topics || []).join("; "),
+        Query: r.query || "",
+        "Lead Stage": stageLabel(r.lead_stage || "not_contacted"),
+        "Last Contacted": r.last_contacted_at
+          ? format(new Date(r.last_contacted_at), "yyyy-MM-dd HH:mm") : "",
+        "Notes Count": rowNotes.length,
+        "All Notes": rowNotes.map((n) => `${format(new Date(n.created_at), "dd MMM yyyy")}: ${n.note}`).join(" | "),
+        Source: r.source || "",
+        "Received At": format(new Date(r.created_at), "yyyy-MM-dd HH:mm"),
+      };
+    });
+
+  const exportExcel = (scope: "filtered" | "all") => {
+    const list = scope === "filtered" ? sortedItems : rows;
+    if (list.length === 0) return;
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(buildRows(list));
+    ws["!cols"] = [
+      { wch: 22 }, { wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 16 },
+      { wch: 16 }, { wch: 22 }, { wch: 30 }, { wch: 50 }, { wch: 18 }, { wch: 18 },
+      { wch: 11 }, { wch: 60 }, { wch: 16 }, { wch: 18 },
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, "Inquiries");
+
+    const summary = [
+      { Metric: "Total Inquiries (all time)", Value: rows.length },
+      { Metric: "Inquiries in current view", Value: sortedItems.length },
+      { Metric: "Today's Inquiries", Value: stats.today },
+      { Metric: "Contacted", Value: stats.contacted },
+      { Metric: "Not Contacted", Value: stats.notContacted },
+      { Metric: "Potential Leads", Value: stats.potential },
+      ...stageCounts.map((s) => ({ Metric: `Stage: ${s.label}`, Value: s.total })),
+    ];
+    const ws2 = XLSX.utils.json_to_sheet(summary);
+    ws2["!cols"] = [{ wch: 34 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "Summary");
+
+    XLSX.writeFile(wb, `mba-guidance-inquiries-${scope}-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
+
   const clearFilters = () => {
     setSearch(""); setStage("all"); setContactState("all"); setTopic("all");
     setDateFrom(""); setDateTo(""); setNotesFilter("all"); setTodayOnly(false);
+    setSpecialisation("all"); setGradYear("all");
   };
 
   const statCards = [
     { label: "Total Inquiries", value: stats.total, icon: Users, onClick: clearFilters },
     { label: "Today's Inquiries", value: stats.today, icon: CalendarCheck, onClick: () => { clearFilters(); setTodayOnly(true); } },
+    { label: "In Current View", value: stats.inRange, icon: FileSpreadsheet, onClick: () => {} },
     { label: "Contacted", value: stats.contacted, icon: PhoneCall, onClick: () => { clearFilters(); setContactState("contacted"); } },
     { label: "Not Contacted", value: stats.notContacted, icon: PhoneOff, onClick: () => { clearFilters(); setContactState("not_contacted"); } },
     { label: "Potential Leads", value: stats.potential, icon: Star, onClick: () => { clearFilters(); setStage("potential_lead"); } },
   ];
+
 
   const detailNotes = detail ? notesByRequest[detail.id] || [] : [];
 
@@ -239,12 +324,20 @@ const AdminStudentInquiry = () => {
             All student leads from the Free MBA Guidance page, with stages and follow-up notes.
           </p>
         </div>
-        <Button variant="outline" onClick={exportCsv} disabled={sortedItems.length === 0}>
-          <Download className="w-4 h-4 mr-2" /> Export CSV
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={exportCsv} disabled={sortedItems.length === 0}>
+            <Download className="w-4 h-4 mr-2" /> Export CSV
+          </Button>
+          <Button onClick={() => exportExcel("filtered")} disabled={sortedItems.length === 0}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (Filtered)
+          </Button>
+          <Button variant="secondary" onClick={() => exportExcel("all")} disabled={rows.length === 0}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (All Data)
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-4">
         {statCards.map((card) => (
           <button key={card.label} onClick={card.onClick} className="text-left">
             <Card className="h-full transition-colors hover:border-primary/40">
@@ -258,6 +351,32 @@ const AdminStudentInquiry = () => {
           </button>
         ))}
       </div>
+
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+            Stage-wise Inquiries — current view / all time
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {stageCounts.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setStage(stage === s.value ? "all" : s.value)}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  stage === s.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                }`}
+              >
+                <span className="block text-[11px] text-muted-foreground">{s.label}</span>
+                <span className="text-sm font-semibold text-foreground">
+                  {s.filtered}
+                  <span className="text-muted-foreground font-normal"> / {s.total}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Card className="mb-4">
         <CardContent className="p-4 grid gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -304,6 +423,31 @@ const AdminStudentInquiry = () => {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-xs">Sector / Specialisation</Label>
+            <Select value={specialisation} onValueChange={setSpecialisation}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Specialisations</SelectItem>
+                {specOptions.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Graduation Year</Label>
+            <Select value={gradYear} onValueChange={setGradYear}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {yearOptions.map((y) => (
+                  <SelectItem key={y} value={y}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label className="text-xs">Notes</Label>
             <Select value={notesFilter} onValueChange={setNotesFilter}>
