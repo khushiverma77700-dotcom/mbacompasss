@@ -243,9 +243,10 @@ export const CatPlannerSection = () => (
     <div className={containerClass}>
       <SectionHeading
         eyebrow="CAT Preparation"
-        title="Need a CAT Preparation Plan?"
-        subtitle="Tell us about your preparation level and goals. We'll help you structure your CAT journey around a clear, practical flow."
+        title="Free CAT Planner"
+        subtitle="Tell us about your preparation level and goals. Our CAT guidance helps you structure your CAT journey around a clear, practical flow — study, practice, mocks, analysis and revision."
       />
+
       <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
         {catPlannerFlow.map((step, i) => (
           <div key={step} className="flex items-center gap-3 md:gap-4">
