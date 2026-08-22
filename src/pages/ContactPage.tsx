@@ -194,15 +194,8 @@ const ContactPage = () => {
               >
                 Get My Free Guidance <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="min-h-12 px-6 text-base font-medium"
-                onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
-              >
-                How It Works
-              </Button>
             </div>
+
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Badge variant="outline" className="text-xs font-medium px-3 py-1.5 bg-card">
