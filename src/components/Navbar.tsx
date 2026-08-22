@@ -216,6 +216,13 @@ const Navbar = () => {
             >
               Compare
             </Link>
+            <Link
+              to="/contact"
+              onClick={closeMobile}
+              className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-primary hover:text-primary hover:bg-primary/5"
+            >
+              <Gift className="w-4 h-4 mr-2" /> Free MBA Guidance
+            </Link>
           </nav>
 
           <div className="mt-3" onClick={closeMobile}>
