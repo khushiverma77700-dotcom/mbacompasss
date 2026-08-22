@@ -157,26 +157,67 @@ export const whoCanReachOut: string[] = [
 
 export const guidanceFaqs = [
   {
-    q: "Is the MBA consultation really free?",
-    a: "Yes. MBA Compass is offering this guidance completely free for students for the next one month. There is no consultation fee, no hidden charges and no obligation to purchase anything.",
+    q: "Is MBA counselling free at MBA Compass?",
+    a: "Yes. MBA Compass is currently offering free MBA counselling and guidance to students for the one-month initiative. Students can seek guidance related to MBA colleges, admissions, CAT, profiles, resumes, placements and more without paying a consultation fee.",
   },
   {
-    q: "Who can apply?",
-    a: "Any student seeking guidance related to MBA colleges, CAT, OMETs, admissions, placements, internships or MBA careers can submit a query.",
+    q: "Is the MBA profile review free?",
+    a: "Yes. Students can request a free MBA profile review. The review can help you understand your profile strengths, areas for improvement and how your academic, work experience and other achievements may fit into your MBA plans.",
   },
   {
-    q: "Do I need to have a CAT score?",
-    a: "No. Students can reach out even if they have not taken CAT yet. Share whatever details you have and we will guide you from there.",
+    q: "Can I get my MBA resume reviewed for free?",
+    a: "Yes. MBA Compass offers free resume review for students. You can get guidance on resume structure, content, achievements, presentation and areas that can be improved for MBA applications and opportunities.",
   },
   {
-    q: "Can I ask about colleges and placements?",
-    a: "Yes. Students can seek guidance related to college selection, admission processes, placement reports, ROI and other MBA-related decisions.",
+    q: "Can MBA Compass help me choose the right MBA college?",
+    a: "Yes. We can help you compare and shortlist MBA colleges based on factors such as your profile, career goals, fees, placements, ROI, specialisation, location and other relevant considerations.",
   },
   {
-    q: "How will your team contact me?",
-    a: "After submitting the form you will receive a confirmation on screen and our team will reach out to you shortly. You can also join our WhatsApp community for updates, references and further student support.",
+    q: "Can I get CAT preparation guidance?",
+    a: "Yes. Students can get guidance related to CAT preparation, including study planning, section-wise strategies, mock-test planning, revision and overall preparation strategy.",
+  },
+  {
+    q: "Do you provide CAT mentorship?",
+    a: "Yes. MBA Compass provides CAT guidance and mentorship to help students plan their preparation and make better decisions throughout their CAT journey.",
+  },
+  {
+    q: "Can you help me shortlist MBA colleges?",
+    a: "Yes. You can get guidance on MBA college shortlisting based on your profile, expected score or percentile, career goals, preferred specialisation, fees, placements and other important factors.",
+  },
+  {
+    q: "Can I get guidance on MBA placement reports?",
+    a: "Yes. We can help you understand and compare MBA placement information, including average and median packages, recruiters, roles, placement outcomes, fees and ROI-related factors.",
+  },
+  {
+    q: "Can I get MBA admission guidance?",
+    a: "Yes. MBA Compass provides guidance related to applications, college shortlisting, admission processes, selection stages, interviews and comparing admission offers.",
+  },
+  {
+    q: "Who can apply for free MBA guidance?",
+    a: "Any student or MBA aspirant looking for guidance related to CAT, OMETs, MBA colleges, admissions, profiles, resumes, placements, internships or MBA careers can submit a request.",
+  },
+  {
+    q: "Do I need a CAT score to get MBA guidance?",
+    a: "No. You do not necessarily need a CAT score to seek guidance. Students can reach out at different stages of their MBA journey, including before starting CAT preparation, while preparing for exams or while exploring MBA colleges.",
+  },
+  {
+    q: "Can I get guidance for XAT, SNAP, NMAT and other OMETs?",
+    a: "Yes. MBA Compass can provide general guidance around CAT and other MBA entrance exams such as XAT, SNAP, NMAT, CMAT and other OMETs, including preparation strategy, exam planning and next steps.",
+  },
+  {
+    q: "Is MBA Compass's college guidance unbiased?",
+    a: "MBA Compass aims to provide student-first, information-focused guidance to help students compare their options. Students are encouraged to evaluate colleges using factors such as fees, placements, ROI, career opportunities, specialisation and personal fit before making a decision.",
+  },
+  {
+    q: "Can I get a free CAT preparation planner?",
+    a: "Yes. Students can request a free CAT planner to help structure their preparation. Guidance may include study planning, section-wise preparation, practice, mock tests, analysis and revision.",
+  },
+  {
+    q: "How can I get free MBA counselling?",
+    a: "Simply submit the consultation form on this page with your basic details and query. The MBA Compass team can then review your request and reach out to you with relevant guidance.",
   },
 ];
+
 
 export const mentorshipJourney: string[] = [
   "CAT Preparation",
