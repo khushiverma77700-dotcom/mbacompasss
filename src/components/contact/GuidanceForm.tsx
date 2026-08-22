@@ -236,7 +236,7 @@ const GuidanceForm = ({
         />
       </div>
 
-      <Button type="submit" className="w-full mt-5 min-h-12 text-base" disabled={loading}>
+      <Button type="submit" className="w-full mt-6 min-h-12 text-base font-semibold shadow-lg shadow-primary/25" disabled={loading}>
         {loading ? (
           <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
         ) : (
@@ -252,7 +252,9 @@ const GuidanceForm = ({
         <Badge variant="secondary" className="text-[11px]">100% Free for students</Badge>
         <Badge variant="secondary" className="text-[11px]">Available for the next one month</Badge>
       </div>
+      </div>
     </form>
+
   );
 };
 
