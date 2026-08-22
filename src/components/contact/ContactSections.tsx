@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import {
@@ -79,10 +80,11 @@ export const HelpCategoriesSection = ({ onSelect }: { onSelect: (topic: string) 
   <section className={sectionClass}>
     <div className={containerClass}>
       <SectionHeading
-        eyebrow="Services"
+        eyebrow="Free MBA Counselling"
         title="What Can We Help You With?"
-        subtitle="Pick the area where you need free MBA guidance. Every service below is free for students for the next one month."
+        subtitle="Pick the area where you need free MBA counselling or guidance. Every service below is free for students for the current one-month initiative."
       />
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
         {helpTopics.map((topic, i) => {
           const Icon = topic.icon;
@@ -155,16 +157,17 @@ export const ReviewSpotlightSection = () => (
     <div className={containerClass}>
       <SectionHeading
         eyebrow="Profile & Resume"
-        title="Get Your Profile & Resume Reviewed — FREE"
-        subtitle="Two of the most important parts of your MBA application, reviewed by our team at no cost."
+        title="Free MBA Profile Review & Free Resume Review"
+        subtitle="Two of the most important parts of your MBA application, reviewed by our team at no cost — useful for CAT profile review and MBA applications alike."
       />
+
       <div className="grid md:grid-cols-2 gap-6">
         <MotionDiv>
           <div className="h-full bg-card rounded-2xl border border-border p-6 md:p-8 card-shadow">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
               <UserCheck className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-heading text-xl font-bold text-foreground mb-3">Free Profile Review</h3>
+            <h3 className="font-heading text-xl font-bold text-foreground mb-3">Free MBA Profile Review</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               {["Profile strengths", "Profile gaps", "Academic positioning", "Work experience positioning", "Extracurriculars", "Overall MBA profile"].map((x) => (
                 <li key={x} className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> {x}</li>
@@ -198,13 +201,15 @@ export const CollegeGuidanceSection = () => (
     <div className={containerClass}>
       <div className="grid lg:grid-cols-2 gap-10 items-center">
         <MotionDiv>
-          <Badge variant="secondary" className="mb-3 text-xs font-semibold tracking-wide">Unbiased Guidance</Badge>
+          <Badge variant="secondary" className="mb-3 text-xs font-semibold tracking-wide">Unbiased MBA College Reviews</Badge>
           <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-            Don't Choose an MBA College Just Because It Looks Good on Paper.
+            MBA College Selection & Guidance
           </h2>
           <p className="text-muted-foreground mt-3 leading-relaxed">
-            Get a student-first, information-focused perspective on B-Schools. We help you evaluate colleges using practical factors that matter for your career.
+            Don't choose an MBA college just because it looks good on paper. Get a student-first, information-focused
+            perspective on B-School selection, and evaluate colleges using practical factors that matter for your career.
           </p>
+
           <div className="flex flex-wrap gap-2 mt-5">
             {collegeFactors.map((f) => (
               <Badge key={f} variant="outline" className="px-3 py-1.5 text-xs font-medium">{f}</Badge>
@@ -239,9 +244,10 @@ export const CatPlannerSection = () => (
     <div className={containerClass}>
       <SectionHeading
         eyebrow="CAT Preparation"
-        title="Need a CAT Preparation Plan?"
-        subtitle="Tell us about your preparation level and goals. We'll help you structure your CAT journey around a clear, practical flow."
+        title="Free CAT Planner"
+        subtitle="Tell us about your preparation level and goals. Our CAT guidance helps you structure your CAT journey around a clear, practical flow — study, practice, mocks, analysis and revision."
       />
+
       <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
         {catPlannerFlow.map((step, i) => (
           <div key={step} className="flex items-center gap-3 md:gap-4">
@@ -272,9 +278,10 @@ export const MentorshipJourneySection = () => (
     <div className={containerClass}>
       <SectionHeading
         eyebrow="Mentorship"
-        title="Free MBA Mentorship"
-        subtitle="From CAT preparation to college selection and admissions, get guidance at every stage of your MBA journey."
+        title="CAT Guidance, Strategy & Mentorship"
+        subtitle="From CAT strategy and OMET planning to MBA college selection, admission counselling and MBA career guidance — get mentorship at every stage of your journey."
       />
+
       <div className="relative max-w-4xl mx-auto">
         <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-border md:-translate-x-1/2 hidden sm:block" />
         <div className="space-y-6">
@@ -455,6 +462,102 @@ export const FinalCTASection = () => (
             Get My Free MBA Guidance <Send className="w-4 h-4 ml-2" />
           </Button>
         </div>
+      </div>
+    </div>
+  </section>
+);
+
+/** H2: MBA Admission Guidance + MBA Career & Internship Guidance (H3 cards). */
+export const AdmissionAndCareerSection = () => (
+  <section className={sectionClass}>
+    <div className={containerClass}>
+      <SectionHeading
+        eyebrow="Admissions"
+        title="MBA Admission Guidance"
+        subtitle="Free MBA admission counselling across applications, selection stages, interviews and comparing offers."
+      />
+      <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+        {[
+          {
+            icon: GraduationCap,
+            title: "MBA Admission Mentorship",
+            desc: "Understand application timelines, selection criteria, WAT-PI rounds and how to compare admission offers.",
+          },
+          {
+            icon: BarChart3,
+            title: "Placement Report Guidance",
+            desc: "Read placement reports with context — average and median packages, recruiters, roles and ROI.",
+          },
+          {
+            icon: Briefcase,
+            title: "Internship Guidance",
+            desc: "Pre-MBA and MBA internship planning, profile building and resume positioning for target roles.",
+          },
+        ].map(({ icon: Icon, title, desc }, i) => (
+          <MotionDiv key={title} delay={i * 0.06}>
+            <div className="h-full bg-card rounded-2xl border border-border p-6 card-shadow">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <Icon className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="font-heading font-semibold text-foreground mb-2">{title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+            </div>
+          </MotionDiv>
+        ))}
+      </div>
+
+      <div className="mt-14">
+        <SectionHeading
+          eyebrow="Careers"
+          title="MBA Career & Internship Guidance"
+          subtitle="Finance, Marketing, Consulting, Product, HR, Analytics or Operations — get help mapping your MBA to a career path that fits your profile."
+        />
+        <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
+          {["Finance", "Marketing", "Consulting", "Product Management", "HR", "Business Analytics", "Operations & SCM", "General Management"].map((r) => (
+            <Badge key={r} variant="outline" className="px-3 py-1.5 text-xs font-medium">{r}</Badge>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <CtaButton>Get Free MBA Career Guidance</CtaButton>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const relatedLinks = [
+  { to: "/colleges", label: "MBA College Reviews", desc: "Compare 1600+ MBA colleges on fees, placements and ROI." },
+  { to: "/college-shortlister", label: "MBA College Selection", desc: "Shortlist B-Schools that match your profile and target score." },
+  { to: "/profile-analyzer", label: "MBA Profile Review", desc: "Get an instant read on your MBA profile strengths and gaps." },
+  { to: "/exam/cat", label: "CAT Guidance", desc: "CAT exam pattern, dates, syllabus and preparation strategy." },
+  { to: "/coaching", label: "MBA Mentorship", desc: "Explore MBA coaching and mentorship options across India." },
+  { to: "/blog", label: "MBA Admissions", desc: "Guides on MBA admissions, interviews and B-School selection." },
+];
+
+/** Internal links out to the rest of the site with natural anchor text. */
+export const RelatedResourcesSection = () => (
+  <section className="py-14 md:py-20 bg-muted/30">
+    <div className={containerClass}>
+      <SectionHeading
+        eyebrow="Explore more"
+        title="More Free MBA Guidance Resources"
+        subtitle="Use these free tools and guides alongside your counselling request."
+      />
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+        {relatedLinks.map((l, i) => (
+          <MotionDiv key={l.to} delay={i * 0.04}>
+            <Link
+              to={l.to}
+              className="block h-full bg-card rounded-xl border border-border p-5 card-shadow hover:border-primary/40 transition-colors"
+            >
+              <span className="font-heading font-semibold text-foreground">{l.label}</span>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{l.desc}</p>
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary mt-3">
+                Explore <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+            </Link>
+          </MotionDiv>
+        ))}
       </div>
     </div>
   </section>
