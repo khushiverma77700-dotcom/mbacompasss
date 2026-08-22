@@ -248,10 +248,13 @@ const ContactPage = () => {
       <CollegeGuidanceSection />
       <CatPlannerSection />
       <MentorshipJourneySection />
+      <AdmissionAndCareerSection />
       <QuestionsSection />
       <WhoAndHowSection />
       <TrustSection />
+      <RelatedResourcesSection />
       <GuidanceFAQ />
+
       <FinalCTASection />
 
       <div className="container mx-auto px-4 py-10">
