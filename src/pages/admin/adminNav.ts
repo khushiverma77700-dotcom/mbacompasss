@@ -119,6 +119,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Callback Requests", path: "/admin/callbacks", icon: PhoneCall, dotKey: "callbacks" },
       { label: "Inquiries", path: "/admin/inquiries", icon: MessageSquare, dotKey: "inquiries" },
       { label: "Free MBA Guidance", path: "/admin/guidance-requests", icon: Gift, dotKey: "guidanceRequests" },
+      { label: "Student Inquiry", path: "/admin/student-inquiry", icon: MessageSquare, dotKey: "guidanceRequests" },
       { label: "Student Leads", path: "/admin/leads", icon: Users, dotKey: "leads" },
       { label: "Master Data", path: "/admin/all-leads-unified", icon: Database, dotKey: "master" },
       { label: "Subscribers", path: "/admin/subscribers", icon: Mail, dotKey: "subscribers" },
