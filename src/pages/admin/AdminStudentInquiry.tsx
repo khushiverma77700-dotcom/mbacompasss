@@ -101,6 +101,18 @@ const AdminStudentInquiry = () => {
     return Array.from(set).sort();
   }, [rows]);
 
+  const specOptions = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => { if (r.specialisation) set.add(String(r.specialisation)); });
+    return Array.from(set).sort();
+  }, [rows]);
+
+  const yearOptions = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => { if (r.graduation_year) set.add(String(r.graduation_year)); });
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
@@ -120,6 +132,8 @@ const AdminStudentInquiry = () => {
         if (contactState === "potential" && (r.lead_stage || "") !== "potential_lead") return false;
       }
       if (topic !== "all" && !(r.help_topics || []).includes(topic)) return false;
+      if (specialisation !== "all" && String(r.specialisation || "") !== specialisation) return false;
+      if (gradYear !== "all" && String(r.graduation_year || "") !== gradYear) return false;
       if (notesFilter === "with" && !(notesByRequest[r.id]?.length)) return false;
       if (notesFilter === "without" && (notesByRequest[r.id]?.length || 0) > 0) return false;
       const created = new Date(r.created_at);
@@ -128,7 +142,7 @@ const AdminStudentInquiry = () => {
       if (dateTo && created > new Date(`${dateTo}T23:59:59`)) return false;
       return true;
     });
-  }, [rows, search, stage, contactState, topic, notesFilter, todayOnly, dateFrom, dateTo, notesByRequest]);
+  }, [rows, search, stage, contactState, topic, specialisation, gradYear, notesFilter, todayOnly, dateFrom, dateTo, notesByRequest]);
 
   const { sortedItems, sortConfig, handleSort } = useTableSort(filtered);
 
@@ -140,8 +154,19 @@ const AdminStudentInquiry = () => {
       contacted,
       notContacted: rows.length - contacted,
       potential: rows.filter((r) => r.lead_stage === "potential_lead").length,
+      inRange: filtered.length,
     };
-  }, [rows]);
+  }, [rows, filtered]);
+
+  /** Stage-wise counts across the currently filtered set (with all-time reference). */
+  const stageCounts = useMemo(() => {
+    return LEAD_STAGES.map((s) => ({
+      ...s,
+      filtered: filtered.filter((r) => (r.lead_stage || "not_contacted") === s.value).length,
+      total: rows.filter((r) => (r.lead_stage || "not_contacted") === s.value).length,
+    }));
+  }, [filtered, rows]);
+
 
   const updateStage = async (id: string, value: string) => {
     const contacted = CONTACTED_STAGES.includes(value);
