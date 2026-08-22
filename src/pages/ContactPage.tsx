@@ -164,15 +164,17 @@ const ContactPage = () => {
                 variant="secondary"
                 className="mb-4 px-3 py-1 text-xs font-semibold tracking-wide bg-primary/10 text-primary border-primary/20"
               >
-                <Gift className="w-3.5 h-3.5 mr-1.5" /> FREE MBA GUIDANCE FOR STUDENTS
+                <Gift className="w-3.5 h-3.5 mr-1.5" /> FREE MBA COUNSELLING FOR STUDENTS
               </Badge>
               <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
-                Get Free MBA Guidance & Mentorship
+                Free MBA Guidance & Counselling for Students
               </h1>
               <p className="text-base md:text-lg text-muted-foreground mt-4 leading-relaxed max-w-xl">
-                Confused about your MBA journey? Get free support from MBA Compass for everything
-                from CAT strategy and profile review to MBA college selection, resume review,
-                admissions, placements and more.
+                Confused about your MBA journey? Get free MBA counselling from MBA Compass — from CAT
+                guidance and profile review to MBA college selection, resume review, admission
+                guidance, placements and mentorship. Every service on this page is free for students
+                during our current one-month initiative.
+
               </p>
 
               <div className="flex flex-wrap gap-3 mt-6">
