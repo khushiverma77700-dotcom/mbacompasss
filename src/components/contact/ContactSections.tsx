@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import {
@@ -461,6 +462,102 @@ export const FinalCTASection = () => (
             Get My Free MBA Guidance <Send className="w-4 h-4 ml-2" />
           </Button>
         </div>
+      </div>
+    </div>
+  </section>
+);
+
+/** H2: MBA Admission Guidance + MBA Career & Internship Guidance (H3 cards). */
+export const AdmissionAndCareerSection = () => (
+  <section className={sectionClass}>
+    <div className={containerClass}>
+      <SectionHeading
+        eyebrow="Admissions"
+        title="MBA Admission Guidance"
+        subtitle="Free MBA admission counselling across applications, selection stages, interviews and comparing offers."
+      />
+      <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+        {[
+          {
+            icon: GraduationCap,
+            title: "MBA Admission Mentorship",
+            desc: "Understand application timelines, selection criteria, WAT-PI rounds and how to compare admission offers.",
+          },
+          {
+            icon: BarChart3,
+            title: "Placement Report Guidance",
+            desc: "Read placement reports with context — average and median packages, recruiters, roles and ROI.",
+          },
+          {
+            icon: Briefcase,
+            title: "Internship Guidance",
+            desc: "Pre-MBA and MBA internship planning, profile building and resume positioning for target roles.",
+          },
+        ].map(({ icon: Icon, title, desc }, i) => (
+          <MotionDiv key={title} delay={i * 0.06}>
+            <div className="h-full bg-card rounded-2xl border border-border p-6 card-shadow">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <Icon className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="font-heading font-semibold text-foreground mb-2">{title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+            </div>
+          </MotionDiv>
+        ))}
+      </div>
+
+      <div className="mt-14">
+        <SectionHeading
+          eyebrow="Careers"
+          title="MBA Career & Internship Guidance"
+          subtitle="Finance, Marketing, Consulting, Product, HR, Analytics or Operations — get help mapping your MBA to a career path that fits your profile."
+        />
+        <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
+          {["Finance", "Marketing", "Consulting", "Product Management", "HR", "Business Analytics", "Operations & SCM", "General Management"].map((r) => (
+            <Badge key={r} variant="outline" className="px-3 py-1.5 text-xs font-medium">{r}</Badge>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <CtaButton>Get Free MBA Career Guidance</CtaButton>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const relatedLinks = [
+  { to: "/colleges", label: "MBA College Reviews", desc: "Compare 1600+ MBA colleges on fees, placements and ROI." },
+  { to: "/college-shortlister", label: "MBA College Selection", desc: "Shortlist B-Schools that match your profile and target score." },
+  { to: "/profile-analyzer", label: "MBA Profile Review", desc: "Get an instant read on your MBA profile strengths and gaps." },
+  { to: "/exams/cat", label: "CAT Guidance", desc: "CAT exam pattern, dates, syllabus and preparation strategy." },
+  { to: "/coaching", label: "MBA Mentorship", desc: "Explore MBA coaching and mentorship options across India." },
+  { to: "/articles", label: "MBA Admissions", desc: "Guides on MBA admissions, interviews and B-School selection." },
+];
+
+/** Internal links out to the rest of the site with natural anchor text. */
+export const RelatedResourcesSection = () => (
+  <section className="py-14 md:py-20 bg-muted/30">
+    <div className={containerClass}>
+      <SectionHeading
+        eyebrow="Explore more"
+        title="More Free MBA Guidance Resources"
+        subtitle="Use these free tools and guides alongside your counselling request."
+      />
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+        {relatedLinks.map((l, i) => (
+          <MotionDiv key={l.to} delay={i * 0.04}>
+            <Link
+              to={l.to}
+              className="block h-full bg-card rounded-xl border border-border p-5 card-shadow hover:border-primary/40 transition-colors"
+            >
+              <span className="font-heading font-semibold text-foreground">{l.label}</span>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{l.desc}</p>
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary mt-3">
+                Explore <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+            </Link>
+          </MotionDiv>
+        ))}
       </div>
     </div>
   </section>
