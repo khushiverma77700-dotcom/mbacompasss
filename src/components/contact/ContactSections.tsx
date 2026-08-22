@@ -200,13 +200,15 @@ export const CollegeGuidanceSection = () => (
     <div className={containerClass}>
       <div className="grid lg:grid-cols-2 gap-10 items-center">
         <MotionDiv>
-          <Badge variant="secondary" className="mb-3 text-xs font-semibold tracking-wide">Unbiased Guidance</Badge>
+          <Badge variant="secondary" className="mb-3 text-xs font-semibold tracking-wide">Unbiased MBA College Reviews</Badge>
           <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-            Don't Choose an MBA College Just Because It Looks Good on Paper.
+            MBA College Selection & Guidance
           </h2>
           <p className="text-muted-foreground mt-3 leading-relaxed">
-            Get a student-first, information-focused perspective on B-Schools. We help you evaluate colleges using practical factors that matter for your career.
+            Don't choose an MBA college just because it looks good on paper. Get a student-first, information-focused
+            perspective on B-School selection, and evaluate colleges using practical factors that matter for your career.
           </p>
+
           <div className="flex flex-wrap gap-2 mt-5">
             {collegeFactors.map((f) => (
               <Badge key={f} variant="outline" className="px-3 py-1.5 text-xs font-medium">{f}</Badge>
