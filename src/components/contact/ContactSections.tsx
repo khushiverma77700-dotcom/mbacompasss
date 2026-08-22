@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
@@ -23,18 +23,16 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
 
-const prefersReducedMotion =
-  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
 const MotionDiv = ({
   children, className, delay = 0,
 }: { children: React.ReactNode; className?: string; delay?: number }) => {
-  const [ref, inView] = useInView<HTMLDivElement>({ threshold: 0.1, once: true });
+  const { ref, inView } = useInView<HTMLDivElement>("80px");
+  const reduced = useReducedMotion();
   return (
     <motion.div
       ref={ref}
       initial="hidden"
-      animate={prefersReducedMotion ? "visible" : inView ? "visible" : "hidden"}
+      animate={reduced ? "visible" : inView ? "visible" : "hidden"}
       variants={fadeUp}
       transition={{ delay }}
       className={className}
