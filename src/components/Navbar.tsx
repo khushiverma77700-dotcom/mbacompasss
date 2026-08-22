@@ -118,6 +118,17 @@ const Navbar = () => {
           >
             Compare
           </Link>
+
+          <Link
+            to="/contact"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+              location.pathname === "/contact"
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <Gift className="w-3.5 h-3.5" /> Free Guidance
+          </Link>
         </nav>
 
         <div className="hidden lg:flex items-center gap-3 min-w-0">
