@@ -123,6 +123,25 @@ const AdminAllLeads = () => {
       }
     }
 
+    if (guidance) {
+      for (const g of guidance as any[]) {
+        const extras: string[] = [];
+        if (g.exam) extras.push(`Exam: ${g.exam}`);
+        if (g.score) extras.push(`Score: ${g.score}`);
+        if (g.graduation_year) extras.push(`Grad: ${g.graduation_year}`);
+        if (g.work_experience) extras.push(`Exp: ${g.work_experience}`);
+        if (g.specialisation) extras.push(`Spec: ${g.specialisation}`);
+        if (g.help_topics?.length) extras.push(`Needs: ${g.help_topics.join(", ")}`);
+        if (g.lead_stage) extras.push(`Stage: ${g.lead_stage}`);
+        unified.push({
+          id: `guidance-${g.id}`, name: g.name || "—", email: g.email || "—",
+          phone: g.phone || "—", source: "student-inquiry",
+          source_page: "Student Inquiry (Free MBA Guidance)", created_at: g.created_at,
+          extras: extras.join(" | "),
+        });
+      }
+    }
+
     if (bizInquiries) {
       for (const b of bizInquiries) {
         const extras: string[] = [];
