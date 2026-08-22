@@ -31,6 +31,7 @@ const sourceConfig: Record<string, { label: string; color: string; icon: React.E
   "business-inquiry": { label: "Business Inquiry", color: "bg-rose-500/10 text-rose-700 border-rose-200", icon: Briefcase },
   "cat-score": { label: "CAT Score", color: "bg-cyan-500/10 text-cyan-700 border-cyan-200", icon: Calculator },
   "coupon-claim": { label: "Coupon Claim", color: "bg-orange-500/10 text-orange-700 border-orange-200", icon: Ticket },
+  "student-inquiry": { label: "Student Inquiry", color: "bg-sky-500/10 text-sky-700 border-sky-200", icon: MessageSquare },
 };
 
 const ROWS_PER_PAGE = 50;
