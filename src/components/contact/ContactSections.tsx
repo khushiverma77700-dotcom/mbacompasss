@@ -20,7 +20,7 @@ const containerClass = "container mx-auto px-4";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
 };
 
 const MotionDiv = ({
