@@ -79,10 +79,11 @@ export const HelpCategoriesSection = ({ onSelect }: { onSelect: (topic: string) 
   <section className={sectionClass}>
     <div className={containerClass}>
       <SectionHeading
-        eyebrow="Services"
+        eyebrow="Free MBA Counselling"
         title="What Can We Help You With?"
-        subtitle="Pick the area where you need free MBA guidance. Every service below is free for students for the next one month."
+        subtitle="Pick the area where you need free MBA counselling or guidance. Every service below is free for students for the current one-month initiative."
       />
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
         {helpTopics.map((topic, i) => {
           const Icon = topic.icon;
