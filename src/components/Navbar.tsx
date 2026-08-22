@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -118,6 +118,17 @@ const Navbar = () => {
           >
             Compare
           </Link>
+
+          <Link
+            to="/contact"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+              location.pathname === "/contact"
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <Gift className="w-3.5 h-3.5" /> Free Guidance
+          </Link>
         </nav>
 
         <div className="hidden lg:flex items-center gap-3 min-w-0">
@@ -204,6 +215,13 @@ const Navbar = () => {
               className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
             >
               Compare
+            </Link>
+            <Link
+              to="/contact"
+              onClick={closeMobile}
+              className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-primary hover:text-primary hover:bg-primary/5"
+            >
+              <Gift className="w-4 h-4 mr-2" /> Free MBA Guidance
             </Link>
           </nav>
 
