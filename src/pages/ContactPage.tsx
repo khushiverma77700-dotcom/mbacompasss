@@ -57,22 +57,53 @@ const ContactPage = () => {
   const scrollToForm = () =>
     document.getElementById("guidance-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  const PAGE_URL = "https://mbacompass.in/contact";
+
   const jsonLd = [
     {
       "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Free MBA Counselling & Guidance | Profile Review | MBA Compass",
+      url: PAGE_URL,
+      description:
+        "Free MBA counselling and guidance from MBA Compass — profile review, resume review, CAT strategy, college selection, admission guidance and mentorship.",
+      inLanguage: "en-IN",
+      isPartOf: { "@type": "WebSite", name: "MBA Compass", url: "https://mbacompass.in" },
+      about: { "@type": "Thing", name: "MBA Counselling" },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://mbacompass.in/" },
+        { "@type": "ListItem", position: 2, name: "Free MBA Counselling & Guidance", item: PAGE_URL },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: guidanceFaqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+    {
+      "@context": "https://schema.org",
       "@type": "ContactPage",
-      name: "Free MBA Guidance & Support — MBA Compass",
-      url: "https://mbacompass.in/contact",
+      name: "Free MBA Counselling & Guidance — MBA Compass",
+      url: PAGE_URL,
     },
     {
       "@context": "https://schema.org",
       "@type": "Service",
-      name: "Free MBA Guidance & Mentorship",
+      name: "Free MBA Counselling & Guidance",
+      serviceType: "MBA Counselling",
       provider: { "@type": "Organization", name: "MBA Compass", url: "https://mbacompass.in" },
       areaServed: { "@type": "Country", name: "India" },
       audience: { "@type": "AudienceType", audienceType: "MBA aspirants" },
       description:
-        "Free MBA guidance, profile review, resume review, CAT planner, OMET mentorship, college shortlisting, admission mentorship and career guidance for MBA students.",
+        "Free MBA counselling, MBA profile review, resume review, CAT planner, CAT mentorship, MBA college selection and shortlisting, admission guidance and career guidance for students.",
       offers: {
         "@type": "Offer",
         price: "0",
@@ -101,17 +132,22 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Free MBA Guidance & Support — MBA Compass"
-        description="Get free MBA guidance, profile review, resume review, CAT planner, OMET mentorship, college shortlisting and admission support from MBA Compass. 100% free for students for the next one month."
+        title="Free MBA Counselling & Guidance | Profile Review | MBA Compass"
+        description="Get free MBA counselling and guidance from MBA Compass. Get profile & resume reviews, CAT strategy, college selection, admission guidance, mentorship and more — 100% free for students."
         keywords={[
-          "free MBA guidance", "free MBA consultation", "MBA mentorship free",
-          "free profile review MBA", "free resume review MBA", "CAT preparation plan free",
-          "MBA college shortlisting help", "OMET mentorship", "MBA admission guidance",
-          "placement report guidance", "MBA career guidance free",
+          "MBA counselling", "free MBA counselling", "free MBA guidance",
+          "MBA profile review", "free resume review", "CAT guidance",
+          "CAT mentorship", "free CAT planner", "MBA college selection",
+          "MBA admission guidance",
         ]}
-        canonical="https://mbacompass.in/contact"
+        canonical={PAGE_URL}
+        ogTitle="Free MBA Counselling & Guidance | Profile Review | MBA Compass"
+        ogDescription="Get free MBA counselling, profile review, CAT guidance, college selection support and MBA mentorship from MBA Compass."
+        twitterTitle="Free MBA Counselling & Guidance | MBA Compass"
+        twitterDescription="Free MBA profile review, resume review, CAT guidance, college selection and mentorship for students."
         jsonLd={jsonLd}
       />
+
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-background pt-10 pb-14 md:pt-14 md:pb-20" ref={formRef}>
