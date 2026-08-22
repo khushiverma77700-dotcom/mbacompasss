@@ -424,6 +424,31 @@ const AdminStudentInquiry = () => {
             </Select>
           </div>
           <div>
+            <Label className="text-xs">Sector / Specialisation</Label>
+            <Select value={specialisation} onValueChange={setSpecialisation}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Specialisations</SelectItem>
+                {specOptions.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Graduation Year</Label>
+            <Select value={gradYear} onValueChange={setGradYear}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {yearOptions.map((y) => (
+                  <SelectItem key={y} value={y}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label className="text-xs">Notes</Label>
             <Select value={notesFilter} onValueChange={setNotesFilter}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
