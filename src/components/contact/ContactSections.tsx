@@ -166,7 +166,7 @@ export const ReviewSpotlightSection = () => (
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
               <UserCheck className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-heading text-xl font-bold text-foreground mb-3">Free Profile Review</h3>
+            <h3 className="font-heading text-xl font-bold text-foreground mb-3">Free MBA Profile Review</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               {["Profile strengths", "Profile gaps", "Academic positioning", "Work experience positioning", "Extracurriculars", "Overall MBA profile"].map((x) => (
                 <li key={x} className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> {x}</li>
