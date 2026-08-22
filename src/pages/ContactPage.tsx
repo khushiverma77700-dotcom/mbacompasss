@@ -12,6 +12,7 @@ import PageKeywords from "@/components/PageKeywords";
 import GuidanceForm from "@/components/contact/GuidanceForm";
 import GuidanceSuccessDialog from "@/components/contact/GuidanceSuccessDialog";
 import StickyGuidanceCTA from "@/components/contact/StickyGuidanceCTA";
+import GuidanceToolsSlider from "@/components/contact/GuidanceToolsSlider";
 import {
   HelpCategoriesSection, FreeHighlightSection, ReviewSpotlightSection,
   CollegeGuidanceSection, CatPlannerSection, MentorshipJourneySection,
