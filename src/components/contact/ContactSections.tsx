@@ -277,9 +277,10 @@ export const MentorshipJourneySection = () => (
     <div className={containerClass}>
       <SectionHeading
         eyebrow="Mentorship"
-        title="Free MBA Mentorship"
-        subtitle="From CAT preparation to college selection and admissions, get guidance at every stage of your MBA journey."
+        title="CAT Guidance, Strategy & Mentorship"
+        subtitle="From CAT strategy and OMET planning to MBA college selection, admission counselling and MBA career guidance — get mentorship at every stage of your journey."
       />
+
       <div className="relative max-w-4xl mx-auto">
         <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-border md:-translate-x-1/2 hidden sm:block" />
         <div className="space-y-6">
