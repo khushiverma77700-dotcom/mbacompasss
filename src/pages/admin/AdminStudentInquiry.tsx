@@ -245,18 +245,73 @@ const AdminStudentInquiry = () => {
     URL.revokeObjectURL(url);
   };
 
+  const buildRows = (list: any[]) =>
+    list.map((r) => {
+      const rowNotes = notesByRequest[r.id] || [];
+      return {
+        Name: r.name || "",
+        Email: r.email || "",
+        Phone: r.phone || "",
+        "Graduation Year": r.graduation_year || "",
+        Exam: r.exam || "",
+        "Score / Percentile": r.score || "",
+        "Work Experience": r.work_experience || "",
+        "Specialisation / Sector": r.specialisation || "",
+        "Help Topics": (r.help_topics || []).join("; "),
+        Query: r.query || "",
+        "Lead Stage": stageLabel(r.lead_stage || "not_contacted"),
+        "Last Contacted": r.last_contacted_at
+          ? format(new Date(r.last_contacted_at), "yyyy-MM-dd HH:mm") : "",
+        "Notes Count": rowNotes.length,
+        "All Notes": rowNotes.map((n) => `${format(new Date(n.created_at), "dd MMM yyyy")}: ${n.note}`).join(" | "),
+        Source: r.source || "",
+        "Received At": format(new Date(r.created_at), "yyyy-MM-dd HH:mm"),
+      };
+    });
+
+  const exportExcel = (scope: "filtered" | "all") => {
+    const list = scope === "filtered" ? sortedItems : rows;
+    if (list.length === 0) return;
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(buildRows(list));
+    ws["!cols"] = [
+      { wch: 22 }, { wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 16 },
+      { wch: 16 }, { wch: 22 }, { wch: 30 }, { wch: 50 }, { wch: 18 }, { wch: 18 },
+      { wch: 11 }, { wch: 60 }, { wch: 16 }, { wch: 18 },
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, "Inquiries");
+
+    const summary = [
+      { Metric: "Total Inquiries (all time)", Value: rows.length },
+      { Metric: "Inquiries in current view", Value: sortedItems.length },
+      { Metric: "Today's Inquiries", Value: stats.today },
+      { Metric: "Contacted", Value: stats.contacted },
+      { Metric: "Not Contacted", Value: stats.notContacted },
+      { Metric: "Potential Leads", Value: stats.potential },
+      ...stageCounts.map((s) => ({ Metric: `Stage: ${s.label}`, Value: s.total })),
+    ];
+    const ws2 = XLSX.utils.json_to_sheet(summary);
+    ws2["!cols"] = [{ wch: 34 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "Summary");
+
+    XLSX.writeFile(wb, `mba-guidance-inquiries-${scope}-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
+
   const clearFilters = () => {
     setSearch(""); setStage("all"); setContactState("all"); setTopic("all");
     setDateFrom(""); setDateTo(""); setNotesFilter("all"); setTodayOnly(false);
+    setSpecialisation("all"); setGradYear("all");
   };
 
   const statCards = [
     { label: "Total Inquiries", value: stats.total, icon: Users, onClick: clearFilters },
     { label: "Today's Inquiries", value: stats.today, icon: CalendarCheck, onClick: () => { clearFilters(); setTodayOnly(true); } },
+    { label: "In Current View", value: stats.inRange, icon: FileSpreadsheet, onClick: () => {} },
     { label: "Contacted", value: stats.contacted, icon: PhoneCall, onClick: () => { clearFilters(); setContactState("contacted"); } },
     { label: "Not Contacted", value: stats.notContacted, icon: PhoneOff, onClick: () => { clearFilters(); setContactState("not_contacted"); } },
     { label: "Potential Leads", value: stats.potential, icon: Star, onClick: () => { clearFilters(); setStage("potential_lead"); } },
   ];
+
 
   const detailNotes = detail ? notesByRequest[detail.id] || [] : [];
 
