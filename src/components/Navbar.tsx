@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
