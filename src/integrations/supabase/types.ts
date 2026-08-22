@@ -3277,6 +3277,60 @@ export type Database = {
         }
         Relationships: []
       }
+      guidance_requests: {
+        Row: {
+          created_at: string
+          email: string
+          exam: string | null
+          graduation_year: string | null
+          help_topics: string[]
+          id: string
+          name: string
+          phone: string
+          query: string | null
+          score: string | null
+          source: string
+          specialisation: string | null
+          status: string
+          user_id: string | null
+          work_experience: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          exam?: string | null
+          graduation_year?: string | null
+          help_topics?: string[]
+          id?: string
+          name: string
+          phone: string
+          query?: string | null
+          score?: string | null
+          source?: string
+          specialisation?: string | null
+          status?: string
+          user_id?: string | null
+          work_experience?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          exam?: string | null
+          graduation_year?: string | null
+          help_topics?: string[]
+          id?: string
+          name?: string
+          phone?: string
+          query?: string | null
+          score?: string | null
+          source?: string
+          specialisation?: string | null
+          status?: string
+          user_id?: string | null
+          work_experience?: string | null
+        }
+        Relationships: []
+      }
       iim_waitlist_applications: {
         Row: {
           admitted: number | null
