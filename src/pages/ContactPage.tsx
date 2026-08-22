@@ -282,7 +282,7 @@ const ContactPage = () => {
       </section>
 
       {/* Form section — below the slider, full-width centered */}
-      <section className="relative pb-16 md:pb-20" ref={formRef}>
+      <section className="relative pb-10 md:pb-14" ref={formRef}>
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
             <motion.div
@@ -301,8 +301,38 @@ const ContactPage = () => {
         </div>
       </section>
 
+      {/* Contact details — moved below the form */}
+      <section className="relative pb-16 md:pb-20">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.5 }}
+            className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-3"
+          >
+            {[
+              { icon: Mail, label: "Email", value: email },
+              { icon: Phone, label: "Phone", value: phone },
+              { icon: MapPin, label: "Address", value: address },
+            ].map(({ icon: Icon, label, value }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center justify-center rounded-2xl border border-border/70 bg-card/70 p-5 text-center transition-all hover:border-primary/30 hover:bg-card hover:shadow-[0_16px_40px_-18px_hsl(var(--primary)/0.18)]"
+              >
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-foreground">{label}</p>
+                <p className="text-xs text-muted-foreground leading-tight break-words mt-0.5">{value}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
       <HelpCategoriesSection onSelect={selectTopic} />
+
       <FreeHighlightSection />
       <ReviewSpotlightSection />
       <CollegeGuidanceSection />
