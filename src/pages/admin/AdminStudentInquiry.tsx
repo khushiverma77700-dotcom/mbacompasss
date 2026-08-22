@@ -15,9 +15,11 @@ import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import { useToast } from "@/hooks/use-toast";
 import { format, isToday } from "date-fns";
+import * as XLSX from "xlsx";
 import {
-  Download, Users, CalendarCheck, PhoneCall, PhoneOff, Star, StickyNote, Eye, Trash2,
+  Download, Users, CalendarCheck, PhoneCall, PhoneOff, Star, StickyNote, Eye, Trash2, FileSpreadsheet,
 } from "lucide-react";
+
 
 export const LEAD_STAGES = [
   { value: "not_contacted", label: "Not Contacted" },
