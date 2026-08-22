@@ -324,12 +324,20 @@ const AdminStudentInquiry = () => {
             All student leads from the Free MBA Guidance page, with stages and follow-up notes.
           </p>
         </div>
-        <Button variant="outline" onClick={exportCsv} disabled={sortedItems.length === 0}>
-          <Download className="w-4 h-4 mr-2" /> Export CSV
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={exportCsv} disabled={sortedItems.length === 0}>
+            <Download className="w-4 h-4 mr-2" /> Export CSV
+          </Button>
+          <Button onClick={() => exportExcel("filtered")} disabled={sortedItems.length === 0}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (Filtered)
+          </Button>
+          <Button variant="secondary" onClick={() => exportExcel("all")} disabled={rows.length === 0}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (All Data)
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-4">
         {statCards.map((card) => (
           <button key={card.label} onClick={card.onClick} className="text-left">
             <Card className="h-full transition-colors hover:border-primary/40">
@@ -343,6 +351,32 @@ const AdminStudentInquiry = () => {
           </button>
         ))}
       </div>
+
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+            Stage-wise Inquiries — current view / all time
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {stageCounts.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setStage(stage === s.value ? "all" : s.value)}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  stage === s.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                }`}
+              >
+                <span className="block text-[11px] text-muted-foreground">{s.label}</span>
+                <span className="text-sm font-semibold text-foreground">
+                  {s.filtered}
+                  <span className="text-muted-foreground font-normal"> / {s.total}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Card className="mb-4">
         <CardContent className="p-4 grid gap-3 md:grid-cols-3 lg:grid-cols-4">
