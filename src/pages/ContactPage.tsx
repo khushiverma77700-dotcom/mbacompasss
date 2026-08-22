@@ -209,49 +209,27 @@ const ContactPage = () => {
             </div>
           </motion.div>
 
-          {/* Trust stats + contact tiles */}
+          {/* Trust stats — centered */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="mt-10"
+            className="mt-10 flex justify-center"
           >
-            <div className="grid gap-4 md:grid-cols-12">
-              {/* Stats */}
-              <div className="md:col-span-7 grid grid-cols-3 gap-3 rounded-2xl border border-primary/10 bg-card/80 p-4 backdrop-blur-sm">
-                {[
-                  { value: "2,000+", label: "Aspirants mentored" },
-                  { value: "600+", label: "B-schools covered" },
-                  { value: "₹0", label: "Consultation fee" },
-                ].map((stat) => (
-                  <div key={stat.label} className="text-center px-2">
-                    <p className="font-heading text-xl md:text-2xl font-bold text-primary">{stat.value}</p>
-                    <p className="mt-1 text-[11px] md:text-xs leading-tight text-muted-foreground">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Contact tiles */}
-              <div className="md:col-span-5 grid sm:grid-cols-3 md:grid-cols-3 gap-3">
-                {[
-                  { icon: Mail, label: "Email", value: email },
-                  { icon: Phone, label: "Phone", value: phone },
-                  { icon: MapPin, label: "Address", value: address },
-                ].map(({ icon: Icon, label, value }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col items-center justify-center rounded-2xl border border-border/70 bg-card/70 p-3 text-center"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <p className="mt-2 text-xs font-medium text-foreground">{label}</p>
-                    <p className="text-[11px] text-muted-foreground leading-tight break-words">{value}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="grid grid-cols-3 gap-4 rounded-2xl border border-primary/10 bg-card/80 p-4 backdrop-blur-sm max-w-2xl w-full">
+              {[
+                { value: "2,000+", label: "Aspirants mentored" },
+                { value: "600+", label: "B-schools covered" },
+                { value: "₹0", label: "Consultation fee" },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center px-2">
+                  <p className="font-heading text-xl md:text-2xl font-bold text-primary">{stat.value}</p>
+                  <p className="mt-1 text-[11px] md:text-xs leading-tight text-muted-foreground">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </motion.div>
+
 
           {/* Student-focused promise cards */}
           <motion.div
