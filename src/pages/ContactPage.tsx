@@ -151,10 +151,8 @@ const ContactPage = () => {
                 <Button size="lg" className="min-h-12 px-7 text-base font-semibold" onClick={scrollToForm}>
                   Get My Free Guidance <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-                <Button size="lg" variant="outline" className="min-h-12 px-7 text-base font-semibold" asChild>
-                  <Link to="/business-inquiries">Contact MBA Compass</Link>
-                </Button>
               </div>
+
 
               <div className="mt-10 grid sm:grid-cols-3 gap-4 text-sm">
                 <div className="flex items-start gap-3">
