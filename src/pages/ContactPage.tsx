@@ -16,7 +16,10 @@ import {
   HelpCategoriesSection, FreeHighlightSection, ReviewSpotlightSection,
   CollegeGuidanceSection, CatPlannerSection, MentorshipJourneySection,
   QuestionsSection, WhoAndHowSection, TrustSection, GuidanceFAQ, FinalCTASection,
+  AdmissionAndCareerSection, RelatedResourcesSection,
 } from "@/components/contact/ContactSections";
+import { guidanceFaqs } from "@/components/contact/guidanceData";
+
 
 const ContactPage = () => {
   const { data: settings } = useSiteSettings("contact_page");
