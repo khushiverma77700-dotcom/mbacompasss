@@ -156,9 +156,10 @@ export const ReviewSpotlightSection = () => (
     <div className={containerClass}>
       <SectionHeading
         eyebrow="Profile & Resume"
-        title="Get Your Profile & Resume Reviewed — FREE"
-        subtitle="Two of the most important parts of your MBA application, reviewed by our team at no cost."
+        title="Free MBA Profile Review & Free Resume Review"
+        subtitle="Two of the most important parts of your MBA application, reviewed by our team at no cost — useful for CAT profile review and MBA applications alike."
       />
+
       <div className="grid md:grid-cols-2 gap-6">
         <MotionDiv>
           <div className="h-full bg-card rounded-2xl border border-border p-6 md:p-8 card-shadow">
