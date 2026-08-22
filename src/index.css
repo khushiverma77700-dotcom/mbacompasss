@@ -782,6 +782,10 @@
   .freebies-marquee, .freebies-marquee-reverse { animation: none; }
 }
 
+/* Contact page — free tools slider (faster loop) */
+.freebies-marquee-track .freebies-marquee.tools-speed { animation-duration: 22s; }
+
+
 /* Admin mobile safety: prevent wide tables/cards from breaking layout */
 @media (max-width: 1023px) {
   .admin-scope table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }

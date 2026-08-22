@@ -12,6 +12,7 @@ import PageKeywords from "@/components/PageKeywords";
 import GuidanceForm from "@/components/contact/GuidanceForm";
 import GuidanceSuccessDialog from "@/components/contact/GuidanceSuccessDialog";
 import StickyGuidanceCTA from "@/components/contact/StickyGuidanceCTA";
+import GuidanceToolsSlider from "@/components/contact/GuidanceToolsSlider";
 import {
   HelpCategoriesSection, FreeHighlightSection, ReviewSpotlightSection,
   CollegeGuidanceSection, CatPlannerSection, MentorshipJourneySection,
@@ -150,15 +151,22 @@ const ContactPage = () => {
 
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-background pt-10 pb-14 md:pt-14 md:pb-20" ref={formRef}>
-        <div className="container mx-auto px-4">
+      <section
+        className="relative overflow-hidden bg-gradient-to-b from-primary/[0.07] via-background to-background pt-10 pb-14 md:pt-14 md:pb-20"
+        ref={formRef}
+      >
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-primary/10 blur-[90px]" />
+          <div className="absolute top-40 right-0 h-80 w-80 rounded-full bg-sky-400/10 blur-[110px]" />
+        </div>
+        <div className="container relative mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Left: value prop */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="pt-2 lg:pt-8"
+              className="pt-2 lg:pt-6"
             >
               <Badge
                 variant="secondary"
@@ -166,65 +174,79 @@ const ContactPage = () => {
               >
                 <Gift className="w-3.5 h-3.5 mr-1.5" /> FREE MBA COUNSELLING FOR STUDENTS
               </Badge>
-              <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
-                Free MBA Guidance & Counselling for Students
+              <h1 className="font-heading text-3xl md:text-4xl lg:text-[3.25rem] font-bold text-foreground leading-[1.1] tracking-tight">
+                Free MBA Guidance &{" "}
+                <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
+                  Counselling
+                </span>{" "}
+                for Students
               </h1>
               <p className="text-base md:text-lg text-muted-foreground mt-4 leading-relaxed max-w-xl">
                 Confused about your MBA journey? Get free MBA counselling from MBA Compass — from CAT
                 guidance and profile review to MBA college selection, resume review, admission
                 guidance, placements and mentorship. Every service on this page is free for students
                 during our current one-month initiative.
-
               </p>
 
               <div className="flex flex-wrap gap-3 mt-6">
-                <Badge variant="outline" className="text-xs font-medium px-3 py-1.5">
+                <Badge variant="outline" className="text-xs font-medium px-3 py-1.5 bg-card">
                   <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-primary" />
                   100% FREE FOR STUDENTS
                 </Badge>
-                <Badge variant="outline" className="text-xs font-medium px-3 py-1.5">
+                <Badge variant="outline" className="text-xs font-medium px-3 py-1.5 bg-card">
                   <Sparkles className="w-3.5 h-3.5 mr-1.5 text-primary" />
                   Available for the next one month
                 </Badge>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                <Button size="lg" className="min-h-12 px-7 text-base font-semibold" onClick={scrollToForm}>
+              {/* Trust stats */}
+              <div className="mt-7 grid grid-cols-3 gap-3 max-w-lg">
+                {[
+                  { value: "2,000+", label: "Aspirants mentored" },
+                  { value: "600+", label: "B-schools covered" },
+                  { value: "₹0", label: "Consultation fee" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-xl border border-primary/10 bg-card px-3 py-3 text-center"
+                  >
+                    <p className="font-heading text-lg md:text-xl font-bold text-primary">{stat.value}</p>
+                    <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 mt-7">
+                <Button size="lg" className="min-h-12 px-7 text-base font-semibold shadow-lg shadow-primary/25" onClick={scrollToForm}>
                   Get My Free Guidance <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
 
-
-              <div className="mt-10 grid sm:grid-cols-3 gap-4 text-sm">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Mail className="w-4 h-4 text-primary" />
+              <div className="mt-9 grid sm:grid-cols-3 gap-3 text-sm">
+                {[
+                  { icon: Mail, label: "Email", value: email },
+                  { icon: Phone, label: "Phone", value: phone },
+                  { icon: MapPin, label: "Address", value: address },
+                ].map(({ icon: Icon, label, value }) => (
+                  <div
+                    key={label}
+                    className="flex items-start gap-3 rounded-xl border border-border/70 bg-card/70 p-3"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">{label}</p>
+                      <p className="text-muted-foreground break-words">{value}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">Email</p>
-                    <p className="text-muted-foreground">{email}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Phone className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Phone</p>
-                    <p className="text-muted-foreground">{phone}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Address</p>
-                    <p className="text-muted-foreground">{address}</p>
-                  </div>
-                </div>
+                ))}
               </div>
+
+              {/* Free AI tools auto-slider filling the space below */}
+              <GuidanceToolsSlider />
             </motion.div>
+
 
             {/* Right: form */}
             <motion.div

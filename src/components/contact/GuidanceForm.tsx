@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Check, ShieldCheck, Loader2 } from "lucide-react";
+import { Check, ShieldCheck, Loader2, Users, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { helpOptions } from "./guidanceData";
@@ -104,17 +104,29 @@ const GuidanceForm = ({
     <form
       onSubmit={handleSubmit}
       id="guidance-form"
-      className="scroll-mt-24 bg-card rounded-2xl border border-border p-5 sm:p-6 card-shadow"
+      className="scroll-mt-24 overflow-hidden rounded-3xl border border-primary/15 bg-card shadow-[0_24px_60px_-32px_hsl(var(--primary)/0.35)]"
       noValidate
     >
-      <div className="mb-5">
-        <h2 className="font-heading text-xl font-bold text-foreground">
+      {/* Header band with trust signal */}
+      <div className="border-b border-primary/10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-5 py-5 sm:px-7 sm:py-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+            <Users className="h-3.5 w-3.5" /> 2,000+ MBA Aspirants Mentored
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+            <Star className="h-3.5 w-3.5 fill-emerald-600 text-emerald-600" /> 100% Free
+          </span>
+        </div>
+        <h2 className="font-heading mt-3 text-xl font-bold text-foreground sm:text-2xl">
           Tell Us What You Need Help With
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Takes under a minute. Only name, email and mobile are required.
+        <p className="mt-1 text-sm text-muted-foreground">
+          Takes under a minute. Only name, email and mobile are required — no login needed.
         </p>
       </div>
+
+      <div className="px-5 py-6 sm:px-7">
+
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
@@ -224,7 +236,7 @@ const GuidanceForm = ({
         />
       </div>
 
-      <Button type="submit" className="w-full mt-5 min-h-12 text-base" disabled={loading}>
+      <Button type="submit" className="w-full mt-6 min-h-12 text-base font-semibold shadow-lg shadow-primary/25" disabled={loading}>
         {loading ? (
           <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
         ) : (
@@ -240,7 +252,9 @@ const GuidanceForm = ({
         <Badge variant="secondary" className="text-[11px]">100% Free for students</Badge>
         <Badge variant="secondary" className="text-[11px]">Available for the next one month</Badge>
       </div>
+      </div>
     </form>
+
   );
 };
 
