@@ -61,8 +61,11 @@ const AdminStudentInquiry = () => {
   const [topic, setTopic] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [specialisation, setSpecialisation] = useState("all");
+  const [gradYear, setGradYear] = useState("all");
   const [notesFilter, setNotesFilter] = useState("all");
   const [todayOnly, setTodayOnly] = useState(false);
+
 
   const [detail, setDetail] = useState<any | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
