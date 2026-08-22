@@ -1,0 +1,1 @@
+DELETE FROM public.guidance_requests WHERE source = 'guest-check' AND email = 'anon-test@example.com';
