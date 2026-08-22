@@ -56,6 +56,7 @@ const AdminAllLeads = () => {
       { data: bizInquiries },
       { data: catScores },
       { data: couponClaims },
+      { data: guidance },
     ] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("profile_analyses").select("*").order("created_at", { ascending: false }),
@@ -64,6 +65,7 @@ const AdminAllLeads = () => {
       supabase.from("business_inquiries").select("*").order("created_at", { ascending: false }),
       supabase.from("cat_score_submissions").select("*").order("created_at", { ascending: false }),
       supabase.from("coupon_claims").select("*, coupons(code, institute_id)").order("claimed_at", { ascending: false }),
+      (supabase.from("guidance_requests" as any) as any).select("*").order("created_at", { ascending: false }),
     ]);
 
     if (profiles) {
