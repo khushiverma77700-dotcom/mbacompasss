@@ -89,6 +89,7 @@ const AdminMerittoLogs = lazyWithPreload(() => import("./pages/admin/AdminMeritt
 const FreebiesPage = lazyWithPreload(() => import("./pages/FreebiesPage"));
 const AdminInquiries = lazyWithPreload(() => import("./pages/admin/AdminInquiries"));
 const AdminGuidanceRequests = lazyWithPreload(() => import("./pages/admin/AdminGuidanceRequests"));
+const AdminStudentInquiry = lazyWithPreload(() => import("./pages/admin/AdminStudentInquiry"));
 const AdminCourses = lazyWithPreload(() => import("./pages/admin/AdminCourses"));
 const AdminColleges = lazyWithPreload(() => import("./pages/admin/AdminColleges"));
 const AdminProgrammes = lazyWithPreload(() => import("./pages/admin/AdminProgrammes"));
@@ -878,6 +879,7 @@ const App = () => (
               <Route path="meritto-logs" element={<LazyPage><AdminMerittoLogs /></LazyPage>} />
               <Route path="inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />
               <Route path="guidance-requests" element={<LazyPage><AdminGuidanceRequests /></LazyPage>} />
+              <Route path="student-inquiry" element={<LazyPage><AdminStudentInquiry /></LazyPage>} />
               <Route path="courses" element={<LazyPage><AdminCourses /></LazyPage>} />
               <Route path="colleges" element={<LazyPage><AdminColleges /></LazyPage>} />
               <Route path="programmes" element={<LazyPage><AdminProgrammes /></LazyPage>} />

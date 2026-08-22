@@ -31,6 +31,7 @@ const sourceConfig: Record<string, { label: string; color: string; icon: React.E
   "business-inquiry": { label: "Business Inquiry", color: "bg-rose-500/10 text-rose-700 border-rose-200", icon: Briefcase },
   "cat-score": { label: "CAT Score", color: "bg-cyan-500/10 text-cyan-700 border-cyan-200", icon: Calculator },
   "coupon-claim": { label: "Coupon Claim", color: "bg-orange-500/10 text-orange-700 border-orange-200", icon: Ticket },
+  "student-inquiry": { label: "Student Inquiry", color: "bg-sky-500/10 text-sky-700 border-sky-200", icon: MessageSquare },
 };
 
 const ROWS_PER_PAGE = 50;
@@ -56,6 +57,7 @@ const AdminAllLeads = () => {
       { data: bizInquiries },
       { data: catScores },
       { data: couponClaims },
+      { data: guidance },
     ] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("profile_analyses").select("*").order("created_at", { ascending: false }),
@@ -64,6 +66,7 @@ const AdminAllLeads = () => {
       supabase.from("business_inquiries").select("*").order("created_at", { ascending: false }),
       supabase.from("cat_score_submissions").select("*").order("created_at", { ascending: false }),
       supabase.from("coupon_claims").select("*, coupons(code, institute_id)").order("claimed_at", { ascending: false }),
+      (supabase.from("guidance_requests" as any) as any).select("*").order("created_at", { ascending: false }),
     ]);
 
     if (profiles) {
@@ -119,6 +122,25 @@ const AdminAllLeads = () => {
           id: `newsletter-${s.id}`, name: s.email.split("@")[0],
           email: s.email, phone: "—", source: "newsletter",
           source_page: "Newsletter Signup", created_at: s.created_at, extras: "",
+        });
+      }
+    }
+
+    if (guidance) {
+      for (const g of guidance as any[]) {
+        const extras: string[] = [];
+        if (g.exam) extras.push(`Exam: ${g.exam}`);
+        if (g.score) extras.push(`Score: ${g.score}`);
+        if (g.graduation_year) extras.push(`Grad: ${g.graduation_year}`);
+        if (g.work_experience) extras.push(`Exp: ${g.work_experience}`);
+        if (g.specialisation) extras.push(`Spec: ${g.specialisation}`);
+        if (g.help_topics?.length) extras.push(`Needs: ${g.help_topics.join(", ")}`);
+        if (g.lead_stage) extras.push(`Stage: ${g.lead_stage}`);
+        unified.push({
+          id: `guidance-${g.id}`, name: g.name || "—", email: g.email || "—",
+          phone: g.phone || "—", source: "student-inquiry",
+          source_page: "Student Inquiry (Free MBA Guidance)", created_at: g.created_at,
+          extras: extras.join(" | "),
         });
       }
     }

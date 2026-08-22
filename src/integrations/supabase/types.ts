@@ -3277,14 +3277,55 @@ export type Database = {
         }
         Relationships: []
       }
+      guidance_request_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_email: string | null
+          id: string
+          note: string
+          request_id: string
+          stage_at_note: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          id?: string
+          note: string
+          request_id: string
+          stage_at_note?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          id?: string
+          note?: string
+          request_id?: string
+          stage_at_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guidance_request_notes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "guidance_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guidance_requests: {
         Row: {
+          assigned_to: string | null
           created_at: string
           email: string
           exam: string | null
           graduation_year: string | null
           help_topics: string[]
           id: string
+          last_contacted_at: string | null
+          lead_stage: string
           name: string
           phone: string
           query: string | null
@@ -3296,12 +3337,15 @@ export type Database = {
           work_experience: string | null
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           email: string
           exam?: string | null
           graduation_year?: string | null
           help_topics?: string[]
           id?: string
+          last_contacted_at?: string | null
+          lead_stage?: string
           name: string
           phone: string
           query?: string | null
@@ -3313,12 +3357,15 @@ export type Database = {
           work_experience?: string | null
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           email?: string
           exam?: string | null
           graduation_year?: string | null
           help_topics?: string[]
           id?: string
+          last_contacted_at?: string | null
+          lead_stage?: string
           name?: string
           phone?: string
           query?: string | null
