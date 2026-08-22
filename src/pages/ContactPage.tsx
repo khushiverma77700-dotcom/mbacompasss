@@ -160,7 +160,7 @@ const ContactPage = () => {
           <div className="absolute top-40 right-0 h-80 w-80 rounded-full bg-sky-400/10 blur-[110px]" />
         </div>
         <div className="container relative mx-auto px-4">
-          <div className="grid lg:grid-cols-[1fr_minmax(0,520px)] gap-8 lg:gap-12 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Left: value prop */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
