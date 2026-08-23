@@ -2933,6 +2933,7 @@ export type Database = {
           registration_deadline: string | null
           slug: string
           syllabus: string[] | null
+          updated_at: string | null
         }
         Insert: {
           cluster_id?: string | null
@@ -2961,6 +2962,7 @@ export type Database = {
           registration_deadline?: string | null
           slug: string
           syllabus?: string[] | null
+          updated_at?: string | null
         }
         Update: {
           cluster_id?: string | null
@@ -2989,6 +2991,7 @@ export type Database = {
           registration_deadline?: string | null
           slug?: string
           syllabus?: string[] | null
+          updated_at?: string | null
         }
         Relationships: [
           {
