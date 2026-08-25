@@ -105,7 +105,7 @@ export default function DashboardShowcase() {
             <div className="font-semibold text-gray-900 text-sm sm:text-base">{active.title}</div>
             <p className="text-xs sm:text-sm text-muted-foreground">{active.caption}</p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {SLIDES.map((s, i) => (
               <button
                 key={s.title}
@@ -113,7 +113,7 @@ export default function DashboardShowcase() {
                 onClick={() => setIndex(i)}
                 aria-label={`Show ${s.title}`}
                 aria-current={i === index}
-                className={`h-2 rounded-full transition-all ${i === index ? "w-6 bg-sky-600" : "w-2 bg-sky-200 hover:bg-sky-300"}`}
+                className={`h-2 shrink-0 rounded-full transition-all ${i === index ? "w-6 bg-sky-600" : "w-2 bg-sky-200 hover:bg-sky-300"}`}
               />
             ))}
           </div>
