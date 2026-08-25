@@ -397,9 +397,9 @@ function DetailInner() {
               </div>
 
               {c.description
-                ? <p className="mt-5 text-gray-700 leading-relaxed">{c.description}</p>
+                ? <p className="mt-4 sm:mt-5 text-sm sm:text-base text-gray-700 leading-relaxed">{c.description}</p>
                 : (
-                  <p className="mt-5 text-gray-700 leading-relaxed">
+                  <p className="mt-4 sm:mt-5 text-sm sm:text-base text-gray-700 leading-relaxed">
                     A focused, exam-ready program with {mockAgg.total || c.full_mocks_count || 0}+ practice mocks,
                     {mockAgg.totalQuestions ? ` ${mockAgg.totalQuestions.toLocaleString("en-IN")} questions ` : " curated questions "}
                     and a structured plan to take you from prep to test-day with confidence.
@@ -407,11 +407,12 @@ function DetailInner() {
                 )}
 
               {/* Hero highlight strip */}
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="sky" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
               </div>
+
 
               {Object.keys(mockAgg.byExam).length > 0 && (
                 <div className="mt-5 flex flex-wrap gap-2">
