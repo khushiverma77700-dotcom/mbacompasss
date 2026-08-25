@@ -573,7 +573,7 @@ function DetailInner() {
                 <span className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center"><BarChart3 className="h-5 w-5" /></span>
                 <h3 className="font-bold text-lg text-gray-900">Section-wise question pool</h3>
               </div>
-              <Accordion type="multiple" defaultValue={["g-0"]} className="space-y-2">
+              <Accordion type="multiple" defaultValue={[]} className="space-y-2">
                 {groupSections(mockAgg.bySection).map((g, gi) => (
                   <AccordionItem key={g.group} value={`g-${gi}`} className="border rounded-xl px-4 bg-white">
                     <AccordionTrigger className="hover:no-underline">
