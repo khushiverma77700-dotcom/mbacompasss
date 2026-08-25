@@ -523,10 +523,10 @@ function DetailInner() {
               ) : <p className="text-sm text-muted-foreground">Exam coverage will appear here as mocks are added.</p>}
             </Card>
 
-            <Card className="p-6 border-sky-100 bg-gradient-to-br from-sky-600 to-blue-700 text-white">
+            <Card className="p-6 border-sky-100">
               <div className="flex items-center gap-2 mb-4">
-                <span className="h-9 w-9 rounded-lg bg-white/15 grid place-items-center"><Layers className="h-5 w-5" /></span>
-                <h3 className="font-bold text-lg">Mock breakdown</h3>
+                <span className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center"><Layers className="h-5 w-5" /></span>
+                <h3 className="font-bold text-lg text-gray-900">Mock breakdown</h3>
               </div>
               <div className="space-y-3 text-sm">
                 <BreakdownRow label="Full-length mocks" value={mockAgg.byType.full_length || 0} />
