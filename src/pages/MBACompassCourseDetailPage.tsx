@@ -533,7 +533,6 @@ function DetailInner() {
                 <BreakdownRow label="Sectional mocks" value={mockAgg.byType.sectional || 0} />
                 <BreakdownRow label="Topic-wise mocks" value={mockAgg.byType.topic_wise || 0} />
                 <BreakdownRow label="Daily tests" value={mockAgg.byType.daily_test || 0} />
-                <div className="h-px bg-white/20 my-2" />
                 <BreakdownRow label="Total questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} />
                 <BreakdownRow label="Total practice time" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)} hours` : "—"} />
               </div>
