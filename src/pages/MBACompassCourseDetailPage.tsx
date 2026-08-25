@@ -880,9 +880,9 @@ function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
 
 function BreakdownRow({ label, value }: { label: string; value: any }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-white/80">{label}</span>
-      <span className="font-bold">{value}</span>
+    <div className="flex items-center justify-between border-b border-sky-50 pb-2 last:border-0 last:pb-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-bold text-gray-900">{value}</span>
     </div>
   );
 }
