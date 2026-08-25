@@ -8,6 +8,7 @@ import SEOHead, {
 } from "@/components/SEOHead";
 import { LazyMount } from "@/hooks/useInView";
 import BackToTop from "@/components/BackToTop";
+import JumpToMenu from "@/components/JumpToMenu";
 
 // Everything below the hero is code-split + mount-on-scroll so the initial
 // bundle stays tiny. Blank-screen on slow networks was caused by too much
@@ -149,8 +150,8 @@ const SectionPlaceholder = ({ height = 320 }: { height?: number }) => {
   );
 };
 
-const Deferred = ({ height, rootMargin = "0px", children }: { height: number; rootMargin?: string; children: React.ReactNode }) => (
-  <LazyMount rootMargin={rootMargin} minHeight={height} fallback={<SectionPlaceholder height={height} />}>
+const Deferred = ({ height, rootMargin = "0px", id, children }: { height: number; rootMargin?: string; id?: string; children: React.ReactNode }) => (
+  <LazyMount id={id} rootMargin={rootMargin} minHeight={height} fallback={<SectionPlaceholder height={height} />}>
     <Suspense fallback={<SectionPlaceholder height={height} />}>{children}</Suspense>
   </LazyMount>
 );
@@ -186,7 +187,7 @@ const Index = () => {
 
         {/* Everything else: code-split + mount on scroll */}
         <Deferred height={44} rootMargin="120px"><MBANewsBar /></Deferred>
-        <Deferred height={560} rootMargin="200px"><FreeToolsShowcase /></Deferred>
+        <Deferred height={560} rootMargin="200px" id="home-tools"><FreeToolsShowcase /></Deferred>
         <Deferred height={320}><ExamDeadlinesTicker /></Deferred>
         <Deferred height={520}><TopRankedCollegesSection /></Deferred>
 
@@ -200,8 +201,8 @@ const Index = () => {
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={520}><PlacementsBySectorSection /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
-        <Deferred height={320}><TopCitiesSection /></Deferred>
-        <Deferred height={420}><TopExamComparisonSection /></Deferred>
+        <Deferred height={320} id="home-cities"><TopCitiesSection /></Deferred>
+        <Deferred height={420} id="home-comparisons"><TopExamComparisonSection /></Deferred>
         <Deferred height={520}><TopperWall /></Deferred>
         <Deferred height={420}><WhyChooseUs /></Deferred>
         <Deferred height={160}><AICoachingFinder /></Deferred>
@@ -210,10 +211,11 @@ const Index = () => {
         <Deferred height={360}><TestimonialsSection /></Deferred>
         <Deferred height={480}><FreebiesPreview /></Deferred>
         <Deferred height={360}><LearningResourcesSection /></Deferred>
-        <Deferred height={420}><LatestArticlesSection /></Deferred>
+        <Deferred height={420} id="home-blog"><LatestArticlesSection /></Deferred>
         <Deferred height={420}><FAQSection /></Deferred>
         <Deferred height={280}><CTASection /></Deferred>
       </div>
+      <JumpToMenu />
       <BackToTop />
     </>
   );
