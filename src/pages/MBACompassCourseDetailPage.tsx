@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   ArrowLeft, Star, Users, Clock, Award, CheckCircle2, GraduationCap,
-  Sparkles, Target, BookOpen, Download, ArrowRight, GitCompare,
+  Sparkles, Target, BookOpen, ArrowRight,
   ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
   Trophy, Headphones, RefreshCw, BadgeCheck, Brain, Rocket, LineChart,
   PlayCircle, X as XIcon, MessageSquare, Globe, IndianRupee, TrendingUp,
