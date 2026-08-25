@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   ArrowLeft, Star, Users, Clock, Award, CheckCircle2, GraduationCap,
-  Sparkles, Target, BookOpen, Download, ArrowRight, GitCompare,
+  Sparkles, Target, BookOpen, ArrowRight,
   ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
   Trophy, Headphones, RefreshCw, BadgeCheck, Brain, Rocket, LineChart,
   PlayCircle, X as XIcon, MessageSquare, Globe, IndianRupee, TrendingUp,
@@ -25,6 +25,31 @@ import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
+
+const SECTION_GROUPS: { group: string; match: RegExp }[] = [
+  { group: "Quantitative", match: /quant|math|qa\b|arith|algebra|geometry|number/i },
+  { group: "Verbal & Reading", match: /verbal|varc|english|reading|language|comprehension|vocab|grammar/i },
+  { group: "Logical & Data", match: /logic|dilr|reason|data|interpret|analytic|decision/i },
+  { group: "General Knowledge", match: /gk|general awareness|current|innovation|entrepreneur|environment/i },
+];
+
+function groupSections(bySection: Record<string, number>) {
+  const buckets = new Map<string, [string, number][]>();
+  Object.entries(bySection)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([sec, n]) => {
+      const g = SECTION_GROUPS.find((x) => x.match.test(sec))?.group ?? "Other sections";
+      if (!buckets.has(g)) buckets.set(g, []);
+      buckets.get(g)!.push([sec, n]);
+    });
+  const order = [...SECTION_GROUPS.map((g) => g.group), "Other sections"];
+  return order
+    .filter((g) => buckets.has(g))
+    .map((g) => {
+      const items = buckets.get(g)!;
+      return { group: g, items, total: items.reduce((s, [, n]) => s + n, 0) };
+    });
+}
 
 export default function MBACompassCourseDetailPage() {
   return (
@@ -320,11 +345,11 @@ function DetailInner() {
                   <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-100">{e}</Badge>
                 ))}
                 {c.mode && <Badge variant="outline" className="capitalize">{c.mode}</Badge>}
-                {c.level && <Badge variant="outline" className="capitalize bg-violet-50 text-violet-700 border-violet-200">{c.level}</Badge>}
+                {c.level && <Badge variant="outline" className="capitalize">{c.level}</Badge>}
                 {c.has_certificate && <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50"><Award className="h-3 w-3 mr-1" /> Certified</Badge>}
               </div>
 
-              <h1 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight">{c.title}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight">{c.title}</h1>
               {c.subtitle && <p className="text-base md:text-lg text-muted-foreground mt-3">{c.subtitle}</p>}
 
               <div className="flex flex-wrap items-center gap-4 mt-5 text-sm">
@@ -365,7 +390,7 @@ function DetailInner() {
               {/* Hero highlight strip */}
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
-                <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="violet" />
+                <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="sky" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
               </div>
 
@@ -418,15 +443,18 @@ function DetailInner() {
                     ) : (
                       <Button size="lg" className="w-full bg-sky-600 hover:bg-sky-700">Enroll Now <ArrowRight className="h-4 w-4 ml-1" /></Button>
                     )}
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" onClick={toggleCompare}>
-                        <GitCompare className="h-4 w-4 mr-1" /> {inCompare ? "Added" : "Compare"}
-                      </Button>
+                    <div className="flex items-center justify-center gap-4 pt-1">
+                      <button type="button" onClick={toggleCompare} className="text-sm font-medium text-sky-700 underline-offset-4 hover:underline">
+                        {inCompare ? "Added to compare" : "Compare"}
+                      </button>
+                      <span className="h-4 w-px bg-sky-100" aria-hidden />
                       {c.brochure_url ? (
-                        <Button asChild variant="outline">
-                          <a href={c.brochure_url} target="_blank" rel="noopener noreferrer"><Download className="h-4 w-4 mr-1" /> Brochure</a>
-                        </Button>
-                      ) : <Button variant="outline" disabled><Download className="h-4 w-4 mr-1" /> Brochure</Button>}
+                        <a href={c.brochure_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sky-700 underline-offset-4 hover:underline">
+                          Download brochure
+                        </a>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Brochure coming soon</span>
+                      )}
                     </div>
                   </div>
 
@@ -474,9 +502,9 @@ function DetailInner() {
               </Card>
             )}
             {features.length > 0 && (
-              <Card className="p-6 border-sky-100 bg-gradient-to-br from-white to-violet-50/30">
+              <Card className="p-6 border-sky-100 bg-gradient-to-br from-white to-sky-50/50">
                 <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-900">
-                  <span className="h-9 w-9 rounded-lg bg-violet-100 text-violet-600 grid place-items-center"><Sparkles className="h-5 w-5" /></span>
+                  <span className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center"><Sparkles className="h-5 w-5" /></span>
                   Key program features
                 </h3>
                 <ul className="space-y-3">
@@ -523,17 +551,16 @@ function DetailInner() {
               ) : <p className="text-sm text-muted-foreground">Exam coverage will appear here as mocks are added.</p>}
             </Card>
 
-            <Card className="p-6 border-sky-100 bg-gradient-to-br from-sky-600 to-blue-700 text-white">
+            <Card className="p-6 border-sky-100">
               <div className="flex items-center gap-2 mb-4">
-                <span className="h-9 w-9 rounded-lg bg-white/15 grid place-items-center"><Layers className="h-5 w-5" /></span>
-                <h3 className="font-bold text-lg">Mock breakdown</h3>
+                <span className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center"><Layers className="h-5 w-5" /></span>
+                <h3 className="font-bold text-lg text-gray-900">Mock breakdown</h3>
               </div>
               <div className="space-y-3 text-sm">
                 <BreakdownRow label="Full-length mocks" value={mockAgg.byType.full_length || 0} />
                 <BreakdownRow label="Sectional mocks" value={mockAgg.byType.sectional || 0} />
                 <BreakdownRow label="Topic-wise mocks" value={mockAgg.byType.topic_wise || 0} />
                 <BreakdownRow label="Daily tests" value={mockAgg.byType.daily_test || 0} />
-                <div className="h-px bg-white/20 my-2" />
                 <BreakdownRow label="Total questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} />
                 <BreakdownRow label="Total practice time" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)} hours` : "—"} />
               </div>
@@ -543,18 +570,34 @@ function DetailInner() {
           {Object.keys(mockAgg.bySection).length > 0 && (
             <Card className="p-6 border-sky-100 mt-6">
               <div className="flex items-center gap-2 mb-4">
-                <span className="h-9 w-9 rounded-lg bg-emerald-100 text-emerald-600 grid place-items-center"><BarChart3 className="h-5 w-5" /></span>
+                <span className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center"><BarChart3 className="h-5 w-5" /></span>
                 <h3 className="font-bold text-lg text-gray-900">Section-wise question pool</h3>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Object.entries(mockAgg.bySection).sort((a,b)=>b[1]-a[1]).map(([sec, n]) => (
-                  <div key={sec} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
-                    <div className="text-xs uppercase tracking-wide text-sky-700 font-semibold">{sec}</div>
-                    <div className="text-xl font-bold text-gray-900 mt-1">{n}</div>
-                    <div className="text-[10px] text-muted-foreground">questions</div>
-                  </div>
+              <Accordion type="multiple" defaultValue={[]} className="space-y-2">
+                {groupSections(mockAgg.bySection).map((g, gi) => (
+                  <AccordionItem key={g.group} value={`g-${gi}`} className="border rounded-xl px-4 bg-white">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <span className="text-sm font-semibold text-gray-900">{g.group}</span>
+                        <span className="text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
+                          {g.items.length} sections • {g.total} questions
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pb-2">
+                        {g.items.map(([sec, n]) => (
+                          <div key={sec} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
+                            <div className="text-xs uppercase tracking-wide text-sky-700 font-semibold">{sec}</div>
+                            <div className="text-lg font-bold text-gray-900 mt-1">{n}</div>
+                            <div className="text-xs text-muted-foreground">questions</div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             </Card>
           )}
         </section>
@@ -563,16 +606,41 @@ function DetailInner() {
       {/* EVERYTHING INCLUDED */}
       <section className="container mx-auto px-4 py-12">
         <SectionHead eyebrow="Inside the program" title="Everything included in this course" />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-8">
-          {featureCheck.map(([label, on]) => (
-            <div key={label} className={`flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border transition ${on ? "bg-emerald-50/60 border-emerald-200 text-emerald-900 shadow-sm" : "bg-slate-50 border-slate-200 text-slate-400"}`}>
-              <span className={`h-7 w-7 rounded-md grid place-items-center shrink-0 ${on ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-400"}`}>
-                <CheckCircle2 className="h-4 w-4" />
-              </span>
-              <span className="font-medium">{label}</span>
+        {(() => {
+          const included = featureCheck.filter(([, on]) => on);
+          const excluded = featureCheck.filter(([, on]) => !on);
+          return (
+            <div className="mt-8 space-y-8">
+              {included.length > 0 && (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {included.map(([label]) => (
+                    <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-emerald-50/60 border-emerald-200 text-gray-900 shadow-sm">
+                      <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-emerald-500 text-white">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </span>
+                      <span className="font-medium">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {excluded.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Not included in this plan</h3>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {excluded.map(([label]) => (
+                      <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-white border-slate-200 text-muted-foreground">
+                        <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-slate-100 text-slate-500">
+                          <XIcon className="h-4 w-4" />
+                        </span>
+                        <span className="font-medium">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })()}
       </section>
 
       {/* CURRICULUM */}
@@ -660,14 +728,14 @@ function DetailInner() {
               <Card key={t.id} className="p-4 border-sky-100 hover:shadow-md transition group">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-sky-600">{t.exam_code} • {(t.test_type || "").replace(/_/g, " ")}</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-sky-600">{t.exam_code} • {(t.test_type || "").replace(/_/g, " ")}</div>
                     <div className="font-semibold text-gray-900 text-sm mt-1 line-clamp-2">{t.name}</div>
                   </div>
                   <span className="h-8 w-8 rounded-lg bg-sky-100 text-sky-600 grid place-items-center shrink-0 group-hover:bg-sky-600 group-hover:text-white transition">
                     <PlayCircle className="h-4 w-4" />
                   </span>
                 </div>
-                <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t.total_duration_minutes || 0} min</span>
                   {t.difficulty && <span className="inline-flex items-center gap-1 capitalize"><BarChart3 className="h-3 w-3" /> {t.difficulty}</span>}
                 </div>
@@ -693,7 +761,7 @@ function DetailInner() {
             { icon: Trophy, title: "Track & crack", desc: "Live percentile tracker, predictor and GD-PI prep until you convert." },
           ].map((s, i) => (
             <Card key={i} className="p-5 border-sky-100 relative overflow-hidden">
-              <div className="absolute top-2 right-3 text-5xl font-black text-sky-50 select-none">{i + 1}</div>
+              <div className="absolute top-2 right-3 text-4xl font-black text-sky-50 select-none">{i + 1}</div>
               <span className="h-10 w-10 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shadow-sm">
                 <s.icon className="h-5 w-5" />
               </span>
@@ -766,7 +834,7 @@ function DetailInner() {
                   <div className="p-4">
                     <div className="flex flex-wrap gap-1 mb-2">
                       {(r.exam_focus ?? []).slice(0, 3).map((e: string) => (
-                        <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 text-[10px]">{e}</Badge>
+                        <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 text-xs">{e}</Badge>
                       ))}
                     </div>
                     <div className="font-bold text-gray-900 group-hover:text-sky-700 transition line-clamp-2">{r.title}</div>
@@ -832,7 +900,7 @@ function Stat({ n, l }: { n: any; l: string }) {
   return (
     <div className="bg-sky-50/60 border border-sky-100 rounded-md py-2">
       <div className="text-base font-bold text-sky-700">{n}</div>
-      <div className="text-[10px] text-muted-foreground">{l}</div>
+      <div className="text-xs text-muted-foreground">{l}</div>
     </div>
   );
 }
@@ -848,7 +916,7 @@ function HeroChip({ icon: Icon, label, value, tint }: { icon: any; label: string
     <div className={`rounded-xl border bg-gradient-to-br ${map[tint]} p-3 shadow-sm`}>
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4" />
-        <span className="text-[11px] uppercase tracking-wide font-semibold">{label}</span>
+        <span className="text-xs uppercase tracking-wide font-semibold">{label}</span>
       </div>
       <div className="mt-1 text-xl font-bold text-gray-900">{value}</div>
     </div>
@@ -873,16 +941,16 @@ function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
       <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.15em] uppercase text-sky-600 bg-sky-50 border border-sky-200 rounded-full px-3 py-1">
         <Sparkles className="h-3 w-3" /> {eyebrow}
       </div>
-      <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mt-3 tracking-tight">{title}</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mt-3 tracking-tight">{title}</h2>
     </div>
   );
 }
 
 function BreakdownRow({ label, value }: { label: string; value: any }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-white/80">{label}</span>
-      <span className="font-bold">{value}</span>
+    <div className="flex items-center justify-between border-b border-sky-50 pb-2 last:border-0 last:pb-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-bold text-gray-900">{value}</span>
     </div>
   );
 }
