@@ -23,6 +23,7 @@ import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
+import DashboardShowcase from "@/components/mock/DashboardShowcase";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
@@ -346,7 +347,7 @@ function DetailInner() {
       />
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-8 pb-12">
+      <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-6 pb-10 sm:pt-8 sm:pb-12">
         <div className="absolute inset-0 pointer-events-none opacity-60" aria-hidden>
           <div className="absolute -top-24 -right-24 hidden h-80 w-80 rounded-full bg-sky-200/40 blur-3xl sm:block" />
           <div className="absolute -bottom-32 -left-20 hidden h-80 w-80 rounded-full bg-blue-200/40 blur-3xl sm:block" />
@@ -356,7 +357,7 @@ function DetailInner() {
             <Link to="/courses"><ArrowLeft className="h-4 w-4 mr-1" /> All courses</Link>
           </Button>
 
-          <div className="grid lg:grid-cols-12 gap-8">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
             <div className="lg:col-span-7">
               <div className="flex flex-wrap gap-2 mb-3">
                 {(c.exam_focus ?? []).map((e: string) => (
@@ -367,10 +368,11 @@ function DetailInner() {
                 {c.has_certificate && <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50"><Award className="h-3 w-3 mr-1" /> Certified</Badge>}
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight">{c.title}</h1>
-              {c.subtitle && <p className="text-base md:text-lg text-muted-foreground mt-3">{c.subtitle}</p>}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight break-words">{c.title}</h1>
+              {c.subtitle && <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-3">{c.subtitle}</p>}
 
-              <div className="flex flex-wrap items-center gap-4 mt-5 text-sm">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 sm:mt-5 text-xs sm:text-sm">
+
                 {c.rating ? (
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
@@ -396,9 +398,9 @@ function DetailInner() {
               </div>
 
               {c.description
-                ? <p className="mt-5 text-gray-700 leading-relaxed">{c.description}</p>
+                ? <p className="mt-4 sm:mt-5 text-sm sm:text-base text-gray-700 leading-relaxed">{c.description}</p>
                 : (
-                  <p className="mt-5 text-gray-700 leading-relaxed">
+                  <p className="mt-4 sm:mt-5 text-sm sm:text-base text-gray-700 leading-relaxed">
                     A focused, exam-ready program with {mockAgg.total || c.full_mocks_count || 0}+ practice mocks,
                     {mockAgg.totalQuestions ? ` ${mockAgg.totalQuestions.toLocaleString("en-IN")} questions ` : " curated questions "}
                     and a structured plan to take you from prep to test-day with confidence.
@@ -406,11 +408,12 @@ function DetailInner() {
                 )}
 
               {/* Hero highlight strip */}
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="sky" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
               </div>
+
 
               {Object.keys(mockAgg.byExam).length > 0 && (
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -425,7 +428,7 @@ function DetailInner() {
             </div>
 
             <div className="lg:col-span-5">
-              <Card className="overflow-hidden border-sky-100 shadow-xl sticky top-20">
+              <Card className="overflow-hidden border-sky-100 shadow-xl lg:sticky lg:top-20">
                 {c.thumbnail_url ? (
                   <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover"  loading="lazy" decoding="async" />
                 ) : (
@@ -537,6 +540,9 @@ function DetailInner() {
           </div>
         </section>
       )}
+
+      {/* DASHBOARD SHOWCASE */}
+      <DashboardShowcase />
 
       {/* EXAM COVERAGE + MOCK LIBRARY */}
       {(Object.keys(mockAgg.byExam).length > 0 || mockAgg.total > 0) && (
