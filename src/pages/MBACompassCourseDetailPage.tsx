@@ -601,13 +601,14 @@ function DetailInner() {
                 {groupSections(mockAgg.bySection).map((g, gi) => (
                   <AccordionItem key={g.group} value={`g-${gi}`} className="border rounded-xl px-4 bg-white">
                     <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3 text-left">
-                        <span className="text-sm font-semibold text-gray-900">{g.group}</span>
-                        <span className="text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
-                          {g.items.length} sections • {g.total} questions
+                      <div className="flex flex-1 items-center justify-between gap-2 text-left pr-2">
+                        <span className="text-[13px] sm:text-sm font-semibold text-gray-900 whitespace-nowrap">{g.group}</span>
+                        <span className="text-[11px] sm:text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5 whitespace-nowrap shrink-0">
+                          {g.items.length} sec • {g.total} Qs
                         </span>
                       </div>
                     </AccordionTrigger>
+
                     <AccordionContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pb-2">
                         {g.items.map(([sec, n]) => (
@@ -632,7 +633,7 @@ function DetailInner() {
         <SectionHead eyebrow="Inside the program" title="Everything included in this course" />
         {(() => {
           const included = featureCheck.filter(([, on]) => on);
-          const excluded = featureCheck.filter(([, on]) => !on);
+
           return (
             <div className="mt-8 space-y-8">
               {included.length > 0 && (
@@ -645,21 +646,6 @@ function DetailInner() {
                       <span className="font-medium">{label}</span>
                     </div>
                   ))}
-                </div>
-              )}
-              {excluded.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Not included in this plan</h3>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {excluded.map(([label]) => (
-                      <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-white border-slate-200 text-muted-foreground">
-                        <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-slate-100 text-slate-500">
-                          <XIcon className="h-4 w-4" />
-                        </span>
-                        <span className="font-medium">{label}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
@@ -808,10 +794,10 @@ function DetailInner() {
               ["AI-personalised study plan", true, false],
               ["Section-wise analytics", true, "Limited"],
               ["Daily tests + sectional mocks", true, "Weekly only"],
-              ["Live mentor support", c.has_mentorship_1on1 || c.has_live_classes, false],
+              ["Live mentor support", true, false],
               ["Percentile predictor", c.has_percentile_predictor, false],
               ["GD-PI prep included", c.has_gd_pi_prep, "Extra cost"],
-              ["Lifetime access", c.has_lifetime_access, false],
+              ["Lifetime access", true, false],
               ["Total questions", mockAgg.totalQuestions ? `${mockAgg.totalQuestions.toLocaleString("en-IN")}+` : "5,000+", "1,500"],
             ].map(([label, a, b]: any, i) => (
               <CompareRow key={i} label={label} a={a} b={b} />

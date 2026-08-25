@@ -32,7 +32,7 @@ export default function DashboardShowcase() {
     if (paused) return;
     timer.current = window.setInterval(() => {
       setIndex((i) => (i + 1) % SLIDES.length);
-    }, 1000);
+    }, 2500);
     return () => {
       if (timer.current) window.clearInterval(timer.current);
     };
@@ -101,11 +101,11 @@ export default function DashboardShowcase() {
         </div>
 
         <div className="px-4 py-4 border-t border-sky-50 flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex-1 min-w-0" aria-live="polite">
+          <div className="flex-1 min-w-0 text-center sm:text-left" aria-live="polite">
             <div className="font-semibold text-gray-900 text-sm sm:text-base">{active.title}</div>
-            <p className="text-xs sm:text-sm text-muted-foreground">{active.caption}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-0.5">{active.caption}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center justify-center flex-wrap gap-1.5 self-center shrink-0">
             {SLIDES.map((s, i) => (
               <button
                 key={s.title}
