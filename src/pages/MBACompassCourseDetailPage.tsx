@@ -346,7 +346,7 @@ function DetailInner() {
       />
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-8 pb-12">
+      <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-6 pb-10 sm:pt-8 sm:pb-12">
         <div className="absolute inset-0 pointer-events-none opacity-60" aria-hidden>
           <div className="absolute -top-24 -right-24 hidden h-80 w-80 rounded-full bg-sky-200/40 blur-3xl sm:block" />
           <div className="absolute -bottom-32 -left-20 hidden h-80 w-80 rounded-full bg-blue-200/40 blur-3xl sm:block" />
@@ -356,7 +356,7 @@ function DetailInner() {
             <Link to="/courses"><ArrowLeft className="h-4 w-4 mr-1" /> All courses</Link>
           </Button>
 
-          <div className="grid lg:grid-cols-12 gap-8">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
             <div className="lg:col-span-7">
               <div className="flex flex-wrap gap-2 mb-3">
                 {(c.exam_focus ?? []).map((e: string) => (
@@ -427,7 +427,7 @@ function DetailInner() {
             </div>
 
             <div className="lg:col-span-5">
-              <Card className="overflow-hidden border-sky-100 shadow-xl sticky top-20">
+              <Card className="overflow-hidden border-sky-100 shadow-xl lg:sticky lg:top-20">
                 {c.thumbnail_url ? (
                   <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover"  loading="lazy" decoding="async" />
                 ) : (
