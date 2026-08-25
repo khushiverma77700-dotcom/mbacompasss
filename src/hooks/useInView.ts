@@ -40,9 +40,10 @@ interface LazyMountProps {
   rootMargin?: string;
   minHeight?: number;
   fallback?: ReactNode;
+  id?: string;
 }
 
-export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fallback = null }: LazyMountProps) => {
+export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fallback = null, id }: LazyMountProps) => {
   const { ref, inView } = useInView<HTMLDivElement>(rootMargin);
   // CRITICAL CLS fix: keep `min-height` reserved even AFTER `inView` flips true.
   // Otherwise the wrapper collapses to 0 while the lazy chunk downloads, then
@@ -54,12 +55,15 @@ export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fal
     "div",
     {
       ref,
+      id,
       style: {
         minHeight,
         contentVisibility: "auto" as any,
         containIntrinsicSize: `1px ${minHeight}px`,
+        scrollMarginTop: "6rem",
       },
     },
     inView ? createElement(Suspense, { fallback }, children) : fallback
   );
 };
+
