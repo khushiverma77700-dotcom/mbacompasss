@@ -73,7 +73,7 @@ export default function DashboardShowcase() {
                   <img
                     src={s.url}
                     alt={`MBA Compass mocks dashboard — ${s.title}`}
-                    className="w-full rounded-xl border border-sky-100 bg-white shadow-md"
+                    className="w-full aspect-[16/9] object-cover object-top rounded-xl border border-sky-100 bg-white shadow-md"
                     loading={i === 0 ? "eager" : "lazy"}
                     decoding="async"
                   />
