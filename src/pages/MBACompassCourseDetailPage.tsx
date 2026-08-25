@@ -367,10 +367,11 @@ function DetailInner() {
                 {c.has_certificate && <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50"><Award className="h-3 w-3 mr-1" /> Certified</Badge>}
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight">{c.title}</h1>
-              {c.subtitle && <p className="text-base md:text-lg text-muted-foreground mt-3">{c.subtitle}</p>}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight break-words">{c.title}</h1>
+              {c.subtitle && <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-3">{c.subtitle}</p>}
 
-              <div className="flex flex-wrap items-center gap-4 mt-5 text-sm">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 sm:mt-5 text-xs sm:text-sm">
+
                 {c.rating ? (
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
