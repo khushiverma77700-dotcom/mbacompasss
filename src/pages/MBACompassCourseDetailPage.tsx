@@ -26,6 +26,31 @@ import { toast } from "sonner";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
+const SECTION_GROUPS: { group: string; match: RegExp }[] = [
+  { group: "Quantitative", match: /quant|math|qa\b|arith|algebra|geometry|number/i },
+  { group: "Verbal & Reading", match: /verbal|varc|english|reading|language|comprehension|vocab|grammar/i },
+  { group: "Logical & Data", match: /logic|dilr|reason|data|interpret|analytic|decision/i },
+  { group: "General Knowledge", match: /gk|general awareness|current|innovation|entrepreneur|environment/i },
+];
+
+function groupSections(bySection: Record<string, number>) {
+  const buckets = new Map<string, [string, number][]>();
+  Object.entries(bySection)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([sec, n]) => {
+      const g = SECTION_GROUPS.find((x) => x.match.test(sec))?.group ?? "Other sections";
+      if (!buckets.has(g)) buckets.set(g, []);
+      buckets.get(g)!.push([sec, n]);
+    });
+  const order = [...SECTION_GROUPS.map((g) => g.group), "Other sections"];
+  return order
+    .filter((g) => buckets.has(g))
+    .map((g) => {
+      const items = buckets.get(g)!;
+      return { group: g, items, total: items.reduce((s, [, n]) => s + n, 0) };
+    });
+}
+
 export default function MBACompassCourseDetailPage() {
   return (
     <CompassCompareProvider>
