@@ -132,9 +132,9 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
             </div>
 
             {hasAIKeywords && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="columns-1 md:columns-2 gap-4 [column-fill:balance]">
                 {sections.map((section, si) => (
-                  <motion.div key={section.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: si * 0.08 }}>
+                  <motion.div key={section.label} className="mb-4 break-inside-avoid" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: si * 0.08 }}>
                     <div className="rounded-2xl border border-border/40 bg-card p-5 hover:shadow-md transition-shadow h-full">
                       {/* Section header */}
                       <div className="flex items-center gap-2.5 mb-4">
