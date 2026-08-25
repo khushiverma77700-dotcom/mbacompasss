@@ -873,7 +873,7 @@ function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
       <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.15em] uppercase text-sky-600 bg-sky-50 border border-sky-200 rounded-full px-3 py-1">
         <Sparkles className="h-3 w-3" /> {eyebrow}
       </div>
-      <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mt-3 tracking-tight">{title}</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mt-3 tracking-tight">{title}</h2>
     </div>
   );
 }
