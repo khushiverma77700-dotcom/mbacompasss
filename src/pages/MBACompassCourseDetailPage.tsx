@@ -543,18 +543,34 @@ function DetailInner() {
           {Object.keys(mockAgg.bySection).length > 0 && (
             <Card className="p-6 border-sky-100 mt-6">
               <div className="flex items-center gap-2 mb-4">
-                <span className="h-9 w-9 rounded-lg bg-emerald-100 text-emerald-600 grid place-items-center"><BarChart3 className="h-5 w-5" /></span>
+                <span className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center"><BarChart3 className="h-5 w-5" /></span>
                 <h3 className="font-bold text-lg text-gray-900">Section-wise question pool</h3>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Object.entries(mockAgg.bySection).sort((a,b)=>b[1]-a[1]).map(([sec, n]) => (
-                  <div key={sec} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
-                    <div className="text-xs uppercase tracking-wide text-sky-700 font-semibold">{sec}</div>
-                    <div className="text-xl font-bold text-gray-900 mt-1">{n}</div>
-                    <div className="text-[10px] text-muted-foreground">questions</div>
-                  </div>
+              <Accordion type="multiple" defaultValue={["g-0"]} className="space-y-2">
+                {groupSections(mockAgg.bySection).map((g, gi) => (
+                  <AccordionItem key={g.group} value={`g-${gi}`} className="border rounded-xl px-4 bg-white">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <span className="text-sm font-semibold text-gray-900">{g.group}</span>
+                        <span className="text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
+                          {g.items.length} sections • {g.total} questions
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pb-2">
+                        {g.items.map(([sec, n]) => (
+                          <div key={sec} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
+                            <div className="text-xs uppercase tracking-wide text-sky-700 font-semibold">{sec}</div>
+                            <div className="text-lg font-bold text-gray-900 mt-1">{n}</div>
+                            <div className="text-xs text-muted-foreground">questions</div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             </Card>
           )}
         </section>
