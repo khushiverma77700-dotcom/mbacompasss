@@ -320,7 +320,7 @@ function DetailInner() {
                   <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-100">{e}</Badge>
                 ))}
                 {c.mode && <Badge variant="outline" className="capitalize">{c.mode}</Badge>}
-                {c.level && <Badge variant="outline" className="capitalize bg-violet-50 text-violet-700 border-violet-200">{c.level}</Badge>}
+                {c.level && <Badge variant="outline" className="capitalize">{c.level}</Badge>}
                 {c.has_certificate && <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50"><Award className="h-3 w-3 mr-1" /> Certified</Badge>}
               </div>
 
@@ -365,7 +365,7 @@ function DetailInner() {
               {/* Hero highlight strip */}
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
-                <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="violet" />
+                <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="sky" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
               </div>
 
@@ -477,9 +477,9 @@ function DetailInner() {
               </Card>
             )}
             {features.length > 0 && (
-              <Card className="p-6 border-sky-100 bg-gradient-to-br from-white to-violet-50/30">
+              <Card className="p-6 border-sky-100 bg-gradient-to-br from-white to-sky-50/50">
                 <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-900">
-                  <span className="h-9 w-9 rounded-lg bg-violet-100 text-violet-600 grid place-items-center"><Sparkles className="h-5 w-5" /></span>
+                  <span className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center"><Sparkles className="h-5 w-5" /></span>
                   Key program features
                 </h3>
                 <ul className="space-y-3">
