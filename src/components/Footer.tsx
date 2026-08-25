@@ -31,14 +31,14 @@ const Footer = () => {
               <img src={mbahubLogo} alt="MBA Compass Logo" width="32" height="32" className="w-8 h-8 rounded-lg object-contain"  loading="lazy" decoding="async" />
               <div className="flex flex-col leading-tight">
                 <span className="font-heading font-bold text-lg text-primary-foreground">MBA Compass</span>
-                <span className="text-[8px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
+                <span className="text-[10px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
               </div>
             </Link>
             <p className="text-sm text-primary-foreground/60">{brandDesc}</p>
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">MBA Exams</h4>
+            <h2 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">MBA Exams</h2>
             <ul className="space-y-2 text-sm min-h-[180px]">
               {examLinks.length > 0
                 ? examLinks.map((link: any, i: number) => (
@@ -49,7 +49,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">Quick Links</h4>
+            <h2 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">Quick Links</h2>
             <ul className="space-y-2 text-sm min-h-[300px]">
               {quickLinks.length > 0
                 ? quickLinks.map((link: any, i: number) => (
@@ -65,7 +65,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">Contact Us</h4>
+            <h2 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">Contact Us</h2>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {email}</li>
               <li className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> {phone}</li>

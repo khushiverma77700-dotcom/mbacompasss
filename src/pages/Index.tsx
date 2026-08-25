@@ -7,6 +7,7 @@ import SEOHead, {
   generateBreadcrumbSchema,
 } from "@/components/SEOHead";
 import { LazyMount } from "@/hooks/useInView";
+import BackToTop from "@/components/BackToTop";
 
 // Everything below the hero is code-split + mount-on-scroll so the initial
 // bundle stays tiny. Blank-screen on slow networks was caused by too much
@@ -27,7 +28,6 @@ const SuccessStoriesSection = lazy(() => import("@/components/SuccessStoriesSect
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 const LearningResourcesSection = lazy(() => import("@/components/LearningResourcesSection"));
 const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
-const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
@@ -186,6 +186,7 @@ const Index = () => {
 
         {/* Everything else: code-split + mount on scroll */}
         <Deferred height={44} rootMargin="120px"><MBANewsBar /></Deferred>
+        <Deferred height={560} rootMargin="200px"><FreeToolsShowcase /></Deferred>
         <Deferred height={320}><ExamDeadlinesTicker /></Deferred>
         <Deferred height={520}><TopRankedCollegesSection /></Deferred>
 
@@ -198,7 +199,6 @@ const Index = () => {
         <Deferred height={520}><ROIComparisonTable /></Deferred>
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={520}><PlacementsBySectorSection /></Deferred>
-        <Deferred height={560}><FreeToolsShowcase /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
         <Deferred height={320}><TopCitiesSection /></Deferred>
         <Deferred height={420}><TopExamComparisonSection /></Deferred>
@@ -211,10 +211,10 @@ const Index = () => {
         <Deferred height={480}><FreebiesPreview /></Deferred>
         <Deferred height={360}><LearningResourcesSection /></Deferred>
         <Deferred height={420}><LatestArticlesSection /></Deferred>
-        <Deferred height={360}><NewsSection /></Deferred>
         <Deferred height={420}><FAQSection /></Deferred>
         <Deferred height={280}><CTASection /></Deferred>
       </div>
+      <BackToTop />
     </>
   );
 };
