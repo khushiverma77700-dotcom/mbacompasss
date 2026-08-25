@@ -415,9 +415,9 @@ function DetailInner() {
               {Object.keys(mockAgg.byExam).length > 0 && (
                 <div className="mt-5 flex flex-wrap gap-2">
                   <span className="text-xs font-semibold text-gray-600 self-center mr-1">Exams Covered:</span>
-                  {Object.entries(mockAgg.byExam).sort((a,b)=>b[1]-a[1]).map(([exam, n]) => (
+                  {Object.entries(mockAgg.byExam).map(([exam, n]) => ({ exam, d: examDisplay(exam, n) })).sort((a,b)=>b.d.value-a.d.value).map(({ exam, d }) => (
                     <span key={exam} className="inline-flex items-center gap-1 text-xs bg-white border border-sky-200 text-sky-700 rounded-full px-3 py-1 shadow-sm">
-                      <Flame className="h-3 w-3 text-sky-500" /> {exam} <span className="font-bold">{n}</span>
+                      <Flame className="h-3 w-3 text-sky-500" /> {exam} <span className="font-bold">{d.label}</span>
                     </span>
                   ))}
                 </div>
