@@ -563,16 +563,41 @@ function DetailInner() {
       {/* EVERYTHING INCLUDED */}
       <section className="container mx-auto px-4 py-12">
         <SectionHead eyebrow="Inside the program" title="Everything included in this course" />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-8">
-          {featureCheck.map(([label, on]) => (
-            <div key={label} className={`flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border transition ${on ? "bg-emerald-50/60 border-emerald-200 text-emerald-900 shadow-sm" : "bg-slate-50 border-slate-200 text-slate-400"}`}>
-              <span className={`h-7 w-7 rounded-md grid place-items-center shrink-0 ${on ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-400"}`}>
-                <CheckCircle2 className="h-4 w-4" />
-              </span>
-              <span className="font-medium">{label}</span>
+        {(() => {
+          const included = featureCheck.filter(([, on]) => on);
+          const excluded = featureCheck.filter(([, on]) => !on);
+          return (
+            <div className="mt-8 space-y-8">
+              {included.length > 0 && (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {included.map(([label]) => (
+                    <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-emerald-50/60 border-emerald-200 text-gray-900 shadow-sm">
+                      <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-emerald-500 text-white">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </span>
+                      <span className="font-medium">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {excluded.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Not included in this plan</h3>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {excluded.map(([label]) => (
+                      <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-white border-slate-200 text-muted-foreground">
+                        <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-slate-100 text-slate-500">
+                          <XIcon className="h-4 w-4" />
+                        </span>
+                        <span className="font-medium">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })()}
       </section>
 
       {/* CURRICULUM */}
