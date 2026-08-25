@@ -40,6 +40,7 @@ export default function DashboardShowcase() {
 
   const go = (dir: -1 | 1) => setIndex((i) => (i + dir + SLIDES.length) % SLIDES.length);
   const active = SLIDES[index];
+  const at = (offset: number) => SLIDES[(index + offset + SLIDES.length) % SLIDES.length];
 
   return (
     <section className="container mx-auto px-4 py-8" aria-labelledby="dashboard-showcase-heading">
@@ -56,37 +57,49 @@ export default function DashboardShowcase() {
       </div>
 
       <div
-        className="mt-6 rounded-2xl border border-sky-100 bg-white shadow-sm overflow-hidden"
+        className="mt-6 max-w-5xl mx-auto rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-blue-50 shadow-sm overflow-hidden"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => setPaused(false)}
       >
-        <div className="relative bg-gradient-to-br from-sky-50 to-blue-50">
-          <div className="overflow-hidden">
-            <div
-              className="flex transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${index * 100}%)` }}
-            >
-              {SLIDES.map((s, i) => (
-                <div key={s.title} className="w-full shrink-0 p-3 sm:p-5">
+        <div className="relative px-3 sm:px-10 py-6">
+          {/* 3-up stage: side previews (desktop) with a zoomed centre slide */}
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
+            {[-1, 0, 1].map((offset) => {
+              const s = at(offset);
+              const isCenter = offset === 0;
+              return (
+                <button
+                  key={`${offset}-${s.title}`}
+                  type="button"
+                  onClick={() => !isCenter && go(offset as -1 | 1)}
+                  aria-label={isCenter ? s.title : `Show ${s.title}`}
+                  aria-current={isCenter}
+                  tabIndex={isCenter ? -1 : 0}
+                  className={`relative shrink-0 transition-all duration-500 ease-out rounded-xl overflow-hidden bg-white border ${
+                    isCenter
+                      ? "w-full sm:w-[54%] border-sky-200 shadow-xl z-10 scale-100"
+                      : "hidden sm:block w-[23%] border-sky-100 shadow-sm opacity-60 hover:opacity-90 scale-95"
+                  }`}
+                >
                   <img
                     src={s.url}
                     alt={`MBA Compass mocks dashboard — ${s.title}`}
-                    className="w-full aspect-[16/9] object-cover object-top rounded-xl border border-sky-100 bg-white shadow-md"
-                    loading={i === 0 ? "eager" : "lazy"}
+                    className="w-full h-auto aspect-[16/10] object-contain bg-white"
+                    loading={isCenter && offset === 0 ? "eager" : "lazy"}
                     decoding="async"
                   />
-                </div>
-              ))}
-            </div>
+                </button>
+              );
+            })}
           </div>
 
           <button
             type="button"
             onClick={() => go(-1)}
             aria-label="Previous screenshot"
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 border border-sky-100 shadow grid place-items-center text-sky-700 hover:bg-white"
+            className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-white/95 border border-sky-100 shadow grid place-items-center text-sky-700 hover:bg-white"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -94,18 +107,18 @@ export default function DashboardShowcase() {
             type="button"
             onClick={() => go(1)}
             aria-label="Next screenshot"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 border border-sky-100 shadow grid place-items-center text-sky-700 hover:bg-white"
+            className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-white/95 border border-sky-100 shadow grid place-items-center text-sky-700 hover:bg-white"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="px-4 py-4 border-t border-sky-50 flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex-1 min-w-0 text-center sm:text-left" aria-live="polite">
+        <div className="px-4 pb-5 pt-3 border-t border-sky-100/70 bg-white/70">
+          <div className="text-center max-w-xl mx-auto" aria-live="polite">
             <div className="font-semibold text-gray-900 text-sm sm:text-base">{active.title}</div>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-0.5">{active.caption}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1">{active.caption}</p>
           </div>
-          <div className="flex items-center justify-center flex-wrap gap-1.5 self-center shrink-0">
+          <div className="mt-3 flex items-center justify-center flex-wrap gap-1.5">
             {SLIDES.map((s, i) => (
               <button
                 key={s.title}
