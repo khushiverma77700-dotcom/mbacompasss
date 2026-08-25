@@ -550,14 +550,14 @@ function DetailInner() {
               </div>
               {Object.keys(mockAgg.byExam).length > 0 ? (
                 <div className="space-y-3">
-                  {Object.entries(mockAgg.byExam).sort((a,b)=>b[1]-a[1]).map(([exam, n]) => {
-                    const max = Math.max(...Object.values(mockAgg.byExam));
-                    const pct = Math.max(8, Math.round((n/max)*100));
+                  {Object.entries(mockAgg.byExam).map(([exam, n]) => ({ exam, d: examDisplay(exam, n) })).sort((a,b)=>b.d.value-a.d.value).map(({ exam, d }, _i, arr) => {
+                    const max = Math.max(...arr.map((x) => x.d.value));
+                    const pct = Math.max(8, Math.round((d.value/max)*100));
                     return (
                       <div key={exam}>
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span className="font-semibold text-gray-800">{exam}</span>
-                          <span className="text-sky-700 font-bold">{n} mocks</span>
+                          <span className="text-sky-700 font-bold">{d.label} mocks</span>
                         </div>
                         <div className="h-2 bg-sky-50 rounded-full overflow-hidden">
                           <div className="h-full bg-gradient-to-r from-sky-500 to-blue-500 rounded-full" style={{ width: `${pct}%` }} />
@@ -575,10 +575,10 @@ function DetailInner() {
                 <h3 className="font-bold text-lg text-gray-900">Mock breakdown</h3>
               </div>
               <div className="space-y-3 text-sm">
-                <BreakdownRow label="Full-length mocks" value={mockAgg.byType.full_length || 0} />
-                <BreakdownRow label="Sectional mocks" value={mockAgg.byType.sectional || 0} />
-                <BreakdownRow label="Topic-wise mocks" value={mockAgg.byType.topic_wise || 0} />
-                <BreakdownRow label="Daily tests" value={mockAgg.byType.daily_test || 0} />
+                <BreakdownRow label="Full-length mocks" value={typeDisplay("full_length", mockAgg.byType.full_length || 0)} />
+                <BreakdownRow label="Sectional mocks" value={typeDisplay("sectional", mockAgg.byType.sectional || 0)} />
+                <BreakdownRow label="Topic-wise mocks" value={typeDisplay("topic_wise", mockAgg.byType.topic_wise || 0)} />
+                <BreakdownRow label="Daily tests" value="Daily 1" />
                 <BreakdownRow label="Total questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} />
                 <BreakdownRow label="Total practice time" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)} hours` : "—"} />
               </div>
