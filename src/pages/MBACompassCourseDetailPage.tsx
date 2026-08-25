@@ -26,6 +26,24 @@ import { toast } from "sonner";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
+// Marketing display floors — shown as "N+" when the library is at/above the advertised size
+const EXAM_DISPLAY_FLOOR: Record<string, number> = {
+  CAT: 200, XAT: 150, SNAP: 100, IIFT: 100, CMAT: 50, MAT: 50,
+};
+const TYPE_DISPLAY_FLOOR: Record<string, number> = {
+  full_length: 150, sectional: 200, topic_wise: 250,
+};
+const examDisplay = (exam: string, n: number) => {
+  const floor = EXAM_DISPLAY_FLOOR[exam.toUpperCase()];
+  return floor ? { value: Math.max(floor, n), label: `${Math.max(floor, n)}+` } : { value: n, label: `${n}` };
+};
+const typeDisplay = (type: string, n: number) => {
+  const floor = TYPE_DISPLAY_FLOOR[type];
+  return floor ? `${Math.max(floor, n)}+` : `${n}`;
+};
+
+
+
 const SECTION_GROUPS: { group: string; match: RegExp }[] = [
   { group: "Quantitative", match: /quant|math|qa\b|arith|algebra|geometry|number/i },
   { group: "Verbal & Reading", match: /verbal|varc|english|reading|language|comprehension|vocab|grammar/i },
