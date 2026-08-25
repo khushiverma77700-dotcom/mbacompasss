@@ -324,7 +324,7 @@ function DetailInner() {
                 {c.has_certificate && <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50"><Award className="h-3 w-3 mr-1" /> Certified</Badge>}
               </div>
 
-              <h1 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight">{c.title}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight">{c.title}</h1>
               {c.subtitle && <p className="text-base md:text-lg text-muted-foreground mt-3">{c.subtitle}</p>}
 
               <div className="flex flex-wrap items-center gap-4 mt-5 text-sm">
@@ -703,14 +703,14 @@ function DetailInner() {
               <Card key={t.id} className="p-4 border-sky-100 hover:shadow-md transition group">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-sky-600">{t.exam_code} • {(t.test_type || "").replace(/_/g, " ")}</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-sky-600">{t.exam_code} • {(t.test_type || "").replace(/_/g, " ")}</div>
                     <div className="font-semibold text-gray-900 text-sm mt-1 line-clamp-2">{t.name}</div>
                   </div>
                   <span className="h-8 w-8 rounded-lg bg-sky-100 text-sky-600 grid place-items-center shrink-0 group-hover:bg-sky-600 group-hover:text-white transition">
                     <PlayCircle className="h-4 w-4" />
                   </span>
                 </div>
-                <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t.total_duration_minutes || 0} min</span>
                   {t.difficulty && <span className="inline-flex items-center gap-1 capitalize"><BarChart3 className="h-3 w-3" /> {t.difficulty}</span>}
                 </div>
@@ -736,7 +736,7 @@ function DetailInner() {
             { icon: Trophy, title: "Track & crack", desc: "Live percentile tracker, predictor and GD-PI prep until you convert." },
           ].map((s, i) => (
             <Card key={i} className="p-5 border-sky-100 relative overflow-hidden">
-              <div className="absolute top-2 right-3 text-5xl font-black text-sky-50 select-none">{i + 1}</div>
+              <div className="absolute top-2 right-3 text-4xl font-black text-sky-50 select-none">{i + 1}</div>
               <span className="h-10 w-10 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shadow-sm">
                 <s.icon className="h-5 w-5" />
               </span>
@@ -809,7 +809,7 @@ function DetailInner() {
                   <div className="p-4">
                     <div className="flex flex-wrap gap-1 mb-2">
                       {(r.exam_focus ?? []).slice(0, 3).map((e: string) => (
-                        <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 text-[10px]">{e}</Badge>
+                        <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 text-xs">{e}</Badge>
                       ))}
                     </div>
                     <div className="font-bold text-gray-900 group-hover:text-sky-700 transition line-clamp-2">{r.title}</div>
@@ -875,7 +875,7 @@ function Stat({ n, l }: { n: any; l: string }) {
   return (
     <div className="bg-sky-50/60 border border-sky-100 rounded-md py-2">
       <div className="text-base font-bold text-sky-700">{n}</div>
-      <div className="text-[10px] text-muted-foreground">{l}</div>
+      <div className="text-xs text-muted-foreground">{l}</div>
     </div>
   );
 }
@@ -891,7 +891,7 @@ function HeroChip({ icon: Icon, label, value, tint }: { icon: any; label: string
     <div className={`rounded-xl border bg-gradient-to-br ${map[tint]} p-3 shadow-sm`}>
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4" />
-        <span className="text-[11px] uppercase tracking-wide font-semibold">{label}</span>
+        <span className="text-xs uppercase tracking-wide font-semibold">{label}</span>
       </div>
       <div className="mt-1 text-xl font-bold text-gray-900">{value}</div>
     </div>
