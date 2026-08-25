@@ -23,6 +23,7 @@ import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
+import DashboardShowcase from "@/components/mock/DashboardShowcase";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
