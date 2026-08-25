@@ -99,9 +99,14 @@ const TopExamComparisonSection = () => {
                 className="snap-start shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
               >
                 <Link to={item.link} className="block h-full p-5 bg-card border border-border rounded-xl hover:border-primary/40 hover:shadow-md transition-all group">
-                  <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors mb-1 line-clamp-1">{item.title}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center justify-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary ring-1 ring-primary/20">
+                      VS
+                    </span>
+                    <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">{item.title}</h3>
+                  </div>
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
-                  <span className="text-xs font-medium text-primary flex items-center gap-1">Read Comparison <ArrowRight className="w-3 h-3" /></span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 px-2.5 py-1 text-xs font-semibold text-primary group-hover:bg-primary/10 transition-colors">Read Comparison <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </motion.div>
             ))}

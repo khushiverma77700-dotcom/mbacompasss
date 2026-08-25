@@ -44,7 +44,15 @@ const TopCitiesSection = () => {
           <h2 className="font-heading text-3xl font-bold text-foreground mb-2">Top MBA Cities</h2>
           <p className="text-muted-foreground">Find the best colleges in your preferred city</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+        {/* With only a couple of cities a 4-col grid leaves a large empty hole,
+            so fall back to a centered compact row until there are enough cards. */}
+        <div
+          className={
+            cities.length < 4
+              ? "flex flex-wrap justify-center gap-5 [&>*]:w-40 sm:[&>*]:w-52"
+              : "grid grid-cols-2 sm:grid-cols-4 gap-5"
+          }
+        >
           {cities.map((city, i) => {
             const Icon = city.icon;
             return (

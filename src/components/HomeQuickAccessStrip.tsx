@@ -34,11 +34,11 @@ const HomeQuickAccessStrip = () => (
     <div className="container mx-auto px-4">
       <div className="rounded-2xl bg-white border border-primary/10 shadow-[0_10px_40px_-10px_rgba(14,165,233,0.25)] p-3 md:p-4">
         <div className="flex items-center justify-between px-1 pb-2 md:pb-3">
-          <div className="flex items-center gap-1.5 text-[11px] md:text-xs font-semibold text-primary">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
             <Sparkles className="w-3.5 h-3.5" />
             Quick Access &amp; Free Tools
           </div>
-          <Link to="/freebies" className="text-[11px] md:text-xs font-medium text-primary/80 hover:text-primary">
+          <Link to="/freebies" className="inline-flex items-center gap-1 rounded-full border border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
             View all →
           </Link>
         </div>
@@ -50,7 +50,7 @@ const HomeQuickAccessStrip = () => (
               className="group relative flex flex-col items-center text-center gap-1.5 md:gap-2 rounded-xl p-2.5 md:p-3 hover:bg-sky-50/70 transition-colors"
             >
               {tag && (
-                <span className="absolute top-1.5 left-1.5 text-[8px] md:text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20">
+                <span className="absolute top-1.5 left-1.5 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20">
                   {tag}
                 </span>
               )}
@@ -58,7 +58,7 @@ const HomeQuickAccessStrip = () => (
                 <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary" strokeWidth={2.2} />
               </div>
               <div>
-                <div className="text-[11px] md:text-[13px] font-bold text-foreground leading-tight">{label}</div>
+                <div className="text-xs md:text-sm font-bold text-foreground leading-tight">{label}</div>
                 <div className="hidden md:block text-[10px] text-muted-foreground mt-0.5">{sub}</div>
               </div>
               <ArrowUpRight className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 absolute top-2 right-2 transition-opacity" />
