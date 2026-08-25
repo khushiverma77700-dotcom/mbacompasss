@@ -633,7 +633,7 @@ function DetailInner() {
         <SectionHead eyebrow="Inside the program" title="Everything included in this course" />
         {(() => {
           const included = featureCheck.filter(([, on]) => on);
-          const excluded = featureCheck.filter(([, on]) => !on);
+
           return (
             <div className="mt-8 space-y-8">
               {included.length > 0 && (
