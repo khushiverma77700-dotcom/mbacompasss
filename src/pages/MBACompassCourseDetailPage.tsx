@@ -794,10 +794,10 @@ function DetailInner() {
               ["AI-personalised study plan", true, false],
               ["Section-wise analytics", true, "Limited"],
               ["Daily tests + sectional mocks", true, "Weekly only"],
-              ["Live mentor support", c.has_mentorship_1on1 || c.has_live_classes, false],
+              ["Live mentor support", true, false],
               ["Percentile predictor", c.has_percentile_predictor, false],
               ["GD-PI prep included", c.has_gd_pi_prep, "Extra cost"],
-              ["Lifetime access", c.has_lifetime_access, false],
+              ["Lifetime access", true, false],
               ["Total questions", mockAgg.totalQuestions ? `${mockAgg.totalQuestions.toLocaleString("en-IN")}+` : "5,000+", "1,500"],
             ].map(([label, a, b]: any, i) => (
               <CompareRow key={i} label={label} a={a} b={b} />
