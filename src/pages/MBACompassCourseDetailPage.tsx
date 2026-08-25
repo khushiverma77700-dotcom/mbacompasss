@@ -601,13 +601,14 @@ function DetailInner() {
                 {groupSections(mockAgg.bySection).map((g, gi) => (
                   <AccordionItem key={g.group} value={`g-${gi}`} className="border rounded-xl px-4 bg-white">
                     <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3 text-left">
-                        <span className="text-sm font-semibold text-gray-900">{g.group}</span>
-                        <span className="text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
-                          {g.items.length} sections • {g.total} questions
+                      <div className="flex flex-1 items-center justify-between gap-2 text-left pr-2">
+                        <span className="text-[13px] sm:text-sm font-semibold text-gray-900 whitespace-nowrap">{g.group}</span>
+                        <span className="text-[11px] sm:text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5 whitespace-nowrap shrink-0">
+                          {g.items.length} sec • {g.total} Qs
                         </span>
                       </div>
                     </AccordionTrigger>
+
                     <AccordionContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pb-2">
                         {g.items.map(([sec, n]) => (
