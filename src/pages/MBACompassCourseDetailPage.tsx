@@ -540,6 +540,9 @@ function DetailInner() {
         </section>
       )}
 
+      {/* DASHBOARD SHOWCASE */}
+      <DashboardShowcase />
+
       {/* EXAM COVERAGE + MOCK LIBRARY */}
       {(Object.keys(mockAgg.byExam).length > 0 || mockAgg.total > 0) && (
         <section className="container mx-auto px-4 py-8">
