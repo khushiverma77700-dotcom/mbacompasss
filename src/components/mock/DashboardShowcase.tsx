@@ -63,9 +63,9 @@ export default function DashboardShowcase() {
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => setPaused(false)}
       >
-        <div className="relative px-3 sm:px-10 py-6">
+        <div className="relative px-3 sm:px-8 py-6 overflow-hidden">
           {/* 3-up stage: side previews (desktop) with a zoomed centre slide */}
-          <div className="flex items-center justify-center gap-3 sm:gap-4">
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
             {[-1, 0, 1].map((offset) => {
               const s = at(offset);
               const isCenter = offset === 0;
@@ -77,16 +77,17 @@ export default function DashboardShowcase() {
                   aria-label={isCenter ? s.title : `Show ${s.title}`}
                   aria-current={isCenter}
                   tabIndex={isCenter ? -1 : 0}
-                  className={`relative shrink-0 transition-all duration-500 ease-out rounded-xl overflow-hidden bg-white border ${
+                  className={`relative shrink-0 rounded-xl overflow-hidden bg-white border transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                     isCenter
-                      ? "w-full sm:w-[54%] border-sky-200 shadow-xl z-10 scale-100"
-                      : "hidden sm:block w-[23%] border-sky-100 shadow-sm opacity-60 hover:opacity-90 scale-95"
-                  }`}
+                      ? "w-full sm:w-[64%] border-sky-200 shadow-2xl z-10 scale-100 opacity-100"
+                      : "hidden sm:block w-[19%] border-sky-100 shadow-sm opacity-45 blur-[1px] hover:opacity-80 hover:blur-0 scale-90"
+                  } ${offset === -1 ? "-translate-x-2" : offset === 1 ? "translate-x-2" : ""}`}
                 >
                   <img
+                    key={s.url}
                     src={s.url}
                     alt={`MBA Compass mocks dashboard — ${s.title}`}
-                    className="w-full h-auto aspect-[16/10] object-contain bg-white"
+                    className={`w-full h-auto aspect-[16/10] object-contain bg-white ${isCenter ? "animate-in fade-in slide-in-from-right-6 duration-700" : ""}`}
                     loading={isCenter && offset === 0 ? "eager" : "lazy"}
                     decoding="async"
                   />
@@ -94,6 +95,7 @@ export default function DashboardShowcase() {
               );
             })}
           </div>
+
 
           <button
             type="button"
