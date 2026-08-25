@@ -648,21 +648,6 @@ function DetailInner() {
                   ))}
                 </div>
               )}
-              {excluded.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Not included in this plan</h3>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {excluded.map(([label]) => (
-                      <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-white border-slate-200 text-muted-foreground">
-                        <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-slate-100 text-slate-500">
-                          <XIcon className="h-4 w-4" />
-                        </span>
-                        <span className="font-medium">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           );
         })()}
