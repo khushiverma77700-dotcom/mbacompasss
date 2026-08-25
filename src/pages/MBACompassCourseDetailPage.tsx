@@ -418,15 +418,18 @@ function DetailInner() {
                     ) : (
                       <Button size="lg" className="w-full bg-sky-600 hover:bg-sky-700">Enroll Now <ArrowRight className="h-4 w-4 ml-1" /></Button>
                     )}
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" onClick={toggleCompare}>
-                        <GitCompare className="h-4 w-4 mr-1" /> {inCompare ? "Added" : "Compare"}
-                      </Button>
+                    <div className="flex items-center justify-center gap-4 pt-1">
+                      <button type="button" onClick={toggleCompare} className="text-sm font-medium text-sky-700 underline-offset-4 hover:underline">
+                        {inCompare ? "Added to compare" : "Compare"}
+                      </button>
+                      <span className="h-4 w-px bg-sky-100" aria-hidden />
                       {c.brochure_url ? (
-                        <Button asChild variant="outline">
-                          <a href={c.brochure_url} target="_blank" rel="noopener noreferrer"><Download className="h-4 w-4 mr-1" /> Brochure</a>
-                        </Button>
-                      ) : <Button variant="outline" disabled><Download className="h-4 w-4 mr-1" /> Brochure</Button>}
+                        <a href={c.brochure_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sky-700 underline-offset-4 hover:underline">
+                          Download brochure
+                        </a>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Brochure coming soon</span>
+                      )}
                     </div>
                   </div>
 
