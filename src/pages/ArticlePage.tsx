@@ -153,8 +153,47 @@ const ArticlePage = () => {
       <SEOHead {...resolvedSeo} ogType="article" />
       <ReadingProgress />
 
-      {/* Cinematic Hero */}
-      <div className="relative overflow-hidden aspect-[16/9] max-h-[620px] min-h-[340px] md:min-h-[420px] flex items-end bg-[hsl(210,45%,12%)]">
+      {/* Mobile hero — stacked, no text-over-banner */}
+      <div className="md:hidden bg-card border-b border-border">
+        <div className="px-4 pt-5 pb-4">
+          <span className="inline-flex items-center gap-1.5 mb-3 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            {article.category}
+          </span>
+          <h1 className="font-heading text-[1.6rem] font-extrabold text-foreground leading-[1.15] tracking-[-0.02em]">
+            {(article as any).h1_tag || article.title}
+          </h1>
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted-foreground">
+            {article.author && (
+              <span className="flex items-center gap-1.5 font-semibold text-foreground/80">
+                <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="w-3 h-3 text-primary" />
+                </span>
+                {article.author}
+              </span>
+            )}
+            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(article.created_at)}</span>
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {readTime} read</span>
+          </div>
+        </div>
+        {mobileHeroImage && (
+          <div className="px-4 pb-5">
+            <div className="relative overflow-hidden rounded-2xl bg-muted aspect-[16/9] border border-border">
+              <img
+                src={mobileHeroImage}
+                alt={article.title}
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="eager"
+                {...({ fetchpriority: "high" } as any)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Cinematic Hero (desktop) */}
+      <div className="relative hidden overflow-hidden aspect-[16/9] max-h-[620px] min-h-[340px] md:min-h-[420px] md:flex items-end bg-[hsl(210,45%,12%)]">
+
         {/* Background */}
         <div className="absolute inset-0">
           {heroImage ? (
