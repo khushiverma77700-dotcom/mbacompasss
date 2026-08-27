@@ -137,8 +137,13 @@ const AdminBulkExams = () => {
     };
   }, [batchId, inFlight, fetchJobs]);
 
-  const kickWorker = () =>
-    supabase.functions.invoke("exam-generation-worker", { body: {} }).catch(() => {});
+/** Fans the queue out across parallel workers so many exams generate at once. */
+const PARALLEL_WORKERS = 12;
+const kickWorker = () =>
+  supabase.functions
+    .invoke("exam-generation-worker", { body: { concurrency: PARALLEL_WORKERS } })
+    .catch(() => {});
+
 
   const downloadTemplate = () => {
     const blob = new Blob([TEMPLATE], { type: "text/csv;charset=utf-8" });
@@ -239,7 +244,9 @@ const AdminBulkExams = () => {
     const ok = jobs.filter((j) => ["completed", "published"].includes(j.status)).length;
     const failed = jobs.filter((j) => j.status === "failed").length;
     const done = ok + failed;
-    const running = jobs.find((j) => j.status === "running") || null;
+    const runningJobs = jobs.filter((j) => j.status === "running");
+    const running = runningJobs[0] || null;
+
     const tokens = jobs.reduce((s, j) => s + (j.tokens_used || 0), 0);
     // Partial credit for the exam currently mid-flight, so the bar always moves.
     const fractional = jobs.reduce((s, j) => {
@@ -251,7 +258,7 @@ const AdminBulkExams = () => {
       total, ok, failed, done,
       remaining: total - done,
       pct: total ? Math.round((fractional / total) * 100) : 0,
-      running, tokens,
+      running, runningJobs, tokens,
     };
   }, [jobs]);
 
@@ -369,11 +376,12 @@ const AdminBulkExams = () => {
               <Progress value={stats.pct} className="h-2.5" />
               <div className="flex flex-wrap items-center justify-between gap-2 mt-2 text-xs text-muted-foreground">
                 <span>
-                  {stats.running
-                    ? <>Currently processing: <span className="font-semibold text-foreground">{stats.running.exam_name}</span>{stats.running.step ? ` — ${stats.running.step}` : ""}</>
-                    : inFlight ? "Waiting for the worker to pick up the next exam…" : "Batch finished."}
+                  {stats.runningJobs.length
+                    ? <>Generating in parallel ({stats.runningJobs.length} of up to {PARALLEL_WORKERS} workers): <span className="font-semibold text-foreground">{stats.runningJobs.map((j) => j.exam_name).join(", ")}</span></>
+                    : inFlight ? `Starting ${PARALLEL_WORKERS} parallel workers…` : "Batch finished."}
                 </span>
                 <span>{stats.done} of {stats.total} exams{stats.tokens ? ` · ${stats.tokens.toLocaleString()} tokens` : ""}</span>
+
               </div>
             </div>
 

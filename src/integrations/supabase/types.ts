@@ -11622,6 +11622,45 @@ export type Database = {
         Args: never
         Returns: number
       }
+      claim_exam_generation_job: {
+        Args: { _lock_minutes?: number; _max_attempts?: number }
+        Returns: {
+          attempts: number
+          auto_publish: boolean
+          batch_id: string | null
+          batch_label: string | null
+          created_at: string
+          created_by: string | null
+          error: string | null
+          exam_category: string | null
+          exam_id: string | null
+          exam_name: string
+          exam_year: number | null
+          finished_at: string | null
+          id: string
+          log: Json
+          mode: string
+          notes: string | null
+          official_website: string | null
+          published_slug: string | null
+          result: Json | null
+          sort_order: number | null
+          sources: Json | null
+          status: string
+          step: string | null
+          steps_done: number
+          steps_total: number
+          tokens_used: number
+          updated_at: string
+          worker_lock_until: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "exam_generation_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       claim_master_refresh_item: {
         Args: { _lock_minutes?: number }
         Returns: {
