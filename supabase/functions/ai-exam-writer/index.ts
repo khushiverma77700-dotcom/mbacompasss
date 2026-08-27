@@ -429,6 +429,93 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Stage 2 — gap-fill only. Takes the EXISTING sections of a published exam
+  // plus (optionally) a gap list, re-researches only the missing facts from the
+  // official site and returns a PATCH containing just the repaired modules.
+  if (body.stage === "gapfill") {
+    return streamWithHeartbeat(async () => {
+      const existing: Record<string, any> =
+        body.sections && typeof body.sections === "object" ? body.sections : {};
+
+      const allGaps: Gap[] = Array.isArray(body.gaps) && body.gaps.length
+        ? body.gaps.map((g: any) =>
+            typeof g === "string" ? { key: g, detail: g } : { key: g.key, detail: g.detail || g.key })
+        : auditExamSections(existing);
+
+      if (!allGaps.length) {
+        return { patch: {}, gaps_before: 0, gaps_after: 0, tokens_used: 0, sources: [], batches: [] };
+      }
+
+      const keys = [...new Set(allGaps.map((g) => g.key))];
+      const researchData = body.research?.notes
+        ? body.research
+        : await researchGaps(examName, year, body.official_website, keys);
+
+      const ctx = {
+        site: body.official_website,
+        category: body.exam_category,
+        notes: body.notes,
+        researchNotes: researchData.notes,
+      };
+
+      const byBatch = gapsByBatch(allGaps);
+      const requested: BatchName[] = Array.isArray(body.batches) && body.batches.length
+        ? body.batches
+        : (Object.keys(byBatch) as BatchName[]);
+
+      const patch: Record<string, any> = {};
+      const errors: string[] = [];
+      let tokens = 0;
+      const handled: string[] = [];
+
+      for (const batch of requested) {
+        const batchGaps = byBatch[batch];
+        if (!batchGaps?.length) continue;
+        const gapKeyList = [...new Set(batchGaps.map((g) => g.key))];
+        try {
+          const { data, tokens: t } = await generateBatch(batch, examName, year, ctx, {
+            gaps: batchGaps.map((g) => `${g.key} — ${g.detail}`),
+            previous: existing,
+          });
+          tokens += t;
+          // keep only the modules that actually had gaps, and only when the new
+          // version is at least as rich as what is already live
+          const merged = mergeRicher({ ...existing }, data, gapKeyList);
+          for (const k of gapKeyList) {
+            if (merged[k] !== undefined && merged[k] !== existing[k]) patch[k] = merged[k];
+          }
+          handled.push(batch);
+        } catch (e) {
+          errors.push(`${batch}: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
+      // Never ship blank rows / placeholder cells: prune the merged result and
+      // keep only the pruned versions of the patched keys.
+      const pruned = pruneBlankContent({ ...existing, ...patch });
+      const finalPatch: Record<string, any> = {};
+      for (const k of Object.keys(patch)) {
+        if (pruned[k] !== undefined) finalPatch[k] = pruned[k];
+      }
+
+      const after = auditExamSections({ ...existing, ...finalPatch });
+      return {
+        patch: finalPatch,
+        gaps_before: allGaps.length,
+        gaps_after: after.length,
+        gaps_remaining: after,
+        keys_patched: Object.keys(finalPatch),
+        batches: handled,
+        sources: researchData.sources || [],
+        research: researchData,
+        tokens_used: tokens,
+        errors,
+      };
+    });
+  }
+
+
+
   return streamWithHeartbeat(async () => {
     const batches: BatchName[] = Array.isArray(body.batches) && body.batches.length
       ? body.batches
