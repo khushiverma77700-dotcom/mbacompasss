@@ -16,6 +16,9 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const MAX_RUN_MS = 110_000;
 const LOCK_MINUTES = 10;
 const MAX_ATTEMPTS = 3;
+// How many exams may generate at the same time (fan-out of parallel workers).
+const DEFAULT_CONCURRENCY = 12;
+const MAX_CONCURRENCY = 15;
 
 const BATCHES = [
   { key: "core", label: "Hero, Quick Answer, Highlights, Dates, Overview, Eligibility, Registration & Fees" },
@@ -31,28 +34,41 @@ async function appendLog(sb: any, jobId: string, entry: Record<string, unknown>)
   await sb.from("exam_generation_jobs").update({ log }).eq("id", jobId);
 }
 
+/**
+ * Atomically claim the next job. Uses a SECURITY DEFINER RPC backed by
+ * FOR UPDATE SKIP LOCKED so 10-15 parallel workers never grab the same exam.
+ */
 async function claimJob(sb: any) {
-  const nowIso = new Date().toISOString();
-  const { data: candidates } = await sb
-    .from("exam_generation_jobs")
-    .select("*")
-    .in("status", ["queued", "running"])
-    .or(`worker_lock_until.is.null,worker_lock_until.lt.${nowIso}`)
-    .lt("attempts", MAX_ATTEMPTS)
-    .order("created_at", { ascending: true })
-    .limit(1);
-  const job = candidates?.[0];
-  if (!job) return null;
-  const lockUntil = new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString();
-  const { data: locked } = await sb
-    .from("exam_generation_jobs")
-    .update({ status: "running", worker_lock_until: lockUntil, attempts: (job.attempts ?? 0) + 1 })
-    .eq("id", job.id)
-    .lt("attempts", MAX_ATTEMPTS)
-    .select("*")
-    .maybeSingle();
-  return locked || null;
+  const { data, error } = await sb.rpc("claim_exam_generation_job", {
+    _lock_minutes: LOCK_MINUTES,
+    _max_attempts: MAX_ATTEMPTS,
+  });
+  if (error) throw new Error(`claim failed: ${error.message}`);
+  const job = Array.isArray(data) ? data[0] : data;
+  return job || null;
 }
+
+async function pendingCount(sb: any) {
+  const { count } = await sb
+    .from("exam_generation_jobs")
+    .select("id", { count: "exact", head: true })
+    .in("status", ["queued", "running"])
+    .lt("attempts", MAX_ATTEMPTS);
+  return count ?? 0;
+}
+
+function invokeWorker(body: Record<string, unknown>) {
+  return fetch(`${SUPABASE_URL}/functions/v1/exam-generation-worker`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      "x-worker-key": SERVICE_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  }).catch(() => {});
+}
+
 
 async function callWriter(payload: Record<string, unknown>) {
   const resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-exam-writer`, {
@@ -259,7 +275,24 @@ Deno.serve(async (req) => {
   const started = Date.now();
   let processed = 0;
 
+  let body: any = {};
+  try { body = await req.json(); } catch { /* empty body is fine */ }
+
   try {
+    // ---- Dispatcher mode (default entry point) ----------------------------
+    // Fans the queue out across up to MAX_CONCURRENCY parallel worker
+    // invocations so a 30-exam batch runs ~12 at a time instead of one by one.
+    if (!body?.worker) {
+      const pending = await pendingCount(sb);
+      const requested = Number(body?.concurrency) || DEFAULT_CONCURRENCY;
+      const lanes = Math.max(0, Math.min(pending, MAX_CONCURRENCY, Math.max(1, requested)));
+      for (let i = 0; i < lanes; i++) invokeWorker({ worker: true, lane: i });
+      return new Response(JSON.stringify({ mode: "dispatch", pending, workers_started: lanes }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ---- Worker lane -----------------------------------------------------
     while (Date.now() - started < MAX_RUN_MS) {
       const job = await claimJob(sb);
       if (!job) break;
@@ -279,23 +312,16 @@ Deno.serve(async (req) => {
       processed++;
     }
 
-    // Self-kick when work remains and this invocation ran out of time.
-    const { count } = await sb
-      .from("exam_generation_jobs")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["queued", "running"])
-      .lt("attempts", MAX_ATTEMPTS);
-    if ((count ?? 0) > 0 && Date.now() - started >= MAX_RUN_MS) {
-      fetch(`${SUPABASE_URL}/functions/v1/exam-generation-worker`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${SERVICE_KEY}`, "x-worker-key": SERVICE_KEY, "Content-Type": "application/json" },
-        body: "{}",
-      }).catch(() => {});
+    // Keep this lane alive while work remains (survives a closed browser).
+    const pending = await pendingCount(sb);
+    if (pending > 0 && Date.now() - started >= MAX_RUN_MS) {
+      invokeWorker({ worker: true, lane: body?.lane ?? 0 });
     }
 
-    return new Response(JSON.stringify({ processed, pending: count ?? 0 }), {
+    return new Response(JSON.stringify({ mode: "worker", processed, pending }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (e) {
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }), {
       status: 500,
