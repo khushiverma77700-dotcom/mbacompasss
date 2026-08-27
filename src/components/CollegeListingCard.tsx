@@ -8,6 +8,7 @@ import {
   Building2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { shortStat, shortLabel, clipText } from "@/lib/textClip";
 
 interface Props {
   college: any;
@@ -23,7 +24,10 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
   const specs = uniq(college.specializations);
   const recruiters = uniq(college.top_recruiters);
   const accreditations = uniq(college.accreditations);
-  const displayRank = college.ranking || rank;
+  const displayRank = Number(college.ranking) > 0 ? Number(college.ranking) : rank;
+  const students = Number(college.total_students) > 0 ? Number(college.total_students) : null;
+  const campusSize = String(college.campus_size || "").trim();
+
 
   return (
     <div className="animate-fade-in">
