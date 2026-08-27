@@ -39,10 +39,10 @@ interface Job {
   log: any;
 }
 
-const TEMPLATE = `Exam Name,Category,Exam Year,Official Exam Link
-CAT,MBA Entrance,2026,https://iimcat.ac.in
-XAT,MBA Entrance,2026,https://xatonline.in
-NMAT,MBA Entrance,2026,https://www.nmat.org.in
+const TEMPLATE = `Exam Name,Category,Exam Year,Official Exam Link,Sort Order
+CAT,MBA Entrance,2026,https://iimcat.ac.in,1
+XAT,MBA Entrance,2026,https://xatonline.in,2
+NMAT,MBA Entrance,2026,https://www.nmat.org.in,3
 `;
 
 const STATUS_META: Record<string, { icon: JSX.Element; className: string; label: string }> = {
