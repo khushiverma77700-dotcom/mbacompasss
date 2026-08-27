@@ -2,7 +2,7 @@ import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom"
 import { useMemo } from "react";
 import DOMPurify from "isomorphic-dompurify";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
-import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, Star, Award, Building2, Users, Monitor, Building, Wifi, ArrowLeft, Share2 } from "lucide-react";
+import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, Star, Award, Building2, Users, Monitor, Building, Wifi, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -235,10 +235,7 @@ const CategoryPage = () => {
             ]}
             className="mb-4 text-primary-foreground/80 [&_a:hover]:text-white"
           />
-          <div className="flex items-center justify-between mb-8">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
+          <div className="flex items-center justify-end mb-8">
             <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
               <Share2 className="w-3.5 h-3.5" /> Share
             </button>
