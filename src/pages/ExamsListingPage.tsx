@@ -301,7 +301,7 @@ const ExamsListingPage = () => {
   const frequency = searchParams.get("frequency") || "all";
   const month = searchParams.get("month") || "all";
   const status = searchParams.get("status") || "all";
-  const sort = searchParams.get("sort") || "soonest";
+  const sort = searchParams.get("sort") || "curated";
 
   const setParam = (key: string, value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -327,7 +327,7 @@ const ExamsListingPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exams")
-        .select("id, name, slug, full_name, conducting_body, frequency, exam_date, registration_deadline, description, official_website, logo_url, exam_year, exam_category, exam_level, exam_mode, duration, pattern")
+        .select("id, name, slug, full_name, conducting_body, frequency, exam_date, registration_deadline, description, official_website, logo_url, exam_year, exam_category, exam_level, exam_mode, duration, pattern, listing_sort_order")
         .order("name");
       if (error) throw error;
       return (data || []).filter((r: any) => clean(r.name) && clean(r.slug));
