@@ -205,7 +205,8 @@ async function processItem(sb: any, item: Item) {
     exam.sections && typeof exam.sections === "object" ? { ...exam.sections } : {};
 
   let gaps: Gap[] = auditExamSections(sections);
-  const gapsBefore = item.gaps_before ?? gaps.length;
+  // column defaults to 0, so treat 0 as "not measured yet"
+  const gapsBefore = item.gaps_before && item.gaps_before > 0 ? item.gaps_before : gaps.length;
 
   await sb.from("exam_backfill_items").update({
     step: `Auditing ${exam.name} — ${gaps.length} gaps`,
