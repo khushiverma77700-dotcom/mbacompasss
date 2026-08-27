@@ -12325,6 +12325,14 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      system_check_cron_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          jobname: string
+          schedule: string
+        }[]
+      }
       unlock_bundle_mocks: {
         Args: { _bundle_id: string; _user_id: string }
         Returns: number
