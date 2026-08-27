@@ -14,13 +14,14 @@ import { cleanValue, tableHasRows, type ExamSections, type ExamSource, type Tabl
 
 /* ---------------------------------------------------------------- primitives */
 
-export const Section = ({ id, title, kicker, children }: { id: string; title: string; kicker?: string; children: ReactNode }) => (
-  <section id={id} className="scroll-mt-24">
-    <div className="mb-4">
-      {kicker && <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">{kicker}</p>}
-      <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground">{title}</h2>
+export const Section = ({ id, title, kicker, intro, children }: { id: string; title: string; kicker?: string; intro?: string; children: ReactNode }) => (
+  <section id={id} className="scroll-mt-28 min-w-0 rounded-2xl border border-border bg-card/60 p-5 md:p-7">
+    <div className="mb-5 border-b border-border/70 pb-4">
+      {kicker && <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary mb-1.5">{kicker}</p>}
+      <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground leading-snug">{title}</h2>
+      {intro && <p className="text-sm text-muted-foreground mt-2 max-w-3xl">{intro}</p>}
     </div>
-    {children}
+    <div className="min-w-0 space-y-4">{children}</div>
   </section>
 );
 
