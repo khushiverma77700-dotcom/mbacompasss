@@ -153,7 +153,7 @@ async function research(examName: string, year: number | null, site?: string) {
     return true;
   });
 
-  return { sources: uniqueSources, notes: chunks.join("\n\n---\n\n").slice(0, 45000) };
+  return { sources: uniqueSources, notes: chunks.join("\n\n---\n\n").slice(0, 70000) };
 }
 
 function extractJson(text: string): any {
