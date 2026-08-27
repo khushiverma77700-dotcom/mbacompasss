@@ -54,6 +54,29 @@ async function claimJob(sb: any) {
   return locked || null;
 }
 
+async function callWriter(payload: Record<string, unknown>) {
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-exam-writer`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      "x-worker-key": SERVICE_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+  const raw = await resp.text();
+  if (!resp.ok) throw new Error(`ai-exam-writer ${resp.status}: ${raw.slice(0, 300)}`);
+  let data: any;
+  try {
+    // The writer streams whitespace heartbeats before the JSON payload.
+    data = JSON.parse(raw.trim());
+  } catch {
+    throw new Error(`ai-exam-writer returned invalid JSON: ${raw.slice(0, 200)}`);
+  }
+  if (data?.error) throw new Error(`ai-exam-writer: ${String(data.error).slice(0, 300)}`);
+  return data;
+}
+
 async function runJob(sb: any, job: any) {
   const existing = (job.result && typeof job.result === "object" ? job.result : {}) as any;
   const sections: Record<string, any> = existing.sections && typeof existing.sections === "object" ? { ...existing.sections } : {};
@@ -62,35 +85,47 @@ async function runJob(sb: any, job: any) {
   let tokens = job.tokens_used ?? 0;
   const doneBatches: string[] = Array.isArray(existing.done_batches) ? existing.done_batches : [];
 
+  // Research runs as its own short call so no single invocation has to crawl
+  // sources AND generate content (that was hitting the 150s idle timeout).
+  if (!research) {
+    await sb.from("exam_generation_jobs").update({ step: "Researching official sources" }).eq("id", job.id);
+    await appendLog(sb, job.id, { level: "info", step: "research", message: "Researching official sources" });
+    const r = await callWriter({
+      stage: "research",
+      exam_name: job.exam_name,
+      exam_year: job.exam_year,
+      official_website: job.official_website,
+    });
+    research = r.research;
+    if (Array.isArray(r.sources)) {
+      const seen = new Set(sources.map((s: any) => s.url));
+      for (const s of r.sources) if (!seen.has(s.url)) { sources.push(s); seen.add(s.url); }
+    }
+    await sb.from("exam_generation_jobs").update({
+      sources,
+      result: { sections, research, done_batches: doneBatches },
+      worker_lock_until: new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString(),
+    }).eq("id", job.id);
+    await appendLog(sb, job.id, { level: "success", step: "research", message: `Research done — ${sources.length} official sources` });
+  }
+
   for (const batch of BATCHES) {
     if (doneBatches.includes(batch.key)) continue;
 
     await sb.from("exam_generation_jobs").update({ step: batch.label }).eq("id", job.id);
     await appendLog(sb, job.id, { level: "info", step: batch.key, message: `Generating: ${batch.label}` });
 
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-exam-writer`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        "x-worker-key": SERVICE_KEY,
-      },
-      body: JSON.stringify({
-        exam_name: job.exam_name,
-        exam_year: job.exam_year,
-        official_website: job.official_website,
-        exam_category: job.exam_category,
-        notes: job.notes,
-        batches: [batch.key],
-        ...(research ? { research } : {}),
-      }),
+    const data = await callWriter({
+      exam_name: job.exam_name,
+      exam_year: job.exam_year,
+      official_website: job.official_website,
+      exam_category: job.exam_category,
+      notes: job.notes,
+      batches: [batch.key],
+      max_repair_passes: 1,
+      ...(research ? { research } : {}),
     });
 
-    if (!resp.ok) {
-      const t = await resp.text().catch(() => "");
-      throw new Error(`ai-exam-writer ${resp.status}: ${t.slice(0, 300)}`);
-    }
-    const data = await resp.json();
     Object.assign(sections, data.sections || {});
     if (!research && data.research) research = data.research;
     if (Array.isArray(data.sources) && data.sources.length) {
@@ -99,6 +134,7 @@ async function runJob(sb: any, job: any) {
     }
     tokens += data.tokens_used ?? 0;
     doneBatches.push(batch.key);
+
 
     const generated = Object.keys(data.sections || {}).filter((k) => {
       const v = (data.sections || {})[k];
