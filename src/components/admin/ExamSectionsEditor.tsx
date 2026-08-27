@@ -22,6 +22,7 @@ interface Props {
   sections: ExamSections;
   sources: ExamSource[];
   existingExamId?: string | null;
+  sortOrder?: number | null;
   onSectionsChange: (next: ExamSections) => void;
   onPublished: (examId: string, slug: string) => void;
 }
@@ -33,7 +34,7 @@ const slugify = (name: string) =>
 
 const ExamSectionsEditor = ({
   examName, examYear, officialWebsite, examCategory, logoUrl,
-  sections, sources, existingExamId, onSectionsChange, onPublished,
+  sections, sources, existingExamId, sortOrder, onSectionsChange, onPublished,
 }: Props) => {
   const { toast } = useToast();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -139,6 +140,7 @@ const ExamSectionsEditor = ({
         primary_keyword: seo.primary_keyword || null,
         keywords: seo.keywords?.length ? seo.keywords : null,
         reviewed_by: reviewedBy || null,
+        ...(sortOrder === null || sortOrder === undefined ? {} : { listing_sort_order: sortOrder }),
         sources: sources?.length ? sources : null,
         sections,
         updated_at: new Date().toISOString(),
