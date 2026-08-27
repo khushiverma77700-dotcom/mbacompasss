@@ -312,6 +312,7 @@ const kickWorker = () =>
                       <TableHead>Category</TableHead>
                       <TableHead>Year</TableHead>
                       <TableHead>Official Link</TableHead>
+                      <TableHead className="w-24">Sort Order</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
