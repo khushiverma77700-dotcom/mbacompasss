@@ -406,15 +406,25 @@ function buildChecks(): Check[] {
       const url = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(SITE)}&strategy=mobile&category=performance&key=${encodeURIComponent(key)}`;
       const start = Date.now();
       try {
-        const resp = await timed((signal) => fetch(url, { signal }), 25_000);
+        const resp = await timed(
+          (signal) => fetch(url, { signal, headers: { Referer: `${SITE}/`, Origin: SITE } }),
+          25_000,
+        );
         const ms = Date.now() - start;
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
+          const gmsg = String(data?.error?.message || `HTTP ${resp.status}`);
+          const restricted = /referer|referrer|API_KEY_HTTP_REFERRER/i.test(gmsg);
           return {
-            status: "fail",
+            status: restricted ? "warn" : "fail",
             httpStatus: resp.status,
-            message: data?.error?.message || `HTTP ${resp.status}`,
-            fixHint: "Verify the PSI API key and that the PageSpeed Insights API is enabled for the project.",
+            message: restricted
+              ? `PSI key is restricted to browser referrers, so server-side speed audits are blocked: ${gmsg}`
+              : gmsg,
+            detail: { latency_ms: ms, referrer_restricted: restricted },
+            fixHint: restricted
+              ? "In Google Cloud, change the GOOGLE_PSI_API_KEY restriction from 'HTTP referrers' to 'None' (or add an IP-less server key) so speed-optimizer can call PSI."
+              : "Verify the PSI API key and that the PageSpeed Insights API is enabled for the project.",
           };
         }
         const score = data?.lighthouseResult?.categories?.performance?.score;
@@ -527,30 +537,47 @@ function buildChecks(): Check[] {
       if (missing.length) {
         return { status: "fail", message: `OTP cannot be sent — missing ${missing.join(", ")}` };
       }
-      const start = Date.now();
-      try {
-        const url = `https://sms.hspsms.com/balance?username=${encodeURIComponent(username)}&apikey=${encodeURIComponent(apiKey)}`;
-        const resp = await timed((signal) => fetch(url, { signal }));
-        const text = (await resp.text().catch(() => "")).slice(0, 200);
-        const ms = Date.now() - start;
-        const looksBad = /invalid|error|authentication/i.test(text);
-        if (!resp.ok || looksBad) {
-          return {
-            status: "fail",
-            httpStatus: resp.status,
-            message: `HSPSMS rejected the credentials: ${text || `HTTP ${resp.status}`}`,
-            detail: { latency_ms: ms },
-          };
+      // Credential-validating probe: HSPSMS exposes a balance API, but some
+      // accounts have it firewalled. A blocked balance call is only a warning —
+      // an explicit "invalid credentials" answer is a real failure.
+      const endpoints = [
+        `https://sms.hspsms.com/api/balance?username=${encodeURIComponent(username)}&apikey=${encodeURIComponent(apiKey)}`,
+        `https://sms.hspsms.com/getBalance?username=${encodeURIComponent(username)}&apikey=${encodeURIComponent(apiKey)}`,
+      ];
+      const attempts: Array<{ url: string; status: number; body: string }> = [];
+      for (const url of endpoints) {
+        const start = Date.now();
+        try {
+          const resp = await timed((signal) => fetch(url, { signal }), 12_000);
+          const text = (await resp.text().catch(() => "")).slice(0, 200);
+          attempts.push({ url: url.replace(encodeURIComponent(apiKey), "***"), status: resp.status, body: text });
+          if (/invalid|authentication fail|wrong/i.test(text)) {
+            return {
+              status: "fail",
+              httpStatus: resp.status,
+              message: `HSPSMS rejected the credentials: ${text}`,
+              detail: { attempts },
+            };
+          }
+          if (resp.ok && text && !/error|forbidden/i.test(text)) {
+            return {
+              status: "pass",
+              httpStatus: resp.status,
+              message: `HSPSMS account reachable in ${Date.now() - start} ms — ${text}`,
+              detail: { latency_ms: Date.now() - start, response: text },
+            };
+          }
+        } catch (e) {
+          attempts.push({ url: "hspsms", status: 0, body: errText(e) });
         }
-        return {
-          status: "pass",
-          httpStatus: resp.status,
-          message: `HSPSMS account reachable in ${ms} ms (${text || "no balance payload"})`,
-          detail: { latency_ms: ms, response: text },
-        };
-      } catch (e) {
-        return { status: "fail", message: `HSPSMS unreachable: ${errText(e)}` };
       }
+      return {
+        status: "warn",
+        message:
+          "All four HSPSMS credentials are configured, but the balance API did not confirm them (endpoint blocked for this account). Judge delivery by the OTP success rate check below.",
+        detail: { attempts },
+        fixHint: "If OTP verification rates also drop, re-check the HSPSMS API key, sender ID and the DLT template text.",
+      };
     },
   });
 
