@@ -1205,7 +1205,10 @@ function renderExam(e: any): PageMeta {
   ]);
   const eligibility = listify(e.eligibility);
   const syllabus = listify(e.syllabus);
-  const faqs = Array.isArray(e.faqs) ? e.faqs : [];
+  const examSections = e.sections && typeof e.sections === "object" ? e.sections : null;
+  const modulesHtml = renderExamSections(examSections);
+  const sectionFaqs = Array.isArray(examSections?.faqs) ? examSections.faqs : [];
+  const faqs = (Array.isArray(e.faqs) && e.faqs.length ? e.faqs : sectionFaqs) as any[];
   const faqsHtml = faqs.length
     ? `<dl class="space-y-4">${faqs.map((f: any) => `<div><dt class="font-semibold text-slate-900">${esc(f.question || f.q || "")}</dt><dd class="mt-1 text-slate-700">${esc(f.answer || f.a || "")}</dd></div>`).join("")}</dl>`
     : "";
