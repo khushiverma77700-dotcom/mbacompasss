@@ -47,3 +47,9 @@ verify_jwt = false
 
 [functions.process-email-queue]
 verify_jwt = true
+
+[functions.ai-exam-writer]
+verify_jwt = false
+
+[functions.exam-generation-worker]
+verify_jwt = false

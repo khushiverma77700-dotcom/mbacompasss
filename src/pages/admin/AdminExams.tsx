@@ -16,6 +16,7 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
+import ExamAIGenerator from "@/components/admin/ExamAIGenerator";
 
 const emptyForm = {
   name: "", slug: "", full_name: "", description: "", conducting_body: "",
@@ -206,8 +207,13 @@ const AdminExams = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Exams</h1>
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam</Button>
+        <Button variant="outline" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam Manually</Button>
       </div>
+
+      <div className="mb-6">
+        <ExamAIGenerator onPublished={fetchExams} />
+      </div>
+
 
       <Card>
         <CardContent className="p-0">
