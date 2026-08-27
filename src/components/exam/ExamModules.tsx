@@ -120,13 +120,25 @@ const prettyUrl = (url: string) => {
   }
 };
 
+
+/** Keeps highlight values short and scannable — strips editorial asides that
+ *  legacy AI runs added, e.g. "(Admit Card download begins, per official site)". */
+const tidyHighlight = (raw: string) => {
+  let v = raw.trim();
+  v = v.replace(/\s*\(([^)]*(?:per official site|official site|as per|source)[^)]*)\)\s*/gi, " ");
+  v = v.replace(/,?\s*(?:as )?per (?:the )?official (?:site|website|notification)\.?$/i, "");
+  if (v.length > 70) v = v.replace(/\s*\([^)]*\)\s*$/, "");
+  return v.replace(/\s{2,}/g, " ").replace(/[;,]\s*$/, "").trim();
+};
+
 export const HighlightCards = ({ items }: { items: NonNullable<ExamSections["highlights"]> }) => {
   const valid = items.filter((i) => cleanValue(i.label) && cleanValue(i.value));
   if (!valid.length) return null;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
       {valid.map((item, i) => {
-        const value = String(item.value).trim();
+        const value = tidyHighlight(String(item.value));
+
         const Icon = highlightIcon(item.label || "");
         const isUrl = URL_RE.test(value);
         const isEmail = EMAIL_RE.test(value);
