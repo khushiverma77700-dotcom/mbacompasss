@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
     college_jobs_resumed: [] as string[],
     section_jobs_resumed: [] as string[],
     mock_worker_pump: null,
+    exam_worker_pump: null,
     errors: [] as string[],
   };
 
@@ -79,6 +80,26 @@ Deno.serve(async (req) => {
       (report as any).mock_worker_pump = await pumpResp.json().catch(() => ({ status: pumpResp.status }));
     } catch (err) {
       (report.errors as string[]).push(`mock worker pump: ${(err as Error).message}`);
+    }
+
+    // Keep bulk exam generation moving independently of the admin browser.
+    // The exam worker uses database leases and bounded continuation budgets, so
+    // calling this every minute is safe and does not duplicate active work.
+    try {
+      const examResp = await fetch(`${SUPABASE_URL}/functions/v1/exam-generation-worker`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_ROLE}`,
+          apikey: SERVICE_ROLE,
+          "x-worker-key": SERVICE_ROLE,
+        },
+        body: JSON.stringify({ concurrency: 12, source: "bulk-jobs-watchdog" }),
+      });
+      (report as any).exam_worker_pump = await examResp.json().catch(() => ({ status: examResp.status }));
+      if (!examResp.ok) (report.errors as string[]).push(`exam worker pump: HTTP ${examResp.status}`);
+    } catch (err) {
+      (report.errors as string[]).push(`exam worker pump: ${(err as Error).message}`);
     }
 
     const { data: recovered, error: recoverError } = await admin.rpc("recover_stale_bulk_jobs", {
