@@ -143,7 +143,7 @@ const HeroSection = () => {
       return;
     }
     if (query.trim()) {
-      navigate(`/category/cat?q=${encodeURIComponent(query)}`);
+      navigate(`/coaching?q=${encodeURIComponent(query.trim())}`);
     }
   };
 
