@@ -137,7 +137,7 @@ const ExamDeadlinesTicker = () => {
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
                   <Link
-                    to={`/exams/${exam.slug}`}
+                    to={`/exam/${exam.slug}`}
                     className={`relative block overflow-hidden rounded-2xl border ${urgency.ring} bg-background shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 group h-full`}
                   >
                     {/* top glow */}
