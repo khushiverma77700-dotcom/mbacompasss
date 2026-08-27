@@ -101,6 +101,10 @@ const ArticlePage = () => {
     }
   }, [article]);
 
+  // Auto-wrap every table in the article body in a horizontal slider.
+  useScrollableTables(contentRef, [article?.id, article?.content]);
+
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({ title: article?.title, url: window.location.href });
