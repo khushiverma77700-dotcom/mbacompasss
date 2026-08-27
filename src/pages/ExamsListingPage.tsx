@@ -152,7 +152,9 @@ const fromDb = (row: any): ExamCard => ({
   logoUrl: clean(row.logo_url),
   year: row.exam_year ?? null,
   sectionCount: Array.isArray(row?.pattern?.sections) ? row.pattern.sections.length : undefined,
+  sortOrder: row.listing_sort_order ?? null,
 });
+
 
 const fromStatic = (e: (typeof examDetails)[number]): ExamCard => ({
   id: e.id,
