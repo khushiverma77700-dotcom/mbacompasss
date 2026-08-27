@@ -326,12 +326,27 @@ const ExamDetailPage = () => {
               </Section>
             )}
 
-            {hasModuleContent(sections.fees) && (
-              <Section id="fees" title={`${examName} application fee`}>
-                <DataTable block={{
-                  columns: ["Category", "Application fee"],
-                  rows: (sections.fees || []).map((f) => [f.category || "", f.fee || ""]),
-                }} />
+            {(hasModuleContent(sections.fees) || hasModuleContent(sections.fees_notes)) && (
+              <Section
+                id="fees"
+                title={`${examName} application fee ${year || ""}`.trim()}
+                intro={`Category-wise ${examName} registration fee, accepted payment modes and refund rules.`}
+              >
+                {hasModuleContent(sections.fees) && (
+                  <DataTable
+                    block={{
+                      columns: (sections.fees || []).some((f) => cleanValue(f.notes))
+                        ? ["Category", "Application fee", "Notes"]
+                        : ["Category", "Application fee"],
+                      rows: (sections.fees || []).map((f) =>
+                        (sections.fees || []).some((x) => cleanValue(x.notes))
+                          ? [f.category || "", f.fee || "", f.notes || ""]
+                          : [f.category || "", f.fee || ""]),
+                    }}
+                    caption="Fees are as published by the conducting authority — verify on the official portal before paying."
+                  />
+                )}
+                <RichHtml html={sections.fees_notes} />
               </Section>
             )}
 
