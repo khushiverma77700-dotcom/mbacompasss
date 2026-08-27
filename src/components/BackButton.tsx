@@ -23,20 +23,19 @@ const BackButton = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-3">
-      <button
-        type="button"
-        onClick={handleBack}
-        aria-label="Go back"
-        className="group inline-flex items-center gap-2 min-h-[44px] rounded-full border border-border bg-card pl-2 pr-4 py-1.5 text-sm font-medium text-muted-foreground shadow-sm transition-all hover:border-primary/40 hover:text-primary hover:shadow-md active:scale-95"
-      >
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/10">
-          <ArrowLeft className="h-4 w-4" />
-        </span>
-        Back
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={handleBack}
+      aria-label="Go back"
+      className="group fixed bottom-5 left-4 z-40 inline-flex items-center gap-2 min-h-[44px] rounded-full border border-border bg-card/95 pl-2 pr-4 py-1.5 text-sm font-medium text-muted-foreground shadow-lg backdrop-blur transition-all hover:border-primary/40 hover:text-primary active:scale-95"
+    >
+      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/10">
+        <ArrowLeft className="h-4 w-4" />
+      </span>
+      Back
+    </button>
   );
 };
+
 
 export default BackButton;
