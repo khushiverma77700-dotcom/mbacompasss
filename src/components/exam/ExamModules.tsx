@@ -310,11 +310,11 @@ export const CollegeModule = ({
   const valid = colleges.filter((c) => cleanValue(c.name));
   if (!valid.length) return null;
   return (
-    <Card>
-      <CardContent className="p-5 md:p-6">
-        <h3 className="font-heading text-lg font-bold text-foreground">{title}</h3>
-        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
-        <div className="mt-4">
+    <Card className="min-w-0 overflow-hidden">
+      <CardContent className="min-w-0 p-5 md:p-7">
+        <h3 className="font-heading text-lg md:text-xl font-bold text-foreground">{title}</h3>
+        {description && <p className="text-sm text-muted-foreground mt-1.5">{description}</p>}
+        <div className="mt-5 min-w-0">
           <DataTable
             block={{
               columns: ["Institution", "Location", "Course", "Cutoff", "Fees", "Outcome"],
@@ -322,7 +322,7 @@ export const CollegeModule = ({
             }}
           />
         </div>
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-5">
           <Link to="/colleges"><Button size="sm" variant="outline" className="gap-1">Browse all colleges <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
           <Link to="/college-shortlister"><Button size="sm" variant="outline" className="gap-1">Shortlist colleges for my score <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
         </div>
