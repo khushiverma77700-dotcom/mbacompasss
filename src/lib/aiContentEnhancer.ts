@@ -178,6 +178,13 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
 
   let out = html;
 
+  // 0. Strip placeholder noise like "official TBA;" / "TBA –" that models
+  // sometimes prepend to figures. It must never surface on the site.
+  out = out
+    .replace(/\b(official\s+)?TBA\b\s*[;:,–—-]?\s*/gi, "")
+    .replace(/(<(?:p|li|td|th|h[1-6])[^>]*>)\s*[;:,–—-]\s*/gi, "$1");
+
+
   // 0a. Normalise leaked markdown embedded INSIDE existing HTML — e.g. a single
   // <p> containing "### Step-by-Step Process 1. **Enquiry**: …". Break it onto
   // separate lines so the markdown→HTML pass below renders headings + lists.
