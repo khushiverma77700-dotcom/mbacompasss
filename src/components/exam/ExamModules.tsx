@@ -5,7 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, CheckCircle2, ExternalLink, HelpCircle } from "lucide-react";
+import {
+  ArrowRight, Building2, CalendarDays, CheckCircle2, Clock, ExternalLink, FileText,
+  Globe, HelpCircle, IndianRupee, Info, Layers, Mail, Phone,
+} from "lucide-react";
 import { useScrollableTables } from "@/hooks/useScrollableTables";
 import { cleanValue, tableHasRows, type ExamSections, type ExamSource, type TableBlock } from "@/lib/examSections";
 
