@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import PageKeywords from "@/components/PageKeywords";
 import { useEffect, useRef } from "react";
-import { ArrowLeft, Calendar, Clock, User, Tag, Share2, BookOpen, ArrowRight } from "lucide-react";
+import { Calendar, Clock, User, Tag, Share2, BookOpen, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
