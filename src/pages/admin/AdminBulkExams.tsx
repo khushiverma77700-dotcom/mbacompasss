@@ -169,6 +169,7 @@ const kickWorker = () =>
     const iCat = idx("category");
     const iYear = idx("year");
     const iLink = idx("link", "website", "url");
+    const iSort = idx("sort order", "sort", "order");
     if (iName === -1) {
       toast({ title: "Missing 'Exam Name' column", variant: "destructive" });
       return;
@@ -182,6 +183,7 @@ const kickWorker = () =>
         exam_category: iCat > -1 ? (r[iCat] ?? "").trim() : "",
         exam_year: iYear > -1 ? (r[iYear] ?? "").trim() : "",
         official_website: iLink > -1 ? (r[iLink] ?? "").trim() : "",
+        sort_order: iSort > -1 ? (r[iSort] ?? "").trim() : "",
       });
     }
     if (!out.length) {
