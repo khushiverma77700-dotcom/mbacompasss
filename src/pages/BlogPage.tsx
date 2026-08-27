@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Calendar, Clock, Search, BookOpen, ArrowLeft, Share2 } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Search, BookOpen, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -90,10 +90,7 @@ const BlogPage = () => {
       />
 
       {/* Utility row */}
-      <div className="container mx-auto px-6 pt-6 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-slate-500 hover:text-sky-600 text-sm font-medium transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
+      <div className="container mx-auto px-6 pt-6 flex items-center justify-end">
         <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-slate-600 hover:text-sky-600 text-sm font-medium transition-colors bg-white border border-sky-100 px-3 py-1.5 rounded-full shadow-sm">
           <Share2 className="w-3.5 h-3.5" /> Share
         </button>

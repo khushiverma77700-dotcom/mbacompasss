@@ -13,7 +13,7 @@ import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { canonicalUrl } from "@/lib/canonical";
 import { withMerchantOfferFields } from "@/lib/offerSchema";
 import {
-  ChevronRight, ArrowLeft, GraduationCap, BookOpen, Clock, Calendar,
+  ChevronRight, GraduationCap, BookOpen, Clock, Calendar,
   CheckCircle2, Phone, MessageCircle, Mail, Trophy, Sparkles, ShieldCheck, Building2,
   Star, Users, Award, Target, TrendingUp, Zap, Download, Share2, Heart,
   Video, FileText, HeadphonesIcon, MapPin, Globe, Tag, IndianRupee,
@@ -671,11 +671,6 @@ const InstituteCoursePage = () => {
           </div>
         </section>
 
-        <div className="mt-8">
-          <Link to={`/institute/${inst.slug}`}>
-            <Button variant="ghost" className="gap-1.5"><ArrowLeft className="w-4 h-4" /> Back to {inst.name}</Button>
-          </Link>
-        </div>
       </div>
 
       {/* Mobile sticky CTA */}

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, FileText } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import RadarChartCard from "@/components/profile-report/RadarChartCard";
 import CollegeFitHeatmap from "@/components/profile-report/CollegeFitHeatmap";
 import ScenarioSimulator from "@/components/profile-report/ScenarioSimulator";
@@ -57,10 +57,7 @@ const SharedReportPage = () => {
     <div className="min-h-screen bg-background">
       <SEOHead title="Shared MBA Profile Report — B School Buzz" description="Read-only premium MBA profile analysis." canonical={`/report/${id}`} />
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <Link to="/profile-analyzer" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1">
-            <ArrowLeft className="w-4 h-4" /> Generate your own report
-          </Link>
+        <div className="flex items-center justify-end mb-6">
           <PdfDownloadButton targetRef={reportRef} fileName={`mba-report-${id?.slice(0, 8)}.pdf`} />
         </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { Loader2, ArrowLeft, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -55,9 +55,6 @@ const ListingFormPage = () => {
       <SEOHead title={`Edit Listing — ${orgName} | B School Buzz`} noIndex />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-6">
-          <Link to="/my-listings" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-3">
-            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Back to My Listings
-          </Link>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-3xl font-bold">{orgName}</h1>

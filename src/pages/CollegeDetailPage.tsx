@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import PageKeywords from "@/components/PageKeywords";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { MapPin, Star, Users, TrendingUp, Award, BookOpen, ArrowLeft, Globe, GraduationCap, CheckCircle, Building, Calendar, ChevronDown, ChevronUp, Download, ThumbsUp, ThumbsDown, HelpCircle, Home, Image, Medal, Banknote, MessageSquare } from "lucide-react";
+import { MapPin, Star, Users, TrendingUp, Award, BookOpen, Globe, GraduationCap, CheckCircle, Building, Calendar, ChevronDown, ChevronUp, Download, ThumbsUp, ThumbsDown, HelpCircle, Home, Image, Medal, Banknote, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -336,22 +336,17 @@ const CollegeDetailPage = () => {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6 pb-12 md:pt-8 md:pb-16">
-          {/* Breadcrumb / Back row */}
-          <div className="flex items-center justify-between mb-6">
-            <Link to="/colleges" className="inline-flex items-center gap-1.5 text-primary-foreground/85 hover:text-primary-foreground text-sm font-medium transition-colors group">
-              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" /> Back to Colleges
-            </Link>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied!" }); }}
-                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-primary-foreground bg-white/10 hover:bg-white/15 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 transition-colors"
-              >
-                <Share2 className="w-3.5 h-3.5" /> Share
-              </button>
-              <Badge className="bg-amber-400/95 text-amber-950 border-none font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 shadow-md">
-                ✦ Verified Profile
-              </Badge>
-            </div>
+          {/* Action row */}
+          <div className="flex items-center justify-end mb-6 gap-2">
+            <button
+              onClick={() => { navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied!" }); }}
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-primary-foreground bg-white/10 hover:bg-white/15 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 transition-colors"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Share
+            </button>
+            <Badge className="bg-amber-400/95 text-amber-950 border-none font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 shadow-md">
+              ✦ Verified Profile
+            </Badge>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

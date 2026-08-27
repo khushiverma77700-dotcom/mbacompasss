@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateInstituteSchema, generateBreadcrumbSchema, generateFAQSchema, generateReviewSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 import {
-  ArrowLeft, MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
+  MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
   ChevronRight, Users, Award, Sparkles, CheckCircle2, ShieldCheck, TrendingUp,
   GraduationCap, Calendar, BookOpen, Clock, Trophy, X
 } from "lucide-react";
