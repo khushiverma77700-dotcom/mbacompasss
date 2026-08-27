@@ -2905,6 +2905,147 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_backfill_items: {
+        Row: {
+          attempts: number
+          created_at: string
+          error: string | null
+          exam_id: string | null
+          exam_name: string
+          exam_slug: string | null
+          exam_year: number | null
+          fields_filled: number
+          finished_at: string | null
+          gaps: Json
+          gaps_after: number
+          gaps_before: number
+          id: string
+          job_id: string
+          log: Json
+          official_website: string | null
+          passes: number
+          research: Json | null
+          started_at: string | null
+          status: string
+          step: string | null
+          tokens_used: number
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          exam_id?: string | null
+          exam_name: string
+          exam_slug?: string | null
+          exam_year?: number | null
+          fields_filled?: number
+          finished_at?: string | null
+          gaps?: Json
+          gaps_after?: number
+          gaps_before?: number
+          id?: string
+          job_id: string
+          log?: Json
+          official_website?: string | null
+          passes?: number
+          research?: Json | null
+          started_at?: string | null
+          status?: string
+          step?: string | null
+          tokens_used?: number
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          exam_id?: string | null
+          exam_name?: string
+          exam_slug?: string | null
+          exam_year?: number | null
+          fields_filled?: number
+          finished_at?: string | null
+          gaps?: Json
+          gaps_after?: number
+          gaps_before?: number
+          id?: string
+          job_id?: string
+          log?: Json
+          official_website?: string | null
+          passes?: number
+          research?: Json | null
+          started_at?: string | null
+          status?: string
+          step?: string | null
+          tokens_used?: number
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_backfill_items_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_backfill_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "exam_backfill_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_backfill_jobs: {
+        Row: {
+          completed: number
+          created_at: string
+          created_by: string | null
+          failed: number
+          fields_filled: number
+          finished_at: string | null
+          id: string
+          label: string | null
+          status: string
+          tokens_used: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          completed?: number
+          created_at?: string
+          created_by?: string | null
+          failed?: number
+          fields_filled?: number
+          finished_at?: string | null
+          id?: string
+          label?: string | null
+          status?: string
+          tokens_used?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          completed?: number
+          created_at?: string
+          created_by?: string | null
+          failed?: number
+          fields_filled?: number
+          finished_at?: string | null
+          id?: string
+          label?: string | null
+          status?: string
+          tokens_used?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exam_generation_jobs: {
         Row: {
           attempts: number
@@ -11621,6 +11762,41 @@ export type Database = {
       backfill_personalized_questions_from_mocks: {
         Args: never
         Returns: number
+      }
+      claim_exam_backfill_item: {
+        Args: { _lock_minutes?: number; _max_attempts?: number }
+        Returns: {
+          attempts: number
+          created_at: string
+          error: string | null
+          exam_id: string | null
+          exam_name: string
+          exam_slug: string | null
+          exam_year: number | null
+          fields_filled: number
+          finished_at: string | null
+          gaps: Json
+          gaps_after: number
+          gaps_before: number
+          id: string
+          job_id: string
+          log: Json
+          official_website: string | null
+          passes: number
+          research: Json | null
+          started_at: string | null
+          status: string
+          step: string | null
+          tokens_used: number
+          updated_at: string
+          worker_lock_until: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "exam_backfill_items"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       claim_exam_generation_job: {
         Args: { _lock_minutes?: number; _max_attempts?: number }
