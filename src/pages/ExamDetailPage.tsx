@@ -21,6 +21,7 @@ import {
   FaqAccordion, HighlightCards, PreparationBlocks, QuickAnswerBox, ResourceLinks,
   RichHtml, Section, SourcesBox, StepFlow, SyllabusAccordion, ToolLinks, UpdatesList,
 } from "@/components/exam/ExamModules";
+import { ExamPlannerCard, ExamTocCard } from "@/components/exam/ExamSidebar";
 import {
   cleanValue, hasModuleContent, parseSections, tableHasRows,
   type ExamSections, type ExamSource,
