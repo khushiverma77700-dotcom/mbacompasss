@@ -311,17 +311,69 @@ function mergeRicher(base: Record<string, any>, next: Record<string, any>, keys:
 }
 
 
+/**
+ * Runs `work` while streaming whitespace heartbeats so the platform never sees
+ * an idle connection (research + multi-pass generation can run for minutes).
+ * Leading whitespace is valid JSON padding, so callers can still `res.json()`.
+ */
+function streamWithHeartbeat(work: () => Promise<unknown>): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const beat = setInterval(() => {
+        try { controller.enqueue(encoder.encode(" ")); } catch { /* closed */ }
+      }, 10_000);
+      try {
+        const payload = await work();
+        controller.enqueue(encoder.encode(JSON.stringify(payload)));
+      } catch (e) {
+        controller.enqueue(encoder.encode(JSON.stringify({
+          error: e instanceof Error ? e.message : String(e),
+        })));
+      } finally {
+        clearInterval(beat);
+        controller.close();
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const guard = await requireAdmin(req, corsHeaders);
   if (guard) return guard;
 
+  let body: any;
   try {
-    const body = await req.json();
-    const examName: string = (body.exam_name || "").trim();
-    if (!examName) throw new Error("exam_name is required");
-    const year: number | null = body.exam_year ? Number(body.exam_year) : null;
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "invalid JSON body" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const examName: string = (body.exam_name || "").trim();
+  if (!examName) {
+    return new Response(JSON.stringify({ error: "exam_name is required" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const year: number | null = body.exam_year ? Number(body.exam_year) : null;
+
+  // Stage 1 — research only. Kept as its own request so a single invocation
+  // never has to do Firecrawl crawling AND long generation back to back.
+  if (body.stage === "research") {
+    return streamWithHeartbeat(async () => {
+      const researchData = await research(examName, year, body.official_website);
+      return { research: researchData, sources: researchData.sources || [] };
+    });
+  }
+
+  return streamWithHeartbeat(async () => {
     const batches: BatchName[] = Array.isArray(body.batches) && body.batches.length
       ? body.batches
       : ["core", "exam", "outcomes", "discovery"];
@@ -334,9 +386,11 @@ Deno.serve(async (req) => {
     let tokens = 0;
     const errors: string[] = [];
     const coverage: Record<string, { gaps: string[]; passes: number }> = {};
+    // One repair pass per request by default — the worker re-invokes this
+    // function for further passes instead of holding one long connection.
     const maxRepairs = Number.isFinite(Number(body.max_repair_passes))
       ? Math.max(0, Math.min(3, Number(body.max_repair_passes)))
-      : 2;
+      : 1;
 
     const ctx = {
       site: body.official_website,
@@ -383,22 +437,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        sections,
-        sources: researchData.sources || [],
-        research: researchData,
-        tokens_used: tokens,
-        coverage,
-        errors,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
+    return {
+      sections,
+      sources: researchData.sources || [],
+      research: researchData,
+      tokens_used: tokens,
+      coverage,
+      errors,
+    };
+  });
 });
+
