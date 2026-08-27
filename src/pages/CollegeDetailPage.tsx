@@ -370,7 +370,7 @@ const CollegeDetailPage = () => {
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  {college.ranking && (
+                  {Number(college.ranking) > 0 && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-950 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-md uppercase tracking-wider shadow-md">
                       <Award className="w-3 h-3" /> NIRF Rank #{college.ranking}
                     </span>
