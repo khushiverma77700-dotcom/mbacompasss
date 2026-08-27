@@ -372,7 +372,14 @@ const ExamsListingPage = () => {
     });
 
     list = [...list].sort((a, b) => {
+      if (sort === "curated") {
+        const oa = a.sortOrder ?? 9999;
+        const ob = b.sortOrder ?? 9999;
+        if (oa !== ob) return oa - ob;
+        return a.name.localeCompare(b.name);
+      }
       if (sort === "name") return a.name.localeCompare(b.name);
+
       if (sort === "popularity") {
         const ia = POPULAR_ORDER.indexOf(a.name.toUpperCase());
         const ib = POPULAR_ORDER.indexOf(b.name.toUpperCase());
