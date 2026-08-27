@@ -95,6 +95,7 @@ COMPLETENESS RULES (equally important):
 - Where an exact figure is unconfirmed but the structure is stable year to year (exam pattern, marking scheme, syllabus topics, eligibility norms, registration steps, documents, exam-day rules, counselling flow, preparation guidance), write the full, exam-specific detail — these are not date-dependent facts.
 - Respect minimum depth: highlights 10-14 cards, quick_answer 8-10 Q&As, dates 10-14 events, syllabus every subject with topics AND subtopics, registration 8-12 steps, documents 8-12 items, faqs 25-35 questions, eligibility criteria 8-12 rows, preparation 7-10 blocks (each 120+ words), colleges 12-20 institutions, centres 20-40 cities, papers up to 5 recent years, updates 5-10 items, comparisons 2-4 blocks.
 - FEES ARE MANDATORY. Never return an empty fees array. Give a row for EVERY candidate category the authority publishes (General, OBC-NCL, EWS, SC, ST, PwD, and any female/transgender concession), plus late fee, per-additional-programme fee, overseas-centre fee and GST rows when they exist. Always write fees_notes covering payment modes, refund policy and payment-failure handling — these are stable policy facts, not date-dependent guesses.
+- FEE VALUES: every fees row MUST carry a real published amount in the "fee" field (e.g. "INR 2,500"). A blank, dashed, "TBA", "as applicable" or "varies" fee value is FORBIDDEN — if you cannot confirm the amount for a category from the official notification, DROP THAT ROW ENTIRELY instead of returning an empty value. The same rule applies to every table cell and every "value" field on the page: a real value, or no row at all.
 - This page must be genuinely content-rich: every prose module needs a direct answer, then specifics (numbers, sections, marks, timings, named entities, worked examples). No module may be a single thin sentence.
 - highlights: keep each "value" SHORT and scannable (under ~60 characters, no explanatory clauses in brackets). Put long explanations in the relevant prose module instead. For portal/website/helpdesk cards, the value must be the bare URL, email or phone only.
 
@@ -188,6 +189,88 @@ async function research(examName: string, year: number | null, site?: string) {
 
   return { sources: uniqueSources, notes: chunks.join("\n\n---\n\n").slice(0, 70000) };
 }
+
+/** Search phrases tuned to the specific missing modules, so a gap-fill pass
+ *  re-researches ONLY the facts that are still missing (cheap + focused). */
+const GAP_QUERY: Record<string, string> = {
+  fees: "application fee for General OBC SC ST PwD category late fee payment refund policy",
+  fees_notes: "application fee payment modes net banking UPI refund policy",
+  dates: "important dates registration window exam date admit card result schedule",
+  hero: "official notification conducting body exam mode duration frequency",
+  eligibility: "eligibility criteria graduation percentage age reservation relaxation",
+  registration: "how to apply registration steps documents photo signature specifications",
+  pattern: "exam pattern number of questions sections marks duration",
+  marking: "marking scheme negative marking per question marks",
+  syllabus: "detailed syllabus subject wise topics",
+  papers: "previous year question papers download",
+  difficulty: "sectional difficulty analysis previous year",
+  cutoffs: "cutoff percentile category wise previous year",
+  colleges: "participating institutes accepting scores list",
+  centres: "exam city test centre list",
+  counselling: "counselling process schedule seat allotment",
+  admit_card: "admit card release download steps",
+  exam_day: "exam day guidelines prohibited items reporting time",
+  result: "result declaration scorecard download",
+  updates: "latest news notification update",
+  faqs: "frequently asked questions candidates",
+};
+
+/** Targeted research pass for a gap-fill run: only queries tied to the
+ *  missing modules, restricted to the official domain when we know it. */
+async function researchGaps(
+  examName: string,
+  year: number | null,
+  site: string | undefined,
+  keys: string[],
+) {
+  const label = `${examName}${year ? ` ${year}` : ""}`;
+  const domain = site ? site.replace(/^https?:\/\//, "").replace(/\/$/, "") : "";
+  const prefix = domain ? `site:${domain} ` : "";
+  const sources: { title: string; url: string }[] = [];
+  const chunks: string[] = [];
+
+  const phrases = [...new Set(keys.map((k) => GAP_QUERY[k]).filter(Boolean))].slice(0, 5);
+  if (!phrases.length) phrases.push("official notification details");
+
+  for (const phrase of phrases) {
+    try {
+      const results = await firecrawlSearch({
+        query: `${prefix}${label} ${phrase}`,
+        limit: 3,
+        scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+      });
+      for (const r of results) {
+        if (!r.url) continue;
+        sources.push({ title: r.title || r.url, url: r.url });
+        const md = (r.markdown || r.description || "").slice(0, 6000);
+        if (md) chunks.push(`SOURCE: ${r.url}\n${md}`);
+      }
+    } catch (e) {
+      console.warn("[ai-exam-writer] gap search failed", phrase, e);
+    }
+  }
+
+  if (site) {
+    try {
+      const scraped = await firecrawlScrape(site, ["markdown"]);
+      const md = (scraped?.markdown || scraped?.data?.markdown || "").slice(0, 8000);
+      if (md) {
+        chunks.push(`SOURCE (official site): ${site}\n${md}`);
+        sources.push({ title: `${examName} official website`, url: site });
+      }
+    } catch (e) {
+      console.warn("[ai-exam-writer] gap scrape failed", e);
+    }
+  }
+
+  const seenUrl = new Set<string>();
+  return {
+    sources: sources.filter((s) => (seenUrl.has(s.url) ? false : (seenUrl.add(s.url), true))),
+    notes: chunks.join("\n\n---\n\n").slice(0, 60000),
+  };
+}
+
+
 
 function extractJson(text: string): any {
   const cleaned = text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
@@ -346,6 +429,93 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Stage 2 — gap-fill only. Takes the EXISTING sections of a published exam
+  // plus (optionally) a gap list, re-researches only the missing facts from the
+  // official site and returns a PATCH containing just the repaired modules.
+  if (body.stage === "gapfill") {
+    return streamWithHeartbeat(async () => {
+      const existing: Record<string, any> =
+        body.sections && typeof body.sections === "object" ? body.sections : {};
+
+      const allGaps: Gap[] = Array.isArray(body.gaps) && body.gaps.length
+        ? body.gaps.map((g: any) =>
+            typeof g === "string" ? { key: g, detail: g } : { key: g.key, detail: g.detail || g.key })
+        : auditExamSections(existing);
+
+      if (!allGaps.length) {
+        return { patch: {}, gaps_before: 0, gaps_after: 0, tokens_used: 0, sources: [], batches: [] };
+      }
+
+      const keys = [...new Set(allGaps.map((g) => g.key))];
+      const researchData = body.research?.notes
+        ? body.research
+        : await researchGaps(examName, year, body.official_website, keys);
+
+      const ctx = {
+        site: body.official_website,
+        category: body.exam_category,
+        notes: body.notes,
+        researchNotes: researchData.notes,
+      };
+
+      const byBatch = gapsByBatch(allGaps);
+      const requested: BatchName[] = Array.isArray(body.batches) && body.batches.length
+        ? body.batches
+        : (Object.keys(byBatch) as BatchName[]);
+
+      const patch: Record<string, any> = {};
+      const errors: string[] = [];
+      let tokens = 0;
+      const handled: string[] = [];
+
+      for (const batch of requested) {
+        const batchGaps = byBatch[batch];
+        if (!batchGaps?.length) continue;
+        const gapKeyList = [...new Set(batchGaps.map((g) => g.key))];
+        try {
+          const { data, tokens: t } = await generateBatch(batch, examName, year, ctx, {
+            gaps: batchGaps.map((g) => `${g.key} — ${g.detail}`),
+            previous: existing,
+          });
+          tokens += t;
+          // keep only the modules that actually had gaps, and only when the new
+          // version is at least as rich as what is already live
+          const merged = mergeRicher({ ...existing }, data, gapKeyList);
+          for (const k of gapKeyList) {
+            if (merged[k] !== undefined && merged[k] !== existing[k]) patch[k] = merged[k];
+          }
+          handled.push(batch);
+        } catch (e) {
+          errors.push(`${batch}: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
+      // Never ship blank rows / placeholder cells: prune the merged result and
+      // keep only the pruned versions of the patched keys.
+      const pruned = pruneBlankContent({ ...existing, ...patch });
+      const finalPatch: Record<string, any> = {};
+      for (const k of Object.keys(patch)) {
+        if (pruned[k] !== undefined) finalPatch[k] = pruned[k];
+      }
+
+      const after = auditExamSections({ ...existing, ...finalPatch });
+      return {
+        patch: finalPatch,
+        gaps_before: allGaps.length,
+        gaps_after: after.length,
+        gaps_remaining: after,
+        keys_patched: Object.keys(finalPatch),
+        batches: handled,
+        sources: researchData.sources || [],
+        research: researchData,
+        tokens_used: tokens,
+        errors,
+      };
+    });
+  }
+
+
+
   return streamWithHeartbeat(async () => {
     const batches: BatchName[] = Array.isArray(body.batches) && body.batches.length
       ? body.batches
@@ -411,7 +581,8 @@ Deno.serve(async (req) => {
     }
 
     return {
-      sections,
+      // never return blank rows / placeholder cells to the caller
+      sections: pruneBlankContent(sections),
       sources: researchData.sources || [],
       research: researchData,
       tokens_used: tokens,

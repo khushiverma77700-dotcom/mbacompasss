@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
     section_jobs_resumed: [] as string[],
     mock_worker_pump: null,
     exam_worker_pump: null,
+    exam_backfill_pump: null,
     errors: [] as string[],
   };
 
@@ -100,6 +101,24 @@ Deno.serve(async (req) => {
       if (!examResp.ok) (report.errors as string[]).push(`exam worker pump: HTTP ${examResp.status}`);
     } catch (err) {
       (report.errors as string[]).push(`exam worker pump: ${(err as Error).message}`);
+    }
+
+    // Keep the exam completeness backfill queue draining without a browser.
+    try {
+      const bfResp = await fetch(`${SUPABASE_URL}/functions/v1/exam-backfill-worker`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_ROLE}`,
+          apikey: SERVICE_ROLE,
+          "x-worker-key": SERVICE_ROLE,
+        },
+        body: JSON.stringify({ concurrency: 8, source: "bulk-jobs-watchdog" }),
+      });
+      (report as any).exam_backfill_pump = await bfResp.json().catch(() => ({ status: bfResp.status }));
+      if (!bfResp.ok) (report.errors as string[]).push(`exam backfill pump: HTTP ${bfResp.status}`);
+    } catch (err) {
+      (report.errors as string[]).push(`exam backfill pump: ${(err as Error).message}`);
     }
 
     const { data: recovered, error: recoverError } = await admin.rpc("recover_stale_bulk_jobs", {
