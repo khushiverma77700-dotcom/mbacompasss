@@ -276,15 +276,27 @@ Generate ONLY this JSON object for the "${batch}" module group:
 ${SHAPES[batch]}
 ${extra}${repairBlock}`;
 
-  const resp = await callAIGateway(
-    {
-      model: MODEL,
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: 24000,
-    },
-    { feature: `ai-exam-writer:${batch}`, provider: "openai-mini", purpose: "long" },
-  );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120_000);
+  let resp: Response;
+  try {
+    resp = await callAIGateway(
+      {
+        model: MODEL,
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+        max_tokens: 24000,
+      },
+      {
+        feature: `ai-exam-writer:${batch}`,
+        provider: "openai-mini",
+        purpose: "long",
+        signal: controller.signal,
+      },
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!resp.ok) {
     const t = await resp.text().catch(() => "");

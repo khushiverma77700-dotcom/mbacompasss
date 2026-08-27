@@ -13,9 +13,9 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const MAX_RUN_MS = 110_000;
 const LOCK_MINUTES = 10;
 const MAX_ATTEMPTS = 3;
+const NEXT_HOP_DELAY_MS = 2_000;
 // How many exams may generate at the same time (fan-out of parallel workers).
 const DEFAULT_CONCURRENCY = 12;
 const MAX_CONCURRENCY = 15;
@@ -57,8 +57,9 @@ async function pendingCount(sb: any) {
   return count ?? 0;
 }
 
-function invokeWorker(body: Record<string, unknown>) {
-  return fetch(`${SUPABASE_URL}/functions/v1/exam-generation-worker`, {
+async function invokeWorker(body: Record<string, unknown>) {
+  await new Promise((resolve) => setTimeout(resolve, NEXT_HOP_DELAY_MS));
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/exam-generation-worker`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${SERVICE_KEY}`,
@@ -66,20 +67,33 @@ function invokeWorker(body: Record<string, unknown>) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  }).catch(() => {});
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`worker continuation ${response.status}: ${detail.slice(0, 300)}`);
+  }
+  return response;
 }
 
 
 async function callWriter(payload: Record<string, unknown>) {
-  const resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-exam-writer`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${SERVICE_KEY}`,
-      "x-worker-key": SERVICE_KEY,
-    },
-    body: JSON.stringify(payload),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 135_000);
+  let resp: Response;
+  try {
+    resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-exam-writer`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        "x-worker-key": SERVICE_KEY,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
   const raw = await resp.text();
   if (!resp.ok) throw new Error(`ai-exam-writer ${resp.status}: ${raw.slice(0, 300)}`);
   let data: any;
@@ -93,7 +107,13 @@ async function callWriter(payload: Record<string, unknown>) {
   return data;
 }
 
-async function runJob(sb: any, job: any) {
+/**
+ * Process exactly one durable stage per invocation. A full exam can take many
+ * minutes, which exceeds the edge runtime when all stages run in one request.
+ * Every successful stage checkpoints its result and releases the lease before
+ * a later worker claims the next stage.
+ */
+async function runJobStage(sb: any, job: any): Promise<boolean> {
   const existing = (job.result && typeof job.result === "object" ? job.result : {}) as any;
   const sections: Record<string, any> = existing.sections && typeof existing.sections === "object" ? { ...existing.sections } : {};
   let research = existing.research ?? undefined;
@@ -123,6 +143,12 @@ async function runJob(sb: any, job: any) {
       worker_lock_until: new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString(),
     }).eq("id", job.id);
     await appendLog(sb, job.id, { level: "success", step: "research", message: `Research done — ${sources.length} official sources` });
+    await sb.from("exam_generation_jobs").update({
+      status: "queued",
+      worker_lock_until: null,
+      attempts: 0,
+    }).eq("id", job.id);
+    return false;
   }
 
   for (const batch of BATCHES) {
@@ -177,6 +203,12 @@ async function runJob(sb: any, job: any) {
       result: { sections, research, done_batches: doneBatches },
       worker_lock_until: new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString(),
     }).eq("id", job.id);
+    await sb.from("exam_generation_jobs").update({
+      status: "queued",
+      worker_lock_until: null,
+      attempts: 0,
+    }).eq("id", job.id);
+    return false;
   }
 
   let publishedSlug: string | null = null;
@@ -201,6 +233,7 @@ async function runJob(sb: any, job: any) {
   if (!job.auto_publish) {
     await appendLog(sb, job.id, { level: "success", message: "Generation complete — open the review editor to publish." });
   }
+  return true;
 }
 
 const slugify = (name: string) =>
@@ -272,7 +305,6 @@ async function publishExam(sb: any, job: any, sections: Record<string, any>, sou
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-  const started = Date.now();
   let processed = 0;
 
   let body: any = {};
@@ -286,21 +318,28 @@ Deno.serve(async (req) => {
       const pending = await pendingCount(sb);
       const requested = Number(body?.concurrency) || DEFAULT_CONCURRENCY;
       const lanes = Math.max(0, Math.min(pending, MAX_CONCURRENCY, Math.max(1, requested)));
-      for (let i = 0; i < lanes; i++) invokeWorker({ worker: true, lane: i });
+      for (let i = 0; i < lanes; i++) {
+        EdgeRuntime.waitUntil(
+          invokeWorker({ worker: true, lane: i, budget: 8 }).catch((e) =>
+            console.error("worker dispatch failed", e instanceof Error ? e.message : String(e))
+          ),
+        );
+      }
       return new Response(JSON.stringify({ mode: "dispatch", pending, workers_started: lanes }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // ---- Worker lane -----------------------------------------------------
-    while (Date.now() - started < MAX_RUN_MS) {
-      const job = await claimJob(sb);
-      if (!job) break;
+    const budget = Math.max(1, Math.min(8, Number(body?.budget) || 8));
+    const job = await claimJob(sb);
+    if (job) {
       try {
-        await runJob(sb, job);
+        await runJobStage(sb, job);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        const failed = (job.attempts ?? 0) + 1 >= MAX_ATTEMPTS;
+        // claim_exam_generation_job already increments attempts before returning.
+        const failed = (job.attempts ?? 0) >= MAX_ATTEMPTS;
         await sb.from("exam_generation_jobs").update({
           status: failed ? "failed" : "queued",
           error: msg.slice(0, 800),
@@ -312,10 +351,15 @@ Deno.serve(async (req) => {
       processed++;
     }
 
-    // Keep this lane alive while work remains (survives a closed browser).
+    // Continue only while work remains and this chain still has budget. The
+    // cron watchdog starts a fresh bounded chain every minute as a safety net.
     const pending = await pendingCount(sb);
-    if (pending > 0 && Date.now() - started >= MAX_RUN_MS) {
-      invokeWorker({ worker: true, lane: body?.lane ?? 0 });
+    if (pending > 0 && budget > 1) {
+      EdgeRuntime.waitUntil(
+        invokeWorker({ worker: true, lane: body?.lane ?? 0, budget: budget - 1 }).catch((e) =>
+          console.error("worker continuation failed", e instanceof Error ? e.message : String(e))
+        ),
+      );
     }
 
     return new Response(JSON.stringify({ mode: "worker", processed, pending }), {
