@@ -249,8 +249,20 @@ async function generateBatch(
   examName: string,
   year: number | null,
   ctx: { site?: string; category?: string; notes?: string; researchNotes: string },
+  repair?: { gaps: string[]; previous: Record<string, any> },
 ): Promise<{ data: any; tokens: number }> {
   const extra = batch === "discovery" ? MBA_COMPASS_SECTION_RULES : "";
+  const repairBlock = repair
+    ? `
+
+GAP-FILL PASS — the previous attempt left these keys BLANK or TOO THIN: ${repair.gaps.join(", ")}.
+Return the JSON object again, but this time these keys MUST be complete, deep and at full required depth. Do not shorten anything.
+For reference, here is what was produced before (improve and expand it; keep confirmed facts identical, never contradict them):
+${JSON.stringify(
+      Object.fromEntries(repair.gaps.map((k) => [k, repair.previous?.[k] ?? null])),
+    ).slice(0, 12000)}
+Structural facts (pattern, marking, syllabus, eligibility norms, registration steps, exam-day rules, counselling flow, preparation guidance, fee categories, payment/refund policy, centre cities, participating institutes, FAQs) are stable year to year — they must NEVER be left blank. Only genuinely unpublished dates/figures may stay empty.`
+    : "";
   const prompt = `${baseRules(examName, year)}
 
 EXAM CATEGORY HINT: ${ctx.category || "auto-detect (Management / Engineering / Law / Medical / Government / Other)"}
@@ -262,14 +274,14 @@ ${ctx.researchNotes || "(no research available — rely only on well-established
 
 Generate ONLY this JSON object for the "${batch}" module group:
 ${SHAPES[batch]}
-${extra}`;
+${extra}${repairBlock}`;
 
   const resp = await callAIGateway(
     {
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
-      max_tokens: 16000,
+      max_tokens: 24000,
     },
     { feature: `ai-exam-writer:${batch}`, provider: "openai-mini", purpose: "long" },
   );
@@ -283,6 +295,21 @@ ${extra}`;
   const tokens = json?.usage?.total_tokens ?? 0;
   return { data: extractJson(text), tokens };
 }
+
+/** Merge repair output into the base data, keeping whichever version is richer. */
+function mergeRicher(base: Record<string, any>, next: Record<string, any>, keys: string[]) {
+  const size = (v: any): number =>
+    Array.isArray(v) ? v.length
+      : typeof v === "string" ? wordCount(v)
+      : v && typeof v === "object" ? JSON.stringify(v).length
+      : 0;
+  for (const k of keys) {
+    if (next?.[k] === undefined || next[k] === null) continue;
+    if (size(next[k]) >= size(base?.[k])) base[k] = next[k];
+  }
+  return base;
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
