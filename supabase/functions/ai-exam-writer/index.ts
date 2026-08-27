@@ -106,9 +106,14 @@ async function research(examName: string, year: number | null, site?: string) {
   const chunks: string[] = [];
 
   try {
+    const domain = site ? site.replace(/^https?:\/\//, "").replace(/\/$/, "") : "";
     const queries = [
-      site ? `site:${site.replace(/^https?:\/\//, "").replace(/\/$/, "")} ${label} notification eligibility exam pattern` : `${label} official notification eligibility exam pattern registration dates`,
-      `${label} official syllabus marking scheme cutoff participating institutes`,
+      domain
+        ? `site:${domain} ${label} notification eligibility exam pattern registration dates`
+        : `${label} official notification eligibility exam pattern registration dates`,
+      `${label} official syllabus marking scheme sectional time limit`,
+      `${label} application fee admit card exam day guidelines test centres`,
+      `${label} cutoff percentile participating institutes counselling process result`,
     ];
     for (const q of queries) {
       const results = await firecrawlSearch({
