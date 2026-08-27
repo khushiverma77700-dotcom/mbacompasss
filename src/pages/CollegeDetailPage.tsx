@@ -363,7 +363,7 @@ const CollegeDetailPage = () => {
                   <img src={college.logo_url} alt={college.name} width={96} height={96} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50" loading="eager" decoding="async" />
                 ) : (
                   <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white shadow-2xl ring-2 ring-white/50 flex items-center justify-center text-primary font-extrabold text-3xl">
-                    {college.ranking ? `#${college.ranking}` : college.name.charAt(0)}
+                    {Number(college.ranking) > 0 ? `#${college.ranking}` : college.name.charAt(0)}
                   </div>
                 )}
               </div>
