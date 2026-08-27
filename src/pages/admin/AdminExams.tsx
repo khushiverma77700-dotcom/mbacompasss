@@ -16,6 +16,7 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
+import ExamAIGenerator from "@/components/admin/ExamAIGenerator";
 
 const emptyForm = {
   name: "", slug: "", full_name: "", description: "", conducting_body: "",
