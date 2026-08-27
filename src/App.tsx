@@ -576,6 +576,7 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
       Skip to main content
     </a>
     <Suspense fallback={<div style={{ height: 64 }} aria-hidden="true" />}><Navbar /></Suspense>
+    <BackButton />
     <main id="main-content">{children}</main>
     <DeferredChrome />
   </>
