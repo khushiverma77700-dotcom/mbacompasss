@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAllRows";
@@ -83,7 +82,7 @@ export default function AdminExamCompleteness() {
           .from("exams")
           .select("id,name,slug,exam_year,official_website,sections,updated_at")
           .order("name")
-          .range(from, to),
+          .range(from, to) as unknown as PromiseLike<{ data: ExamRow[] | null; error: { message: string } | null }>,
       );
       const audited = rows.map((exam) => {
         const gaps = auditExamSections(exam.sections as Record<string, unknown> | null);
@@ -201,11 +200,6 @@ export default function AdminExamCompleteness() {
 
   return (
     <div className="space-y-6">
-      <Helmet>
-        <title>Exam Completeness Engine | Admin</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
-
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Exam Completeness Engine</h1>
