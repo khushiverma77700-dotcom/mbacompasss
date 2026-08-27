@@ -42,6 +42,8 @@ interface ExamCard {
   year?: number | null;
   sectionCount?: number;
   topColleges?: string[];
+  sortOrder?: number | null;
+
 }
 
 const clean = (v?: string | null) => {
