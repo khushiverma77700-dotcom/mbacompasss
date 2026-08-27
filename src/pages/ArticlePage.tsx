@@ -23,6 +23,8 @@ import NotFound from "@/pages/NotFound";
 import AutoTOC from "@/components/AutoTOC";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import TopicClusterLinks, { DEFAULT_MBA_CLUSTER } from "@/components/TopicClusterLinks";
+import { useScrollableTables } from "@/hooks/useScrollableTables";
+
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
