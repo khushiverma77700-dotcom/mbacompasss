@@ -179,6 +179,7 @@ const ExamDetailPage = () => {
 
   const toc = [
     hasModuleContent(sections.quick_answer) && { id: "quick-answer", label: "At a glance" },
+    hasModuleContent(sections.highlights) && { id: "highlights", label: `${examName} highlights` },
     hasModuleContent(sections.dates) && { id: "dates", label: "Important dates" },
     hasModuleContent(sections.overview) && { id: "overview", label: "Overview" },
     hasModuleContent(sections.eligibility) && { id: "eligibility", label: "Eligibility" },
