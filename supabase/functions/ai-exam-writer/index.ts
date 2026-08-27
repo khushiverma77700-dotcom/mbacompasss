@@ -25,7 +25,7 @@ const MODEL = "gpt-5-mini";
 export type BatchName = "core" | "exam" | "outcomes" | "discovery";
 
 const BATCH_KEYS: Record<BatchName, string[]> = {
-  core: ["hero", "quick_answer", "highlights", "dates", "overview", "eligibility", "registration", "fees"],
+  core: ["hero", "quick_answer", "highlights", "dates", "overview", "eligibility", "registration", "fees", "fees_notes"],
   exam: ["pattern", "marking", "syllabus", "resources", "papers", "difficulty", "preparation", "tools"],
   outcomes: ["cutoffs", "colleges", "comparisons", "counselling", "admit_card", "exam_day", "centres", "result", "after_exam"],
   discovery: ["related_exams", "related_searches", "updates", "faqs", "seo"],
@@ -34,13 +34,14 @@ const BATCH_KEYS: Record<BatchName, string[]> = {
 const SHAPES: Record<BatchName, string> = {
   core: `{
   "hero": { "full_form": string, "tagline": string, "exam_category": string, "exam_level": string, "exam_mode": string, "frequency": string, "duration": string, "conducting_body": string, "official_website": string, "registration_status": string, "exam_status": string },
-  "quick_answer": [ { "q": string, "a": string } ],            // 6-10 items, answers 1-3 sentences
-  "highlights": [ { "label": string, "value": string } ],       // 6-10 factual cards
-  "dates": [ { "event": string, "date": string, "status": string, "notes": string } ],
-  "overview": string,                                            // HTML: 4-7 <p>/<h3> blocks, exam-specific
-  "eligibility": { "summary": string /*HTML*/, "criteria": [ { "label": string, "value": string } ], "can_i_apply": [ { "q": string, "a": string } ] },
-  "registration": { "steps": [ { "title": string, "detail": string } ], "documents": [string], "notes": string /*HTML*/ },
-  "fees": [ { "category": string, "fee": string } ]
+  "quick_answer": [ { "q": string, "a": string } ],            // 8-10 items, answers 2-3 sentences
+  "highlights": [ { "label": string, "value": string } ],       // 10-14 factual cards
+  "dates": [ { "event": string, "date": string, "status": string, "notes": string } ],  // 10-14 events
+  "overview": string,                                            // HTML: 7-10 blocks (<h3> + <p>/<ul>), 700+ words, exam-specific
+  "eligibility": { "summary": string /*HTML, 3-5 paragraphs*/, "criteria": [ { "label": string, "value": string } ], "can_i_apply": [ { "q": string, "a": string } ] },
+  "registration": { "steps": [ { "title": string, "detail": string } ], "documents": [string], "notes": string /*HTML: photo/signature specs, correction window, common mistakes*/ },
+  "fees": [ { "category": string, "fee": string, "notes": string } ],  // MANDATORY: one row per candidate category (General, OBC-NCL, EWS, SC, ST, PwD, Female/Transgender where applicable), plus rows for late fee, per-additional-programme fee, international/overseas centre fee and GST when applicable
+  "fees_notes": string                                            // HTML: accepted payment modes (net banking / UPI / debit / credit), refund & non-refundable policy, payment-failure handling, fee-waiver rules
 }`,
   exam: `{
   "pattern": { "columns": [string], "rows": [[string]], "notes": string /*HTML*/ },
@@ -86,7 +87,9 @@ ACCURACY RULES (non-negotiable):
 COMPLETENESS RULES (equally important):
 - Aim to fill EVERY field in the requested shape. An empty field is acceptable ONLY when the fact is genuinely unverifiable — never because it takes effort.
 - Where an exact figure is unconfirmed but the structure is stable year to year (exam pattern, marking scheme, syllabus topics, eligibility norms, registration steps, documents, exam-day rules, counselling flow, preparation guidance), write the full, exam-specific detail — these are not date-dependent facts.
-- Respect minimum depth: highlights 8-12 cards, quick_answer 8-10 Q&As, dates 8-12 events, syllabus every subject with topics AND subtopics, registration 6-10 steps, faqs 20-30 questions, eligibility criteria 6-10 rows.
+- Respect minimum depth: highlights 10-14 cards, quick_answer 8-10 Q&As, dates 10-14 events, syllabus every subject with topics AND subtopics, registration 8-12 steps, documents 8-12 items, faqs 25-35 questions, eligibility criteria 8-12 rows, preparation 7-10 blocks (each 120+ words), colleges 12-20 institutions, centres 20-40 cities, papers up to 5 recent years, updates 5-10 items, comparisons 2-4 blocks.
+- FEES ARE MANDATORY. Never return an empty fees array. Give a row for EVERY candidate category the authority publishes (General, OBC-NCL, EWS, SC, ST, PwD, and any female/transgender concession), plus late fee, per-additional-programme fee, overseas-centre fee and GST rows when they exist. Always write fees_notes covering payment modes, refund policy and payment-failure handling — these are stable policy facts, not date-dependent guesses.
+- This page must be genuinely content-rich: every prose module needs a direct answer, then specifics (numbers, sections, marks, timings, named entities, worked examples). No module may be a single thin sentence.
 - highlights: keep each "value" SHORT and scannable (under ~60 characters, no explanatory clauses in brackets). Put long explanations in the relevant prose module instead. For portal/website/helpdesk cards, the value must be the bare URL, email or phone only.
 
 SEO / AEO / GEO RULES:
@@ -197,7 +200,7 @@ ${extra}`;
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
-      max_tokens: 12000,
+      max_tokens: 16000,
     },
     { feature: `ai-exam-writer:${batch}`, provider: "openai-mini", purpose: "long" },
   );

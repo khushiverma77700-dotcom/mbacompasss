@@ -689,10 +689,23 @@
 }
 .ai-table-shell > .ai-table-wrap {
   margin: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   border-radius: 0.75rem;
   border: 1px solid hsl(var(--border));
   background: hsl(var(--card));
   scrollbar-width: thin;
+}
+.ai-table-shell > .ai-table-wrap > table {
+  display: table;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
 }
 .ai-table-shell > .ai-table-wrap::-webkit-scrollbar { height: 6px; }
 .ai-table-shell > .ai-table-wrap::-webkit-scrollbar-thumb {

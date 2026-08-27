@@ -29,7 +29,8 @@ export interface ExamSections {
   overview?: string;
   eligibility?: { summary?: string; criteria?: LabelValue[]; can_i_apply?: QA[] };
   registration?: { steps?: { title?: string; detail?: string }[]; documents?: string[]; notes?: string };
-  fees?: { category?: string; fee?: string }[];
+  fees?: { category?: string; fee?: string; notes?: string }[];
+  fees_notes?: string;
   pattern?: TableBlock;
   marking?: LabelValue[];
   syllabus?: { subject?: string; topics?: { name?: string; subtopics?: string[] }[] }[];
@@ -65,6 +66,7 @@ export const EXAM_MODULE_LABELS: Record<keyof ExamSections, string> = {
   eligibility: "Eligibility",
   registration: "Registration process",
   fees: "Application fee",
+  fees_notes: "Fee notes & payment modes",
   pattern: "Exam pattern",
   marking: "Marking scheme",
   syllabus: "Syllabus",
@@ -91,14 +93,14 @@ export const EXAM_MODULE_LABELS: Record<keyof ExamSections, string> = {
 
 export const EXAM_MODULE_ORDER: (keyof ExamSections)[] = [
   "hero", "quick_answer", "highlights", "dates", "overview", "eligibility",
-  "registration", "fees", "pattern", "marking", "syllabus", "resources",
+  "registration", "fees", "fees_notes", "pattern", "marking", "syllabus", "resources",
   "papers", "difficulty", "preparation", "tools", "cutoffs", "colleges",
   "comparisons", "counselling", "admit_card", "exam_day", "centres", "result",
   "after_exam", "related_exams", "related_searches", "updates", "faqs", "seo",
 ];
 
 export const EXAM_BATCHES: { key: string; label: string; modules: (keyof ExamSections)[] }[] = [
-  { key: "core", label: "Core", modules: ["hero", "quick_answer", "highlights", "dates", "overview", "eligibility", "registration", "fees"] },
+  { key: "core", label: "Core", modules: ["hero", "quick_answer", "highlights", "dates", "overview", "eligibility", "registration", "fees", "fees_notes"] },
   { key: "exam", label: "Exam & prep", modules: ["pattern", "marking", "syllabus", "resources", "papers", "difficulty", "preparation", "tools"] },
   { key: "outcomes", label: "Outcomes", modules: ["cutoffs", "colleges", "comparisons", "counselling", "admit_card", "exam_day", "centres", "result", "after_exam"] },
   { key: "discovery", label: "Discovery & SEO", modules: ["related_exams", "related_searches", "updates", "faqs", "seo"] },

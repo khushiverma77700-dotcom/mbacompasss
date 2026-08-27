@@ -207,7 +207,7 @@ const ExamDetailPage = () => {
 
       {/* HERO */}
       <header className="border-b border-border bg-gradient-to-b from-primary/[0.06] to-background">
-        <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
             <div className="flex items-center gap-3 mb-3">
               {dbExam?.logo_url && (
@@ -259,14 +259,14 @@ const ExamDetailPage = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <SiteBreadcrumbs
-          items={[{ name: "MBA Exams", url: "/colleges" }, { name: titleLabel, url: `/exam/${slug || ""}` }]}
+          items={[{ name: "MBA Exams", url: "/exam" }, { name: titleLabel, url: `/exam/${slug || ""}` }]}
           className="mb-6"
         />
 
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_18rem] gap-8 min-w-0">
-          <main className="space-y-10 min-w-0">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-6 lg:gap-8 min-w-0">
+          <main className="space-y-5 md:space-y-6 min-w-0">
             {hasModuleContent(sections.quick_answer) && (
               <div id="quick-answer" className="scroll-mt-24">
                 <QuickAnswerBox items={sections.quick_answer!} title={`${titleLabel} at a glance`} />
@@ -326,12 +326,27 @@ const ExamDetailPage = () => {
               </Section>
             )}
 
-            {hasModuleContent(sections.fees) && (
-              <Section id="fees" title={`${examName} application fee`}>
-                <DataTable block={{
-                  columns: ["Category", "Application fee"],
-                  rows: (sections.fees || []).map((f) => [f.category || "", f.fee || ""]),
-                }} />
+            {(hasModuleContent(sections.fees) || hasModuleContent(sections.fees_notes)) && (
+              <Section
+                id="fees"
+                title={`${examName} application fee ${year || ""}`.trim()}
+                intro={`Category-wise ${examName} registration fee, accepted payment modes and refund rules.`}
+              >
+                {hasModuleContent(sections.fees) && (
+                  <DataTable
+                    block={{
+                      columns: (sections.fees || []).some((f) => cleanValue(f.notes))
+                        ? ["Category", "Application fee", "Notes"]
+                        : ["Category", "Application fee"],
+                      rows: (sections.fees || []).map((f) =>
+                        (sections.fees || []).some((x) => cleanValue(x.notes))
+                          ? [f.category || "", f.fee || "", f.notes || ""]
+                          : [f.category || "", f.fee || ""]),
+                    }}
+                    caption="Fees are as published by the conducting authority — verify on the official portal before paying."
+                  />
+                )}
+                <RichHtml html={sections.fees_notes} />
               </Section>
             )}
 

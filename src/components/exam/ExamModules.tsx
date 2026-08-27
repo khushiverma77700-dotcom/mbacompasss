@@ -14,13 +14,14 @@ import { cleanValue, tableHasRows, type ExamSections, type ExamSource, type Tabl
 
 /* ---------------------------------------------------------------- primitives */
 
-export const Section = ({ id, title, kicker, children }: { id: string; title: string; kicker?: string; children: ReactNode }) => (
-  <section id={id} className="scroll-mt-24">
-    <div className="mb-4">
-      {kicker && <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">{kicker}</p>}
-      <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground">{title}</h2>
+export const Section = ({ id, title, kicker, intro, children }: { id: string; title: string; kicker?: string; intro?: string; children: ReactNode }) => (
+  <section id={id} className="scroll-mt-28 min-w-0 rounded-2xl border border-border bg-card/60 p-5 md:p-7">
+    <div className="mb-5 border-b border-border/70 pb-4">
+      {kicker && <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary mb-1.5">{kicker}</p>}
+      <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground leading-snug">{title}</h2>
+      {intro && <p className="text-sm text-muted-foreground mt-2 max-w-3xl">{intro}</p>}
     </div>
-    {children}
+    <div className="min-w-0 space-y-4">{children}</div>
   </section>
 );
 
@@ -42,10 +43,10 @@ export const DataTable = ({ block, caption }: { block?: TableBlock; caption?: st
   useScrollableTables(ref, [block]);
   if (!tableHasRows(block)) return null;
   return (
-    <div ref={ref}>
+    <div ref={ref} className="min-w-0 w-full">
       <div className="ai-table-shell">
         <div className="ai-table-wrap">
-          <table className="w-full text-sm">
+          <table className="text-sm">
             <thead>
               <tr className="bg-muted/60">
                 {block!.columns!.map((c, i) => (
@@ -309,11 +310,11 @@ export const CollegeModule = ({
   const valid = colleges.filter((c) => cleanValue(c.name));
   if (!valid.length) return null;
   return (
-    <Card>
-      <CardContent className="p-5 md:p-6">
-        <h3 className="font-heading text-lg font-bold text-foreground">{title}</h3>
-        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
-        <div className="mt-4">
+    <Card className="min-w-0 overflow-hidden">
+      <CardContent className="min-w-0 p-5 md:p-7">
+        <h3 className="font-heading text-lg md:text-xl font-bold text-foreground">{title}</h3>
+        {description && <p className="text-sm text-muted-foreground mt-1.5">{description}</p>}
+        <div className="mt-5 min-w-0">
           <DataTable
             block={{
               columns: ["Institution", "Location", "Course", "Cutoff", "Fees", "Outcome"],
@@ -321,7 +322,7 @@ export const CollegeModule = ({
             }}
           />
         </div>
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-5">
           <Link to="/colleges"><Button size="sm" variant="outline" className="gap-1">Browse all colleges <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
           <Link to="/college-shortlister"><Button size="sm" variant="outline" className="gap-1">Shortlist colleges for my score <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
         </div>
@@ -336,8 +337,8 @@ export const ComparisonBlocks = ({ items }: { items: NonNullable<ExamSections["c
   return (
     <div className="space-y-4">
       {valid.map((cmp, i) => (
-        <Card key={i}>
-          <CardContent className="p-5">
+        <Card key={i} className="min-w-0 overflow-hidden">
+          <CardContent className="min-w-0 p-5 md:p-6">
             <h3 className="font-heading text-base font-bold text-foreground mb-3">{cmp.a} vs {cmp.b}</h3>
             <DataTable
               block={{
