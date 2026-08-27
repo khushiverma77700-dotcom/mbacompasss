@@ -298,7 +298,7 @@ const kickWorker = () =>
             {fileName && <Badge variant="secondary" className="text-xs">{fileName}</Badge>}
           </div>
           <p className="text-xs text-muted-foreground">
-            Columns: <span className="font-mono">Exam Name, Category, Exam Year, Official Exam Link</span>
+            Columns: <span className="font-mono">Exam Name, Category, Exam Year, Official Exam Link, Sort Order</span> — sort order is optional; blank rows fall back to their CSV position.
           </p>
 
           {rows.length > 0 && (
