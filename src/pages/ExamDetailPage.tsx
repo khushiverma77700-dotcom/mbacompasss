@@ -220,7 +220,7 @@ const ExamDetailPage = () => {
                 {cleanValue(hero.registration_status) && <Badge variant="outline" className="text-[11px]">{hero.registration_status}</Badge>}
               </div>
             </div>
-            <h1 className="font-heading text-2xl md:text-4xl font-bold text-foreground">{titleLabel}</h1>
+            <h1 className="font-heading text-2xl md:text-4xl font-bold text-foreground">{cleanValue(dbExam?.h1_tag) || sections.seo?.h1 || titleLabel}</h1>
             {cleanValue(hero.full_form) && hero.full_form !== examName && (
               <p className="text-sm md:text-base text-muted-foreground mt-1">{hero.full_form}</p>
             )}

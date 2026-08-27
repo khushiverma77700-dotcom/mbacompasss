@@ -994,13 +994,184 @@ ${section("Frequently Asked Questions", faqsHtml)}`;
   };
 }
 
+// Render the modular AI exam payload (exams.sections) into crawlable HTML so
+// the prerendered response contains the full page content, not just meta tags.
+const EXAM_SECTION_LABELS: Record<string, string> = {
+  quick_answer: "Quick answers",
+  highlights: "Exam highlights",
+  dates: "Important dates",
+  overview: "Exam overview",
+  eligibility: "Eligibility criteria",
+  registration: "Registration process",
+  fees: "Application fee",
+  pattern: "Exam pattern",
+  marking: "Marking scheme",
+  syllabus: "Syllabus",
+  papers: "Previous year papers",
+  difficulty: "Difficulty analysis",
+  preparation: "Preparation strategy",
+  cutoffs: "Cutoffs",
+  colleges: "Colleges accepting the score",
+  counselling: "Admission & counselling",
+  admit_card: "Admit card",
+  exam_day: "Exam day guidelines",
+  centres: "Exam centres",
+  result: "Result",
+  after_exam: "What after the exam",
+  related_exams: "Related exams",
+  updates: "Latest updates",
+};
+
+const EXAM_SECTION_ORDER = [
+  "quick_answer", "highlights", "dates", "overview", "eligibility", "registration",
+  "fees", "pattern", "marking", "syllabus", "papers", "difficulty", "preparation",
+  "cutoffs", "colleges", "counselling", "admit_card", "exam_day", "centres",
+  "result", "after_exam", "related_exams", "updates",
+];
+
+const EXAM_PLACEHOLDER = /^(tba|to be announced|n\/?a|na|coming soon|-+|—|not available|unknown)$/i;
+const examClean = (v: any): string => {
+  const s = (v ?? "").toString().trim();
+  if (!s || EXAM_PLACEHOLDER.test(s)) return "";
+  return s.replace(/^official\s+TBA;?\s*/i, "").trim();
+};
+
+function examTable(columns: string[], rows: string[][]): string {
+  const cols = columns.filter((c) => examClean(c));
+  const body = rows.filter((r) => Array.isArray(r) && r.some((c) => examClean(c)));
+  if (!cols.length || !body.length) return "";
+  return `<div class="overflow-x-auto"><table class="w-full text-left border border-slate-200 rounded-md"><thead><tr>${cols
+    .map((c) => `<th class="px-4 py-2 bg-slate-50 font-medium text-slate-700">${esc(c)}</th>`)
+    .join("")}</tr></thead><tbody>${body
+    .map(
+      (r) =>
+        `<tr class="border-b border-slate-100 last:border-0">${cols
+          .map((_, i) => `<td class="px-4 py-2 text-slate-800">${esc(examClean(r[i]))}</td>`)
+          .join("")}</tr>`,
+    )
+    .join("")}</tbody></table></div>`;
+}
+
+function examSectionHtml(key: string, value: any): string {
+  const ul = (items: string[]) => {
+    const clean = items.map(examClean).filter(Boolean);
+    return clean.length
+      ? `<ul class="list-disc pl-6 space-y-1 text-slate-700">${clean.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`
+      : "";
+  };
+  const qaList = (items: any[]) => {
+    const rows = (items || []).filter((f) => examClean(f?.q) && examClean(f?.a));
+    return rows.length
+      ? `<dl class="space-y-4">${rows
+          .map(
+            (f) =>
+              `<div><dt class="font-semibold text-slate-900"><h3 class="text-lg font-semibold">${esc(examClean(f.q))}</h3></dt><dd class="mt-1 text-slate-700">${esc(examClean(f.a))}</dd></div>`,
+          )
+          .join("")}</dl>`
+      : "";
+  };
+  const steps = (items: any[]) =>
+    (items || []).filter((s) => examClean(s?.title) || examClean(s?.detail)).length
+      ? `<ol class="list-decimal pl-6 space-y-2 text-slate-700">${items
+          .filter((s) => examClean(s?.title) || examClean(s?.detail))
+          .map((s) => `<li><strong>${esc(examClean(s.title))}</strong> ${esc(examClean(s.detail))}</li>`)
+          .join("")}</ol>`
+      : "";
+
+  switch (key) {
+    case "overview":
+    case "admit_card":
+    case "after_exam":
+      return sanitizeContent(examClean(value) ? String(value) : "");
+    case "quick_answer":
+    case "faqs":
+      return qaList(value);
+    case "highlights":
+    case "marking":
+      return examTable(
+        ["Parameter", "Details"],
+        (value || []).map((r: any) => [r?.label, r?.value]),
+      );
+    case "dates":
+      return examTable(
+        ["Event", "Date", "Status"],
+        (value || []).map((r: any) => [r?.event, r?.date, r?.status]),
+      );
+    case "fees":
+      return examTable(
+        ["Category", "Application fee", "Notes"],
+        (value || []).map((r: any) => [r?.category, r?.fee, r?.notes]),
+      );
+    case "pattern":
+    case "cutoffs":
+    case "difficulty":
+      return examTable(value?.columns || [], value?.rows || []);
+    case "eligibility":
+      return [
+        sanitizeContent(examClean(value?.summary) ? String(value.summary) : ""),
+        examTable(["Criteria", "Requirement"], (value?.criteria || []).map((r: any) => [r?.label, r?.value])),
+        qaList(value?.can_i_apply || []),
+      ]
+        .filter(Boolean)
+        .join("");
+    case "registration":
+    case "counselling":
+      return [steps(value?.steps || []), ul(value?.documents || []), sanitizeContent(examClean(value?.notes) ? String(value.notes) : "")]
+        .filter(Boolean)
+        .join("");
+    case "syllabus":
+      return (value || [])
+        .filter((s: any) => examClean(s?.subject))
+        .map(
+          (s: any) =>
+            `<h3 class="mt-4 text-lg font-semibold text-slate-900">${esc(examClean(s.subject))}</h3>${ul(
+              (s?.topics || []).flatMap((t: any) => [t?.name, ...(t?.subtopics || [])]),
+            )}`,
+        )
+        .join("");
+    case "papers":
+      return examTable(["Year", "Paper", "Solutions", "Difficulty"], (value || []).map((p: any) => [p?.year, p?.paper_url, p?.solutions_url, p?.difficulty]));
+    case "preparation":
+      return (value || [])
+        .filter((p: any) => examClean(p?.title) || examClean(p?.body_html))
+        .map((p: any) => `<h3 class="mt-4 text-lg font-semibold text-slate-900">${esc(examClean(p.title))}</h3>${sanitizeContent(String(p?.body_html || ""))}`)
+        .join("");
+    case "colleges":
+      return examTable(["College", "Location", "Course", "Cutoff", "Fees"], (value || []).map((c: any) => [c?.name, c?.location, c?.course, c?.cutoff, c?.fees]));
+    case "centres":
+      return examTable(["City", "State", "Availability"], (value || []).map((c: any) => [c?.city, c?.state, c?.availability]));
+    case "exam_day":
+      return [ul(value?.before || []), ul(value?.at_centre || []), ul(value?.not_allowed || [])].filter(Boolean).join("");
+    case "result":
+      return sanitizeContent(examClean(value?.html) ? String(value.html) : "");
+    case "related_exams":
+      return ul((value || []).map((r: any) => `${examClean(r?.name)}${examClean(r?.why) ? ` — ${examClean(r.why)}` : ""}`));
+    case "updates":
+      return ul((value || []).map((u: any) => `${examClean(u?.date)} ${examClean(u?.headline)} ${examClean(u?.summary)}`.trim()));
+    default:
+      return "";
+  }
+}
+
+function renderExamSections(sections: any): string {
+  if (!sections || typeof sections !== "object") return "";
+  return EXAM_SECTION_ORDER.map((key) => {
+    const html = examSectionHtml(key, (sections as any)[key]);
+    if (!html) return "";
+    return `<section class="mt-8"><h2 class="text-2xl font-bold text-slate-900 mb-3">${esc(EXAM_SECTION_LABELS[key] || key)}</h2>${html}</section>`;
+  })
+    .filter(Boolean)
+    .join("");
+}
+
 function renderExam(e: any): PageMeta {
   const url = `${SITE}/exam/${e.slug}`;
   const name = e.name || slugToTitle(e.slug);
   const fullName = e.full_name || name;
-  const title = e.meta_title || `${name} 2026: Exam Pattern, Syllabus, Dates & Eligibility`;
+  const seoBlock = (e.sections && typeof e.sections === "object" ? (e.sections as any).seo : null) || {};
+  const title = e.meta_title || seoBlock.meta_title || `${name} 2026: Exam Pattern, Syllabus, Dates & Eligibility`;
   const description = clamp(
-    stripHtml(e.meta_description || e.description || `${fullName} exam pattern, syllabus, dates, eligibility and top MBA colleges accepting scores.`),
+    stripHtml(e.meta_description || seoBlock.meta_description || e.description || `${fullName} exam pattern, syllabus, dates, eligibility and top MBA colleges accepting scores.`),
     200,
   );
   const body = sanitizeContent(e.description || "");
@@ -1035,7 +1206,10 @@ function renderExam(e: any): PageMeta {
   ]);
   const eligibility = listify(e.eligibility);
   const syllabus = listify(e.syllabus);
-  const faqs = Array.isArray(e.faqs) ? e.faqs : [];
+  const examSections = e.sections && typeof e.sections === "object" ? e.sections : null;
+  const modulesHtml = renderExamSections(examSections);
+  const sectionFaqs = Array.isArray(examSections?.faqs) ? examSections.faqs : [];
+  const faqs = (Array.isArray(e.faqs) && e.faqs.length ? e.faqs : sectionFaqs) as any[];
   const faqsHtml = faqs.length
     ? `<dl class="space-y-4">${faqs.map((f: any) => `<div><dt class="font-semibold text-slate-900">${esc(f.question || f.q || "")}</dt><dd class="mt-1 text-slate-700">${esc(f.answer || f.a || "")}</dd></div>`).join("")}</dl>`
     : "";
@@ -1065,9 +1239,10 @@ function renderExam(e: any): PageMeta {
     : null;
 
   const bodyHtml = `${body ? `<section class="prose prose-slate max-w-none">${body}</section>` : ""}
-${section("Overview", overview)}
-${section("Eligibility", renderList(eligibility))}
-${section("Syllabus", renderList(syllabus))}
+${section("Key facts", overview)}
+${modulesHtml}
+${modulesHtml ? "" : section("Eligibility", renderList(eligibility))}
+${modulesHtml ? "" : section("Syllabus", renderList(syllabus))}
 ${section("Frequently Asked Questions", faqsHtml)}`;
 
   return {
@@ -1075,7 +1250,7 @@ ${section("Frequently Asked Questions", faqsHtml)}`;
     title,
     description,
     image: OG_DEFAULT,
-    h1: e.h1_tag || fullName,
+    h1: e.h1_tag || seoBlock.h1 || fullName,
     jsonLd: faqLd ? [examLd, faqLd] : examLd,
     breadcrumbs: [
       { name: "Home", url: `${SITE}/` },
