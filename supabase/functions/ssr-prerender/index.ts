@@ -1238,9 +1238,10 @@ function renderExam(e: any): PageMeta {
     : null;
 
   const bodyHtml = `${body ? `<section class="prose prose-slate max-w-none">${body}</section>` : ""}
-${section("Overview", overview)}
-${section("Eligibility", renderList(eligibility))}
-${section("Syllabus", renderList(syllabus))}
+${section("Key facts", overview)}
+${modulesHtml}
+${modulesHtml ? "" : section("Eligibility", renderList(eligibility))}
+${modulesHtml ? "" : section("Syllabus", renderList(syllabus))}
 ${section("Frequently Asked Questions", faqsHtml)}`;
 
   return {
