@@ -190,6 +190,88 @@ async function research(examName: string, year: number | null, site?: string) {
   return { sources: uniqueSources, notes: chunks.join("\n\n---\n\n").slice(0, 70000) };
 }
 
+/** Search phrases tuned to the specific missing modules, so a gap-fill pass
+ *  re-researches ONLY the facts that are still missing (cheap + focused). */
+const GAP_QUERY: Record<string, string> = {
+  fees: "application fee for General OBC SC ST PwD category late fee payment refund policy",
+  fees_notes: "application fee payment modes net banking UPI refund policy",
+  dates: "important dates registration window exam date admit card result schedule",
+  hero: "official notification conducting body exam mode duration frequency",
+  eligibility: "eligibility criteria graduation percentage age reservation relaxation",
+  registration: "how to apply registration steps documents photo signature specifications",
+  pattern: "exam pattern number of questions sections marks duration",
+  marking: "marking scheme negative marking per question marks",
+  syllabus: "detailed syllabus subject wise topics",
+  papers: "previous year question papers download",
+  difficulty: "sectional difficulty analysis previous year",
+  cutoffs: "cutoff percentile category wise previous year",
+  colleges: "participating institutes accepting scores list",
+  centres: "exam city test centre list",
+  counselling: "counselling process schedule seat allotment",
+  admit_card: "admit card release download steps",
+  exam_day: "exam day guidelines prohibited items reporting time",
+  result: "result declaration scorecard download",
+  updates: "latest news notification update",
+  faqs: "frequently asked questions candidates",
+};
+
+/** Targeted research pass for a gap-fill run: only queries tied to the
+ *  missing modules, restricted to the official domain when we know it. */
+async function researchGaps(
+  examName: string,
+  year: number | null,
+  site: string | undefined,
+  keys: string[],
+) {
+  const label = `${examName}${year ? ` ${year}` : ""}`;
+  const domain = site ? site.replace(/^https?:\/\//, "").replace(/\/$/, "") : "";
+  const prefix = domain ? `site:${domain} ` : "";
+  const sources: { title: string; url: string }[] = [];
+  const chunks: string[] = [];
+
+  const phrases = [...new Set(keys.map((k) => GAP_QUERY[k]).filter(Boolean))].slice(0, 5);
+  if (!phrases.length) phrases.push("official notification details");
+
+  for (const phrase of phrases) {
+    try {
+      const results = await firecrawlSearch({
+        query: `${prefix}${label} ${phrase}`,
+        limit: 3,
+        scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+      });
+      for (const r of results) {
+        if (!r.url) continue;
+        sources.push({ title: r.title || r.url, url: r.url });
+        const md = (r.markdown || r.description || "").slice(0, 6000);
+        if (md) chunks.push(`SOURCE: ${r.url}\n${md}`);
+      }
+    } catch (e) {
+      console.warn("[ai-exam-writer] gap search failed", phrase, e);
+    }
+  }
+
+  if (site) {
+    try {
+      const scraped = await firecrawlScrape(site, ["markdown"]);
+      const md = (scraped?.markdown || scraped?.data?.markdown || "").slice(0, 8000);
+      if (md) {
+        chunks.push(`SOURCE (official site): ${site}\n${md}`);
+        sources.push({ title: `${examName} official website`, url: site });
+      }
+    } catch (e) {
+      console.warn("[ai-exam-writer] gap scrape failed", e);
+    }
+  }
+
+  const seenUrl = new Set<string>();
+  return {
+    sources: sources.filter((s) => (seenUrl.has(s.url) ? false : (seenUrl.add(s.url), true))),
+    notes: chunks.join("\n\n---\n\n").slice(0, 60000),
+  };
+}
+
+
+
 function extractJson(text: string): any {
   const cleaned = text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
   try {
