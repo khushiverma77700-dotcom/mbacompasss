@@ -1250,7 +1250,7 @@ ${section("Frequently Asked Questions", faqsHtml)}`;
     title,
     description,
     image: OG_DEFAULT,
-    h1: e.h1_tag || fullName,
+    h1: e.h1_tag || seoBlock.h1 || fullName,
     jsonLd: faqLd ? [examLd, faqLd] : examLd,
     breadcrumbs: [
       { name: "Home", url: `${SITE}/` },
