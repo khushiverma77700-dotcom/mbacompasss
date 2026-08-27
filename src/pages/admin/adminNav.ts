@@ -7,7 +7,7 @@ import {
   Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare,
   TrendingUp, Sparkles, ShieldCheck, Briefcase, Target, PhoneCall, Database,
   Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart, CalendarClock, FileCode,
-  Gift, Send,
+  Gift, Send, Stethoscope,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -179,6 +179,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "CTA Click Analytics", path: "/admin/cta-analytics", icon: BarChart3 },
       { label: "Database Backup", path: "/admin/database-backup", icon: Database },
       { label: "AI & Cloud Usage", path: "/admin/ai-usage", icon: Activity },
+      { label: "System Check", path: "/admin/system-check", icon: Stethoscope },
       { label: "API Keys & Secrets", path: "/admin/api-keys", icon: KeyRound },
       // Welcome Email automation removed
       { label: "Safe Browsing Guide", path: "/admin/safe-browsing-guide", icon: ShieldCheck },

@@ -10967,6 +10967,158 @@ export type Database = {
         }
         Relationships: []
       }
+      system_check_config: {
+        Row: {
+          created_at: string
+          cron_token: string
+          daily_enabled: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cron_token?: string
+          daily_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cron_token?: string
+          daily_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      system_check_results: {
+        Row: {
+          category: string
+          check_key: string
+          created_at: string
+          detail: Json
+          fix_hint: string | null
+          http_status: number | null
+          id: string
+          latency_ms: number | null
+          message: string | null
+          name: string
+          provider: string | null
+          run_date: string
+          run_id: string
+          section: string
+          status: string
+          target: string | null
+          used_in: string[]
+        }
+        Insert: {
+          category?: string
+          check_key: string
+          created_at?: string
+          detail?: Json
+          fix_hint?: string | null
+          http_status?: number | null
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          name: string
+          provider?: string | null
+          run_date?: string
+          run_id: string
+          section: string
+          status?: string
+          target?: string | null
+          used_in?: string[]
+        }
+        Update: {
+          category?: string
+          check_key?: string
+          created_at?: string
+          detail?: Json
+          fix_hint?: string | null
+          http_status?: number | null
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          name?: string
+          provider?: string | null
+          run_date?: string
+          run_id?: string
+          section?: string
+          status?: string
+          target?: string | null
+          used_in?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_check_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "system_check_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_check_runs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          failed: number
+          finished_at: string | null
+          id: string
+          passed: number
+          run_date: string
+          skipped: number
+          started_at: string
+          status: string
+          summary: Json
+          total: number
+          trigger: string
+          triggered_by: string | null
+          updated_at: string
+          warned: number
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          passed?: number
+          run_date?: string
+          skipped?: number
+          started_at?: string
+          status?: string
+          summary?: Json
+          total?: number
+          trigger?: string
+          triggered_by?: string | null
+          updated_at?: string
+          warned?: number
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          passed?: number
+          run_date?: string
+          skipped?: number
+          started_at?: string
+          status?: string
+          summary?: Json
+          total?: number
+          trigger?: string
+          triggered_by?: string | null
+          updated_at?: string
+          warned?: number
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           active: boolean | null
@@ -12173,6 +12325,14 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      system_check_cron_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          jobname: string
+          schedule: string
+        }[]
+      }
       unlock_bundle_mocks: {
         Args: { _bundle_id: string; _user_id: string }
         Returns: number
