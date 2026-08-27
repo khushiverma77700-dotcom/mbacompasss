@@ -233,7 +233,7 @@ const ExamDeadlinesTicker = () => {
         </p>
 
         <div className="text-center mt-6">
-          <Link to="/exams">
+          <Link to="/exam">
             <Button variant="outline" size="lg" className="gap-2 rounded-full">
               Explore All Exams <ChevronRight className="w-4 h-4" />
             </Button>
