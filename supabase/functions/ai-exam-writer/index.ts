@@ -80,15 +80,25 @@ ACCURACY RULES (non-negotiable):
 - Use ONLY facts you can support from the OFFICIAL RESEARCH provided below or from well-established, verifiable official information about this exam.
 - NEVER invent dates, fees, cutoffs, marks, links or counts. If a value is not confirmed, return an EMPTY STRING for it or omit the item entirely — the page hides empty modules.
 - NEVER write placeholders like "TBA", "To be announced", "N/A", "coming soon", "approx.", "—", "XX".
-- Only include a module/array when you have real, exam-specific content for it. Empty arrays are expected and correct for irrelevant modules.
 - Every URL must be an official domain (exam authority, conducting body, official counselling authority). No third-party links.
 - Indian currency as "INR 2,500" style. Dates as "12 Nov 2026" or "Nov 2026" when only the month is confirmed.
+
+COMPLETENESS RULES (equally important):
+- Aim to fill EVERY field in the requested shape. An empty field is acceptable ONLY when the fact is genuinely unverifiable — never because it takes effort.
+- Where an exact figure is unconfirmed but the structure is stable year to year (exam pattern, marking scheme, syllabus topics, eligibility norms, registration steps, documents, exam-day rules, counselling flow, preparation guidance), write the full, exam-specific detail — these are not date-dependent facts.
+- Respect minimum depth: highlights 8-12 cards, quick_answer 8-10 Q&As, dates 8-12 events, syllabus every subject with topics AND subtopics, registration 6-10 steps, faqs 20-30 questions, eligibility criteria 6-10 rows.
+- highlights: keep each "value" SHORT and scannable (under ~60 characters, no explanatory clauses in brackets). Put long explanations in the relevant prose module instead. For portal/website/helpdesk cards, the value must be the bare URL, email or phone only.
+
+SEO / AEO / GEO RULES:
+- SEO: use the exam's real search vocabulary naturally — "${label} exam date", "${label} eligibility", "${label} syllabus", "${label} registration", "${label} cutoff", "${label} exam pattern" — in headings and the first sentence of each block. No keyword stuffing.
+- AEO: start every HTML block and every FAQ answer with a direct, self-contained 1-2 sentence answer, then expand. Answers must make sense when quoted alone by a voice assistant or featured snippet.
+- GEO: write extractable, citation-friendly statements — one fact per sentence, named entities spelled in full on first use (conducting body, institute names, portal names), explicit numbers and units, and no vague pronouns. Prefer lists and tables over long paragraphs so LLMs can lift the facts cleanly.
 - Each HTML field: clean semantic HTML only (<p>, <h3>, <ul>, <li>, <strong>, <table>). No inline styles, no <script>, no links to non-official sites.
-- Start every HTML block with a direct 1-2 sentence answer, then expand (AEO/GEO friendly).
 - Write for Indian aspirants, mentor tone, specific and useful — no filler.
 
 Return STRICT JSON matching the requested shape. No markdown fences, no commentary.`;
 }
+
 
 async function research(examName: string, year: number | null, site?: string) {
   const label = `${examName}${year ? ` ${year}` : ""}`;
@@ -96,9 +106,14 @@ async function research(examName: string, year: number | null, site?: string) {
   const chunks: string[] = [];
 
   try {
+    const domain = site ? site.replace(/^https?:\/\//, "").replace(/\/$/, "") : "";
     const queries = [
-      site ? `site:${site.replace(/^https?:\/\//, "").replace(/\/$/, "")} ${label} notification eligibility exam pattern` : `${label} official notification eligibility exam pattern registration dates`,
-      `${label} official syllabus marking scheme cutoff participating institutes`,
+      domain
+        ? `site:${domain} ${label} notification eligibility exam pattern registration dates`
+        : `${label} official notification eligibility exam pattern registration dates`,
+      `${label} official syllabus marking scheme sectional time limit`,
+      `${label} application fee admit card exam day guidelines test centres`,
+      `${label} cutoff percentile participating institutes counselling process result`,
     ];
     for (const q of queries) {
       const results = await firecrawlSearch({
@@ -138,7 +153,7 @@ async function research(examName: string, year: number | null, site?: string) {
     return true;
   });
 
-  return { sources: uniqueSources, notes: chunks.join("\n\n---\n\n").slice(0, 45000) };
+  return { sources: uniqueSources, notes: chunks.join("\n\n---\n\n").slice(0, 70000) };
 }
 
 function extractJson(text: string): any {

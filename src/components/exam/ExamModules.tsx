@@ -5,7 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, CheckCircle2, ExternalLink, HelpCircle } from "lucide-react";
+import {
+  ArrowRight, Building2, CalendarDays, CheckCircle2, Clock, ExternalLink, FileText,
+  Globe, HelpCircle, IndianRupee, Info, Layers, Mail, Phone,
+} from "lucide-react";
 import { useScrollableTables } from "@/hooks/useScrollableTables";
 import { cleanValue, tableHasRows, type ExamSections, type ExamSource, type TableBlock } from "@/lib/examSections";
 
@@ -88,16 +91,110 @@ export const QuickAnswerBox = ({ items, title }: { items: NonNullable<ExamSectio
   </Card>
 );
 
-export const HighlightCards = ({ items }: { items: NonNullable<ExamSections["highlights"]> }) => (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-    {items.filter((i) => cleanValue(i.label) && cleanValue(i.value)).map((item, i) => (
-      <div key={i} className="rounded-xl border border-border bg-card p-4 shadow-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</p>
-        <p className="text-sm md:text-base font-semibold text-foreground mt-1 leading-snug">{item.value}</p>
-      </div>
-    ))}
-  </div>
-);
+/* Highlight cards ---------------------------------------------------------- */
+
+const URL_RE = /^(https?:\/\/|www\.)\S+$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^\+?[\d\s-]{8,16}$/;
+
+const highlightIcon = (label: string) => {
+  const l = (label || "").toLowerCase();
+  if (/portal|website|link|site|url/.test(l)) return Globe;
+  if (/email|mail|helpdesk|contact/.test(l)) return Mail;
+  if (/phone|call|mobile/.test(l)) return Phone;
+  if (/date|window|day|deadline|schedule/.test(l)) return CalendarDays;
+  if (/duration|time|shift/.test(l)) return Clock;
+  if (/fee|cost|amount|payment/.test(l)) return IndianRupee;
+  if (/document|bulletin|pdf|paper|notification/.test(l)) return FileText;
+  if (/body|authority|conduct|organis|organiz/.test(l)) return Building2;
+  if (/mode|level|category|frequency/.test(l)) return Layers;
+  return Info;
+};
+
+const prettyUrl = (url: string) => {
+  try {
+    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+    return u.hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+};
+
+
+/** Keeps highlight values short and scannable — strips editorial asides that
+ *  legacy AI runs added, e.g. "(Admit Card download begins, per official site)". */
+const tidyHighlight = (raw: string) => {
+  let v = raw.trim();
+  v = v.replace(/\s*\(([^)]*(?:per official site|official site|as per|source)[^)]*)\)\s*/gi, " ");
+  v = v.replace(/,?\s*(?:as )?per (?:the )?official (?:site|website|notification)\.?$/i, "");
+  if (v.length > 70) v = v.replace(/\s*\([^)]*\)\s*$/, "");
+  return v.replace(/\s{2,}/g, " ").replace(/[;,]\s*$/, "").trim();
+};
+
+export const HighlightCards = ({ items }: { items: NonNullable<ExamSections["highlights"]> }) => {
+  const valid = items.filter((i) => cleanValue(i.label) && cleanValue(i.value));
+  if (!valid.length) return null;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+      {valid.map((item, i) => {
+        const value = tidyHighlight(String(item.value));
+
+        const Icon = highlightIcon(item.label || "");
+        const isUrl = URL_RE.test(value);
+        const isEmail = EMAIL_RE.test(value);
+        const isPhone = PHONE_RE.test(value);
+
+        return (
+          <div
+            key={i}
+            className="group flex h-full flex-col gap-2.5 rounded-2xl border border-border bg-card p-4 md:p-5 shadow-sm transition-colors hover:border-primary/40"
+          >
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+              </span>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground leading-tight">
+                {item.label}
+              </p>
+            </div>
+
+            {isUrl ? (
+              <div className="mt-auto space-y-2">
+                <p className="text-sm font-medium text-foreground break-words">{prettyUrl(value)}</p>
+                <Button asChild size="sm" variant="outline" className="w-full gap-1.5">
+                  <a
+                    href={value.startsWith("http") ? value : `https://${value}`}
+                    target="_blank"
+                    rel="noreferrer nofollow"
+                  >
+                    Open official page <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </Button>
+              </div>
+            ) : isEmail ? (
+              <div className="mt-auto space-y-2">
+                <p className="text-sm font-medium text-foreground break-words">{value}</p>
+                <Button asChild size="sm" variant="outline" className="w-full gap-1.5">
+                  <a href={`mailto:${value}`}>Email helpdesk <Mail className="h-3.5 w-3.5" /></a>
+                </Button>
+              </div>
+            ) : isPhone ? (
+              <div className="mt-auto space-y-2">
+                <p className="text-sm font-medium text-foreground">{value}</p>
+                <Button asChild size="sm" variant="outline" className="w-full gap-1.5">
+                  <a href={`tel:${value.replace(/\s|-/g, "")}`}>Call helpdesk <Phone className="h-3.5 w-3.5" /></a>
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm md:text-[15px] font-semibold text-foreground leading-snug">{value}</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 
 export const DatesTable = ({ rows }: { rows: NonNullable<ExamSections["dates"]> }) => {
   const valid = rows.filter((r) => cleanValue(r.event));
