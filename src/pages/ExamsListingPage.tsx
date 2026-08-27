@@ -504,7 +504,7 @@ const ExamsListingPage = () => {
         canonical={canonicalUrl("/exam")}
         jsonLd={jsonLd}
       />
-      <PageKeywords contentType="static" recordId="exam" fallbackKeywords={["MBA entrance exams 2026", "CAT XAT NMAT SNAP dates", "MBA exam calendar India"]} />
+      
 
       {/* Hero */}
       <section className="border-b border-border/60 bg-gradient-to-b from-primary/5 to-background">
@@ -660,6 +660,11 @@ const ExamsListingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Related Topics & Keywords — bottom of page */}
+      <div className="container mx-auto px-4 pb-12">
+        <PageKeywords contentType="static" recordId="exam" fallbackKeywords={["MBA entrance exams 2026", "CAT XAT NMAT SNAP dates", "MBA exam calendar India"]} />
+      </div>
     </div>
   );
 };
