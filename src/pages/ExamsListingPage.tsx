@@ -279,11 +279,13 @@ const ExamListCard = ({ exam, compact }: { exam: ExamCard; compact?: boolean }) 
 /* ------------------------------------------------------------------ */
 
 const SORTS = [
+  { value: "curated", label: "Recommended (admin order)" },
   { value: "soonest", label: "Exam date (soonest first)" },
   { value: "deadline", label: "Registration deadline" },
   { value: "name", label: "Name (A–Z)" },
   { value: "popularity", label: "Most popular" },
 ];
+
 
 const POPULAR_ORDER = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "MICAT", "TISSNET"];
 
