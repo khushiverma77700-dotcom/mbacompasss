@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ const emptyForm = {
   name: "", slug: "", full_name: "", description: "", conducting_body: "",
   eligibility: "", exam_date: "", registration_deadline: "", frequency: "",
   syllabus: [] as string[], keywords: [] as string[],
-  meta_title: "", meta_description: "",
+  meta_title: "", meta_description: "", h1_tag: "",
   primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
@@ -33,7 +33,25 @@ const AdminExams = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [syllabusInput, setSyllabusInput] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
+  const [editRecord, setEditRecord] = useState<any>(null);
   const { toast } = useToast();
+
+  // Exam body content lives in the modular `sections` JSON, not in `description`.
+  // Flatten it to plain text so the SEO checklist and the AI SEO writer see the
+  // real word count / keyword density instead of an almost-empty description.
+  const sectionsText = useMemo(() => {
+    const raw = editRecord?.sections;
+    if (!raw || typeof raw !== "object") return "";
+    const out: string[] = [];
+    const walk = (v: any) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === "string") { const t = v.replace(/<[^>]+>/g, " ").trim(); if (t) out.push(t); return; }
+      if (Array.isArray(v)) { v.forEach(walk); return; }
+      if (typeof v === "object") { Object.values(v).forEach(walk); }
+    };
+    walk(raw);
+    return out.join(" ");
+  }, [editRecord]);
   const { sortedItems: sortedExams, sortConfig, handleSort } = useTableSort(exams);
 
   const fetchExams = async () => {
@@ -56,6 +74,7 @@ const AdminExams = () => {
       syllabus: form.syllabus.length > 0 ? form.syllabus : null,
       keywords: form.keywords.length > 0 ? form.keywords : null,
       meta_title: form.meta_title || null, meta_description: form.meta_description || null,
+      h1_tag: form.h1_tag || null,
       primary_keyword: form.primary_keyword || null,
       funnel_stage: form.funnel_stage || null,
       cluster_id: form.cluster_id || null,
@@ -76,7 +95,7 @@ const AdminExams = () => {
       submitToGoogleIndexing("exam", slug, savedId ?? undefined).catch(() => {});
     }
     toast({ title: editId ? "Exam updated" : "Exam created" });
-    setShowForm(false); setForm(emptyForm); setEditId(null); fetchExams();
+    setShowForm(false); setForm(emptyForm); setEditId(null); setEditRecord(null); fetchExams();
   };
 
   const handleEdit = (exam: any) => {
@@ -87,10 +106,12 @@ const AdminExams = () => {
       registration_deadline: exam.registration_deadline ?? "", frequency: exam.frequency ?? "",
       syllabus: exam.syllabus ?? [], keywords: exam.keywords ?? [],
       meta_title: exam.meta_title ?? "", meta_description: exam.meta_description ?? "",
+      h1_tag: exam.h1_tag ?? "",
       primary_keyword: exam.primary_keyword ?? "",
       funnel_stage: exam.funnel_stage ?? "",
       cluster_id: exam.cluster_id ?? "",
     });
+    setEditRecord(exam);
     setEditId(exam.id); setShowForm(true);
   };
 
@@ -128,12 +149,14 @@ const AdminExams = () => {
                 <AISEOButton
                   contentType="exam"
                   recordId={editId || undefined}
-                  data={{ name: form.name, full_name: form.full_name, description: form.description, conducting_body: form.conducting_body, slug: form.slug }}
-                  onApply={(s) => setForm(f => ({
+                  data={{ name: form.name, full_name: form.full_name, description: `${form.description || ""}\n${sectionsText}`.trim(), conducting_body: form.conducting_body, slug: form.slug, h1_tag: form.h1_tag }}
+                  onApply={(s: any) => setForm(f => ({
                     ...f,
                     ...(s.meta_title && { meta_title: s.meta_title }),
                     ...(s.meta_description && { meta_description: s.meta_description }),
-                    ...(s.keywords && { keywords: s.keywords }),
+                    ...(s.h1_tag && { h1_tag: s.h1_tag }),
+                    ...(s.keywords && { keywords: Array.isArray(s.keywords) ? s.keywords : f.keywords }),
+                    ...(typeof s.content === "string" && s.content ? { description: s.content } : {}),
                   }))}
                 />
               </div>
@@ -179,8 +202,9 @@ const AdminExams = () => {
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-3">
-                <SEOChecklist data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, keywords: form.keywords, description: form.description, schemaType: "exam" }} contentType="exam" recordId={editId || undefined} showPublishWarning />
+                <SEOChecklist data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, keywords: form.keywords, h1_tag: form.h1_tag, description: `${form.description || ""}\n${sectionsText}`.trim(), schemaType: "exam" }} contentType="exam" recordId={editId || undefined} showPublishWarning />
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label><Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} /><span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span></div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">H1 Heading</Label><Input value={form.h1_tag} onChange={(e) => setForm({ ...form, h1_tag: e.target.value })} placeholder="e.g. CAT 2026: Exam Dates, Pattern, Syllabus & Cutoffs" /></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label><Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span></div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Keywords</Label>
