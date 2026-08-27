@@ -8,7 +8,7 @@ import {
   Building2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { shortStat, shortLabel, clipText } from "@/lib/textClip";
+import { shortStat, shortLabel, clipText, numericStat } from "@/lib/textClip";
 
 interface Props {
   college: any;
@@ -141,25 +141,25 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <IndianRupee className="w-2.5 h-2.5" /> Total Fees
                 </div>
-                <p className="text-sm font-extrabold text-foreground leading-tight">{college.fees || "—"}</p>
+                <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.fees)}</p>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <TrendingUp className="w-2.5 h-2.5" /> Avg CTC
                 </div>
-                <p className="text-sm font-extrabold text-foreground leading-tight">{college.placement_avg || "—"}</p>
+                <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.placement_avg)}</p>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <Star className="w-2.5 h-2.5" /> Highest CTC
                 </div>
-                <p className="text-sm font-extrabold text-foreground leading-tight">{college.placement_highest || "—"}</p>
+                <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.placement_highest)}</p>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <Award className="w-2.5 h-2.5" /> Median CTC
                 </div>
-                <p className="text-sm font-extrabold text-foreground leading-tight">{college.placement_median || "—"}</p>
+                <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.placement_median)}</p>
               </div>
             </div>
 

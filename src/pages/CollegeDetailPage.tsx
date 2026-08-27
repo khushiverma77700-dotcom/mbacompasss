@@ -25,6 +25,7 @@ import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import CitationLink from "@/components/CitationLink";
 import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import { fallbackText } from "@/lib/contentFallback";
+import { numericStat, rankOnly, stripTBA } from "@/lib/textClip";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
@@ -362,14 +363,14 @@ const CollegeDetailPage = () => {
                   <img src={college.logo_url} alt={college.name} width={96} height={96} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50" loading="eager" decoding="async" />
                 ) : (
                   <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white shadow-2xl ring-2 ring-white/50 flex items-center justify-center text-primary font-extrabold text-3xl">
-                    {college.ranking ? `#${college.ranking}` : college.name.charAt(0)}
+                    {Number(college.ranking) > 0 ? `#${college.ranking}` : college.name.charAt(0)}
                   </div>
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  {college.ranking && (
+                  {Number(college.ranking) > 0 && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-950 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-md uppercase tracking-wider shadow-md">
                       <Award className="w-3 h-3" /> NIRF Rank #{college.ranking}
                     </span>
@@ -413,22 +414,23 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Premium Stats Strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
               {[
-                { label: "NIRF Ranking", value: college.ranking ? `#${college.ranking}` : fallbackText(null, { kind: "ranking", tier: college.tier }), source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
-                { label: "Total Fees", value: fallbackText(college.fees, { kind: "fees_text", tier: college.tier }), source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
-                { label: "Avg Package", value: fallbackText(placementData.avg_package || college.placement_avg, { kind: "placement_avg", tier: college.tier }), source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
-                { label: "Highest Package", value: fallbackText(placementData.highest_package || college.placement_highest, { kind: "placement_highest", tier: college.tier }), source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "NIRF Ranking", value: Number(college.ranking) > 0 ? rankOnly(college.ranking) : numericStat(fallbackText(null, { kind: "ranking", tier: college.tier })), source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
+                { label: "Total Fees", value: numericStat(college.fees, numericStat(fallbackText(null, { kind: "fees_text", tier: college.tier }))), source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
+                { label: "Avg Package", value: numericStat(placementData.avg_package || college.placement_avg, numericStat(fallbackText(null, { kind: "placement_avg", tier: college.tier }))), source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "Highest Package", value: numericStat(placementData.highest_package || college.placement_highest, numericStat(fallbackText(null, { kind: "placement_highest", tier: college.tier }))), source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
               ].map(s => {
                 const Icon = s.icon;
                 return (
-                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-3 py-3 sm:px-4 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all min-w-0">
+                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-3 py-2.5 sm:px-3.5 sm:py-3 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all min-w-0">
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                     <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
                       <Icon className="w-3.5 h-3.5 text-primary-foreground/70 flex-shrink-0" />
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70 truncate">{s.label}</span>
                     </div>
-                    <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight break-words">{s.value}</div>
+                    <div className="font-heading font-extrabold text-primary-foreground text-[0.95rem] sm:text-base md:text-lg leading-tight truncate" title={s.value}>{s.value}</div>
+
                     <div className="mt-1.5">
                       <CitationLink source={s.source} year={s.year} entityName={college.name} entityWebsite={(college as any).website} className="!bg-white/10 !border-white/20 !text-primary-foreground/80" />
                     </div>
@@ -508,7 +510,7 @@ const CollegeDetailPage = () => {
               <button
                 key={t.value}
                 onClick={() => scrollToSection(t.value)}
-                className="group relative whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all text-muted-foreground hover:text-primary hover:bg-primary/8 border border-transparent hover:border-primary/15"
+                className="group relative shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all text-muted-foreground hover:text-primary hover:bg-primary/8 border border-transparent hover:border-primary/15"
               >
                 {t.label}
               </button>
@@ -624,7 +626,7 @@ const CollegeDetailPage = () => {
                               <td className="py-3 px-3 font-medium text-foreground">{c.name}</td>
                               <td className="py-3 px-3 text-muted-foreground">{c.duration}</td>
                               <td className="py-3 px-3 text-muted-foreground">{c.eligibility}</td>
-                              <td className="py-3 px-3 text-right font-heading font-bold text-primary">{c.fees}</td>
+                              <td className="py-3 px-3 text-right font-heading font-bold text-primary whitespace-nowrap">{numericStat(c.fees)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -689,10 +691,10 @@ const CollegeDetailPage = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     {[
-                      { label: "Average Package", value: placementData.avg_package || college.placement_avg || "N/A", icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
-                      { label: "Highest Package", value: placementData.highest_package || college.placement_highest || "N/A", icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
-                      { label: "Median Package", value: placementData.median_package || college.placement_median || "N/A", icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
-                      { label: "Placement Rate", value: placementData.placement_rate || "98%", icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
+                      { label: "Average Package", value: numericStat(placementData.avg_package || college.placement_avg), icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
+                      { label: "Highest Package", value: numericStat(placementData.highest_package || college.placement_highest), icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
+                      { label: "Median Package", value: numericStat(placementData.median_package || college.placement_median), icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
+                      { label: "Placement Rate", value: numericStat(placementData.placement_rate, "98%"), icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
                     ].map(s => (
                       <div key={s.label} className={`relative bg-gradient-to-br ${s.color} rounded-xl p-4 text-center border border-border/40 hover:shadow-md hover:-translate-y-0.5 transition-all`}>
                         <s.icon className={`w-5 h-5 ${s.iconColor} mx-auto mb-2`} />
@@ -752,7 +754,7 @@ const CollegeDetailPage = () => {
                                 <td className="py-3 px-3 font-medium text-foreground whitespace-nowrap">{c.category}</td>
                                 <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">{c.exam}</td>
                                 <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">{c.year}</td>
-                                <td className="py-3 px-3 text-right font-heading font-bold text-primary whitespace-nowrap">{c.percentile}</td>
+                                <td className="py-3 px-3 text-right font-heading font-bold text-primary whitespace-nowrap">{numericStat(c.percentile, stripTBA(c.percentile) || "—")}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -1053,17 +1055,18 @@ const CollegeDetailPage = () => {
                 <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-                <CardContent className="pt-6 relative z-10">
-                  <div className="flex flex-col gap-2 mb-4">
+                <CardContent className="px-5 py-5 relative z-10">
+                  <div className="flex flex-col gap-2 mb-3.5">
                     <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md self-start">
                       ★ Featured
                     </span>
                     <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
                   </div>
-                  <p className="font-heading text-4xl font-extrabold leading-none mb-1 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
-                    {college.fees_lakhs ? `₹${college.fees_lakhs}L` : (college.fees || "Contact College")}
+                  <p className="font-heading text-2xl xl:text-3xl font-extrabold leading-tight mb-1 break-words [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
+                    {college.fees_lakhs ? `₹${college.fees_lakhs}L` : numericStat(college.fees, "Contact College")}
                   </p>
                   <p className="text-xs text-primary-foreground/75 mb-5">For complete 2-year program · GST inclusive</p>
+
 
                   <Button onClick={handleDownloadBrochure} size="lg" className="w-full bg-white text-primary hover:bg-white/95 font-bold gap-2 shadow-xl mb-2">
                     <Download className="w-4 h-4" /> Download Brochure
@@ -1129,7 +1132,7 @@ const CollegeDetailPage = () => {
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
-                                <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {sc.fees}</div>
+                                <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {numericStat(sc.fees)}</div>
                               </div>
                               <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
                             </div>
@@ -1173,7 +1176,7 @@ const CollegeDetailPage = () => {
                     <div className="space-y-2.5">
                       {[
                         { icon: MapPin, label: "Location", value: `${college.city}, ${college.state}` },
-                        { icon: Award, label: "Ranking", value: college.ranking ? `#${college.ranking} (NIRF)` : "N/A" },
+                        { icon: Award, label: "Ranking", value: Number(college.ranking) > 0 ? `#${college.ranking}` : "—" },
                         { icon: BookOpen, label: "Type", value: college.type || "N/A" },
                         { icon: Users, label: "Students", value: college.total_students ? `${college.total_students}+` : "N/A" },
                         { icon: Building, label: "Campus", value: college.campus_size || "N/A" },
