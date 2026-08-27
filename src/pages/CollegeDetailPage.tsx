@@ -1176,7 +1176,7 @@ const CollegeDetailPage = () => {
                     <div className="space-y-2.5">
                       {[
                         { icon: MapPin, label: "Location", value: `${college.city}, ${college.state}` },
-                        { icon: Award, label: "Ranking", value: college.ranking ? `#${college.ranking} (NIRF)` : "N/A" },
+                        { icon: Award, label: "Ranking", value: Number(college.ranking) > 0 ? `#${college.ranking}` : "—" },
                         { icon: BookOpen, label: "Type", value: college.type || "N/A" },
                         { icon: Users, label: "Students", value: college.total_students ? `${college.total_students}+` : "N/A" },
                         { icon: Building, label: "Campus", value: college.campus_size || "N/A" },
