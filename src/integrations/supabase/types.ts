@@ -2905,6 +2905,84 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_generation_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          created_by: string | null
+          error: string | null
+          exam_category: string | null
+          exam_id: string | null
+          exam_name: string
+          exam_year: number | null
+          finished_at: string | null
+          id: string
+          log: Json
+          mode: string
+          notes: string | null
+          official_website: string | null
+          result: Json | null
+          sources: Json | null
+          status: string
+          step: string | null
+          steps_done: number
+          steps_total: number
+          tokens_used: number
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          exam_category?: string | null
+          exam_id?: string | null
+          exam_name: string
+          exam_year?: number | null
+          finished_at?: string | null
+          id?: string
+          log?: Json
+          mode?: string
+          notes?: string | null
+          official_website?: string | null
+          result?: Json | null
+          sources?: Json | null
+          status?: string
+          step?: string | null
+          steps_done?: number
+          steps_total?: number
+          tokens_used?: number
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          exam_category?: string | null
+          exam_id?: string | null
+          exam_name?: string
+          exam_year?: number | null
+          finished_at?: string | null
+          id?: string
+          log?: Json
+          mode?: string
+          notes?: string | null
+          official_website?: string | null
+          result?: Json | null
+          sources?: Json | null
+          status?: string
+          step?: string | null
+          steps_done?: number
+          steps_total?: number
+          tokens_used?: number
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Relationships: []
+      }
       exams: {
         Row: {
           cluster_id: string | null
@@ -2914,8 +2992,14 @@ export type Database = {
           created_at: string
           cutoffs: Json | null
           description: string | null
+          duration: string | null
           eligibility: string | null
+          exam_category: string | null
           exam_date: string | null
+          exam_level: string | null
+          exam_mode: string | null
+          exam_status: string | null
+          exam_year: number | null
           faqs: Json | null
           frequency: string | null
           full_name: string | null
@@ -2925,13 +3009,19 @@ export type Database = {
           important_dates: Json | null
           keywords: string[] | null
           last_seo_refresh: string | null
+          logo_url: string | null
           meta_description: string | null
           meta_title: string | null
           name: string
+          official_website: string | null
           pattern: Json | null
           primary_keyword: string | null
           registration_deadline: string | null
+          registration_status: string | null
+          reviewed_by: string | null
+          sections: Json | null
           slug: string
+          sources: Json | null
           syllabus: string[] | null
           updated_at: string | null
         }
@@ -2943,8 +3033,14 @@ export type Database = {
           created_at?: string
           cutoffs?: Json | null
           description?: string | null
+          duration?: string | null
           eligibility?: string | null
+          exam_category?: string | null
           exam_date?: string | null
+          exam_level?: string | null
+          exam_mode?: string | null
+          exam_status?: string | null
+          exam_year?: number | null
           faqs?: Json | null
           frequency?: string | null
           full_name?: string | null
@@ -2954,13 +3050,19 @@ export type Database = {
           important_dates?: Json | null
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name: string
+          official_website?: string | null
           pattern?: Json | null
           primary_keyword?: string | null
           registration_deadline?: string | null
+          registration_status?: string | null
+          reviewed_by?: string | null
+          sections?: Json | null
           slug: string
+          sources?: Json | null
           syllabus?: string[] | null
           updated_at?: string | null
         }
@@ -2972,8 +3074,14 @@ export type Database = {
           created_at?: string
           cutoffs?: Json | null
           description?: string | null
+          duration?: string | null
           eligibility?: string | null
+          exam_category?: string | null
           exam_date?: string | null
+          exam_level?: string | null
+          exam_mode?: string | null
+          exam_status?: string | null
+          exam_year?: number | null
           faqs?: Json | null
           frequency?: string | null
           full_name?: string | null
@@ -2983,13 +3091,19 @@ export type Database = {
           important_dates?: Json | null
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name?: string
+          official_website?: string | null
           pattern?: Json | null
           primary_keyword?: string | null
           registration_deadline?: string | null
+          registration_status?: string | null
+          reviewed_by?: string | null
+          sections?: Json | null
           slug?: string
+          sources?: Json | null
           syllabus?: string[] | null
           updated_at?: string | null
         }
