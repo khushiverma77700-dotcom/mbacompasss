@@ -206,7 +206,7 @@ const kickWorker = () =>
         exam_year: r.exam_year && !Number.isNaN(Number(r.exam_year)) ? Number(r.exam_year) : null,
         exam_category: r.exam_category || null,
         official_website: r.official_website || null,
-        sort_order: i + 1,
+        sort_order: r.sort_order && !Number.isNaN(Number(r.sort_order)) ? Number(r.sort_order) : i + 1,
         batch_id: newBatch,
         batch_label: fileName || "Bulk upload",
         auto_publish: true,
