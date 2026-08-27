@@ -2922,6 +2922,7 @@ export type Database = {
           notes: string | null
           official_website: string | null
           result: Json | null
+          sort_order: number | null
           sources: Json | null
           status: string
           step: string | null
@@ -2947,6 +2948,7 @@ export type Database = {
           notes?: string | null
           official_website?: string | null
           result?: Json | null
+          sort_order?: number | null
           sources?: Json | null
           status?: string
           step?: string | null
@@ -2972,6 +2974,7 @@ export type Database = {
           notes?: string | null
           official_website?: string | null
           result?: Json | null
+          sort_order?: number | null
           sources?: Json | null
           status?: string
           step?: string | null
@@ -3009,6 +3012,7 @@ export type Database = {
           important_dates: Json | null
           keywords: string[] | null
           last_seo_refresh: string | null
+          listing_sort_order: number | null
           logo_url: string | null
           meta_description: string | null
           meta_title: string | null
@@ -3050,6 +3054,7 @@ export type Database = {
           important_dates?: Json | null
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          listing_sort_order?: number | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -3091,6 +3096,7 @@ export type Database = {
           important_dates?: Json | null
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          listing_sort_order?: number | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
