@@ -29,6 +29,7 @@ const lazyWithPreload = <T extends React.ComponentType<any>>(
 // Lazy below-the-fold + interaction-only chrome (keep out of initial bundle)
 const Navbar = lazyWithPreload(() => import("@/components/Navbar"));
 const Footer = lazyWithPreload(() => import("@/components/Footer"));
+import BackButton from "@/components/BackButton";
 const Toaster = lazyWithPreload(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 const Sonner = lazyWithPreload(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 const GlobalLoginDialog = lazyWithPreload(() => import("@/components/GlobalLoginDialog"));
