@@ -87,7 +87,9 @@ ACCURACY RULES (non-negotiable):
 COMPLETENESS RULES (equally important):
 - Aim to fill EVERY field in the requested shape. An empty field is acceptable ONLY when the fact is genuinely unverifiable — never because it takes effort.
 - Where an exact figure is unconfirmed but the structure is stable year to year (exam pattern, marking scheme, syllabus topics, eligibility norms, registration steps, documents, exam-day rules, counselling flow, preparation guidance), write the full, exam-specific detail — these are not date-dependent facts.
-- Respect minimum depth: highlights 8-12 cards, quick_answer 8-10 Q&As, dates 8-12 events, syllabus every subject with topics AND subtopics, registration 6-10 steps, faqs 20-30 questions, eligibility criteria 6-10 rows.
+- Respect minimum depth: highlights 10-14 cards, quick_answer 8-10 Q&As, dates 10-14 events, syllabus every subject with topics AND subtopics, registration 8-12 steps, documents 8-12 items, faqs 25-35 questions, eligibility criteria 8-12 rows, preparation 7-10 blocks (each 120+ words), colleges 12-20 institutions, centres 20-40 cities, papers up to 5 recent years, updates 5-10 items, comparisons 2-4 blocks.
+- FEES ARE MANDATORY. Never return an empty fees array. Give a row for EVERY candidate category the authority publishes (General, OBC-NCL, EWS, SC, ST, PwD, and any female/transgender concession), plus late fee, per-additional-programme fee, overseas-centre fee and GST rows when they exist. Always write fees_notes covering payment modes, refund policy and payment-failure handling — these are stable policy facts, not date-dependent guesses.
+- This page must be genuinely content-rich: every prose module needs a direct answer, then specifics (numbers, sections, marks, timings, named entities, worked examples). No module may be a single thin sentence.
 - highlights: keep each "value" SHORT and scannable (under ~60 characters, no explanatory clauses in brackets). Put long explanations in the relevant prose module instead. For portal/website/helpdesk cards, the value must be the bare URL, email or phone only.
 
 SEO / AEO / GEO RULES:
@@ -198,7 +200,7 @@ ${extra}`;
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
-      max_tokens: 12000,
+      max_tokens: 16000,
     },
     { feature: `ai-exam-writer:${batch}`, provider: "openai-mini", purpose: "long" },
   );
