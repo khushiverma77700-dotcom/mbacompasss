@@ -88,5 +88,7 @@ Allow: /
 # Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
 # Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
+
+# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 Sitemap: https://mbacompass.in/sitemap.xml
 Sitemap: https://mbacompass.in/sitemap-images.xml
