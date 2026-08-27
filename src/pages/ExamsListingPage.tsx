@@ -297,6 +297,13 @@ const ExamsListingPage = () => {
   const status = searchParams.get("status") || "all";
   const sort = searchParams.get("sort") || "soonest";
 
+  const setParam = (key: string, value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (!value || value === "all") next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next, { replace: true });
+  };
+
   const [searchInput, setSearchInput] = useState(q);
   useEffect(() => { setSearchInput(q); }, [q]);
   useEffect(() => {
@@ -306,13 +313,6 @@ const ExamsListingPage = () => {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
-
-  const setParam = (key: string, value: string) => {
-    const next = new URLSearchParams(searchParams);
-    if (!value || value === "all") next.delete(key);
-    else next.set(key, value);
-    setSearchParams(next, { replace: true });
-  };
 
   const resetFilters = () => setSearchParams(new URLSearchParams(), { replace: true });
 
@@ -504,7 +504,7 @@ const ExamsListingPage = () => {
         canonical={canonicalUrl("/exam")}
         jsonLd={jsonLd}
       />
-      <PageKeywords pagePath="/exam" />
+      <PageKeywords contentType="static" recordId="exam" fallbackKeywords={["MBA entrance exams 2026", "CAT XAT NMAT SNAP dates", "MBA exam calendar India"]} />
 
       {/* Hero */}
       <section className="border-b border-border/60 bg-gradient-to-b from-primary/5 to-background">

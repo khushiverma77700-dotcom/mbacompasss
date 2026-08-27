@@ -44,7 +44,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { path: "/courses",                   changefreq: "weekly",  priority: 0.8 },
   { path: "/iim-waitlist-movement",     changefreq: "daily",   priority: 0.8 },
   { path: "/freebies",                  changefreq: "weekly",  priority: 0.7 },
-  { path: "/exams",                     changefreq: "weekly",  priority: 0.8 },
+  { path: "/exam",                      changefreq: "daily",   priority: 0.9 },
   { path: "/authors",                   changefreq: "monthly", priority: 0.5 },
   { path: "/formulas",                  changefreq: "weekly",  priority: 0.7 },
   { path: "/bundles",                   changefreq: "weekly",  priority: 0.7 },
