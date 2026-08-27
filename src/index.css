@@ -871,8 +871,21 @@
   .overflow-x-auto > table th,
   .overflow-x-auto > table td {
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: keep-all;
+    min-width: 7.5rem;
   }
+  .overflow-x-auto > table thead th {
+    white-space: nowrap;
+  }
+  .ai-table-shell th,
+  .ai-table-shell td {
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+    min-width: 7.5rem !important;
+  }
+  .ai-table-shell tbody tr > *:first-child { min-width: 9.5rem !important; }
+
 }
 
 
