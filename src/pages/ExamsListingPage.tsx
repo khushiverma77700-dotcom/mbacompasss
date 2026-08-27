@@ -663,9 +663,7 @@ const ExamsListingPage = () => {
 
       {/* Related Topics & Keywords — bottom of page */}
       <div className="container mx-auto px-4 pb-12">
-        <div className="rounded-2xl border border-border/60 bg-card/50 p-5 sm:p-8">
-          <PageKeywords contentType="static" recordId="exam" fallbackKeywords={["MBA entrance exams 2026", "CAT XAT NMAT SNAP dates", "MBA exam calendar India"]} />
-        </div>
+        <PageKeywords contentType="static" recordId="exam" fallbackKeywords={["MBA entrance exams 2026", "CAT XAT NMAT SNAP dates", "MBA exam calendar India"]} />
       </div>
     </div>
   );
