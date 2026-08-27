@@ -42,6 +42,8 @@ interface ExamCard {
   year?: number | null;
   sectionCount?: number;
   topColleges?: string[];
+  sortOrder?: number | null;
+
 }
 
 const clean = (v?: string | null) => {
@@ -150,7 +152,9 @@ const fromDb = (row: any): ExamCard => ({
   logoUrl: clean(row.logo_url),
   year: row.exam_year ?? null,
   sectionCount: Array.isArray(row?.pattern?.sections) ? row.pattern.sections.length : undefined,
+  sortOrder: row.listing_sort_order ?? null,
 });
+
 
 const fromStatic = (e: (typeof examDetails)[number]): ExamCard => ({
   id: e.id,
@@ -275,11 +279,13 @@ const ExamListCard = ({ exam, compact }: { exam: ExamCard; compact?: boolean }) 
 /* ------------------------------------------------------------------ */
 
 const SORTS = [
+  { value: "curated", label: "Recommended (admin order)" },
   { value: "soonest", label: "Exam date (soonest first)" },
   { value: "deadline", label: "Registration deadline" },
   { value: "name", label: "Name (A–Z)" },
   { value: "popularity", label: "Most popular" },
 ];
+
 
 const POPULAR_ORDER = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "MICAT", "TISSNET"];
 
@@ -295,7 +301,7 @@ const ExamsListingPage = () => {
   const frequency = searchParams.get("frequency") || "all";
   const month = searchParams.get("month") || "all";
   const status = searchParams.get("status") || "all";
-  const sort = searchParams.get("sort") || "soonest";
+  const sort = searchParams.get("sort") || "curated";
 
   const setParam = (key: string, value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -321,7 +327,7 @@ const ExamsListingPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exams")
-        .select("id, name, slug, full_name, conducting_body, frequency, exam_date, registration_deadline, description, official_website, logo_url, exam_year, exam_category, exam_level, exam_mode, duration, pattern")
+        .select("id, name, slug, full_name, conducting_body, frequency, exam_date, registration_deadline, description, official_website, logo_url, exam_year, exam_category, exam_level, exam_mode, duration, pattern, listing_sort_order")
         .order("name");
       if (error) throw error;
       return (data || []).filter((r: any) => clean(r.name) && clean(r.slug));
@@ -366,7 +372,14 @@ const ExamsListingPage = () => {
     });
 
     list = [...list].sort((a, b) => {
+      if (sort === "curated") {
+        const oa = a.sortOrder ?? 9999;
+        const ob = b.sortOrder ?? 9999;
+        if (oa !== ob) return oa - ob;
+        return a.name.localeCompare(b.name);
+      }
       if (sort === "name") return a.name.localeCompare(b.name);
+
       if (sort === "popularity") {
         const ia = POPULAR_ORDER.indexOf(a.name.toUpperCase());
         const ib = POPULAR_ORDER.indexOf(b.name.toUpperCase());

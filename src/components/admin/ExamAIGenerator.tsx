@@ -24,6 +24,7 @@ interface Job {
   exam_category: string | null;
   notes: string | null;
   exam_id: string | null;
+  sort_order: number | null;
   mode: string;
   status: string;
   step: string | null;
@@ -59,7 +60,7 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
   const [editorSections, setEditorSections] = useState<ExamSections | null>(null);
   const [form, setForm] = useState({
     exam_name: "", exam_year: String(new Date().getFullYear()),
-    official_website: "", exam_category: "", notes: "",
+    official_website: "", exam_category: "", notes: "", sort_order: "",
   });
   const pollRef = useRef<number | null>(null);
 
@@ -107,13 +108,14 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
         official_website: form.official_website.trim() || null,
         exam_category: form.exam_category.trim() || null,
         notes: form.notes.trim() || null,
+        sort_order: form.sort_order ? Number(form.sort_order) : null,
         created_by: auth?.user?.id ?? null,
         steps_total: EXAM_BATCHES.length,
       });
       if (error) throw error;
       toast({ title: "Generation queued", description: "Runs in the background — you can close this tab." });
       setOpen(false);
-      setForm({ exam_name: "", exam_year: String(new Date().getFullYear()), official_website: "", exam_category: "", notes: "" });
+      setForm({ exam_name: "", exam_year: String(new Date().getFullYear()), official_website: "", exam_category: "", notes: "", sort_order: "" });
       await fetchJobs();
       kickWorker();
     } catch (e: any) {
@@ -235,6 +237,7 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
               sections={editorSections}
               sources={(Array.isArray(activeJob.sources) ? activeJob.sources : []) as ExamSource[]}
               existingExamId={activeJob.exam_id}
+              sortOrder={activeJob.sort_order ?? null}
               onSectionsChange={setEditorSections}
               onPublished={async (examId) => {
                 await supabase.from("exam_generation_jobs")
@@ -262,6 +265,15 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Year</Label>
                 <Input inputMode="numeric" value={form.exam_year} onChange={(e) => setForm({ ...form, exam_year: e.target.value.replace(/\D/g, "") })} />
               </div>
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Sort order (listing position)</Label>
+              <Input
+                inputMode="numeric"
+                placeholder="e.g. 1 (lower shows first on /exam)"
+                value={form.sort_order}
+                onChange={(e) => setForm({ ...form, sort_order: e.target.value.replace(/\D/g, "") })}
+              />
             </div>
             <div>
               <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Official website (optional)</Label>
