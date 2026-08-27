@@ -25,7 +25,7 @@ const MODEL = "gpt-5-mini";
 export type BatchName = "core" | "exam" | "outcomes" | "discovery";
 
 const BATCH_KEYS: Record<BatchName, string[]> = {
-  core: ["hero", "quick_answer", "highlights", "dates", "overview", "eligibility", "registration", "fees"],
+  core: ["hero", "quick_answer", "highlights", "dates", "overview", "eligibility", "registration", "fees", "fees_notes"],
   exam: ["pattern", "marking", "syllabus", "resources", "papers", "difficulty", "preparation", "tools"],
   outcomes: ["cutoffs", "colleges", "comparisons", "counselling", "admit_card", "exam_day", "centres", "result", "after_exam"],
   discovery: ["related_exams", "related_searches", "updates", "faqs", "seo"],
@@ -34,13 +34,14 @@ const BATCH_KEYS: Record<BatchName, string[]> = {
 const SHAPES: Record<BatchName, string> = {
   core: `{
   "hero": { "full_form": string, "tagline": string, "exam_category": string, "exam_level": string, "exam_mode": string, "frequency": string, "duration": string, "conducting_body": string, "official_website": string, "registration_status": string, "exam_status": string },
-  "quick_answer": [ { "q": string, "a": string } ],            // 6-10 items, answers 1-3 sentences
-  "highlights": [ { "label": string, "value": string } ],       // 6-10 factual cards
-  "dates": [ { "event": string, "date": string, "status": string, "notes": string } ],
-  "overview": string,                                            // HTML: 4-7 <p>/<h3> blocks, exam-specific
-  "eligibility": { "summary": string /*HTML*/, "criteria": [ { "label": string, "value": string } ], "can_i_apply": [ { "q": string, "a": string } ] },
-  "registration": { "steps": [ { "title": string, "detail": string } ], "documents": [string], "notes": string /*HTML*/ },
-  "fees": [ { "category": string, "fee": string } ]
+  "quick_answer": [ { "q": string, "a": string } ],            // 8-10 items, answers 2-3 sentences
+  "highlights": [ { "label": string, "value": string } ],       // 10-14 factual cards
+  "dates": [ { "event": string, "date": string, "status": string, "notes": string } ],  // 10-14 events
+  "overview": string,                                            // HTML: 7-10 blocks (<h3> + <p>/<ul>), 700+ words, exam-specific
+  "eligibility": { "summary": string /*HTML, 3-5 paragraphs*/, "criteria": [ { "label": string, "value": string } ], "can_i_apply": [ { "q": string, "a": string } ] },
+  "registration": { "steps": [ { "title": string, "detail": string } ], "documents": [string], "notes": string /*HTML: photo/signature specs, correction window, common mistakes*/ },
+  "fees": [ { "category": string, "fee": string, "notes": string } ],  // MANDATORY: one row per candidate category (General, OBC-NCL, EWS, SC, ST, PwD, Female/Transgender where applicable), plus rows for late fee, per-additional-programme fee, international/overseas centre fee and GST when applicable
+  "fees_notes": string                                            // HTML: accepted payment modes (net banking / UPI / debit / credit), refund & non-refundable policy, payment-failure handling, fee-waiver rules
 }`,
   exam: `{
   "pattern": { "columns": [string], "rows": [[string]], "notes": string /*HTML*/ },
