@@ -2908,6 +2908,9 @@ export type Database = {
       exam_generation_jobs: {
         Row: {
           attempts: number
+          auto_publish: boolean
+          batch_id: string | null
+          batch_label: string | null
           created_at: string
           created_by: string | null
           error: string | null
@@ -2921,6 +2924,7 @@ export type Database = {
           mode: string
           notes: string | null
           official_website: string | null
+          published_slug: string | null
           result: Json | null
           sort_order: number | null
           sources: Json | null
@@ -2934,6 +2938,9 @@ export type Database = {
         }
         Insert: {
           attempts?: number
+          auto_publish?: boolean
+          batch_id?: string | null
+          batch_label?: string | null
           created_at?: string
           created_by?: string | null
           error?: string | null
@@ -2947,6 +2954,7 @@ export type Database = {
           mode?: string
           notes?: string | null
           official_website?: string | null
+          published_slug?: string | null
           result?: Json | null
           sort_order?: number | null
           sources?: Json | null
@@ -2960,6 +2968,9 @@ export type Database = {
         }
         Update: {
           attempts?: number
+          auto_publish?: boolean
+          batch_id?: string | null
+          batch_label?: string | null
           created_at?: string
           created_by?: string | null
           error?: string | null
@@ -2973,6 +2984,7 @@ export type Database = {
           mode?: string
           notes?: string | null
           official_website?: string | null
+          published_slug?: string | null
           result?: Json | null
           sort_order?: number | null
           sources?: Json | null
