@@ -573,7 +573,7 @@ function buildChecks(): Check[] {
         .from("phone_otps")
         .select("*", { count: "exact", head: true })
         .gte("created_at", since)
-        .not("verified_at", "is", null);
+        .eq("verified", true);
       const t = total ?? 0;
       const v = verified ?? 0;
       if (t === 0) return { status: "pass", message: "No OTP requests in the last 24 h" };
@@ -930,12 +930,15 @@ function buildChecks(): Check[] {
       const since = new Date(Date.now() - 86400000).toISOString();
       const { data, error } = await sb
         .from("ai_usage_logs")
-        .select("feature, success, error_message, created_at")
+        .select("feature, status, error_message, created_at")
         .gte("created_at", since)
         .limit(1000);
       if (error) return { status: "warn", message: `Could not read ai_usage_logs: ${error.message}` };
       const rows = data || [];
-      const failures = rows.filter((r) => r.success === false);
+      const failures = rows.filter((r) => {
+        const st = String(r.status || "").toLowerCase();
+        return st && st !== "success" && st !== "ok";
+      });
       if (!failures.length) {
         return { status: "pass", message: `${rows.length} AI calls in 24 h, none failed` };
       }
