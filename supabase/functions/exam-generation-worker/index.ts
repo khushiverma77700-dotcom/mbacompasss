@@ -104,13 +104,18 @@ async function runJob(sb: any, job: any) {
       const v = (data.sections || {})[k];
       return Array.isArray(v) ? v.length > 0 : !!v;
     });
+    const cov = (data.coverage || {})[batch.key] || {};
+    const covGaps: string[] = Array.isArray(cov.gaps) ? cov.gaps : [];
     await appendLog(sb, job.id, {
-      level: (data.errors || []).length ? "warn" : "success",
+      level: (data.errors || []).length || covGaps.length ? "warn" : "success",
       step: batch.key,
-      message: `Done: ${generated.join(", ") || "no content returned"}`,
-      errors: data.errors || [],
+      message: `Done: ${generated.join(", ") || "no content returned"}${
+        cov.passes ? ` · AI passes: ${cov.passes}` : ""
+      }${covGaps.length ? ` · still thin: ${covGaps.join(", ")}` : " · all modules complete"}`,
+      errors: [...(data.errors || []), ...(covGaps.length ? [`incomplete modules: ${covGaps.join(", ")}`] : [])],
       tokens: data.tokens_used ?? 0,
     });
+
 
     await sb.from("exam_generation_jobs").update({
       steps_done: doneBatches.length,
