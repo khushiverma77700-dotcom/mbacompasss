@@ -581,7 +581,8 @@ Deno.serve(async (req) => {
     }
 
     return {
-      sections,
+      // never return blank rows / placeholder cells to the caller
+      sections: pruneBlankContent(sections),
       sources: researchData.sources || [],
       research: researchData,
       tokens_used: tokens,
