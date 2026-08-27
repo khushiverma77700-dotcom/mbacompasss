@@ -333,16 +333,48 @@ Deno.serve(async (req) => {
     const sections: Record<string, any> = {};
     let tokens = 0;
     const errors: string[] = [];
+    const coverage: Record<string, { gaps: string[]; passes: number }> = {};
+    const maxRepairs = Number.isFinite(Number(body.max_repair_passes))
+      ? Math.max(0, Math.min(3, Number(body.max_repair_passes)))
+      : 2;
+
+    const ctx = {
+      site: body.official_website,
+      category: body.exam_category,
+      notes: body.notes,
+      researchNotes: researchData.notes,
+    };
 
     for (const batch of batches) {
       try {
-        const { data, tokens: t } = await generateBatch(batch, examName, year, {
-          site: body.official_website,
-          category: body.exam_category,
-          notes: body.notes,
-          researchNotes: researchData.notes,
-        });
+        let { data, tokens: t } = await generateBatch(batch, examName, year, ctx);
         tokens += t;
+        let gaps = findGaps(batch, data);
+        let passes = 1;
+
+        // Auto gap-fill: re-ask only for the modules that came back blank/thin.
+        while (gaps.length && passes <= maxRepairs) {
+          try {
+            const repaired = await generateBatch(batch, examName, year, ctx, {
+              gaps,
+              previous: data,
+            });
+            tokens += repaired.tokens;
+            data = mergeRicher(data, repaired.data, BATCH_KEYS[batch]);
+            const next = findGaps(batch, data);
+            passes += 1;
+            if (next.length === gaps.length && next.every((k, i) => k === gaps[i])) {
+              gaps = next;
+              break; // no progress — stop burning credits
+            }
+            gaps = next;
+          } catch (e) {
+            errors.push(`${batch} repair: ${e instanceof Error ? e.message : String(e)}`);
+            break;
+          }
+        }
+
+        coverage[batch] = { gaps, passes };
         for (const key of BATCH_KEYS[batch]) {
           if (data?.[key] !== undefined) sections[key] = data[key];
         }
@@ -357,10 +389,12 @@ Deno.serve(async (req) => {
         sources: researchData.sources || [],
         research: researchData,
         tokens_used: tokens,
+        coverage,
         errors,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (e) {
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
