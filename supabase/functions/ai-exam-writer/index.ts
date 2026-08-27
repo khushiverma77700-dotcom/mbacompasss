@@ -92,15 +92,84 @@ COMPLETENESS RULES (equally important):
 - This page must be genuinely content-rich: every prose module needs a direct answer, then specifics (numbers, sections, marks, timings, named entities, worked examples). No module may be a single thin sentence.
 - highlights: keep each "value" SHORT and scannable (under ~60 characters, no explanatory clauses in brackets). Put long explanations in the relevant prose module instead. For portal/website/helpdesk cards, the value must be the bare URL, email or phone only.
 
+EXAM-NAME ANCHORING (critical for topical strength):
+- The exact exam name "${label}" (and the short form "${examName}") must appear repeatedly and naturally across the whole page: in EVERY <h3> heading of every HTML block, in the first sentence of every prose module, in every FAQ question or answer, in the eligibility summary, registration notes, fees notes, admit-card, exam-day, result and after-exam blocks.
+- Aim for roughly 2-3% keyword density on "${examName}" across the page — dense enough to be unmistakably about this exam, never in awkward or repeated boilerplate sentences. Vary the phrasing: "${label}", "${examName} exam", "the ${examName} paper", "${examName} aspirants", "${examName} registration", "${examName} syllabus".
+- Never write generic sentences like "This exam is conducted every year" — always name the exam: "${label} is conducted every year by …".
+
 SEO / AEO / GEO RULES:
 - SEO: use the exam's real search vocabulary naturally — "${label} exam date", "${label} eligibility", "${label} syllabus", "${label} registration", "${label} cutoff", "${label} exam pattern" — in headings and the first sentence of each block. No keyword stuffing.
-- AEO: start every HTML block and every FAQ answer with a direct, self-contained 1-2 sentence answer, then expand. Answers must make sense when quoted alone by a voice assistant or featured snippet.
+- AEO: start every HTML block and every FAQ answer with a direct, self-contained 1-2 sentence answer that names ${label}, then expand. Answers must make sense when quoted alone by a voice assistant or featured snippet.
 - GEO: write extractable, citation-friendly statements — one fact per sentence, named entities spelled in full on first use (conducting body, institute names, portal names), explicit numbers and units, and no vague pronouns. Prefer lists and tables over long paragraphs so LLMs can lift the facts cleanly.
 - Each HTML field: clean semantic HTML only (<p>, <h3>, <ul>, <li>, <strong>, <table>). No inline styles, no <script>, no links to non-official sites.
 - Write for Indian aspirants, mentor tone, specific and useful — no filler.
 
-Return STRICT JSON matching the requested shape. No markdown fences, no commentary.`;
+Return STRICT JSON matching the requested shape. Every key in the shape MUST be present. No markdown fences, no commentary.`;
 }
+
+// ---- Completeness spec: minimum acceptable depth per key ----
+type Rule = { type: "array" | "html" | "object" | "table"; min?: number; words?: number; path?: string };
+
+const RULES: Record<string, Rule> = {
+  hero: { type: "object" },
+  quick_answer: { type: "array", min: 8 },
+  highlights: { type: "array", min: 10 },
+  dates: { type: "array", min: 8 },
+  overview: { type: "html", words: 600 },
+  eligibility: { type: "array", min: 8, path: "criteria" },
+  registration: { type: "array", min: 8, path: "steps" },
+  fees: { type: "array", min: 4 },
+  fees_notes: { type: "html", words: 60 },
+  pattern: { type: "table", min: 3 },
+  marking: { type: "array", min: 4 },
+  syllabus: { type: "array", min: 2 },
+  papers: { type: "array", min: 1 },
+  difficulty: { type: "table", min: 2 },
+  preparation: { type: "array", min: 6 },
+  cutoffs: { type: "table", min: 3 },
+  colleges: { type: "array", min: 10 },
+  comparisons: { type: "array", min: 2 },
+  counselling: { type: "array", min: 3, path: "steps" },
+  admit_card: { type: "html", words: 120 },
+  centres: { type: "array", min: 15 },
+  after_exam: { type: "html", words: 120 },
+  related_exams: { type: "array", min: 4 },
+  related_searches: { type: "array", min: 8 },
+  updates: { type: "array", min: 4 },
+  faqs: { type: "array", min: 20 },
+  seo: { type: "object" },
+};
+
+const wordCount = (html: unknown) =>
+  typeof html === "string" ? html.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length : 0;
+
+/** Returns the list of keys in `batch` that are missing or too thin. */
+function findGaps(batch: BatchName, data: Record<string, any>): string[] {
+  const gaps: string[] = [];
+  for (const key of BATCH_KEYS[batch]) {
+    const rule = RULES[key];
+    const val = data?.[key];
+    if (!rule) {
+      if (val === undefined || val === null || val === "" ) gaps.push(key);
+      continue;
+    }
+    if (rule.type === "array") {
+      const arr = rule.path ? val?.[rule.path] : val;
+      if (!Array.isArray(arr) || arr.length < (rule.min ?? 1)) gaps.push(key);
+    } else if (rule.type === "html") {
+      if (wordCount(val) < (rule.words ?? 40)) gaps.push(key);
+    } else if (rule.type === "table") {
+      if (!Array.isArray(val?.rows) || val.rows.length < (rule.min ?? 2)) gaps.push(key);
+    } else if (rule.type === "object") {
+      const filled = val && typeof val === "object"
+        ? Object.values(val).filter((v) => typeof v === "string" ? v.trim() !== "" : Array.isArray(v) ? v.length : !!v).length
+        : 0;
+      if (filled < 4) gaps.push(key);
+    }
+  }
+  return gaps;
+}
+
 
 
 async function research(examName: string, year: number | null, site?: string) {
@@ -180,8 +249,20 @@ async function generateBatch(
   examName: string,
   year: number | null,
   ctx: { site?: string; category?: string; notes?: string; researchNotes: string },
+  repair?: { gaps: string[]; previous: Record<string, any> },
 ): Promise<{ data: any; tokens: number }> {
   const extra = batch === "discovery" ? MBA_COMPASS_SECTION_RULES : "";
+  const repairBlock = repair
+    ? `
+
+GAP-FILL PASS — the previous attempt left these keys BLANK or TOO THIN: ${repair.gaps.join(", ")}.
+Return the JSON object again, but this time these keys MUST be complete, deep and at full required depth. Do not shorten anything.
+For reference, here is what was produced before (improve and expand it; keep confirmed facts identical, never contradict them):
+${JSON.stringify(
+      Object.fromEntries(repair.gaps.map((k) => [k, repair.previous?.[k] ?? null])),
+    ).slice(0, 12000)}
+Structural facts (pattern, marking, syllabus, eligibility norms, registration steps, exam-day rules, counselling flow, preparation guidance, fee categories, payment/refund policy, centre cities, participating institutes, FAQs) are stable year to year — they must NEVER be left blank. Only genuinely unpublished dates/figures may stay empty.`
+    : "";
   const prompt = `${baseRules(examName, year)}
 
 EXAM CATEGORY HINT: ${ctx.category || "auto-detect (Management / Engineering / Law / Medical / Government / Other)"}
@@ -193,14 +274,14 @@ ${ctx.researchNotes || "(no research available — rely only on well-established
 
 Generate ONLY this JSON object for the "${batch}" module group:
 ${SHAPES[batch]}
-${extra}`;
+${extra}${repairBlock}`;
 
   const resp = await callAIGateway(
     {
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
-      max_tokens: 16000,
+      max_tokens: 24000,
     },
     { feature: `ai-exam-writer:${batch}`, provider: "openai-mini", purpose: "long" },
   );
@@ -214,6 +295,21 @@ ${extra}`;
   const tokens = json?.usage?.total_tokens ?? 0;
   return { data: extractJson(text), tokens };
 }
+
+/** Merge repair output into the base data, keeping whichever version is richer. */
+function mergeRicher(base: Record<string, any>, next: Record<string, any>, keys: string[]) {
+  const size = (v: any): number =>
+    Array.isArray(v) ? v.length
+      : typeof v === "string" ? wordCount(v)
+      : v && typeof v === "object" ? JSON.stringify(v).length
+      : 0;
+  for (const k of keys) {
+    if (next?.[k] === undefined || next[k] === null) continue;
+    if (size(next[k]) >= size(base?.[k])) base[k] = next[k];
+  }
+  return base;
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -237,16 +333,48 @@ Deno.serve(async (req) => {
     const sections: Record<string, any> = {};
     let tokens = 0;
     const errors: string[] = [];
+    const coverage: Record<string, { gaps: string[]; passes: number }> = {};
+    const maxRepairs = Number.isFinite(Number(body.max_repair_passes))
+      ? Math.max(0, Math.min(3, Number(body.max_repair_passes)))
+      : 2;
+
+    const ctx = {
+      site: body.official_website,
+      category: body.exam_category,
+      notes: body.notes,
+      researchNotes: researchData.notes,
+    };
 
     for (const batch of batches) {
       try {
-        const { data, tokens: t } = await generateBatch(batch, examName, year, {
-          site: body.official_website,
-          category: body.exam_category,
-          notes: body.notes,
-          researchNotes: researchData.notes,
-        });
+        let { data, tokens: t } = await generateBatch(batch, examName, year, ctx);
         tokens += t;
+        let gaps = findGaps(batch, data);
+        let passes = 1;
+
+        // Auto gap-fill: re-ask only for the modules that came back blank/thin.
+        while (gaps.length && passes <= maxRepairs) {
+          try {
+            const repaired = await generateBatch(batch, examName, year, ctx, {
+              gaps,
+              previous: data,
+            });
+            tokens += repaired.tokens;
+            data = mergeRicher(data, repaired.data, BATCH_KEYS[batch]);
+            const next = findGaps(batch, data);
+            passes += 1;
+            if (next.length === gaps.length && next.every((k, i) => k === gaps[i])) {
+              gaps = next;
+              break; // no progress — stop burning credits
+            }
+            gaps = next;
+          } catch (e) {
+            errors.push(`${batch} repair: ${e instanceof Error ? e.message : String(e)}`);
+            break;
+          }
+        }
+
+        coverage[batch] = { gaps, passes };
         for (const key of BATCH_KEYS[batch]) {
           if (data?.[key] !== undefined) sections[key] = data[key];
         }
@@ -261,10 +389,12 @@ Deno.serve(async (req) => {
         sources: researchData.sources || [],
         research: researchData,
         tokens_used: tokens,
+        coverage,
         errors,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (e) {
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
