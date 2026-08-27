@@ -259,14 +259,14 @@ const ExamDetailPage = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <SiteBreadcrumbs
-          items={[{ name: "MBA Exams", url: "/colleges" }, { name: titleLabel, url: `/exam/${slug || ""}` }]}
+          items={[{ name: "MBA Exams", url: "/exam" }, { name: titleLabel, url: `/exam/${slug || ""}` }]}
           className="mb-6"
         />
 
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_18rem] gap-8 min-w-0">
-          <main className="space-y-10 min-w-0">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-6 lg:gap-8 min-w-0">
+          <main className="space-y-5 md:space-y-6 min-w-0">
             {hasModuleContent(sections.quick_answer) && (
               <div id="quick-answer" className="scroll-mt-24">
                 <QuickAnswerBox items={sections.quick_answer!} title={`${titleLabel} at a glance`} />
