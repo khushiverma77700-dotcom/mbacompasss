@@ -510,7 +510,7 @@ const CollegeDetailPage = () => {
               <button
                 key={t.value}
                 onClick={() => scrollToSection(t.value)}
-                className="group relative whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all text-muted-foreground hover:text-primary hover:bg-primary/8 border border-transparent hover:border-primary/15"
+                className="group relative shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all text-muted-foreground hover:text-primary hover:bg-primary/8 border border-transparent hover:border-primary/15"
               >
                 {t.label}
               </button>
