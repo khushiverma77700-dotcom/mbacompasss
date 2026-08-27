@@ -1168,9 +1168,10 @@ function renderExam(e: any): PageMeta {
   const url = `${SITE}/exam/${e.slug}`;
   const name = e.name || slugToTitle(e.slug);
   const fullName = e.full_name || name;
-  const title = e.meta_title || `${name} 2026: Exam Pattern, Syllabus, Dates & Eligibility`;
+  const seoBlock = (e.sections && typeof e.sections === "object" ? (e.sections as any).seo : null) || {};
+  const title = e.meta_title || seoBlock.meta_title || `${name} 2026: Exam Pattern, Syllabus, Dates & Eligibility`;
   const description = clamp(
-    stripHtml(e.meta_description || e.description || `${fullName} exam pattern, syllabus, dates, eligibility and top MBA colleges accepting scores.`),
+    stripHtml(e.meta_description || seoBlock.meta_description || e.description || `${fullName} exam pattern, syllabus, dates, eligibility and top MBA colleges accepting scores.`),
     200,
   );
   const body = sanitizeContent(e.description || "");
