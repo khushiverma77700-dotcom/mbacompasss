@@ -538,28 +538,11 @@ const ExamDetailPage = () => {
           {/* STICKY SIDEBAR */}
           <aside className="hidden lg:block">
             <div className="sticky top-24 space-y-4">
-              {toc.length > 0 && (
-                <Card><CardContent className="p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">On this page</p>
-                  <nav className="space-y-1">
-                    {toc.map((item) => (
-                      <a key={item.id} href={`#${item.id}`} className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                        {item.label}
-                      </a>
-                    ))}
-                  </nav>
-                </CardContent></Card>
-              )}
-              <Card><CardContent className="p-4 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plan your admission</p>
-                <Link to="/college-shortlister" className="block text-sm text-primary hover:underline">College shortlister</Link>
-                <Link to="/profile-analyzer" className="block text-sm text-primary hover:underline">AI profile analyzer</Link>
-                <Link to="/mocks" className="block text-sm text-primary hover:underline">Full-length mock tests</Link>
-                <Link to="/mba-roi-calculator" className="block text-sm text-primary hover:underline">MBA ROI calculator</Link>
-                <Link to="/colleges" className="block text-sm text-primary hover:underline">Browse MBA colleges</Link>
-              </CardContent></Card>
+              <ExamTocCard items={toc} />
+              <ExamPlannerCard />
             </div>
           </aside>
+
         </div>
       </div>
 
