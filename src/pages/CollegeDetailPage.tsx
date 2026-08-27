@@ -25,6 +25,7 @@ import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import CitationLink from "@/components/CitationLink";
 import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import { fallbackText } from "@/lib/contentFallback";
+import { numericStat, rankOnly, stripTBA } from "@/lib/textClip";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
