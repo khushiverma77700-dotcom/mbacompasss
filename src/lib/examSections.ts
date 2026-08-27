@@ -29,7 +29,8 @@ export interface ExamSections {
   overview?: string;
   eligibility?: { summary?: string; criteria?: LabelValue[]; can_i_apply?: QA[] };
   registration?: { steps?: { title?: string; detail?: string }[]; documents?: string[]; notes?: string };
-  fees?: { category?: string; fee?: string }[];
+  fees?: { category?: string; fee?: string; notes?: string }[];
+  fees_notes?: string;
   pattern?: TableBlock;
   marking?: LabelValue[];
   syllabus?: { subject?: string; topics?: { name?: string; subtopics?: string[] }[] }[];
