@@ -97,6 +97,7 @@ const AdminColleges = lazyWithPreload(() => import("./pages/admin/AdminColleges"
 const AdminProgrammes = lazyWithPreload(() => import("./pages/admin/AdminProgrammes"));
 const AdminSubscribers = lazyWithPreload(() => import("./pages/admin/AdminSubscribers"));
 const AdminExams = lazyWithPreload(() => import("./pages/admin/AdminExams"));
+const AdminBulkExams = lazyWithPreload(() => import("./pages/admin/AdminBulkExams"));
 const AdminExamCountdowns = lazyWithPreload(() => import("./pages/admin/AdminExamCountdowns"));
 const AdminCategories = lazyWithPreload(() => import("./pages/admin/AdminCategories"));
 const AdminSiteSettings = lazyWithPreload(() => import("./pages/admin/AdminSiteSettings"));
@@ -889,6 +890,7 @@ const App = () => (
               <Route path="programmes" element={<LazyPage><AdminProgrammes /></LazyPage>} />
               <Route path="subscribers" element={<LazyPage><AdminSubscribers /></LazyPage>} />
               <Route path="exams" element={<LazyPage><AdminExams /></LazyPage>} />
+              <Route path="exams/bulk-create" element={<LazyPage><AdminBulkExams /></LazyPage>} />
               <Route path="exam-countdowns" element={<LazyPage><AdminExamCountdowns /></LazyPage>} />
               <Route path="categories" element={<LazyPage><AdminCategories /></LazyPage>} />
               <Route path="site-settings" element={<LazyPage><AdminSiteSettings /></LazyPage>} />
