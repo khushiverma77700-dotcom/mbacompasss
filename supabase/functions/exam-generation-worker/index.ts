@@ -77,15 +77,23 @@ async function invokeWorker(body: Record<string, unknown>) {
 
 
 async function callWriter(payload: Record<string, unknown>) {
-  const resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-exam-writer`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${SERVICE_KEY}`,
-      "x-worker-key": SERVICE_KEY,
-    },
-    body: JSON.stringify(payload),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 135_000);
+  let resp: Response;
+  try {
+    resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-exam-writer`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        "x-worker-key": SERVICE_KEY,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
   const raw = await resp.text();
   if (!resp.ok) throw new Error(`ai-exam-writer ${resp.status}: ${raw.slice(0, 300)}`);
   let data: any;
@@ -330,7 +338,8 @@ Deno.serve(async (req) => {
         await runJobStage(sb, job);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        const failed = (job.attempts ?? 0) + 1 >= MAX_ATTEMPTS;
+        // claim_exam_generation_job already increments attempts before returning.
+        const failed = (job.attempts ?? 0) >= MAX_ATTEMPTS;
         await sb.from("exam_generation_jobs").update({
           status: failed ? "failed" : "queued",
           error: msg.slice(0, 800),
