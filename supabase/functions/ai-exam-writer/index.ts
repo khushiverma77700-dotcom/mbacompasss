@@ -92,15 +92,84 @@ COMPLETENESS RULES (equally important):
 - This page must be genuinely content-rich: every prose module needs a direct answer, then specifics (numbers, sections, marks, timings, named entities, worked examples). No module may be a single thin sentence.
 - highlights: keep each "value" SHORT and scannable (under ~60 characters, no explanatory clauses in brackets). Put long explanations in the relevant prose module instead. For portal/website/helpdesk cards, the value must be the bare URL, email or phone only.
 
+EXAM-NAME ANCHORING (critical for topical strength):
+- The exact exam name "${label}" (and the short form "${examName}") must appear repeatedly and naturally across the whole page: in EVERY <h3> heading of every HTML block, in the first sentence of every prose module, in every FAQ question or answer, in the eligibility summary, registration notes, fees notes, admit-card, exam-day, result and after-exam blocks.
+- Aim for roughly 2-3% keyword density on "${examName}" across the page — dense enough to be unmistakably about this exam, never in awkward or repeated boilerplate sentences. Vary the phrasing: "${label}", "${examName} exam", "the ${examName} paper", "${examName} aspirants", "${examName} registration", "${examName} syllabus".
+- Never write generic sentences like "This exam is conducted every year" — always name the exam: "${label} is conducted every year by …".
+
 SEO / AEO / GEO RULES:
 - SEO: use the exam's real search vocabulary naturally — "${label} exam date", "${label} eligibility", "${label} syllabus", "${label} registration", "${label} cutoff", "${label} exam pattern" — in headings and the first sentence of each block. No keyword stuffing.
-- AEO: start every HTML block and every FAQ answer with a direct, self-contained 1-2 sentence answer, then expand. Answers must make sense when quoted alone by a voice assistant or featured snippet.
+- AEO: start every HTML block and every FAQ answer with a direct, self-contained 1-2 sentence answer that names ${label}, then expand. Answers must make sense when quoted alone by a voice assistant or featured snippet.
 - GEO: write extractable, citation-friendly statements — one fact per sentence, named entities spelled in full on first use (conducting body, institute names, portal names), explicit numbers and units, and no vague pronouns. Prefer lists and tables over long paragraphs so LLMs can lift the facts cleanly.
 - Each HTML field: clean semantic HTML only (<p>, <h3>, <ul>, <li>, <strong>, <table>). No inline styles, no <script>, no links to non-official sites.
 - Write for Indian aspirants, mentor tone, specific and useful — no filler.
 
-Return STRICT JSON matching the requested shape. No markdown fences, no commentary.`;
+Return STRICT JSON matching the requested shape. Every key in the shape MUST be present. No markdown fences, no commentary.`;
 }
+
+// ---- Completeness spec: minimum acceptable depth per key ----
+type Rule = { type: "array" | "html" | "object" | "table"; min?: number; words?: number; path?: string };
+
+const RULES: Record<string, Rule> = {
+  hero: { type: "object" },
+  quick_answer: { type: "array", min: 8 },
+  highlights: { type: "array", min: 10 },
+  dates: { type: "array", min: 8 },
+  overview: { type: "html", words: 600 },
+  eligibility: { type: "array", min: 8, path: "criteria" },
+  registration: { type: "array", min: 8, path: "steps" },
+  fees: { type: "array", min: 4 },
+  fees_notes: { type: "html", words: 60 },
+  pattern: { type: "table", min: 3 },
+  marking: { type: "array", min: 4 },
+  syllabus: { type: "array", min: 2 },
+  papers: { type: "array", min: 1 },
+  difficulty: { type: "table", min: 2 },
+  preparation: { type: "array", min: 6 },
+  cutoffs: { type: "table", min: 3 },
+  colleges: { type: "array", min: 10 },
+  comparisons: { type: "array", min: 2 },
+  counselling: { type: "array", min: 3, path: "steps" },
+  admit_card: { type: "html", words: 120 },
+  centres: { type: "array", min: 15 },
+  after_exam: { type: "html", words: 120 },
+  related_exams: { type: "array", min: 4 },
+  related_searches: { type: "array", min: 8 },
+  updates: { type: "array", min: 4 },
+  faqs: { type: "array", min: 20 },
+  seo: { type: "object" },
+};
+
+const wordCount = (html: unknown) =>
+  typeof html === "string" ? html.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length : 0;
+
+/** Returns the list of keys in `batch` that are missing or too thin. */
+function findGaps(batch: BatchName, data: Record<string, any>): string[] {
+  const gaps: string[] = [];
+  for (const key of BATCH_KEYS[batch]) {
+    const rule = RULES[key];
+    const val = data?.[key];
+    if (!rule) {
+      if (val === undefined || val === null || val === "" ) gaps.push(key);
+      continue;
+    }
+    if (rule.type === "array") {
+      const arr = rule.path ? val?.[rule.path] : val;
+      if (!Array.isArray(arr) || arr.length < (rule.min ?? 1)) gaps.push(key);
+    } else if (rule.type === "html") {
+      if (wordCount(val) < (rule.words ?? 40)) gaps.push(key);
+    } else if (rule.type === "table") {
+      if (!Array.isArray(val?.rows) || val.rows.length < (rule.min ?? 2)) gaps.push(key);
+    } else if (rule.type === "object") {
+      const filled = val && typeof val === "object"
+        ? Object.values(val).filter((v) => typeof v === "string" ? v.trim() !== "" : Array.isArray(v) ? v.length : !!v).length
+        : 0;
+      if (filled < 4) gaps.push(key);
+    }
+  }
+  return gaps;
+}
+
 
 
 async function research(examName: string, year: number | null, site?: string) {
