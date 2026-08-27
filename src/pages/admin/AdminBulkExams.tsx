@@ -17,6 +17,7 @@ interface Row {
   exam_category: string;
   exam_year: string;
   official_website: string;
+  sort_order: string;
 }
 
 interface Job {
