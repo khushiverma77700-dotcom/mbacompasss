@@ -43,10 +43,10 @@ export const DataTable = ({ block, caption }: { block?: TableBlock; caption?: st
   useScrollableTables(ref, [block]);
   if (!tableHasRows(block)) return null;
   return (
-    <div ref={ref}>
+    <div ref={ref} className="min-w-0 w-full">
       <div className="ai-table-shell">
         <div className="ai-table-wrap">
-          <table className="w-full text-sm">
+          <table className="text-sm">
             <thead>
               <tr className="bg-muted/60">
                 {block!.columns!.map((c, i) => (
