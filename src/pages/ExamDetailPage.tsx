@@ -359,10 +359,28 @@ const ExamDetailPage = () => {
 
             {hasModuleContent(sections.papers) && (
               <Section id="papers" title={`${examName} previous year papers`}>
-                <DataTable block={{
-                  columns: ["Year", "Paper", "Solutions", "Difficulty"],
-                  rows: (sections.papers || []).map((p) => [p.year || "", p.paper_url || "", p.solutions_url || "", p.difficulty || ""]),
-                }} />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(sections.papers || []).filter((p) => cleanValue(p.year) || cleanValue(p.paper_url)).map((p, i) => (
+                    <Card key={i}><CardContent className="p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-foreground">{cleanValue(p.year) || "Question paper"}</p>
+                        {cleanValue(p.difficulty) && <Badge variant="secondary" className="text-[11px]">{p.difficulty}</Badge>}
+                      </div>
+                      <div className="flex flex-wrap gap-3 mt-2">
+                        {cleanValue(p.paper_url) && (
+                          <a href={p.paper_url} target="_blank" rel="noreferrer nofollow" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                            Question paper <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                        {cleanValue(p.solutions_url) && (
+                          <a href={p.solutions_url} target="_blank" rel="noreferrer nofollow" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                            Solutions <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    </CardContent></Card>
+                  ))}
+                </div>
               </Section>
             )}
 
