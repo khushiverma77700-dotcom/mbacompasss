@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, X, ArrowLeft, GraduationCap, Star, Trash2 } from "lucide-react";
+import { CheckCircle2, X, GraduationCap, Star, Trash2 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 
@@ -137,10 +137,6 @@ function CompareInner() {
       />
 
       <section className="container mx-auto px-4 py-8">
-        <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/mba-compass"><ArrowLeft className="h-4 w-4 mr-1" /> Back to all courses</Link>
-        </Button>
-
         <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Compare programs side by side</h1>
         <p className="text-muted-foreground mt-1">Pick your perfect program by features, mocks, mentorship and pricing.</p>
 

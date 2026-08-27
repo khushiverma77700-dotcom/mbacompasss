@@ -2,7 +2,7 @@ import { useMemo, useRef } from "react";
 import AutoTOC from "@/components/AutoTOC";
 import PageKeywords from "@/components/PageKeywords";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, CheckCircle, ArrowRight } from "lucide-react";
+import { Calendar, CheckCircle, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -162,7 +162,6 @@ const ExamDetailPage = () => {
       <SEOHead {...resolvedSeo} />
       <div className="hero-gradient py-10 md:py-14">
         <div className="container mx-auto px-4">
-          <Link to="/" className="inline-flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground mb-4 text-sm"><ArrowLeft className="w-4 h-4" /> Home</Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <Badge className="mb-3 bg-primary-foreground/20 text-primary-foreground border-none">MBA Exam</Badge>
             <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-2">{exam.fullName}</h1>

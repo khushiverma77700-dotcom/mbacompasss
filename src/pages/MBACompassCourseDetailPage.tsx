@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  ArrowLeft, Star, Users, Clock, Award, CheckCircle2, GraduationCap,
+  Star, Users, Clock, Award, CheckCircle2, GraduationCap,
   Sparkles, Target, BookOpen, ArrowRight,
   ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
   Trophy, Headphones, RefreshCw, BadgeCheck, Brain, Rocket, LineChart,
@@ -353,10 +353,6 @@ function DetailInner() {
           <div className="absolute -bottom-32 -left-20 hidden h-80 w-80 rounded-full bg-blue-200/40 blur-3xl sm:block" />
         </div>
         <div className="container mx-auto px-4 relative">
-          <Button asChild variant="ghost" size="sm" className="mb-4">
-            <Link to="/courses"><ArrowLeft className="h-4 w-4 mr-1" /> All courses</Link>
-          </Button>
-
           <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
             <div className="lg:col-span-7">
               <div className="flex flex-wrap gap-2 mb-3">
