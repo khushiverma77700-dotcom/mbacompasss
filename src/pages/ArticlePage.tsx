@@ -23,6 +23,8 @@ import NotFound from "@/pages/NotFound";
 import AutoTOC from "@/components/AutoTOC";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import TopicClusterLinks, { DEFAULT_MBA_CLUSTER } from "@/components/TopicClusterLinks";
+import { useScrollableTables } from "@/hooks/useScrollableTables";
+
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -98,6 +100,10 @@ const ArticlePage = () => {
       document.title = `${(article as any).meta_title || article.title} | MBA Compass`;
     }
   }, [article]);
+
+  // Auto-wrap every table in the article body in a horizontal slider.
+  useScrollableTables(contentRef, [article?.id, article?.content]);
+
 
   const handleShare = () => {
     if (navigator.share) {

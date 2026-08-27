@@ -677,6 +677,85 @@
   max-width: none;
 }
 
+/* ── Auto-detected scrollable tables (useScrollableTables) ─────────────────
+   The shell is a positioned box around the scroller so we can paint a fade
+   and a "Swipe" hint that stay put while the table scrolls underneath. */
+.ai-table-shell {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 1rem 0;
+}
+.ai-table-shell > .ai-table-wrap {
+  margin: 0 !important;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  scrollbar-width: thin;
+}
+.ai-table-shell > .ai-table-wrap::-webkit-scrollbar { height: 6px; }
+.ai-table-shell > .ai-table-wrap::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.35);
+  border-radius: 9999px;
+}
+/* Right-edge fade only while there is more table to reveal. */
+.ai-table-shell[data-scroll]::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 2.25rem;
+  pointer-events: none;
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: linear-gradient(to left, hsl(var(--card)), hsl(var(--card) / 0));
+  transition: opacity 0.2s ease;
+}
+.ai-table-shell[data-scroll][data-at-end]::after { opacity: 0; }
+/* Swipe hint pill. */
+.ai-table-shell[data-scroll]::before {
+  content: "Swipe →";
+  position: absolute;
+  top: -0.7rem;
+  right: 0.5rem;
+  z-index: 2;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  color: hsl(var(--primary));
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--primary) / 0.25);
+  transition: opacity 0.2s ease;
+}
+.ai-table-shell[data-scroll][data-at-end]::before { opacity: 0; }
+/* Readable cells inside auto-wrapped tables. */
+.ai-table-shell table { border-collapse: collapse; width: max-content; min-width: 100%; }
+.ai-table-shell th,
+.ai-table-shell td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  text-align: left;
+  vertical-align: top;
+  min-width: 7rem;
+}
+.ai-table-shell thead th {
+  background: hsl(var(--muted) / 0.6);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ai-table-shell tbody tr:nth-child(even) { background: hsl(var(--muted) / 0.25); }
+@media (max-width: 640px) {
+  .ai-table-shell th,
+  .ai-table-shell td { font-size: 0.75rem; padding: 0.4rem 0.55rem; min-width: 6.5rem; }
+}
+
+
 /* Article pages: wide HTML from TipTap/AI must stay inside the article card on
    phones and tablets. Narrow tables wrap to fit; wide tables scroll horizontally
    inside their wrapper while keeping header cells readable (no squishing). */
