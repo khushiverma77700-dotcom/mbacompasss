@@ -205,7 +205,7 @@ const ExamListCard = ({ exam, compact }: { exam: ExamCard; compact?: boolean }) 
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           <Badge variant="secondary" className="text-[10px] sm:text-xs">{category}</Badge>
-          <Badge variant="secondary" className="text-[10px] sm:text-xs">{level}</Badge>
+          {level !== category && <Badge variant="secondary" className="text-[10px] sm:text-xs">{level}</Badge>}
           {exam.mode && <Badge variant="secondary" className="max-w-[11rem] truncate text-[10px] sm:text-xs">{exam.mode}</Badge>}
         </div>
 
