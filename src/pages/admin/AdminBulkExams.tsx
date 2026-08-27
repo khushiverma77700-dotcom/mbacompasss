@@ -17,6 +17,7 @@ interface Row {
   exam_category: string;
   exam_year: string;
   official_website: string;
+  sort_order: string;
 }
 
 interface Job {
@@ -38,10 +39,10 @@ interface Job {
   log: any;
 }
 
-const TEMPLATE = `Exam Name,Category,Exam Year,Official Exam Link
-CAT,MBA Entrance,2026,https://iimcat.ac.in
-XAT,MBA Entrance,2026,https://xatonline.in
-NMAT,MBA Entrance,2026,https://www.nmat.org.in
+const TEMPLATE = `Exam Name,Category,Exam Year,Official Exam Link,Sort Order
+CAT,MBA Entrance,2026,https://iimcat.ac.in,1
+XAT,MBA Entrance,2026,https://xatonline.in,2
+NMAT,MBA Entrance,2026,https://www.nmat.org.in,3
 `;
 
 const STATUS_META: Record<string, { icon: JSX.Element; className: string; label: string }> = {
@@ -168,6 +169,7 @@ const kickWorker = () =>
     const iCat = idx("category");
     const iYear = idx("year");
     const iLink = idx("link", "website", "url");
+    const iSort = idx("sort order", "sort", "order");
     if (iName === -1) {
       toast({ title: "Missing 'Exam Name' column", variant: "destructive" });
       return;
@@ -181,6 +183,7 @@ const kickWorker = () =>
         exam_category: iCat > -1 ? (r[iCat] ?? "").trim() : "",
         exam_year: iYear > -1 ? (r[iYear] ?? "").trim() : "",
         official_website: iLink > -1 ? (r[iLink] ?? "").trim() : "",
+        sort_order: iSort > -1 ? (r[iSort] ?? "").trim() : "",
       });
     }
     if (!out.length) {
@@ -203,7 +206,7 @@ const kickWorker = () =>
         exam_year: r.exam_year && !Number.isNaN(Number(r.exam_year)) ? Number(r.exam_year) : null,
         exam_category: r.exam_category || null,
         official_website: r.official_website || null,
-        sort_order: i + 1,
+        sort_order: r.sort_order && !Number.isNaN(Number(r.sort_order)) ? Number(r.sort_order) : i + 1,
         batch_id: newBatch,
         batch_label: fileName || "Bulk upload",
         auto_publish: true,
@@ -295,7 +298,7 @@ const kickWorker = () =>
             {fileName && <Badge variant="secondary" className="text-xs">{fileName}</Badge>}
           </div>
           <p className="text-xs text-muted-foreground">
-            Columns: <span className="font-mono">Exam Name, Category, Exam Year, Official Exam Link</span>
+            Columns: <span className="font-mono">Exam Name, Category, Exam Year, Official Exam Link, Sort Order</span> — sort order is optional; blank rows fall back to their CSV position.
           </p>
 
           {rows.length > 0 && (
@@ -309,6 +312,7 @@ const kickWorker = () =>
                       <TableHead>Category</TableHead>
                       <TableHead>Year</TableHead>
                       <TableHead>Official Link</TableHead>
+                      <TableHead className="w-24">Sort Order</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -319,6 +323,7 @@ const kickWorker = () =>
                         <TableCell className="text-sm">{r.exam_category || "—"}</TableCell>
                         <TableCell className="text-sm">{r.exam_year || "—"}</TableCell>
                         <TableCell className="text-xs font-mono truncate max-w-[240px]">{r.official_website || "—"}</TableCell>
+                        <TableCell className="text-sm">{r.sort_order || i + 1}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
