@@ -323,6 +323,7 @@ const kickWorker = () =>
                         <TableCell className="text-sm">{r.exam_category || "—"}</TableCell>
                         <TableCell className="text-sm">{r.exam_year || "—"}</TableCell>
                         <TableCell className="text-xs font-mono truncate max-w-[240px]">{r.official_website || "—"}</TableCell>
+                        <TableCell className="text-sm">{r.sort_order || i + 1}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
