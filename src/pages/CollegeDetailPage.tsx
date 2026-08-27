@@ -1055,17 +1055,18 @@ const CollegeDetailPage = () => {
                 <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-                <CardContent className="pt-6 relative z-10">
-                  <div className="flex flex-col gap-2 mb-4">
+                <CardContent className="px-5 py-5 relative z-10">
+                  <div className="flex flex-col gap-2 mb-3.5">
                     <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md self-start">
                       ★ Featured
                     </span>
                     <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
                   </div>
-                  <p className="font-heading text-4xl font-extrabold leading-none mb-1 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
-                    {college.fees_lakhs ? `₹${college.fees_lakhs}L` : (college.fees || "Contact College")}
+                  <p className="font-heading text-2xl xl:text-3xl font-extrabold leading-tight mb-1 break-words [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
+                    {college.fees_lakhs ? `₹${college.fees_lakhs}L` : numericStat(college.fees, "Contact College")}
                   </p>
                   <p className="text-xs text-primary-foreground/75 mb-5">For complete 2-year program · GST inclusive</p>
+
 
                   <Button onClick={handleDownloadBrochure} size="lg" className="w-full bg-white text-primary hover:bg-white/95 font-bold gap-2 shadow-xl mb-2">
                     <Download className="w-4 h-4" /> Download Brochure
