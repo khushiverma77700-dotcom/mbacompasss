@@ -626,7 +626,7 @@ const CollegeDetailPage = () => {
                               <td className="py-3 px-3 font-medium text-foreground">{c.name}</td>
                               <td className="py-3 px-3 text-muted-foreground">{c.duration}</td>
                               <td className="py-3 px-3 text-muted-foreground">{c.eligibility}</td>
-                              <td className="py-3 px-3 text-right font-heading font-bold text-primary">{c.fees}</td>
+                              <td className="py-3 px-3 text-right font-heading font-bold text-primary whitespace-nowrap">{numericStat(c.fees)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -691,10 +691,10 @@ const CollegeDetailPage = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     {[
-                      { label: "Average Package", value: placementData.avg_package || college.placement_avg || "N/A", icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
-                      { label: "Highest Package", value: placementData.highest_package || college.placement_highest || "N/A", icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
-                      { label: "Median Package", value: placementData.median_package || college.placement_median || "N/A", icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
-                      { label: "Placement Rate", value: placementData.placement_rate || "98%", icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
+                      { label: "Average Package", value: numericStat(placementData.avg_package || college.placement_avg), icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
+                      { label: "Highest Package", value: numericStat(placementData.highest_package || college.placement_highest), icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
+                      { label: "Median Package", value: numericStat(placementData.median_package || college.placement_median), icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
+                      { label: "Placement Rate", value: numericStat(placementData.placement_rate, "98%"), icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
                     ].map(s => (
                       <div key={s.label} className={`relative bg-gradient-to-br ${s.color} rounded-xl p-4 text-center border border-border/40 hover:shadow-md hover:-translate-y-0.5 transition-all`}>
                         <s.icon className={`w-5 h-5 ${s.iconColor} mx-auto mb-2`} />
@@ -754,7 +754,7 @@ const CollegeDetailPage = () => {
                                 <td className="py-3 px-3 font-medium text-foreground whitespace-nowrap">{c.category}</td>
                                 <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">{c.exam}</td>
                                 <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">{c.year}</td>
-                                <td className="py-3 px-3 text-right font-heading font-bold text-primary whitespace-nowrap">{c.percentile}</td>
+                                <td className="py-3 px-3 text-right font-heading font-bold text-primary whitespace-nowrap">{numericStat(c.percentile, stripTBA(c.percentile) || "—")}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -1132,7 +1132,7 @@ const CollegeDetailPage = () => {
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
-                                <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {sc.fees}</div>
+                                <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {numericStat(sc.fees)}</div>
                               </div>
                               <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
                             </div>
