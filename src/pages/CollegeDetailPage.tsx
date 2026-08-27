@@ -414,22 +414,23 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Premium Stats Strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
               {[
-                { label: "NIRF Ranking", value: college.ranking ? `#${college.ranking}` : fallbackText(null, { kind: "ranking", tier: college.tier }), source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
-                { label: "Total Fees", value: fallbackText(college.fees, { kind: "fees_text", tier: college.tier }), source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
-                { label: "Avg Package", value: fallbackText(placementData.avg_package || college.placement_avg, { kind: "placement_avg", tier: college.tier }), source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
-                { label: "Highest Package", value: fallbackText(placementData.highest_package || college.placement_highest, { kind: "placement_highest", tier: college.tier }), source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "NIRF Ranking", value: Number(college.ranking) > 0 ? rankOnly(college.ranking) : numericStat(fallbackText(null, { kind: "ranking", tier: college.tier })), source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
+                { label: "Total Fees", value: numericStat(college.fees, numericStat(fallbackText(null, { kind: "fees_text", tier: college.tier }))), source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
+                { label: "Avg Package", value: numericStat(placementData.avg_package || college.placement_avg, numericStat(fallbackText(null, { kind: "placement_avg", tier: college.tier }))), source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "Highest Package", value: numericStat(placementData.highest_package || college.placement_highest, numericStat(fallbackText(null, { kind: "placement_highest", tier: college.tier }))), source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
               ].map(s => {
                 const Icon = s.icon;
                 return (
-                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-3 py-3 sm:px-4 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all min-w-0">
+                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-3 py-2.5 sm:px-3.5 sm:py-3 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all min-w-0">
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                     <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
                       <Icon className="w-3.5 h-3.5 text-primary-foreground/70 flex-shrink-0" />
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70 truncate">{s.label}</span>
                     </div>
-                    <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight break-words">{s.value}</div>
+                    <div className="font-heading font-extrabold text-primary-foreground text-[0.95rem] sm:text-base md:text-lg leading-tight truncate" title={s.value}>{s.value}</div>
+
                     <div className="mt-1.5">
                       <CitationLink source={s.source} year={s.year} entityName={college.name} entityWebsite={(college as any).website} className="!bg-white/10 !border-white/20 !text-primary-foreground/80" />
                     </div>
