@@ -207,7 +207,7 @@ const ExamDetailPage = () => {
 
       {/* HERO */}
       <header className="border-b border-border bg-gradient-to-b from-primary/[0.06] to-background">
-        <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
             <div className="flex items-center gap-3 mb-3">
               {dbExam?.logo_url && (
