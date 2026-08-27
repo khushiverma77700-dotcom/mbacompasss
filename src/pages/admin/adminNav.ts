@@ -53,6 +53,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Shortlister Colleges", path: "/admin/shortlister-colleges", icon: Target },
       { label: "Exams", path: "/admin/exams", icon: FileText },
       { label: "Bulk Exam Creator", path: "/admin/exams/bulk-create", icon: Sparkles },
+      { label: "Exam Completeness", path: "/admin/exams/completeness", icon: Sparkles },
       { label: "Categories", path: "/admin/categories", icon: Tag },
       { label: "Specializations", path: "/admin/specializations", icon: Tag },
     ],
