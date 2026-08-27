@@ -46,6 +46,7 @@ const InstituteCoursePage = lazyWithPreload(() => import("./pages/InstituteCours
 const ComparePage = lazyWithPreload(() => import("./pages/ComparePage"));
 const ArticlePage = lazyWithPreload(() => import("./pages/ArticlePage"));
 const ExamDetailPage = lazyWithPreload(() => import("./pages/ExamDetailPage"));
+const ExamsListingPage = lazyWithPreload(() => import("./pages/ExamsListingPage"));
 const AboutPage = lazyWithPreload(() => import("./pages/AboutPage"));
 const IpmatPreparationGuide = lazyWithPreload(() => import("./pages/guides/IpmatPreparationGuide"));
 const ContactPage = lazyWithPreload(() => import("./pages/ContactPage"));
@@ -298,6 +299,7 @@ const ROUTE_MATCH_PREFETCHERS = [
   { pattern: "/college/:slug", preloaders: [CollegeDetailPage.preload] },
   { pattern: "/institute/:slug", preloaders: [InstitutePage.preload] },
   { pattern: "/exam/:slug", preloaders: [ExamDetailPage.preload] },
+  { pattern: "/exam", preloaders: [ExamsListingPage.preload] },
   { pattern: "/colleges/:region", preloaders: [CollegeFilterPage.preload] },
   { pattern: "/coaching/:region", preloaders: [CoachingFilterPage.preload] },
   { pattern: "/report/:id", preloaders: [SharedReportPage.preload] },
@@ -1014,6 +1016,7 @@ const App = () => (
             <Route path="/coaching/exam/:slug" element={<PublicLayout><LazyPage><CoachingCategoryRedirect kind="exam" /></LazyPage></PublicLayout>} />
             <Route path="/coaching/mode/:slug" element={<PublicLayout><LazyPage><CoachingCategoryRedirect kind="mode" /></LazyPage></PublicLayout>} />
             <Route path="/coaching/:region" element={<PublicLayout><LazyPage><CoachingFilterPage /></LazyPage></PublicLayout>} />
+            <Route path="/exam" element={<PublicLayout><LazyPage><ExamsListingPage /></LazyPage></PublicLayout>} />
             <Route path="/exam/:slug" element={<PublicLayout><LazyPage><ExamDetailPage /></LazyPage></PublicLayout>} />
 
             <Route path="/dashboard" element={<PublicLayout><LazyPage><DashboardPage /></LazyPage></PublicLayout>} />
@@ -1147,7 +1150,7 @@ const App = () => (
             <Route path="/mba-roi-calculator" element={<Navigate to="/roi-calculator" replace />} />
             <Route path="/business-inquiry" element={<Navigate to="/business-inquiries" replace />} />
             <Route path="/admissions/*" element={<Navigate to="/colleges" replace />} />
-            <Route path="/exams" element={<Navigate to="/colleges" replace />} />
+            <Route path="/exams" element={<Navigate to="/exam" replace />} />
             <Route path="/exams/:slug" element={<ExamSlugRedirect />} />
             <Route path="/course/:slug" element={<CourseSlugRedirect />} />
             {/* Legacy top-level college slugs (e.g. /asm-ibmr-pune, /pumba-pune-mba-admission) — resolve to /college/:slug or NotFound. Keep second-to-last so real routes win. */}
