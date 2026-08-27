@@ -337,8 +337,8 @@ export const ComparisonBlocks = ({ items }: { items: NonNullable<ExamSections["c
   return (
     <div className="space-y-4">
       {valid.map((cmp, i) => (
-        <Card key={i}>
-          <CardContent className="p-5">
+        <Card key={i} className="min-w-0 overflow-hidden">
+          <CardContent className="min-w-0 p-5 md:p-6">
             <h3 className="font-heading text-base font-bold text-foreground mb-3">{cmp.a} vs {cmp.b}</h3>
             <DataTable
               block={{
