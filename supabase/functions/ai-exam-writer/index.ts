@@ -13,6 +13,12 @@ import { requireAdmin } from "../_shared/requireAdmin.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { MBA_COMPASS_SECTION_RULES } from "../_shared/aiContentRules.ts";
 import { firecrawlSearch, firecrawlScrape } from "../_shared/firecrawlGateway.ts";
+import {
+  auditExamSections,
+  gapsByBatch,
+  pruneBlankContent,
+  type Gap,
+} from "../_shared/examCompleteness.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
