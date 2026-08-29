@@ -211,7 +211,10 @@ export async function semrushSerp(keyword: string, locale = "in") {
       url: r["Url"],
     }));
   } catch (e) {
-    console.warn("[keywordMetrics] serp failed:", e instanceof Error ? e.message : e);
+    const msg = e instanceof Error ? e.message : String(e);
+    console.warn("[keywordMetrics] serp failed:", msg);
+    // A quota / plan limit is a real, actionable state — never hide it as "no results".
+    if (/LIMIT EXCEEDED|quota|403/i.test(msg)) throw new Error(`Semrush quota: ${msg.slice(0, 160)}`);
     return [];
   }
 }
