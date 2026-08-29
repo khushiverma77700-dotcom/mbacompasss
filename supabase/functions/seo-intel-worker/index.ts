@@ -679,7 +679,11 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
       body: "Open the Recommendations tab to review, approve or reject them.",
     });
   }
-  return { records: inserted };
+  return {
+    records: inserted,
+    detail: `${inserted} new, ${updated} refreshed, ${suppressed} suppressed for weak evidence`,
+  };
+
 }
 
 /** Did applied changes actually help? Compare rank/traffic before vs after. */
