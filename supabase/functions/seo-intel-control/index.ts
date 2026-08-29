@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
           sb.from("seo_intel_page_profiles").select("path, competitive_gap_score, confidence, summary, updated_at").order("competitive_gap_score", { ascending: false, nullsFirst: false }).limit(60),
           sb.from("seo_intel_rec_outcomes").select("*").order("implemented", { ascending: false }),
           sb.from("seo_intel_graph_edges").select("from_type, from_id, edge, to_type, to_id, weight").limit(1500),
-          sb.from("seo_intel_strategy").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+          sb.from("seo_intel_strategy").select("*").order("generated_at", { ascending: false }).limit(1).maybeSingle(),
           sb.from("seo_intel_kw_sources").select("keyword, metric, source, value, value_text, label, confidence, observed_at").order("observed_at", { ascending: false }).limit(400),
         ]);
         return json({

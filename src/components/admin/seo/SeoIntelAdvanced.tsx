@@ -132,7 +132,7 @@ export function StrategyPanel({ intel, busy, runStage }: { intel: IntelData | nu
             <>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <ConfidenceBadge value={s.confidence} />
-                <span>Generated {new Date(s.created_at).toLocaleString()}</span>
+                <span>Generated {new Date(s.generated_at).toLocaleString()}</span>
                 {s.data_coverage && (
                   <span>· evidence: {Object.entries(s.data_coverage).map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`).join(", ")}</span>
                 )}
