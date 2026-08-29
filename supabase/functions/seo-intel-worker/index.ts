@@ -750,9 +750,9 @@ async function runReport(ctx: Ctx) {
     clicks, impressions, avg_position: avgPos,
     pages_improved: gained, pages_declined: lost, pages_not_indexed: notIndexed,
     recommendations: {
-      total: recs.length,
-      open: recs.filter((r: any) => ["new", "review"].includes(r.status)).length,
-      applied: recs.filter((r: any) => r.status === "applied" || r.status === "verified").length,
+      total: (recs ?? []).length,
+      open: (recs ?? []).filter((r: any) => ["new", "review"].includes(r.status)).length,
+      applied: (recs ?? []).filter((r: any) => r.status === "applied" || r.status === "verified").length,
     },
     tasks: {
       total: (tasks ?? []).length,
