@@ -212,6 +212,7 @@ const Index = () => {
         <Deferred height={480}><FreebiesPreview /></Deferred>
         <Deferred height={360}><LearningResourcesSection /></Deferred>
         <Deferred height={420} id="home-blog"><LatestArticlesSection /></Deferred>
+        <Deferred height={360}><NewsSection /></Deferred>
         <Deferred height={420}><FAQSection /></Deferred>
         <Deferred height={280}><CTASection /></Deferred>
       </div>
