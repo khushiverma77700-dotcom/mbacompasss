@@ -689,11 +689,15 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
 /** Did applied changes actually help? Compare rank/traffic before vs after. */
 async function runVerify(ctx: Ctx) {
   const { sb } = ctx;
-  const { data: exps } = await sb.from("seo_intel_experiments")
-    .select("*").is("result_captured_on", null).limit(30);
+  const targetId = (ctx.job.payload as any)?.experiment_id as string | undefined;
+  let q = sb.from("seo_intel_experiments").select("*").is("result_captured_on", null).limit(30);
+  if (targetId) q = sb.from("seo_intel_experiments").select("*").eq("id", targetId).limit(1);
+  const { data: exps } = await q;
   let measured = 0;
   for (const e of exps ?? []) {
-    if (e.measure_after && new Date(e.measure_after) > new Date()) continue;
+    // An admin-requested verification still measures only what history actually holds.
+    if (!targetId && e.measure_after && new Date(e.measure_after) > new Date()) continue;
+
     const { data: hist } = await sb.from("seo_intel_page_history")
       .select("clicks, impressions, avg_position, captured_on")
       .eq("path", e.path).order("captured_on", { ascending: false }).limit(1).maybeSingle();
