@@ -29,6 +29,7 @@ const SuccessStoriesSection = lazy(() => import("@/components/SuccessStoriesSect
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 const LearningResourcesSection = lazy(() => import("@/components/LearningResourcesSection"));
 const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
+const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
