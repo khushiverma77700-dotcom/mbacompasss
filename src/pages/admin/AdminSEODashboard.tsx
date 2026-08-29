@@ -101,11 +101,12 @@ interface DataQualityReport {
   dataSourcesUsed?: string[]; confidence?: string; notes?: string;
 }
 
-interface BlogTitleResult {
-  title: string; targetKeyword: string; searchVolume: number; competition: string;
+interface BlogTitleResult extends KeywordMetricSources {
+  title: string; targetKeyword: string; searchVolume: number | null; competition: string;
   contentType: string; wordCount?: number; priority: string; trendingScore: number;
   metaTitle?: string; metaDescription?: string; slug?: string;
 }
+
 
 interface CompetitorResult {
   domain: string; domainAuthority: number; estimatedTraffic?: string; indexedPages?: string;
