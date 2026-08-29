@@ -352,7 +352,20 @@ async function runCompetitorScan(ctx: Ctx) {
 
   let stored = 0;
   for (const k of kws) {
-    const serp = await semrushSerp(k.keyword, locale);
+    let serp: Awaited<ReturnType<typeof semrushSerp>>;
+    try {
+      serp = await semrushSerp(k.keyword, locale);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // Quota / plan limit: park the stage with a clear, honest status instead of reporting zero.
+      await markSource(sb, "semrush", {
+        configured: true, status: "error", last_error: msg, last_sync_at: nowIso(),
+      });
+      return {
+        skipped: `Semrush API limit reached — competitor SERP data paused until the plan quota resets (${msg.slice(0, 120)})`,
+        records: stored,
+      };
+    }
     for (const s of serp.slice(0, 5)) {
       if (!s.domain || /mbacompass\.in/i.test(s.domain)) continue;
       const { error: cErr } = await sb.from("seo_intel_competitors").upsert({
@@ -374,11 +387,11 @@ async function runCompetitorScan(ctx: Ctx) {
       if (hErr) throw new Error(`seo_intel_competitor_history upsert: ${hErr.message}`);
       stored++;
     }
-
   }
-  await markSource(sb, "semrush", { configured: true, status: "connected", last_sync_at: nowIso() });
+  await markSource(sb, "semrush", { configured: true, status: "connected", last_error: null, last_sync_at: nowIso() });
   return { records: stored };
 }
+
 
 /** Actual indexing state per URL from Search Console URL Inspection. */
 async function runIndexCheck(ctx: Ctx) {
