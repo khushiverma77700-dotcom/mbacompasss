@@ -551,7 +551,7 @@ const ExamsListingPage = () => {
       </section>
 
       {/* Search + filters */}
-      <section className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
+      <section className="sticky top-16 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-[12rem] flex-1">

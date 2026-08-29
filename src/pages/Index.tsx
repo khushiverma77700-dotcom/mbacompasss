@@ -29,6 +29,7 @@ const SuccessStoriesSection = lazy(() => import("@/components/SuccessStoriesSect
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 const LearningResourcesSection = lazy(() => import("@/components/LearningResourcesSection"));
 const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
+const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
@@ -212,6 +213,7 @@ const Index = () => {
         <Deferred height={480}><FreebiesPreview /></Deferred>
         <Deferred height={360}><LearningResourcesSection /></Deferred>
         <Deferred height={420} id="home-blog"><LatestArticlesSection /></Deferred>
+        <Deferred height={360}><NewsSection /></Deferred>
         <Deferred height={420}><FAQSection /></Deferred>
         <Deferred height={280}><CTASection /></Deferred>
       </div>
