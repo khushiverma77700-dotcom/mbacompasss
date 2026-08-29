@@ -916,6 +916,7 @@ const App = () => (
               <Route path="comparisons" element={<LazyPage><AdminComparisons /></LazyPage>} />
               <Route path="coaching-results" element={<LazyPage><AdminCoachingResults /></LazyPage>} />
               <Route path="seo-dashboard" element={<LazyPage><AdminSEODashboard /></LazyPage>} />
+              <Route path="seo-intelligence" element={<LazyPage><AdminSEOIntelligence /></LazyPage>} />
               <Route path="reseo-audit-log" element={<LazyPage><AdminReseoAuditLog /></LazyPage>} />
               <Route path="seo-health-check" element={<LazyPage><AdminSEOHealthCheck /></LazyPage>} />
               <Route path="image-seo" element={<LazyPage><AdminImageSeo /></LazyPage>} />
