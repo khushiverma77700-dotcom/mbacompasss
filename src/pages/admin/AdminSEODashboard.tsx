@@ -2383,6 +2383,25 @@ const AdminSEODashboard = () => {
                   </Button>
                 </div>
 
+                {metricSources && (
+                  <Card className="border-emerald-200 bg-emerald-50/40">
+                    <CardContent className="p-3 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-medium">Live data sources:</span>
+                      <Badge variant="outline" className={metricSources.dataforseo ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Google Keyword Planner {metricSources.dataforseo ? "on" : "not configured"}
+                      </Badge>
+                      <Badge variant="outline" className={metricSources.semrush ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Semrush {metricSources.semrush ? "on" : "not connected"}
+                      </Badge>
+                      <Badge variant="outline" className="border-blue-300 text-blue-700">Search Console on</Badge>
+                      <span className="text-muted-foreground">
+                        {metricSources.verifiedKeywords ?? 0} keywords carry verified provider metrics. Rows marked
+                        &nbsp;<span className="text-amber-700">unverified</span>&nbsp;show no volume instead of a guess.
+                      </span>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Keywords Table */}
                 <Card>
                   <CardContent className="p-0">
