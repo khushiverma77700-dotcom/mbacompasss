@@ -27,7 +27,7 @@ const BackButton = () => {
       type="button"
       onClick={handleBack}
       aria-label="Go back"
-      className="group fixed bottom-5 left-4 z-40 inline-flex items-center gap-2 min-h-[44px] rounded-full border border-border bg-card/95 pl-2 pr-4 py-1.5 text-sm font-medium text-muted-foreground shadow-lg backdrop-blur transition-all hover:border-primary/40 hover:text-primary active:scale-95"
+      className="group fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-5 left-4 z-50 inline-flex items-center gap-2 min-h-[44px] rounded-full border border-border bg-card/95 pl-2 pr-4 py-1.5 text-sm font-medium text-muted-foreground shadow-lg backdrop-blur transition-all hover:border-primary/40 hover:text-primary active:scale-95"
     >
       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/10">
         <ArrowLeft className="h-4 w-4" />
