@@ -385,14 +385,21 @@ async function runIndexCheck(ctx: Ctx) {
   const { sb, siteUrl, job } = ctx;
   if (!siteUrl) return { skipped: "Search Console is not connected — indexing state unavailable.", records: 0 };
   const cursor = Number(job.payload?.cursor ?? 0);
-  const batch = 20;
+  const batch = 8;
+  const deadline = Date.now() + 90_000; // stay well inside the function timeout
   const { data: pages } = await sb.from("seo_intel_pages")
     .select("path")
     .order("indexed_checked_at", { ascending: true, nullsFirst: true })
     .range(0, batch - 1);
   let done = 0;
   for (const p of pages ?? []) {
-    const state = await gscIndexState(siteUrl, `${SITE_URL}${p.path}`);
+    if (Date.now() > deadline) break;
+    let state: string | null = null;
+    try {
+      state = await gscIndexState(siteUrl, `${SITE_URL}${p.path}`);
+    } catch (_e) {
+      state = null; // a single URL failing must not fail the whole stage
+    }
     await sb.from("seo_intel_pages").update({
       indexed_status: state ?? "unknown",
       indexed_checked_at: nowIso(),
@@ -412,6 +419,7 @@ async function runIndexCheck(ctx: Ctx) {
   await markSource(sb, "gsc_url_inspection", { configured: true, status: "connected", last_sync_at: nowIso() });
   return { records: done, detail: `inspected ${done} URL(s) from cursor ${cursor}` };
 }
+
 
 /** AI analysis over the stored signals → concrete, evidence-backed recommendations. */
 async function runAnalyze(ctx: Ctx) {
