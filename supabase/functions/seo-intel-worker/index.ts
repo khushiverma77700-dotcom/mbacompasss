@@ -750,9 +750,9 @@ async function runReport(ctx: Ctx) {
     clicks, impressions, avg_position: avgPos,
     pages_improved: gained, pages_declined: lost, pages_not_indexed: notIndexed,
     recommendations: {
-      total: (recs ?? []).length,
-      open: (recs ?? []).filter((r: any) => ["new", "review"].includes(r.status)).length,
-      applied: (recs ?? []).filter((r: any) => r.status === "applied" || r.status === "verified").length,
+      total: recs.length,
+      open: recs.filter((r: any) => ["new", "review"].includes(r.status)).length,
+      applied: recs.filter((r: any) => r.status === "applied" || r.status === "verified").length,
     },
     tasks: {
       total: (tasks ?? []).length,
@@ -783,15 +783,24 @@ async function runReport(ctx: Ctx) {
  */
 async function runDailySnapshot(ctx: Ctx) {
   const { sb } = ctx;
-  const [{ data: pages }, { data: keywords }, { data: recs }] = await Promise.all([
-    sb.from("seo_intel_pages")
-      .select("clicks, impressions, avg_position, position_change, health_score, indexed_status, psi_perf_score, psi_lcp_ms"),
-    sb.from("seo_intel_keywords").select("current_position, position_change, clicks, impressions"),
-    sb.from("seo_intel_recommendations").select("status"),
-  ]);
+  // Paged reads: the Data API caps a single select at 1,000 rows, and a partial
+  // read would silently understate every total on the dashboard.
+  const fetchAll = async (table: string, cols: string) => {
+    const out: any[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from(table).select(cols).range(from, from + 999);
+      if (error) throw new Error(`${table} read failed: ${error.message}`);
+      out.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
+    }
+    return out;
+  };
 
-  const pageList = pages ?? [];
-  const kwList = keywords ?? [];
+  const [pageList, kwList, recs] = await Promise.all([
+    fetchAll("seo_intel_pages", "clicks, impressions, avg_position, position_change, health_score, indexed_status, psi_perf_score, psi_lcp_ms"),
+    fetchAll("seo_intel_keywords", "current_position, position_change, clicks, impressions"),
+    fetchAll("seo_intel_recommendations", "status"),
+  ]);
   const avg = (vals: number[]) =>
     vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : null;
   const nums = (rows: any[], key: string) =>
@@ -823,8 +832,8 @@ async function runDailySnapshot(ctx: Ctx) {
     avg_health: avg(nums(pageList, "health_score")),
     avg_psi_perf: avg(nums(pageList, "psi_perf_score")),
     avg_lcp_ms: avg(nums(pageList, "psi_lcp_ms")),
-    open_recommendations: (recs ?? []).filter((r: any) => ["new", "review"].includes(r.status)).length,
-    applied_changes: (recs ?? []).filter((r: any) => ["applied", "verified"].includes(r.status)).length,
+    open_recommendations: recs.filter((r: any) => ["new", "review"].includes(r.status)).length,
+    applied_changes: recs.filter((r: any) => ["applied", "verified"].includes(r.status)).length,
     data_sources: {
       traffic: "gsc (actual)",
       positions: "gsc / semrush (actual)",
