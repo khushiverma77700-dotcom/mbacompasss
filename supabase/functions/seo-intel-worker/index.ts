@@ -63,8 +63,31 @@ async function runGscPages(ctx: Ctx) {
     await markSource(sb, "search_console", { configured: gscConfigured(), status: "not_connected", last_error: "No verified property resolved" });
     return { skipped: "Search Console is not connected — link it to collect actual traffic data.", records: 0 };
   }
-  const cur = await gscPageMetrics(siteUrl, dayOffset(30), dayOffset(2));
-  const prev = await gscPageMetrics(siteUrl, dayOffset(58), dayOffset(31));
+  const rawCur = await gscPageMetrics(siteUrl, dayOffset(30), dayOffset(2));
+  const rawPrev = await gscPageMetrics(siteUrl, dayOffset(58), dayOffset(31));
+
+  // Different URLs (trailing slash, query strings, casing) can normalise to the
+  // same path, so aggregate before upserting — Postgres rejects a conflict that
+  // touches the same row twice.
+  const merge = (rows: typeof rawCur) => {
+    const map = new Map<string, { path: string; clicks: number; impressions: number; ctr: number; position: number | null; posSum: number; imprSum: number }>();
+    for (const r of rows) {
+      if (!r.path) continue;
+      const e = map.get(r.path) ?? { path: r.path, clicks: 0, impressions: 0, ctr: 0, position: null, posSum: 0, imprSum: 0 };
+      e.clicks += r.clicks; e.impressions += r.impressions;
+      if (r.position != null) { e.posSum += r.position * Math.max(r.impressions, 1); e.imprSum += Math.max(r.impressions, 1); }
+      map.set(r.path, e);
+    }
+    return [...map.values()].map((e) => ({
+      path: e.path,
+      clicks: e.clicks,
+      impressions: e.impressions,
+      ctr: e.impressions ? Number((e.clicks / e.impressions).toFixed(4)) : 0,
+      position: e.imprSum ? Number((e.posSum / e.imprSum).toFixed(2)) : null,
+    }));
+  };
+  const cur = merge(rawCur);
+  const prev = merge(rawPrev);
   const prevMap = new Map(prev.map((r) => [r.path, r]));
 
   const pageRows = cur.map((r) => {
@@ -329,10 +352,23 @@ async function runCompetitorScan(ctx: Ctx) {
 
   let stored = 0;
   for (const k of kws) {
-    const serp = await semrushSerp(k.keyword, locale);
+    let serp: Awaited<ReturnType<typeof semrushSerp>>;
+    try {
+      serp = await semrushSerp(k.keyword, locale);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // Quota / plan limit: park the stage with a clear, honest status instead of reporting zero.
+      await markSource(sb, "semrush", {
+        configured: true, status: "error", last_error: msg, last_sync_at: nowIso(),
+      });
+      return {
+        skipped: `Semrush API limit reached — competitor SERP data paused until the plan quota resets (${msg.slice(0, 120)})`,
+        records: stored,
+      };
+    }
     for (const s of serp.slice(0, 5)) {
       if (!s.domain || /mbacompass\.in/i.test(s.domain)) continue;
-      await sb.from("seo_intel_competitors").upsert({
+      const { error: cErr } = await sb.from("seo_intel_competitors").upsert({
         domain: s.domain,
         keyword: k.keyword,
         our_path: k.target_path,
@@ -343,30 +379,40 @@ async function runCompetitorScan(ctx: Ctx) {
         last_checked_at: nowIso(),
         updated_at: nowIso(),
       }, { onConflict: "domain,keyword" });
-      await sb.from("seo_intel_competitor_history").upsert({
+      if (cErr) throw new Error(`seo_intel_competitors upsert: ${cErr.message}`);
+      const { error: hErr } = await sb.from("seo_intel_competitor_history").upsert({
         domain: s.domain, keyword: k.keyword, captured_on: today(),
         position: s.position, our_position: k.current_position, data_source: "semrush",
       }, { onConflict: "domain,keyword,captured_on" });
+      if (hErr) throw new Error(`seo_intel_competitor_history upsert: ${hErr.message}`);
       stored++;
     }
   }
-  await markSource(sb, "semrush", { configured: true, status: "connected", last_sync_at: nowIso() });
+  await markSource(sb, "semrush", { configured: true, status: "connected", last_error: null, last_sync_at: nowIso() });
   return { records: stored };
 }
+
 
 /** Actual indexing state per URL from Search Console URL Inspection. */
 async function runIndexCheck(ctx: Ctx) {
   const { sb, siteUrl, job } = ctx;
   if (!siteUrl) return { skipped: "Search Console is not connected — indexing state unavailable.", records: 0 };
   const cursor = Number(job.payload?.cursor ?? 0);
-  const batch = 20;
+  const batch = 8;
+  const deadline = Date.now() + 90_000; // stay well inside the function timeout
   const { data: pages } = await sb.from("seo_intel_pages")
     .select("path")
     .order("indexed_checked_at", { ascending: true, nullsFirst: true })
     .range(0, batch - 1);
   let done = 0;
   for (const p of pages ?? []) {
-    const state = await gscIndexState(siteUrl, `${SITE_URL}${p.path}`);
+    if (Date.now() > deadline) break;
+    let state: string | null = null;
+    try {
+      state = await gscIndexState(siteUrl, `${SITE_URL}${p.path}`);
+    } catch (_e) {
+      state = null; // a single URL failing must not fail the whole stage
+    }
     await sb.from("seo_intel_pages").update({
       indexed_status: state ?? "unknown",
       indexed_checked_at: nowIso(),
@@ -386,6 +432,7 @@ async function runIndexCheck(ctx: Ctx) {
   await markSource(sb, "gsc_url_inspection", { configured: true, status: "connected", last_sync_at: nowIso() });
   return { records: done, detail: `inspected ${done} URL(s) from cursor ${cursor}` };
 }
+
 
 /** AI analysis over the stored signals → concrete, evidence-backed recommendations. */
 async function runAnalyze(ctx: Ctx) {

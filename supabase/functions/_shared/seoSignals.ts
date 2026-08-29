@@ -132,6 +132,7 @@ export async function gscIndexState(siteUrl: string, inspectionUrl: string): Pro
       method: "POST",
       headers: gscHeaders(),
       body: JSON.stringify({ inspectionUrl, siteUrl }),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) return null;
     const json = await res.json().catch(() => ({}));
