@@ -2524,7 +2524,22 @@ const AdminSEODashboard = () => {
             {btResults.length > 0 && (
               <>
                 {btSummary && <Card><CardContent className="pt-4"><p className="text-sm">{btSummary}</p></CardContent></Card>}
+                {metricSources && (
+                  <Card className="border-emerald-200 bg-emerald-50/40">
+                    <CardContent className="p-3 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-medium">Search volumes verified by:</span>
+                      <Badge variant="outline" className={metricSources.dataforseo ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Google Keyword Planner {metricSources.dataforseo ? "on" : "not configured"}
+                      </Badge>
+                      <Badge variant="outline" className={metricSources.semrush ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Semrush {metricSources.semrush ? "on" : "not connected"}
+                      </Badge>
+                      <span className="text-muted-foreground">{metricSources.verifiedKeywords ?? 0} verified keywords used for these titles.</span>
+                    </CardContent>
+                  </Card>
+                )}
                 <div className="flex justify-end gap-2"><Button variant="outline" size="sm" onClick={handleSaveAllBlogIdeas}><Save className="h-4 w-4 mr-1" /> Save All</Button></div>
+
                 <Card>
                   <CardContent className="p-0">
                     <Table>
