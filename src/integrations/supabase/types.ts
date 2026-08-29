@@ -9794,6 +9794,8 @@ export type Database = {
           internal_links_in: number | null
           internal_links_out: number | null
           last_crawl_at: string | null
+          live_crawl_at: string | null
+          live_crawl_error: string | null
           meta_description: string | null
           page_type: string | null
           path: string
@@ -9807,7 +9809,22 @@ export type Database = {
           prev_impressions: number | null
           primary_keyword: string | null
           priority: string | null
+          psi_checked_at: string | null
+          psi_cls: number | null
+          psi_fcp_ms: number | null
+          psi_lcp_ms: number | null
+          psi_opportunities: Json | null
+          psi_perf_score: number | null
+          psi_seo_score: number | null
+          psi_strategy: string | null
+          psi_tbt_ms: number | null
+          rendered_h1: string | null
+          rendered_has_schema: boolean | null
+          rendered_links_out: number | null
+          rendered_title: string | null
+          rendered_word_count: number | null
           schema_types: string[] | null
+          ssr_gap: boolean | null
           status: string | null
           target_keywords: string[] | null
           title: string | null
@@ -9837,6 +9854,8 @@ export type Database = {
           internal_links_in?: number | null
           internal_links_out?: number | null
           last_crawl_at?: string | null
+          live_crawl_at?: string | null
+          live_crawl_error?: string | null
           meta_description?: string | null
           page_type?: string | null
           path: string
@@ -9850,7 +9869,22 @@ export type Database = {
           prev_impressions?: number | null
           primary_keyword?: string | null
           priority?: string | null
+          psi_checked_at?: string | null
+          psi_cls?: number | null
+          psi_fcp_ms?: number | null
+          psi_lcp_ms?: number | null
+          psi_opportunities?: Json | null
+          psi_perf_score?: number | null
+          psi_seo_score?: number | null
+          psi_strategy?: string | null
+          psi_tbt_ms?: number | null
+          rendered_h1?: string | null
+          rendered_has_schema?: boolean | null
+          rendered_links_out?: number | null
+          rendered_title?: string | null
+          rendered_word_count?: number | null
           schema_types?: string[] | null
+          ssr_gap?: boolean | null
           status?: string | null
           target_keywords?: string[] | null
           title?: string | null
@@ -9880,6 +9914,8 @@ export type Database = {
           internal_links_in?: number | null
           internal_links_out?: number | null
           last_crawl_at?: string | null
+          live_crawl_at?: string | null
+          live_crawl_error?: string | null
           meta_description?: string | null
           page_type?: string | null
           path?: string
@@ -9893,7 +9929,22 @@ export type Database = {
           prev_impressions?: number | null
           primary_keyword?: string | null
           priority?: string | null
+          psi_checked_at?: string | null
+          psi_cls?: number | null
+          psi_fcp_ms?: number | null
+          psi_lcp_ms?: number | null
+          psi_opportunities?: Json | null
+          psi_perf_score?: number | null
+          psi_seo_score?: number | null
+          psi_strategy?: string | null
+          psi_tbt_ms?: number | null
+          rendered_h1?: string | null
+          rendered_has_schema?: boolean | null
+          rendered_links_out?: number | null
+          rendered_title?: string | null
+          rendered_word_count?: number | null
           schema_types?: string[] | null
+          ssr_gap?: boolean | null
           status?: string | null
           target_keywords?: string[] | null
           title?: string | null
@@ -10198,6 +10249,51 @@ export type Database = {
           status?: string
           updated_at?: string
           usage?: Json
+        }
+        Relationships: []
+      }
+      seo_intel_speed_history: {
+        Row: {
+          captured_on: string
+          cls: number | null
+          created_at: string
+          data_source: string | null
+          fcp_ms: number | null
+          id: string
+          lcp_ms: number | null
+          path: string
+          perf_score: number | null
+          seo_score: number | null
+          strategy: string
+          tbt_ms: number | null
+        }
+        Insert: {
+          captured_on?: string
+          cls?: number | null
+          created_at?: string
+          data_source?: string | null
+          fcp_ms?: number | null
+          id?: string
+          lcp_ms?: number | null
+          path: string
+          perf_score?: number | null
+          seo_score?: number | null
+          strategy?: string
+          tbt_ms?: number | null
+        }
+        Update: {
+          captured_on?: string
+          cls?: number | null
+          created_at?: string
+          data_source?: string | null
+          fcp_ms?: number | null
+          id?: string
+          lcp_ms?: number | null
+          path?: string
+          perf_score?: number | null
+          seo_score?: number | null
+          strategy?: string
+          tbt_ms?: number | null
         }
         Relationships: []
       }

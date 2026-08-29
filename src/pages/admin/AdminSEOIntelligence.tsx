@@ -47,7 +47,7 @@ type Snapshot = {
 };
 
 const JOB_ORDER = [
-  "gsc_pages", "gsc_queries", "crawl_pages", "keyword_metrics", "rank_track",
+  "gsc_pages", "gsc_queries", "crawl_pages", "live_crawl", "speed_audit", "keyword_metrics", "rank_track",
   "index_check", "competitor_scan", "analyze", "verify", "report",
 ];
 
@@ -477,6 +477,8 @@ const AdminSEOIntelligence = () => {
                     <TableHead className="text-right">CTR</TableHead><TableHead className="text-right">Position</TableHead>
                     <TableHead className="text-right">Change</TableHead><TableHead className="text-right">Words</TableHead>
                     <TableHead>Schema</TableHead><TableHead className="text-right">Health</TableHead><TableHead>Indexed</TableHead>
+                    <TableHead>Crawler sees</TableHead><TableHead className="text-right">Speed</TableHead><TableHead className="text-right">LCP</TableHead>
+
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -493,14 +495,30 @@ const AdminSEOIntelligence = () => {
                       <TableCell>{p.has_schema == null ? "—" : p.has_schema ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <XCircle className="h-4 w-4 text-red-500" />}</TableCell>
                       <TableCell className="text-right text-xs">{dec(p.health_score, 0)}</TableCell>
                       <TableCell className="text-xs">{p.indexed_status ?? "—"}</TableCell>
+                      <TableCell className="text-xs">
+                        {p.live_crawl_at == null
+                          ? <span className="text-muted-foreground">not checked</span>
+                          : p.live_crawl_error
+                            ? <span className="text-red-600" title={p.live_crawl_error}>crawl failed</span>
+                            : p.ssr_gap
+                              ? <span className="text-red-600" title={`Crawler received only ${num(p.rendered_word_count)} words`}>gap · {num(p.rendered_word_count)}w</span>
+                              : <span className="text-emerald-600">full · {num(p.rendered_word_count)}w</span>}
+                      </TableCell>
+                      <TableCell className={`text-right text-xs ${p.psi_perf_score == null ? "" : p.psi_perf_score >= 90 ? "text-emerald-600" : p.psi_perf_score >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                        {p.psi_perf_score == null ? "—" : dec(p.psi_perf_score, 0)}
+                      </TableCell>
+                      <TableCell className={`text-right text-xs ${p.psi_lcp_ms == null ? "" : p.psi_lcp_ms > 2500 ? "text-red-600" : "text-emerald-600"}`}>
+                        {p.psi_lcp_ms == null ? "—" : `${dec(p.psi_lcp_ms / 1000, 1)}s`}
+                      </TableCell>
                     </TableRow>
                   ))}
-                  {!filteredPages.length && <TableRow><TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">No page data yet. Run the on-page crawl and the Search Console sync.</TableCell></TableRow>}
+                  {!filteredPages.length && <TableRow><TableCell colSpan={14} className="py-8 text-center text-sm text-muted-foreground">No page data yet. Run the on-page crawl and the Search Console sync.</TableCell></TableRow>}
+
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
-          <p className="text-xs text-muted-foreground">Clicks, impressions, CTR and position are <SourceTag kind="actual" /> from Search Console. Words, schema and health are <SourceTag kind="calculated" /> from our content database.</p>
+          <p className="text-xs text-muted-foreground">Clicks, impressions, CTR and position are <SourceTag kind="actual" /> from Search Console. "Crawler sees" is <SourceTag kind="actual" /> from a live Firecrawl fetch of the URL, and Speed / LCP are <SourceTag kind="actual" /> Google PageSpeed (mobile) measurements. Words, schema and health are <SourceTag kind="calculated" /> from our content database.</p>
         </TabsContent>
 
         {/* ── Keywords ── */}
