@@ -9664,6 +9664,93 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_intel_daily_snapshots: {
+        Row: {
+          applied_changes: number | null
+          avg_health: number | null
+          avg_lcp_ms: number | null
+          avg_position: number | null
+          avg_psi_perf: number | null
+          captured_on: string
+          clicks: number | null
+          coverage: Json
+          created_at: string
+          ctr: number | null
+          data_sources: Json
+          gains: number | null
+          id: string
+          impressions: number | null
+          indexed_pages: number | null
+          losses: number | null
+          not_indexed_pages: number | null
+          open_recommendations: number | null
+          pages_tracked: number | null
+          rank_1: number | null
+          rank_2: number | null
+          rank_3: number | null
+          ranking_keywords: number | null
+          top_10: number | null
+          top_20: number | null
+          top_5: number | null
+        }
+        Insert: {
+          applied_changes?: number | null
+          avg_health?: number | null
+          avg_lcp_ms?: number | null
+          avg_position?: number | null
+          avg_psi_perf?: number | null
+          captured_on: string
+          clicks?: number | null
+          coverage?: Json
+          created_at?: string
+          ctr?: number | null
+          data_sources?: Json
+          gains?: number | null
+          id?: string
+          impressions?: number | null
+          indexed_pages?: number | null
+          losses?: number | null
+          not_indexed_pages?: number | null
+          open_recommendations?: number | null
+          pages_tracked?: number | null
+          rank_1?: number | null
+          rank_2?: number | null
+          rank_3?: number | null
+          ranking_keywords?: number | null
+          top_10?: number | null
+          top_20?: number | null
+          top_5?: number | null
+        }
+        Update: {
+          applied_changes?: number | null
+          avg_health?: number | null
+          avg_lcp_ms?: number | null
+          avg_position?: number | null
+          avg_psi_perf?: number | null
+          captured_on?: string
+          clicks?: number | null
+          coverage?: Json
+          created_at?: string
+          ctr?: number | null
+          data_sources?: Json
+          gains?: number | null
+          id?: string
+          impressions?: number | null
+          indexed_pages?: number | null
+          losses?: number | null
+          not_indexed_pages?: number | null
+          open_recommendations?: number | null
+          pages_tracked?: number | null
+          rank_1?: number | null
+          rank_2?: number | null
+          rank_3?: number | null
+          ranking_keywords?: number | null
+          top_10?: number | null
+          top_20?: number | null
+          top_5?: number | null
+        }
+        Relationships: []
+      }
       seo_intel_demand: {
         Row: {
           acceleration_30d: number | null
