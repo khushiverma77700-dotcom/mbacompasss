@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
     { type: "page_twin", everyMin: 1440, payload: { limit: 25 }, priority: 17 },
     { type: "knowledge_graph", everyMin: 2880, priority: 18 },
     { type: "strategy", everyMin: 10080, priority: 19 },
+    { type: "daily_snapshot", everyMin: 720, priority: 19 },
     { type: "report", everyMin: settings.freq_report_min, priority: 20 },
 
   ];
