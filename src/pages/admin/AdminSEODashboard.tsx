@@ -946,7 +946,7 @@ const AdminSEODashboard = () => {
     const idea: SavedBlogIdea = {
       id: crypto.randomUUID(), title: bt.title, metaTitle: bt.metaTitle || bt.title.slice(0, 60),
       metaDescription: bt.metaDescription || `${bt.title} - Expert guide on ${bt.targetKeyword}.`,
-      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume,
+      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume ?? 0,
       competition: bt.competition, contentType: bt.contentType, priority: bt.priority, savedAt: new Date().toISOString(),
     };
     const updated = [...savedBlogIdeas, idea];
@@ -958,7 +958,7 @@ const AdminSEODashboard = () => {
     const newIdeas: SavedBlogIdea[] = btResults.filter(bt => !savedBlogIdeas.some(s => s.title === bt.title)).map(bt => ({
       id: crypto.randomUUID(), title: bt.title, metaTitle: bt.metaTitle || bt.title.slice(0, 60),
       metaDescription: bt.metaDescription || `${bt.title} - Expert guide on ${bt.targetKeyword}.`,
-      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume,
+      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume ?? 0,
       competition: bt.competition, contentType: bt.contentType, priority: bt.priority, savedAt: new Date().toISOString(),
     }));
     const updated = [...savedBlogIdeas, ...newIdeas];
