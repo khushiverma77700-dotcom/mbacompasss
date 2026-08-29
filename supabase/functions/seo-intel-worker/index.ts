@@ -14,6 +14,8 @@ import {
   loadPages, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
 } from "../_shared/seoSignals.ts";
 import { getKeywordMetrics, semrushSerp, semrushConfigured } from "../_shared/keywordMetrics.ts";
+import { firecrawlScrapeStrict, firecrawlConfigured, FirecrawlError } from "../_shared/firecrawlGateway.ts";
+import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const MAX_DEPTH = 25;
@@ -433,12 +435,149 @@ async function runIndexCheck(ctx: Ctx) {
   return { records: done, detail: `inspected ${done} URL(s) from cursor ${cursor}` };
 }
 
+/* ─────────── Firecrawl: what a crawler actually receives (live HTML) ─────────── */
+
+async function runLiveCrawl(ctx: Ctx) {
+  const { sb, job } = ctx;
+  if (!firecrawlConfigured()) {
+    await markSource(sb, "firecrawl", { configured: false, status: "not_connected", last_error: "Firecrawl connector not linked" });
+    return { skipped: "Firecrawl is not connected.", records: 0 };
+  }
+
+  const batch = Math.max(1, Math.min(6, Number(job.payload?.batch ?? 4)));
+  const deadline = Date.now() + 110_000;
+
+  // Highest-value pages first, then anything never checked / checked longest ago.
+  const { data: pages } = await sb.from("seo_intel_pages")
+    .select("path, title, primary_keyword, word_count, has_schema")
+    .order("live_crawl_at", { ascending: true, nullsFirst: true })
+    .order("impressions", { ascending: false, nullsFirst: false })
+    .limit(batch);
+  if (!pages?.length) return { skipped: "No pages to crawl yet.", records: 0 };
+
+  let done = 0;
+  let gaps = 0;
+  for (const p of pages) {
+    if (Date.now() > deadline) break;
+    const url = `${SITE_URL}${p.path}`;
+    try {
+      const res = await firecrawlScrapeStrict(url, { formats: ["markdown", "rawHtml"], onlyMainContent: false, timeoutMs: 45_000 });
+      const doc = res?.data ?? res ?? {};
+      const html: string = doc.rawHtml ?? doc.html ?? "";
+      const md: string = doc.markdown ?? "";
+      const meta = doc.metadata ?? {};
+
+      const renderedTitle: string | null = meta.title ?? (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? null);
+      const renderedH1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? null;
+      const words = wordCount(md || stripHtml(html));
+      const hasSchema = /application\/ld\+json/i.test(html);
+      const linksOut = (html.match(/href="\/(?!\/)/g) ?? []).length;
+      // An SSR gap = the crawler-visible HTML is missing content the page should ship.
+      const ssrGap = words < 200 || !renderedTitle || !hasSchema;
+      if (ssrGap) gaps++;
+
+      await sb.from("seo_intel_pages").update({
+        rendered_title: renderedTitle ? renderedTitle.slice(0, 300) : null,
+        rendered_h1: renderedH1 ? stripHtml(renderedH1).slice(0, 300) : null,
+        rendered_word_count: words,
+        rendered_has_schema: hasSchema,
+        rendered_links_out: linksOut,
+        ssr_gap: ssrGap,
+        live_crawl_at: nowIso(),
+        live_crawl_error: null,
+        updated_at: nowIso(),
+      }).eq("path", p.path);
+      done++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const status = e instanceof FirecrawlError ? e.status : 0;
+      // Credits / policy / rate limits are engine-wide problems, not page problems.
+      if (status === 402 || status === 403 || status === 429 || status === 401) {
+        await markSource(sb, "firecrawl", { configured: true, status: "error", last_error: msg, last_tested_at: nowIso() });
+        return { skipped: `Firecrawl unavailable — live crawling paused (${msg.slice(0, 140)})`, records: done };
+      }
+      await sb.from("seo_intel_pages").update({
+        live_crawl_at: nowIso(), live_crawl_error: msg.slice(0, 300), updated_at: nowIso(),
+      }).eq("path", p.path);
+    }
+  }
+
+  await markSource(sb, "firecrawl", { configured: true, status: "connected", last_error: null, last_sync_at: nowIso() });
+  return { records: done, detail: `live-crawled ${done} page(s), ${gaps} with a crawler-visibility gap` };
+}
+
+/* ─────────── PageSpeed Insights: real Core Web Vitals per page ─────────── */
+
+async function runSpeedAudit(ctx: Ctx) {
+  const { sb, job } = ctx;
+  const strategy: "mobile" | "desktop" = job.payload?.strategy === "desktop" ? "desktop" : "mobile";
+  const batch = Math.max(1, Math.min(3, Number(job.payload?.batch ?? 2))); // PSI is slow (~20-40s/URL)
+  const deadline = Date.now() + 110_000;
+
+  const { data: pages } = await sb.from("seo_intel_pages")
+    .select("path")
+    .order("psi_checked_at", { ascending: true, nullsFirst: true })
+    .order("impressions", { ascending: false, nullsFirst: false })
+    .limit(batch);
+  if (!pages?.length) return { skipped: "No pages to audit yet.", records: 0 };
+
+  let done = 0;
+  for (const p of pages) {
+    if (Date.now() > deadline) break;
+    const url = `${SITE_URL}${p.path}`;
+    try {
+      const m = await psiAudit(url, strategy, 60_000);
+      await sb.from("seo_intel_pages").update({
+        psi_perf_score: m.perf_score,
+        psi_seo_score: m.seo_score,
+        psi_lcp_ms: m.lcp_ms,
+        psi_cls: m.cls,
+        psi_tbt_ms: m.tbt_ms,
+        psi_fcp_ms: m.fcp_ms,
+        psi_strategy: m.strategy,
+        psi_opportunities: m.opportunities,
+        psi_checked_at: nowIso(),
+        updated_at: nowIso(),
+      }).eq("path", p.path);
+
+      await sb.from("seo_intel_speed_history").upsert({
+        path: p.path, captured_on: today(), strategy: m.strategy,
+        perf_score: m.perf_score, seo_score: m.seo_score,
+        lcp_ms: m.lcp_ms, cls: m.cls, tbt_ms: m.tbt_ms, fcp_ms: m.fcp_ms,
+        data_source: "pagespeed",
+      }, { onConflict: "path,captured_on,strategy" });
+      done++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const status = e instanceof PsiError ? e.status : 0;
+      // Quota (429) and key/referrer restrictions (403) block every URL equally.
+      if (status === 429 || status === 403 || status === 400 || status === 401) {
+        await markSource(sb, "pagespeed", {
+          configured: psiConfigured(), status: "error", last_error: msg, last_tested_at: nowIso(),
+        });
+        return {
+          skipped: status === 429
+            ? `PageSpeed daily quota exhausted — speed audits resume after the quota resets (${msg.slice(0, 120)})`
+            : `PageSpeed API rejected the request — ${msg.slice(0, 160)}`,
+          records: done,
+        };
+      }
+      await ctx.note(`PageSpeed failed for ${p.path}: ${msg.slice(0, 160)}`);
+    }
+  }
+
+  await markSource(sb, "pagespeed", {
+    configured: psiConfigured(), status: "connected", last_error: null, last_sync_at: nowIso(),
+  });
+  return { records: done, detail: `audited ${done} page(s) on ${strategy}` };
+}
+
 
 /** AI analysis over the stored signals → concrete, evidence-backed recommendations. */
 async function runAnalyze(ctx: Ctx) {
   const { sb } = ctx;
   const { data: pages } = await sb.from("seo_intel_pages")
-    .select("path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status")
+    .select("path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities")
     .order("impressions", { ascending: false, nullsFirst: false })
     .limit(12);
   if (!pages?.length) return { skipped: "No page data collected yet.", records: 0 };
@@ -456,8 +595,14 @@ RULES:
 - confidence is 0-1. priority is one of high | medium | low.
 - category is one of: technical, content, keywords, internal_links, schema, ctr, indexing, competitor.
 
-PAGES (Search Console = actual, on-page = calculated from our CMS):
+PAGES (Search Console = actual; on-page = from our CMS; rendered_* / ssr_gap = what Firecrawl actually received from the live URL; psi_* = real Google PageSpeed/Lighthouse mobile measurements, lcp/tbt in ms):
 ${JSON.stringify(pages, null, 1)}
+
+Interpretation rules for the extra signals:
+- ssr_gap true, or rendered_word_count far below word_count, means crawlers do not see the content — treat as a technical/indexing blocker with the highest priority.
+- rendered_has_schema false while has_schema true means schema is injected client-side only.
+- Flag speed only from psi_* values: LCP > 2500ms, CLS > 0.1 or TBT > 200ms, and cite psi_opportunities titles.
+- Where a psi_* or rendered_* field is null, that page has not been measured yet — say so instead of guessing.
 
 COMPETITOR SERP SNAPSHOT (Semrush, estimated positions):
 ${JSON.stringify(comps ?? [], null, 1)}
@@ -616,6 +761,8 @@ const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?
   rank_track: runRankTrack,
   competitor_scan: runCompetitorScan,
   index_check: runIndexCheck,
+  live_crawl: runLiveCrawl,
+  speed_audit: runSpeedAudit,
   analyze: runAnalyze,
   verify: runVerify,
   report: runReport,

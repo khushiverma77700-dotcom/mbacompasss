@@ -53,6 +53,8 @@ export const JOB_LABELS: Record<string, string> = {
   gsc_queries: "Search Console — query performance",
   index_check: "Indexing status check",
   crawl_pages: "On-page technical crawl",
+  live_crawl: "Live crawler-visibility check (Firecrawl)",
+  speed_audit: "Core Web Vitals audit (PageSpeed)",
   keyword_metrics: "Keyword metrics refresh (Semrush)",
   rank_track: "Daily rank tracking",
   competitor_scan: "Competitor intelligence scan",

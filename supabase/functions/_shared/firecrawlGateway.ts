@@ -95,3 +95,62 @@ export async function firecrawlScrape(url: string, formats: string[] = ["markdow
     return null;
   }
 }
+
+export class FirecrawlError extends Error {
+  status: number;
+  retryable: boolean;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.retryable = status === 429 || status >= 500;
+  }
+}
+
+/**
+ * Strict scrape used by monitoring stages: surfaces the real provider status
+ * (402 credits, 403 blocked, 429 rate limit) instead of returning null, so the
+ * caller can park honestly rather than record a false "no content" result.
+ */
+export async function firecrawlScrapeStrict(
+  url: string,
+  opts: { formats?: string[]; onlyMainContent?: boolean; timeoutMs?: number } = {},
+): Promise<any> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!LOVABLE_API_KEY || !FIRECRAWL_API_KEY) {
+    throw new FirecrawlError("Firecrawl is not connected (missing LOVABLE_API_KEY or FIRECRAWL_API_KEY)", 401);
+  }
+
+  let r: Response;
+  try {
+    r = await fetch(`${FIRECRAWL_GATEWAY}/v2/scrape`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": FIRECRAWL_API_KEY,
+      },
+      body: JSON.stringify({
+        url,
+        formats: opts.formats ?? ["markdown", "rawHtml"],
+        onlyMainContent: opts.onlyMainContent ?? false,
+      }),
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 60_000),
+    });
+  } catch (e) {
+    throw new FirecrawlError(`Firecrawl request failed: ${e instanceof Error ? e.message : String(e)}`, 599);
+  }
+
+  const text = await r.text();
+  if (!r.ok) throw new FirecrawlError(`Firecrawl ${r.status}: ${text.slice(0, 240)}`, r.status);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new FirecrawlError(`Firecrawl returned non-JSON: ${text.slice(0, 160)}`, 599);
+  }
+}
+
+export function firecrawlConfigured(): boolean {
+  return !!Deno.env.get("LOVABLE_API_KEY") && !!Deno.env.get("FIRECRAWL_API_KEY");
+}
+
