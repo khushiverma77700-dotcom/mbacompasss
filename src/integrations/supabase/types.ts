@@ -4759,6 +4759,78 @@ export type Database = {
         }
         Relationships: []
       }
+      keyword_metrics_cache: {
+        Row: {
+          competition: number | null
+          cpc: number | null
+          created_at: string
+          difficulty: number | null
+          difficulty_source: string | null
+          fetched_at: string
+          gsc_clicks: number | null
+          gsc_ctr: number | null
+          gsc_fetched_at: string | null
+          gsc_impressions: number | null
+          gsc_position: number | null
+          id: string
+          intent: string | null
+          keyword: string
+          locale: string
+          monthly_trend: Json | null
+          raw: Json | null
+          results_count: number | null
+          search_volume: number | null
+          updated_at: string
+          volume_source: string | null
+        }
+        Insert: {
+          competition?: number | null
+          cpc?: number | null
+          created_at?: string
+          difficulty?: number | null
+          difficulty_source?: string | null
+          fetched_at?: string
+          gsc_clicks?: number | null
+          gsc_ctr?: number | null
+          gsc_fetched_at?: string | null
+          gsc_impressions?: number | null
+          gsc_position?: number | null
+          id?: string
+          intent?: string | null
+          keyword: string
+          locale?: string
+          monthly_trend?: Json | null
+          raw?: Json | null
+          results_count?: number | null
+          search_volume?: number | null
+          updated_at?: string
+          volume_source?: string | null
+        }
+        Update: {
+          competition?: number | null
+          cpc?: number | null
+          created_at?: string
+          difficulty?: number | null
+          difficulty_source?: string | null
+          fetched_at?: string
+          gsc_clicks?: number | null
+          gsc_ctr?: number | null
+          gsc_fetched_at?: string | null
+          gsc_impressions?: number | null
+          gsc_position?: number | null
+          id?: string
+          intent?: string | null
+          keyword?: string
+          locale?: string
+          monthly_trend?: Json | null
+          raw?: Json | null
+          results_count?: number | null
+          search_volume?: number | null
+          updated_at?: string
+          volume_source?: string | null
+        }
+        Relationships: []
+      }
       landscape_colleges: {
         Row: {
           average_package: string | null
