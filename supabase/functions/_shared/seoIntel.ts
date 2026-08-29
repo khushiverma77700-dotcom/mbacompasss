@@ -45,6 +45,9 @@ export const JOB_TYPES = [
   "analyze",          // AI recommendation generation from stored signals
   "verify",           // measure impact of applied changes
   "report",           // daily / weekly report rollup
+  "daily_snapshot",   // site-wide daily metric rollup for before/after reporting
+  "live_crawl",       // crawler-visibility check (Firecrawl)
+  "speed_audit",      // Core Web Vitals (PageSpeed)
   // ── advanced intelligence layer ────────────────────────────────
   "demand_model",       // multi-source search demand + acceleration
   "intent_scan",        // intent classification + intent-shift detection
@@ -78,6 +81,7 @@ export const JOB_LABELS: Record<string, string> = {
   analyze: "AI analysis & recommendations",
   verify: "Change impact verification",
   report: "Report generation",
+  daily_snapshot: "Daily metrics snapshot",
   demand_model: "Search demand model (multi-source)",
   intent_scan: "Search intent classification & shift detection",
   serp_intel: "SERP intelligence snapshot",

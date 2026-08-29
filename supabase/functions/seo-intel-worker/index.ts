@@ -689,11 +689,15 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
 /** Did applied changes actually help? Compare rank/traffic before vs after. */
 async function runVerify(ctx: Ctx) {
   const { sb } = ctx;
-  const { data: exps } = await sb.from("seo_intel_experiments")
-    .select("*").is("result_captured_on", null).limit(30);
+  const targetId = (ctx.job.payload as any)?.experiment_id as string | undefined;
+  let q = sb.from("seo_intel_experiments").select("*").is("result_captured_on", null).limit(30);
+  if (targetId) q = sb.from("seo_intel_experiments").select("*").eq("id", targetId).limit(1);
+  const { data: exps } = await q;
   let measured = 0;
   for (const e of exps ?? []) {
-    if (e.measure_after && new Date(e.measure_after) > new Date()) continue;
+    // An admin-requested verification still measures only what history actually holds.
+    if (!targetId && e.measure_after && new Date(e.measure_after) > new Date()) continue;
+
     const { data: hist } = await sb.from("seo_intel_page_history")
       .select("clicks, impressions, avg_position, captured_on")
       .eq("path", e.path).order("captured_on", { ascending: false }).limit(1).maybeSingle();
@@ -771,6 +775,85 @@ async function runReport(ctx: Ctx) {
   return { records: 1, detail: summary };
 }
 
+/**
+ * Daily site-wide rollup written to seo_intel_daily_snapshots so the dashboard can
+ * compare today vs 7 / 30 days ago from recorded history instead of recomputing
+ * estimates. Every field is either an actual provider number or a count of stored
+ * rows; nothing is modelled or invented, and a metric with no data stays null.
+ */
+async function runDailySnapshot(ctx: Ctx) {
+  const { sb } = ctx;
+  // Paged reads: the Data API caps a single select at 1,000 rows, and a partial
+  // read would silently understate every total on the dashboard.
+  const fetchAll = async (table: string, cols: string) => {
+    const out: any[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from(table).select(cols).range(from, from + 999);
+      if (error) throw new Error(`${table} read failed: ${error.message}`);
+      out.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
+    }
+    return out;
+  };
+
+  const [pageList, kwList, recs] = await Promise.all([
+    fetchAll("seo_intel_pages", "clicks, impressions, avg_position, position_change, health_score, indexed_status, psi_perf_score, psi_lcp_ms"),
+    fetchAll("seo_intel_keywords", "current_position, position_change, clicks, impressions"),
+    fetchAll("seo_intel_recommendations", "status"),
+  ]);
+  const avg = (vals: number[]) =>
+    vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : null;
+  const nums = (rows: any[], key: string) =>
+    rows.map((r) => r[key]).filter((v: any) => v != null).map(Number);
+
+  const ranked = kwList.filter((k: any) => k.current_position != null).map((k: any) => Number(k.current_position));
+  const clicks = pageList.reduce((s: number, p: any) => s + (p.clicks ?? 0), 0);
+  const impressions = pageList.reduce((s: number, p: any) => s + (p.impressions ?? 0), 0);
+  const indexed = pageList.filter((p: any) => p.indexed_status && /index/i.test(p.indexed_status) && !/not/i.test(p.indexed_status)).length;
+
+  const row = {
+    captured_on: today(),
+    clicks,
+    impressions,
+    ctr: impressions > 0 ? Number(((clicks / impressions) * 100).toFixed(2)) : null,
+    avg_position: avg(nums(pageList, "avg_position")),
+    ranking_keywords: ranked.length || null,
+    rank_1: ranked.filter((p) => p <= 1.5).length,
+    rank_2: ranked.filter((p) => p > 1.5 && p <= 2.5).length,
+    rank_3: ranked.filter((p) => p > 2.5 && p <= 3.5).length,
+    top_5: ranked.filter((p) => p <= 5).length,
+    top_10: ranked.filter((p) => p <= 10).length,
+    top_20: ranked.filter((p) => p <= 20).length,
+    gains: kwList.filter((k: any) => (k.position_change ?? 0) > 0).length,
+    losses: kwList.filter((k: any) => (k.position_change ?? 0) < 0).length,
+    indexed_pages: indexed,
+    not_indexed_pages: pageList.filter((p: any) => p.indexed_status && !/index/i.test(p.indexed_status)).length,
+    pages_tracked: pageList.length,
+    avg_health: avg(nums(pageList, "health_score")),
+    avg_psi_perf: avg(nums(pageList, "psi_perf_score")),
+    avg_lcp_ms: avg(nums(pageList, "psi_lcp_ms")),
+    open_recommendations: recs.filter((r: any) => ["new", "review"].includes(r.status)).length,
+    applied_changes: recs.filter((r: any) => ["applied", "verified"].includes(r.status)).length,
+    data_sources: {
+      traffic: "gsc (actual)",
+      positions: "gsc / semrush (actual)",
+      onpage: "internal (calculated)",
+      speed: "pagespeed (actual)",
+    },
+    coverage: {
+      pages_with_performance: pageList.filter((p: any) => p.impressions != null).length,
+      pages_with_speed: pageList.filter((p: any) => p.psi_perf_score != null).length,
+      pages_with_index_state: pageList.filter((p: any) => !!p.indexed_status).length,
+      keywords_with_position: ranked.length,
+      keywords_total: kwList.length,
+    },
+  };
+
+  const { error } = await sb.from("seo_intel_daily_snapshots").upsert(row, { onConflict: "captured_on" });
+  if (error) throw new Error(`Snapshot write failed: ${error.message}`);
+  return { records: 1, detail: `${clicks} clicks · ${ranked.length} ranking keywords · ${indexed} indexed pages` };
+}
+
 const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?: string; detail?: string }>> = {
   gsc_pages: runGscPages,
   gsc_queries: runGscQueries,
@@ -784,7 +867,9 @@ const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?
   analyze: runAnalyze,
   verify: runVerify,
   report: runReport,
+  daily_snapshot: runDailySnapshot,
 };
+
 
 // Advanced intelligence stages share one signature (sb, settings, payload).
 for (const [type, fn] of Object.entries(ADVANCED_STAGES)) {

@@ -34,6 +34,9 @@ import {
   useIntelData, AdvancedHeaderStat, StrategyPanel, OpportunitiesPanel, DemandPanel,
   ForecastPanel, GapsPanel, EntityPanel,
 } from "@/components/admin/seo/SeoIntelAdvanced";
+import {
+  useLiveStatus, LiveOperationsPanel, ImpactReportPanel, ApprovalPanel, IntelligenceOverview,
+} from "@/components/admin/seo/SeoLiveOps";
 
 
 /* ───────────────────────── types ───────────────────────── */
@@ -181,6 +184,21 @@ const AdminSEOIntelligence = () => {
     return () => clearInterval(id);
   }, [loadSnapshot]);
 
+  // Live engine state — real job rows, polled from the server every 5s.
+  const { status: liveStatus, error: liveError, reload: reloadLive } = useLiveStatus(5000);
+
+  // Every stage button runs the real backend stage and reports its true outcome.
+  const runStage = useCallback(async (types: string[], label: string) => {
+    try {
+      await call("run_now", { only: types, force: true });
+      toast.success(`${label} queued on the server`);
+      await reloadLive();
+    } catch (e) {
+      toast.error(`${label} could not start: ${(e as Error).message}`);
+      throw e;
+    }
+  }, [call, reloadLive]);
+
   const act = async (label: string, fn: () => Promise<any>, reloadTables = false) => {
     setBusy(label);
     try {
@@ -310,6 +328,9 @@ const AdminSEOIntelligence = () => {
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="live">Live operations</TabsTrigger>
+            <TabsTrigger value="impact">Impact &amp; changes</TabsTrigger>
+            <TabsTrigger value="approvals">Approvals</TabsTrigger>
             <TabsTrigger value="strategy">Strategy</TabsTrigger>
             <TabsTrigger value="opportunities">Next actions</TabsTrigger>
             <TabsTrigger value="demand">Demand & intent</TabsTrigger>
@@ -352,7 +373,18 @@ const AdminSEOIntelligence = () => {
         </TabsContent>
 
         {/* ── Overview ── */}
+        <TabsContent value="live" className="pt-4">
+          <LiveOperationsPanel status={liveStatus} error={liveError} reload={reloadLive} onRunStage={runStage} />
+        </TabsContent>
+        <TabsContent value="impact" className="pt-4">
+          <ImpactReportPanel onRunStage={runStage} />
+        </TabsContent>
+        <TabsContent value="approvals" className="pt-4">
+          <ApprovalPanel onChanged={() => { loadSnapshot(true); loadTables(); }} />
+        </TabsContent>
+
         <TabsContent value="overview" className="space-y-4 pt-4">
+          <IntelligenceOverview status={liveStatus} />
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
