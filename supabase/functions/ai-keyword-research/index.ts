@@ -161,14 +161,16 @@ ${realSuggestions.wiki.length ? `✅ Related: ${realSuggestions.wiki.join(" | ")
 
 TOTAL REAL KEYWORDS COLLECTED: ${allRealKeywords.length}
 
+${factBlock}
+
 Instructions:
-1. Start with the REAL keywords above — tag them with their source
-2. Then add AI-enriched keywords you're confident about — tag them as "ai_enriched"
+1. Start with keywords from the VERIFIED KEYWORD METRICS block — those have proven demand
+2. Then use the autocomplete/PAA keywords above — tag them with their source
 3. Provide 30-40 keywords total, organized into clear categories
-4. For EACH keyword: realistic India monthly search volume, competition level, difficulty score, search intent, trend direction
-5. Include CPC estimates in INR where relevant
-6. Identify content gaps, seasonal opportunities, and featured snippet chances
-7. Suggest competitor keywords (what Shiksha, Collegedunia, Careers360 rank for that we don't)`;
+4. Copy volume/KD/CPC verbatim from the verified block; use 0 when a keyword is not listed there (never guess)
+5. Identify content gaps, seasonal opportunities, and featured snippet chances
+6. Suggest competitor keywords (what Shiksha, Collegedunia, Careers360 rank for that we don't)`;
+
 
   const tool = {
     type: "function",
