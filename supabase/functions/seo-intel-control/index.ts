@@ -577,6 +577,32 @@ Deno.serve(async (req) => {
           return json({ ok: true, status: "applied" });
         }
 
+        if (act === "verify") {
+          // Verification is a measurement, not a claim: it only reads Search Console
+          // history for the changed page and records whatever it finds.
+          const { data: exp } = await sb.from("seo_intel_experiments")
+            .select("id, measure_after, result_captured_on")
+            .eq("recommendation_id", id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+          if (!exp) {
+            return json({ error: "Nothing to verify yet — this change has not been applied, so there is no before/after record." }, 400);
+          }
+          await sb.from("seo_intel_jobs").insert({
+            job_type: "verify", priority: 3, triggered_by: "admin",
+            payload: { experiment_id: exp.id, recommendation_id: id },
+            scheduled_for: nowIso(),
+          });
+          await invokeFn("seo-intel-worker", { cron_token: settings.cron_token, force: true });
+          await logActivity(sb, { event: "Verification requested", detail: `${rec.path} — ${rec.change_type}` });
+          const waiting = exp.measure_after && new Date(exp.measure_after) > new Date();
+          return json({
+            ok: true,
+            status: "verifying",
+            note: waiting
+              ? `Queued. Search Console data for this page is still inside the measurement window (until ${exp.measure_after}), so the result may stay "still being analyzed" until then.`
+              : "Queued — the worker will compare the recorded before/after Search Console numbers for this page.",
+          });
+        }
+
         return json({ error: `Unknown recommendation action: ${act}` }, 400);
       }
 
