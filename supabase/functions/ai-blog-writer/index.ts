@@ -6,6 +6,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck, type QualityIssue } from "../_shared/aiContentRules.ts";
 import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
+import { getKeywordMetrics, metricsFactBlock, opportunityScore, semrushExpand } from "../_shared/keywordMetrics.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -1057,6 +1059,37 @@ Deno.serve(async (req) => {
     const todayIso = today.toISOString().slice(0, 10);
     const currentYear = today.getFullYear();
 
+    // ── REAL search data grounding (Semrush / Google Keyword Planner / our GSC) ──
+    let metricsBlock = "";
+    let verifiedLongTails: string[] = [];
+    let verifiedQuestions: string[] = [];
+    try {
+      const expansion = await semrushExpand(targetKw, "in", 40);
+      const candidates = [
+        targetKw,
+        ...secKws,
+        ...expansion.map((e) => e.keyword),
+      ].filter(Boolean);
+      const { metrics } = await getKeywordMetrics(candidates, { locale: "in" });
+      const byScore = metrics
+        .filter((m) => m.verified)
+        .sort((a, b) => opportunityScore(b) - opportunityScore(a));
+      const questionish = (k: string) =>
+        /^(what|why|how|when|which|who|is|are|can|do|does|should)\b/i.test(k) || k.includes("?");
+      verifiedQuestions = byScore.filter((m) => questionish(m.keyword)).slice(0, 12).map((m) => m.keyword);
+      verifiedLongTails = byScore
+        .filter((m) => !questionish(m.keyword) && m.keyword !== targetKw.toLowerCase() && m.keyword.split(" ").length >= 3)
+        .slice(0, 15)
+        .map((m) => m.keyword);
+      if (byScore.length) {
+        metricsBlock = `\n# VERIFIED SEARCH DATA (real provider numbers — use as facts, never contradict)\n${metricsFactBlock(byScore.slice(0, 25))}\n\nHow to use this data:\n- Cover the highest-volume verified sub-topics as dedicated H2/H3 sections.\n- Use these VERIFIED LONG-TAIL keywords naturally across headings and body: ${verifiedLongTails.join(", ") || "(none returned)"}\n- Answer these VERIFIED QUESTION queries directly (one concise 40-60 word answer each, AEO-ready): ${verifiedQuestions.join(" | ") || "(none returned)"}\n- Never print search-volume numbers inside the article body; they only guide topic selection.\n`;
+      }
+      console.log(`[ai-blog-writer] verified keyword metrics: ${byScore.length}, long-tails: ${verifiedLongTails.length}, questions: ${verifiedQuestions.length}`);
+    } catch (e) {
+      console.warn("[ai-blog-writer] keyword metrics unavailable:", e instanceof Error ? e.message : e);
+    }
+
+
     const systemPrompt = `You are a senior MBA mentor at B School Buzz writing for Indian aspirants. Write like a real human mentor explaining things to a student — warm, conversational, specific, practical. Plain English, short sentences, contractions allowed (you're, don't, it's). Never sound like an AI or a generic SEO blog.
 
 # VOICE — MENTOR, NOT AI (NON-NEGOTIABLE)
@@ -1098,6 +1131,8 @@ Deno.serve(async (req) => {
 - Secondary keywords: ${secKws.length ? secKws.map(k => `"${k}"`).join(", ") : "(derive 8-12 high-intent secondary + LSI keywords yourself based ONLY on this specific topic — never reuse generic MBA terms unrelated to the topic)"}
 - Category: ${brief.category || "news"}
 - Date context: ${dateCtx}
+${metricsBlock}
+
 
 # TOPIC-SPECIFIC SEO LOCK (CRITICAL — NON-NEGOTIABLE — UNIQUE PER BLOG)
 This article is about "${brief.title}". EVERY keyword, internal link, external reference, anchor text, recruiter name, college mention, exam reference, statistic and example MUST be 100% specific to THIS exact topic. Generic MBA filler that could apply to any other blog is FORBIDDEN — it will be rejected.

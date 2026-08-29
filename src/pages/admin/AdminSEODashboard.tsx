@@ -60,11 +60,23 @@ interface DashboardRow {
   isStatic?: boolean; path?: string;
 }
 
-interface KeywordResult {
-  keyword: string; searchVolume: number; competition: string; difficulty: number;
+interface KeywordMetricSources {
+  /** Provider the volume came from: dataforseo | semrush | cache | unverified */
+  volumeSource?: string;
+  difficultySource?: string;
+  dataVerified?: boolean;
+  monthlyTrend?: number[] | null;
+  opportunityScore?: number;
+  gsc?: { clicks: number; impressions: number; ctr: number; position: number } | null;
+  metricsFetchedAt?: string | null;
+}
+
+interface KeywordResult extends KeywordMetricSources {
+  keyword: string; searchVolume: number | null; competition: string; difficulty: number;
   cpc?: number; intent: string; trending: string; category?: string;
   source?: string; priorityScore?: number;
 }
+
 
 interface KeywordCluster {
   clusterName: string; pillarKeyword: string;
@@ -89,11 +101,12 @@ interface DataQualityReport {
   dataSourcesUsed?: string[]; confidence?: string; notes?: string;
 }
 
-interface BlogTitleResult {
-  title: string; targetKeyword: string; searchVolume: number; competition: string;
+interface BlogTitleResult extends KeywordMetricSources {
+  title: string; targetKeyword: string; searchVolume: number | null; competition: string;
   contentType: string; wordCount?: number; priority: string; trendingScore: number;
   metaTitle?: string; metaDescription?: string; slug?: string;
 }
+
 
 interface CompetitorResult {
   domain: string; domainAuthority: number; estimatedTraffic?: string; indexedPages?: string;
@@ -384,6 +397,12 @@ const AdminSEODashboard = () => {
   const [kwDataQuality, setKwDataQuality] = useState<DataQualityReport | null>(null);
   const [kwCompetitorKws, setKwCompetitorKws] = useState<any[]>([]);
   const [kwSummary, setKwSummary] = useState("");
+  // Which real-data providers backed the last research run.
+  const [metricSources, setMetricSources] = useState<{
+    semrush?: boolean; dataforseo?: boolean; searchConsole?: boolean;
+    verifiedKeywords?: number; note?: string;
+  } | null>(null);
+
   const [kwLoading, setKwLoading] = useState(false);
   const [kwLastRefresh, setKwLastRefresh] = useState<string | null>(null);
   const [kwSelectedKws, setKwSelectedKws] = useState<string[]>([]);
@@ -801,9 +820,10 @@ const AdminSEODashboard = () => {
       setKwDataQuality(d?.dataQualityReport || null);
       setKwCompetitorKws(d?.competitorKeywords || []);
       setKwSummary(d?.summary || "");
+      setMetricSources(d?.dataSources || null);
       setKwLastRefresh(new Date().toLocaleString());
-      const realCount = (d?.keywords || []).filter((k: any) => k.source !== "ai_enriched").length;
-      toast({ title: "Keyword research complete", description: `${d?.keywords?.length || 0} keywords (${realCount} from real data)` });
+      const verified = (d?.keywords || []).filter((k: any) => k.dataVerified).length;
+      toast({ title: "Keyword research complete", description: `${d?.keywords?.length || 0} keywords — ${verified} with verified provider volume` });
     } catch (e: any) {
       toast({ title: "Keyword research failed", description: e.message, variant: "destructive" });
     } finally { setKwLoading(false); }
@@ -828,6 +848,7 @@ const AdminSEODashboard = () => {
       setBtTrending(d?.trendingTopics || []);
       setBtCalendar(d?.contentCalendar || []);
       setBtSummary(d?.summary || "");
+      setMetricSources(d?.dataSources || null);
       setBtLastRefresh(new Date().toLocaleString());
       toast({ title: "Blog title research complete", description: `Found ${d?.titles?.length || 0} title ideas` });
     } catch (e: any) {
@@ -925,7 +946,7 @@ const AdminSEODashboard = () => {
     const idea: SavedBlogIdea = {
       id: crypto.randomUUID(), title: bt.title, metaTitle: bt.metaTitle || bt.title.slice(0, 60),
       metaDescription: bt.metaDescription || `${bt.title} - Expert guide on ${bt.targetKeyword}.`,
-      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume,
+      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume ?? 0,
       competition: bt.competition, contentType: bt.contentType, priority: bt.priority, savedAt: new Date().toISOString(),
     };
     const updated = [...savedBlogIdeas, idea];
@@ -937,7 +958,7 @@ const AdminSEODashboard = () => {
     const newIdeas: SavedBlogIdea[] = btResults.filter(bt => !savedBlogIdeas.some(s => s.title === bt.title)).map(bt => ({
       id: crypto.randomUUID(), title: bt.title, metaTitle: bt.metaTitle || bt.title.slice(0, 60),
       metaDescription: bt.metaDescription || `${bt.title} - Expert guide on ${bt.targetKeyword}.`,
-      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume,
+      slug: bt.slug || generateSlug(bt.title), targetKeyword: bt.targetKeyword, searchVolume: bt.searchVolume ?? 0,
       competition: bt.competition, contentType: bt.contentType, priority: bt.priority, savedAt: new Date().toISOString(),
     }));
     const updated = [...savedBlogIdeas, ...newIdeas];
@@ -1254,6 +1275,40 @@ const AdminSEODashboard = () => {
 
   const trendIcon = (t: string) => t === "up" ? <ArrowUp className="h-3 w-3 text-green-500" /> : t === "down" ? <ArrowDown className="h-3 w-3 text-red-500" /> : <Minus className="h-3 w-3 text-muted-foreground" />;
   const priorityColor = (p: string) => p === "high" ? "text-red-600 bg-red-50" : p === "medium" ? "text-amber-600 bg-amber-50" : "text-green-600 bg-green-50";
+
+  // Renders a search volume with the provider it came from. Never shows a number we can't source.
+  const sourceLabel: Record<string, string> = {
+    dataforseo: "Keyword Planner",
+    semrush: "Semrush",
+    cache: "Cached (real)",
+    gsc: "Search Console",
+  };
+  const VolumeCell = ({ row }: { row: KeywordMetricSources & { searchVolume?: number | null; cpc?: number } }) => {
+    const verified = row.dataVerified !== false && typeof row.searchVolume === "number" && row.searchVolume !== null;
+    if (!verified) {
+      return (
+        <div className="space-y-0.5">
+          <span className="text-xs text-muted-foreground">No provider data</span>
+          <Badge variant="outline" className="block w-fit text-[10px] border-amber-300 text-amber-700">unverified</Badge>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-0.5">
+        <span className="font-mono text-sm">{Number(row.searchVolume).toLocaleString()}<span className="text-[10px] text-muted-foreground">/mo</span></span>
+        {row.cpc ? <span className="text-[10px] text-muted-foreground block">₹{row.cpc} CPC</span> : null}
+        <Badge variant="outline" className="block w-fit text-[10px] border-emerald-300 text-emerald-700">
+          {sourceLabel[row.volumeSource || ""] || row.volumeSource || "real"}
+        </Badge>
+        {row.gsc ? (
+          <span className="text-[10px] text-blue-700 block">
+            GSC: #{row.gsc.position.toFixed(1)} · {row.gsc.impressions.toLocaleString()} impr
+          </span>
+        ) : null}
+      </div>
+    );
+  };
+
 
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
@@ -2328,6 +2383,25 @@ const AdminSEODashboard = () => {
                   </Button>
                 </div>
 
+                {metricSources && (
+                  <Card className="border-emerald-200 bg-emerald-50/40">
+                    <CardContent className="p-3 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-medium">Live data sources:</span>
+                      <Badge variant="outline" className={metricSources.dataforseo ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Google Keyword Planner {metricSources.dataforseo ? "on" : "not configured"}
+                      </Badge>
+                      <Badge variant="outline" className={metricSources.semrush ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Semrush {metricSources.semrush ? "on" : "not connected"}
+                      </Badge>
+                      <Badge variant="outline" className="border-blue-300 text-blue-700">Search Console on</Badge>
+                      <span className="text-muted-foreground">
+                        {metricSources.verifiedKeywords ?? 0} keywords carry verified provider metrics. Rows marked
+                        &nbsp;<span className="text-amber-700">unverified</span>&nbsp;show no volume instead of a guess.
+                      </span>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Keywords Table */}
                 <Card>
                   <CardContent className="p-0">
@@ -2351,7 +2425,7 @@ const AdminSEODashboard = () => {
                           <TableRow key={i}>
                             <TableCell><Checkbox checked={kwSelectedKws.includes(kw.keyword)} onCheckedChange={(c) => setKwSelectedKws(prev => c ? [...prev, kw.keyword] : prev.filter(k => k !== kw.keyword))} /></TableCell>
                             <TableCell className="font-medium text-sm">{kw.keyword}</TableCell>
-                            <TableCell><span className="font-mono text-sm">{kw.searchVolume?.toLocaleString()}</span>{kw.cpc ? <span className="text-[10px] text-muted-foreground block">₹{kw.cpc}</span> : null}</TableCell>
+                            <TableCell><VolumeCell row={kw} /></TableCell>
                             <TableCell><div className="flex items-center gap-1"><Progress value={kw.difficulty} className="w-16 h-2" /><span className="text-xs">{kw.difficulty}</span></div></TableCell>
                             <TableCell><Badge variant="outline" className={`text-xs ${kw.competition === "low" ? "border-green-300 text-green-700" : kw.competition === "high" ? "border-red-300 text-red-700" : "border-amber-300 text-amber-700"}`}>{kw.competition}</Badge></TableCell>
                             <TableCell><Badge variant="secondary" className="text-xs">{kw.intent}</Badge></TableCell>
@@ -2450,7 +2524,22 @@ const AdminSEODashboard = () => {
             {btResults.length > 0 && (
               <>
                 {btSummary && <Card><CardContent className="pt-4"><p className="text-sm">{btSummary}</p></CardContent></Card>}
+                {metricSources && (
+                  <Card className="border-emerald-200 bg-emerald-50/40">
+                    <CardContent className="p-3 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-medium">Search volumes verified by:</span>
+                      <Badge variant="outline" className={metricSources.dataforseo ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Google Keyword Planner {metricSources.dataforseo ? "on" : "not configured"}
+                      </Badge>
+                      <Badge variant="outline" className={metricSources.semrush ? "border-emerald-300 text-emerald-700" : "border-muted text-muted-foreground"}>
+                        Semrush {metricSources.semrush ? "on" : "not connected"}
+                      </Badge>
+                      <span className="text-muted-foreground">{metricSources.verifiedKeywords ?? 0} verified keywords used for these titles.</span>
+                    </CardContent>
+                  </Card>
+                )}
                 <div className="flex justify-end gap-2"><Button variant="outline" size="sm" onClick={handleSaveAllBlogIdeas}><Save className="h-4 w-4 mr-1" /> Save All</Button></div>
+
                 <Card>
                   <CardContent className="p-0">
                     <Table>
@@ -2465,7 +2554,7 @@ const AdminSEODashboard = () => {
                               <p className="text-[10px] text-green-600 mt-0.5">/{bt.slug}</p>
                             </TableCell>
                             <TableCell className="text-xs">{bt.targetKeyword}</TableCell>
-                            <TableCell><span className="font-mono text-sm">{bt.searchVolume?.toLocaleString()}</span></TableCell>
+                            <TableCell><VolumeCell row={bt} /></TableCell>
                             <TableCell><Badge variant="outline" className="text-xs">{bt.contentType}</Badge></TableCell>
                             <TableCell><Badge className={`text-xs ${priorityColor(bt.priority)}`}>{bt.priority}</Badge></TableCell>
                             <TableCell><div className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /><span className="text-xs">{bt.trendingScore}/10</span></div></TableCell>

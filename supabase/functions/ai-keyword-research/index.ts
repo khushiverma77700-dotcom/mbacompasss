@@ -2,6 +2,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?targe
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { getCredential } from "../_shared/getCredential.ts";
+import {
+  getKeywordMetrics,
+  metricsFactBlock,
+  opportunityScore,
+  semrushExpand,
+  semrushConfigured,
+  dataForSeoConfigured,
+  type KeywordMetric,
+} from "../_shared/keywordMetrics.ts";
+
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -111,7 +121,8 @@ async function fetchAlphabetExpansion(query: string): Promise<string[]> {
 function buildKeywordResearchPayload(
   query: string,
   existingKeywords: string[],
-  realSuggestions: { google: string[]; paa: string[]; trends: string[]; wiki: string[]; alphabet: string[] }
+  realSuggestions: { google: string[]; paa: string[]; trends: string[]; wiki: string[]; alphabet: string[] },
+  factBlock = "",
 ) {
   const allRealKeywords = [...new Set([
     ...realSuggestions.google, ...realSuggestions.paa, ...realSuggestions.alphabet
@@ -122,10 +133,12 @@ function buildKeywordResearchPayload(
 CRITICAL RULES:
 - Use ONLY the real Google autocomplete data provided below for primary keywords
 - For each keyword you list, mark the source accurately (google_suggest, paa, trends, alphabet, ai_enriched)
-- Search volume estimates must be REALISTIC for India (not inflated). Most long-tail keywords get 100-2000 searches/month
+- NEVER invent search volume, CPC or difficulty. A verified metrics block is supplied below: copy those numbers EXACTLY for keywords that appear in it. For any keyword not in that block, set searchVolume to 0 and difficulty to 0 — the system replaces them with measured provider data afterwards.
+- Strongly prefer keywords that appear in the verified metrics block; they are the only ones with proven demand
 - Include a mix: head terms (high volume, high competition), body terms, and long-tail terms (low volume, low competition)
 - Group keywords by clear categories (exam-specific, city-specific, comparison, preparation, fees, etc.)
 - Prioritize keywords where a new/growing site can actually compete`;
+
 
   const userPrompt = `Research keywords for: "${query}"
 
@@ -148,14 +161,16 @@ ${realSuggestions.wiki.length ? `✅ Related: ${realSuggestions.wiki.join(" | ")
 
 TOTAL REAL KEYWORDS COLLECTED: ${allRealKeywords.length}
 
+${factBlock}
+
 Instructions:
-1. Start with the REAL keywords above — tag them with their source
-2. Then add AI-enriched keywords you're confident about — tag them as "ai_enriched"
+1. Start with keywords from the VERIFIED KEYWORD METRICS block — those have proven demand
+2. Then use the autocomplete/PAA keywords above — tag them with their source
 3. Provide 30-40 keywords total, organized into clear categories
-4. For EACH keyword: realistic India monthly search volume, competition level, difficulty score, search intent, trend direction
-5. Include CPC estimates in INR where relevant
-6. Identify content gaps, seasonal opportunities, and featured snippet chances
-7. Suggest competitor keywords (what Shiksha, Collegedunia, Careers360 rank for that we don't)`;
+4. Copy volume/KD/CPC verbatim from the verified block; use 0 when a keyword is not listed there (never guess)
+5. Identify content gaps, seasonal opportunities, and featured snippet chances
+6. Suggest competitor keywords (what Shiksha, Collegedunia, Careers360 rank for that we don't)`;
+
 
   const tool = {
     type: "function",
@@ -221,17 +236,25 @@ Instructions:
   return { systemPrompt, userPrompt, tool, toolName: "keyword_data" };
 }
 
-function buildBlogTitlesPayload(query: string) {
-  const systemPrompt = `You are an expert content strategist for Indian MBA education. Research blog topics that rank well and drive traffic. For each title generate SEO-optimized meta title (<60 chars), compelling meta description (120-155 chars), and clean URL slug.`;
+function buildBlogTitlesPayload(query: string, factBlock = "", candidates: string[] = []) {
+  const systemPrompt = `You are an expert content strategist for Indian MBA education. Research blog topics that rank well and drive traffic. For each title generate SEO-optimized meta title (<60 chars), compelling meta description (120-155 chars), and clean URL slug.
+
+CRITICAL DATA RULES:
+- The targetKeyword of every title MUST be copied verbatim from the verified keyword list supplied by the user message. Do not invent keywords.
+- NEVER invent search volume. Copy searchVolume exactly from the verified metrics block; if a keyword is absent there, use 0.`;
   const userPrompt = `Generate 20 high-potential blog title ideas for: "${query}"
 
+${factBlock}
+
+${candidates.length ? `PICK targetKeyword ONLY FROM THIS VERIFIED LIST (highest opportunity first):\n${candidates.slice(0, 60).map((k, i) => `${i + 1}. ${k}`).join("\n")}` : ""}
+
 For each title provide:
-- title (CTR + SEO optimized)
+- title (CTR + SEO optimized, built around the chosen verified keyword)
 - metaTitle (under 60 chars, primary keyword)
 - metaDescription (120-155 chars, CTA)
 - slug (clean, hyphens, no stop words)
-- target keyword
-- estimated monthly search volume
+- targetKeyword (verbatim from the verified list)
+- searchVolume (copied from the verified metrics block, else 0)
 - competition level
 - content type (listicle/guide/comparison/news/how-to/case-study)
 - estimated word count needed to rank
@@ -242,6 +265,7 @@ Also suggest:
 - 5 evergreen topics
 - 5 trending/timely topics
 - 4-week content calendar`;
+
 
   const tool = {
     type: "function",
@@ -383,6 +407,11 @@ Deno.serve(async (req) => {
     }
 
     let payload: { systemPrompt: string; userPrompt: string; tool: any; toolName: string };
+    // Real metrics collected before the AI call, reused to overwrite AI numbers afterwards.
+    let metricsMap = new Map<string, KeywordMetric>();
+    let providerHealth: unknown = null;
+    const locale = "in";
+    const mkey = (k: string) => k.trim().toLowerCase().replace(/\s+/g, " ");
 
     if (mode === "keyword_research") {
       const searchQuery = query || niche || "MBA coaching India";
@@ -399,10 +428,54 @@ Deno.serve(async (req) => {
       const totalReal = new Set([...google, ...paa, ...alphabet]).size;
       console.log(`[ai-keyword-research] Real data fetched in ${Date.now() - startTime}ms: ${google.length} Google, ${paa.length} PAA, ${trends.length} Trends, ${wiki.length} Wiki, ${alphabet.length} Alphabet, ${totalReal} unique`);
 
-      payload = buildKeywordResearchPayload(searchQuery, existingKeywords || [], { google, paa, trends, wiki, alphabet });
+      // Real provider metrics for the seed + every discovered suggestion
+      const expansion = await semrushExpand(searchQuery, locale, 30).catch(() => []);
+      const candidateKeywords = [...new Set([
+        searchQuery,
+        ...google, ...paa, ...alphabet,
+        ...expansion.map((e) => e.keyword),
+      ].map(mkey).filter(Boolean))].slice(0, 200);
+
+      const { metrics, health } = await getKeywordMetrics(candidateKeywords, { locale });
+      metricsMap = new Map(metrics.map((m) => [mkey(m.keyword), m]));
+      providerHealth = health;
+      const ranked = metrics
+        .filter((m) => m.verified)
+        .sort((a, b) => opportunityScore(b) - opportunityScore(a));
+      console.log(`[ai-keyword-research] verified metrics: ${ranked.length}/${candidateKeywords.length}`, JSON.stringify(health));
+
+      payload = buildKeywordResearchPayload(
+        searchQuery,
+        existingKeywords || [],
+        { google, paa, trends, wiki, alphabet },
+        metricsFactBlock(ranked),
+      );
     } else if (mode === "blog_titles") {
-      payload = buildBlogTitlesPayload(query || niche || "MBA coaching");
+      const topic = query || niche || "MBA coaching";
+      const [suggest, paa, expansion] = await Promise.all([
+        fetchGoogleSuggest(topic),
+        fetchPeopleAlsoAsk(topic),
+        semrushExpand(topic, locale, 40).catch(() => []),
+      ]);
+      const candidateKeywords = [...new Set([
+        topic, ...suggest, ...paa, ...expansion.map((e) => e.keyword),
+      ].map(mkey).filter(Boolean))].slice(0, 200);
+
+      const { metrics, health } = await getKeywordMetrics(candidateKeywords, { locale });
+      metricsMap = new Map(metrics.map((m) => [mkey(m.keyword), m]));
+      providerHealth = health;
+      const ranked = metrics
+        .filter((m) => m.verified)
+        .sort((a, b) => opportunityScore(b) - opportunityScore(a));
+      console.log(`[ai-keyword-research] blog_titles verified metrics: ${ranked.length}`, JSON.stringify(health));
+
+      payload = buildBlogTitlesPayload(
+        topic,
+        metricsFactBlock(ranked),
+        ranked.map((m) => m.keyword),
+      );
     } else if (mode === "cluster_map") {
+
       const pillarTopic = query || niche || "MBA coaching";
       payload = {
         systemPrompt: "You are an SEO topic-cluster strategist for Indian MBA education. Build pillar→cluster maps with funnel stage tagging (TOFU=awareness, MOFU=consideration, BOFU=decision).",
@@ -518,10 +591,84 @@ Deno.serve(async (req) => {
       result = extractJsonFromResponse(content);
     }
 
+    // ── Overwrite every AI-guessed metric with real provider data ──
+    const competitionLabel = (c: number | null) =>
+      c === null ? "unknown" : c >= 0.66 ? "high" : c >= 0.33 ? "medium" : "low";
+
+    const applyMetrics = (row: any, keyField: string) => {
+      const m = metricsMap.get(mkey(String(row?.[keyField] ?? "")));
+      if (!m || !(m.verified || m.gsc)) {
+        row.searchVolume = null;
+        row.volumeSource = "unverified";
+        row.dataVerified = false;
+        return row;
+      }
+      row.searchVolume = m.searchVolume;
+      if (m.cpc !== null) row.cpc = m.cpc;
+      if (m.difficulty !== null) row.difficulty = m.difficulty;
+      if (m.competition !== null) row.competition = competitionLabel(m.competition);
+      if (m.trendDirection) row.trending = m.trendDirection;
+      row.monthlyTrend = m.monthlyTrend;
+      row.volumeSource = m.volumeSource;
+      row.difficultySource = m.difficultySource;
+      row.gsc = m.gsc;
+      row.opportunityScore = opportunityScore(m);
+      row.dataVerified = true;
+      row.metricsFetchedAt = m.fetchedAt;
+      return row;
+    };
+
+    if (metricsMap.size) {
+      if (Array.isArray(result?.keywords)) {
+        result.keywords = result.keywords.map((k: any) => applyMetrics(k, "keyword"));
+        // Surface high-opportunity verified keywords the model skipped.
+        const used = new Set(result.keywords.map((k: any) => mkey(k.keyword)));
+        const extras = [...metricsMap.values()]
+          .filter((m) => m.verified && !used.has(mkey(m.keyword)))
+          .sort((a, b) => opportunityScore(b) - opportunityScore(a))
+          .slice(0, 15)
+          .map((m) => ({
+            keyword: m.keyword,
+            searchVolume: m.searchVolume,
+            cpc: m.cpc,
+            difficulty: m.difficulty,
+            competition: competitionLabel(m.competition),
+            trending: m.trendDirection || "stable",
+            monthlyTrend: m.monthlyTrend,
+            intent: "informational",
+            category: "provider_discovered",
+            source: m.volumeSource,
+            volumeSource: m.volumeSource,
+            difficultySource: m.difficultySource,
+            gsc: m.gsc,
+            opportunityScore: opportunityScore(m),
+            dataVerified: true,
+            metricsFetchedAt: m.fetchedAt,
+          }));
+        result.keywords = [...result.keywords, ...extras];
+      }
+      if (Array.isArray(result?.titles)) {
+        result.titles = result.titles.map((t: any) => applyMetrics(t, "targetKeyword"));
+      }
+      if (Array.isArray(result?.keywordGaps)) {
+        result.keywordGaps = result.keywordGaps.map((g: any) => applyMetrics(g, "keyword"));
+      }
+      result.dataSources = {
+        semrush: semrushConfigured(),
+        dataforseo: dataForSeoConfigured(),
+        searchConsole: true,
+        health: providerHealth,
+        verifiedKeywords: [...metricsMap.values()].filter((m) => m.verified).length,
+        note:
+          "Search volume, CPC, competition and difficulty come from Google Ads Keyword Planner (DataForSEO) and/or Semrush. Rows marked unverified have no provider data and show no volume.",
+      };
+    }
+
     console.log(`[ai-keyword-research] Total time: ${Date.now() - startTime}ms, keywords: ${result?.keywords?.length || 0}`);
     return new Response(JSON.stringify({ success: true, data: result, mode, generatedAt: new Date().toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (e) {
     console.error("ai-keyword-research error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
