@@ -2512,7 +2512,7 @@ const AdminSEODashboard = () => {
                               <p className="text-[10px] text-green-600 mt-0.5">/{bt.slug}</p>
                             </TableCell>
                             <TableCell className="text-xs">{bt.targetKeyword}</TableCell>
-                            <TableCell><span className="font-mono text-sm">{bt.searchVolume?.toLocaleString()}</span></TableCell>
+                            <TableCell><VolumeCell row={bt} /></TableCell>
                             <TableCell><Badge variant="outline" className="text-xs">{bt.contentType}</Badge></TableCell>
                             <TableCell><Badge className={`text-xs ${priorityColor(bt.priority)}`}>{bt.priority}</Badge></TableCell>
                             <TableCell><div className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /><span className="text-xs">{bt.trendingScore}/10</span></div></TableCell>
