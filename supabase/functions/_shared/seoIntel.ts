@@ -45,6 +45,23 @@ export const JOB_TYPES = [
   "analyze",          // AI recommendation generation from stored signals
   "verify",           // measure impact of applied changes
   "report",           // daily / weekly report rollup
+  // ── advanced intelligence layer ────────────────────────────────
+  "demand_model",       // multi-source search demand + acceleration
+  "intent_scan",        // intent classification + intent-shift detection
+  "serp_intel",         // SERP composition & rewarded format
+  "volatility_scan",    // ranking volatility monitor
+  "forecast",           // ranking forecast with confidence
+  "cannibalization",    // competing URLs for the same intent
+  "content_gaps",       // content gap intelligence 2.0
+  "entity_map",         // entity & topical authority coverage
+  "link_intel",         // internal linking opportunities
+  "ctr_intel",          // CTR benchmarking vs our own cohorts
+  "anomaly_scan",       // statistical anomaly detection
+  "opportunity_score",  // opportunity scoring + next best action
+  "page_twin",          // page-level SEO digital twin profiles
+  "impact_attribution", // isolate change impact from site-wide trend
+  "knowledge_graph",    // entity/keyword/page/competitor graph
+  "strategy",           // AI SEO growth strategy
 ] as const;
 export type JobType = (typeof JOB_TYPES)[number];
 
@@ -61,7 +78,24 @@ export const JOB_LABELS: Record<string, string> = {
   analyze: "AI analysis & recommendations",
   verify: "Change impact verification",
   report: "Report generation",
+  demand_model: "Search demand model (multi-source)",
+  intent_scan: "Search intent classification & shift detection",
+  serp_intel: "SERP intelligence snapshot",
+  volatility_scan: "Ranking volatility monitor",
+  forecast: "Ranking forecast",
+  cannibalization: "Keyword cannibalization detection",
+  content_gaps: "Content gap intelligence",
+  entity_map: "Entity & topical authority map",
+  link_intel: "Internal linking intelligence",
+  ctr_intel: "CTR benchmarking",
+  anomaly_scan: "Anomaly detection",
+  opportunity_score: "Opportunity scoring & next best action",
+  page_twin: "Page SEO intelligence profiles",
+  impact_attribution: "SEO change impact attribution",
+  knowledge_graph: "SEO knowledge graph",
+  strategy: "AI SEO growth strategy",
 };
+
 
 export interface IntelSettings {
   engine_enabled: boolean;
