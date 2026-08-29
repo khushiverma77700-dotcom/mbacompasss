@@ -13491,6 +13491,7 @@ export type Database = {
         }
       }
       seo_intel_recover_stalled: { Args: never; Returns: number }
+      seo_intel_tick: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       system_check_cron_jobs: {
