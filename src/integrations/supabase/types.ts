@@ -9247,6 +9247,57 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_intel_anomalies: {
+        Row: {
+          classification: string | null
+          confidence: string
+          created_at: string
+          detected_on: string
+          deviation_sigma: number | null
+          evidence: Json
+          expected: number | null
+          id: string
+          keyword: string | null
+          metric: string
+          observed: number | null
+          path: string | null
+          scope: string
+          severity: string
+        }
+        Insert: {
+          classification?: string | null
+          confidence?: string
+          created_at?: string
+          detected_on?: string
+          deviation_sigma?: number | null
+          evidence?: Json
+          expected?: number | null
+          id?: string
+          keyword?: string | null
+          metric: string
+          observed?: number | null
+          path?: string | null
+          scope?: string
+          severity?: string
+        }
+        Update: {
+          classification?: string | null
+          confidence?: string
+          created_at?: string
+          detected_on?: string
+          deviation_sigma?: number | null
+          evidence?: Json
+          expected?: number | null
+          id?: string
+          keyword?: string | null
+          metric?: string
+          observed?: number | null
+          path?: string | null
+          scope?: string
+          severity?: string
+        }
+        Relationships: []
+      }
       seo_intel_audit: {
         Row: {
           action: string
@@ -9292,6 +9343,60 @@ export type Database = {
           path?: string | null
           recommendation_id?: string | null
           verification_result?: string | null
+        }
+        Relationships: []
+      }
+      seo_intel_cannibalization: {
+        Row: {
+          cluster_key: string
+          computed_at: string
+          confidence: string
+          evidence: Json
+          id: string
+          keyword: string | null
+          locale: string
+          overlap_score: number | null
+          paths: string[]
+          recommendation: string | null
+          recommended_action: string | null
+          shared_keywords: string[] | null
+          status: string
+          stronger_path: string | null
+          weaker_paths: string[] | null
+        }
+        Insert: {
+          cluster_key: string
+          computed_at?: string
+          confidence?: string
+          evidence?: Json
+          id?: string
+          keyword?: string | null
+          locale?: string
+          overlap_score?: number | null
+          paths?: string[]
+          recommendation?: string | null
+          recommended_action?: string | null
+          shared_keywords?: string[] | null
+          status?: string
+          stronger_path?: string | null
+          weaker_paths?: string[] | null
+        }
+        Update: {
+          cluster_key?: string
+          computed_at?: string
+          confidence?: string
+          evidence?: Json
+          id?: string
+          keyword?: string | null
+          locale?: string
+          overlap_score?: number | null
+          paths?: string[]
+          recommendation?: string | null
+          recommended_action?: string | null
+          shared_keywords?: string[] | null
+          status?: string
+          stronger_path?: string | null
+          weaker_paths?: string[] | null
         }
         Relationships: []
       }
@@ -9451,10 +9556,230 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_intel_content_gaps: {
+        Row: {
+          competitor_domain: string | null
+          competitor_url: string | null
+          computed_at: string
+          confidence: string
+          description: string | null
+          evidence: Json
+          gap_type: string
+          id: string
+          keyword: string | null
+          path: string | null
+          priority: string
+          status: string
+          title: string
+          value_score: number | null
+        }
+        Insert: {
+          competitor_domain?: string | null
+          competitor_url?: string | null
+          computed_at?: string
+          confidence?: string
+          description?: string | null
+          evidence?: Json
+          gap_type: string
+          id?: string
+          keyword?: string | null
+          path?: string | null
+          priority?: string
+          status?: string
+          title: string
+          value_score?: number | null
+        }
+        Update: {
+          competitor_domain?: string | null
+          competitor_url?: string | null
+          computed_at?: string
+          confidence?: string
+          description?: string | null
+          evidence?: Json
+          gap_type?: string
+          id?: string
+          keyword?: string | null
+          path?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          value_score?: number | null
+        }
+        Relationships: []
+      }
+      seo_intel_ctr_intel: {
+        Row: {
+          benchmark_ctr: number | null
+          benchmark_source: string | null
+          computed_at: string
+          confidence: string
+          country: string | null
+          ctr: number | null
+          ctr_delta_pct: number | null
+          detail: string | null
+          device: string | null
+          diagnosis: string | null
+          evidence: Json
+          id: string
+          impressions: number | null
+          path: string | null
+          position: number | null
+          query: string | null
+        }
+        Insert: {
+          benchmark_ctr?: number | null
+          benchmark_source?: string | null
+          computed_at?: string
+          confidence?: string
+          country?: string | null
+          ctr?: number | null
+          ctr_delta_pct?: number | null
+          detail?: string | null
+          device?: string | null
+          diagnosis?: string | null
+          evidence?: Json
+          id?: string
+          impressions?: number | null
+          path?: string | null
+          position?: number | null
+          query?: string | null
+        }
+        Update: {
+          benchmark_ctr?: number | null
+          benchmark_source?: string | null
+          computed_at?: string
+          confidence?: string
+          country?: string | null
+          ctr?: number | null
+          ctr_delta_pct?: number | null
+          detail?: string | null
+          device?: string | null
+          diagnosis?: string | null
+          evidence?: Json
+          id?: string
+          impressions?: number | null
+          path?: string | null
+          position?: number | null
+          query?: string | null
+        }
+        Relationships: []
+      }
+      seo_intel_demand: {
+        Row: {
+          acceleration_30d: number | null
+          computed_at: string
+          discrepancy: Json | null
+          emerging: boolean
+          evidence: Json
+          final_volume: number | null
+          final_volume_source: string | null
+          historical: Json | null
+          id: string
+          impressions_change_pct: number | null
+          keyword: string
+          locale: string
+          seasonality: Json | null
+          sources: Json
+          trend_direction: string | null
+          verdict: string | null
+          volume_confidence: string
+        }
+        Insert: {
+          acceleration_30d?: number | null
+          computed_at?: string
+          discrepancy?: Json | null
+          emerging?: boolean
+          evidence?: Json
+          final_volume?: number | null
+          final_volume_source?: string | null
+          historical?: Json | null
+          id?: string
+          impressions_change_pct?: number | null
+          keyword: string
+          locale?: string
+          seasonality?: Json | null
+          sources?: Json
+          trend_direction?: string | null
+          verdict?: string | null
+          volume_confidence?: string
+        }
+        Update: {
+          acceleration_30d?: number | null
+          computed_at?: string
+          discrepancy?: Json | null
+          emerging?: boolean
+          evidence?: Json
+          final_volume?: number | null
+          final_volume_source?: string | null
+          historical?: Json | null
+          id?: string
+          impressions_change_pct?: number | null
+          keyword?: string
+          locale?: string
+          seasonality?: Json | null
+          sources?: Json
+          trend_direction?: string | null
+          verdict?: string | null
+          volume_confidence?: string
+        }
+        Relationships: []
+      }
+      seo_intel_entities: {
+        Row: {
+          clicks: number | null
+          cluster: string | null
+          computed_at: string
+          coverage_state: string
+          entity: string
+          entity_type: string | null
+          evidence: Json
+          id: string
+          impressions: number | null
+          keyword_count: number
+          page_count: number
+          pages: string[] | null
+          recommendation: string | null
+          score: number | null
+        }
+        Insert: {
+          clicks?: number | null
+          cluster?: string | null
+          computed_at?: string
+          coverage_state?: string
+          entity: string
+          entity_type?: string | null
+          evidence?: Json
+          id?: string
+          impressions?: number | null
+          keyword_count?: number
+          page_count?: number
+          pages?: string[] | null
+          recommendation?: string | null
+          score?: number | null
+        }
+        Update: {
+          clicks?: number | null
+          cluster?: string | null
+          computed_at?: string
+          coverage_state?: string
+          entity?: string
+          entity_type?: string | null
+          evidence?: Json
+          id?: string
+          impressions?: number | null
+          keyword_count?: number
+          page_count?: number
+          pages?: string[] | null
+          recommendation?: string | null
+          score?: number | null
+        }
+        Relationships: []
+      }
       seo_intel_experiments: {
         Row: {
           after_value: string | null
           ai_analysis: string | null
+          attribution: Json | null
           baseline_captured_on: string | null
           baseline_clicks: number | null
           baseline_impressions: number | null
@@ -9467,6 +9792,7 @@ export type Database = {
           created_at: string
           data_source: string | null
           id: string
+          impact_confidence: string | null
           keyword: string | null
           measure_after: string | null
           outcome: string | null
@@ -9482,6 +9808,7 @@ export type Database = {
         Insert: {
           after_value?: string | null
           ai_analysis?: string | null
+          attribution?: Json | null
           baseline_captured_on?: string | null
           baseline_clicks?: number | null
           baseline_impressions?: number | null
@@ -9494,6 +9821,7 @@ export type Database = {
           created_at?: string
           data_source?: string | null
           id?: string
+          impact_confidence?: string | null
           keyword?: string | null
           measure_after?: string | null
           outcome?: string | null
@@ -9509,6 +9837,7 @@ export type Database = {
         Update: {
           after_value?: string | null
           ai_analysis?: string | null
+          attribution?: Json | null
           baseline_captured_on?: string | null
           baseline_clicks?: number | null
           baseline_impressions?: number | null
@@ -9521,6 +9850,7 @@ export type Database = {
           created_at?: string
           data_source?: string | null
           id?: string
+          impact_confidence?: string | null
           keyword?: string | null
           measure_after?: string | null
           outcome?: string | null
@@ -9532,6 +9862,147 @@ export type Database = {
           result_impressions?: number | null
           result_position?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_intel_forecasts: {
+        Row: {
+          competition: number | null
+          computed_at: string
+          confidence: string
+          current_position: number | null
+          demand_direction: string | null
+          factors: Json
+          forecast_direction: string | null
+          horizon_days: number
+          id: string
+          keyword: string
+          locale: string
+          momentum_30d: number | null
+          opportunity: string | null
+          path: string | null
+          probability: number | null
+          risk: string | null
+          target_threshold: string | null
+        }
+        Insert: {
+          competition?: number | null
+          computed_at?: string
+          confidence?: string
+          current_position?: number | null
+          demand_direction?: string | null
+          factors?: Json
+          forecast_direction?: string | null
+          horizon_days?: number
+          id?: string
+          keyword: string
+          locale?: string
+          momentum_30d?: number | null
+          opportunity?: string | null
+          path?: string | null
+          probability?: number | null
+          risk?: string | null
+          target_threshold?: string | null
+        }
+        Update: {
+          competition?: number | null
+          computed_at?: string
+          confidence?: string
+          current_position?: number | null
+          demand_direction?: string | null
+          factors?: Json
+          forecast_direction?: string | null
+          horizon_days?: number
+          id?: string
+          keyword?: string
+          locale?: string
+          momentum_30d?: number | null
+          opportunity?: string | null
+          path?: string | null
+          probability?: number | null
+          risk?: string | null
+          target_threshold?: string | null
+        }
+        Relationships: []
+      }
+      seo_intel_graph_edges: {
+        Row: {
+          edge: string
+          evidence: Json
+          from_id: string
+          from_type: string
+          id: string
+          to_id: string
+          to_type: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          edge: string
+          evidence?: Json
+          from_id: string
+          from_type: string
+          id?: string
+          to_id: string
+          to_type: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          edge?: string
+          evidence?: Json
+          from_id?: string
+          from_type?: string
+          id?: string
+          to_id?: string
+          to_type?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      seo_intel_intent: {
+        Row: {
+          computed_at: string
+          id: string
+          intent: string | null
+          intent_confidence: string
+          keyword: string
+          locale: string
+          previous_intent: string | null
+          recommended_target_path: string | null
+          secondary_intents: string[] | null
+          serp_intent: string | null
+          shift_detected: boolean
+          shift_evidence: Json | null
+        }
+        Insert: {
+          computed_at?: string
+          id?: string
+          intent?: string | null
+          intent_confidence?: string
+          keyword: string
+          locale?: string
+          previous_intent?: string | null
+          recommended_target_path?: string | null
+          secondary_intents?: string[] | null
+          serp_intent?: string | null
+          shift_detected?: boolean
+          shift_evidence?: Json | null
+        }
+        Update: {
+          computed_at?: string
+          id?: string
+          intent?: string | null
+          intent_confidence?: string
+          keyword?: string
+          locale?: string
+          previous_intent?: string | null
+          recommended_target_path?: string | null
+          secondary_intents?: string[] | null
+          serp_intent?: string | null
+          shift_detected?: boolean
+          shift_evidence?: Json | null
         }
         Relationships: []
       }
@@ -9691,6 +10162,96 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_intel_kw_sources: {
+        Row: {
+          confidence: string | null
+          created_at: string
+          id: string
+          keyword: string
+          label: string | null
+          locale: string
+          metric: string
+          observed_at: string
+          raw: Json
+          source: string
+          value: number | null
+          value_text: string | null
+        }
+        Insert: {
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          keyword: string
+          label?: string | null
+          locale?: string
+          metric: string
+          observed_at?: string
+          raw?: Json
+          source: string
+          value?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          keyword?: string
+          label?: string | null
+          locale?: string
+          metric?: string
+          observed_at?: string
+          raw?: Json
+          source?: string
+          value?: number | null
+          value_text?: string | null
+        }
+        Relationships: []
+      }
+      seo_intel_link_opportunities: {
+        Row: {
+          anchor_suggestion: string | null
+          computed_at: string
+          confidence: string
+          context_hint: string | null
+          evidence: Json
+          id: string
+          relationship: string | null
+          score: number | null
+          source_path: string
+          status: string
+          target_importance: number | null
+          target_path: string
+        }
+        Insert: {
+          anchor_suggestion?: string | null
+          computed_at?: string
+          confidence?: string
+          context_hint?: string | null
+          evidence?: Json
+          id?: string
+          relationship?: string | null
+          score?: number | null
+          source_path: string
+          status?: string
+          target_importance?: number | null
+          target_path: string
+        }
+        Update: {
+          anchor_suggestion?: string | null
+          computed_at?: string
+          confidence?: string
+          context_hint?: string | null
+          evidence?: Json
+          id?: string
+          relationship?: string | null
+          score?: number | null
+          source_path?: string
+          status?: string
+          target_importance?: number | null
+          target_path?: string
+        }
+        Relationships: []
+      }
       seo_intel_notifications: {
         Row: {
           body: string | null
@@ -9726,6 +10287,54 @@ export type Database = {
           meta?: Json
           path?: string | null
           severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      seo_intel_opportunities: {
+        Row: {
+          computed_at: string
+          confidence: string
+          factors: Json
+          id: string
+          keyword: string | null
+          kind: string
+          next_action: string | null
+          path: string | null
+          priority_rank: number | null
+          rationale: string | null
+          score: number | null
+          status: string
+          title: string
+        }
+        Insert: {
+          computed_at?: string
+          confidence?: string
+          factors?: Json
+          id?: string
+          keyword?: string | null
+          kind: string
+          next_action?: string | null
+          path?: string | null
+          priority_rank?: number | null
+          rationale?: string | null
+          score?: number | null
+          status?: string
+          title: string
+        }
+        Update: {
+          computed_at?: string
+          confidence?: string
+          factors?: Json
+          id?: string
+          keyword?: string | null
+          kind?: string
+          next_action?: string | null
+          path?: string | null
+          priority_rank?: number | null
+          rationale?: string | null
+          score?: number | null
+          status?: string
           title?: string
         }
         Relationships: []
@@ -9769,6 +10378,39 @@ export type Database = {
           impressions?: number | null
           indexed_status?: string | null
           path?: string
+        }
+        Relationships: []
+      }
+      seo_intel_page_profiles: {
+        Row: {
+          competitive_gap_score: number | null
+          confidence: string
+          gap_factors: Json
+          id: string
+          path: string
+          profile: Json
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          competitive_gap_score?: number | null
+          confidence?: string
+          gap_factors?: Json
+          id?: string
+          path: string
+          profile?: Json
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          competitive_gap_score?: number | null
+          confidence?: string
+          gap_factors?: Json
+          id?: string
+          path?: string
+          profile?: Json
+          summary?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -9997,6 +10639,51 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_intel_rec_outcomes: {
+        Row: {
+          avg_ctr_delta: number | null
+          avg_days_to_impact: number | null
+          avg_position_delta: number | null
+          category: string
+          change_type: string
+          failed: number
+          id: string
+          implemented: number
+          inconclusive: number
+          samples: Json
+          succeeded: number
+          updated_at: string
+        }
+        Insert: {
+          avg_ctr_delta?: number | null
+          avg_days_to_impact?: number | null
+          avg_position_delta?: number | null
+          category: string
+          change_type?: string
+          failed?: number
+          id?: string
+          implemented?: number
+          inconclusive?: number
+          samples?: Json
+          succeeded?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_ctr_delta?: number | null
+          avg_days_to_impact?: number | null
+          avg_position_delta?: number | null
+          category?: string
+          change_type?: string
+          failed?: number
+          id?: string
+          implemented?: number
+          inconclusive?: number
+          samples?: Json
+          succeeded?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seo_intel_recommendations: {
         Row: {
           after_value: string | null
@@ -10010,10 +10697,16 @@ export type Database = {
           confidence: number | null
           created_at: string
           data_source: string | null
+          dedupe_hash: string | null
           evidence: Json
+          evidence_score: number | null
           expected_impact: string | null
           id: string
+          impact_confidence: string | null
           keyword: string | null
+          last_seen_at: string | null
+          occurrences: number
+          opportunity_score: number | null
           page_type: string | null
           path: string | null
           priority: string
@@ -10021,8 +10714,10 @@ export type Database = {
           recommended_change: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          state: string
           status: string
           updated_at: string
+          validation: Json | null
           verification: Json | null
           verified_at: string | null
           why_it_matters: string | null
@@ -10039,10 +10734,16 @@ export type Database = {
           confidence?: number | null
           created_at?: string
           data_source?: string | null
+          dedupe_hash?: string | null
           evidence?: Json
+          evidence_score?: number | null
           expected_impact?: string | null
           id?: string
+          impact_confidence?: string | null
           keyword?: string | null
+          last_seen_at?: string | null
+          occurrences?: number
+          opportunity_score?: number | null
           page_type?: string | null
           path?: string | null
           priority?: string
@@ -10050,8 +10751,10 @@ export type Database = {
           recommended_change?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          state?: string
           status?: string
           updated_at?: string
+          validation?: Json | null
           verification?: Json | null
           verified_at?: string | null
           why_it_matters?: string | null
@@ -10068,10 +10771,16 @@ export type Database = {
           confidence?: number | null
           created_at?: string
           data_source?: string | null
+          dedupe_hash?: string | null
           evidence?: Json
+          evidence_score?: number | null
           expected_impact?: string | null
           id?: string
+          impact_confidence?: string | null
           keyword?: string | null
+          last_seen_at?: string | null
+          occurrences?: number
+          opportunity_score?: number | null
           page_type?: string | null
           path?: string | null
           priority?: string
@@ -10079,8 +10788,10 @@ export type Database = {
           recommended_change?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          state?: string
           status?: string
           updated_at?: string
+          validation?: Json | null
           verification?: Json | null
           verified_at?: string | null
           why_it_matters?: string | null
@@ -10117,6 +10828,51 @@ export type Database = {
           period_start?: string | null
           report_type?: string
           summary?: string | null
+        }
+        Relationships: []
+      }
+      seo_intel_serp: {
+        Row: {
+          alignment: Json | null
+          captured_on: string
+          created_at: string
+          data_source: string | null
+          features: Json
+          id: string
+          keyword: string
+          locale: string
+          our_position: number | null
+          our_url: string | null
+          rewarded_format: string | null
+          top_results: Json
+        }
+        Insert: {
+          alignment?: Json | null
+          captured_on?: string
+          created_at?: string
+          data_source?: string | null
+          features?: Json
+          id?: string
+          keyword: string
+          locale?: string
+          our_position?: number | null
+          our_url?: string | null
+          rewarded_format?: string | null
+          top_results?: Json
+        }
+        Update: {
+          alignment?: Json | null
+          captured_on?: string
+          created_at?: string
+          data_source?: string | null
+          features?: Json
+          id?: string
+          keyword?: string
+          locale?: string
+          our_position?: number | null
+          our_url?: string | null
+          rewarded_format?: string | null
+          top_results?: Json
         }
         Relationships: []
       }
@@ -10297,6 +11053,39 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_intel_strategy: {
+        Row: {
+          confidence: string
+          data_coverage: Json
+          evidence: Json
+          generated_at: string
+          horizon: string
+          id: string
+          priorities: Json
+          summary: string | null
+        }
+        Insert: {
+          confidence?: string
+          data_coverage?: Json
+          evidence?: Json
+          generated_at?: string
+          horizon?: string
+          id?: string
+          priorities?: Json
+          summary?: string | null
+        }
+        Update: {
+          confidence?: string
+          data_coverage?: Json
+          evidence?: Json
+          generated_at?: string
+          horizon?: string
+          id?: string
+          priorities?: Json
+          summary?: string | null
+        }
+        Relationships: []
+      }
       seo_intel_tasks: {
         Row: {
           after_value: string | null
@@ -10366,6 +11155,54 @@ export type Database = {
           task_type?: string
           updated_at?: string
           verification_result?: string | null
+        }
+        Relationships: []
+      }
+      seo_intel_volatility: {
+        Row: {
+          avg_abs_change: number | null
+          classification: string | null
+          confidence: string
+          created_at: string
+          detected_on: string
+          evidence: Json
+          id: string
+          keyword: string | null
+          keywords_moved: number | null
+          keywords_tracked: number | null
+          path: string | null
+          scope: string
+          window_hours: number
+        }
+        Insert: {
+          avg_abs_change?: number | null
+          classification?: string | null
+          confidence?: string
+          created_at?: string
+          detected_on?: string
+          evidence?: Json
+          id?: string
+          keyword?: string | null
+          keywords_moved?: number | null
+          keywords_tracked?: number | null
+          path?: string | null
+          scope?: string
+          window_hours?: number
+        }
+        Update: {
+          avg_abs_change?: number | null
+          classification?: string | null
+          confidence?: string
+          created_at?: string
+          detected_on?: string
+          evidence?: Json
+          id?: string
+          keyword?: string | null
+          keywords_moved?: number | null
+          keywords_tracked?: number | null
+          path?: string | null
+          scope?: string
+          window_hours?: number
         }
         Relationships: []
       }
