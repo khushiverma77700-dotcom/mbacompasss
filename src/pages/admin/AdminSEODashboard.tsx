@@ -397,6 +397,12 @@ const AdminSEODashboard = () => {
   const [kwDataQuality, setKwDataQuality] = useState<DataQualityReport | null>(null);
   const [kwCompetitorKws, setKwCompetitorKws] = useState<any[]>([]);
   const [kwSummary, setKwSummary] = useState("");
+  // Which real-data providers backed the last research run.
+  const [metricSources, setMetricSources] = useState<{
+    semrush?: boolean; dataforseo?: boolean; searchConsole?: boolean;
+    verifiedKeywords?: number; note?: string;
+  } | null>(null);
+
   const [kwLoading, setKwLoading] = useState(false);
   const [kwLastRefresh, setKwLastRefresh] = useState<string | null>(null);
   const [kwSelectedKws, setKwSelectedKws] = useState<string[]>([]);
