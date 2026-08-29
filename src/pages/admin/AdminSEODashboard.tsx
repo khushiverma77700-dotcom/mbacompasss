@@ -820,9 +820,10 @@ const AdminSEODashboard = () => {
       setKwDataQuality(d?.dataQualityReport || null);
       setKwCompetitorKws(d?.competitorKeywords || []);
       setKwSummary(d?.summary || "");
+      setMetricSources(d?.dataSources || null);
       setKwLastRefresh(new Date().toLocaleString());
-      const realCount = (d?.keywords || []).filter((k: any) => k.source !== "ai_enriched").length;
-      toast({ title: "Keyword research complete", description: `${d?.keywords?.length || 0} keywords (${realCount} from real data)` });
+      const verified = (d?.keywords || []).filter((k: any) => k.dataVerified).length;
+      toast({ title: "Keyword research complete", description: `${d?.keywords?.length || 0} keywords — ${verified} with verified provider volume` });
     } catch (e: any) {
       toast({ title: "Keyword research failed", description: e.message, variant: "destructive" });
     } finally { setKwLoading(false); }
@@ -847,6 +848,7 @@ const AdminSEODashboard = () => {
       setBtTrending(d?.trendingTopics || []);
       setBtCalendar(d?.contentCalendar || []);
       setBtSummary(d?.summary || "");
+      setMetricSources(d?.dataSources || null);
       setBtLastRefresh(new Date().toLocaleString());
       toast({ title: "Blog title research complete", description: `Found ${d?.titles?.length || 0} title ideas` });
     } catch (e: any) {
