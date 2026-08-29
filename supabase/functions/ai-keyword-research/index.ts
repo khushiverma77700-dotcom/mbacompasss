@@ -591,10 +591,84 @@ Deno.serve(async (req) => {
       result = extractJsonFromResponse(content);
     }
 
+    // ── Overwrite every AI-guessed metric with real provider data ──
+    const competitionLabel = (c: number | null) =>
+      c === null ? "unknown" : c >= 0.66 ? "high" : c >= 0.33 ? "medium" : "low";
+
+    const applyMetrics = (row: any, keyField: string) => {
+      const m = metricsMap.get(mkey(String(row?.[keyField] ?? "")));
+      if (!m || !(m.verified || m.gsc)) {
+        row.searchVolume = null;
+        row.volumeSource = "unverified";
+        row.dataVerified = false;
+        return row;
+      }
+      row.searchVolume = m.searchVolume;
+      if (m.cpc !== null) row.cpc = m.cpc;
+      if (m.difficulty !== null) row.difficulty = m.difficulty;
+      if (m.competition !== null) row.competition = competitionLabel(m.competition);
+      if (m.trendDirection) row.trending = m.trendDirection;
+      row.monthlyTrend = m.monthlyTrend;
+      row.volumeSource = m.volumeSource;
+      row.difficultySource = m.difficultySource;
+      row.gsc = m.gsc;
+      row.opportunityScore = opportunityScore(m);
+      row.dataVerified = true;
+      row.metricsFetchedAt = m.fetchedAt;
+      return row;
+    };
+
+    if (metricsMap.size) {
+      if (Array.isArray(result?.keywords)) {
+        result.keywords = result.keywords.map((k: any) => applyMetrics(k, "keyword"));
+        // Surface high-opportunity verified keywords the model skipped.
+        const used = new Set(result.keywords.map((k: any) => mkey(k.keyword)));
+        const extras = [...metricsMap.values()]
+          .filter((m) => m.verified && !used.has(mkey(m.keyword)))
+          .sort((a, b) => opportunityScore(b) - opportunityScore(a))
+          .slice(0, 15)
+          .map((m) => ({
+            keyword: m.keyword,
+            searchVolume: m.searchVolume,
+            cpc: m.cpc,
+            difficulty: m.difficulty,
+            competition: competitionLabel(m.competition),
+            trending: m.trendDirection || "stable",
+            monthlyTrend: m.monthlyTrend,
+            intent: "informational",
+            category: "provider_discovered",
+            source: m.volumeSource,
+            volumeSource: m.volumeSource,
+            difficultySource: m.difficultySource,
+            gsc: m.gsc,
+            opportunityScore: opportunityScore(m),
+            dataVerified: true,
+            metricsFetchedAt: m.fetchedAt,
+          }));
+        result.keywords = [...result.keywords, ...extras];
+      }
+      if (Array.isArray(result?.titles)) {
+        result.titles = result.titles.map((t: any) => applyMetrics(t, "targetKeyword"));
+      }
+      if (Array.isArray(result?.keywordGaps)) {
+        result.keywordGaps = result.keywordGaps.map((g: any) => applyMetrics(g, "keyword"));
+      }
+      result.dataSources = {
+        semrush: semrushConfigured(),
+        dataforseo: dataForSeoConfigured(),
+        searchConsole: true,
+        health: providerHealth,
+        verifiedKeywords: [...metricsMap.values()].filter((m) => m.verified).length,
+        note:
+          "Search volume, CPC, competition and difficulty come from Google Ads Keyword Planner (DataForSEO) and/or Semrush. Rows marked unverified have no provider data and show no volume.",
+      };
+    }
+
     console.log(`[ai-keyword-research] Total time: ${Date.now() - startTime}ms, keywords: ${result?.keywords?.length || 0}`);
     return new Response(JSON.stringify({ success: true, data: result, mode, generatedAt: new Date().toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (e) {
     console.error("ai-keyword-research error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
