@@ -60,11 +60,23 @@ interface DashboardRow {
   isStatic?: boolean; path?: string;
 }
 
-interface KeywordResult {
-  keyword: string; searchVolume: number; competition: string; difficulty: number;
+interface KeywordMetricSources {
+  /** Provider the volume came from: dataforseo | semrush | cache | unverified */
+  volumeSource?: string;
+  difficultySource?: string;
+  dataVerified?: boolean;
+  monthlyTrend?: number[] | null;
+  opportunityScore?: number;
+  gsc?: { clicks: number; impressions: number; ctr: number; position: number } | null;
+  metricsFetchedAt?: string | null;
+}
+
+interface KeywordResult extends KeywordMetricSources {
+  keyword: string; searchVolume: number | null; competition: string; difficulty: number;
   cpc?: number; intent: string; trending: string; category?: string;
   source?: string; priorityScore?: number;
 }
+
 
 interface KeywordCluster {
   clusterName: string; pillarKeyword: string;
