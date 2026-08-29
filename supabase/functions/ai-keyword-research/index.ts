@@ -407,6 +407,11 @@ Deno.serve(async (req) => {
     }
 
     let payload: { systemPrompt: string; userPrompt: string; tool: any; toolName: string };
+    // Real metrics collected before the AI call, reused to overwrite AI numbers afterwards.
+    let metricsMap = new Map<string, KeywordMetric>();
+    let providerHealth: unknown = null;
+    const locale = "in";
+    const mkey = (k: string) => k.trim().toLowerCase().replace(/\s+/g, " ");
 
     if (mode === "keyword_research") {
       const searchQuery = query || niche || "MBA coaching India";
@@ -423,10 +428,54 @@ Deno.serve(async (req) => {
       const totalReal = new Set([...google, ...paa, ...alphabet]).size;
       console.log(`[ai-keyword-research] Real data fetched in ${Date.now() - startTime}ms: ${google.length} Google, ${paa.length} PAA, ${trends.length} Trends, ${wiki.length} Wiki, ${alphabet.length} Alphabet, ${totalReal} unique`);
 
-      payload = buildKeywordResearchPayload(searchQuery, existingKeywords || [], { google, paa, trends, wiki, alphabet });
+      // Real provider metrics for the seed + every discovered suggestion
+      const expansion = await semrushExpand(searchQuery, locale, 30).catch(() => []);
+      const candidateKeywords = [...new Set([
+        searchQuery,
+        ...google, ...paa, ...alphabet,
+        ...expansion.map((e) => e.keyword),
+      ].map(mkey).filter(Boolean))].slice(0, 200);
+
+      const { metrics, health } = await getKeywordMetrics(candidateKeywords, { locale });
+      metricsMap = new Map(metrics.map((m) => [mkey(m.keyword), m]));
+      providerHealth = health;
+      const ranked = metrics
+        .filter((m) => m.verified)
+        .sort((a, b) => opportunityScore(b) - opportunityScore(a));
+      console.log(`[ai-keyword-research] verified metrics: ${ranked.length}/${candidateKeywords.length}`, JSON.stringify(health));
+
+      payload = buildKeywordResearchPayload(
+        searchQuery,
+        existingKeywords || [],
+        { google, paa, trends, wiki, alphabet },
+        metricsFactBlock(ranked),
+      );
     } else if (mode === "blog_titles") {
-      payload = buildBlogTitlesPayload(query || niche || "MBA coaching");
+      const topic = query || niche || "MBA coaching";
+      const [suggest, paa, expansion] = await Promise.all([
+        fetchGoogleSuggest(topic),
+        fetchPeopleAlsoAsk(topic),
+        semrushExpand(topic, locale, 40).catch(() => []),
+      ]);
+      const candidateKeywords = [...new Set([
+        topic, ...suggest, ...paa, ...expansion.map((e) => e.keyword),
+      ].map(mkey).filter(Boolean))].slice(0, 200);
+
+      const { metrics, health } = await getKeywordMetrics(candidateKeywords, { locale });
+      metricsMap = new Map(metrics.map((m) => [mkey(m.keyword), m]));
+      providerHealth = health;
+      const ranked = metrics
+        .filter((m) => m.verified)
+        .sort((a, b) => opportunityScore(b) - opportunityScore(a));
+      console.log(`[ai-keyword-research] blog_titles verified metrics: ${ranked.length}`, JSON.stringify(health));
+
+      payload = buildBlogTitlesPayload(
+        topic,
+        metricsFactBlock(ranked),
+        ranked.map((m) => m.keyword),
+      );
     } else if (mode === "cluster_map") {
+
       const pillarTopic = query || niche || "MBA coaching";
       payload = {
         systemPrompt: "You are an SEO topic-cluster strategist for Indian MBA education. Build pillar→cluster maps with funnel stage tagging (TOFU=awareness, MOFU=consideration, BOFU=decision).",
