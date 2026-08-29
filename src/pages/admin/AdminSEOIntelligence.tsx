@@ -304,10 +304,18 @@ const AdminSEOIntelligence = () => {
         </CardContent>
       </Card>
 
+      {intel && <AdvancedHeaderStat intel={intel} />}
+
       <Tabs value={tab} onValueChange={setTab}>
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="strategy">Strategy</TabsTrigger>
+            <TabsTrigger value="opportunities">Next actions</TabsTrigger>
+            <TabsTrigger value="demand">Demand & intent</TabsTrigger>
+            <TabsTrigger value="forecast">Forecast & anomalies</TabsTrigger>
+            <TabsTrigger value="gaps">Gaps & cannibalization</TabsTrigger>
+            <TabsTrigger value="entities">Entities & graph</TabsTrigger>
             <TabsTrigger value="monitor">Live monitor</TabsTrigger>
             <TabsTrigger value="pages">Pages</TabsTrigger>
             <TabsTrigger value="keywords">Keywords</TabsTrigger>
@@ -323,8 +331,29 @@ const AdminSEOIntelligence = () => {
           </TabsList>
         </div>
 
+        {/* ── Advanced intelligence layer ── */}
+        <TabsContent value="strategy" className="pt-4">
+          <StrategyPanel intel={intel} busy={intelBusy} runStage={runIntelStage} />
+        </TabsContent>
+        <TabsContent value="opportunities" className="pt-4">
+          <OpportunitiesPanel intel={intel} busy={intelBusy} runStage={runIntelStage} setItemStatus={setIntelItemStatus} />
+        </TabsContent>
+        <TabsContent value="demand" className="pt-4">
+          <DemandPanel intel={intel} busy={intelBusy} runStage={runIntelStage} />
+        </TabsContent>
+        <TabsContent value="forecast" className="pt-4">
+          <ForecastPanel intel={intel} busy={intelBusy} runStage={runIntelStage} />
+        </TabsContent>
+        <TabsContent value="gaps" className="pt-4">
+          <GapsPanel intel={intel} busy={intelBusy} runStage={runIntelStage} setItemStatus={setIntelItemStatus} />
+        </TabsContent>
+        <TabsContent value="entities" className="pt-4">
+          <EntityPanel intel={intel} busy={intelBusy} runStage={runIntelStage} />
+        </TabsContent>
+
         {/* ── Overview ── */}
         <TabsContent value="overview" className="space-y-4 pt-4">
+
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader className="pb-2">
