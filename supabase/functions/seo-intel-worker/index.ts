@@ -355,7 +355,7 @@ async function runCompetitorScan(ctx: Ctx) {
     const serp = await semrushSerp(k.keyword, locale);
     for (const s of serp.slice(0, 5)) {
       if (!s.domain || /mbacompass\.in/i.test(s.domain)) continue;
-      await sb.from("seo_intel_competitors").upsert({
+      const { error: cErr } = await sb.from("seo_intel_competitors").upsert({
         domain: s.domain,
         keyword: k.keyword,
         our_path: k.target_path,
@@ -366,12 +366,15 @@ async function runCompetitorScan(ctx: Ctx) {
         last_checked_at: nowIso(),
         updated_at: nowIso(),
       }, { onConflict: "domain,keyword" });
-      await sb.from("seo_intel_competitor_history").upsert({
+      if (cErr) throw new Error(`seo_intel_competitors upsert: ${cErr.message}`);
+      const { error: hErr } = await sb.from("seo_intel_competitor_history").upsert({
         domain: s.domain, keyword: k.keyword, captured_on: today(),
         position: s.position, our_position: k.current_position, data_source: "semrush",
       }, { onConflict: "domain,keyword,captured_on" });
+      if (hErr) throw new Error(`seo_intel_competitor_history upsert: ${hErr.message}`);
       stored++;
     }
+
   }
   await markSource(sb, "semrush", { configured: true, status: "connected", last_sync_at: nowIso() });
   return { records: stored };
