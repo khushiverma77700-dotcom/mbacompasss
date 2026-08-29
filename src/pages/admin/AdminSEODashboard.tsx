@@ -1268,6 +1268,40 @@ const AdminSEODashboard = () => {
   const trendIcon = (t: string) => t === "up" ? <ArrowUp className="h-3 w-3 text-green-500" /> : t === "down" ? <ArrowDown className="h-3 w-3 text-red-500" /> : <Minus className="h-3 w-3 text-muted-foreground" />;
   const priorityColor = (p: string) => p === "high" ? "text-red-600 bg-red-50" : p === "medium" ? "text-amber-600 bg-amber-50" : "text-green-600 bg-green-50";
 
+  // Renders a search volume with the provider it came from. Never shows a number we can't source.
+  const sourceLabel: Record<string, string> = {
+    dataforseo: "Keyword Planner",
+    semrush: "Semrush",
+    cache: "Cached (real)",
+    gsc: "Search Console",
+  };
+  const VolumeCell = ({ row }: { row: KeywordMetricSources & { searchVolume?: number | null; cpc?: number } }) => {
+    const verified = row.dataVerified !== false && typeof row.searchVolume === "number" && row.searchVolume !== null;
+    if (!verified) {
+      return (
+        <div className="space-y-0.5">
+          <span className="text-xs text-muted-foreground">No provider data</span>
+          <Badge variant="outline" className="block w-fit text-[10px] border-amber-300 text-amber-700">unverified</Badge>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-0.5">
+        <span className="font-mono text-sm">{Number(row.searchVolume).toLocaleString()}<span className="text-[10px] text-muted-foreground">/mo</span></span>
+        {row.cpc ? <span className="text-[10px] text-muted-foreground block">₹{row.cpc} CPC</span> : null}
+        <Badge variant="outline" className="block w-fit text-[10px] border-emerald-300 text-emerald-700">
+          {sourceLabel[row.volumeSource || ""] || row.volumeSource || "real"}
+        </Badge>
+        {row.gsc ? (
+          <span className="text-[10px] text-blue-700 block">
+            GSC: #{row.gsc.position.toFixed(1)} · {row.gsc.impressions.toLocaleString()} impr
+          </span>
+        ) : null}
+      </div>
+    );
+  };
+
+
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "full-audit", label: "🔥 Full Audit & Fix", icon: FileCheck },
