@@ -63,8 +63,31 @@ async function runGscPages(ctx: Ctx) {
     await markSource(sb, "search_console", { configured: gscConfigured(), status: "not_connected", last_error: "No verified property resolved" });
     return { skipped: "Search Console is not connected — link it to collect actual traffic data.", records: 0 };
   }
-  const cur = await gscPageMetrics(siteUrl, dayOffset(30), dayOffset(2));
-  const prev = await gscPageMetrics(siteUrl, dayOffset(58), dayOffset(31));
+  const rawCur = await gscPageMetrics(siteUrl, dayOffset(30), dayOffset(2));
+  const rawPrev = await gscPageMetrics(siteUrl, dayOffset(58), dayOffset(31));
+
+  // Different URLs (trailing slash, query strings, casing) can normalise to the
+  // same path, so aggregate before upserting — Postgres rejects a conflict that
+  // touches the same row twice.
+  const merge = (rows: typeof rawCur) => {
+    const map = new Map<string, { path: string; clicks: number; impressions: number; ctr: number; position: number | null; posSum: number; imprSum: number }>();
+    for (const r of rows) {
+      if (!r.path) continue;
+      const e = map.get(r.path) ?? { path: r.path, clicks: 0, impressions: 0, ctr: 0, position: null, posSum: 0, imprSum: 0 };
+      e.clicks += r.clicks; e.impressions += r.impressions;
+      if (r.position != null) { e.posSum += r.position * Math.max(r.impressions, 1); e.imprSum += Math.max(r.impressions, 1); }
+      map.set(r.path, e);
+    }
+    return [...map.values()].map((e) => ({
+      path: e.path,
+      clicks: e.clicks,
+      impressions: e.impressions,
+      ctr: e.impressions ? Number((e.clicks / e.impressions).toFixed(4)) : 0,
+      position: e.imprSum ? Number((e.posSum / e.imprSum).toFixed(2)) : null,
+    }));
+  };
+  const cur = merge(rawCur);
+  const prev = merge(rawPrev);
   const prevMap = new Map(prev.map((r) => [r.path, r]));
 
   const pageRows = cur.map((r) => {
