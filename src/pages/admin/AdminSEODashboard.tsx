@@ -2398,7 +2398,7 @@ const AdminSEODashboard = () => {
                           <TableRow key={i}>
                             <TableCell><Checkbox checked={kwSelectedKws.includes(kw.keyword)} onCheckedChange={(c) => setKwSelectedKws(prev => c ? [...prev, kw.keyword] : prev.filter(k => k !== kw.keyword))} /></TableCell>
                             <TableCell className="font-medium text-sm">{kw.keyword}</TableCell>
-                            <TableCell><span className="font-mono text-sm">{kw.searchVolume?.toLocaleString()}</span>{kw.cpc ? <span className="text-[10px] text-muted-foreground block">₹{kw.cpc}</span> : null}</TableCell>
+                            <TableCell><VolumeCell row={kw} /></TableCell>
                             <TableCell><div className="flex items-center gap-1"><Progress value={kw.difficulty} className="w-16 h-2" /><span className="text-xs">{kw.difficulty}</span></div></TableCell>
                             <TableCell><Badge variant="outline" className={`text-xs ${kw.competition === "low" ? "border-green-300 text-green-700" : kw.competition === "high" ? "border-red-300 text-red-700" : "border-amber-300 text-amber-700"}`}>{kw.competition}</Badge></TableCell>
                             <TableCell><Badge variant="secondary" className="text-xs">{kw.intent}</Badge></TableCell>
