@@ -1057,6 +1057,37 @@ Deno.serve(async (req) => {
     const todayIso = today.toISOString().slice(0, 10);
     const currentYear = today.getFullYear();
 
+    // ── REAL search data grounding (Semrush / Google Keyword Planner / our GSC) ──
+    let metricsBlock = "";
+    let verifiedLongTails: string[] = [];
+    let verifiedQuestions: string[] = [];
+    try {
+      const expansion = await semrushExpand(targetKw, "in", 40);
+      const candidates = [
+        targetKw,
+        ...secKws,
+        ...expansion.map((e) => e.keyword),
+      ].filter(Boolean);
+      const { metrics } = await getKeywordMetrics(candidates, { locale: "in" });
+      const byScore = metrics
+        .filter((m) => m.verified)
+        .sort((a, b) => opportunityScore(b) - opportunityScore(a));
+      const questionish = (k: string) =>
+        /^(what|why|how|when|which|who|is|are|can|do|does|should)\b/i.test(k) || k.includes("?");
+      verifiedQuestions = byScore.filter((m) => questionish(m.keyword)).slice(0, 12).map((m) => m.keyword);
+      verifiedLongTails = byScore
+        .filter((m) => !questionish(m.keyword) && m.keyword !== targetKw.toLowerCase() && m.keyword.split(" ").length >= 3)
+        .slice(0, 15)
+        .map((m) => m.keyword);
+      if (byScore.length) {
+        metricsBlock = `\n# VERIFIED SEARCH DATA (real provider numbers — use as facts, never contradict)\n${metricsFactBlock(byScore.slice(0, 25))}\n\nHow to use this data:\n- Cover the highest-volume verified sub-topics as dedicated H2/H3 sections.\n- Use these VERIFIED LONG-TAIL keywords naturally across headings and body: ${verifiedLongTails.join(", ") || "(none returned)"}\n- Answer these VERIFIED QUESTION queries directly (one concise 40-60 word answer each, AEO-ready): ${verifiedQuestions.join(" | ") || "(none returned)"}\n- Never print search-volume numbers inside the article body; they only guide topic selection.\n`;
+      }
+      console.log(`[ai-blog-writer] verified keyword metrics: ${byScore.length}, long-tails: ${verifiedLongTails.length}, questions: ${verifiedQuestions.length}`);
+    } catch (e) {
+      console.warn("[ai-blog-writer] keyword metrics unavailable:", e instanceof Error ? e.message : e);
+    }
+
+
     const systemPrompt = `You are a senior MBA mentor at B School Buzz writing for Indian aspirants. Write like a real human mentor explaining things to a student — warm, conversational, specific, practical. Plain English, short sentences, contractions allowed (you're, don't, it's). Never sound like an AI or a generic SEO blog.
 
 # VOICE — MENTOR, NOT AI (NON-NEGOTIABLE)
