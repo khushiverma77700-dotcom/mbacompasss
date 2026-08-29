@@ -1,33 +1,63 @@
-# AI Exam Page Builder + Universal Exam Template
+# Real search data for Blog Titles and the AI SEO suite
 
-Goal: in Admin → Colleges & Exams → Exams, add an "AI Create Exam" flow where you type only the **exam name + year** (plus optional official website / notes) and AI generates a complete, modular exam page. The public page `/exam/:slug` is rebuilt as one reusable premium template that renders only the modules the exam actually has.
+## What is wrong today
 
-## What you'll get
+Verified in the code:
 
-**Admin (`/admin/exams`)**
-- New primary button: **AI Create Exam**. Dialog inputs: Exam Name, Year, optional official website, optional exam category (Management / Engineering / Law / Govt / Other — auto-detected if blank), optional extra instructions.
-- Live generation console (same style as other AI dashboards): per-section progress rows (Hero → Quick Answer → Highlights → Dates → Overview → Eligibility → Registration → Fees → Pattern → Marking → Syllabus → Papers → Difficulty → Preparation → Cutoffs → Colleges → Counselling → Admit Card → Exam Day → Result → Comparisons → Updates → FAQs → SEO), with status, tokens used and errors. Runs in background — closing the browser does not kill it; reopening resumes the view.
-- Result opens a **section-by-section review editor**: every generated block is editable (rich text / table rows / date rows / FAQ list), each with a "Regenerate this section" button. Save as Draft or Publish.
-- Existing exams get an **Enrich with AI** action that fills only missing modules and leaves existing content untouched.
+- The Blog Titles tab and Keyword Research tab both get their numbers from `ai-keyword-research`, where search volume, CPC, difficulty and competition are **invented by the language model**. Blog Titles has no real data source at all, which is why the same round numbers repeat.
+- Keyword Research does fetch real Google Autocomplete, Trends autocomplete, Wikipedia and "people also ask" style expansions — so the keyword *strings* are real, but every *number* attached to them is a guess.
+- Blog articles are written to a strong content spec already (keyword placement, internal links, FAQs, tables), but the writer never receives volume, difficulty, SERP or competitor data, so topic and keyword choices are not data-driven.
+- Blog article pages render no structured data on the client. Article schema exists only in the prerender path, and FAQ + breadcrumb schema for articles is missing.
 
-**Public exam page (`/exam/:slug`)**
-Rebuilt template following your flow: hero (logo, name, year, full form, status pills, metadata row, 2 CTAs, Last updated) → Quick Answer box → highlight cards → Important Dates table → sticky TOC + sticky sidebar (desktop) → all content modules → colleges/institutes modules placed at the 4 logical points (after Overview, after Pattern, after Cutoff, after Result) → comparisons → FAQ accordion → Related searches / Related exams → Sources & editorial box. Mobile: cards, accordions, horizontally scrollable tables (reusing the existing table-slider hook), sticky bottom CTA bar. Any module without data is hidden, never shown empty.
+## What will be built
 
-Interactive tools (Score/Percentile/Rank/College predictor) are surfaced as links to the existing calculators and shortlister — no new calculators are built in this pass.
+### 1. One keyword-metrics service, two real providers
 
-## Data & accuracy
+A new shared module plus a `keyword-metrics` backend function becomes the single source of truth for keyword numbers:
 
-- Research step uses Firecrawl restricted to the official exam domain (+ conducting body domain) so figures come from the latest official notification; sources captured per section and shown in the Sources box.
-- Anything not confirmed by a source is left blank and the module hides — no "TBA" placeholders (consistent with existing site rule).
-- Content rules reused: no external links in body content, no AI buzzword list, mandatory "About MBA Compass" section, "Summary" wording.
+- **DataForSEO** — Google Ads Keyword Planner volume, 12-month monthly trend, CPC and competition index for the India / English market. This is the primary volume source.
+- **Semrush** (connected account) — keyword difficulty, SERP competition, related and question keywords, and competitor keyword gaps.
+- **Google Search Console** (already connected in this project) — actual clicks, impressions, CTR and average position for keywords the site already ranks for. Where GSC has data it wins, because it is our own measured traffic.
 
-## Technical outline
+Every returned metric carries a `source` and `fetched_at`. Results are cached in a new `keyword_metrics_cache` table (30-day freshness for volume, 7-day for GSC) so repeat lookups cost nothing and bulk runs stay inside provider limits.
 
-1. **Migration**: add `exams.exam_year int`, `logo_url text`, `official_website text`, `status text`, `registration_status text`, `reviewed_by text`, `sources jsonb`, `sections jsonb` (the modular payload: quick_answer, highlights, dates, overview, eligibility, registration, fees, pattern, marking, syllabus, resources, papers, difficulty, preparation, cutoffs, counselling, admit_card, exam_day, centres, result, comparisons, updates, related). New table `exam_generation_jobs` (exam name, year, status, step, log jsonb, result jsonb, error) with GRANTs for `authenticated` + `service_role`, RLS admin-only via `has_role`.
-2. **Edge functions**: `ai-exam-writer` (per-section generation, Firecrawl-grounded, `_shared/aiGateway.ts` + `MBA_COMPASS_SECTION_RULES`, admin-guarded) and `exam-generation-worker` (queue drain + self-kick, mirroring `master-refresh-worker`), so jobs survive a closed browser.
-3. **Admin UI**: `src/components/admin/ExamAIGenerator.tsx` (dialog + live console via job polling) and `src/components/admin/ExamSectionsEditor.tsx` (modular review/edit), wired into `AdminExams.tsx`.
-4. **Public template**: `src/pages/ExamDetailPage.tsx` rewritten to render `sections` through small module components in `src/components/exam/` (HeroBlock, QuickAnswer, HighlightCards, DatesTable, ModuleSection, CollegeModule, FaqAccordion, SourcesBox, StickyTocSidebar, MobileCtaBar). Uses existing `useScrollableTables`, `aiContentEnhancer`, `LastUpdatedBadge`, semantic tokens only.
-5. **SEO**: title `[Exam] [Year]: Dates, Syllabus, Pattern, Eligibility & Cutoff`, self-referencing canonical on `/exam/:slug` (year stays on the same URL — no duplicate year URLs), JSON-LD WebPage + BreadcrumbList + FAQPage + ItemList, exam routes already in the sitemap/SSR pipeline so prerendering picks up the new HTML.
+### 2. Blog Titles becomes data-driven
 
-## Out of scope for this pass
-New score/rank/percentile calculators, exam-centre live availability data, and per-exam infographic image generation (hooks are left in the schema so they can be added later).
+New flow when you enter a topic:
+
+1. Expand the topic into real candidate keywords (Google Autocomplete, PAA, Semrush related/questions).
+2. Fetch real metrics for every candidate through the service above.
+3. Score each candidate: volume, difficulty vs our authority, intent, trend direction, and whether we already rank for it in GSC.
+4. Only then ask the model to write titles — one title per selected keyword, with the real numbers passed in as facts it may not change.
+
+The table gains: real volume, 12-month trend sparkline, CPC, Semrush difficulty, current GSC position (if any), an opportunity score, and a **source badge** on every row. Where a provider has no data, the cell shows the AI estimate in grey with an "est." marker and a tooltip explaining it is unverified.
+
+### 3. Blog writer uses the data
+
+When you send a title to the writer, it now receives the keyword's real metrics, the top-10 SERP snapshot for that keyword, the secondary and question keywords with their own volumes, and the pages we already rank with. The prompt is extended so the article covers the actual question set people search, places the primary keyword against measured competitor patterns, and never states a search figure that did not come from a provider.
+
+The writer also returns, and the article page renders, complete structured data: BlogPosting, FAQPage, BreadcrumbList, plus author and publisher blocks — client-side and in the prerendered HTML so crawlers see the same thing.
+
+### 4. Same data across the admin SEO tools
+
+The keyword-metrics service is wired into the other places that currently guess: Keyword Research, Content Gaps, Competitor Analysis, Re-SEO / Auto-SEO scoring, the SEO health check and the pruning engine. A "data source" column and a provider-health strip (quota left, last successful call, cache hit rate) is added to the SEO dashboard so you can see when a provider is failing rather than silently falling back to estimates.
+
+### 5. SEO strategy layer
+
+On top of accurate numbers, a strategy panel that compares our GSC performance against Semrush competitor gaps and reports, per money page: keywords we rank 4-20 for and could push to page one, keywords competitors own that we have no page for, cannibalisation between our own pages, and decayed pages worth refreshing. Each row links straight into Re-SEO or the blog writer with the keyword pre-loaded.
+
+## Setup you need to do
+
+- **DataForSEO** — create an account at dataforseo.com and give me the API login and password; I will store them as backend secrets. Pay-per-use, roughly a few cents per hundred keywords.
+- **Semrush** — I will open the connect card so you can authorise your Semrush account. Your plan's limits apply.
+
+Both are called only from backend functions; no key ever reaches the browser.
+
+## Technical details
+
+- New table `keyword_metrics_cache` (keyword, locale, provider payloads, JSONB monthly trend, fetched_at) with RLS and grants: read for authenticated admins, full access for service role.
+- New edge function `keyword-metrics` with modes `lookup`, `bulk`, `expand`, `serp`, `gsc`. Batches DataForSEO in blocks of 100 keywords, honours `Retry-After` on 429, and returns partial results with a per-keyword status rather than failing the whole request.
+- Shared helper `_shared/keywordMetrics.ts` used by `ai-keyword-research`, `ai-blog-writer`, `auto-seo-engine`, `seo-reoptimize-worker`, `deep-seo-audit` and the pruning workers, so there is one code path for provider selection, caching and source tagging.
+- AI calls continue to run through `_shared/aiGateway.ts` on the two existing OpenAI keys; no new AI provider is added.
+- The response type gains `metrics: { value, source, confidence, fetched_at }` per keyword, and the frontend renders `source === "ai_estimate"` distinctly. No number is ever rendered without a source.
+- Affected backend functions are redeployed and each provider path is tested with a live call before the work is reported done.
