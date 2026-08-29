@@ -13460,6 +13460,37 @@ export type Database = {
         Args: { _job_id: string }
         Returns: undefined
       }
+      seo_intel_claim_job: {
+        Args: { p_lease_seconds?: number }
+        Returns: {
+          created_at: string
+          data_source: string | null
+          dedupe_key: string | null
+          error: string | null
+          errors: Json
+          finished_at: string | null
+          id: string
+          job_type: string
+          lease_until: string | null
+          max_retries: number
+          payload: Json
+          priority: number
+          records_processed: number
+          retry_count: number
+          scheduled_for: string
+          started_at: string | null
+          status: string
+          triggered_by: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "seo_intel_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      seo_intel_recover_stalled: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       system_check_cron_jobs: {
