@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.exam-generation-worker]
 verify_jwt = false
+
+[functions.seo-intel-scheduler]
+verify_jwt = false
+
+[functions.seo-intel-worker]
+verify_jwt = false
