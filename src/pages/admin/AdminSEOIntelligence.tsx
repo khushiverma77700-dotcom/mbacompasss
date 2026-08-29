@@ -112,6 +112,13 @@ const AdminSEOIntelligence = () => {
   const [testResults, setTestResults] = useState<Record<string, any> | null>(null);
   const [form, setForm] = useState<any>(null);
 
+  // Advanced intelligence layer (demand, forecasts, opportunities, strategy…).
+  const {
+    data: intel, busy: intelBusy, load: reloadIntel,
+    runStage: runIntelStage, setItemStatus: setIntelItemStatus,
+  } = useIntelData();
+
+
   /* ── data loading ── */
   const call = useCallback(async (action: string, payload: Record<string, unknown> = {}) => {
     const { data, error } = await supabase.functions.invoke("seo-intel-control", { body: { action, ...payload } });
