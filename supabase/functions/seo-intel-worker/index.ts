@@ -768,6 +768,12 @@ const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?
   report: runReport,
 };
 
+// Advanced intelligence stages share one signature (sb, settings, payload).
+for (const [type, fn] of Object.entries(ADVANCED_STAGES)) {
+  HANDLERS[type] = (ctx: Ctx) => fn(ctx.sb, ctx.settings, ctx.job.payload ?? {});
+}
+
+
 /* ───────────────────────── entry point ───────────────────────── */
 
 Deno.serve(async (req) => {
