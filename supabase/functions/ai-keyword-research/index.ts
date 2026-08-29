@@ -121,7 +121,8 @@ async function fetchAlphabetExpansion(query: string): Promise<string[]> {
 function buildKeywordResearchPayload(
   query: string,
   existingKeywords: string[],
-  realSuggestions: { google: string[]; paa: string[]; trends: string[]; wiki: string[]; alphabet: string[] }
+  realSuggestions: { google: string[]; paa: string[]; trends: string[]; wiki: string[]; alphabet: string[] },
+  factBlock = "",
 ) {
   const allRealKeywords = [...new Set([
     ...realSuggestions.google, ...realSuggestions.paa, ...realSuggestions.alphabet
@@ -132,10 +133,12 @@ function buildKeywordResearchPayload(
 CRITICAL RULES:
 - Use ONLY the real Google autocomplete data provided below for primary keywords
 - For each keyword you list, mark the source accurately (google_suggest, paa, trends, alphabet, ai_enriched)
-- Search volume estimates must be REALISTIC for India (not inflated). Most long-tail keywords get 100-2000 searches/month
+- NEVER invent search volume, CPC or difficulty. A verified metrics block is supplied below: copy those numbers EXACTLY for keywords that appear in it. For any keyword not in that block, set searchVolume to 0 and difficulty to 0 — the system replaces them with measured provider data afterwards.
+- Strongly prefer keywords that appear in the verified metrics block; they are the only ones with proven demand
 - Include a mix: head terms (high volume, high competition), body terms, and long-tail terms (low volume, low competition)
 - Group keywords by clear categories (exam-specific, city-specific, comparison, preparation, fees, etc.)
 - Prioritize keywords where a new/growing site can actually compete`;
+
 
   const userPrompt = `Research keywords for: "${query}"
 
