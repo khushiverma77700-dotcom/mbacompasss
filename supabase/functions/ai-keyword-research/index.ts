@@ -236,17 +236,25 @@ Instructions:
   return { systemPrompt, userPrompt, tool, toolName: "keyword_data" };
 }
 
-function buildBlogTitlesPayload(query: string) {
-  const systemPrompt = `You are an expert content strategist for Indian MBA education. Research blog topics that rank well and drive traffic. For each title generate SEO-optimized meta title (<60 chars), compelling meta description (120-155 chars), and clean URL slug.`;
+function buildBlogTitlesPayload(query: string, factBlock = "", candidates: string[] = []) {
+  const systemPrompt = `You are an expert content strategist for Indian MBA education. Research blog topics that rank well and drive traffic. For each title generate SEO-optimized meta title (<60 chars), compelling meta description (120-155 chars), and clean URL slug.
+
+CRITICAL DATA RULES:
+- The targetKeyword of every title MUST be copied verbatim from the verified keyword list supplied by the user message. Do not invent keywords.
+- NEVER invent search volume. Copy searchVolume exactly from the verified metrics block; if a keyword is absent there, use 0.`;
   const userPrompt = `Generate 20 high-potential blog title ideas for: "${query}"
 
+${factBlock}
+
+${candidates.length ? `PICK targetKeyword ONLY FROM THIS VERIFIED LIST (highest opportunity first):\n${candidates.slice(0, 60).map((k, i) => `${i + 1}. ${k}`).join("\n")}` : ""}
+
 For each title provide:
-- title (CTR + SEO optimized)
+- title (CTR + SEO optimized, built around the chosen verified keyword)
 - metaTitle (under 60 chars, primary keyword)
 - metaDescription (120-155 chars, CTA)
 - slug (clean, hyphens, no stop words)
-- target keyword
-- estimated monthly search volume
+- targetKeyword (verbatim from the verified list)
+- searchVolume (copied from the verified metrics block, else 0)
 - competition level
 - content type (listicle/guide/comparison/news/how-to/case-study)
 - estimated word count needed to rank
@@ -257,6 +265,7 @@ Also suggest:
 - 5 evergreen topics
 - 5 trending/timely topics
 - 4-week content calendar`;
+
 
   const tool = {
     type: "function",
