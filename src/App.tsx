@@ -118,6 +118,7 @@ const AdminAllLinks = lazyWithPreload(() => import("./pages/admin/AdminAllLinks"
 const AdminComparisons = lazyWithPreload(() => import("./pages/admin/AdminComparisons"));
 const AdminCoachingResults = lazyWithPreload(() => import("./pages/admin/AdminCoachingResults"));
 const AdminSEODashboard = lazyWithPreload(() => import("./pages/admin/AdminSEODashboard"));
+const AdminSEOIntelligence = lazyWithPreload(() => import("./pages/admin/AdminSEOIntelligence"));
 const AdminReseoAuditLog = lazyWithPreload(() => import("./pages/admin/AdminReseoAuditLog"));
 const AdminSEOHealthCheck = lazyWithPreload(() => import("./pages/admin/AdminSEOHealthCheck"));
 const AdminImageSeo = lazyWithPreload(() => import("./pages/admin/AdminImageSeo"));
