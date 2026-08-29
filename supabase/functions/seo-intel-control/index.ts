@@ -164,6 +164,63 @@ Deno.serve(async (req) => {
         return json({ ok: true });
       }
 
+      /* ─────────── advanced intelligence layer ─────────── */
+      case "intel_snapshot": {
+        const locale = settings.semrush_database || "in";
+        const [
+          demand, intent, serp, volatility, forecasts, cannib, gaps, entities,
+          links, ctr, anomalies, opps, profiles, outcomes, graph, strategy, sources,
+        ] = await Promise.all([
+          sb.from("seo_intel_demand").select("*").eq("locale", locale).order("emerging", { ascending: false }).limit(120),
+          sb.from("seo_intel_intent").select("*").eq("locale", locale).order("shift_detected", { ascending: false }).limit(200),
+          sb.from("seo_intel_serp").select("*").eq("locale", locale).order("captured_on", { ascending: false }).limit(60),
+          sb.from("seo_intel_volatility").select("*").order("detected_on", { ascending: false }).limit(20),
+          sb.from("seo_intel_forecasts").select("*").eq("locale", locale).order("probability", { ascending: false, nullsFirst: false }).limit(120),
+          sb.from("seo_intel_cannibalization").select("*").eq("status", "open").order("overlap_score", { ascending: false }).limit(60),
+          sb.from("seo_intel_content_gaps").select("*").eq("status", "open").order("value_score", { ascending: false, nullsFirst: false }).limit(120),
+          sb.from("seo_intel_entities").select("*").order("score", { ascending: false }).limit(200),
+          sb.from("seo_intel_link_opportunities").select("*").eq("status", "open").order("score", { ascending: false }).limit(120),
+          sb.from("seo_intel_ctr_intel").select("*").order("ctr_delta_pct", { ascending: true }).limit(120),
+          sb.from("seo_intel_anomalies").select("*").order("detected_on", { ascending: false }).limit(80),
+          sb.from("seo_intel_opportunities").select("*").eq("status", "open").order("priority_rank").limit(150),
+          sb.from("seo_intel_page_profiles").select("path, competitive_gap_score, confidence, summary, updated_at").order("competitive_gap_score", { ascending: false, nullsFirst: false }).limit(60),
+          sb.from("seo_intel_rec_outcomes").select("*").order("implemented", { ascending: false }),
+          sb.from("seo_intel_graph_edges").select("from_type, from_id, edge, to_type, to_id, weight").limit(1500),
+          sb.from("seo_intel_strategy").select("*").order("generated_at", { ascending: false }).limit(1).maybeSingle(),
+          sb.from("seo_intel_kw_sources").select("keyword, metric, source, value, value_text, label, confidence, observed_at").order("observed_at", { ascending: false }).limit(400),
+        ]);
+        return json({
+          locale,
+          demand: demand.data ?? [], intent: intent.data ?? [], serp: serp.data ?? [],
+          volatility: volatility.data ?? [], forecasts: forecasts.data ?? [],
+          cannibalization: cannib.data ?? [], gaps: gaps.data ?? [], entities: entities.data ?? [],
+          links: links.data ?? [], ctr: ctr.data ?? [], anomalies: anomalies.data ?? [],
+          opportunities: opps.data ?? [], profiles: profiles.data ?? [],
+          learning: outcomes.data ?? [], graph: graph.data ?? [],
+          strategy: strategy.data ?? null, keyword_sources: sources.data ?? [],
+        });
+      }
+
+      case "page_profile": {
+        const path = String(body.path ?? "");
+        const { data } = await sb.from("seo_intel_page_profiles").select("*").eq("path", path).maybeSingle();
+        if (!data) return json({ error: "No profile stored for this page yet. Run the page profile stage first." }, 404);
+        return json({ profile: data });
+      }
+
+      case "intel_item_action": {
+        const table = String(body.table ?? "");
+        const allowedTables = ["seo_intel_opportunities", "seo_intel_link_opportunities", "seo_intel_content_gaps", "seo_intel_cannibalization"];
+        if (!allowedTables.includes(table)) return json({ error: "Unsupported item type." }, 400);
+        const status = String(body.status ?? "");
+        if (!["open", "actioned", "dismissed", "done"].includes(status)) return json({ error: "Unsupported status." }, 400);
+        const { error } = await sb.from(table).update({ status }).eq("id", String(body.id ?? ""));
+        if (error) return json({ error: error.message }, 400);
+        await logAudit(sb, { actor, actor_label: "admin", action: `${table}_${status}`, entity: table, entity_id: String(body.id ?? "") });
+        return json({ ok: true });
+      }
+
+
       /* ─────────── provider tests (real requests) ─────────── */
       case "test_sources": {
         const results: Record<string, any> = {};

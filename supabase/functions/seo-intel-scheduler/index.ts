@@ -69,7 +69,25 @@ Deno.serve(async (req) => {
     { type: "competitor_scan", everyMin: settings.freq_competitor_min, priority: 6 },
     { type: "analyze", everyMin: settings.freq_monitor_min, priority: 7 },
     { type: "verify", everyMin: 1440, priority: 8 },
-    { type: "report", everyMin: settings.freq_report_min, priority: 9 },
+    // ── advanced intelligence layer: analysis over already-collected signals ──
+    { type: "demand_model", everyMin: Math.max(settings.freq_rank_min, 720), payload: { limit: 30 }, priority: 10 },
+    { type: "intent_scan", everyMin: 1440, payload: { limit: 150 }, priority: 10 },
+    { type: "serp_intel", everyMin: Math.max(settings.freq_competitor_min, 1440), payload: { limit: 6 }, priority: 11 },
+    { type: "volatility_scan", everyMin: 720, priority: 11 },
+    { type: "forecast", everyMin: 1440, payload: { limit: 80 }, priority: 12 },
+    { type: "cannibalization", everyMin: 1440, priority: 12 },
+    { type: "ctr_intel", everyMin: 1440, priority: 12 },
+    { type: "entity_map", everyMin: 2880, priority: 13 },
+    { type: "link_intel", everyMin: 1440, priority: 13 },
+    { type: "content_gaps", everyMin: 2880, payload: { limit: 5 }, priority: 14 },
+    { type: "anomaly_scan", everyMin: 720, priority: 14 },
+    { type: "impact_attribution", everyMin: 1440, priority: 15 },
+    { type: "opportunity_score", everyMin: 720, priority: 16 },
+    { type: "page_twin", everyMin: 1440, payload: { limit: 25 }, priority: 17 },
+    { type: "knowledge_graph", everyMin: 2880, priority: 18 },
+    { type: "strategy", everyMin: 10080, priority: 19 },
+    { type: "report", everyMin: settings.freq_report_min, priority: 20 },
+
   ];
 
   // Only the explicitly requested types when an admin runs a single stage now.

@@ -17,6 +17,8 @@ import { getKeywordMetrics, semrushSerp, semrushConfigured } from "../_shared/ke
 import { firecrawlScrapeStrict, firecrawlConfigured, FirecrawlError } from "../_shared/firecrawlGateway.ts";
 import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { ADVANCED_STAGES, validateRecommendation, upsertRecommendation } from "../_shared/seoIntel2.ts";
+
 
 const MAX_DEPTH = 25;
 const LEASE_SECONDS = 170;
@@ -630,14 +632,11 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
   const recs = parsed?.recommendations ?? [];
 
   let inserted = 0;
+  let suppressed = 0;
+  let updated = 0;
   for (const r of recs.slice(0, 25)) {
     if (!r?.problem) continue;
-    // Skip an identical open recommendation for the same page.
-    const { data: dupe } = await sb.from("seo_intel_recommendations")
-      .select("id").eq("path", r.path ?? null).eq("problem", r.problem)
-      .in("status", ["new", "review", "approved"]).maybeSingle();
-    if (dupe) continue;
-    const { error } = await sb.from("seo_intel_recommendations").insert({
+    const candidate = {
       path: r.path ?? null,
       keyword: r.keyword ?? null,
       category: r.category ?? "general",
@@ -654,9 +653,24 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
       data_source: "openai+gsc",
       ai_model: "gpt-4.1-mini",
       auto_appliable: ["title", "meta_description", "meta"].includes(String(r.change_type ?? "").toLowerCase()),
-    });
-    if (!error) inserted++;
+    };
+    // Self-validation: every recommendation must survive a check against the
+    // stored evidence before it is ever shown to an admin.
+    const validation = await validateRecommendation(sb, candidate);
+    if (!validation.ok) {
+      suppressed++;
+      await logActivity(sb, {
+        event: "Recommendation suppressed",
+        detail: `${candidate.path ?? "site"} — ${validation.reason}`,
+        level: "warn", job_type: "analyze",
+      });
+      continue;
+    }
+    const outcome = await upsertRecommendation(sb, candidate, validation);
+    if (outcome === "inserted") inserted++;
+    else if (outcome === "updated") updated++;
   }
+
   await markSource(sb, "openai", { configured: true, status: "connected", last_sync_at: nowIso() });
   if (inserted) {
     await notify(sb, {
@@ -665,7 +679,11 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
       body: "Open the Recommendations tab to review, approve or reject them.",
     });
   }
-  return { records: inserted };
+  return {
+    records: inserted,
+    detail: `${inserted} new, ${updated} refreshed, ${suppressed} suppressed for weak evidence`,
+  };
+
 }
 
 /** Did applied changes actually help? Compare rank/traffic before vs after. */
@@ -767,6 +785,12 @@ const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?
   verify: runVerify,
   report: runReport,
 };
+
+// Advanced intelligence stages share one signature (sb, settings, payload).
+for (const [type, fn] of Object.entries(ADVANCED_STAGES)) {
+  HANDLERS[type] = (ctx: Ctx) => fn(ctx.sb, ctx.settings, ctx.job.payload ?? {});
+}
+
 
 /* ───────────────────────── entry point ───────────────────────── */
 
