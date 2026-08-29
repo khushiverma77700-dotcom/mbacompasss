@@ -17,6 +17,8 @@ import { getKeywordMetrics, semrushSerp, semrushConfigured } from "../_shared/ke
 import { firecrawlScrapeStrict, firecrawlConfigured, FirecrawlError } from "../_shared/firecrawlGateway.ts";
 import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { ADVANCED_STAGES } from "../_shared/seoIntel2.ts";
+
 
 const MAX_DEPTH = 25;
 const LEASE_SECONDS = 170;
