@@ -220,6 +220,201 @@ Deno.serve(async (req) => {
         return json({ ok: true });
       }
 
+      /* ─────────── live operations feed (polled by the dashboard) ─────────── */
+      case "live_status": {
+        const since24h = new Date(Date.now() - 864e5).toISOString();
+        const [runningJobs, queued, recent, sources, freshness, kwFresh] = await Promise.all([
+          sb.from("seo_intel_jobs")
+            .select("id, job_type, status, started_at, records_processed, retry_count, payload, lease_until, triggered_by")
+            .eq("status", "running").order("started_at"),
+          sb.from("seo_intel_jobs")
+            .select("id, job_type, status, scheduled_for, priority, triggered_by")
+            .in("status", ["queued", "parked"]).order("priority").order("scheduled_for").limit(25),
+          sb.from("seo_intel_jobs")
+            .select("id, job_type, status, records_processed, error, started_at, finished_at, retry_count, triggered_by")
+            .not("finished_at", "is", null).order("finished_at", { ascending: false }).limit(40),
+          sb.from("seo_intel_sources").select("source_key, label, kind, configured, status, last_sync_at, next_sync_at, last_error").order("label"),
+          sb.from("seo_intel_pages")
+            .select("perf_updated_at, last_crawl_at, psi_checked_at, indexed_checked_at, live_crawl_at")
+            .order("updated_at", { ascending: false }).limit(500),
+          sb.from("seo_intel_keywords").select("last_checked_at").order("last_checked_at", { ascending: false, nullsFirst: false }).limit(1).maybeSingle(),
+        ]);
+
+        const maxOf = (rows: any[], key: string) => {
+          const vals = rows.map((r) => r[key]).filter(Boolean).sort();
+          return vals.length ? vals[vals.length - 1] : null;
+        };
+        const pageRows = freshness.data ?? [];
+        const recentRows = recent.data ?? [];
+
+        // Records processed per stage in the last 24 hours — actual worker output.
+        const throughput: Record<string, { runs: number; records: number; failed: number; last_finished_at: string | null }> = {};
+        for (const j of recentRows) {
+          if (!j.finished_at || j.finished_at < since24h) continue;
+          const t = (throughput[j.job_type] ??= { runs: 0, records: 0, failed: 0, last_finished_at: null });
+          t.runs++;
+          t.records += j.records_processed ?? 0;
+          if (j.status === "failed") t.failed++;
+          if (!t.last_finished_at || j.finished_at > t.last_finished_at) t.last_finished_at = j.finished_at;
+        }
+
+        const gate = withinSchedule(settings);
+        return json({
+          engine: {
+            enabled: settings.engine_enabled,
+            running: gate.ok,
+            reason: gate.reason ?? null,
+            paused_reason: settings.paused_reason,
+            last_full_scan_at: settings.last_full_scan_at ?? null,
+            last_report_at: settings.last_report_at ?? null,
+          },
+          running: (runningJobs.data ?? []).map((j: any) => ({ ...j, label: JOB_LABELS[j.job_type] ?? j.job_type })),
+          queued: (queued.data ?? []).map((j: any) => ({ ...j, label: JOB_LABELS[j.job_type] ?? j.job_type })),
+          recent: recentRows.map((j: any) => ({ ...j, label: JOB_LABELS[j.job_type] ?? j.job_type })),
+          throughput,
+          failures_24h: recentRows.filter((j: any) => j.status === "failed" && j.finished_at >= since24h).length,
+          next_scan_at: (queued.data ?? [])[0]?.scheduled_for ?? null,
+          sources: sources.data ?? [],
+          freshness: {
+            performance: maxOf(pageRows, "perf_updated_at"),
+            crawl: maxOf(pageRows, "last_crawl_at"),
+            speed: maxOf(pageRows, "psi_checked_at"),
+            indexing: maxOf(pageRows, "indexed_checked_at"),
+            crawler_view: maxOf(pageRows, "live_crawl_at"),
+            keywords: kwFresh.data?.last_checked_at ?? null,
+          },
+          server_time: nowIso(),
+          job_labels: JOB_LABELS,
+        });
+      }
+
+      /* ─────────── impact & change report (recorded history only) ─────────── */
+      case "impact_report": {
+        const [snapshots, experiments, auditRows, ranks] = await Promise.all([
+          sb.from("seo_intel_daily_snapshots").select("*").order("captured_on", { ascending: false }).limit(60),
+          sb.from("seo_intel_experiments").select("*").order("changed_on", { ascending: false }).limit(120),
+          sb.from("seo_intel_audit")
+            .select("id, action, entity, path, before_value, after_value, data_source, created_at, actor_label")
+            .order("created_at", { ascending: false }).limit(60),
+          sb.from("seo_intel_rank_history")
+            .select("keyword, position, captured_on, clicks, impressions, path")
+            .gte("captured_on", new Date(Date.now() - 31 * 864e5).toISOString().slice(0, 10))
+            .order("captured_on", { ascending: false }).limit(4000),
+        ]);
+
+        const snaps = snapshots.data ?? [];
+        const latest = snaps[0] ?? null;
+        // Pick the recorded snapshot closest to N days before the latest one.
+        const baselineFor = (days: number) => {
+          if (!latest) return null;
+          const target = new Date(new Date(latest.captured_on).getTime() - days * 864e5).toISOString().slice(0, 10);
+          const older = snaps.filter((s: any) => s.captured_on <= target);
+          return older.length ? older[0] : null;
+        };
+        const METRICS = [
+          "clicks", "impressions", "ctr", "avg_position", "ranking_keywords",
+          "rank_1", "top_3_calc", "top_5", "top_10", "top_20", "indexed_pages",
+          "avg_health", "avg_psi_perf", "avg_lcp_ms",
+        ] as const;
+        const readMetric = (row: any, m: string) =>
+          m === "top_3_calc"
+            ? ((row?.rank_1 ?? 0) + (row?.rank_2 ?? 0) + (row?.rank_3 ?? 0)) || null
+            : row?.[m] ?? null;
+
+        const windowFor = (days: number) => {
+          const base = baselineFor(days);
+          const deltas: Record<string, any> = {};
+          for (const m of METRICS) {
+            const now = readMetric(latest, m);
+            const before = readMetric(base, m);
+            deltas[m] = {
+              current: now,
+              previous: before,
+              delta: now != null && before != null ? Number((now - before).toFixed(2)) : null,
+              // "lower is better" metrics are flagged so the UI never mislabels a win.
+              lower_is_better: m === "avg_position" || m === "avg_lcp_ms",
+              status: now == null
+                ? "no_data"
+                : before == null
+                ? "awaiting_baseline"
+                : now === before
+                ? "unchanged"
+                : "measured",
+            };
+          }
+          return {
+            days,
+            baseline_date: base?.captured_on ?? null,
+            current_date: latest?.captured_on ?? null,
+            comparable: !!(latest && base),
+            metrics: deltas,
+          };
+        };
+
+        // Keyword-level movement straight out of recorded rank history.
+        const byKeyword = new Map<string, { keyword: string; points: { d: string; p: number | null }[] }>();
+        for (const r of ranks.data ?? []) {
+          const e = byKeyword.get(r.keyword) ?? { keyword: r.keyword, points: [] };
+          e.points.push({ d: r.captured_on, p: r.position });
+          byKeyword.set(r.keyword, e);
+        }
+        const movement = { improved: [] as any[], declined: [] as any[], unchanged: 0, insufficient_history: 0 };
+        for (const e of byKeyword.values()) {
+          const pts = e.points.filter((p) => p.p != null).sort((a, b) => (a.d < b.d ? 1 : -1));
+          if (pts.length < 2) { movement.insufficient_history++; continue; }
+          const now = Number(pts[0].p);
+          const then = Number(pts[pts.length - 1].p);
+          const delta = Number((then - now).toFixed(2));
+          const item = { keyword: e.keyword, from: then, to: now, delta, from_date: pts[pts.length - 1].d, to_date: pts[0].d };
+          if (delta > 0.5) movement.improved.push(item);
+          else if (delta < -0.5) movement.declined.push(item);
+          else movement.unchanged++;
+        }
+        movement.improved.sort((a, b) => b.delta - a.delta);
+        movement.declined.sort((a, b) => a.delta - b.delta);
+
+        const exps = experiments.data ?? [];
+        return json({
+          has_history: snaps.length > 0,
+          snapshot_count: snaps.length,
+          latest_snapshot: latest,
+          snapshots: snaps.slice().reverse(),
+          windows: { today: windowFor(1), d7: windowFor(7), d30: windowFor(30) },
+          changes: {
+            improved: exps.filter((e: any) => e.outcome === "improved"),
+            declined: exps.filter((e: any) => e.outcome === "declined"),
+            unchanged: exps.filter((e: any) => e.outcome === "no_change"),
+            analyzing: exps.filter((e: any) => !e.outcome || e.outcome === "pending" || !e.result_captured_on),
+          },
+          movement: { improved: movement.improved.slice(0, 40), declined: movement.declined.slice(0, 40), unchanged: movement.unchanged, insufficient_history: movement.insufficient_history },
+          audit: auditRows.data ?? [],
+        });
+      }
+
+      /* ─────────── approval queue: review → preview → approve → apply → verify ─────────── */
+      case "approval_queue": {
+        const [recs, tasks, consoleTasks] = await Promise.all([
+          sb.from("seo_intel_recommendations")
+            .select("*")
+            .in("status", ["new", "review", "approved", "applied"])
+            .order("priority").order("opportunity_score", { ascending: false, nullsFirst: false }).limit(120),
+          sb.from("seo_intel_tasks").select("*").not("status", "in", '("completed","rejected")').order("priority").limit(80),
+          sb.from("seo_intel_console_tasks").select("*").neq("status", "completed").order("created_at", { ascending: false }).limit(60),
+        ]);
+        const list = recs.data ?? [];
+        const canAutoApply = (r: any) =>
+          !!r.after_value && !!r.path && /title|meta|description/i.test(String(r.change_type ?? ""));
+        return json({
+          pending: list.filter((r: any) => ["new", "review"].includes(r.status)).map((r: any) => ({ ...r, can_auto_apply: canAutoApply(r) })),
+          approved: list.filter((r: any) => r.status === "approved").map((r: any) => ({ ...r, can_auto_apply: canAutoApply(r) })),
+          applied: list.filter((r: any) => r.status === "applied"),
+          tasks: tasks.data ?? [],
+          console_tasks: consoleTasks.data ?? [],
+          auto_apply_safe: settings.auto_apply_safe,
+        });
+      }
+
+
 
       /* ─────────── provider tests (real requests) ─────────── */
       case "test_sources": {
