@@ -297,7 +297,7 @@ const AdminSEOIntelligence = () => {
             <Button size="sm" variant="outline" disabled={!!busy} onClick={() => act("Source test", async () => setTestResults((await call("test_sources")).results))}>
               <ShieldCheck className="mr-2 h-4 w-4" /> Test all data sources
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => { loadSnapshot(); loadTables(); }}>
+            <Button size="sm" variant="ghost" onClick={() => { loadSnapshot(); loadTables(); reloadIntel(true); }}>
               <RefreshCw className="mr-2 h-4 w-4" /> Refresh view
             </Button>
           </div>
