@@ -30,6 +30,11 @@ import {
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar,
 } from "recharts";
+import {
+  useIntelData, AdvancedHeaderStat, StrategyPanel, OpportunitiesPanel, DemandPanel,
+  ForecastPanel, GapsPanel, EntityPanel,
+} from "@/components/admin/seo/SeoIntelAdvanced";
+
 
 /* ───────────────────────── types ───────────────────────── */
 
