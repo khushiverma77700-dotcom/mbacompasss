@@ -136,6 +136,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     items: [
       { label: "Page Editor & SEO", path: "/admin/page-editor", icon: PenLine },
       { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
+      { label: "AI SEO Intelligence Center", path: "/admin/seo-intelligence", icon: Activity },
       { label: "Re-SEO Optimizer", path: "/admin/seo-dashboard?tab=reseo", icon: RefreshCw },
       { label: "CTR Optimizer", path: "/admin/ctr-optimizer", icon: TrendingUp },
       { label: "Website Optimizer", path: "/admin/website-optimizer", icon: Sparkles },
