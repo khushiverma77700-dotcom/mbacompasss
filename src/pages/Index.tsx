@@ -40,6 +40,33 @@ const FreeToolsShowcase = lazy(() => import("@/components/FreeToolsShowcase"));
 const ROIComparisonTable = lazy(() => import("@/components/ROIComparisonTable"));
 const FreebiesPreview = lazy(() => import("@/components/FreebiesPreview"));
 const TopperWall = lazy(() => import("@/components/TopperWall"));
+const HomeAdmissionTimeline = lazy(() => import("@/components/HomeAdmissionTimeline"));
+const HomePersonaPaths = lazy(() => import("@/components/HomePersonaPaths"));
+const HomeSalaryInsights = lazy(() => import("@/components/HomeSalaryInsights"));
+const HomeSpecializations = lazy(() => import("@/components/HomeSpecializations"));
+const HomeQuickAnswers = lazy(() => import("@/components/HomeQuickAnswers"));
+
+/**
+ * Warms the chunks a visitor almost always scrolls into, but only when the
+ * browser is idle and the connection is not metered/slow. Keeps first paint
+ * untouched while removing the scroll-time loading flash.
+ */
+const prefetchNextChunks = () => {
+  const conn = (navigator as any).connection;
+  if (conn?.saveData) return;
+  if (typeof conn?.effectiveType === "string" && /2g/.test(conn.effectiveType)) return;
+
+  const run = () => {
+    import("@/components/HomePersonaPaths");
+    import("@/components/HomeAdmissionTimeline");
+    import("@/components/TopRankedCollegesSection");
+    import("@/components/StatsCounterSection");
+    import("@/components/PopularExamsSection");
+  };
+  const ric = (window as any).requestIdleCallback;
+  if (typeof ric === "function") ric(run, { timeout: 2600 });
+  else window.setTimeout(run, 1800);
+};
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
