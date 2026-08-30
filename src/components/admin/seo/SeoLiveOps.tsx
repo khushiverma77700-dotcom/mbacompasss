@@ -766,11 +766,11 @@ export const ApprovalPanel = ({ onChanged }: { onChanged?: () => void }) => {
               <div className="grid gap-2 sm:grid-cols-2">
                 <div className="rounded border p-2">
                   <div className="mb-1 text-xs font-semibold text-muted-foreground">Before</div>
-                  <div className="whitespace-pre-wrap break-words text-xs">{preview.before_value ?? "— (nothing recorded)"}</div>
+                  <div className="whitespace-pre-wrap break-words text-xs">{asText(preview.before_value, "— (nothing recorded)")}</div>
                 </div>
                 <div className="rounded border p-2">
                   <div className="mb-1 text-xs font-semibold text-muted-foreground">After</div>
-                  <div className="whitespace-pre-wrap break-words text-xs">{preview.after_value ?? "— (needs a human edit)"}</div>
+                  <div className="whitespace-pre-wrap break-words text-xs">{asText(preview.after_value, "— (needs a human edit)")}</div>
                 </div>
               </div>
               <div className="text-xs text-muted-foreground">

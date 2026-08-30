@@ -39,6 +39,7 @@ import {
 } from "@/components/admin/seo/SeoLiveOps";
 import SeoResearchConsole from "@/components/admin/seo/SeoResearchConsole";
 import SeoLiveAnalytics from "@/components/admin/seo/SeoLiveAnalytics";
+import { asText } from "@/components/admin/seo/SeoLiveOps";
 
 /* ── Navigation: 23 views grouped into 6 plain-language sections ── */
 const TAB_SECTIONS: Array<{
@@ -589,7 +590,7 @@ const AdminSEOIntelligence = () => {
                           <span className="font-medium">{a.event}</span>
                           <span className="text-muted-foreground">{when(a.created_at)}</span>
                         </div>
-                        {a.detail && <div className={`mt-1 ${a.level === "error" ? "text-red-600" : a.level === "warn" ? "text-amber-600" : "text-muted-foreground"}`}>{a.detail}</div>}
+                        {a.detail && <div className={`mt-1 ${a.level === "error" ? "text-red-600" : a.level === "warn" ? "text-amber-600" : "text-muted-foreground"}`}>{asText(a.detail, "")}</div>}
                       </div>
                     ))}
                     {!snap?.activity?.length && <p className="text-sm text-muted-foreground">Nothing yet. Switch the engine on or run a cycle.</p>}

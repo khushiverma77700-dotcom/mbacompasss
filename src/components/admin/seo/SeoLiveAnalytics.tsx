@@ -22,6 +22,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import { callControl, type LiveStatus } from "@/components/admin/seo/SeoLiveOps";
+import { asText } from "@/components/admin/seo/SeoLiveOps";
 
 type Lever = {
   id: number; group: string; name: string; scope: "page" | "keyword";
@@ -250,7 +251,7 @@ const SeoLiveAnalytics = ({
                             : { duration: 0.6 }}
                         />
                       </div>
-                      {p.detail && <div className="mt-1 text-xs text-muted-foreground">{p.detail}</div>}
+                      {p.detail && <div className="mt-1 text-xs text-muted-foreground">{asText(p.detail, "")}</div>}
                     </motion.div>
                   );
                 })}

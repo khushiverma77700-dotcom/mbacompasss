@@ -20,6 +20,7 @@ import {
   RefreshCw, CheckCircle2, AlertTriangle, Zap,
 } from "lucide-react";
 import { callControl } from "./SeoLiveOps";
+import { asText } from "@/components/admin/seo/SeoLiveOps";
 
 const num = (v: any) => (v === null || v === undefined ? "—" : Number(v).toLocaleString("en-IN"));
 const ago = (v: any) => {
@@ -247,7 +248,7 @@ const SeoResearchConsole = () => {
                       <p className={`text-sm font-medium ${LEVEL_STYLES[a.level] ?? ""}`}>{a.event}</p>
                       <span className="whitespace-nowrap text-[11px] text-muted-foreground">{ago(a.created_at)}</span>
                     </div>
-                    {a.detail && <p className="mt-0.5 text-xs text-muted-foreground">{a.detail}</p>}
+                    {a.detail && <p className="mt-0.5 text-xs text-muted-foreground">{asText(a.detail, "")}</p>}
                     {(a.label || a.records) && (
                       <div className="mt-1 flex flex-wrap gap-1.5">
                         {a.label && <Badge variant="outline" className="text-[10px]">{a.label}</Badge>}
@@ -408,8 +409,8 @@ const SeoResearchConsole = () => {
                   </div>
                   {c.change_summary && <p className="mt-0.5 text-xs text-muted-foreground">{c.change_summary}</p>}
                   <div className="mt-1 grid gap-1 text-xs sm:grid-cols-2">
-                    <p className="text-muted-foreground">Before: {c.before_value || "—"}</p>
-                    <p>After: {c.after_value || "—"}</p>
+                    <p className="text-muted-foreground">Before: {asText(c.before_value)}</p>
+                    <p>After: {asText(c.after_value)}</p>
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     Changed {c.changed_on}
