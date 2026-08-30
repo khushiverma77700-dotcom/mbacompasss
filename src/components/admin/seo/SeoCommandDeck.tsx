@@ -200,10 +200,13 @@ export default function SeoCommandDeck() {
             <GaugeRing pct={queueLoad} value={fmtInt(queued.length, "0")} label="Queue depth" tone="amber" live={queued.length > 0} />
           </div>
 
-          <div className="flex flex-col items-center gap-2">
-            <RadarSweep blips={Math.max(4, running.length + Math.min(20, queued.length))} active={working} />
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Scanner</span>
-          </div>
+          {m.heavy && (
+            <div className="flex flex-col items-center gap-2">
+              <RadarSweep blips={Math.max(4, running.length + Math.min(20, queued.length))} active={working} />
+              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Scanner</span>
+            </div>
+          )}
+
 
           <div className="space-y-2">
             <div className="grid gap-2 sm:grid-cols-3">
