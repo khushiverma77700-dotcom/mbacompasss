@@ -63,8 +63,13 @@ const AdminArticles = () => {
     if (data) setComparisons(data);
   };
 
+  // List view never needs the full article body — that alone was megabytes of
+  // HTML per page load. The body is fetched on demand when editing.
+  const LIST_COLUMNS =
+    "id, title, slug, excerpt, category, author, published, featured, status, priority, keywords, meta_title, meta_description, h1_tag, primary_keyword, funnel_stage, cluster_id, is_comparison, comparison_id, banner_url, mobile_banner_url, image_url, intro, created_at, updated_at";
+
   const fetchArticles = async () => {
-    const { data } = await supabase.from("articles").select("*").order("created_at", { ascending: false }).limit(10000);
+    const { data } = await supabase.from("articles").select(LIST_COLUMNS).order("created_at", { ascending: false }).limit(10000);
     if (data) setArticles(data);
   };
 
