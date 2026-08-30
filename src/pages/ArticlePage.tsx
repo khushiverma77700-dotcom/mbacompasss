@@ -79,7 +79,46 @@ const ArticlePage = () => {
   const articleKeywords = ((article as any)?.keywords || []) as string[];
   const heroImage = article?.banner_url || article?.image_url;
   const mobileHeroImage = (article as any)?.mobile_banner_url || heroImage;
-  const jsonLd = article ? generateArticleSchema(article) : undefined;
+
+  // AEO/GEO: answer-first summary derived from stored content (no AI call).
+  const answerText = article
+    ? deriveDirectAnswer(
+        (article as any).ai_summary,
+        (article as any).meta_description,
+        article.excerpt,
+        article.content,
+      )
+    : undefined;
+  const answerQuestion = article ? `${(article as any).h1_tag || article.title}` : undefined;
+
+  const jsonLd = article
+    ? buildPageGraph(
+        buildArticleSchema(article as any),
+        buildWebPageSchema({
+          path: `/article/${article.slug}`,
+          name: (article as any).meta_title || article.title,
+          description: (article as any).meta_description || article.excerpt || undefined,
+          datePublished: article.created_at,
+          dateModified: (article as any).updated_at || article.created_at,
+          primaryImage: heroImage || undefined,
+          breadcrumbs: [
+            { name: "Blog", url: "/blog" },
+            { name: article.title, url: `/article/${article.slug}` },
+          ],
+        }),
+        buildBreadcrumbSchema(`/article/${article.slug}`, [
+          { name: "Blog", url: "/blog" },
+          { name: article.title, url: `/article/${article.slug}` },
+        ]),
+        answerText && answerQuestion
+          ? buildDirectAnswerSchema({
+              path: `/article/${article.slug}`,
+              question: answerQuestion,
+              answer: answerText,
+            })
+          : null,
+      )
+    : undefined;
   const { seo: resolvedSeo } = useResolvedSeo(
     "article",
     article?.id,
@@ -94,6 +133,7 @@ const ArticlePage = () => {
         }
       : {},
   );
+
 
   useEffect(() => {
     if (article) {
