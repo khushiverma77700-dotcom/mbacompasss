@@ -11,13 +11,16 @@ import {
 import { requireAdmin } from "../_shared/requireAdmin.ts";
 import {
   gscConfigured, resolveGscSite, gscPageMetrics, gscQueryMetrics, gscIndexState,
-  loadPages, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
+  loadPagesSlice, SILO_SOURCES, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
 } from "../_shared/seoSignals.ts";
+
 import { getKeywordMetrics, semrushSerp, semrushExpand, semrushConfigured } from "../_shared/keywordMetrics.ts";
 import { firecrawlScrapeStrict, firecrawlConfigured, FirecrawlError } from "../_shared/firecrawlGateway.ts";
 import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { ADVANCED_STAGES, validateRecommendation, upsertRecommendation } from "../_shared/seoIntel2.ts";
+import { STATIC_ROUTES } from "../_shared/staticRoutes.ts";
+
 
 
 const MAX_DEPTH = 25;
@@ -200,17 +203,70 @@ async function runGscQueries(ctx: Ctx) {
 }
 
 /** On-page technical + content snapshot straight from our own content tables. */
+/**
+ * Static routes rendered as inventory rows (they have no CMS row).
+ */
+function staticInventory(): any[] {
+  return STATIC_ROUTES.map((r) => ({
+    path: r.path,
+    name: null as string | null,
+    page_type: "static",
+    source_table: "static_routes",
+    source_id: r.path,
+    source_field: "",
+    keyword: null as string | null,
+    topic: null as string | null,
+    html: "",
+    text: "",
+    words: 0,
+  }));
+}
+
+/**
+ * Walks the whole site source-by-source using a (sourceIndex, offset) cursor so
+ * one invocation only materialises the window it is about to write. Index
+ * `SILO_SOURCES.length` is the static-routes pass, after which the sweep is
+ * complete.
+ */
 async function runCrawlPages(ctx: Ctx) {
   const { sb, job } = ctx;
-  const cursor = Number(job.payload?.cursor ?? 0);
-  const limit = Number(ctx.settings.max_pages_per_run ?? 25) * 6; // DB reads are cheap
-  const all = await loadPages(sb);
-  const slice = all.slice(cursor, cursor + limit);
+  const srcIdx = Number(job.payload?.src ?? 0);
+  const offset = Number(job.payload?.offset ?? 0);
+  const limit = Math.max(25, Number(ctx.settings.max_pages_per_run ?? 25) * 6);
+  const sourceCount = SILO_SOURCES.length;
 
-  const { data: perf } = await sb.from("seo_intel_pages")
-    .select("path, clicks, impressions, ctr, avg_position")
-    .in("path", slice.map((p) => p.path).slice(0, 500));
-  const perfMap = new Map((perf ?? []).map((p: any) => [p.path, p]));
+  let slice: any[] = [];
+  let nextSrc = srcIdx;
+  let nextOffset = offset;
+  let label = "";
+
+  if (srcIdx < sourceCount) {
+    slice = await loadPagesSlice(sb, srcIdx, offset, limit);
+    label = `${SILO_SOURCES[srcIdx].table} ${offset}-${offset + slice.length}`;
+    if (slice.length < limit) { nextSrc = srcIdx + 1; nextOffset = 0; }
+    else { nextOffset = offset + limit; }
+  } else {
+    slice = staticInventory().slice(offset, offset + limit);
+    label = `static routes ${offset}-${offset + slice.length}`;
+    nextSrc = srcIdx + 1; nextOffset = 0;
+  }
+  const sweepDone = srcIdx >= sourceCount;
+
+
+  const paths = slice.map((p) => p.path);
+  const known = new Set<string>();
+  const perfMap = new Map<string, any>();
+  // Chunked so a large slice never exceeds the URL length limit of `.in()`.
+  for (let i = 0; i < paths.length; i += 200) {
+    const { data: perf } = await sb.from("seo_intel_pages")
+      .select("path, clicks, impressions, ctr, avg_position")
+      .in("path", paths.slice(i, i + 200));
+    for (const row of perf ?? []) {
+      known.add(row.path);
+      perfMap.set(row.path, row);
+    }
+  }
+  const newPaths = paths.filter((p) => !known.has(p));
 
   const rows = slice.map((p) => {
     const html = p.html ?? "";
@@ -249,24 +305,60 @@ async function runCrawlPages(ctx: Ctx) {
       health_issues: health.issues,
       primary_keyword: p.keyword,
       last_crawl_at: nowIso(),
+      discovered_by: p.source_table === "static_routes" ? "static_routes" : p.source_table,
       data_sources: { onpage: "internal", label: "calculated" },
       updated_at: nowIso(),
     };
   });
   if (rows.length) await upsertRows(sb, "seo_intel_pages", rows, "path");
 
-  const next = cursor + limit;
-  if (next < all.length) {
+  // Brand-new pages jump the queue: they get analysed (SEO/AEO/GEO) first.
+  if (newPaths.length) {
+    await logActivity(sb, {
+      event: `${newPaths.length} new page(s) discovered`,
+      detail: newPaths.slice(0, 12).join(", ") + (newPaths.length > 12 ? ` +${newPaths.length - 12} more` : ""),
+      level: "success", job_id: ctx.job.id, job_type: "crawl_pages", records: newPaths.length,
+    });
+    await enqueue(sb, {
+      job_type: "analyze",
+      payload: { paths: newPaths.slice(0, 40), reason: "new_pages" },
+      priority: 1,
+      dedupe_key: `analyze:new:${today()}:${srcIdx}:${offset}`,
+      triggered_by: "worker",
+    }).catch(() => {});
+    await notify(sb, {
+      kind: "pages_discovered", severity: "info",
+      title: `${newPaths.length} new page(s) added to the SEO engine`,
+      body: `They are queued for SEO/AEO/GEO analysis right away: ${newPaths.slice(0, 5).join(", ")}`,
+    }).catch(() => {});
+  }
+
+  if (!sweepDone) {
     await enqueue(sb, {
       job_type: "crawl_pages",
-      payload: { cursor: next },
+      payload: { src: nextSrc, offset: nextOffset },
       priority: 3,
-      dedupe_key: `crawl_pages:cursor:${next}`,
+      dedupe_key: `crawl_pages:${nextSrc}:${nextOffset}`,
+      triggered_by: "worker",
+    }).catch(() => {});
+  } else {
+    // Inventory complete — start/continue the rotational optimisation sweep.
+    await enqueue(sb, {
+      job_type: "analyze",
+      payload: { rotate: true },
+      priority: 2,
+      dedupe_key: `analyze:rotate:${new Date().toISOString().slice(0, 13)}`,
       triggered_by: "worker",
     }).catch(() => {});
   }
-  return { records: rows.length, detail: `pages ${cursor}-${cursor + rows.length} of ${all.length}` };
+  return {
+    records: rows.length,
+    detail: `${label}${newPaths.length ? ` · ${newPaths.length} new` : ""}`,
+  };
 }
+
+
+
 
 /** Semrush volume / difficulty / CPC / 12-month trend for tracked keywords. */
 async function runKeywordMetrics(ctx: Ctx) {
@@ -580,12 +672,29 @@ async function runSpeedAudit(ctx: Ctx) {
 
 /** AI analysis over the stored signals → concrete, evidence-backed recommendations. */
 async function runAnalyze(ctx: Ctx) {
-  const { sb } = ctx;
-  const { data: pages } = await sb.from("seo_intel_pages")
-    .select("path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities")
-    .order("impressions", { ascending: false, nullsFirst: false })
-    .limit(12);
+  const { sb, job } = ctx;
+  const PAGE_COLS = "path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities, last_analyzed_at, analysis_round";
+  const batchSize = Math.max(6, Math.min(20, Number(ctx.settings.max_pages_per_run ?? 12)));
+  const explicitPaths: string[] = Array.isArray(job.payload?.paths) ? job.payload.paths : [];
+
+  let pages: any[] | null = null;
+  if (explicitPaths.length) {
+    // Newly discovered pages — analysed ahead of the rotation.
+    const { data } = await sb.from("seo_intel_pages").select(PAGE_COLS)
+      .in("path", explicitPaths.slice(0, batchSize));
+    pages = data ?? [];
+  } else {
+    // ROTATION: never-analysed pages first, then the longest-untouched ones, so
+    // 100% of the site (not just the high-impression head) keeps getting
+    // SEO / AEO / GEO work, round after round.
+    const { data } = await sb.from("seo_intel_pages").select(PAGE_COLS)
+      .order("last_analyzed_at", { ascending: true, nullsFirst: true })
+      .order("impressions", { ascending: false, nullsFirst: false })
+      .limit(batchSize);
+    pages = data ?? [];
+  }
   if (!pages?.length) return { skipped: "No page data collected yet.", records: 0 };
+
 
   const { data: comps } = await sb.from("seo_intel_competitors")
     .select("domain, keyword, their_position, our_position").limit(20);
@@ -597,8 +706,14 @@ RULES:
 - Only use the numbers given. Never invent traffic, volume or rankings.
 - Each recommendation must name the exact problem, the evidence (quote the numbers given), why it matters, the concrete change, and a before/after value where a text change is proposed.
 - Prefer changes that can be applied to title, meta description, headings, internal links, schema or content depth.
+- Cover all three layers for EVERY page in the list, not only the high-traffic ones:
+  · SEO — title/meta/heading/keyword/internal-link/indexing quality.
+  · AEO (answer engines) — is there a direct one-paragraph answer near the top, an FAQ block with real questions, definition/entity clarity, and FAQPage/HowTo/Article schema?
+  · GEO (generative engines) — factual, citable statements with named entities (IIM, CAT, NIRF, fees, cutoffs, years), stat-rich sentences an LLM can quote, and unique data no competitor page has.
+- A page with low or zero impressions is still in scope: recommend the AEO/GEO and depth work that would make it rankable.
 - confidence is 0-1. priority is one of high | medium | low.
-- category is one of: technical, content, keywords, internal_links, schema, ctr, indexing, competitor.
+- category is one of: technical, content, keywords, internal_links, schema, ctr, indexing, competitor, aeo, geo.
+
 
 PAGES (Search Console = actual; on-page = from our CMS; rendered_* / ssr_gap = what Firecrawl actually received from the live URL; psi_* = real Google PageSpeed/Lighthouse mobile measurements, lcp/tbt in ms):
 ${JSON.stringify(pages, null, 1)}
@@ -675,6 +790,32 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
   }
 
   await markSource(sb, "openai", { configured: true, status: "connected", last_sync_at: nowIso() });
+
+  // Stamp the rotation so these pages move to the back of the queue and the
+  // next batch is a different slice of the site.
+  const analysedPaths = pages.map((p: any) => p.path);
+  for (const p of pages as any[]) {
+    await sb.from("seo_intel_pages").update({
+      last_analyzed_at: nowIso(),
+      analysis_round: Number(p.analysis_round ?? 0) + 1,
+      updated_at: nowIso(),
+    }).eq("path", p.path);
+  }
+
+  // Keep sweeping: how much of the site has never been analysed yet?
+  const { count: pending } = await sb.from("seo_intel_pages")
+    .select("path", { count: "exact", head: true })
+    .is("last_analyzed_at", null);
+  if ((pending ?? 0) > 0) {
+    await enqueue(sb, {
+      job_type: "analyze",
+      payload: { rotate: true },
+      priority: 2,
+      dedupe_key: `analyze:rotate:${nowIso().slice(0, 16)}`,
+      triggered_by: "worker",
+    }).catch(() => {});
+  }
+
   if (inserted) {
     await notify(sb, {
       kind: "recommendations", severity: "info",
@@ -684,8 +825,9 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
   }
   return {
     records: inserted,
-    detail: `${inserted} new, ${updated} refreshed, ${suppressed} suppressed for weak evidence`,
+    detail: `${analysedPaths.length} page(s) analysed · ${inserted} new, ${updated} refreshed, ${suppressed} suppressed · ${pending ?? 0} page(s) still awaiting first pass`,
   };
+
 
 }
 

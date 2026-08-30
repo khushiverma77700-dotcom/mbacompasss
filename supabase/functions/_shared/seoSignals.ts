@@ -400,8 +400,17 @@ export async function loadSettings(sb: any) {
   };
 }
 
-/** Fetch every public page row from the SILO source registry. */
+/**
+ * Fetch EVERY public page row from the SILO source registry.
+ *
+ * PostgREST caps a single response at 1000 rows regardless of `.limit()`, which
+ * silently truncated large tables (colleges) and left thousands of pages
+ * invisible to the SEO engine. Every source is therefore read in 1000-row
+ * pages until it is exhausted.
+ */
 export async function loadPages(sb: any, sources = SILO_SOURCES) {
+  const PAGE = 1000;
+  const HARD_CAP = 50_000; // safety valve, far above the real site size
   const pages: Array<{
     path: string;
     name: string | null;
@@ -417,30 +426,92 @@ export async function loadPages(sb: any, sources = SILO_SOURCES) {
   }> = [];
 
   for (const src of sources) {
-    let q = sb.from(src.table).select(src.columns);
-    if (src.filter) q = src.filter(q);
-    const { data, error } = await q.limit(2000);
-    if (error || !data) continue;
-    for (const row of data) {
-      const path = src.pathFor(row, {});
-      if (!path) continue;
-      const html = src.htmlFor(row).map((v) => flattenText(v)).join("\n");
-      const extra = (src.textFor?.(row) ?? []).map((v) => flattenText(v)).join("\n");
-      const text = stripHtml(`${html}\n${extra}`);
-      pages.push({
-        path,
-        name: src.nameFor(row),
-        page_type: src.page_type,
-        source_table: src.table,
-        source_id: row.id,
-        source_field: src.field,
-        keyword: src.keywordFor?.(row) ?? null,
-        topic: src.topicFor?.(row) ?? null,
-        html,
-        text,
-        words: wordCount(text),
-      });
+    for (let from = 0; from < HARD_CAP; from += PAGE) {
+      let q = sb.from(src.table).select(src.columns);
+      if (src.filter) q = src.filter(q);
+      const { data, error } = await q.range(from, from + PAGE - 1);
+      if (error || !data) break;
+      for (const row of data) {
+        const path = src.pathFor(row, {});
+        if (!path) continue;
+        const html = src.htmlFor(row).map((v) => flattenText(v)).join("\n");
+        const extra = (src.textFor?.(row) ?? []).map((v) => flattenText(v)).join("\n");
+        const text = stripHtml(`${html}\n${extra}`);
+        pages.push({
+          path,
+          name: src.nameFor(row),
+          page_type: src.page_type,
+          source_table: src.table,
+          source_id: row.id,
+          source_field: src.field,
+          keyword: src.keywordFor?.(row) ?? null,
+          topic: src.topicFor?.(row) ?? null,
+          html,
+          text,
+          words: wordCount(text),
+        });
+      }
+      if (data.length < PAGE) break;
     }
   }
   return pages;
 }
+
+export type LoadedPage = Awaited<ReturnType<typeof loadPages>>[number];
+
+/** How many rows each source contributes (cheap head count, no payload). */
+export async function countSourceRows(sb: any, sources = SILO_SOURCES) {
+  const out: number[] = [];
+  for (const src of sources) {
+    let q = sb.from(src.table).select("id", { count: "exact", head: true });
+    if (src.filter) q = src.filter(q);
+    const { count } = await q;
+    out.push(count ?? 0);
+  }
+  return out;
+}
+
+/**
+ * Read ONE window of ONE source. Used by the crawler so a single invocation
+ * never has to materialise the whole site (which blows the CPU/memory budget
+ * once a table has thousands of content-heavy rows).
+ */
+export async function loadPagesSlice(
+  sb: any,
+  sourceIndex: number,
+  offset: number,
+  size: number,
+  sources = SILO_SOURCES,
+): Promise<LoadedPage[]> {
+  const src = sources[sourceIndex];
+  if (!src) return [];
+  let q = sb.from(src.table).select(src.columns);
+  if (src.filter) q = src.filter(q);
+  const { data, error } = await q.range(offset, offset + size - 1);
+  if (error || !data) return [];
+  const pages: LoadedPage[] = [];
+  for (const row of data) {
+    const path = src.pathFor(row, {});
+    if (!path) continue;
+    const html = src.htmlFor(row).map((v: any) => flattenText(v)).join("\n");
+    const extra = (src.textFor?.(row) ?? []).map((v: any) => flattenText(v)).join("\n");
+    const text = stripHtml(`${html}\n${extra}`);
+    pages.push({
+      path,
+      name: src.nameFor(row),
+      page_type: src.page_type,
+      source_table: src.table,
+      source_id: row.id,
+      source_field: src.field,
+      keyword: src.keywordFor?.(row) ?? null,
+      topic: src.topicFor?.(row) ?? null,
+      html,
+      text,
+      words: wordCount(text),
+    });
+  }
+  return pages;
+}
+
+
+
