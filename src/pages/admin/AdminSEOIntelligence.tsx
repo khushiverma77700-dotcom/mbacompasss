@@ -37,6 +37,7 @@ import {
 import {
   useLiveStatus, LiveOperationsPanel, ImpactReportPanel, ApprovalPanel, IntelligenceOverview,
 } from "@/components/admin/seo/SeoLiveOps";
+import SeoResearchConsole from "@/components/admin/seo/SeoResearchConsole";
 
 
 /* ───────────────────────── types ───────────────────────── */
@@ -328,6 +329,7 @@ const AdminSEOIntelligence = () => {
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="research">Research console</TabsTrigger>
             <TabsTrigger value="live">Live operations</TabsTrigger>
             <TabsTrigger value="impact">Impact &amp; changes</TabsTrigger>
             <TabsTrigger value="approvals">Approvals</TabsTrigger>
@@ -373,6 +375,10 @@ const AdminSEOIntelligence = () => {
         </TabsContent>
 
         {/* ── Overview ── */}
+        <TabsContent value="research" className="pt-4">
+          <SeoResearchConsole />
+        </TabsContent>
+
         <TabsContent value="live" className="pt-4">
           <LiveOperationsPanel status={liveStatus} error={liveError} reload={reloadLive} onRunStage={runStage} />
         </TabsContent>

@@ -88,6 +88,14 @@ Deno.serve(async (req) => {
     { type: "strategy", everyMin: 10080, priority: 19 },
     { type: "daily_snapshot", everyMin: 720, priority: 19 },
     { type: "report", everyMin: settings.freq_report_min, priority: 20 },
+    // ── autonomous research & execution: find keywords, tear competitors down,
+    //    and (only in autonomous mode) apply the safe wins by itself ──────────
+    { type: "keyword_discovery", everyMin: Math.max(settings.freq_rank_min, 360), priority: 9 },
+    { type: "competitor_deep", everyMin: Math.max(settings.freq_competitor_min, 720), payload: { batch: 3 }, priority: 11 },
+    ...(settings.autonomous_mode
+      ? [{ type: "auto_apply", everyMin: 180, payload: { limit: 5 }, priority: 8 }]
+      : []),
+
 
   ];
 

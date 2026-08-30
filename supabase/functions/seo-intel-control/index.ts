@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
         const allowed = [
           "schedule_mode", "window_start", "window_end", "active_days", "timezone",
           "freq_monitor_min", "freq_rank_min", "freq_competitor_min", "freq_crawl_min", "freq_report_min",
-          "auto_apply_safe", "gsc_site_url", "semrush_database", "semrush_campaign_id", "max_pages_per_run",
+          "auto_apply_safe", "autonomous_mode", "gsc_site_url", "semrush_database", "semrush_campaign_id", "max_pages_per_run",
         ];
         const patch: Record<string, unknown> = { updated_by: actor };
         for (const k of allowed) if (k in p) patch[k] = p[k];
@@ -225,13 +225,13 @@ Deno.serve(async (req) => {
         const since24h = new Date(Date.now() - 864e5).toISOString();
         const [runningJobs, queued, recent, sources, freshness, kwFresh] = await Promise.all([
           sb.from("seo_intel_jobs")
-            .select("id, job_type, status, started_at, records_processed, retry_count, payload, lease_until, triggered_by")
+            .select("id, job_type, status, started_at, records_processed, retry_count, payload, lease_until, triggered_by, progress")
             .eq("status", "running").order("started_at"),
           sb.from("seo_intel_jobs")
             .select("id, job_type, status, scheduled_for, priority, triggered_by")
             .in("status", ["queued", "parked"]).order("priority").order("scheduled_for").limit(25),
           sb.from("seo_intel_jobs")
-            .select("id, job_type, status, records_processed, error, started_at, finished_at, retry_count, triggered_by")
+            .select("id, job_type, status, records_processed, error, started_at, finished_at, retry_count, triggered_by, progress")
             .not("finished_at", "is", null).order("finished_at", { ascending: false }).limit(40),
           sb.from("seo_intel_sources").select("source_key, label, kind, configured, status, last_sync_at, next_sync_at, last_error").order("label"),
           sb.from("seo_intel_pages")
@@ -283,8 +283,55 @@ Deno.serve(async (req) => {
             crawler_view: maxOf(pageRows, "live_crawl_at"),
             keywords: kwFresh.data?.last_checked_at ?? null,
           },
+          autonomous_mode: !!settings.autonomous_mode,
           server_time: nowIso(),
           job_labels: JOB_LABELS,
+        });
+      }
+
+      /* ─────────── research feed: what the engine actually learned ─────────── */
+      case "research_feed": {
+        const sinceIso = new Date(Date.now() - (Number(body?.hours ?? 24) * 36e5)).toISOString();
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const [activity, newKeywords, gaps, competitors, applied, recs] = await Promise.all([
+          sb.from("seo_intel_activity")
+            .select("id, event, detail, level, job_type, records, data_source, created_at")
+            .gte("created_at", sinceIso).order("created_at", { ascending: false }).limit(80),
+          sb.from("seo_intel_keywords")
+            .select("keyword, search_volume, difficulty, intent, current_position, discovered_from, discovery_source, volume_source, created_at")
+            .gte("created_at", sinceIso).order("search_volume", { ascending: false, nullsFirst: false }).limit(40),
+          sb.from("seo_intel_content_gaps")
+            .select("id, path, keyword, gap_type, title, description, competitor_domain, value_score, priority, status, computed_at")
+            .eq("status", "open").order("computed_at", { ascending: false }).limit(40),
+          sb.from("seo_intel_competitors")
+            .select("domain, keyword, their_url, their_position, our_position, our_path, word_count, faq_count, schema_types, why_outranking, what_to_change, last_checked_at")
+            .not("why_outranking", "is", null).order("last_checked_at", { ascending: false, nullsFirst: false }).limit(20),
+          sb.from("seo_intel_experiments")
+            .select("id, path, keyword, change_type, change_summary, before_value, after_value, baseline_position, changed_on, outcome, measure_after")
+            .order("changed_on", { ascending: false }).limit(30),
+          sb.from("seo_intel_recommendations")
+            .select("id, path, keyword, change_type, recommended_change, priority, confidence, status, auto_appliable, created_at")
+            .in("status", ["new", "review", "approved"]).order("created_at", { ascending: false }).limit(30),
+        ]);
+
+        const kws = newKeywords.data ?? [];
+        return json({
+          window_hours: Number(body?.hours ?? 24),
+          activity: (activity.data ?? []).map((a: any) => ({ ...a, label: JOB_LABELS[a.job_type] ?? a.job_type ?? null })),
+          new_keywords: kws,
+          content_gaps: gaps.data ?? [],
+          competitor_insights: competitors.data ?? [],
+          changes: applied.data ?? [],
+          pending_recommendations: recs.data ?? [],
+          gains: {
+            keywords_discovered: kws.length,
+            keywords_discovered_today: kws.filter((k: any) => String(k.created_at ?? "").slice(0, 10) === todayStr).length,
+            gaps_open: (gaps.data ?? []).length,
+            competitors_analysed: (competitors.data ?? []).length,
+            changes_today: (applied.data ?? []).filter((e: any) => e.changed_on === todayStr).length,
+            awaiting_approval: (recs.data ?? []).length,
+          },
+          server_time: nowIso(),
         });
       }
 

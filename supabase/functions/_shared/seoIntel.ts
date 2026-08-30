@@ -65,7 +65,12 @@ export const JOB_TYPES = [
   "impact_attribution", // isolate change impact from site-wide trend
   "knowledge_graph",    // entity/keyword/page/competitor graph
   "strategy",           // AI SEO growth strategy
+  // ── autonomous research & execution layer ──────────────────────
+  "keyword_discovery",  // find new + striking-distance keywords worth targeting
+  "competitor_deep",    // crawl the pages outranking us and extract what they do
+  "auto_apply",         // apply safe, evidence-backed changes without a human step
 ] as const;
+
 export type JobType = (typeof JOB_TYPES)[number];
 
 export const JOB_LABELS: Record<string, string> = {
@@ -98,7 +103,11 @@ export const JOB_LABELS: Record<string, string> = {
   impact_attribution: "SEO change impact attribution",
   knowledge_graph: "SEO knowledge graph",
   strategy: "AI SEO growth strategy",
+  keyword_discovery: "Keyword research & discovery",
+  competitor_deep: "Competitor page teardown (Firecrawl + AI)",
+  auto_apply: "Autonomous safe-change execution",
 };
+
 
 
 export interface IntelSettings {
@@ -114,6 +123,8 @@ export interface IntelSettings {
   freq_crawl_min: number;
   freq_report_min: number;
   auto_apply_safe: boolean;
+  autonomous_mode: boolean;
+
   gsc_site_url: string | null;
   semrush_database: string;
   semrush_campaign_id: string | null;
@@ -186,6 +197,35 @@ export async function logActivity(sb: any, e: {
     });
   } catch (_) { /* logging must never break a run */ }
 }
+
+/**
+ * Live heartbeat for a running job. Writes the real step the worker is on into
+ * seo_intel_jobs.progress so the dashboard can animate actual work instead of a
+ * fake spinner. Never throws — a failed heartbeat must not fail the job.
+ */
+export async function beat(sb: any, jobId: string | null | undefined, p: {
+  step: string;
+  pct?: number;
+  detail?: string;
+  target?: string | null;
+  records?: number;
+}) {
+  if (!jobId) return;
+  try {
+    await sb.from("seo_intel_jobs").update({
+      progress: {
+        step: p.step,
+        pct: p.pct == null ? null : Math.max(0, Math.min(100, Math.round(p.pct))),
+        detail: p.detail ?? null,
+        target: p.target ?? null,
+        records: p.records ?? null,
+        at: new Date().toISOString(),
+      },
+    }).eq("id", jobId);
+  } catch (_) { /* heartbeats are best-effort */ }
+}
+
+
 
 export async function logAudit(sb: any, e: {
   actor?: string | null;
