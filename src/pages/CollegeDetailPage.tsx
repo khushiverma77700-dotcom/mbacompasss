@@ -367,7 +367,7 @@ const CollegeDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead {...resolvedSeo} jsonLd={[collegeJsonLd, generateFAQSchema(qaItems)].filter(Boolean) as any} />
+      <SEOHead {...resolvedSeo} jsonLd={pageJsonLd as any} />
       <LoginRequiredDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} message="Sign in to access detailed college information." />
 
       {/* ===== Premium Hero Banner ===== */}
