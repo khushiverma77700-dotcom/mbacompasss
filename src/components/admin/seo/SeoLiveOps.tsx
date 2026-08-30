@@ -40,6 +40,16 @@ const d1 = (v: any, p = 1) => (v === null || v === undefined ? "—" : Number(v)
 const when = (v: any) =>
   v ? new Date(v).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "Never";
 
+// Audit/recommendation values can be stored as JSON objects, so never hand them
+// to React as a child — always coerce to readable text first.
+export const asText = (v: any, fallback = "—"): string => {
+  if (v === null || v === undefined || v === "") return fallback;
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  try { return JSON.stringify(v); } catch { return String(v); }
+};
+
+
 const ago = (v: any) => {
   if (!v) return "never";
   const s = Math.max(0, Math.round((Date.now() - new Date(v).getTime()) / 1000));
