@@ -70,18 +70,17 @@ const useLivePhase = (busy: boolean) => {
   return phase;
 };
 
-/** Count-up animated number so every refresh is visibly "live". */
-const Counter = ({ value, format }: { value: number | null; format: (v: number | null) => string }) => {
+/** Count-up animated number so every refresh is visibly "live". Bump `replay` to re-run the count. */
+const Counter = ({ value, format, replay = 0 }: { value: number | null; format: (v: number | null) => string; replay?: number }) => {
   const [shown, setShown] = useState<number | null>(value);
-  const prev = useRef<number | null>(value);
+  const prev = useRef<number | null>(0);
   useEffect(() => {
     if (value === null) { setShown(null); prev.current = null; return; }
     const from = prev.current ?? 0;
     const to = value;
     prev.current = value;
-    if (from === to) { setShown(to); return; }
     const start = performance.now();
-    const dur = 700;
+    const dur = 900;
     let raf = 0;
     const tick = (now: number) => {
       const p = Math.min(1, (now - start) / dur);
@@ -90,8 +89,61 @@ const Counter = ({ value, format }: { value: number | null; format: (v: number |
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [value]);
+  }, [value, replay]);
   return <>{format(shown)}</>;
+};
+
+/** Animated horizontal comparison bar — makes "is the average rising?" obvious. */
+const VersusBar = ({
+  label, current, previous, allTime, lowerIsBetter, digits = 2, replay,
+}: {
+  label: string; current: number | null; previous: number | null; allTime: number | null;
+  lowerIsBetter?: boolean; digits?: number; replay: number;
+}) => {
+  const vals = [current, previous, allTime].filter((v) => v != null).map((v) => Math.abs(Number(v)));
+  const max = vals.length ? Math.max(...vals) : 1;
+  const improved = current != null && previous != null
+    ? (lowerIsBetter ? current < previous : current > previous) : null;
+  const pct = previous ? Number((((Number(current) - Number(previous)) / Math.abs(Number(previous))) * 100).toFixed(2)) : null;
+  const rows = [
+    { k: "Last 7 days", v: current, tone: improved === false ? "bg-red-500" : "bg-emerald-500" },
+    { k: "Previous 7 days", v: previous, tone: "bg-slate-300" },
+    { k: "All-time average", v: allTime, tone: "bg-sky-500" },
+  ];
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+        {improved === null ? (
+          <Badge variant="outline" className="text-[10px]">No baseline yet</Badge>
+        ) : (
+          <Badge className={`gap-1 text-[10px] ${improved ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}>
+            {improved ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {improved ? "Improving" : "Declining"} · {fmtPct(pct)}
+          </Badge>
+        )}
+      </div>
+      <div className="mt-2 space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.k} className="flex items-center gap-2">
+            <span className="w-28 shrink-0 text-[11px] text-muted-foreground">{r.k}</span>
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+              <motion.div
+                key={`${label}-${r.k}-${replay}`}
+                className={`h-full rounded-full ${r.tone}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${r.v == null ? 0 : Math.min(100, (Math.abs(Number(r.v)) / max) * 100)}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              />
+            </div>
+            <span className="w-16 shrink-0 text-right font-mono text-[11px] tabular-nums">
+              <Counter value={r.v ?? null} format={(v) => fmtDec(v, digits)} replay={replay} />
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const DirBadge = ({ cmp, unitLabel }: { cmp: Cmp | undefined; unitLabel: string }) => {
