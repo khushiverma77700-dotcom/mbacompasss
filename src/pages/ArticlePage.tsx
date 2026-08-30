@@ -9,7 +9,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
+import SEOHead from "@/components/SEOHead";
+import AnswerBlock from "@/components/AnswerBlock";
+import {
+  buildArticleSchema,
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildDirectAnswerSchema,
+  buildPageGraph,
+  deriveDirectAnswer,
+} from "@/lib/aeoSchema";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
