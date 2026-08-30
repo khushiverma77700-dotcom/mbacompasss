@@ -12,30 +12,34 @@ export const FxCounter = ({
   format,
   replay = 0,
   duration = 900,
+  from: fromProp,
 }: {
   value: number | null | undefined;
   format: (v: number | null) => string;
   replay?: number;
   duration?: number;
+  /** Explicit starting value — used when replaying a recorded before → after event. */
+  from?: number;
 }) => {
   const [shown, setShown] = useState<number | null>(value ?? null);
   const prev = useRef<number | null>(0);
   useEffect(() => {
     if (value === null || value === undefined) { setShown(null); prev.current = null; return; }
-    const from = prev.current ?? 0;
+    const from = fromProp ?? prev.current ?? 0;
     prev.current = value;
     const start = performance.now();
     let raf = 0;
     const step = (now: number) => {
-      const p = Math.min(1, (now - start) / duration);
+      const p = Math.min(1, (now - start) / Math.max(1, duration));
       setShown(from + (value - from) * (1 - Math.pow(1 - p, 3)));
       if (p < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [value, replay, duration]);
+  }, [value, replay, duration, fromProp]);
   return <>{format(shown)}</>;
 };
+
 
 /* ── animated conic gauge ring (0–100) ── */
 export const GaugeRing = ({
