@@ -11,7 +11,7 @@ import {
   logAudit, markSource, nowIso, today, JOB_LABELS,
 } from "../_shared/seoIntel.ts";
 import { requireAdmin } from "../_shared/requireAdmin.ts";
-import { gscConfigured, resolveGscSite, GSC_GATEWAY, gscHeaders, SITE_URL } from "../_shared/seoSignals.ts";
+import { gscConfigured, resolveGscSite, GSC_GATEWAY, gscHeaders, SITE_URL, gscDailyMetrics } from "../_shared/seoSignals.ts";
 import { semrushConfigured, getKeywordMetrics } from "../_shared/keywordMetrics.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 
