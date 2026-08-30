@@ -11,8 +11,9 @@ import {
 import { requireAdmin } from "../_shared/requireAdmin.ts";
 import {
   gscConfigured, resolveGscSite, gscPageMetrics, gscQueryMetrics, gscIndexState,
-  loadPages, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
+  loadPages, loadPagesSlice, SILO_SOURCES, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
 } from "../_shared/seoSignals.ts";
+
 import { getKeywordMetrics, semrushSerp, semrushExpand, semrushConfigured } from "../_shared/keywordMetrics.ts";
 import { firecrawlScrapeStrict, firecrawlConfigured, FirecrawlError } from "../_shared/firecrawlGateway.ts";
 import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
