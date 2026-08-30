@@ -42,8 +42,13 @@ import SeoLiveAnalytics from "@/components/admin/seo/SeoLiveAnalytics";
 import SeoPerformanceReport from "@/components/admin/seo/SeoPerformanceReport";
 import SeoWinsBoard from "@/components/admin/seo/SeoWinsBoard";
 import SeoCommandDeck from "@/components/admin/seo/SeoCommandDeck";
+import SeoApprovalQueue from "@/components/admin/seo/SeoApprovalQueue";
+import SeoWinTimeline from "@/components/admin/seo/SeoWinTimeline";
+import SeoPlayback from "@/components/admin/seo/SeoPlayback";
+import { SeoMotionProvider, SeoMotionControl } from "@/components/admin/seo/SeoMotion";
 import { asText } from "@/components/admin/seo/SeoLiveOps";
 import ErrorBoundary from "@/components/ErrorBoundary";
+
 
 /* ── Navigation: 23 views grouped into 6 plain-language sections ── */
 const TAB_SECTIONS: Array<{
