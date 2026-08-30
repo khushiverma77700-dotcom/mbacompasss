@@ -203,6 +203,47 @@ const CollegeDetailPage = () => {
     { q: `What is the average placement?`, a: `Average package: ${college.placement_avg || "competitive"}. Highest: ${college.placement_highest || "among the best"}.` },
   ];
 
+  // AEO/GEO layer — answer-first summary, key facts, entity-linked page graph.
+  const collegePath = `/college/${college.slug}`;
+  const answerText = deriveDirectAnswer(
+    (college as any).meta_description,
+    (college as any).about || (college as any).description,
+    `${college.name} is an MBA/PGDM business school${college.city ? ` in ${college.city}` : ""}${college.state ? `, ${college.state}` : ""}. Total programme fees are ${college.fees || "available on request"} and the average placement package is ${college.placement_avg || "available on request"}.`,
+  );
+  const answerFacts = [
+    { label: "Location", value: [college.city, college.state].filter(Boolean).join(", ") || undefined },
+    { label: "Total fees", value: college.fees || undefined },
+    { label: "Average package", value: college.placement_avg || undefined },
+    { label: "Highest package", value: college.placement_highest || undefined },
+    { label: "NIRF rank", value: college.ranking ? `#${college.ranking}` : undefined },
+    { label: "Exams accepted", value: exams.length ? exams.slice(0, 4).join(", ") : undefined },
+  ].filter((f) => f.value) as { label: string; value: string }[];
+
+  const pageJsonLd = buildPageGraph(
+    collegeJsonLd,
+    buildWebPageSchema({
+      path: collegePath,
+      name: `${college.name} — Fees, Placements & Admission`,
+      description: (college as any).meta_description || answerText,
+      dateModified: (college as any).updated_at || undefined,
+      primaryImage: college.banner_url || college.logo_url || undefined,
+      breadcrumbs: [
+        { name: "Colleges", url: "/colleges" },
+        { name: college.name, url: collegePath },
+      ],
+    }),
+    buildBreadcrumbSchema(collegePath, [
+      { name: "Colleges", url: "/colleges" },
+      { name: college.name, url: collegePath },
+    ]),
+    answerText
+      ? buildDirectAnswerSchema({ path: collegePath, question: `What is ${college.name}?`, answer: answerText })
+      : null,
+    buildKeyFactsSchema({ path: collegePath, name: college.name, facts: answerFacts }),
+    generateFAQSchema(qaItems),
+  );
+
+
   const handleDownloadBrochure = gateBrochure(() => {
     const content = [`${college.name} - Brochure`, `Location: ${college.city}, ${college.state}`, `Ranking: #${college.ranking}`, `Fees: ${college.fees}`, `Avg Package: ${college.placement_avg}`].join("\n");
     const blob = new Blob([content], { type: "text/plain" });
