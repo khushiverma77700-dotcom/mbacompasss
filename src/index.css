@@ -6,6 +6,13 @@
 
 @layer base {
   :root {
+  /* ── UNIFIED TYPE SCALE (only four sizes sitewide) ─────────────────────
+     Mirrors tailwind.config.ts fontSize. Never hardcode new font sizes. */
+  --fs-detail: 0.875rem;                        /* labels, meta, table cells */
+  --fs-body: 1rem;                              /* all reading text */
+  --fs-subhead: clamp(1.25rem, 1.6vw, 1.375rem);/* card + section titles */
+  --fs-heading: clamp(1.75rem, 3.2vw, 2.25rem); /* page + hero titles */
+
     --background: 210 50% 99%;
     --foreground: 215 25% 15%;
 
@@ -597,15 +604,11 @@
   line-height: 1.7 !important;
   font-family: var(--font-body) !important;
 }
-.ai-content h1 { font-size: 1.5rem !important; line-height: 1.3 !important; font-weight: 700 !important; margin: 1.25rem 0 0.75rem !important; font-family: var(--font-heading) !important; }
-.ai-content h2 { font-size: 1.25rem !important; line-height: 1.35 !important; font-weight: 700 !important; margin: 1.25rem 0 0.625rem !important; font-family: var(--font-heading) !important; }
-.ai-content h3 { font-size: 1.0625rem !important; line-height: 1.4 !important; font-weight: 600 !important; margin: 1rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
-.ai-content h4 { font-size: 1rem !important; line-height: 1.45 !important; font-weight: 600 !important; margin: 0.875rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
+.ai-content h1 { font-size: var(--fs-heading) !important; line-height: 1.3 !important; font-weight: 700 !important; margin: 1.25rem 0 0.75rem !important; font-family: var(--font-heading) !important; }
+.ai-content h2 { font-size: var(--fs-subhead) !important; line-height: 1.35 !important; font-weight: 700 !important; margin: 1.25rem 0 0.625rem !important; font-family: var(--font-heading) !important; }
+.ai-content h3 { font-size: var(--fs-body) !important; line-height: 1.4 !important; font-weight: 600 !important; margin: 1rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
+.ai-content h4 { font-size: var(--fs-body) !important; line-height: 1.45 !important; font-weight: 600 !important; margin: 0.875rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
 @media (min-width: 640px) {
-  .ai-content h1 { font-size: 1.75rem !important; }
-  .ai-content h2 { font-size: 1.375rem !important; }
-  .ai-content h3 { font-size: 1.125rem !important; }
-  .ai-content h4 { font-size: 1.0625rem !important; }
 }
 .ai-content p,
 .ai-content ul,
@@ -638,7 +641,7 @@
   display: inline-flex !important;
   align-items: center;
   gap: 0.125rem;
-  font-size: 0.65rem !important;
+  font-size: var(--fs-detail) !important;
   line-height: 1 !important;
   font-weight: 500 !important;
   padding: 0.15rem 0.4rem;
@@ -733,7 +736,7 @@
   top: -0.7rem;
   right: 0.5rem;
   z-index: 2;
-  font-size: 0.625rem;
+  font-size: var(--fs-detail);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -751,7 +754,7 @@
 .ai-table-shell td {
   border: 1px solid hsl(var(--border));
   padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
+  font-size: var(--fs-detail);
   line-height: 1.45;
   text-align: left;
   vertical-align: top;
@@ -765,7 +768,7 @@
 .ai-table-shell tbody tr:nth-child(even) { background: hsl(var(--muted) / 0.25); }
 @media (max-width: 640px) {
   .ai-table-shell th,
-  .ai-table-shell td { font-size: 0.75rem; padding: 0.4rem 0.55rem; min-width: 6.5rem; }
+  .ai-table-shell td { font-size: var(--fs-detail); padding: 0.4rem 0.55rem; min-width: 6.5rem; }
 }
 
 
@@ -816,7 +819,7 @@
     white-space: nowrap !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
-    font-size: 0.8rem !important;
+    font-size: var(--fs-detail) !important;
     line-height: 1.3 !important;
     padding: 0.5rem 0.7rem !important;
     background: hsl(var(--muted) / 0.6) !important;
@@ -834,7 +837,7 @@
     overflow-wrap: break-word !important;
     word-break: keep-all !important;
     hyphens: none !important;
-    font-size: 0.8rem !important;
+    font-size: var(--fs-detail) !important;
     line-height: 1.45 !important;
   }
   .article-content-shell .ai-content tbody td *,
@@ -1027,7 +1030,7 @@
   text-align: initial !important;
 }
 .math-content h4 {
-  font-size: 0.95rem;
+  font-size: var(--fs-body);
   font-weight: 600;
   color: hsl(var(--foreground));
   margin: 0.9rem 0 0.35rem;
@@ -1041,7 +1044,7 @@
   background: hsl(var(--muted));
   padding: 0.05rem 0.3rem;
   border-radius: 0.25rem;
-  font-size: 0.85em;
+  font-size: 1em;
 }
 
 
@@ -1193,9 +1196,9 @@ html, body, #root {
 
 @media (max-width: 640px) {
   /* Headings shrink a notch on tight viewports */
-  h1 { font-size: clamp(1.5rem, 6vw, 2rem); line-height: 1.2; }
-  h2 { font-size: clamp(1.25rem, 5vw, 1.5rem); line-height: 1.25; }
-  h3 { font-size: clamp(1.05rem, 4.2vw, 1.25rem); line-height: 1.3; }
+  h1 { font-size: var(--fs-heading); line-height: 1.2; }
+  h2 { font-size: var(--fs-subhead); line-height: 1.25; }
+  h3 { font-size: var(--fs-body); line-height: 1.35; }
 }
 
 /* ===========================================================================
