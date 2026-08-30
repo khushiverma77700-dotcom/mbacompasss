@@ -143,7 +143,13 @@ Deno.serve(async (req) => {
   const { count: queued } = await sb.from("seo_intel_jobs")
     .select("id", { count: "exact", head: true }).eq("status", "queued");
   if ((queued ?? 0) > 0) {
-    await invokeFn("seo-intel-worker", { cron_token: settings.cron_token, depth: 0 });
+    await invokeFn("seo-intel-worker", {
+      cron_token: settings.cron_token,
+      depth: 0,
+      // Forward the manual flag so a "Run now" click actually drains its jobs
+      // even when the engine switch is off or we are outside the window.
+      force: body?.force ?? false,
+    });
   }
 
   return json({ status: "ok", recovered, enqueued, queued: queued ?? 0 });
