@@ -105,29 +105,14 @@ const Navbar = () => {
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
-            Blogs
-          </Link>
-
-          <Link
-            to="/compare"
-            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              location.pathname === "/compare"
-                ? "bg-secondary text-secondary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
-          >
-            Compare
+            Updates
           </Link>
 
           <Link
             to="/contact"
-            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
-              location.pathname === "/contact"
-                ? "bg-secondary text-secondary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+            className="ml-1 inline-flex items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20 transition-colors hover:bg-primary/15"
           >
-            <Gift className="w-3.5 h-3.5" /> Free Guidance
+            <Gift className="w-3.5 h-3.5 shrink-0" /> Free Guidance
           </Link>
         </nav>
 
@@ -207,21 +192,14 @@ const Navbar = () => {
               onClick={closeMobile}
               className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
             >
-              Blogs
-            </Link>
-            <Link
-              to="/compare"
-              onClick={closeMobile}
-              className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            >
-              Compare
+              Updates
             </Link>
             <Link
               to="/contact"
               onClick={closeMobile}
-              className="flex items-center min-h-11 px-3 py-2.5 rounded-md text-sm font-medium text-primary hover:text-primary hover:bg-primary/5"
+              className="flex items-center justify-center whitespace-nowrap min-h-11 mt-1 px-3 py-2.5 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20"
             >
-              <Gift className="w-4 h-4 mr-2" /> Free MBA Guidance
+              <Gift className="w-4 h-4 mr-2 shrink-0" /> Free Guidance
             </Link>
           </nav>
 
