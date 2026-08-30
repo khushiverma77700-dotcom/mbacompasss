@@ -6,14 +6,14 @@
 
 import {
   admin, cors, json, loadIntelSettings, withinSchedule, enqueue, invokeFn,
-  logActivity, parkEngine, markSource, notify, JOB_LABELS, nowIso, today, dayOffset, SITE_URL,
+  logActivity, logAudit, parkEngine, markSource, notify, beat, JOB_LABELS, nowIso, today, dayOffset, SITE_URL,
 } from "../_shared/seoIntel.ts";
 import { requireAdmin } from "../_shared/requireAdmin.ts";
 import {
   gscConfigured, resolveGscSite, gscPageMetrics, gscQueryMetrics, gscIndexState,
   loadPages, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
 } from "../_shared/seoSignals.ts";
-import { getKeywordMetrics, semrushSerp, semrushConfigured } from "../_shared/keywordMetrics.ts";
+import { getKeywordMetrics, semrushSerp, semrushExpand, semrushConfigured } from "../_shared/keywordMetrics.ts";
 import { firecrawlScrapeStrict, firecrawlConfigured, FirecrawlError } from "../_shared/firecrawlGateway.ts";
 import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
@@ -30,7 +30,10 @@ type Ctx = {
   job: any;
   siteUrl: string | null;
   note: (msg: string, records?: number) => Promise<void>;
+  /** Live heartbeat: records the real step this job is on right now. */
+  beat: (step: string, pct?: number, detail?: string, target?: string | null) => Promise<void>;
 };
+
 
 /* ───────────────────────── helpers ───────────────────────── */
 
