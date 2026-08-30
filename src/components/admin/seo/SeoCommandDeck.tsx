@@ -152,9 +152,10 @@ export default function SeoCommandDeck() {
     <Card className="relative overflow-hidden border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-white to-sky-50/70">
       <motion.div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent"
-        animate={{ opacity: working ? [0.2, 1, 0.2] : 0.3 }}
-        transition={{ duration: 1.8, repeat: Infinity }}
+        animate={{ opacity: working && m.intensity > 0 ? [0.2, 1, 0.2] : 0.3 }}
+        transition={{ duration: m.dur(1.8), repeat: m.repeat }}
       />
+
       <CardContent className="space-y-4 p-4">
         {/* header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
