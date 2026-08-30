@@ -16,10 +16,13 @@ import {
 } from "lucide-react";
 import { fmtInt, safeText, agoText } from "@/lib/seoSafeRender";
 import { LiveDot, RawPayloadDrawer } from "./SeoSafeUi";
+import { useSeoMotion } from "./SeoMotion";
+import { useSeoRealtime } from "@/hooks/useSeoRealtime";
 import {
   FxCounter, GaugeRing, HeatGrid, PhaseRotator, PipelineFlow, RadarSweep, TerminalStream, BurstOnIncrease,
   type FxStage,
 } from "./SeoLiveFx";
+
 
 const PHRASES = [
   "Researching new keyword demand…",
