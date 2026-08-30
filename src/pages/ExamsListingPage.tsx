@@ -407,7 +407,14 @@ const ExamsListingPage = () => {
     (k) => (searchParams.get(k) || "all") !== "all",
   ).length + (q ? 1 : 0);
 
-  const jsonLd = useMemo(() => ([
+  const jsonLd = useMemo(() => buildPageGraph([
+    buildWebPageSchema({
+      path: "/exam",
+      name: "MBA Entrance Exams 2026: Dates, Eligibility, Pattern & Syllabus",
+      description: "Complete list of MBA entrance exams in India for 2026 — CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT and more.",
+      breadcrumbs: [{ name: "MBA Entrance Exams", url: "/exam" }],
+    }),
+    buildBreadcrumbSchema("/exam", [{ name: "MBA Entrance Exams", url: "/exam" }]),
     {
       "@context": "https://schema.org",
       "@type": "ItemList",

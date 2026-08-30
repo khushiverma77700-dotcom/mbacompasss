@@ -228,10 +228,16 @@ const CoachingPage = () => {
           const tail = page && page !== "1" ? `?page=${page}` : "";
           return canonicalUrl(`${window.location.pathname}${tail}`);
         })()}
-        jsonLd={[
-          generateBreadcrumbSchema(seoTemplate.breadcrumbs),
+        jsonLd={buildPageGraph(
+          buildWebPageSchema({
+            path: "/coaching",
+            name: dynamicTitle,
+            description: dynamicDescription,
+            breadcrumbs: [{ name: "MBA Coaching", url: "/coaching" }],
+          }),
+          buildBreadcrumbSchema("/coaching", [{ name: "MBA Coaching", url: "/coaching" }]),
           generateListingSchema(dynamicH1, filtered.slice(0, 20).map((i: any) => ({ name: i.name, slug: i.slug, city: i.city })), "institute"),
-        ]}
+        )}
       />
 
 
