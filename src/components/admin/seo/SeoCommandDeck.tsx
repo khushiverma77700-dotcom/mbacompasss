@@ -229,14 +229,17 @@ export default function SeoCommandDeck() {
                 </BurstOnIncrease>
               ))}
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                <Activity className="h-3.5 w-3.5" /> Stage load, last 24 hours
+            {m.heavy && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <Activity className="h-3.5 w-3.5" /> Stage load, last 24 hours
+                </div>
+                <HeatGrid cells={heatCells} />
               </div>
-              <HeatGrid cells={heatCells} />
-            </div>
+            )}
           </div>
         </div>
+
 
         {/* realtime push ticker — the exact rows the engine just wrote */}
         {m.intensity > 0 && rt.events.length > 0 && (
