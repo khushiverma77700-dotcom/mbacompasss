@@ -11,7 +11,7 @@ import {
   logAudit, markSource, nowIso, today, JOB_LABELS,
 } from "../_shared/seoIntel.ts";
 import { requireAdmin } from "../_shared/requireAdmin.ts";
-import { gscConfigured, resolveGscSite, GSC_GATEWAY, gscHeaders, SITE_URL } from "../_shared/seoSignals.ts";
+import { gscConfigured, resolveGscSite, GSC_GATEWAY, gscHeaders, SITE_URL, gscDailyMetrics } from "../_shared/seoSignals.ts";
 import { semrushConfigured, getKeywordMetrics } from "../_shared/keywordMetrics.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 
@@ -218,6 +218,190 @@ Deno.serve(async (req) => {
         if (error) return json({ error: error.message }, 400);
         await logAudit(sb, { actor, actor_label: "admin", action: `${table}_${status}`, entity: table, entity_id: String(body.id ?? "") });
         return json({ ok: true });
+      }
+
+      /* ─────────── performance_report: live top-level SEO performance
+         report built from actual Search Console daily rows ─────────── */
+      case "performance_report": {
+        const force = !!body?.force;
+        let sync: { ran: boolean; days: number; error: string | null; site: string | null } = {
+          ran: false, days: 0, error: null, site: null,
+        };
+
+        // Refresh the daily history when it is stale (or on demand).
+        const { data: freshest } = await sb.from("seo_gsc_daily")
+          .select("captured_on, synced_at").order("captured_on", { ascending: false }).limit(1).maybeSingle();
+        const staleMs = Date.now() - new Date(freshest?.synced_at ?? 0).getTime();
+        const shouldSync = gscConfigured() && (force || !freshest || staleMs > 3 * 36e5);
+
+        if (shouldSync) {
+          try {
+            const resolved = await resolveGscSite();
+            const siteUrl = settings.gsc_site_url ?? resolved.siteUrl ?? null;
+            if (!siteUrl) throw new Error(resolved.error ?? "Search Console property is not selected yet.");
+            sync.site = siteUrl;
+            // Full history: Search Console retains ~16 months.
+            const start = new Date(Date.now() - 490 * 864e5).toISOString().slice(0, 10);
+            const end = new Date(Date.now() - 1 * 864e5).toISOString().slice(0, 10);
+            const rows = await gscDailyMetrics(siteUrl, start, end);
+            if (rows.length) {
+              for (let i = 0; i < rows.length; i += 500) {
+                const chunk = rows.slice(i, i + 500).map((r) => ({
+                  captured_on: r.date,
+                  clicks: r.clicks,
+                  impressions: r.impressions,
+                  ctr: r.ctr,
+                  avg_position: r.position,
+                  synced_at: nowIso(),
+                }));
+                await sb.from("seo_gsc_daily").upsert(chunk, { onConflict: "captured_on" });
+              }
+            }
+            sync = { ran: true, days: rows.length, error: null, site: siteUrl };
+            await markSource(sb, "gsc", { status: "connected", last_sync_at: nowIso(), last_error: null });
+            await logActivity(sb, {
+              event: "Search Console daily history refreshed",
+              detail: `${rows.length} day(s) of actual performance data stored`,
+              level: "success", data_source: "gsc", records: rows.length,
+            });
+          } catch (e) {
+            sync = { ran: false, days: 0, error: (e as Error).message, site: sync.site };
+            await logActivity(sb, {
+              event: "Search Console daily refresh failed",
+              detail: (e as Error).message, level: "error", data_source: "gsc",
+            });
+          }
+        }
+
+        // Read the whole stored history back (paged).
+        const daily: any[] = [];
+        for (let from = 0; from < 20000; from += 1000) {
+          const { data, error } = await sb.from("seo_gsc_daily")
+            .select("captured_on, clicks, impressions, ctr, avg_position")
+            .order("captured_on", { ascending: true }).range(from, from + 999);
+          if (error) break;
+          daily.push(...(data ?? []));
+          if ((data ?? []).length < 1000) break;
+        }
+
+        const avg = (vals: number[]) =>
+          vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(4)) : null;
+        const sum = (vals: number[]) => vals.reduce((a, b) => a + b, 0);
+        const clicksArr = daily.map((d) => Number(d.clicks ?? 0));
+        const imprArr = daily.map((d) => Number(d.impressions ?? 0));
+        const ctrArr = daily.filter((d) => d.ctr != null).map((d) => Number(d.ctr));
+        const posArr = daily.filter((d) => d.avg_position != null).map((d) => Number(d.avg_position));
+
+        const overall = {
+          from: daily[0]?.captured_on ?? null,
+          to: daily[daily.length - 1]?.captured_on ?? null,
+          days: daily.length,
+          total_clicks: sum(clicksArr),
+          total_impressions: sum(imprArr),
+          avg_daily_clicks: avg(clicksArr),
+          avg_daily_impressions: avg(imprArr),
+          avg_ctr: avg(ctrArr),
+          avg_position: avg(posArr),
+        };
+
+        const latest = daily[daily.length - 1] ?? null;
+        const cmp = (now: any, base: any, lowerIsBetter = false) => {
+          if (now == null || base == null || base === 0) {
+            return { value: now ?? null, baseline: base ?? null, delta: null, pct: null, direction: "no_data" as string };
+          }
+          const delta = Number((Number(now) - Number(base)).toFixed(4));
+          const pctChange = Number(((delta / Math.abs(Number(base))) * 100).toFixed(2));
+          const better = lowerIsBetter ? delta < 0 : delta > 0;
+          return {
+            value: Number(now), baseline: Number(base), delta, pct: pctChange,
+            direction: delta === 0 ? "flat" : better ? "up" : "down",
+          };
+        };
+
+        const windowAvg = (n: number, key: string) => {
+          const slice = daily.slice(-n).filter((d) => d[key] != null).map((d) => Number(d[key]));
+          return avg(slice);
+        };
+
+        const todayVsOverall = {
+          date: latest?.captured_on ?? null,
+          clicks: cmp(latest?.clicks ?? null, overall.avg_daily_clicks),
+          impressions: cmp(latest?.impressions ?? null, overall.avg_daily_impressions),
+          ctr: cmp(latest?.ctr ?? null, overall.avg_ctr),
+          avg_position: cmp(latest?.avg_position ?? null, overall.avg_position, true),
+        };
+
+        const recent = {
+          last_7_clicks: windowAvg(7, "clicks"),
+          last_28_clicks: windowAvg(28, "clicks"),
+          last_7_ctr: windowAvg(7, "ctr"),
+          last_28_ctr: windowAvg(28, "ctr"),
+          last_7_position: windowAvg(7, "avg_position"),
+          last_28_position: windowAvg(28, "avg_position"),
+          last_7_impressions: windowAvg(7, "impressions"),
+          last_28_impressions: windowAvg(28, "impressions"),
+        };
+
+        // Cumulative + growth-% series. Growth is measured against the first
+        // 7 recorded days (the earliest stable baseline we actually have).
+        const baseWindow = daily.slice(0, Math.min(7, daily.length));
+        const baseline = {
+          clicks: avg(baseWindow.map((d) => Number(d.clicks ?? 0))),
+          impressions: avg(baseWindow.map((d) => Number(d.impressions ?? 0))),
+          ctr: avg(baseWindow.filter((d) => d.ctr != null).map((d) => Number(d.ctr))),
+          avg_position: avg(baseWindow.filter((d) => d.avg_position != null).map((d) => Number(d.avg_position))),
+        };
+        let cumClicks = 0;
+        let cumImpr = 0;
+        const series = daily.map((d, i) => {
+          cumClicks += Number(d.clicks ?? 0);
+          cumImpr += Number(d.impressions ?? 0);
+          const roll = (key: string, n = 7) => {
+            const slice = daily.slice(Math.max(0, i - n + 1), i + 1)
+              .filter((x) => x[key] != null).map((x) => Number(x[key]));
+            return avg(slice);
+          };
+          const growth = (val: any, base: any, lowerIsBetter = false) => {
+            if (val == null || base == null || !base) return null;
+            const g = ((Number(val) - Number(base)) / Math.abs(Number(base))) * 100;
+            return Number((lowerIsBetter ? -g : g).toFixed(2));
+          };
+          const r7Clicks = roll("clicks");
+          const r7Ctr = roll("ctr");
+          const r7Pos = roll("avg_position");
+          const r7Impr = roll("impressions");
+          return {
+            date: d.captured_on,
+            clicks: Number(d.clicks ?? 0),
+            impressions: Number(d.impressions ?? 0),
+            ctr: d.ctr == null ? null : Number((Number(d.ctr) * 100).toFixed(2)),
+            avg_position: d.avg_position == null ? null : Number(Number(d.avg_position).toFixed(2)),
+            clicks_7d: r7Clicks,
+            impressions_7d: r7Impr,
+            ctr_7d: r7Ctr == null ? null : Number((r7Ctr * 100).toFixed(2)),
+            position_7d: r7Pos,
+            cum_clicks: cumClicks,
+            cum_impressions: cumImpr,
+            growth_clicks_pct: growth(r7Clicks, baseline.clicks),
+            growth_impressions_pct: growth(r7Impr, baseline.impressions),
+            growth_ctr_pct: growth(r7Ctr, baseline.ctr),
+            growth_position_pct: growth(r7Pos, baseline.avg_position, true),
+          };
+        });
+
+        return json({
+          data_source: "gsc",
+          data_label: daily.length ? "actual" : "unavailable",
+          configured: gscConfigured(),
+          sync,
+          overall,
+          baseline,
+          latest_day: latest,
+          today_vs_overall: todayVsOverall,
+          recent,
+          series,
+          server_time: nowIso(),
+        });
       }
 
       /* ─────────── live operations feed (polled by the dashboard) ─────────── */

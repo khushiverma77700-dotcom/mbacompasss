@@ -39,7 +39,9 @@ import {
 } from "@/components/admin/seo/SeoLiveOps";
 import SeoResearchConsole from "@/components/admin/seo/SeoResearchConsole";
 import SeoLiveAnalytics from "@/components/admin/seo/SeoLiveAnalytics";
+import SeoPerformanceReport from "@/components/admin/seo/SeoPerformanceReport";
 import { asText } from "@/components/admin/seo/SeoLiveOps";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 /* ── Navigation: 23 views grouped into 6 plain-language sections ── */
 const TAB_SECTIONS: Array<{
@@ -47,6 +49,7 @@ const TAB_SECTIONS: Array<{
 }> = [
   {
     label: "Live work", icon: Activity, items: [
+      { value: "performance", label: "Performance report", hint: "Live Search Console report: daily average clicks, CTR and ranking, today versus the all-time average, and cumulative growth charts." },
       { value: "analytics", label: "Live analytics", hint: "What the engine is doing this second, how much of the site it has covered, and whether the changes it made actually improved rankings." },
       { value: "overview", label: "Summary", hint: "Headline numbers for the last 28 days: clicks, impressions, average position and rank distribution." },
       { value: "research", label: "Research console", hint: "Animated feed of keyword discovery and competitor teardowns as they happen." },
@@ -419,6 +422,10 @@ const AdminSEOIntelligence = () => {
             );
           })()}
         </div>
+
+        <TabsContent value="performance" className="pt-4">
+          <SeoPerformanceReport />
+        </TabsContent>
 
         <TabsContent value="analytics" className="pt-4">
           <SeoLiveAnalytics status={liveStatus} onRunStage={runStage} />
@@ -1108,4 +1115,10 @@ const AdminSEOIntelligence = () => {
   );
 };
 
-export default AdminSEOIntelligence;
+const AdminSEOIntelligencePage = () => (
+  <ErrorBoundary>
+    <AdminSEOIntelligence />
+  </ErrorBoundary>
+);
+
+export default AdminSEOIntelligencePage;

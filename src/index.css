@@ -1322,3 +1322,9 @@ html, body, #root {
 .rounded-3xl {
   border-radius: var(--radius) !important;
 }
+
+/* Live "scanning" sweep used by the AI SEO Intelligence Center widgets. */
+@keyframes seo-scan {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(320%); }
+}
