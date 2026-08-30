@@ -10539,14 +10539,17 @@ export type Database = {
       }
       seo_intel_pages: {
         Row: {
+          analysis_round: number
           avg_position: number | null
           category: string | null
           clicks: number | null
           created_at: string
           ctr: number | null
           data_sources: Json
+          discovered_by: string | null
           entity_name: string | null
           entity_slug: string | null
+          first_seen_at: string
           h1: string | null
           has_schema: boolean | null
           heading_count: number | null
@@ -10558,6 +10561,7 @@ export type Database = {
           indexed_status: string | null
           internal_links_in: number | null
           internal_links_out: number | null
+          last_analyzed_at: string | null
           last_crawl_at: string | null
           live_crawl_at: string | null
           live_crawl_error: string | null
@@ -10599,14 +10603,17 @@ export type Database = {
           word_count: number | null
         }
         Insert: {
+          analysis_round?: number
           avg_position?: number | null
           category?: string | null
           clicks?: number | null
           created_at?: string
           ctr?: number | null
           data_sources?: Json
+          discovered_by?: string | null
           entity_name?: string | null
           entity_slug?: string | null
+          first_seen_at?: string
           h1?: string | null
           has_schema?: boolean | null
           heading_count?: number | null
@@ -10618,6 +10625,7 @@ export type Database = {
           indexed_status?: string | null
           internal_links_in?: number | null
           internal_links_out?: number | null
+          last_analyzed_at?: string | null
           last_crawl_at?: string | null
           live_crawl_at?: string | null
           live_crawl_error?: string | null
@@ -10659,14 +10667,17 @@ export type Database = {
           word_count?: number | null
         }
         Update: {
+          analysis_round?: number
           avg_position?: number | null
           category?: string | null
           clicks?: number | null
           created_at?: string
           ctr?: number | null
           data_sources?: Json
+          discovered_by?: string | null
           entity_name?: string | null
           entity_slug?: string | null
+          first_seen_at?: string
           h1?: string | null
           has_schema?: boolean | null
           heading_count?: number | null
@@ -10678,6 +10689,7 @@ export type Database = {
           indexed_status?: string | null
           internal_links_in?: number | null
           internal_links_out?: number | null
+          last_analyzed_at?: string | null
           last_crawl_at?: string | null
           live_crawl_at?: string | null
           live_crawl_error?: string | null
