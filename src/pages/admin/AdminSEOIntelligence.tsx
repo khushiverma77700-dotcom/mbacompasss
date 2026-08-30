@@ -385,6 +385,10 @@ const AdminSEOIntelligence = () => {
         </CardContent>
       </Card>
 
+      <ErrorBoundary fallback={<Card><CardContent className="p-4 text-sm text-muted-foreground">Live deck unavailable right now.</CardContent></Card>}>
+        <SeoCommandDeck />
+      </ErrorBoundary>
+
       {intel && <AdvancedHeaderStat intel={intel} />}
 
       <Tabs value={tab} onValueChange={setTab}>
