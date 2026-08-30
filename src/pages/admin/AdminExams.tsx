@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,6 +78,20 @@ const AdminExams = () => {
     return out.join(" ");
   }, [editRecord]);
   const { sortedItems: sortedExams, sortConfig, handleSort } = useTableSort(exams);
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.exams.filters",
+    defaults: { search: "" },
+  });
+
+  const filteredExams = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    if (!q) return sortedExams;
+    return sortedExams.filter((e: any) => {
+      const hay = [e.name, e.full_name, e.slug, e.conducting_body, e.meta_title, e.primary_keyword]
+        .map((v) => (v || "").toLowerCase());
+      return hay.some((v) => v.includes(q));
+    });
+  }, [sortedExams, filters.search]);
 
   const fetchExams = async () => {
     const { data } = await supabase.from("exams").select("*").order("name");
@@ -256,7 +272,7 @@ const AdminExams = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Exams</h1>
         <div className="flex gap-2 flex-wrap">
           <ExportExcelButton
-            rows={sortedExams}
+            rows={filteredExams}
             fileName="exams"
             sheetName="Exams"
             columns={EXAM_EXPORT_COLUMNS}
@@ -270,8 +286,19 @@ const AdminExams = () => {
         <ExamAIGenerator onPublished={fetchExams} />
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search exams by name, full name or slug..."
+        filters={[]}
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`Showing ${filteredExams.length} of ${exams.length} exams`}
+      />
 
-      <Card>
+      <Card className="mt-4">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -286,7 +313,7 @@ const AdminExams = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedExams.map((e, idx) => (
+              {filteredExams.map((e, idx) => (
                 <TableRow key={e.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{e.name}</TableCell>
