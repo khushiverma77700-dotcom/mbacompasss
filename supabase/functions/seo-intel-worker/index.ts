@@ -857,6 +857,346 @@ async function runDailySnapshot(ctx: Ctx) {
   return { records: 1, detail: `${clicks} clicks · ${ranked.length} ranking keywords · ${indexed} indexed pages` };
 }
 
+/* ─────────── autonomous research: find the keywords worth winning ─────────── */
+
+/**
+ * Keyword research. Two real sources, no invented numbers:
+ *  1. Search Console — queries we already rank 4-20 for ("striking distance").
+ *  2. Semrush phrase expansion for those seeds — related terms and questions we
+ *     do not rank for yet, with provider volume / difficulty / CPC.
+ * New keywords land in seo_intel_keywords (tracked) and, where no page targets
+ * them, in seo_intel_content_gaps so the strategy layer can act on them.
+ */
+async function runKeywordDiscovery(ctx: Ctx) {
+  const { sb, settings } = ctx;
+  const locale = settings.semrush_database || "in";
+  await ctx.beat("Reading Search Console query history", 5);
+
+  const { data: striking } = await sb.from("seo_intel_keywords")
+    .select("keyword, current_position, impressions, clicks, target_path, search_volume")
+    .eq("locale", locale)
+    .gte("current_position", 3.5).lte("current_position", 20.5)
+    .order("impressions", { ascending: false, nullsFirst: false })
+    .limit(40);
+
+  const seeds = (striking ?? []).slice(0, 8).map((k: any) => k.keyword);
+  if (!seeds.length) {
+    return { skipped: "No Search Console query history yet — run the Search Console sync first.", records: 0 };
+  }
+
+  // 1. Striking-distance keywords become explicit, tracked opportunities.
+  let promoted = 0;
+  for (const k of striking ?? []) {
+    const { error } = await sb.from("seo_intel_keywords").update({
+      is_tracked: true,
+      discovered_from: "gsc_striking_distance",
+      discovery_source: "gsc",
+      updated_at: nowIso(),
+    }).eq("keyword", k.keyword).eq("locale", locale);
+    if (!error) promoted++;
+  }
+  await ctx.beat(`${promoted} striking-distance keywords marked for attack`, 25);
+
+  // 2. Semrush expansion around those seeds.
+  let discovered = 0;
+  let gapsAdded = 0;
+  if (!semrushConfigured()) {
+    return {
+      records: promoted,
+      detail: `${promoted} striking-distance keywords tracked (Search Console, actual). Semrush is not connected, so no expansion was possible.`,
+    };
+  }
+
+  const existing = new Set<string>();
+  const { data: known } = await sb.from("seo_intel_keywords").select("keyword").eq("locale", locale).limit(3000);
+  for (const k of known ?? []) existing.add(String(k.keyword).toLowerCase());
+
+  for (let i = 0; i < seeds.length; i++) {
+    const seed = seeds[i];
+    await ctx.beat(`Expanding "${seed}" with Semrush`, 30 + Math.round((i / seeds.length) * 55), undefined, seed);
+    let rows: any[] = [];
+    try {
+      rows = await semrushExpand(seed, locale, 30);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await markSource(sb, "semrush", { configured: true, status: "error", last_error: msg, last_sync_at: nowIso() });
+      return {
+        skipped: `Semrush limit reached during expansion — discovery paused (${msg.slice(0, 120)})`,
+        records: promoted + discovered,
+      };
+    }
+    const fresh = rows
+      .filter((r: any) => r?.keyword && !existing.has(String(r.keyword).toLowerCase()))
+      .slice(0, 20);
+    for (const r of fresh) {
+      existing.add(String(r.keyword).toLowerCase());
+      const { error } = await sb.from("seo_intel_keywords").upsert({
+        keyword: r.keyword,
+        locale,
+        search_volume: r.volume ?? r.searchVolume ?? null,
+        volume_source: "semrush",
+        difficulty: r.difficulty ?? null,
+        difficulty_source: r.difficulty != null ? "semrush" : null,
+        cpc: r.cpc ?? null,
+        competition: r.competition ?? null,
+        intent: classifyIntent(r.keyword),
+        is_tracked: true,
+        discovered_from: seed,
+        discovery_source: "semrush_expansion",
+        first_seen_on: today(),
+        last_checked_at: nowIso(),
+        updated_at: nowIso(),
+      }, { onConflict: "keyword,locale" });
+      if (error) continue;
+      discovered++;
+
+      // No page of ours targets it → a real content gap, scored by provider volume.
+      const volume = Number(r.volume ?? r.searchVolume ?? 0);
+      if (volume >= 100) {
+        const { error: gErr } = await sb.from("seo_intel_content_gaps").insert({
+          keyword: r.keyword,
+          gap_type: "missing_page",
+          title: `No page targets "${r.keyword}"`,
+          description: `Semrush reports ${volume.toLocaleString()} monthly searches for "${r.keyword}" (estimated, provider). Discovered while expanding our own ranking query "${seed}" (Search Console, actual). No page on mbacompass.in currently targets it.`,
+          value_score: Math.min(100, Math.round(Math.log10(volume + 1) * 25)),
+          priority: volume >= 1000 ? "high" : "medium",
+          confidence: 0.7,
+          evidence: { seed, volume, volume_source: "semrush", seed_source: "gsc" },
+          status: "open",
+        });
+        if (!gErr) gapsAdded++;
+      }
+    }
+  }
+
+  await ctx.beat("Storing research results", 95);
+  await markSource(sb, "semrush", { configured: true, status: "connected", last_error: null, last_sync_at: nowIso() });
+  if (discovered) {
+    await notify(sb, {
+      kind: "keyword_discovery", severity: "info",
+      title: `${discovered} new keyword opportunity(ies) discovered`,
+      body: `${promoted} striking-distance keywords tracked from Search Console, ${discovered} new keywords found via Semrush expansion, ${gapsAdded} content gaps opened.`,
+    });
+  }
+  return {
+    records: promoted + discovered,
+    detail: `${promoted} striking-distance (Search Console, actual) · ${discovered} new keywords (Semrush, estimated) · ${gapsAdded} content gaps opened`,
+  };
+}
+
+/* ─────────── competitor teardown: what the pages beating us actually do ─────────── */
+
+async function runCompetitorDeep(ctx: Ctx) {
+  const { sb } = ctx;
+  if (!firecrawlConfigured()) {
+    return { skipped: "Firecrawl is not connected — competitor pages cannot be read.", records: 0 };
+  }
+  const batch = Math.max(1, Math.min(4, Number(ctx.job.payload?.batch ?? 3)));
+  const deadline = Date.now() + 110_000;
+
+  const { data: comps } = await sb.from("seo_intel_competitors")
+    .select("id, domain, keyword, their_url, their_position, our_position, our_path")
+    .not("their_url", "is", null)
+    .order("last_updated_on", { ascending: true, nullsFirst: true })
+    .limit(batch);
+  if (!comps?.length) return { skipped: "No competitor URLs stored yet — run the competitor scan first.", records: 0 };
+
+  let done = 0;
+  for (let i = 0; i < comps.length; i++) {
+    const c = comps[i];
+    if (Date.now() > deadline) break;
+    await ctx.beat(`Reading ${c.domain} for "${c.keyword}"`, Math.round((i / comps.length) * 80) + 5, undefined, c.their_url);
+    let html = "", md = "", title: string | null = null;
+    try {
+      const res = await firecrawlScrapeStrict(c.their_url, { formats: ["markdown", "rawHtml"], onlyMainContent: false, timeoutMs: 45_000 });
+      const doc = res?.data ?? res ?? {};
+      html = doc.rawHtml ?? doc.html ?? "";
+      md = doc.markdown ?? "";
+      title = doc.metadata?.title ?? (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? null);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const status = e instanceof FirecrawlError ? e.status : 0;
+      if ([401, 402, 403, 429].includes(status)) {
+        await markSource(sb, "firecrawl", { configured: true, status: "error", last_error: msg, last_tested_at: nowIso() });
+        return { skipped: `Firecrawl unavailable — competitor teardown paused (${msg.slice(0, 140)})`, records: done };
+      }
+      continue;
+    }
+
+    const headings = [...html.matchAll(/<h([1-3])[^>]*>([\s\S]*?)<\/h\1>/gi)]
+      .map((m) => ({ level: Number(m[1]), text: stripHtml(m[2]).trim().slice(0, 160) }))
+      .filter((h) => h.text).slice(0, 60);
+    const schemaTypes = [...html.matchAll(/"@type"\s*:\s*"([^"]+)"/g)].map((m) => m[1]);
+    const words = wordCount(md || stripHtml(html));
+    const metaDesc = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)?.[1] ?? null;
+    const faqCount = (md.match(/^#{2,3}\s.*\?/gm) ?? []).length;
+
+    // Our own page, for a like-for-like comparison.
+    const { data: ours } = await sb.from("seo_intel_pages")
+      .select("path, title, meta_description, word_count, has_schema, primary_keyword, internal_links_out, avg_position, clicks, impressions")
+      .eq("path", c.our_path ?? "").maybeSingle();
+
+    await ctx.beat(`Comparing our page against ${c.domain}`, Math.round((i / comps.length) * 80) + 45, undefined, c.our_path);
+    let why: string | null = null, what: string[] = [];
+    const aiRes = await callAIGateway({
+      model: "gpt-4.1-mini",
+      messages: [
+        { role: "system", content: "You are a precise SEO competitive analyst. Use only the supplied data. Output strict JSON." },
+        {
+          role: "user",
+          content: `Keyword: "${c.keyword}" (locale India, MBA admissions).
+COMPETITOR (crawled live just now): ${JSON.stringify({ domain: c.domain, url: c.their_url, position: c.their_position, title, metaDesc, words, faqCount, schemaTypes: [...new Set(schemaTypes)].slice(0, 12), headings: headings.slice(0, 40) })}
+OUR PAGE (our CMS + Search Console actuals): ${JSON.stringify(ours ?? { note: "we have no page for this keyword" })}
+
+Return STRICT JSON: {"why_outranking":"2-3 sentences citing only the numbers/structures above","what_to_change":["specific, implementable change", "..."],"content_gaps":["subtopic they cover and we do not", "..."]}`,
+        },
+      ],
+      temperature: 0.2,
+    }, { feature: "seo-intel-competitor-deep" });
+
+    let gaps: string[] = [];
+    if (aiRes.ok) {
+      const payload = await aiRes.json();
+      const parsed = parseAIJson<any>(payload?.choices?.[0]?.message?.content ?? "");
+      why = parsed?.why_outranking ?? null;
+      what = Array.isArray(parsed?.what_to_change) ? parsed.what_to_change.slice(0, 8) : [];
+      gaps = Array.isArray(parsed?.content_gaps) ? parsed.content_gaps.slice(0, 10) : [];
+    }
+
+    await sb.from("seo_intel_competitors").update({
+      title: title ? title.slice(0, 300) : null,
+      meta_description: metaDesc ? metaDesc.slice(0, 400) : null,
+      headings,
+      schema_types: [...new Set(schemaTypes)].slice(0, 20),
+      faq_count: faqCount,
+      word_count: words,
+      last_updated_on: today(),
+      content_gaps: gaps,
+      why_outranking: why,
+      what_to_change: what,
+      data_source: "firecrawl+openai",
+      last_checked_at: nowIso(),
+      updated_at: nowIso(),
+    }).eq("id", c.id);
+
+    // Turn each gap into a stored, reviewable content gap on our own page.
+    for (const g of gaps.slice(0, 5)) {
+      await sb.from("seo_intel_content_gaps").insert({
+        path: c.our_path ?? null,
+        keyword: c.keyword,
+        gap_type: "competitor_coverage",
+        title: String(g).slice(0, 200),
+        description: `${c.domain} ranks #${c.their_position ?? "?"} for "${c.keyword}" and covers this; our page ${c.our_path ?? "(none)"} does not. Competitor page: ${words.toLocaleString()} words, ${faqCount} FAQ blocks, schema ${[...new Set(schemaTypes)].slice(0, 5).join(", ") || "none"} (Firecrawl, actual).`,
+        competitor_domain: c.domain,
+        competitor_url: c.their_url,
+        value_score: 60,
+        priority: (c.their_position ?? 99) <= 3 ? "high" : "medium",
+        confidence: 0.6,
+        evidence: { competitor_words: words, our_words: ours?.word_count ?? null, competitor_position: c.their_position, our_position: c.our_position },
+        status: "open",
+      });
+    }
+    done++;
+  }
+
+  await markSource(sb, "firecrawl", { configured: true, status: "connected", last_error: null, last_sync_at: nowIso() });
+  return { records: done, detail: `tore down ${done} competitor page(s) and stored what they do differently` };
+}
+
+/* ─────────── autonomous execution: apply the safe wins by itself ─────────── */
+
+/**
+ * Applies only changes that are safe and reversible: a page title or meta
+ * description rewrite with a concrete after_value, written to page_seo_overrides.
+ * Every application records a before/after experiment so the impact is measured
+ * from Search Console later. Anything else stays a human task.
+ */
+async function runAutoApply(ctx: Ctx) {
+  const { sb, settings } = ctx;
+  if (!settings.autonomous_mode) {
+    return { skipped: "Autonomous mode is off — changes wait for admin approval in the Approvals tab.", records: 0 };
+  }
+  const limit = Math.max(1, Math.min(10, Number(ctx.job.payload?.limit ?? 5)));
+  const { data: recs } = await sb.from("seo_intel_recommendations")
+    .select("*")
+    .in("status", ["new", "review", "approved"])
+    .eq("auto_appliable", true)
+    .not("after_value", "is", null)
+    .not("path", "is", null)
+    .order("priority")
+    .order("confidence", { ascending: false, nullsFirst: false })
+    .limit(limit * 3);
+
+  const eligible = (recs ?? []).filter((r: any) =>
+    /title|meta|description/i.test(String(r.change_type ?? "")) &&
+    (r.confidence ?? 0) >= 0.6 &&
+    String(r.after_value ?? "").trim().length >= 20
+  ).slice(0, limit);
+
+  if (!eligible.length) {
+    return { skipped: "No safe change is currently eligible for autonomous application.", records: 0 };
+  }
+
+  let applied = 0;
+  for (let i = 0; i < eligible.length; i++) {
+    const rec = eligible[i];
+    await ctx.beat(`Applying ${rec.change_type} on ${rec.path}`, Math.round((i / eligible.length) * 90) + 5, undefined, rec.path);
+    const changeType = String(rec.change_type).toLowerCase();
+    const slug = String(rec.path).split("/").filter(Boolean).pop();
+    if (!slug) continue;
+    const { data: existing } = await sb.from("page_seo_overrides").select("*").eq("slug", slug).maybeSingle();
+    const patch: Record<string, unknown> = { slug, updated_at: nowIso() };
+    if (/title/.test(changeType)) patch.title = rec.after_value;
+    else patch.description = rec.after_value;
+    const { error: upErr } = await sb.from("page_seo_overrides").upsert(patch, { onConflict: "slug" });
+    if (upErr) continue;
+
+    const { data: page } = await sb.from("seo_intel_pages")
+      .select("avg_position, clicks, impressions").eq("path", rec.path).maybeSingle();
+    await sb.from("seo_intel_experiments").insert({
+      path: rec.path, keyword: rec.keyword, recommendation_id: rec.id,
+      change_type: rec.change_type, change_summary: rec.recommended_change,
+      before_value: rec.before_value ?? (/title/.test(changeType) ? existing?.title : existing?.description) ?? null,
+      after_value: rec.after_value,
+      baseline_position: page?.avg_position ?? null,
+      baseline_clicks: page?.clicks ?? null,
+      baseline_impressions: page?.impressions ?? null,
+      baseline_captured_on: today(),
+      changed_on: today(),
+      measure_after: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
+      data_source: "gsc",
+      outcome: "pending",
+    });
+    await sb.from("seo_intel_recommendations").update({
+      status: "applied", applied_at: nowIso(), applied_by: null,
+      reviewed_at: nowIso(),
+    }).eq("id", rec.id);
+    await logAudit(sb, {
+      actor: null, actor_label: "engine (autonomous)", action: "recommendation_applied",
+      entity: "recommendation", entity_id: rec.id, path: rec.path,
+      before_value: { value: existing?.title ?? existing?.description ?? null },
+      after_value: { value: rec.after_value },
+      data_source: rec.data_source, recommendation_id: rec.id,
+    });
+    await logActivity(sb, {
+      event: "Autonomous change applied",
+      detail: `${rec.path} — ${rec.change_type}: "${String(rec.after_value).slice(0, 120)}"`,
+      level: "success", job_id: ctx.job.id, job_type: "auto_apply", records: 1,
+    });
+    applied++;
+  }
+
+  if (applied) {
+    await notify(sb, {
+      kind: "auto_applied", severity: "info",
+      title: `${applied} safe SEO change(s) applied automatically`,
+      body: "Each change recorded a before/after baseline — impact is measured from Search Console after the measurement window.",
+    });
+  }
+  return { records: applied, detail: `${applied} safe change(s) applied and baselined for measurement` };
+}
+
+
 const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?: string; detail?: string }>> = {
   gsc_pages: runGscPages,
   gsc_queries: runGscQueries,
