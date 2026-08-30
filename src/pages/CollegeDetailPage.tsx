@@ -574,6 +574,18 @@ const CollegeDetailPage = () => {
         <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <div className="space-y-6 min-w-0 overflow-hidden">
 
+            {/* Answer-first block — powers the page's speakable + QA schema. */}
+            {(answerText || answerFacts.length > 0) && (
+              <AnswerBlock
+                question={`What is ${college.name}?`}
+                answer={answerText}
+                facts={answerFacts}
+                updatedAt={(college as any).updated_at || null}
+              />
+            )}
+
+
+
             {/* Overview */}
             <div id="overview" ref={el => { sectionRefs.current["overview"] = el; }} className="scroll-mt-32">
               <Card className="overflow-hidden border-border/60 shadow-md">
