@@ -326,33 +326,47 @@ const AdminSEOIntelligence = () => {
       {intel && <AdvancedHeaderStat intel={intel} />}
 
       <Tabs value={tab} onValueChange={setTab}>
-        <div className="overflow-x-auto">
-          <TabsList className="w-max">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="research">Research console</TabsTrigger>
-            <TabsTrigger value="live">Live operations</TabsTrigger>
-            <TabsTrigger value="impact">Impact &amp; changes</TabsTrigger>
-            <TabsTrigger value="approvals">Approvals</TabsTrigger>
-            <TabsTrigger value="strategy">Strategy</TabsTrigger>
-            <TabsTrigger value="opportunities">Next actions</TabsTrigger>
-            <TabsTrigger value="demand">Demand & intent</TabsTrigger>
-            <TabsTrigger value="forecast">Forecast & anomalies</TabsTrigger>
-            <TabsTrigger value="gaps">Gaps & cannibalization</TabsTrigger>
-            <TabsTrigger value="entities">Entities & graph</TabsTrigger>
-            <TabsTrigger value="monitor">Live monitor</TabsTrigger>
-            <TabsTrigger value="pages">Pages</TabsTrigger>
-            <TabsTrigger value="keywords">Keywords</TabsTrigger>
-            <TabsTrigger value="recs">Recommendations</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="indexing">Indexing</TabsTrigger>
-            <TabsTrigger value="competitors">Competitors</TabsTrigger>
-            <TabsTrigger value="experiments">What improved</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="sources">Data sources</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-            <TabsTrigger value="audit">Audit log</TabsTrigger>
-          </TabsList>
+        {/* Two-level navigation: pick a plain-language section, then a view inside it. */}
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            {TAB_SECTIONS.map((s) => {
+              const active = s.items.some((i) => i.value === tab);
+              return (
+                <Button
+                  key={s.label}
+                  size="sm"
+                  variant={active ? "default" : "outline"}
+                  onClick={() => { if (!active) setTab(s.items[0].value); }}
+                >
+                  <s.icon className="mr-2 h-4 w-4" /> {s.label}
+                </Button>
+              );
+            })}
+          </div>
+          {(() => {
+            const section = TAB_SECTIONS.find((s) => s.items.some((i) => i.value === tab)) ?? TAB_SECTIONS[0];
+            const current = section.items.find((i) => i.value === tab);
+            return (
+              <>
+                <div className="overflow-x-auto">
+                  <TabsList className="w-max">
+                    {section.items.map((i) => (
+                      <TabsTrigger key={i.value} value={i.value}>{i.label}</TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+                {current?.hint && (
+                  <p className="text-xs text-muted-foreground">{current.hint}</p>
+                )}
+              </>
+            );
+          })()}
         </div>
+
+        <TabsContent value="analytics" className="pt-4">
+          <SeoLiveAnalytics status={liveStatus} onRunStage={runStage} />
+        </TabsContent>
+
 
         {/* ── Advanced intelligence layer ── */}
         <TabsContent value="strategy" className="pt-4">
