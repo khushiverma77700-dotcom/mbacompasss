@@ -1211,7 +1211,11 @@ const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?
   verify: runVerify,
   report: runReport,
   daily_snapshot: runDailySnapshot,
+  keyword_discovery: runKeywordDiscovery,
+  competitor_deep: runCompetitorDeep,
+  auto_apply: runAutoApply,
 };
+
 
 
 // Advanced intelligence stages share one signature (sb, settings, payload).
