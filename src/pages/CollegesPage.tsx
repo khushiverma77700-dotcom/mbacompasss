@@ -169,7 +169,16 @@ const CollegesPage = () => {
     return `Explore ${filtered.length} ${type}MBA colleges in ${location}${exam} with rankings, fees, placements, and admission details.`;
   }, [activeTab, selectedState, selectedCity, selectedExam, filtered.length]);
 
-  const jsonLd = generateListingSchema(dynamicTitle, filtered, "college");
+  const jsonLd = buildPageGraph(
+    generateListingSchema(dynamicTitle, filtered, "college"),
+    buildWebPageSchema({
+      path: "/colleges",
+      name: dynamicTitle,
+      description: dynamicDescription,
+      breadcrumbs: [{ name: "MBA Colleges", url: "/colleges" }],
+    }),
+    buildBreadcrumbSchema("/colleges", [{ name: "MBA Colleges", url: "/colleges" }]),
+  );
 
   // Dynamic H1
   const dynamicH1 = useMemo(() => {
