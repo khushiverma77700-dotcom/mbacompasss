@@ -563,8 +563,8 @@ export const ImpactReportPanel = ({ onRunStage }: { onRunStage: (types: string[]
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{when(a.created_at)}</TableCell>
                       <TableCell className="text-xs">{a.action}</TableCell>
                       <TableCell className="max-w-[200px] truncate text-xs">{a.path ?? "—"}</TableCell>
-                      <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">{a.before_value ?? "—"}</TableCell>
-                      <TableCell className="max-w-[220px] truncate text-xs">{a.after_value ?? "—"}</TableCell>
+                      <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">{asText(a.before_value)}</TableCell>
+                      <TableCell className="max-w-[220px] truncate text-xs">{asText(a.after_value)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
