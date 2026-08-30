@@ -1245,7 +1245,16 @@ Deno.serve(async (req) => {
   if (depth > MAX_DEPTH) return json({ status: "depth_budget_spent", depth });
 
   const gate = withinSchedule(settings);
-  if (!gate.ok && !body?.force) return json({ status: "idle", reason: gate.reason });
+  if (!gate.ok && !body?.force) {
+    // The schedule gate only governs automatic work. A job an admin queued by
+    // hand ("Run now") must still be drained, otherwise it sits in the queue
+    // forever while the engine switch is off or outside the window.
+    const { count: manualQueued } = await sb.from("seo_intel_jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "queued").eq("triggered_by", "manual");
+    if (!manualQueued) return json({ status: "idle", reason: gate.reason });
+  }
+
 
   const { data: claimed, error: claimErr } = await sb.rpc("seo_intel_claim_job", { p_lease_seconds: LEASE_SECONDS });
   if (claimErr) return json({ error: claimErr.message }, 500);
