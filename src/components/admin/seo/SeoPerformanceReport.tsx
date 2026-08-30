@@ -258,6 +258,33 @@ export default function SeoPerformanceReport() {
     date: safeText(d?.date, ""),
   }));
 
+  // Client-side 7-day windows straight off the real daily rows, so the panel can
+  // answer "is the average going up or down?" without another request.
+  const winAvg = (key: string, n: number, offset = 0) => {
+    const end = series.length - offset;
+    const slice = series.slice(Math.max(0, end - n), Math.max(0, end))
+      .filter((d) => d?.[key] != null).map((d) => Number(d[key]));
+    if (!slice.length) return null;
+    return Number((slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(4));
+  };
+  const cmpWindows = [
+    { label: "Clicks per day", key: "clicks", digits: 1, lower: false, allTime: overall?.avg_daily_clicks ?? null },
+    { label: "Impressions per day", key: "impressions", digits: 0, lower: false, allTime: overall?.avg_daily_impressions ?? null },
+    { label: "CTR %", key: "ctr", digits: 2, lower: false, allTime: overall?.avg_ctr == null ? null : Number((Number(overall.avg_ctr) * 100).toFixed(2)) },
+    { label: "Average position", key: "avg_position", digits: 2, lower: true, allTime: overall?.avg_position ?? null },
+  ].map((c) => ({ ...c, current: winAvg(c.key, 7), previous: winAvg(c.key, 7, 7) }));
+
+  const improvingCount = cmpWindows.filter((c) =>
+    c.current != null && c.previous != null && (c.lower ? c.current < c.previous : c.current > c.previous)).length;
+  const measurable = cmpWindows.filter((c) => c.current != null && c.previous != null).length;
+  const verdict = !measurable
+    ? { text: "Not enough recorded days to compare averages yet.", tone: "muted" as const }
+    : improvingCount >= 3
+      ? { text: `Averages are rising — ${improvingCount} of ${measurable} key metrics are better than last week.`, tone: "up" as const }
+      : improvingCount === 0
+        ? { text: `Averages are falling — none of the ${measurable} key metrics beat last week.`, tone: "down" as const }
+        : { text: `Mixed movement — ${improvingCount} of ${measurable} key metrics are better than last week.`, tone: "mixed" as const };
+
   return (
     <div className="space-y-4">
       {/* live activity strip */}
