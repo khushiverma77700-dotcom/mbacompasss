@@ -47,6 +47,7 @@ const hhmm = (v: unknown) => {
 };
 
 export default function SeoCommandDeck() {
+  const m = useSeoMotion();
   const [status, setStatus] = useState<any>(null);
   const [feed, setFeed] = useState<any>(null);
   const [busy, setBusy] = useState(false);
@@ -79,12 +80,16 @@ export default function SeoCommandDeck() {
     }
   }, [call]);
 
+  // Realtime push: any engine table change refreshes the deck immediately.
+  const rt = useSeoRealtime(() => { if (mounted.current) load(); }, undefined, { debounceMs: 900 });
+
   useEffect(() => {
     mounted.current = true;
     load();
-    const t = setInterval(load, 20_000);
+    // Safety-net poll — much slower when realtime is connected.
+    const t = setInterval(load, rt.connected ? m.pollMs * 4 : m.pollMs);
     return () => { mounted.current = false; clearInterval(t); };
-  }, [load]);
+  }, [load, rt.connected, m.pollMs]);
 
   const running: any[] = Array.isArray(status?.running) ? status.running : [];
   const queued: any[] = Array.isArray(status?.queued) ? status.queued : [];
@@ -93,6 +98,7 @@ export default function SeoCommandDeck() {
   const gains = feed?.gains ?? {};
   const activity: any[] = Array.isArray(feed?.activity) ? feed.activity : [];
   const working = running.length > 0 || busy;
+
 
   const stages: FxStage[] = useMemo(() => {
     const activeTypes = new Set(running.map((r) => String(r.job_type ?? "")));
