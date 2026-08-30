@@ -20,6 +20,7 @@ import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { ADVANCED_STAGES, validateRecommendation, upsertRecommendation } from "../_shared/seoIntel2.ts";
 import { STATIC_ROUTES } from "../_shared/staticRoutes.ts";
+import { scoreAeoGeo } from "../_shared/aeoGeoRules.ts";
 
 
 
@@ -690,7 +691,7 @@ async function runSpeedAudit(ctx: Ctx) {
 /** AI analysis over the stored signals → concrete, evidence-backed recommendations. */
 async function runAnalyze(ctx: Ctx) {
   const { sb, job } = ctx;
-  const PAGE_COLS = "path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities, last_analyzed_at, analysis_round";
+  const PAGE_COLS = "path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, aeo_score, aeo_grade, aeo_failed, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities, last_analyzed_at, analysis_round";
   const batchSize = Math.max(6, Math.min(20, Number(ctx.settings.max_pages_per_run ?? 12)));
   const explicitPaths: string[] = Array.isArray(job.payload?.paths) ? job.payload.paths : [];
 
@@ -738,6 +739,7 @@ ${JSON.stringify(pages, null, 1)}
 Interpretation rules for the extra signals:
 - ssr_gap true, or rendered_word_count far below word_count, means crawlers do not see the content — treat as a technical/indexing blocker with the highest priority.
 - rendered_has_schema false while has_schema true means schema is injected client-side only.
+- aeo_score (0-100), aeo_grade and aeo_failed come from our deterministic AEO/GEO rulebook check on this page. Every failed check in aeo_failed MUST produce a recommendation in category "aeo" or "geo" for that page, naming the failed check and the exact fix (answer-first paragraph, key-facts table, question-shaped headings, FAQ block, fact density, semantic tables, heading order). Pages with aeo_score below 75 are high priority.
 - Flag speed only from psi_* values: LCP > 2500ms, CLS > 0.1 or TBT > 200ms, and cite psi_opportunities titles.
 - Where a psi_* or rendered_* field is null, that page has not been measured yet — say so instead of guessing.
 
