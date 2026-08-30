@@ -1,4 +1,5 @@
 import DOMPurify from "isomorphic-dompurify";
+import { normalizeContentStructure } from "@/lib/contentStructure";
 // Post-processor for AI-generated HTML.
 //
 // 1. Converts inline citation markers — both "[src:NIRF 2025]" (machine-readable)
