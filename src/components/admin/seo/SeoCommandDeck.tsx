@@ -10,10 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Activity, Bot, CheckCircle2, ClipboardCheck, Cpu, Radar, RefreshCw, Search, Syringe, Trophy,
+  Activity, Bot, CheckCircle2, ClipboardCheck, Cpu, Radar, RefreshCw, Search, Syringe, Trophy, Wifi,
 } from "lucide-react";
+
 import { fmtInt, safeText, agoText } from "@/lib/seoSafeRender";
 import { LiveDot, RawPayloadDrawer } from "./SeoSafeUi";
 import { useSeoMotion } from "./SeoMotion";
