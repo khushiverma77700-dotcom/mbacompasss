@@ -685,8 +685,14 @@ RULES:
 - Only use the numbers given. Never invent traffic, volume or rankings.
 - Each recommendation must name the exact problem, the evidence (quote the numbers given), why it matters, the concrete change, and a before/after value where a text change is proposed.
 - Prefer changes that can be applied to title, meta description, headings, internal links, schema or content depth.
+- Cover all three layers for EVERY page in the list, not only the high-traffic ones:
+  · SEO — title/meta/heading/keyword/internal-link/indexing quality.
+  · AEO (answer engines) — is there a direct one-paragraph answer near the top, an FAQ block with real questions, definition/entity clarity, and FAQPage/HowTo/Article schema?
+  · GEO (generative engines) — factual, citable statements with named entities (IIM, CAT, NIRF, fees, cutoffs, years), stat-rich sentences an LLM can quote, and unique data no competitor page has.
+- A page with low or zero impressions is still in scope: recommend the AEO/GEO and depth work that would make it rankable.
 - confidence is 0-1. priority is one of high | medium | low.
-- category is one of: technical, content, keywords, internal_links, schema, ctr, indexing, competitor.
+- category is one of: technical, content, keywords, internal_links, schema, ctr, indexing, competitor, aeo, geo.
+
 
 PAGES (Search Console = actual; on-page = from our CMS; rendered_* / ssr_gap = what Firecrawl actually received from the live URL; psi_* = real Google PageSpeed/Lighthouse mobile measurements, lcp/tbt in ms):
 ${JSON.stringify(pages, null, 1)}
