@@ -131,22 +131,70 @@ const ExamDetailPage = () => {
       : undefined);
 
   const faqItems = (sections.faqs || []).filter((f) => cleanValue(f.q) && cleanValue(f.a));
+
+  // AEO/GEO: direct answer + extractable key facts for this exam.
+  const answerText = useMemo(
+    () =>
+      deriveDirectAnswer(
+        (sections.quick_answer || []).map((i) => cleanValue(i.a)).filter(Boolean).join(" "),
+        typeof sections.overview === "string" ? (sections.overview as string) : undefined,
+        dbExam?.meta_description,
+        dbExam?.description,
+        seoDescription,
+      ),
+    [sections, dbExam, seoDescription],
+  );
+  const answerFacts = useMemo(
+    () =>
+      [
+        { label: "Conducted by", value: cleanValue(hero.conducting_body) },
+        { label: "Level", value: cleanValue(hero.exam_level) },
+        { label: "Mode", value: cleanValue(hero.exam_mode) },
+        { label: "Frequency", value: cleanValue(hero.frequency) },
+        { label: "Duration", value: cleanValue(hero.duration) },
+        { label: "Exam date", value: dbExam?.exam_date ? new Date(dbExam.exam_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined },
+      ].filter((f) => f.value) as { label: string; value: string }[],
+    [hero, dbExam],
+  );
+
   const jsonLd = useMemo(() => {
+    const path = `/exam/${slug}`;
     const base = dbExam ? generateExamSchema(dbExam) : undefined;
-    const graph: any[] = base ? (Array.isArray(base) ? base : [base]) : [];
-    if (faqItems.length) {
-      graph.push({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: faqItems.slice(0, 30).map((f) => ({
-          "@type": "Question",
-          name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
-        })),
-      });
-    }
-    return graph.length === 1 ? graph[0] : graph.length ? graph : undefined;
-  }, [dbExam, faqItems]);
+    return buildPageGraph(
+      base,
+      buildWebPageSchema({
+        path,
+        name: seoTitle || titleLabel,
+        description: seoDescription,
+        dateModified: dbExam?.updated_at || undefined,
+        breadcrumbs: [
+          { name: "Exams", url: "/exam" },
+          { name: titleLabel, url: path },
+        ],
+      }),
+      buildBreadcrumbSchema(path, [
+        { name: "Exams", url: "/exam" },
+        { name: titleLabel, url: path },
+      ]),
+      answerText
+        ? buildDirectAnswerSchema({ path, question: `What is ${titleLabel}?`, answer: answerText })
+        : null,
+      buildKeyFactsSchema({ path, name: titleLabel, facts: answerFacts }),
+      faqItems.length
+        ? {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "@id": `${SITE_ORIGIN}${path}#faq`,
+            mainEntity: faqItems.slice(0, 30).map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }
+        : null,
+    );
+  }, [dbExam, faqItems, slug, seoTitle, seoDescription, titleLabel, answerText, answerFacts]);
+
 
   const { seo: resolvedSeo } = useResolvedSeo("exam", dbExam?.id, {
     title: seoTitle,
