@@ -1328,3 +1328,16 @@ html, body, #root {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(320%); }
 }
+
+/* Homepage salary-band bars: CSS-only grow-in (no chart library needed). */
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.animate-grow-x {
+  transform-origin: left center;
+  animation: grow-x 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-grow-x { animation: none; }
+}

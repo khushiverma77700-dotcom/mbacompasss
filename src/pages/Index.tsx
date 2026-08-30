@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import HeroSection from "@/components/HeroSection";
 import SEOHead, {
   generateWebsiteSchema,
@@ -40,6 +40,33 @@ const FreeToolsShowcase = lazy(() => import("@/components/FreeToolsShowcase"));
 const ROIComparisonTable = lazy(() => import("@/components/ROIComparisonTable"));
 const FreebiesPreview = lazy(() => import("@/components/FreebiesPreview"));
 const TopperWall = lazy(() => import("@/components/TopperWall"));
+const HomeAdmissionTimeline = lazy(() => import("@/components/HomeAdmissionTimeline"));
+const HomePersonaPaths = lazy(() => import("@/components/HomePersonaPaths"));
+const HomeSalaryInsights = lazy(() => import("@/components/HomeSalaryInsights"));
+const HomeSpecializations = lazy(() => import("@/components/HomeSpecializations"));
+const HomeQuickAnswers = lazy(() => import("@/components/HomeQuickAnswers"));
+
+/**
+ * Warms the chunks a visitor almost always scrolls into, but only when the
+ * browser is idle and the connection is not metered/slow. Keeps first paint
+ * untouched while removing the scroll-time loading flash.
+ */
+const prefetchNextChunks = () => {
+  const conn = (navigator as any).connection;
+  if (conn?.saveData) return;
+  if (typeof conn?.effectiveType === "string" && /2g/.test(conn.effectiveType)) return;
+
+  const run = () => {
+    import("@/components/HomePersonaPaths");
+    import("@/components/HomeAdmissionTimeline");
+    import("@/components/TopRankedCollegesSection");
+    import("@/components/StatsCounterSection");
+    import("@/components/PopularExamsSection");
+  };
+  const ric = (window as any).requestIdleCallback;
+  if (typeof ric === "function") ric(run, { timeout: 2600 });
+  else window.setTimeout(run, 1800);
+};
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -158,6 +185,10 @@ const Deferred = ({ height, rootMargin = "0px", id, children }: { height: number
 );
 
 const Index = () => {
+  useEffect(() => {
+    prefetchNextChunks();
+  }, []);
+
   return (
     <>
       <SEOHead
@@ -191,20 +222,24 @@ const Index = () => {
         <Deferred height={560} rootMargin="200px" id="home-tools"><FreeToolsShowcase /></Deferred>
         <Deferred height={320}><ExamDeadlinesTicker /></Deferred>
         <Deferred height={520}><TopRankedCollegesSection /></Deferred>
-
+        <Deferred height={620} rootMargin="240px" id="home-paths"><HomePersonaPaths /></Deferred>
 
         {/* Below-the-fold: code-split + mount on scroll */}
         <Deferred height={200}><StatsCounterSection /></Deferred>
         <Deferred height={520}><MBALandscapeSection /></Deferred>
         <Deferred height={360}><PopularExamsSection /></Deferred>
+        <Deferred height={700} id="home-timeline"><HomeAdmissionTimeline /></Deferred>
         <Deferred height={640}><ExamCutoffsTable /></Deferred>
+        <Deferred height={640} id="home-salary"><HomeSalaryInsights /></Deferred>
         <Deferred height={520}><ROIComparisonTable /></Deferred>
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={520}><PlacementsBySectorSection /></Deferred>
+        <Deferred height={560} id="home-specializations"><HomeSpecializations /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
         <Deferred height={320} id="home-cities"><TopCitiesSection /></Deferred>
         <Deferred height={420} id="home-comparisons"><TopExamComparisonSection /></Deferred>
         <Deferred height={520}><TopperWall /></Deferred>
+
         <Deferred height={420}><WhyChooseUs /></Deferred>
         <Deferred height={160}><AICoachingFinder /></Deferred>
         <Deferred height={360}><HowItWorksSection /></Deferred>
@@ -214,8 +249,10 @@ const Index = () => {
         <Deferred height={360}><LearningResourcesSection /></Deferred>
         <Deferred height={420} id="home-blog"><LatestArticlesSection /></Deferred>
         <Deferred height={360}><NewsSection /></Deferred>
+        <Deferred height={620} id="home-quick-answers"><HomeQuickAnswers /></Deferred>
         <Deferred height={420}><FAQSection /></Deferred>
         <Deferred height={280}><CTASection /></Deferred>
+
       </div>
       <JumpToMenu />
       <BackToTop />

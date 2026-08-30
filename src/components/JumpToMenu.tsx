@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import { Compass, X } from "lucide-react";
 
 const SECTIONS = [
+  { id: "home-paths", label: "Your Path" },
+  { id: "home-timeline", label: "Year Map" },
+  { id: "home-salary", label: "Salaries" },
+  { id: "home-specializations", label: "Specialisations" },
   { id: "home-cities", label: "Cities" },
   { id: "home-tools", label: "Tools" },
   { id: "home-comparisons", label: "Comparisons" },
+  { id: "home-quick-answers", label: "Quick Answers" },
   { id: "home-blog", label: "Blog" },
 ];
 
