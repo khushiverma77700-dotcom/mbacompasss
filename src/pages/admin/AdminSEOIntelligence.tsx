@@ -497,9 +497,13 @@ const AdminSEOIntelligence = () => {
         <TabsContent value="impact" className="pt-4">
           <ImpactReportPanel onRunStage={runStage} />
         </TabsContent>
-        <TabsContent value="approvals" className="pt-4">
+        <TabsContent value="approvals" className="space-y-4 pt-4">
+          <ErrorBoundary>
+            <SeoApprovalQueue onChanged={() => { loadSnapshot(true); loadTables(); }} />
+          </ErrorBoundary>
           <ApprovalPanel onChanged={() => { loadSnapshot(true); loadTables(); }} />
         </TabsContent>
+
 
         <TabsContent value="overview" className="space-y-4 pt-4">
           <IntelligenceOverview status={liveStatus} />
