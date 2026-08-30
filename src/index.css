@@ -1344,3 +1344,23 @@ html, body, #root {
 @media (prefers-reduced-motion: reduce) {
   .animate-grow-x { animation: none; }
 }
+
+/* ── Type-scale guard for Tailwind Typography ──────────────────────────────
+   prose-sm / prose-base / prose-lg would reintroduce off-scale root sizes,
+   so every rich-text block reads at the shared body size. */
+.prose,
+.prose-sm,
+.prose-base,
+.prose-lg {
+  font-size: var(--fs-body);
+}
+.prose h1 { font-size: var(--fs-heading); }
+.prose h2 { font-size: var(--fs-subhead); }
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 { font-size: var(--fs-body); }
+.prose small,
+.prose figcaption,
+.prose th,
+.prose td { font-size: var(--fs-detail); }
