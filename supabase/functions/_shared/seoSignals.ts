@@ -457,3 +457,61 @@ export async function loadPages(sb: any, sources = SILO_SOURCES) {
   return pages;
 }
 
+export type LoadedPage = Awaited<ReturnType<typeof loadPages>>[number];
+
+/** How many rows each source contributes (cheap head count, no payload). */
+export async function countSourceRows(sb: any, sources = SILO_SOURCES) {
+  const out: number[] = [];
+  for (const src of sources) {
+    let q = sb.from(src.table).select("id", { count: "exact", head: true });
+    if (src.filter) q = src.filter(q);
+    const { count } = await q;
+    out.push(count ?? 0);
+  }
+  return out;
+}
+
+/**
+ * Read ONE window of ONE source. Used by the crawler so a single invocation
+ * never has to materialise the whole site (which blows the CPU/memory budget
+ * once a table has thousands of content-heavy rows).
+ */
+export async function loadPagesSlice(
+  sb: any,
+  sourceIndex: number,
+  offset: number,
+  size: number,
+  sources = SILO_SOURCES,
+): Promise<LoadedPage[]> {
+  const src = sources[sourceIndex];
+  if (!src) return [];
+  let q = sb.from(src.table).select(src.columns);
+  if (src.filter) q = src.filter(q);
+  const { data, error } = await q.range(offset, offset + size - 1);
+  if (error || !data) return [];
+  const pages: LoadedPage[] = [];
+  for (const row of data) {
+    const path = src.pathFor(row, {});
+    if (!path) continue;
+    const html = src.htmlFor(row).map((v: any) => flattenText(v)).join("\n");
+    const extra = (src.textFor?.(row) ?? []).map((v: any) => flattenText(v)).join("\n");
+    const text = stripHtml(`${html}\n${extra}`);
+    pages.push({
+      path,
+      name: src.nameFor(row),
+      page_type: src.page_type,
+      source_table: src.table,
+      source_id: row.id,
+      source_field: src.field,
+      keyword: src.keywordFor?.(row) ?? null,
+      topic: src.topicFor?.(row) ?? null,
+      html,
+      text,
+      words: wordCount(text),
+    });
+  }
+  return pages;
+}
+
+}
+
