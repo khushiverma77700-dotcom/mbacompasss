@@ -960,7 +960,7 @@ async function runKeywordDiscovery(ctx: Ctx) {
           description: `Semrush reports ${volume.toLocaleString()} monthly searches for "${r.keyword}" (estimated, provider). Discovered while expanding our own ranking query "${seed}" (Search Console, actual). No page on mbacompass.in currently targets it.`,
           value_score: Math.min(100, Math.round(Math.log10(volume + 1) * 25)),
           priority: volume >= 1000 ? "high" : "medium",
-          confidence: 0.7,
+          confidence: volume >= 1000 ? "high" : "medium",
           evidence: { seed, volume, volume_source: "semrush", seed_source: "gsc" },
           status: "open",
         });
@@ -1073,7 +1073,7 @@ Return STRICT JSON: {"why_outranking":"2-3 sentences citing only the numbers/str
       last_updated_on: today(),
       content_gaps: gaps,
       why_outranking: why,
-      what_to_change: what,
+      what_to_change: what.length ? what.map((w, n) => `${n + 1}. ${w}`).join("\n") : null,
       data_source: "firecrawl+openai",
       last_checked_at: nowIso(),
       updated_at: nowIso(),
@@ -1091,7 +1091,7 @@ Return STRICT JSON: {"why_outranking":"2-3 sentences citing only the numbers/str
         competitor_url: c.their_url,
         value_score: 60,
         priority: (c.their_position ?? 99) <= 3 ? "high" : "medium",
-        confidence: 0.6,
+        confidence: "medium",
         evidence: { competitor_words: words, our_words: ours?.word_count ?? null, competitor_position: c.their_position, our_position: c.our_position },
         status: "open",
       });
