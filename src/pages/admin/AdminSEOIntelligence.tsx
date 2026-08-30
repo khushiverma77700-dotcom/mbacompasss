@@ -1155,8 +1155,11 @@ const AdminSEOIntelligence = () => {
 
 const AdminSEOIntelligencePage = () => (
   <ErrorBoundary>
-    <AdminSEOIntelligence />
+    <SeoMotionProvider>
+      <AdminSEOIntelligence />
+    </SeoMotionProvider>
   </ErrorBoundary>
 );
+
 
 export default AdminSEOIntelligencePage;
