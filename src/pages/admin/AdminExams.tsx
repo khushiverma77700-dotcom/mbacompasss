@@ -27,6 +27,28 @@ const emptyForm = {
   primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
+const EXAM_EXPORT_COLUMNS: [string, string][] = [
+  ["name", "Name"],
+  ["full_name", "Full Name"],
+  ["slug", "Slug"],
+  ["conducting_body", "Conducting Body"],
+  ["exam_date", "Exam Date"],
+  ["registration_deadline", "Registration Deadline"],
+  ["frequency", "Frequency"],
+  ["eligibility", "Eligibility"],
+  ["syllabus", "Syllabus"],
+  ["keywords", "Keywords"],
+  ["primary_keyword", "Primary Keyword"],
+  ["funnel_stage", "Funnel Stage"],
+  ["meta_title", "Meta Title"],
+  ["meta_description", "Meta Description"],
+  ["h1_tag", "H1 Tag"],
+  ["created_at", "Created At"],
+  ["updated_at", "Updated At"],
+];
+
+
+
 const AdminExams = () => {
   const [exams, setExams] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
