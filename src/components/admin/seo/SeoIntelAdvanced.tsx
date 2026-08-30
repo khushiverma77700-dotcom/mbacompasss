@@ -17,6 +17,7 @@ import {
   ArrowUpRight, Activity, AlertTriangle, Gauge, GitBranch, Layers, LineChart,
   Link2, Loader2, RefreshCw, Sparkles, Target, TrendingUp,
 } from "lucide-react";
+import { asText } from "@/components/admin/seo/SeoLiveOps";
 
 export interface IntelData {
   locale: string;
@@ -156,7 +157,7 @@ export function StrategyPanel({ intel, busy, runStage }: { intel: IntelData | nu
                             {a.keyword && <span className="mr-2">Keyword: {a.keyword}</span>}
                             {a.effort && <span>Effort: {a.effort}</span>}
                           </div>
-                          {a.evidence && <div className="mt-1 text-xs">Evidence: {a.evidence}</div>}
+                          {a.evidence && <div className="mt-1 text-xs">Evidence: {asText(a.evidence, "")}</div>}
                           {a.expected_effect && <div className="text-xs text-muted-foreground">Expected: {a.expected_effect}</div>}
                         </li>
                       ))}
@@ -411,7 +412,7 @@ export function DemandPanel({ intel, busy, runStage }: { intel: IntelData | null
                   <TableRow key={i}>
                     <TableCell>{s.metric}</TableCell>
                     <TableCell>{s.source}</TableCell>
-                    <TableCell>{s.value ?? s.value_text ?? "—"}</TableCell>
+                    <TableCell>{asText(s.value ?? s.value_text)}</TableCell>
                     <TableCell><Badge variant="outline">{s.label}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{s.observed_at ? new Date(s.observed_at).toLocaleString() : "—"}</TableCell>
                   </TableRow>

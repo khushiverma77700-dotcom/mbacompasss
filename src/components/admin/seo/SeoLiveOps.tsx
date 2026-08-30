@@ -40,6 +40,16 @@ const d1 = (v: any, p = 1) => (v === null || v === undefined ? "—" : Number(v)
 const when = (v: any) =>
   v ? new Date(v).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "Never";
 
+// Audit/recommendation values can be stored as JSON objects, so never hand them
+// to React as a child — always coerce to readable text first.
+export const asText = (v: any, fallback = "—"): string => {
+  if (v === null || v === undefined || v === "") return fallback;
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  try { return JSON.stringify(v); } catch { return String(v); }
+};
+
+
 const ago = (v: any) => {
   if (!v) return "never";
   const s = Math.max(0, Math.round((Date.now() - new Date(v).getTime()) / 1000));
@@ -563,8 +573,8 @@ export const ImpactReportPanel = ({ onRunStage }: { onRunStage: (types: string[]
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{when(a.created_at)}</TableCell>
                       <TableCell className="text-xs">{a.action}</TableCell>
                       <TableCell className="max-w-[200px] truncate text-xs">{a.path ?? "—"}</TableCell>
-                      <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">{a.before_value ?? "—"}</TableCell>
-                      <TableCell className="max-w-[220px] truncate text-xs">{a.after_value ?? "—"}</TableCell>
+                      <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">{asText(a.before_value)}</TableCell>
+                      <TableCell className="max-w-[220px] truncate text-xs">{asText(a.after_value)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -756,11 +766,11 @@ export const ApprovalPanel = ({ onChanged }: { onChanged?: () => void }) => {
               <div className="grid gap-2 sm:grid-cols-2">
                 <div className="rounded border p-2">
                   <div className="mb-1 text-xs font-semibold text-muted-foreground">Before</div>
-                  <div className="whitespace-pre-wrap break-words text-xs">{preview.before_value ?? "— (nothing recorded)"}</div>
+                  <div className="whitespace-pre-wrap break-words text-xs">{asText(preview.before_value, "— (nothing recorded)")}</div>
                 </div>
                 <div className="rounded border p-2">
                   <div className="mb-1 text-xs font-semibold text-muted-foreground">After</div>
-                  <div className="whitespace-pre-wrap break-words text-xs">{preview.after_value ?? "— (needs a human edit)"}</div>
+                  <div className="whitespace-pre-wrap break-words text-xs">{asText(preview.after_value, "— (needs a human edit)")}</div>
                 </div>
               </div>
               <div className="text-xs text-muted-foreground">
