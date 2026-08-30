@@ -775,9 +775,20 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     // GPT-5-mini pricing
     const estimatedCost = (promptTokens * 0.25 + completionTokens * 2.0) / 1_000_000;
 
+    const aeo = scoreAeoGeo(allContent, {
+      entityName: data.name || data.title || data.exam_name || undefined,
+    });
+
     return new Response(JSON.stringify({
       success: true,
       suggestions,
+      aeoCompliance: {
+        score: aeo.score,
+        grade: aeo.grade,
+        passed: aeo.passed.map((c) => c.label),
+        failed: aeo.failed.map((c) => ({ label: c.label, detail: c.detail ?? null })),
+        fixInstructions: aeo.fixInstructions,
+      },
       meta: {
         model: "openai/gpt-5-mini",
         promptTokens, completionTokens, totalTokens,
