@@ -11,6 +11,15 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateInstituteSchema, generateBreadcrumbSchema, generateFAQSchema, generateReviewSchema } from "@/components/SEOHead";
+import AnswerBlock from "@/components/AnswerBlock";
+import {
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildDirectAnswerSchema,
+  buildKeyFactsSchema,
+  buildPageGraph,
+  deriveDirectAnswer,
+} from "@/lib/aeoSchema";
 import { canonicalUrl } from "@/lib/canonical";
 import {
   MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
