@@ -23,6 +23,10 @@ export interface UseAdminFiltersOptions {
   preserveKeys?: string[];
 }
 
+/** Keys that never go into the URL — search text changes on every keystroke and
+ *  URL re-navigation per keystroke can steal input focus / feel "broken". */
+const URL_EXCLUDED_KEYS = new Set(["search"]);
+
 const isDefaultValue = (val: string, def: string) => {
   const v = (val ?? "").trim();
   if (!v) return true;
@@ -41,6 +45,7 @@ export function useAdminFilters({ storageKey, defaults, preserveKeys = [] }: Use
     // 1) localStorage fallback (only used if URL has no filter params)
     let urlHasAnyFilter = false;
     for (const key of Object.keys(defaults)) {
+      if (URL_EXCLUDED_KEYS.has(key)) continue;
       const urlVal = searchParams.get(key);
       if (urlVal != null) urlHasAnyFilter = true;
     }
