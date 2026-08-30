@@ -490,7 +490,7 @@ export default function SeoPerformanceReport() {
               No Search Console daily data stored yet. Use “Re-sync now” once the connection is live.
             </div>
           ) : (
-            <div className="h-[360px]">
+            <div className="h-[360px]" key={`chart-${chart}-${tick}`}>
               <ResponsiveContainer width="100%" height="100%">
                 {chart === "clicks" ? (
                   <ComposedChart data={chartData}>
