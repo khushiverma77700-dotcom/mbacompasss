@@ -9,6 +9,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead, { generateExamSchema } from "@/components/SEOHead";
+import AnswerBlock from "@/components/AnswerBlock";
+import {
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildDirectAnswerSchema,
+  buildKeyFactsSchema,
+  buildPageGraph,
+  deriveDirectAnswer,
+  SITE_ORIGIN,
+} from "@/lib/aeoSchema";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { canonicalUrl } from "@/lib/canonical";
 import { examDetails } from "@/data/mockData";
@@ -131,22 +141,70 @@ const ExamDetailPage = () => {
       : undefined);
 
   const faqItems = (sections.faqs || []).filter((f) => cleanValue(f.q) && cleanValue(f.a));
+
+  // AEO/GEO: direct answer + extractable key facts for this exam.
+  const answerText = useMemo(
+    () =>
+      deriveDirectAnswer(
+        (sections.quick_answer || []).map((i) => cleanValue(i.a)).filter(Boolean).join(" "),
+        typeof sections.overview === "string" ? (sections.overview as string) : undefined,
+        dbExam?.meta_description,
+        dbExam?.description,
+        seoDescription,
+      ),
+    [sections, dbExam, seoDescription],
+  );
+  const answerFacts = useMemo(
+    () =>
+      [
+        { label: "Conducted by", value: cleanValue(hero.conducting_body) },
+        { label: "Level", value: cleanValue(hero.exam_level) },
+        { label: "Mode", value: cleanValue(hero.exam_mode) },
+        { label: "Frequency", value: cleanValue(hero.frequency) },
+        { label: "Duration", value: cleanValue(hero.duration) },
+        { label: "Exam date", value: dbExam?.exam_date ? new Date(dbExam.exam_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined },
+      ].filter((f) => f.value) as { label: string; value: string }[],
+    [hero, dbExam],
+  );
+
   const jsonLd = useMemo(() => {
+    const path = `/exam/${slug}`;
     const base = dbExam ? generateExamSchema(dbExam) : undefined;
-    const graph: any[] = base ? (Array.isArray(base) ? base : [base]) : [];
-    if (faqItems.length) {
-      graph.push({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: faqItems.slice(0, 30).map((f) => ({
-          "@type": "Question",
-          name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
-        })),
-      });
-    }
-    return graph.length === 1 ? graph[0] : graph.length ? graph : undefined;
-  }, [dbExam, faqItems]);
+    return buildPageGraph(
+      base,
+      buildWebPageSchema({
+        path,
+        name: seoTitle || titleLabel,
+        description: seoDescription,
+        dateModified: dbExam?.updated_at || undefined,
+        breadcrumbs: [
+          { name: "Exams", url: "/exam" },
+          { name: titleLabel, url: path },
+        ],
+      }),
+      buildBreadcrumbSchema(path, [
+        { name: "Exams", url: "/exam" },
+        { name: titleLabel, url: path },
+      ]),
+      answerText
+        ? buildDirectAnswerSchema({ path, question: `What is ${titleLabel}?`, answer: answerText })
+        : null,
+      buildKeyFactsSchema({ path, name: titleLabel, facts: answerFacts }),
+      faqItems.length
+        ? {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "@id": `${SITE_ORIGIN}${path}#faq`,
+            mainEntity: faqItems.slice(0, 30).map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }
+        : null,
+    );
+  }, [dbExam, faqItems, slug, seoTitle, seoDescription, titleLabel, answerText, answerFacts]);
+
 
   const { seo: resolvedSeo } = useResolvedSeo("exam", dbExam?.id, {
     title: seoTitle,
@@ -267,11 +325,22 @@ const ExamDetailPage = () => {
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-6 lg:gap-8 min-w-0">
           <main className="space-y-5 md:space-y-6 min-w-0">
+            {/* Answer-first block — feeds the page's speakable/QA schema. */}
+            {(answerText || answerFacts.length > 0) && (
+              <AnswerBlock
+                question={`What is ${titleLabel}?`}
+                answer={answerText}
+                facts={answerFacts}
+                updatedAt={dbExam?.updated_at || null}
+              />
+            )}
+
             {hasModuleContent(sections.quick_answer) && (
               <div id="quick-answer" className="scroll-mt-24">
                 <QuickAnswerBox items={sections.quick_answer!} title={`${titleLabel} at a glance`} />
               </div>
             )}
+
 
             {hasModuleContent(sections.highlights) && (
               <Section id="highlights" title={`${examName} highlights`}>

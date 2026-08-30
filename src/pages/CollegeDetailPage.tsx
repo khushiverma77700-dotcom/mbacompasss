@@ -15,6 +15,15 @@ import { useCtaGate } from "@/hooks/useCtaGate";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import SEOHead, { generateCollegeSchema, generateFAQSchema } from "@/components/SEOHead";
+import AnswerBlock from "@/components/AnswerBlock";
+import {
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildDirectAnswerSchema,
+  buildKeyFactsSchema,
+  buildPageGraph,
+  deriveDirectAnswer,
+} from "@/lib/aeoSchema";
 import { canonicalUrl } from "@/lib/canonical";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
@@ -203,6 +212,47 @@ const CollegeDetailPage = () => {
     { q: `What is the average placement?`, a: `Average package: ${college.placement_avg || "competitive"}. Highest: ${college.placement_highest || "among the best"}.` },
   ];
 
+  // AEO/GEO layer — answer-first summary, key facts, entity-linked page graph.
+  const collegePath = `/college/${college.slug}`;
+  const answerText = deriveDirectAnswer(
+    (college as any).meta_description,
+    (college as any).about || (college as any).description,
+    `${college.name} is an MBA/PGDM business school${college.city ? ` in ${college.city}` : ""}${college.state ? `, ${college.state}` : ""}. Total programme fees are ${college.fees || "available on request"} and the average placement package is ${college.placement_avg || "available on request"}.`,
+  );
+  const answerFacts = [
+    { label: "Location", value: [college.city, college.state].filter(Boolean).join(", ") || undefined },
+    { label: "Total fees", value: college.fees || undefined },
+    { label: "Average package", value: college.placement_avg || undefined },
+    { label: "Highest package", value: college.placement_highest || undefined },
+    { label: "NIRF rank", value: college.ranking ? `#${college.ranking}` : undefined },
+    { label: "Exams accepted", value: exams.length ? exams.slice(0, 4).join(", ") : undefined },
+  ].filter((f) => f.value) as { label: string; value: string }[];
+
+  const pageJsonLd = buildPageGraph(
+    collegeJsonLd,
+    buildWebPageSchema({
+      path: collegePath,
+      name: `${college.name} — Fees, Placements & Admission`,
+      description: (college as any).meta_description || answerText,
+      dateModified: (college as any).updated_at || undefined,
+      primaryImage: college.banner_url || college.logo_url || undefined,
+      breadcrumbs: [
+        { name: "Colleges", url: "/colleges" },
+        { name: college.name, url: collegePath },
+      ],
+    }),
+    buildBreadcrumbSchema(collegePath, [
+      { name: "Colleges", url: "/colleges" },
+      { name: college.name, url: collegePath },
+    ]),
+    answerText
+      ? buildDirectAnswerSchema({ path: collegePath, question: `What is ${college.name}?`, answer: answerText })
+      : null,
+    buildKeyFactsSchema({ path: collegePath, name: college.name, facts: answerFacts }),
+    generateFAQSchema(qaItems),
+  );
+
+
   const handleDownloadBrochure = gateBrochure(() => {
     const content = [`${college.name} - Brochure`, `Location: ${college.city}, ${college.state}`, `Ranking: #${college.ranking}`, `Fees: ${college.fees}`, `Avg Package: ${college.placement_avg}`].join("\n");
     const blob = new Blob([content], { type: "text/plain" });
@@ -317,7 +367,7 @@ const CollegeDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead {...resolvedSeo} jsonLd={[collegeJsonLd, generateFAQSchema(qaItems)].filter(Boolean) as any} />
+      <SEOHead {...resolvedSeo} jsonLd={pageJsonLd as any} />
       <LoginRequiredDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} message="Sign in to access detailed college information." />
 
       {/* ===== Premium Hero Banner ===== */}
@@ -523,6 +573,18 @@ const CollegeDetailPage = () => {
         />
         <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <div className="space-y-6 min-w-0 overflow-hidden">
+
+            {/* Answer-first block — powers the page's speakable + QA schema. */}
+            {(answerText || answerFacts.length > 0) && (
+              <AnswerBlock
+                question={`What is ${college.name}?`}
+                answer={answerText}
+                facts={answerFacts}
+                updatedAt={(college as any).updated_at || null}
+              />
+            )}
+
+
 
             {/* Overview */}
             <div id="overview" ref={el => { sectionRefs.current["overview"] = el; }} className="scroll-mt-32">

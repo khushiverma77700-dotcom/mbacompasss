@@ -9,7 +9,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
+import SEOHead from "@/components/SEOHead";
+import AnswerBlock from "@/components/AnswerBlock";
+import {
+  buildArticleSchema,
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildDirectAnswerSchema,
+  buildPageGraph,
+  deriveDirectAnswer,
+} from "@/lib/aeoSchema";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
@@ -79,7 +88,46 @@ const ArticlePage = () => {
   const articleKeywords = ((article as any)?.keywords || []) as string[];
   const heroImage = article?.banner_url || article?.image_url;
   const mobileHeroImage = (article as any)?.mobile_banner_url || heroImage;
-  const jsonLd = article ? generateArticleSchema(article) : undefined;
+
+  // AEO/GEO: answer-first summary derived from stored content (no AI call).
+  const answerText = article
+    ? deriveDirectAnswer(
+        (article as any).ai_summary,
+        (article as any).meta_description,
+        article.excerpt,
+        article.content,
+      )
+    : undefined;
+  const answerQuestion = article ? `${(article as any).h1_tag || article.title}` : undefined;
+
+  const jsonLd = article
+    ? buildPageGraph(
+        buildArticleSchema(article as any),
+        buildWebPageSchema({
+          path: `/article/${article.slug}`,
+          name: (article as any).meta_title || article.title,
+          description: (article as any).meta_description || article.excerpt || undefined,
+          datePublished: article.created_at,
+          dateModified: (article as any).updated_at || article.created_at,
+          primaryImage: heroImage || undefined,
+          breadcrumbs: [
+            { name: "Blog", url: "/blog" },
+            { name: article.title, url: `/article/${article.slug}` },
+          ],
+        }),
+        buildBreadcrumbSchema(`/article/${article.slug}`, [
+          { name: "Blog", url: "/blog" },
+          { name: article.title, url: `/article/${article.slug}` },
+        ]),
+        answerText && answerQuestion
+          ? buildDirectAnswerSchema({
+              path: `/article/${article.slug}`,
+              question: answerQuestion,
+              answer: answerText,
+            })
+          : null,
+      )
+    : undefined;
   const { seo: resolvedSeo } = useResolvedSeo(
     "article",
     article?.id,
@@ -94,6 +142,7 @@ const ArticlePage = () => {
         }
       : {},
   );
+
 
   useEffect(() => {
     if (article) {
@@ -309,11 +358,27 @@ const ArticlePage = () => {
               onScrollToContent={() => document.getElementById("article-content")?.scrollIntoView({ behavior: "smooth" })}
             />
 
-            {article.excerpt && (
+
+            {answerText && (
+              <AnswerBlock
+                question={answerQuestion}
+                answer={answerText}
+                facts={[
+                  { label: "Category", value: article.category },
+                  { label: "Author", value: article.author || "MBA Compass Editorial" },
+                  { label: "Read time", value: `${readTime} read` },
+                ]}
+                updatedAt={(article as any).updated_at || article.created_at}
+                className="mb-8"
+              />
+            )}
+
+            {article.excerpt && !answerText && (
               <div className="bg-gradient-to-r from-primary/[0.06] to-transparent border-l-[3px] border-primary rounded-r-xl p-5 mb-8">
                 <p className="text-foreground/80 font-medium italic text-[15px] leading-relaxed">{article.excerpt}</p>
               </div>
             )}
+
 
             <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
               <div className="flex items-center justify-end mb-4 -mt-1">

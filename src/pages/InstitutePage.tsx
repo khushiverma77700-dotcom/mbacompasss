@@ -11,6 +11,15 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateInstituteSchema, generateBreadcrumbSchema, generateFAQSchema, generateReviewSchema } from "@/components/SEOHead";
+import AnswerBlock from "@/components/AnswerBlock";
+import {
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildDirectAnswerSchema,
+  buildKeyFactsSchema,
+  buildPageGraph,
+  deriveDirectAnswer,
+} from "@/lib/aeoSchema";
 import { canonicalUrl } from "@/lib/canonical";
 import {
   MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
@@ -180,7 +189,47 @@ const InstitutePage = () => {
     { name: institute.name, url: canonicalUrl(`/institute/${institute.slug}`) },
     instituteReviews as any[],
   );
-  const combinedJsonLd = [seoSchema, faqSchema, breadcrumbSchema, reviewSchema].filter(Boolean);
+  // AEO/GEO layer — answer-first summary + machine-readable key facts.
+  const institutePath = `/institute/${institute.slug}`;
+  const answerText = deriveDirectAnswer(
+    institute.meta_description,
+    institute.description,
+    `${institute.name} is an MBA entrance coaching institute${institute.city ? ` in ${institute.city}` : ""} offering CAT, XAT, SNAP and NMAT preparation with classroom and online batches, mock tests and mentoring.`,
+  );
+  const answerFacts = [
+    { label: "Location", value: [institute.city, institute.state].filter(Boolean).join(", ") || undefined },
+    { label: "Established", value: inst.established_year ? String(inst.established_year) : undefined },
+    { label: "Programs", value: linkedCourses.length ? `${linkedCourses.length} programs` : undefined },
+    { label: "Rating", value: institute.rating ? `${institute.rating}/5` : undefined },
+    { label: "Success rate", value: institute.success_rate ? `${institute.success_rate}%` : undefined },
+    { label: "Mode", value: isHybrid ? "Classroom + Online" : undefined },
+  ].filter((f) => f.value) as { label: string; value: string }[];
+
+  const combinedJsonLd = buildPageGraph(
+    seoSchema,
+    buildWebPageSchema({
+      path: institutePath,
+      name: institute.meta_title || `${institute.name} — Coaching Institute`,
+      description: institute.meta_description || institute.description || undefined,
+      dateModified: (institute as any).updated_at || undefined,
+      primaryImage: institute.banner_url || institute.logo_url || undefined,
+      breadcrumbs: [
+        { name: "Coaching", url: "/coaching" },
+        { name: institute.name, url: institutePath },
+      ],
+    }),
+    buildBreadcrumbSchema(institutePath, [
+      { name: "Coaching", url: "/coaching" },
+      { name: institute.name, url: institutePath },
+    ]),
+    answerText
+      ? buildDirectAnswerSchema({ path: institutePath, question: `What is ${institute.name}?`, answer: answerText })
+      : null,
+    buildKeyFactsSchema({ path: institutePath, name: institute.name, facts: answerFacts }),
+    faqSchema,
+    reviewSchema,
+  );
+
 
   // Quick stat cards based on available data
   const heroStats = [
@@ -376,6 +425,16 @@ const InstitutePage = () => {
       </section>
 
       <div className="container mx-auto px-4 py-10 max-w-6xl">
+        {(answerText || answerFacts.length > 0) && (
+          <AnswerBlock
+            question={`What is ${institute.name}?`}
+            answer={answerText}
+            facts={answerFacts}
+            updatedAt={(institute as any).updated_at || null}
+            className="mb-8"
+          />
+        )}
+
         <div className="grid lg:grid-cols-[230px_1fr] gap-8">
           {/* ToC — always visible on desktop when there's any content */}
           {(activeSections.length > 0 || linkedCourses.length > 0) && (

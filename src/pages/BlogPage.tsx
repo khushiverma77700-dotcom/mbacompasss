@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
+import { buildWebPageSchema, buildBreadcrumbSchema, buildPageGraph } from "@/lib/aeoSchema";
 import PageKeywords from "@/components/PageKeywords";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import TopicClusterLinks, { DEFAULT_MBA_CLUSTER } from "@/components/TopicClusterLinks";
@@ -80,13 +81,25 @@ const BlogPage = () => {
           "MBA vs PGDM which is better for career", "salary after MBA in India for freshers",
         ]}
         canonical="https://mbacompass.in/blog"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Blog",
-          name: "MBA Compass Blog",
-          url: "https://mbacompass.in/blog",
-          description: "Expert articles on MBA preparation, coaching reviews, career advice, and B-school admissions.",
-        }}
+        jsonLd={buildPageGraph(
+          {
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "@id": "https://mbacompass.in/blog#blog",
+            name: "MBA Compass Blog",
+            url: "https://mbacompass.in/blog",
+            description: "Expert articles on MBA preparation, coaching reviews, career advice, and B-school admissions.",
+            publisher: { "@id": "https://mbacompass.in/#organization" },
+          },
+          buildWebPageSchema({
+            path: "/blog",
+            name: "MBA Blog — CAT Tips, Career Advice & B-School News",
+            description: "Expert blogs on CAT prep, XAT strategies, GD-PI tips, MBA vs PGDM, salary insights, and news from top management institutes.",
+            breadcrumbs: [{ name: "Blog", url: "/blog" }],
+          }),
+          buildBreadcrumbSchema("/blog", [{ name: "Blog", url: "/blog" }]),
+        )}
+
       />
 
       {/* Utility row */}

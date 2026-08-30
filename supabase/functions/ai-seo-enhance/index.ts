@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?targe
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { getCredential } from "../_shared/getCredential.ts";
+import { scoreAeoGeo } from "../_shared/aeoGeoRules.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -775,9 +776,20 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     // GPT-5-mini pricing
     const estimatedCost = (promptTokens * 0.25 + completionTokens * 2.0) / 1_000_000;
 
+    const aeo = scoreAeoGeo(allContent, {
+      entityName: data.name || data.title || data.exam_name || undefined,
+    });
+
     return new Response(JSON.stringify({
       success: true,
       suggestions,
+      aeoCompliance: {
+        score: aeo.score,
+        grade: aeo.grade,
+        passed: aeo.passed.map((c) => c.label),
+        failed: aeo.failed.map((c) => ({ label: c.label, detail: c.detail ?? null })),
+        fixInstructions: aeo.fixInstructions,
+      },
       meta: {
         model: "openai/gpt-5-mini",
         promptTokens, completionTokens, totalTokens,

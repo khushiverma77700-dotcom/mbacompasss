@@ -1,6 +1,10 @@
 // Shared rules appended to every long-form AI content generator
 // (blogs, college pages, college sections, institute pages, course pages, news, refresh).
-// Enforces: no AI buzzwords, mandatory "About MBA Compass" section, "Summary" not "Quick Summary".
+// Enforces: no AI buzzwords, mandatory "About MBA Compass" section, "Summary" not
+// "Quick Summary", plus the sitewide AEO/GEO rulebook (see aeoGeoRules.ts) so all
+// future AI content is answer-engine ready by default.
+
+import { AEO_GEO_RULES } from "./aeoGeoRules.ts";
 
 export const MBA_COMPASS_SECTION_RULES = `
 
@@ -59,7 +63,8 @@ You are writing for real MBA aspirants who will make life decisions based on thi
 - Realistic **average CTC** ranges for the most recent cycle: top IIMs (A/B/C) **INR 32-36 LPA**; XLRI **INR 32-35 LPA**; new IIMs **INR 14-22 LPA**; tier-2 private **INR 8-15 LPA**. Never claim "INR 1 crore average" — that is the highest international package, not an average.
 - Never invent recruiter names, alumni quotes, or precise student counts. Prefer ranges like "around 480 students" over a fake exact figure.
 - Use active cycle data only (current_year-1 to current_year). Do not publish placement/admission figures older than current_year - 2 unless the sentence clearly says it is historical.
-`;
+` + AEO_GEO_RULES;
+
 
 
 // ===================================================================
