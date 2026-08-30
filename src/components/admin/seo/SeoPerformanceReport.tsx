@@ -294,7 +294,7 @@ export default function SeoPerformanceReport() {
         <StatCard
           icon={MousePointerClick} live={live} unitLabel="vs all-time average"
           label="Daily average clicks"
-          value={<any>null ? "" : fmtDec(overall?.avg_daily_clicks, 1)}
+          value={fmtDec(overall?.avg_daily_clicks, 1)}
           sub={`Today ${fmtInt((tvo as any)?.clicks?.value)} · all-time avg ${fmtDec(overall?.avg_daily_clicks, 1)}`}
           cmp={(tvo as any)?.clicks}
         />
