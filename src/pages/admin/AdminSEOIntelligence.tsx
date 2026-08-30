@@ -47,6 +47,7 @@ const TAB_SECTIONS: Array<{
 }> = [
   {
     label: "Live work", icon: Activity, items: [
+      { value: "performance", label: "Performance report", hint: "Live Search Console report: daily average clicks, CTR and ranking, today versus the all-time average, and cumulative growth charts." },
       { value: "analytics", label: "Live analytics", hint: "What the engine is doing this second, how much of the site it has covered, and whether the changes it made actually improved rankings." },
       { value: "overview", label: "Summary", hint: "Headline numbers for the last 28 days: clicks, impressions, average position and rank distribution." },
       { value: "research", label: "Research console", hint: "Animated feed of keyword discovery and competitor teardowns as they happen." },
