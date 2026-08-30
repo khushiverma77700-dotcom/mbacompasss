@@ -78,6 +78,20 @@ const AdminExams = () => {
     return out.join(" ");
   }, [editRecord]);
   const { sortedItems: sortedExams, sortConfig, handleSort } = useTableSort(exams);
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.exams.filters",
+    defaults: { search: "" },
+  });
+
+  const filteredExams = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    if (!q) return sortedExams;
+    return sortedExams.filter((e: any) => {
+      const hay = [e.name, e.full_name, e.slug, e.conducting_body, e.meta_title, e.primary_keyword]
+        .map((v) => (v || "").toLowerCase());
+      return hay.some((v) => v.includes(q));
+    });
+  }, [sortedExams, filters.search]);
 
   const fetchExams = async () => {
     const { data } = await supabase.from("exams").select("*").order("name");
