@@ -198,6 +198,35 @@ export async function logActivity(sb: any, e: {
   } catch (_) { /* logging must never break a run */ }
 }
 
+/**
+ * Live heartbeat for a running job. Writes the real step the worker is on into
+ * seo_intel_jobs.progress so the dashboard can animate actual work instead of a
+ * fake spinner. Never throws — a failed heartbeat must not fail the job.
+ */
+export async function beat(sb: any, jobId: string | null | undefined, p: {
+  step: string;
+  pct?: number;
+  detail?: string;
+  target?: string | null;
+  records?: number;
+}) {
+  if (!jobId) return;
+  try {
+    await sb.from("seo_intel_jobs").update({
+      progress: {
+        step: p.step,
+        pct: p.pct == null ? null : Math.max(0, Math.min(100, Math.round(p.pct))),
+        detail: p.detail ?? null,
+        target: p.target ?? null,
+        records: p.records ?? null,
+        at: new Date().toISOString(),
+      },
+    }).eq("id", jobId);
+  } catch (_) { /* heartbeats are best-effort */ }
+}
+
+
+
 export async function logAudit(sb: any, e: {
   actor?: string | null;
   actor_label?: string;
