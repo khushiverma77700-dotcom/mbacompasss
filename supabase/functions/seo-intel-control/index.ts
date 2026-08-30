@@ -289,7 +289,222 @@ Deno.serve(async (req) => {
         });
       }
 
+      /* ─────────── coverage pulse: keyword coverage, technical gaps,
+         the 64 AI-SEO levers and post-change outcomes — all from stored data ── */
+      case "coverage_pulse": {
+        const fetchAll = async (table: string, cols: string) => {
+          const out: any[] = [];
+          for (let from = 0; from < 20000; from += 1000) {
+            const { data, error } = await sb.from(table).select(cols).range(from, from + 999);
+            if (error) break;
+            out.push(...(data ?? []));
+            if ((data ?? []).length < 1000) break;
+          }
+          return out;
+        };
+
+        const [pageRows, kwRows, expRows, recRows, snapRows] = await Promise.all([
+          fetchAll("seo_intel_pages",
+            "path, page_type, title, meta_description, h1, heading_count, word_count, has_schema, schema_types, " +
+            "internal_links_out, internal_links_in, indexed_status, indexed_checked_at, health_score, " +
+            "clicks, impressions, ctr, avg_position, position_change, perf_updated_at, primary_keyword, target_keywords, " +
+            "last_crawl_at, psi_perf_score, psi_seo_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_fcp_ms, psi_checked_at, " +
+            "rendered_title, rendered_h1, rendered_word_count, rendered_has_schema, rendered_links_out, ssr_gap, live_crawl_at, live_crawl_error"),
+          fetchAll("seo_intel_keywords",
+            "keyword, target_path, search_volume, volume_source, difficulty, difficulty_source, intent, " +
+            "current_position, position_change, opportunity_score, top_competitor_domain, last_checked_at, created_at"),
+          sb.from("seo_intel_experiments").select("*").order("changed_on", { ascending: false }).limit(200)
+            .then((r: any) => r.data ?? []),
+          sb.from("seo_intel_recommendations").select("status, category, change_type, applied_at, created_at")
+            .order("created_at", { ascending: false }).limit(1000).then((r: any) => r.data ?? []),
+          sb.from("seo_intel_daily_snapshots").select("*").order("captured_on", { ascending: false }).limit(30)
+            .then((r: any) => r.data ?? []),
+        ]);
+
+        const P = pageRows;
+        const K = kwRows;
+        const daysAgo = (n: number) => Date.now() - n * 864e5;
+        const fresh = (v: any, n: number) => !!v && new Date(v).getTime() > daysAgo(n);
+        const has = (v: any) => v !== null && v !== undefined && String(v).trim() !== "";
+        const len = (v: any) => String(v ?? "").trim().length;
+        const kwIn = (hay: any, needle: any) =>
+          has(hay) && has(needle) && String(hay).toLowerCase().includes(String(needle).toLowerCase());
+        const schemaHas = (row: any, re: RegExp) =>
+          Array.isArray(row.schema_types) && row.schema_types.some((t: any) => re.test(String(t)));
+
+        // A lever is measurable only when the underlying signal was collected for
+        // at least one row; otherwise it reports "not measured yet" (never faked).
+        type Lever = { id: number; group: string; name: string; ok: (r: any) => boolean; scope?: "page" | "keyword"; gate?: (r: any) => boolean };
+        const L: Lever[] = [];
+        let n = 0;
+        const add = (group: string, name: string, ok: (r: any) => boolean, gate?: (r: any) => boolean, scope: "page" | "keyword" = "page") =>
+          L.push({ id: ++n, group, name, ok, gate, scope });
+
+        // 1. Crawlability & indexing
+        add("Crawlability & indexing", "Page crawled in last 30 days", (r) => fresh(r.last_crawl_at, 30));
+        add("Crawlability & indexing", "Crawler-visibility check done", (r) => has(r.live_crawl_at));
+        add("Crawlability & indexing", "No crawler-visibility error", (r) => !has(r.live_crawl_error), (r) => has(r.live_crawl_at));
+        add("Crawlability & indexing", "Server-rendered HTML matches app", (r) => r.ssr_gap !== true, (r) => has(r.live_crawl_at));
+        add("Crawlability & indexing", "Indexed by Google", (r) => r.indexed_status === "indexed", (r) => has(r.indexed_checked_at));
+        add("Crawlability & indexing", "Index status verified", (r) => has(r.indexed_checked_at));
+        add("Crawlability & indexing", "Title present in raw HTML", (r) => has(r.rendered_title), (r) => has(r.live_crawl_at));
+        add("Crawlability & indexing", "H1 present in raw HTML", (r) => has(r.rendered_h1), (r) => has(r.live_crawl_at));
+
+        // 2. Metadata
+        add("Metadata & snippets", "Title tag present", (r) => has(r.title));
+        add("Metadata & snippets", "Title length 30–65 chars", (r) => len(r.title) >= 30 && len(r.title) <= 65, (r) => has(r.title));
+        add("Metadata & snippets", "Meta description present", (r) => has(r.meta_description));
+        add("Metadata & snippets", "Description length 70–165", (r) => len(r.meta_description) >= 70 && len(r.meta_description) <= 165, (r) => has(r.meta_description));
+        add("Metadata & snippets", "H1 present", (r) => has(r.h1));
+        add("Metadata & snippets", "H1 differs from title", (r) => String(r.h1).trim() !== String(r.title).trim(), (r) => has(r.h1) && has(r.title));
+        add("Metadata & snippets", "Primary keyword in title", (r) => kwIn(r.title, r.primary_keyword), (r) => has(r.primary_keyword) && has(r.title));
+        add("Metadata & snippets", "Primary keyword in description", (r) => kwIn(r.meta_description, r.primary_keyword), (r) => has(r.primary_keyword) && has(r.meta_description));
+
+        // 3. Content depth
+        add("Content depth", "600+ words", (r) => Number(r.word_count) >= 600, (r) => has(r.word_count));
+        add("Content depth", "1,200+ words", (r) => Number(r.word_count) >= 1200, (r) => has(r.word_count));
+        add("Content depth", "5+ headings", (r) => Number(r.heading_count) >= 5, (r) => has(r.heading_count));
+        add("Content depth", "500+ words visible to crawlers", (r) => Number(r.rendered_word_count) >= 500, (r) => has(r.rendered_word_count));
+        add("Content depth", "Crawler sees 80%+ of content", (r) => Number(r.rendered_word_count) >= 0.8 * Number(r.word_count || 1), (r) => has(r.rendered_word_count) && has(r.word_count));
+        add("Content depth", "Primary keyword assigned", (r) => has(r.primary_keyword));
+        add("Content depth", "2+ supporting keywords", (r) => Array.isArray(r.target_keywords) && r.target_keywords.length >= 2);
+        add("Content depth", "Primary keyword in H1", (r) => kwIn(r.h1, r.primary_keyword), (r) => has(r.primary_keyword) && has(r.h1));
+
+        // 4. Structured data & answer engines
+        add("Structured data & AEO", "Schema markup present", (r) => r.has_schema === true);
+        add("Structured data & AEO", "Schema visible to crawlers", (r) => r.rendered_has_schema === true, (r) => has(r.live_crawl_at));
+        add("Structured data & AEO", "FAQ schema", (r) => schemaHas(r, /faq/i));
+        add("Structured data & AEO", "Article / BlogPosting schema", (r) => schemaHas(r, /article|posting/i));
+        add("Structured data & AEO", "Breadcrumb schema", (r) => schemaHas(r, /breadcrumb/i));
+        add("Structured data & AEO", "Organisation / LocalBusiness schema", (r) => schemaHas(r, /organi|localbusiness/i));
+        add("Structured data & AEO", "Course / Product / Review schema", (r) => schemaHas(r, /course|product|review|aggregaterating/i));
+        add("Structured data & AEO", "2+ schema types stacked", (r) => Array.isArray(r.schema_types) && r.schema_types.length >= 2);
+
+        // 5. Internal linking
+        add("Internal linking & silos", "3+ outgoing internal links", (r) => Number(r.internal_links_out) >= 3, (r) => has(r.internal_links_out));
+        add("Internal linking & silos", "10+ outgoing internal links", (r) => Number(r.internal_links_out) >= 10, (r) => has(r.internal_links_out));
+        add("Internal linking & silos", "Receives at least 1 internal link", (r) => Number(r.internal_links_in) >= 1, (r) => has(r.internal_links_in));
+        add("Internal linking & silos", "Receives 3+ internal links", (r) => Number(r.internal_links_in) >= 3, (r) => has(r.internal_links_in));
+        add("Internal linking & silos", "Links visible in raw HTML", (r) => Number(r.rendered_links_out) >= 3, (r) => has(r.rendered_links_out));
+        add("Internal linking & silos", "Not an orphan page", (r) => Number(r.internal_links_in) > 0, (r) => has(r.internal_links_in));
+        add("Internal linking & silos", "Balanced in/out linking", (r) => Number(r.internal_links_in) >= 1 && Number(r.internal_links_out) >= 3, (r) => has(r.internal_links_in) && has(r.internal_links_out));
+        add("Internal linking & silos", "Hub-level authority (5+ links in)", (r) => Number(r.internal_links_in) >= 5, (r) => has(r.internal_links_in));
+
+        // 6. Speed & Core Web Vitals
+        add("Speed & Core Web Vitals", "Speed audited", (r) => has(r.psi_checked_at));
+        add("Speed & Core Web Vitals", "Performance score 90+", (r) => Number(r.psi_perf_score) >= 90, (r) => has(r.psi_perf_score));
+        add("Speed & Core Web Vitals", "Performance score 50+", (r) => Number(r.psi_perf_score) >= 50, (r) => has(r.psi_perf_score));
+        add("Speed & Core Web Vitals", "LCP under 2.5s", (r) => Number(r.psi_lcp_ms) <= 2500, (r) => has(r.psi_lcp_ms));
+        add("Speed & Core Web Vitals", "CLS under 0.1", (r) => Number(r.psi_cls) <= 0.1, (r) => has(r.psi_cls));
+        add("Speed & Core Web Vitals", "Total blocking time under 200ms", (r) => Number(r.psi_tbt_ms) <= 200, (r) => has(r.psi_tbt_ms));
+        add("Speed & Core Web Vitals", "First paint under 1.8s", (r) => Number(r.psi_fcp_ms) <= 1800, (r) => has(r.psi_fcp_ms));
+        add("Speed & Core Web Vitals", "Lighthouse SEO score 90+", (r) => Number(r.psi_seo_score) >= 90, (r) => has(r.psi_seo_score));
+
+        // 7. Search performance
+        add("Search performance", "Getting impressions", (r) => Number(r.impressions) > 0, (r) => has(r.perf_updated_at));
+        add("Search performance", "Getting clicks", (r) => Number(r.clicks) > 0, (r) => has(r.perf_updated_at));
+        add("Search performance", "CTR 2% or better", (r) => Number(r.ctr) >= 0.02, (r) => Number(r.impressions) > 0);
+        add("Search performance", "Ranking in top 20", (r) => Number(r.avg_position) > 0 && Number(r.avg_position) <= 20, (r) => has(r.avg_position));
+        add("Search performance", "Ranking in top 10", (r) => Number(r.avg_position) > 0 && Number(r.avg_position) <= 10, (r) => has(r.avg_position));
+        add("Search performance", "Ranking in top 3", (r) => Number(r.avg_position) > 0 && Number(r.avg_position) <= 3, (r) => has(r.avg_position));
+        add("Search performance", "Position holding or improving", (r) => Number(r.position_change) >= 0, (r) => has(r.position_change));
+        add("Search performance", "Performance data fresh (7 days)", (r) => fresh(r.perf_updated_at, 7));
+
+        // 8. Keyword & competitive intelligence (keyword-scoped)
+        add("Keyword intelligence", "Search volume researched", (k) => has(k.search_volume), undefined, "keyword");
+        add("Keyword intelligence", "Difficulty researched", (k) => has(k.difficulty), undefined, "keyword");
+        add("Keyword intelligence", "Search intent classified", (k) => has(k.intent), undefined, "keyword");
+        add("Keyword intelligence", "Mapped to a target page", (k) => has(k.target_path), undefined, "keyword");
+        add("Keyword intelligence", "Rank tracked", (k) => has(k.current_position), undefined, "keyword");
+        add("Keyword intelligence", "Ranking in top 20", (k) => Number(k.current_position) > 0 && Number(k.current_position) <= 20, (k) => has(k.current_position), "keyword");
+        add("Keyword intelligence", "Opportunity scored", (k) => has(k.opportunity_score), undefined, "keyword");
+        add("Keyword intelligence", "Competitor identified", (k) => has(k.top_competitor_domain), undefined, "keyword");
+
+        const levers = L.map((lev) => {
+          const rows = lev.scope === "keyword" ? K : P;
+          const applicable = lev.gate ? rows.filter(lev.gate) : rows;
+          const passed = applicable.filter((r) => { try { return lev.ok(r); } catch { return false; } });
+          return {
+            id: lev.id,
+            group: lev.group,
+            name: lev.name,
+            scope: lev.scope,
+            applicable: applicable.length,
+            passed: passed.length,
+            failed: applicable.length - passed.length,
+            coverage: applicable.length ? passed.length / applicable.length : null,
+            measured: applicable.length > 0,
+          };
+        });
+
+        const groups = [...new Set(levers.map((l) => l.group))].map((g) => {
+          const items = levers.filter((l) => l.group === g && l.measured);
+          const cov = items.length ? items.reduce((s, i) => s + (i.coverage ?? 0), 0) / items.length : null;
+          return { group: g, levers: L.filter((l) => l.group === g).length, measured: items.length, coverage: cov };
+        });
+
+        const measured = levers.filter((l) => l.measured);
+        const overall = measured.length ? measured.reduce((s, i) => s + (i.coverage ?? 0), 0) / measured.length : null;
+
+        // Technical gap queue — biggest real deficits first.
+        const gapQueue = levers
+          .filter((l) => l.measured && l.failed > 0 && l.scope === "page")
+          .sort((a, b) => b.failed - a.failed).slice(0, 20);
+
+        // Post-change outcomes, straight from recorded experiments.
+        const outcome = (o: string) => expRows.filter((e: any) => e.outcome === o);
+        const withResult = expRows.filter((e: any) => has(e.result_captured_on));
+        const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+
+        return json({
+          totals: {
+            pages: P.length,
+            keywords: K.length,
+            pages_with_primary_keyword: P.filter((r) => has(r.primary_keyword)).length,
+            pages_with_perf_data: P.filter((r) => has(r.perf_updated_at)).length,
+            pages_crawled: P.filter((r) => has(r.last_crawl_at)).length,
+            pages_speed_audited: P.filter((r) => has(r.psi_checked_at)).length,
+            pages_index_checked: P.filter((r) => has(r.indexed_checked_at)).length,
+            keywords_with_volume: K.filter((k) => has(k.search_volume)).length,
+            keywords_ranked: K.filter((k) => has(k.current_position)).length,
+            keywords_top10: K.filter((k) => Number(k.current_position) > 0 && Number(k.current_position) <= 10).length,
+            recommendations_applied: recRows.filter((r: any) => has(r.applied_at)).length,
+            recommendations_open: recRows.filter((r: any) => ["new", "review", "approved"].includes(r.status)).length,
+          },
+          levers,
+          groups,
+          overall_coverage: overall,
+          levers_total: L.length,
+          levers_measured: measured.length,
+          gap_queue: gapQueue,
+          outcomes: {
+            changes_tracked: expRows.length,
+            measured: withResult.length,
+            awaiting_measurement: expRows.length - withResult.length,
+            improved: outcome("improved").length,
+            declined: outcome("declined").length,
+            neutral: outcome("neutral").length,
+            avg_position_delta: avg(withResult.map((e: any) => Number(e.position_delta)).filter((v) => Number.isFinite(v))),
+            total_clicks_delta: withResult.reduce((s: number, e: any) => s + (Number(e.clicks_delta) || 0), 0),
+            recent: expRows.slice(0, 12).map((e: any) => ({
+              path: e.path, keyword: e.keyword, change_type: e.change_type, change_summary: e.change_summary,
+              changed_on: e.changed_on, outcome: e.outcome,
+              position_delta: e.position_delta, clicks_delta: e.clicks_delta,
+              baseline_position: e.baseline_position, result_position: e.result_position,
+              measure_after: e.measure_after, data_source: e.data_source,
+            })),
+          },
+          trend: snapRows.slice().reverse().map((s: any) => ({
+            captured_on: s.captured_on, clicks: s.clicks, impressions: s.impressions,
+            avg_position: s.avg_position, top_10: s.top_10, indexed_pages: s.indexed_pages,
+            applied_changes: s.applied_changes,
+          })),
+          server_time: nowIso(),
+        });
+      }
+
       /* ─────────── research feed: what the engine actually learned ─────────── */
+
       case "research_feed": {
         const sinceIso = new Date(Date.now() - (Number(body?.hours ?? 24) * 36e5)).toISOString();
         const todayStr = new Date().toISOString().slice(0, 10);
