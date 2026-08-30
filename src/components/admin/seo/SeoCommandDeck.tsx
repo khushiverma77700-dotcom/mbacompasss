@@ -177,9 +177,14 @@ export default function SeoCommandDeck() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Badge variant="outline" className="gap-1 text-[10px]">
+              <Wifi className={`h-3 w-3 ${rt.connected ? "text-emerald-600" : "text-muted-foreground"}`} />
+              {rt.connected ? `streaming · ${fmtInt(rt.eventCount, "0")} events` : "polling"}
+            </Badge>
             <Badge variant="outline" className="text-[10px]">
               {okSources}/{sources.length || 0} data sources live
             </Badge>
+
             <RawPayloadDrawer title="live_status + research_feed" payload={{ status, feed }} />
             <Button size="sm" variant="outline" disabled={busy} onClick={load}>
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} /> Refresh deck
