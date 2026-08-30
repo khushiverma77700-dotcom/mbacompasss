@@ -11,7 +11,7 @@ const LatestArticlesSection = () => {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("articles")
-        .select("*")
+        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,content_chars,author")
         .eq("published", true)
         .order("created_at", { ascending: false })
         .limit(4);
@@ -27,9 +27,9 @@ const LatestArticlesSection = () => {
 
   const getImage = (article: typeof featured) => article.image_url || article.banner_url;
 
-  const getReadTime = (content: string | null) => {
-    if (!content) return "3 min";
-    const words = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
+  const getReadTime = (chars: number | null | undefined) => {
+    if (!chars) return "3 min";
+    const words = chars / 5.5;
     return `${Math.max(1, Math.ceil(words / 200))} min`;
   };
 
@@ -79,7 +79,7 @@ const LatestArticlesSection = () => {
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   {featured.author && <span className="flex items-center gap-1"><User className="w-3 h-3" /> {featured.author}</span>}
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(featured.created_at)}</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(featured.content)}</span>
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(featured.content_chars)}</span>
                 </div>
               </div>
             </Link>
@@ -105,7 +105,7 @@ const LatestArticlesSection = () => {
                     <h4 className="font-heading font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug mb-2">{article.title}</h4>
                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                       <span className="flex items-center gap-1"><Calendar className="w-2.5 h-2.5" /> {formatDate(article.created_at)}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {getReadTime(article.content)}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {getReadTime(article.content_chars)}</span>
                     </div>
                   </div>
                 </Link>

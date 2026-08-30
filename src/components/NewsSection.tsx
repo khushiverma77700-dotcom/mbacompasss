@@ -14,7 +14,7 @@ const NewsSection = () => {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data } = await supabase
         .from("articles")
-        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,content,author")
+        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,content_chars,author")
         .eq("published", true)
         .order("created_at", { ascending: false })
         .limit(6);
@@ -25,9 +25,9 @@ const NewsSection = () => {
     refetchOnWindowFocus: false,
   });
 
-  const getReadTime = (content: string | null) => {
-    if (!content) return "3 min";
-    const words = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
+  const getReadTime = (chars: number | null | undefined) => {
+    if (!chars) return "3 min";
+    const words = chars / 5.5;
     return `${Math.max(1, Math.ceil(words / 200))} min`;
   };
 
@@ -115,7 +115,7 @@ const NewsSection = () => {
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" /> {new Date(featured.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                       </span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(featured.content)}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(featured.content_chars)}</span>
                     </div>
                     <span className="text-primary font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
                       Read <ArrowRight className="w-3.5 h-3.5" />
@@ -152,7 +152,7 @@ const NewsSection = () => {
                       <div className="flex items-center gap-2 mb-1.5">
                         <Badge variant="secondary" className="text-xs">{item.category}</Badge>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {getReadTime(item.content)}
+                          <Clock className="w-3 h-3" /> {getReadTime(item.content_chars)}
                         </span>
                       </div>
                       <h3 className="font-heading font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug">
