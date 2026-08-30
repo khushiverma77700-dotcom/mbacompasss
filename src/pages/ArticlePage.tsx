@@ -358,11 +358,27 @@ const ArticlePage = () => {
               onScrollToContent={() => document.getElementById("article-content")?.scrollIntoView({ behavior: "smooth" })}
             />
 
-            {article.excerpt && (
+
+            {answerText && (
+              <AnswerBlock
+                question={answerQuestion}
+                answer={answerText}
+                facts={[
+                  { label: "Category", value: article.category },
+                  { label: "Author", value: article.author || "MBA Compass Editorial" },
+                  { label: "Read time", value: `${readTime} read` },
+                ]}
+                updatedAt={(article as any).updated_at || article.created_at}
+                className="mb-8"
+              />
+            )}
+
+            {article.excerpt && !answerText && (
               <div className="bg-gradient-to-r from-primary/[0.06] to-transparent border-l-[3px] border-primary rounded-r-xl p-5 mb-8">
                 <p className="text-foreground/80 font-medium italic text-[15px] leading-relaxed">{article.excerpt}</p>
               </div>
             )}
+
 
             <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
               <div className="flex items-center justify-end mb-4 -mt-1">
