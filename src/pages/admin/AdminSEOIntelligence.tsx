@@ -41,6 +41,7 @@ import SeoResearchConsole from "@/components/admin/seo/SeoResearchConsole";
 import SeoLiveAnalytics from "@/components/admin/seo/SeoLiveAnalytics";
 import SeoPerformanceReport from "@/components/admin/seo/SeoPerformanceReport";
 import { asText } from "@/components/admin/seo/SeoLiveOps";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 /* ── Navigation: 23 views grouped into 6 plain-language sections ── */
 const TAB_SECTIONS: Array<{
@@ -1114,4 +1115,10 @@ const AdminSEOIntelligence = () => {
   );
 };
 
-export default AdminSEOIntelligence;
+const AdminSEOIntelligencePage = () => (
+  <ErrorBoundary>
+    <AdminSEOIntelligence />
+  </ErrorBoundary>
+);
+
+export default AdminSEOIntelligencePage;
