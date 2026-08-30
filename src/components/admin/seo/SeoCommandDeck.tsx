@@ -10,16 +10,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Activity, Bot, CheckCircle2, ClipboardCheck, Cpu, Radar, RefreshCw, Search, Syringe, Trophy,
+  Activity, Bot, CheckCircle2, ClipboardCheck, Cpu, Radar, RefreshCw, Search, Syringe, Trophy, Wifi,
 } from "lucide-react";
+
 import { fmtInt, safeText, agoText } from "@/lib/seoSafeRender";
 import { LiveDot, RawPayloadDrawer } from "./SeoSafeUi";
+import { useSeoMotion } from "./SeoMotion";
+import { useSeoRealtime } from "@/hooks/useSeoRealtime";
 import {
   FxCounter, GaugeRing, HeatGrid, PhaseRotator, PipelineFlow, RadarSweep, TerminalStream, BurstOnIncrease,
   type FxStage,
 } from "./SeoLiveFx";
+
 
 const PHRASES = [
   "Researching new keyword demand…",
@@ -44,6 +48,7 @@ const hhmm = (v: unknown) => {
 };
 
 export default function SeoCommandDeck() {
+  const m = useSeoMotion();
   const [status, setStatus] = useState<any>(null);
   const [feed, setFeed] = useState<any>(null);
   const [busy, setBusy] = useState(false);
@@ -76,12 +81,16 @@ export default function SeoCommandDeck() {
     }
   }, [call]);
 
+  // Realtime push: any engine table change refreshes the deck immediately.
+  const rt = useSeoRealtime(() => { if (mounted.current) load(); }, undefined, { debounceMs: 900 });
+
   useEffect(() => {
     mounted.current = true;
     load();
-    const t = setInterval(load, 20_000);
+    // Safety-net poll — much slower when realtime is connected.
+    const t = setInterval(load, rt.connected ? m.pollMs * 4 : m.pollMs);
     return () => { mounted.current = false; clearInterval(t); };
-  }, [load]);
+  }, [load, rt.connected, m.pollMs]);
 
   const running: any[] = Array.isArray(status?.running) ? status.running : [];
   const queued: any[] = Array.isArray(status?.queued) ? status.queued : [];
@@ -90,6 +99,7 @@ export default function SeoCommandDeck() {
   const gains = feed?.gains ?? {};
   const activity: any[] = Array.isArray(feed?.activity) ? feed.activity : [];
   const working = running.length > 0 || busy;
+
 
   const stages: FxStage[] = useMemo(() => {
     const activeTypes = new Set(running.map((r) => String(r.job_type ?? "")));
@@ -143,9 +153,10 @@ export default function SeoCommandDeck() {
     <Card className="relative overflow-hidden border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-white to-sky-50/70">
       <motion.div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent"
-        animate={{ opacity: working ? [0.2, 1, 0.2] : 0.3 }}
-        transition={{ duration: 1.8, repeat: Infinity }}
+        animate={{ opacity: working && m.intensity > 0 ? [0.2, 1, 0.2] : 0.3 }}
+        transition={{ duration: m.dur(1.8), repeat: m.repeat }}
       />
+
       <CardContent className="space-y-4 p-4">
         {/* header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -168,9 +179,14 @@ export default function SeoCommandDeck() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Badge variant="outline" className="gap-1 text-[10px]">
+              <Wifi className={`h-3 w-3 ${rt.connected ? "text-emerald-600" : "text-muted-foreground"}`} />
+              {rt.connected ? `streaming · ${fmtInt(rt.eventCount, "0")} events` : "polling"}
+            </Badge>
             <Badge variant="outline" className="text-[10px]">
               {okSources}/{sources.length || 0} data sources live
             </Badge>
+
             <RawPayloadDrawer title="live_status + research_feed" payload={{ status, feed }} />
             <Button size="sm" variant="outline" disabled={busy} onClick={load}>
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} /> Refresh deck
@@ -191,10 +207,13 @@ export default function SeoCommandDeck() {
             <GaugeRing pct={queueLoad} value={fmtInt(queued.length, "0")} label="Queue depth" tone="amber" live={queued.length > 0} />
           </div>
 
-          <div className="flex flex-col items-center gap-2">
-            <RadarSweep blips={Math.max(4, running.length + Math.min(20, queued.length))} active={working} />
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Scanner</span>
-          </div>
+          {m.heavy && (
+            <div className="flex flex-col items-center gap-2">
+              <RadarSweep blips={Math.max(4, running.length + Math.min(20, queued.length))} active={working} />
+              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Scanner</span>
+            </div>
+          )}
+
 
           <div className="space-y-2">
             <div className="grid gap-2 sm:grid-cols-3">
@@ -217,16 +236,40 @@ export default function SeoCommandDeck() {
                 </BurstOnIncrease>
               ))}
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                <Activity className="h-3.5 w-3.5" /> Stage load, last 24 hours
+            {m.heavy && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <Activity className="h-3.5 w-3.5" /> Stage load, last 24 hours
+                </div>
+                <HeatGrid cells={heatCells} />
               </div>
-              <HeatGrid cells={heatCells} />
-            </div>
+            )}
           </div>
         </div>
 
-        <TerminalStream lines={logLines} live={working} height={200} />
+
+        {/* realtime push ticker — the exact rows the engine just wrote */}
+        {m.intensity > 0 && rt.events.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <AnimatePresence initial={false}>
+              {rt.events.slice(0, 8).map((e) => (
+                <motion.span
+                  key={e.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: m.dur(0.25) }}
+                  className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-800"
+                >
+                  {e.type.toLowerCase()} · {e.table.replace("seo_intel_", "")}
+                </motion.span>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {m.heavy && <TerminalStream lines={logLines} live={working} height={200} />}
+
 
         {running.length > 0 && (
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
