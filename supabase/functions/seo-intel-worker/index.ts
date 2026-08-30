@@ -292,6 +292,8 @@ async function runCrawlPages(ctx: Ctx) {
       position: perfRow.avg_position ?? null,
       decayState: "stable",
     });
+    // Deterministic AEO/GEO grade of the CMS content we own for this page.
+    const aeo = scoreAeoGeo(html || text, { entityName: p.name ?? undefined, requireFaq: false });
     return {
       path: p.path,
       page_type: p.page_type,
@@ -304,6 +306,10 @@ async function runCrawlPages(ctx: Ctx) {
       health_score: health.health_score,
       health_issues: health.issues,
       primary_keyword: p.keyword,
+      aeo_score: aeo.score,
+      aeo_grade: aeo.grade,
+      aeo_failed: aeo.failed.map((c) => ({ id: c.id, label: c.label, detail: c.detail ?? null })),
+      aeo_checked_at: nowIso(),
       last_crawl_at: nowIso(),
       discovered_by: p.source_table === "static_routes" ? "static_routes" : p.source_table,
       data_sources: { onpage: "internal", label: "calculated" },
