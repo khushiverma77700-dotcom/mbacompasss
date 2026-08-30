@@ -22,7 +22,7 @@ const BlogPage = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("articles")
-        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,featured,content,author")
+        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,featured,content_chars,author")
         .eq("published", true)
         .order("created_at", { ascending: false });
       return data || [];
@@ -61,9 +61,11 @@ const BlogPage = () => {
   const trending = (articles || []).slice(0, 3);
   const totalArticles = (articles || []).length;
 
-  const getReadTime = (content: string | null) => {
-    if (!content) return "3 min read";
-    const words = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
+  // Uses the stored plain-text length (content_chars) so listings never need
+  // to download full article bodies.
+  const getReadTime = (chars: number | null | undefined) => {
+    if (!chars) return "3 min read";
+    const words = chars / 5.5;
     return `${Math.max(1, Math.ceil(words / 200))} min read`;
   };
 
@@ -263,7 +265,7 @@ const BlogPage = () => {
                       <div className="text-[11px] uppercase tracking-[0.25em] text-sky-500 mb-2 flex items-center gap-3">
                         <Calendar className="w-3 h-3" /> {formatDate(featuredArticle.created_at)}
                         <span className="opacity-40">·</span>
-                        <Clock className="w-3 h-3" /> {getReadTime(featuredArticle.content)}
+                        <Clock className="w-3 h-3" /> {getReadTime(featuredArticle.content_chars)}
                       </div>
                       <h2 className="font-editorial text-xl md:text-2xl leading-tight tracking-tight text-slate-900 line-clamp-3 group-hover:text-sky-600 transition-colors">
                         {featuredArticle.title}
@@ -381,7 +383,7 @@ const BlogPage = () => {
                           </h3>
                           <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(item.created_at)}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content)}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content_chars)}</span>
                           </div>
                         </div>
                       </Link>
@@ -443,7 +445,7 @@ const BlogPage = () => {
                           )}
                           <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(item.created_at)}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content)}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content_chars)}</span>
                           </div>
                         </div>
                       </Link>

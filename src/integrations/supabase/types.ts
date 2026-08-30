@@ -346,6 +346,7 @@ export type Database = {
           cluster_id: string | null
           comparison_id: string | null
           content: string | null
+          content_chars: number | null
           content_hash: string | null
           content_score: number | null
           created_at: string
@@ -378,6 +379,7 @@ export type Database = {
           cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_chars?: number | null
           content_hash?: string | null
           content_score?: number | null
           created_at?: string
@@ -410,6 +412,7 @@ export type Database = {
           cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_chars?: number | null
           content_hash?: string | null
           content_score?: number | null
           created_at?: string
@@ -1546,6 +1549,7 @@ export type Database = {
           created_at: string
           cutoff_info: Json | null
           description: string | null
+          description_short: string | null
           established: number | null
           exams_accepted: string[] | null
           faqs: Json | null
@@ -1594,6 +1598,7 @@ export type Database = {
           created_at?: string
           cutoff_info?: Json | null
           description?: string | null
+          description_short?: string | null
           established?: number | null
           exams_accepted?: string[] | null
           faqs?: Json | null
@@ -1642,6 +1647,7 @@ export type Database = {
           created_at?: string
           cutoff_info?: Json | null
           description?: string | null
+          description_short?: string | null
           established?: number | null
           exams_accepted?: string[] | null
           faqs?: Json | null
@@ -14065,6 +14071,13 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_table_row_estimates: {
+        Args: never
+        Returns: {
+          row_estimate: number
+          table_name: string
+        }[]
+      }
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
       award_quant_xp: {
         Args: { _activity_today?: boolean; _xp: number }
@@ -14463,6 +14476,13 @@ export type Database = {
       mirror_mock_question_to_personalized: {
         Args: { _question_id: string }
         Returns: undefined
+      }
+      mock_question_counts: {
+        Args: never
+        Returns: {
+          question_count: number
+          test_id: string
+        }[]
       }
       move_to_dlq: {
         Args: {

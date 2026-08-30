@@ -708,16 +708,17 @@ function CloudUsageTab({ registerRefresh, registerLoading }: CloudUsageTabProps)
       let totalRows = 0;
       const tableCounts: { name: string; count: number }[] = [];
 
-      const countPromises = tables.map(async (table) => {
-        try {
-          const { count } = await supabase.from(table as any).select("*", { count: "exact", head: true });
-          const c = count || 0;
-          totalRows += c;
-          tableCounts.push({ name: table, count: c });
-        } catch { tableCounts.push({ name: table, count: 0 }); }
+      // One server-side call returns approximate row counts for every table.
+      // (Previously this fired ~130 exact COUNT(*) queries in parallel, which
+      // stalled the whole backend while the page loaded.)
+      const known = new Set(tables);
+      const { data: estimates } = await supabase.rpc("admin_table_row_estimates");
+      (estimates ?? []).forEach((row: any) => {
+        if (!known.has(row.table_name)) return;
+        const c = Number(row.row_estimate) || 0;
+        totalRows += c;
+        tableCounts.push({ name: row.table_name, count: c });
       });
-
-      await Promise.all(countPromises);
 
       // Count files across BOTH storage buckets, recursing into subfolders.
       const [uploadsCount, listingCount] = await Promise.all([
