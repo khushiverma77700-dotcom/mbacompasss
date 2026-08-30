@@ -123,6 +123,8 @@ export interface IntelSettings {
   freq_crawl_min: number;
   freq_report_min: number;
   auto_apply_safe: boolean;
+  autonomous_mode: boolean;
+
   gsc_site_url: string | null;
   semrush_database: string;
   semrush_campaign_id: string | null;
