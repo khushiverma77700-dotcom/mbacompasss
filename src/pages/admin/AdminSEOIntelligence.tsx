@@ -429,6 +429,12 @@ const AdminSEOIntelligence = () => {
           <SeoPerformanceReport />
         </TabsContent>
 
+        <TabsContent value="wins" className="pt-4">
+          <SeoWinsBoard />
+        </TabsContent>
+
+
+
         <TabsContent value="analytics" className="pt-4">
           <SeoLiveAnalytics status={liveStatus} onRunStage={runStage} />
         </TabsContent>
