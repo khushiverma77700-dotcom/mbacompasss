@@ -33,14 +33,14 @@ const DiffPreview = ({ before, after }: { before: unknown; after: unknown }) => 
   return (
     <div className="grid gap-2 md:grid-cols-2">
       <div className="rounded-md border border-red-200 bg-red-50/60 p-2">
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-red-700">Current</div>
-        <p className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-red-900">{b}</p>
-        <div className="mt-1 text-[10px] text-red-700/70">{b === "(empty)" ? "" : `${b.length} chars`}</div>
+        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-red-700">Current</div>
+        <p className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-red-900">{b}</p>
+        <div className="mt-1 text-xs text-red-700/70">{b === "(empty)" ? "" : `${b.length} chars`}</div>
       </div>
       <div className="rounded-md border border-emerald-200 bg-emerald-50/60 p-2">
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Proposed</div>
-        <p className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-emerald-900">{a}</p>
-        <div className="mt-1 text-[10px] text-emerald-700/70">
+        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">Proposed</div>
+        <p className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-emerald-900">{a}</p>
+        <div className="mt-1 text-xs text-emerald-700/70">
           {a === "(no generated value)" ? "needs a human edit" : `${a.length} chars`}
         </div>
       </div>
@@ -60,7 +60,7 @@ const StageCard = ({
       <div className="mt-1 font-mono text-2xl font-semibold tabular-nums">
         <FxCounter value={value} format={(v) => fmtInt(v, "0")} />
       </div>
-      <div className="text-[11px] opacity-80">{label}</div>
+      <div className="text-xs opacity-80">{label}</div>
     </div>
   </BurstOnIncrease>
 );
@@ -151,7 +151,7 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
               <CardTitle className="flex items-center gap-2 text-base">
                 <ClipboardCheck className="h-4 w-4 text-emerald-600" />
                 Approval queue
-                <Badge variant="outline" className="gap-1 text-[10px]">
+                <Badge variant="outline" className="gap-1 text-xs">
                   <Radio className={`h-3 w-3 ${rt.connected ? "text-emerald-600" : "text-muted-foreground"}`} />
                   {rt.connected ? "streaming" : "polling"}
                 </Badge>
@@ -207,20 +207,20 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
                           onClick={() => setOpen(isOpen ? null : String(rec.id))}
                         >
                           <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline" className={`text-[10px] ${PRIORITY_TONE[String(rec.priority ?? "low")] ?? PRIORITY_TONE.low}`}>
+                            <Badge variant="outline" className={`text-xs ${PRIORITY_TONE[String(rec.priority ?? "low")] ?? PRIORITY_TONE.low}`}>
                               {safeText(rec.priority, "low")}
                             </Badge>
-                            <Badge variant="secondary" className="text-[10px]">{safeText(rec.change_type, "change")}</Badge>
-                            {rec.status === "approved" && <Badge className="bg-sky-600 text-[10px]">approved</Badge>}
+                            <Badge variant="secondary" className="text-xs">{safeText(rec.change_type, "change")}</Badge>
+                            {rec.status === "approved" && <Badge className="bg-sky-600 text-xs">approved</Badge>}
                             {rec.can_auto_apply && (
-                              <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-[10px] text-emerald-800">
+                              <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-xs text-emerald-800">
                                 auto-appliable
                               </Badge>
                             )}
                             <span className="truncate font-mono text-xs text-muted-foreground">{safeText(rec.path, "site-wide")}</span>
                           </div>
                           <p className="mt-1 text-sm font-medium">{safeText(rec.recommended_change ?? rec.problem)}</p>
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             keyword {safeText(rec.keyword, "—")} · confidence {safeText(rec.confidence, "—")} · created {agoText(rec.created_at)}
                           </p>
                         </button>
@@ -258,12 +258,12 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
                           >
                             <DiffPreview before={rec.before_value} after={rec.after_value} />
                             {rec.problem && (
-                              <p className="mt-2 text-[11px] text-muted-foreground">
+                              <p className="mt-2 text-xs text-muted-foreground">
                                 <span className="font-semibold">Why:</span> {safeText(rec.problem)}
                               </p>
                             )}
                             {rec.evidence && (
-                              <p className="mt-1 text-[11px] text-muted-foreground">
+                              <p className="mt-1 text-xs text-muted-foreground">
                                 <span className="font-semibold">Evidence:</span> {safeText(rec.evidence)}
                               </p>
                             )}

@@ -129,7 +129,7 @@ const BlogPage = () => {
 
         <div className="relative container mx-auto px-6 pt-10 pb-14">
           {/* Top meta strip */}
-          <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500 border-b border-slate-200/60 pb-4 mb-10">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.25em] text-slate-500 border-b border-slate-200/60 pb-4 mb-10">
             <span>Vol. 04 · {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}</span>
             <span className="hidden md:inline text-sky-600">MBA Compass · B School Buzz</span>
             <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live</span>
@@ -140,7 +140,7 @@ const BlogPage = () => {
             <div className="lg:col-span-7">
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 backdrop-blur text-sky-700 rounded-full text-[10px] font-bold uppercase tracking-widest border border-sky-100 shadow-sm"
+                className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 backdrop-blur text-sky-700 rounded-full text-xs font-bold uppercase tracking-widest border border-sky-100 shadow-sm"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                 The MBA Journal · Issue {String(totalArticles || 88).padStart(2, "0")}
@@ -172,7 +172,7 @@ const BlogPage = () => {
                 ].map((s) => (
                   <div key={s.v} className="border-l-2 border-sky-200 pl-3">
                     <div className="font-editorial italic text-3xl text-slate-900">{s.k}</div>
-                    <div className="text-[11px] uppercase tracking-widest text-slate-500 mt-1">{s.v}</div>
+                    <div className="text-xs uppercase tracking-widest text-slate-500 mt-1">{s.v}</div>
                   </div>
                 ))}
               </div>
@@ -188,7 +188,7 @@ const BlogPage = () => {
                   aria-label="Search articles"
                   className="w-full pl-12 pr-32 py-4 bg-white border border-slate-200 rounded-full text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300 transition-all placeholder:text-slate-500"
                 />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
                   ⌘ K
                 </div>
               </div>
@@ -249,11 +249,11 @@ const BlogPage = () => {
                         </div>
                       )}
                       <div className="absolute top-4 left-4 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur text-sky-700 rounded-full text-[10px] font-bold uppercase tracking-widest shadow">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur text-sky-700 rounded-full text-xs font-bold uppercase tracking-widest shadow">
                           <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" /> Cover Story
                         </span>
                         {featuredArticle.category && (
-                          <span className="px-3 py-1 bg-slate-900/70 text-white rounded-full text-[10px] font-semibold uppercase tracking-widest backdrop-blur">
+                          <span className="px-3 py-1 bg-slate-900/70 text-white rounded-full text-xs font-semibold uppercase tracking-widest backdrop-blur">
                             {featuredArticle.category}
                           </span>
                         )}
@@ -262,7 +262,7 @@ const BlogPage = () => {
 
                     {/* Text block below the image — clean white panel */}
                     <div className="p-6 border-t border-sky-50">
-                      <div className="text-[11px] uppercase tracking-[0.25em] text-sky-500 mb-2 flex items-center gap-3">
+                      <div className="text-xs uppercase tracking-[0.25em] text-sky-500 mb-2 flex items-center gap-3">
                         <Calendar className="w-3 h-3" /> {formatDate(featuredArticle.created_at)}
                         <span className="opacity-40">·</span>
                         <Clock className="w-3 h-3" /> {getReadTime(featuredArticle.content_chars)}
@@ -377,11 +377,11 @@ const BlogPage = () => {
                           )}
                         </div>
                         <div className="mt-6">
-                          <span className="text-sky-500 font-bold text-[10px] uppercase tracking-wider">{item.category}</span>
+                          <span className="text-sky-500 font-bold text-xs uppercase tracking-wider">{item.category}</span>
                           <h3 className="mt-3 text-xl font-bold leading-snug text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2">
                             {item.title}
                           </h3>
-                          <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
+                          <div className="mt-3 flex items-center gap-3 text-xs text-slate-500">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(item.created_at)}</span>
                             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content_chars)}</span>
                           </div>
@@ -396,7 +396,7 @@ const BlogPage = () => {
               <section className="space-y-8">
                 <div className="flex items-end justify-between border-b border-sky-100 pb-4">
                   <div>
-                    <div className="text-[10px] font-bold tracking-[0.25em] uppercase text-sky-500 mb-1.5">The Reading List</div>
+                    <div className="text-xs font-bold tracking-[0.25em] uppercase text-sky-500 mb-1.5">The Reading List</div>
                     <h3 className="font-editorial text-2xl md:text-3xl text-slate-900">
                       Latest <span className="italic text-sky-500">Intelligence</span>
                     </h3>
@@ -434,7 +434,7 @@ const BlogPage = () => {
                           )}
                         </div>
                         <div className="mt-5">
-                          <span className="text-[11px] font-bold text-sky-500 uppercase tracking-widest">{item.category}</span>
+                          <span className="text-xs font-bold text-sky-500 uppercase tracking-widest">{item.category}</span>
                           <h4 className="mt-2 text-lg font-bold leading-snug text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2">
                             {item.title}
                           </h4>
@@ -443,7 +443,7 @@ const BlogPage = () => {
                               {item.excerpt}
                             </p>
                           )}
-                          <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
+                          <div className="mt-3 flex items-center gap-3 text-xs text-slate-500">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(item.created_at)}</span>
                             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {getReadTime(item.content_chars)}</span>
                           </div>
@@ -466,7 +466,7 @@ const BlogPage = () => {
             {/* Sidebar */}
             <aside className="lg:col-span-4 space-y-16">
               <section>
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-8 pb-3 border-b border-sky-50">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-8 pb-3 border-b border-sky-50">
                   Trending Intelligence
                 </h3>
                 <div className="space-y-10">
@@ -483,7 +483,7 @@ const BlogPage = () => {
                         <h4 className="font-bold text-slate-800 leading-tight group-hover:text-sky-600 transition-colors line-clamp-3">
                           {article.title}
                         </h4>
-                        <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                        <p className="mt-2 text-xs text-slate-500 font-bold uppercase tracking-widest">
                           {article.category || "News"}
                         </p>
                       </div>
@@ -521,7 +521,7 @@ const BlogPage = () => {
               {/* Categories */}
               {blogCategories.length > 2 && (
                 <section>
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-6 pb-3 border-b border-sky-50">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-6 pb-3 border-b border-sky-50">
                     Browse by Topic
                   </h3>
                   <div className="space-y-1">
@@ -542,7 +542,7 @@ const BlogPage = () => {
                             <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-sky-500" : "bg-sky-200"}`} />
                             {cat}
                           </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 border border-sky-100">{count}</span>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 border border-sky-100">{count}</span>
                         </button>
                       );
                     })}

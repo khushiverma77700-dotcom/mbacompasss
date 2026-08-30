@@ -157,13 +157,13 @@ const ExamDeadlinesTicker = () => {
                           )}
                         </div>
                         {isUrgent ? (
-                          <span className="flex items-center gap-1 text-[10px] font-bold text-destructive-foreground bg-destructive px-2 py-1 rounded-full animate-pulse shrink-0">
+                          <span className="flex items-center gap-1 text-xs font-bold text-destructive-foreground bg-destructive px-2 py-1 rounded-full animate-pulse shrink-0">
                             <Flame className="w-3 h-3" /> Closing Soon
                           </span>
                         ) : isClosed ? (
-                          <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-full shrink-0">Closed</span>
+                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-full shrink-0">Closed</span>
                         ) : regDays !== null && regDays <= 30 ? (
-                          <span className="flex items-center gap-1 text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded-full shrink-0">
+                          <span className="flex items-center gap-1 text-xs font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded-full shrink-0">
                             <AlertTriangle className="w-3 h-3" /> Hurry
                           </span>
                         ) : null}
@@ -173,22 +173,22 @@ const ExamDeadlinesTicker = () => {
                       <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/40 p-3 mb-3">
                         <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-background border border-border shadow-sm">
                           <span className="text-xl font-extrabold leading-none text-foreground">{reg.day ?? "–"}</span>
-                          <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground mt-0.5">
+                          <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground mt-0.5">
                             {reg.day ? reg.label : reg.label}
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                             <CalendarDays className="w-3 h-3" /> Registration {reg.day ? `Deadline · ${reg.weekday}` : ""}
                           </p>
                           {regDays !== null && regDays >= 0 ? (
-                            <p className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${urgency.chip}`}>
+                            <p className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${urgency.chip}`}>
                               {regDays === 0 ? "Last day today!" : `${regDays} days left`}
                             </p>
                           ) : regDays !== null && regDays < 0 ? (
-                            <p className="mt-1 text-[11px] font-semibold text-muted-foreground">Registration closed</p>
+                            <p className="mt-1 text-xs font-semibold text-muted-foreground">Registration closed</p>
                           ) : (
-                            <p className="mt-1 text-[11px] font-semibold text-muted-foreground">Date to be announced</p>
+                            <p className="mt-1 text-xs font-semibold text-muted-foreground">Date to be announced</p>
                           )}
                         </div>
                       </div>

@@ -197,7 +197,7 @@ export default function PlannerTaskDialog({ open, onOpenChange, initial, onSubmi
                   <SelectItem key={o.value} value={o.value}>
                     <div className="flex flex-col">
                       <span>{o.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{o.hint}</span>
+                      <span className="text-xs text-muted-foreground">{o.hint}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -257,7 +257,7 @@ export default function PlannerTaskDialog({ open, onOpenChange, initial, onSubmi
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-[11px] text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Adds a one-tap button on the task card so the student can jump straight to that screen.
             </p>
           </div>
@@ -271,7 +271,7 @@ export default function PlannerTaskDialog({ open, onOpenChange, initial, onSubmi
                 If you skip this task today, we'll automatically push it to tomorrow so you don't lose it.
               </div>
             </div>
-            {v.auto_rollover && <Badge variant="secondary" className="text-[10px]">Recommended</Badge>}
+            {v.auto_rollover && <Badge variant="secondary" className="text-xs">Recommended</Badge>}
           </label>
 
           <div className="flex justify-end gap-2 pt-2">

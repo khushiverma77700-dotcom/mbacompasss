@@ -578,7 +578,7 @@ const CollegeShortlisterPage = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-2 ml-13">
                             {sampleColleges.map((name, j) => (
-                              <div key={j} className="text-[11px] text-white/60 flex items-center gap-1">
+                              <div key={j} className="text-xs text-white/60 flex items-center gap-1">
                                 <Building2 className="w-3 h-3" /> {name}
                               </div>
                             ))}
@@ -638,7 +638,7 @@ const CollegeShortlisterPage = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <h3 className="font-heading font-semibold text-foreground">{b.title}</h3>
-                          <Badge variant="outline" className="text-[10px] font-bold">{b.stat}</Badge>
+                          <Badge variant="outline" className="text-xs font-bold">{b.stat}</Badge>
                         </div>
                         <p className="text-muted-foreground text-sm leading-relaxed">{b.desc}</p>
                       </div>
@@ -673,7 +673,7 @@ const CollegeShortlisterPage = () => {
                       </div>
                       <h3 className="font-heading font-semibold text-foreground text-lg mb-2">{item.title}</h3>
                       <p className="text-muted-foreground text-sm mb-3">{item.desc}</p>
-                      <Badge variant="secondary" className="text-[10px]">{item.detail}</Badge>
+                      <Badge variant="secondary" className="text-xs">{item.detail}</Badge>
                     </div>
                   </div>
                 </motion.div>
@@ -743,7 +743,7 @@ const CollegeShortlisterPage = () => {
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-foreground">{f.label}</div>
-                    <div className="text-[11px] text-muted-foreground">{f.desc}</div>
+                    <div className="text-xs text-muted-foreground">{f.desc}</div>
                   </div>
                 </div>
               </motion.div>
@@ -772,7 +772,7 @@ const CollegeShortlisterPage = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-sm font-semibold text-foreground block">{t.name}</span>
-                          <span className="text-[11px] text-muted-foreground">Admitted: {t.college}</span>
+                          <span className="text-xs text-muted-foreground">Admitted: {t.college}</span>
                         </div>
                         <Badge variant="outline" className="text-xs">{t.tag}</Badge>
                       </div>
@@ -910,7 +910,7 @@ const CollegeShortlisterPage = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
+                                <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                                   {isPercentileBased ? "Percentile (Expected/Actual)" : "Score (Expected/Actual)"}
                                 </label>
                                 <Select value={form.examScores[exam] || "_none"} onValueChange={v => updateExamScore(exam, v === "_none" ? "" : v)}>
@@ -923,7 +923,7 @@ const CollegeShortlisterPage = () => {
                               </div>
                               {isPercentileBased && (
                                 <div>
-                                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Raw Score (optional)</label>
+                                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Raw Score (optional)</label>
                                   <Input
                                     type="number"
                                     placeholder="e.g. 120"
@@ -1145,7 +1145,7 @@ const CollegeShortlisterPage = () => {
                           <button key={opt.value} onClick={() => updateField("roiPreference", opt.value)}
                             className={`p-3 rounded-xl border text-center transition-all duration-200 ${form.roiPreference === opt.value ? "bg-primary text-primary-foreground border-primary shadow-md" : "border-border hover:border-primary/50"}`}>
                             <div className={`text-sm font-semibold ${form.roiPreference === opt.value ? "" : "text-foreground"}`}>{opt.label}</div>
-                            <div className={`text-[11px] mt-0.5 ${form.roiPreference === opt.value ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{opt.desc}</div>
+                            <div className={`text-xs mt-0.5 ${form.roiPreference === opt.value ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{opt.desc}</div>
                           </button>
                         ))}
                       </div>
@@ -1324,11 +1324,11 @@ const CollegeShortlisterPage = () => {
     return (
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-medium text-muted-foreground">{component.label}</span>
+          <span className="text-xs font-medium text-muted-foreground">{component.label}</span>
           <div className="flex items-center gap-1.5">
-            <span className={`text-[10px] font-bold ${isAbove ? "text-emerald-600" : "text-red-500"}`}>{component.yours}</span>
-            <span className="text-[8px] text-muted-foreground">/</span>
-            <span className="text-[10px] text-muted-foreground">{component.required} req</span>
+            <span className={`text-xs font-bold ${isAbove ? "text-emerald-600" : "text-red-500"}`}>{component.yours}</span>
+            <span className="text-xs text-muted-foreground">/</span>
+            <span className="text-xs text-muted-foreground">{component.required} req</span>
           </div>
         </div>
         <div className="relative h-2 bg-muted rounded-full overflow-hidden">
@@ -1358,13 +1358,13 @@ const CollegeShortlisterPage = () => {
                 <div className="flex-1 min-w-0">
                   <Link to={`/college/${college.slug}`} className="font-heading font-semibold text-foreground text-sm hover:text-primary transition-colors line-clamp-1 block">{college.name}</Link>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-0.5"><MapPin className="w-3 h-3" />{college.city}{college.state ? `, ${college.state}` : ""}</span>
-                    {college.tier && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{college.tier}</Badge>}
+                    <span className="text-xs text-muted-foreground flex items-center gap-0.5"><MapPin className="w-3 h-3" />{college.city}{college.state ? `, ${college.state}` : ""}</span>
+                    {college.tier && <Badge variant="outline" className="text-xs px-1.5 py-0">{college.tier}</Badge>}
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className={`text-lg font-bold ${cfg.color}`}>{college.chancePercent}%</div>
-                  <Badge className={`${cfg.badge} text-[9px]`}>{college.bucket}</Badge>
+                  <Badge className={`${cfg.badge} text-xs`}>{college.bucket}</Badge>
                 </div>
               </div>
 
@@ -1372,7 +1372,7 @@ const CollegeShortlisterPage = () => {
               {college.badges.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
                   {college.badges.map((b, i) => (
-                    <Badge key={i} className={`text-[9px] px-1.5 py-0 ${badgeColors[b] || cfg.badge}`}>{b}</Badge>
+                    <Badge key={i} className={`text-xs px-1.5 py-0 ${badgeColors[b] || cfg.badge}`}>{b}</Badge>
                   ))}
                 </div>
               )}
@@ -1380,19 +1380,19 @@ const CollegeShortlisterPage = () => {
               {/* Stats Grid */}
               <div className="grid grid-cols-4 gap-3 mt-3 pt-3 border-t border-border/50">
                 <div className="text-center">
-                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><IndianRupee className="w-2.5 h-2.5" />Fees</div>
+                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-0.5"><IndianRupee className="w-2.5 h-2.5" />Fees</div>
                   <div className="text-xs font-semibold text-foreground">{college.fees || "N/A"}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><TrendingUp className="w-2.5 h-2.5" />Avg CTC</div>
+                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-0.5"><TrendingUp className="w-2.5 h-2.5" />Avg CTC</div>
                   <div className="text-xs font-semibold text-foreground">{college.placement_avg || "N/A"}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><Award className="w-2.5 h-2.5" />Top CTC</div>
+                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-0.5"><Award className="w-2.5 h-2.5" />Top CTC</div>
                   <div className="text-xs font-semibold text-foreground">{college.placement_highest || "N/A"}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><BarChart3 className="w-2.5 h-2.5" />ROI</div>
+                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-0.5"><BarChart3 className="w-2.5 h-2.5" />ROI</div>
                   <div className={`text-xs font-bold ${college.roi && college.roi >= 2 ? "text-emerald-600" : "text-foreground"}`}>{college.roi ? `${college.roi}x` : "N/A"}</div>
                 </div>
               </div>
@@ -1407,9 +1407,9 @@ const CollegeShortlisterPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-sm font-bold ${bd.overallYours >= bd.overallRequired ? "text-emerald-600" : "text-red-500"}`}>{bd.overallYours}</span>
-                      <span className="text-[10px] text-muted-foreground">/</span>
+                      <span className="text-xs text-muted-foreground">/</span>
                       <span className="text-sm font-semibold text-muted-foreground">{bd.overallRequired}</span>
-                      <span className="text-[10px] text-muted-foreground">needed</span>
+                      <span className="text-xs text-muted-foreground">needed</span>
                     </div>
                   </div>
                   <ScoreBar component={bd.examScore} color={cfg.color} />
@@ -1424,7 +1424,7 @@ const CollegeShortlisterPage = () => {
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className={`w-4 h-4 ${cfg.color} flex-shrink-0 mt-0.5`} />
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Why You Fit</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Why You Fit</span>
                     <p className="text-xs text-foreground mt-0.5 leading-relaxed">{college.whyFit}</p>
                   </div>
                 </div>
@@ -1446,7 +1446,7 @@ const CollegeShortlisterPage = () => {
                             <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                               <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
                             </div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Areas to Improve</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Areas to Improve</span>
                           </div>
                           <div className="space-y-1.5 ml-8">
                             {bd.improvements.map((imp, idx) => (
@@ -1464,17 +1464,17 @@ const CollegeShortlisterPage = () => {
                           <Rocket className="w-3.5 h-3.5 text-primary" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Action Plan</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Action Plan</span>
                           <p className="text-xs text-foreground mt-1 leading-relaxed">{college.tips}</p>
                         </div>
                       </div>
                       {college.exams_accepted && (
                         <div className="flex items-center gap-2 pt-2 border-t border-border/30">
                           <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-[10px] font-medium text-muted-foreground">Exams:</span>
+                          <span className="text-xs font-medium text-muted-foreground">Exams:</span>
                           <div className="flex gap-1 flex-wrap">
                             {college.exams_accepted.map((e, i) => (
-                              <Badge key={i} variant="outline" className="text-[9px] px-1.5 py-0">{e}</Badge>
+                              <Badge key={i} variant="outline" className="text-xs px-1.5 py-0">{e}</Badge>
                             ))}
                           </div>
                         </div>
@@ -1482,7 +1482,7 @@ const CollegeShortlisterPage = () => {
                       {college.specializations?.length > 0 && (
                         <div className="flex items-center gap-2 pt-2 border-t border-border/30">
                           <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-[10px] font-medium text-muted-foreground">Courses:</span>
+                          <span className="text-xs font-medium text-muted-foreground">Courses:</span>
                           <span className="text-xs text-foreground">{college.specializations.slice(0, 5).join(", ")}</span>
                         </div>
                       )}
@@ -1640,16 +1640,16 @@ const CollegeShortlisterPage = () => {
                             <div className={`w-2 h-8 rounded-full bg-gradient-to-b ${cfg.gradient}`} />
                             <div>
                               <Link to={`/college/${college.slug}`} className="font-medium text-xs text-foreground hover:text-primary transition-colors">{college.name}</Link>
-                              <div className="text-[10px] text-muted-foreground">{college.city}{college.state ? `, ${college.state}` : ""}</div>
+                              <div className="text-xs text-muted-foreground">{college.city}{college.state ? `, ${college.state}` : ""}</div>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell><Badge className={`${cfg.badge} text-[10px]`}>{college.bucket}</Badge></TableCell>
+                        <TableCell><Badge className={`${cfg.badge} text-xs`}>{college.bucket}</Badge></TableCell>
                         <TableCell><span className={`font-bold text-sm ${cfg.color}`}>{college.chancePercent}%</span></TableCell>
                         <TableCell className="text-xs">{college.fees || "N/A"}</TableCell>
                         <TableCell className="text-xs">{college.placement_avg || "N/A"}</TableCell>
                         <TableCell className={`text-xs font-bold ${college.roi && college.roi >= 2 ? "text-emerald-600" : ""}`}>{college.roi ? `${college.roi}x` : "N/A"}</TableCell>
-                        <TableCell className="text-[10px]">{college.exams_accepted?.slice(0, 3).join(", ") || "—"}</TableCell>
+                        <TableCell className="text-xs">{college.exams_accepted?.slice(0, 3).join(", ") || "—"}</TableCell>
                         <TableCell className="text-right">
                           <Link to={`/college/${college.slug}`}>
                             <Button variant="ghost" size="sm" className="h-7 text-xs"><Eye className="w-3 h-3 mr-1" /> View</Button>

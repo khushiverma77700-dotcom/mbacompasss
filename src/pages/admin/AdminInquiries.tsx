@@ -84,7 +84,7 @@ const AdminInquiries = () => {
                   <TableCell className="max-w-xs truncate">{inq.message}</TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {format(new Date(inq.created_at), "dd MMM yyyy")}
-                    <br/><span className="text-[10px]">{format(new Date(inq.created_at), "hh:mm a")}</span>
+                    <br/><span className="text-xs">{format(new Date(inq.created_at), "hh:mm a")}</span>
                   </TableCell>
                 </TableRow>
               ))}

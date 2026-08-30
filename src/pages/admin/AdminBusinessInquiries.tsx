@@ -158,7 +158,7 @@ const AdminBusinessInquiries = () => {
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(r.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                    <br/><span className="text-[10px]">{new Date(r.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                    <br/><span className="text-xs">{new Date(r.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                   </TableCell>
                   <TableCell>
                     <Select value={r.status} onValueChange={(v) => updateStatus(r.id, v)}>

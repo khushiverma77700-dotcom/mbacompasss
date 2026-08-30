@@ -155,7 +155,7 @@ const AdminMBANewsroomBar = () => {
                 </Button>
               </div>
               <div className="col-span-12 md:col-span-2">
-                <Label className="text-[11px] uppercase text-muted-foreground">Tag</Label>
+                <Label className="text-xs uppercase text-muted-foreground">Tag</Label>
                 <Input
                   value={it.tag}
                   onChange={(e) => update(i, "tag", e.target.value)}
@@ -164,7 +164,7 @@ const AdminMBANewsroomBar = () => {
                 />
               </div>
               <div className="col-span-12 md:col-span-6">
-                <Label className="text-[11px] uppercase text-muted-foreground">Headline</Label>
+                <Label className="text-xs uppercase text-muted-foreground">Headline</Label>
                 <Input
                   value={it.text}
                   onChange={(e) => update(i, "text", e.target.value)}
@@ -173,14 +173,14 @@ const AdminMBANewsroomBar = () => {
                 />
               </div>
               <div className="col-span-11 md:col-span-2">
-                <Label className="text-[11px] uppercase text-muted-foreground">Link</Label>
+                <Label className="text-xs uppercase text-muted-foreground">Link</Label>
                 <Input
                   value={it.href}
                   onChange={(e) => update(i, "href", e.target.value)}
                   placeholder="/exam/cat or https://…"
                   className="mt-1"
                 />
-                <p className="text-[10px] text-muted-foreground mt-1">Internal path (/exam/cat) or full URL (https://…). External links open in a new tab.</p>
+                <p className="text-xs text-muted-foreground mt-1">Internal path (/exam/cat) or full URL (https://…). External links open in a new tab.</p>
               </div>
 
               <div className="col-span-1 flex justify-end pt-5">
@@ -190,7 +190,7 @@ const AdminMBANewsroomBar = () => {
               </div>
 
               <div className="col-span-12 md:col-span-5 md:col-start-2">
-                <Label className="text-[11px] uppercase text-muted-foreground">Start date & time (optional)</Label>
+                <Label className="text-xs uppercase text-muted-foreground">Start date & time (optional)</Label>
                 <Input
                   type="datetime-local"
                   value={toLocalInput(it.start_at)}
@@ -199,7 +199,7 @@ const AdminMBANewsroomBar = () => {
                 />
               </div>
               <div className="col-span-12 md:col-span-5">
-                <Label className="text-[11px] uppercase text-muted-foreground">End date & time (optional)</Label>
+                <Label className="text-xs uppercase text-muted-foreground">End date & time (optional)</Label>
                 <Input
                   type="datetime-local"
                   value={toLocalInput(it.end_at)}
@@ -217,14 +217,14 @@ const AdminMBANewsroomBar = () => {
                     : "bg-muted text-muted-foreground border-border";
                   return (
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded border ${tone}`}>
+                      <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded border ${tone}`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-current" /> {s.label}
                       </span>
                       {(it.start_at || it.end_at) && (
                         <button
                           type="button"
                           onClick={() => { update(i, "start_at", "" as any); update(i, "end_at", "" as any); }}
-                          className="text-[11px] text-muted-foreground hover:text-foreground underline"
+                          className="text-xs text-muted-foreground hover:text-foreground underline"
                         >
                           Clear schedule
                         </button>
@@ -244,7 +244,7 @@ const AdminMBANewsroomBar = () => {
           <CardTitle className="text-base flex items-center gap-2">
             <Eye className="w-4 h-4 text-primary" /> Live Preview
           </CardTitle>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             Reflects unsaved edits · Hover to pause · {enabled ? "Enabled" : "Hidden on homepage"}
           </span>
         </CardHeader>
@@ -270,16 +270,16 @@ const AdminMBANewsroomBar = () => {
           )}
 
           <div className="mt-4">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Static list preview</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Static list preview</p>
             <div className="border rounded-lg bg-muted/30 p-3 space-y-1.5 max-h-56 overflow-auto">
               {items.filter((it) => it.text && it.href).length === 0 && (
                 <p className="text-xs text-muted-foreground">No valid items yet.</p>
               )}
               {items.filter((it) => it.text && it.href).map((n, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
-                  <span className="text-[10px] font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0">{n.tag || "TAG"}</span>
+                  <span className="text-xs font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0">{n.tag || "TAG"}</span>
                   <span className="truncate">{n.text}</span>
-                  <span className="text-[10px] text-muted-foreground truncate ml-auto">{n.href}</span>
+                  <span className="text-xs text-muted-foreground truncate ml-auto">{n.href}</span>
                 </div>
               ))}
             </div>

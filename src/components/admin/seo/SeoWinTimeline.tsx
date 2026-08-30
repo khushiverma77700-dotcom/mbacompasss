@@ -206,10 +206,10 @@ export default function SeoWinTimeline() {
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">{e.title}</span>
-                        <Badge variant="outline" className="text-[10px]">{meta.label}</Badge>
+                        <Badge variant="outline" className="text-xs">{meta.label}</Badge>
                       </span>
                       <span className="block truncate text-xs text-muted-foreground">{e.subject}</span>
-                      <span className="block font-mono text-[11px] text-muted-foreground">
+                      <span className="block font-mono text-xs text-muted-foreground">
                         {e.metric}: {fmtVal(e.before, e.unit)} → {fmtVal(e.after, e.unit)} · {agoText(e.at)}
                       </span>
                     </span>
@@ -243,7 +243,7 @@ export default function SeoWinTimeline() {
                     />
                   )}
                   <div className="relative">
-                    <Badge variant="outline" className={`text-[10px] ${KIND_META[active.kind].cls}`}>
+                    <Badge variant="outline" className={`text-xs ${KIND_META[active.kind].cls}`}>
                       {KIND_META[active.kind].label}
                     </Badge>
                     <h4 className="mt-2 text-sm font-semibold">{active.title}</h4>
@@ -251,11 +251,11 @@ export default function SeoWinTimeline() {
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="rounded-md border bg-card p-2">
-                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Before</div>
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Before</div>
                         <div className="font-mono text-lg font-semibold tabular-nums">{fmtVal(active.before, active.unit)}</div>
                       </div>
                       <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2">
-                        <div className="text-[10px] uppercase tracking-wide text-emerald-700">After</div>
+                        <div className="text-xs uppercase tracking-wide text-emerald-700">After</div>
                         <div className="font-mono text-lg font-semibold tabular-nums text-emerald-800">
                           <FxCounter
                             value={active.after}
@@ -276,8 +276,8 @@ export default function SeoWinTimeline() {
                       </div>
                     )}
 
-                    <p className="mt-2 text-[11px] text-muted-foreground">Recorded {fmtWhen(active.at)}</p>
-                    {active.note && <p className="mt-1 break-words text-[11px] text-muted-foreground">{safeText(active.note)}</p>}
+                    <p className="mt-2 text-xs text-muted-foreground">Recorded {fmtWhen(active.at)}</p>
+                    {active.note && <p className="mt-1 break-words text-xs text-muted-foreground">{safeText(active.note)}</p>}
 
                     <div className="mt-3 flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => setReplay((r) => r + 1)}>

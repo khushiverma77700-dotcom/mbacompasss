@@ -75,7 +75,7 @@ const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) =
 
       <span
         className={`relative font-semibold text-foreground tracking-tight whitespace-nowrap ${
-          isFull ? "text-sm" : "text-[12.5px]"
+          isFull ? "text-sm" : "text-xs"
         }`}
       >
         Add MBA Compass <span className="text-muted-foreground font-medium">as preferred source on</span>{" "}

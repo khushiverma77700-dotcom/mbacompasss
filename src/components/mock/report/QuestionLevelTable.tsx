@@ -148,7 +148,7 @@ export default function QuestionLevelTable({ rows }: { rows: QRow[] }) {
                   <td className="py-2 px-2 text-right font-mono">{r.timeSec}s</td>
                   <td className="py-2 px-2">
                     <div className="flex flex-wrap gap-1">
-                      {r.tags.map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
+                      {r.tags.map((t) => <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>)}
                     </div>
                   </td>
                 </tr>

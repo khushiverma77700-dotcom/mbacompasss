@@ -178,8 +178,8 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
                     <span className="font-semibold text-sm text-foreground">
                       {job.exam_name}{job.exam_year ? ` ${job.exam_year}` : ""}
                     </span>
-                    <Badge variant="secondary" className="text-[10px]">{job.steps_done}/{job.steps_total} groups</Badge>
-                    {job.tokens_used > 0 && <Badge variant="outline" className="text-[10px]">{job.tokens_used.toLocaleString()} tokens</Badge>}
+                    <Badge variant="secondary" className="text-xs">{job.steps_done}/{job.steps_total} groups</Badge>
+                    {job.tokens_used > 0 && <Badge variant="outline" className="text-xs">{job.tokens_used.toLocaleString()} tokens</Badge>}
                     <div className="ml-auto flex items-center gap-1">
                       {job.status === "completed" && (
                         <Button size="sm" variant="outline" className="gap-1" onClick={() => openReview(job)}>
@@ -202,7 +202,7 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
                   {lastLogs.length > 0 && (
                     <div className="mt-2 space-y-1">
                       {lastLogs.map((entry: any, i: number) => (
-                        <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                        <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
                           <span className="font-mono shrink-0">
                             {new Date(entry.at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                           </span>

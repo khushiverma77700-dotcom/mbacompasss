@@ -214,7 +214,7 @@ export default function PersonalizedBulkQueue() {
                   ? <Loader2 className="h-4 w-4 animate-spin text-sky-600" />
                   : <Sparkles className="h-4 w-4 text-emerald-600" />}
                 <span>{activeJob.status === "running" ? "Generation in progress" : "Last batch complete"}</span>
-                <Badge variant="outline" className="text-[10px]">{activeJob.status}</Badge>
+                <Badge variant="outline" className="text-xs">{activeJob.status}</Badge>
               </div>
               <div className="flex gap-2">
                 {activeJob.status === "running" && (
@@ -276,7 +276,7 @@ export default function PersonalizedBulkQueue() {
                             {it.status}
                           </span>
                           {it.current_step && <span className="text-muted-foreground ml-1">· {it.current_step}</span>}
-                          {it.last_error && <div className="text-rose-600 text-[10px] truncate max-w-xs" title={it.last_error}>err: {it.last_error}</div>}
+                          {it.last_error && <div className="text-rose-600 text-xs truncate max-w-xs" title={it.last_error}>err: {it.last_error}</div>}
                         </td>
                       </tr>
                     );
@@ -369,7 +369,7 @@ function Pill({ label, value, tone, icon }: { label: string; value: string; tone
   const color = tone === "ok" ? "text-emerald-700" : tone === "bad" ? "text-rose-700" : "text-sky-700";
   return (
     <div className="px-3 py-2 rounded-lg border border-sky-100 bg-white">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">{icon}{label}</div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">{icon}{label}</div>
       <div className={`text-base font-bold ${color}`}>{value}</div>
     </div>
   );

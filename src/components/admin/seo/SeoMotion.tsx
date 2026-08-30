@@ -114,7 +114,7 @@ export const SeoMotionControl = () => {
         <Button size="sm" variant="outline" className="gap-1.5">
           <Sparkles className="h-3.5 w-3.5" />
           Motion
-          <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px] uppercase">{m.level}</Badge>
+          <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs uppercase">{m.level}</Badge>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-4">
@@ -143,7 +143,7 @@ export const SeoMotionControl = () => {
           </div>
           <Switch checked={m.performanceMode} onCheckedChange={m.setPerformanceMode} />
         </div>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Numbers are always live — this only changes how much they move on screen.
         </p>
       </PopoverContent>

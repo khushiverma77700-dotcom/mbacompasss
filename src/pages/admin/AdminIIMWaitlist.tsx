@@ -182,12 +182,12 @@ export default function AdminIIMWaitlist() {
                       {[2021, 2022, 2023, 2024, 2025].map(y => (
                         <div key={y} className="p-1.5 rounded bg-muted/50">
                           <div className="font-bold text-foreground">{m[`wl_${y}`] ?? "—"}</div>
-                          <div className="text-[10px] text-muted-foreground">'{String(y).slice(2)}</div>
+                          <div className="text-xs text-muted-foreground">'{String(y).slice(2)}</div>
                         </div>
                       ))}
                       <div className="p-1.5 rounded bg-primary/10 border border-primary/20">
                         <div className="font-bold text-primary">{m.wl_2026_est ?? "—"}</div>
-                        <div className="text-[10px] text-primary/70">'26E</div>
+                        <div className="text-xs text-primary/70">'26E</div>
                       </div>
                     </div>
                   </Card>

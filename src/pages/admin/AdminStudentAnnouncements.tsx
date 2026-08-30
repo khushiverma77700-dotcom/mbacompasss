@@ -98,12 +98,12 @@ export default function AdminStudentAnnouncements() {
               <div key={i.id} className="border rounded-lg p-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    {i.pinned && <Badge variant="secondary" className="text-[10px]">Pinned</Badge>}
-                    {!i.is_active && <Badge variant="outline" className="text-[10px]">Hidden</Badge>}
+                    {i.pinned && <Badge variant="secondary" className="text-xs">Pinned</Badge>}
+                    {!i.is_active && <Badge variant="outline" className="text-xs">Hidden</Badge>}
                     <div className="font-medium">{i.title}</div>
                   </div>
                   {i.body && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{i.body}</div>}
-                  <div className="text-[10px] text-muted-foreground mt-1">{new Date(i.created_at).toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{new Date(i.created_at).toLocaleString()}</div>
                 </div>
                 <div className="flex gap-1">
                   <Button size="sm" variant="ghost" onClick={() => togglePin(i.id, i.pinned)}>

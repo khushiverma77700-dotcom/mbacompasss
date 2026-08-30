@@ -44,7 +44,7 @@ const FreeToolsShowcase = () => (
   <section className="py-12 md:py-16 bg-gradient-to-b from-sky-50/40 via-white to-white">
     <div className="container mx-auto px-4">
       <div className="max-w-3xl mx-auto text-center mb-8 md:mb-10">
-        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
+        <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
           <Sparkles className="w-3.5 h-3.5" /> Free AI Tools
         </div>
         <h2 className="text-2xl md:text-4xl font-bold mt-3 text-foreground">
@@ -69,14 +69,14 @@ const FreeToolsShowcase = () => (
                 <div className="w-12 h-12 rounded-xl bg-white ring-1 ring-primary/15 flex items-center justify-center shadow-sm">
                   <Icon className="w-6 h-6 text-primary" strokeWidth={2.2} />
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-500/10 ring-1 ring-emerald-500/20 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-bold uppercase tracking-wide text-emerald-700 bg-emerald-500/10 ring-1 ring-emerald-500/20 px-2 py-0.5 rounded-full">
                   Free
                 </span>
               </div>
               <h3 className="text-lg md:text-xl font-bold mt-4 text-foreground">{title}</h3>
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{desc}</p>
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-primary/80">{stat}</span>
+                <span className="text-xs font-semibold text-primary/80">{stat}</span>
                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
                   Try it now <ArrowRight className="w-3.5 h-3.5" />
                 </span>

@@ -305,12 +305,12 @@ const AdminCTAAnalytics = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">{m?.label || r.key}</span>
                       {m?.requires_login ? (
-                        <Badge className="text-[10px] gap-1"><Lock className="w-3 h-3" />Gated</Badge>
+                        <Badge className="text-xs gap-1"><Lock className="w-3 h-3" />Gated</Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[10px] gap-1"><Unlock className="w-3 h-3" />Public</Badge>
+                        <Badge variant="outline" className="text-xs gap-1"><Unlock className="w-3 h-3" />Public</Badge>
                       )}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">{m?.category || "Unknown"} · {r.key}</div>
+                    <div className="text-xs text-muted-foreground">{m?.category || "Unknown"} · {r.key}</div>
                   </div>
                 );
               }}
@@ -395,14 +395,14 @@ const AdminCTAAnalytics = () => {
                           <td className="py-1.5 pr-2">{m?.label || e.cta_key}</td>
                           <td className="py-1.5 pr-2">
                             {e.outcome === "executed" ? (
-                              <Badge variant="outline" className="text-[10px] text-emerald-700 border-emerald-300">Ran</Badge>
+                              <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-300">Ran</Badge>
                             ) : (
-                              <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-300">Login</Badge>
+                              <Badge variant="outline" className="text-xs text-amber-700 border-amber-300">Login</Badge>
                             )}
                           </td>
                           <td className="py-1.5 pr-2">{sectionForPath(e.page_path)}</td>
                           <td className="py-1.5 pr-2 max-w-[260px] truncate font-mono">{e.page_path || "—"}</td>
-                          <td className="py-1.5 pr-2 font-mono text-[10px]">{e.user_id?.slice(0, 8) || "anon"}</td>
+                          <td className="py-1.5 pr-2 font-mono text-xs">{e.user_id?.slice(0, 8) || "anon"}</td>
                         </tr>
                       );
                     })}
@@ -477,7 +477,7 @@ const BreakdownCard = ({
                     )}
                     <div className="text-right shrink-0">
                       <div className="font-semibold tabular-nums">{r.total.toLocaleString()}</div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {r.executed} ran · {r.prompted} login ({promptedPct}%)
                       </div>
                     </div>

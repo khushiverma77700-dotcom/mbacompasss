@@ -370,7 +370,7 @@ const SampleReportPreview = () => {
               {sampleStrengths.map((s, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.5 + i * 0.1 }}
                   className="text-xs flex items-center gap-2">
-                  <span className="px-1.5 py-0.5 rounded bg-green-200 text-green-800 text-[9px] font-bold">{s.impact}</span>
+                  <span className="px-1.5 py-0.5 rounded bg-green-200 text-green-800 text-xs font-bold">{s.impact}</span>
                   {s.title}
                 </motion.div>
               ))}
@@ -380,9 +380,9 @@ const SampleReportPreview = () => {
               {sampleWeaknesses.map((w, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.6 + i * 0.1 }}
                   className="text-xs">
-                  <span className="px-1.5 py-0.5 rounded bg-amber-200 text-amber-800 text-[9px] font-bold mr-1">{w.severity}</span>
+                  <span className="px-1.5 py-0.5 rounded bg-amber-200 text-amber-800 text-xs font-bold mr-1">{w.severity}</span>
                   {w.title}
-                  <p className="text-primary mt-0.5 text-[10px]">Fix: {w.fix}</p>
+                  <p className="text-primary mt-0.5 text-xs">Fix: {w.fix}</p>
                 </motion.div>
               ))}
             </div>
@@ -434,7 +434,7 @@ const SampleReportPreview = () => {
                       </div>
                     </td>
                     <td className="p-2.5 text-center">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                         c.diff === "Easy" ? "bg-green-100 text-green-700" :
                         c.diff === "Medium" ? "bg-amber-100 text-amber-700" :
                         c.diff === "Hard" ? "bg-orange-100 text-orange-700" :
@@ -582,10 +582,10 @@ const PeerComparisonScale = ({ peerData, userScore }: { peerData: AnalysisResult
                         : "bg-muted-foreground/20 hover:bg-muted-foreground/30"
                     }`}
                   />
-                  <span className={`text-[9px] ${bucket.is_yours ? "text-primary font-bold" : "text-muted-foreground"}`}>{bucket.range}</span>
+                  <span className={`text-xs ${bucket.is_yours ? "text-primary font-bold" : "text-muted-foreground"}`}>{bucket.range}</span>
                   {bucket.is_yours && (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1">
-                      <span className="text-[8px] bg-primary text-primary-foreground px-1 rounded">YOU</span>
+                      <span className="text-xs bg-primary text-primary-foreground px-1 rounded">YOU</span>
                     </motion.div>
                   )}
                 </div>
@@ -1432,7 +1432,7 @@ const ProfileAnalyzerPage = () => {
                       <item.icon className="w-8 h-8 text-primary" />
                       <span className="text-2xl font-bold">{item.value}</span>
                       <span className="text-xs font-medium">{item.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{item.sub}</span>
+                      <span className="text-xs text-muted-foreground">{item.sub}</span>
                     </motion.div>
                   ))}
                 </motion.div>
@@ -1924,7 +1924,7 @@ const ProfileAnalyzerPage = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications <Badge variant="secondary" className="text-[10px] ml-1">Optional</Badge></Label>
+                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications <Badge variant="secondary" className="text-xs ml-1">Optional</Badge></Label>
                       <p className="text-xs text-muted-foreground">Select any professional certifications you hold. This boosts your profile diversity score.</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {CERTIFICATION_OPTIONS.map(cert => (
@@ -2633,7 +2633,7 @@ const ProfileAnalyzerPage = () => {
                         </motion.div>
                         <div className="flex-1">
                           <span className="font-semibold text-sm">{s.title}</span>
-                          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] ml-2">{s.impact} Impact</Badge>
+                          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs ml-2">{s.impact} Impact</Badge>
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground ml-10">{s.description}</p>
@@ -2655,7 +2655,7 @@ const ProfileAnalyzerPage = () => {
                         </motion.div>
                         <div className="flex-1">
                           <span className="font-semibold text-sm">{w.title}</span>
-                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] ml-2">{w.severity}</Badge>
+                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs ml-2">{w.severity}</Badge>
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground ml-10 mb-2">{w.description}</p>
@@ -2688,7 +2688,7 @@ const ProfileAnalyzerPage = () => {
                           <span className="text-white text-xs font-bold">{i + 1}</span>
                         </div>
                         <Badge variant={r.priority === "critical" ? "destructive" : r.priority === "high" ? "default" : "secondary"} className="text-xs">{r.priority}</Badge>
-                        {r.timeline && <span className="text-[10px] text-muted-foreground flex items-center gap-1 ml-auto"><Clock className="w-3 h-3" /> {r.timeline}</span>}
+                        {r.timeline && <span className="text-xs text-muted-foreground flex items-center gap-1 ml-auto"><Clock className="w-3 h-3" /> {r.timeline}</span>}
                       </div>
                       <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">{r.title}</h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">{r.description}</p>

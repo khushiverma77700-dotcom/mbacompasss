@@ -89,7 +89,7 @@ export default function StudentVocabularyHub() {
         <div aria-hidden className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
 
         <div className="relative px-5 py-7 sm:px-8 sm:py-9 md:px-10 md:py-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-sky-700 backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 backdrop-blur">
             <Sparkles className="h-3 w-3" /> B-School Vocabulary
           </div>
           <h1 className="font-heading mt-3 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl md:text-4xl">
@@ -127,15 +127,15 @@ export default function StudentVocabularyHub() {
               </div>
               <div>
                 <h3 className="font-heading text-sm font-semibold text-slate-900">Today's goal</h3>
-                <p className="text-[11px] text-slate-500">Learn {goal?.words_target || 5} new words</p>
+                <p className="text-xs text-slate-500">Learn {goal?.words_target || 5} new words</p>
               </div>
             </div>
             <span className="text-sm font-semibold text-slate-700">{goal?.words_done || 0}/{goal?.words_target || 5}</span>
           </div>
           <Progress value={wordProgress} className="mt-3 h-2.5" />
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-[11px] text-slate-500">{wordProgress}% complete</span>
-            <Link to="/student/vocabulary/feed" className="text-[11px] font-semibold text-sky-700 hover:underline inline-flex items-center gap-0.5">
+            <span className="text-xs text-slate-500">{wordProgress}% complete</span>
+            <Link to="/student/vocabulary/feed" className="text-xs font-semibold text-sky-700 hover:underline inline-flex items-center gap-0.5">
               Open feed <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
@@ -153,7 +153,7 @@ export default function StudentVocabularyHub() {
                 <Badge className="gap-1 border-0 bg-sky-100 text-sky-700 hover:bg-sky-100">
                   <Sparkles className="h-3 w-3" /> Word of the Day
                 </Badge>
-                <span className="text-[11px] text-slate-500">{new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</span>
+                <span className="text-xs text-slate-500">{new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</span>
               </div>
 
               <div className="mt-3 flex flex-wrap items-end gap-2 sm:gap-3">
@@ -162,12 +162,12 @@ export default function StudentVocabularyHub() {
                   <Volume2 className="h-4 w-4" />
                 </Button>
                 {wotd.part_of_speech && (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium italic text-slate-600">{wotd.part_of_speech}</span>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium italic text-slate-600">{wotd.part_of_speech}</span>
                 )}
               </div>
 
               <div className="mt-4 space-y-1.5">
-                <p className="text-[15px] leading-relaxed text-slate-800">{wotd.meaning}</p>
+                <p className="text-sm leading-relaxed text-slate-800">{wotd.meaning}</p>
                 {wotd.meaning_hindi && (
                   <p className="text-sm text-slate-700"><span className="font-medium text-slate-500">हिन्दी · </span>{wotd.meaning_hindi}</p>
                 )}
@@ -200,7 +200,7 @@ export default function StudentVocabularyHub() {
       {/* Quick toolkit */}
       <section>
         <div className="mb-3">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700">Your toolkit</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">Your toolkit</div>
           <h2 className="font-heading text-xl font-bold text-slate-900">Practice &amp; track</h2>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -217,11 +217,11 @@ export default function StudentVocabularyHub() {
 function HeroStat({ icon: Icon, tint, label, value, hint }: any) {
   return (
     <div className="rounded-2xl border border-white/70 bg-white/80 p-3.5 shadow-sm backdrop-blur">
-      <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
         <Icon className={`h-3.5 w-3.5 ${tint}`} /> {label}
       </div>
       <div className="font-heading mt-1 text-xl font-bold text-slate-900">{value}</div>
-      {hint && <div className="text-[10px] text-slate-500">{hint}</div>}
+      {hint && <div className="text-xs text-slate-500">{hint}</div>}
     </div>
   );
 }
@@ -235,8 +235,8 @@ function ToolCard({ to, icon: Icon, label, sub }: any) {
             <Icon className="h-4.5 w-4.5" />
           </div>
           <div className="font-heading mt-3 text-sm font-semibold text-slate-900">{label}</div>
-          <div className="text-[11px] text-slate-500">{sub}</div>
-          <div className="mt-2 inline-flex items-center text-[11px] font-medium text-sky-700 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="text-xs text-slate-500">{sub}</div>
+          <div className="mt-2 inline-flex items-center text-xs font-medium text-sky-700 opacity-0 transition-opacity group-hover:opacity-100">
             Open <ChevronRight className="ml-0.5 h-3 w-3" />
           </div>
         </CardContent>

@@ -104,7 +104,7 @@ export default function InstallAppPrompt() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate">Install MBA Compass</div>
-          <div className="text-[11px] text-muted-foreground truncate">
+          <div className="text-xs text-muted-foreground truncate">
             {iosHint
               ? "Add to Home Screen for one-tap access"
               : "Use the dashboard like a native app"}

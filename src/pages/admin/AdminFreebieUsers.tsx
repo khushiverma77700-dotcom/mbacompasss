@@ -174,7 +174,7 @@ const AdminFreebieUsers = () => {
                       <TableCell className="text-xs whitespace-nowrap">{new Date(u.first_seen).toLocaleDateString()}</TableCell>
                       <TableCell className="text-xs whitespace-nowrap">{new Date(u.last_seen).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        {u.user_id ? <Badge variant="secondary" className="text-[10px]">Logged-in</Badge> : <Badge variant="outline" className="text-[10px]">Lead</Badge>}
+                        {u.user_id ? <Badge variant="secondary" className="text-xs">Logged-in</Badge> : <Badge variant="outline" className="text-xs">Lead</Badge>}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -158,7 +158,7 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
                   <Volume2 className="h-4 w-4" />
                 </Button>
                 {word.part_of_speech && (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] italic text-slate-600">{word.part_of_speech}</span>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs italic text-slate-600">{word.part_of_speech}</span>
                 )}
               </div>
 
@@ -174,9 +174,9 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
               {Array.isArray(word.exam_appearances) && word.exam_appearances.length > 0 && (
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   <GraduationCap className="h-3.5 w-3.5 text-sky-600" />
-                  <span className="text-[11px] font-medium text-slate-600">Appeared in</span>
+                  <span className="text-xs font-medium text-slate-600">Appeared in</span>
                   {word.exam_appearances.map((e: string) => (
-                    <Badge key={e} className="border-0 bg-white text-[10px] text-sky-700 shadow-sm hover:bg-white">{e}</Badge>
+                    <Badge key={e} className="border-0 bg-white text-xs text-sky-700 shadow-sm hover:bg-white">{e}</Badge>
                   ))}
                 </div>
               )}
@@ -207,7 +207,7 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
             {/* Syn/Ant */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-slate-200 p-4">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">Synonyms</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">Synonyms</div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {(word.synonyms || []).length
                     ? word.synonyms.map((s: string) => <Badge key={s} variant="outline" className="border-sky-200 text-sky-700">{s}</Badge>)
@@ -215,7 +215,7 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
                 </div>
               </div>
               <div className="rounded-xl border border-slate-200 p-4">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-rose-600">Antonyms</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">Antonyms</div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {(word.antonyms || []).length
                     ? word.antonyms.map((s: string) => <Badge key={s} variant="outline" className="border-rose-200 text-rose-600">{s}</Badge>)
@@ -227,7 +227,7 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
             {/* Examples tabs */}
             <div className="rounded-xl border border-slate-200 p-4">
               <div className="mb-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">In Context</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">In Context</div>
                 <h3 className="font-heading text-base sm:text-lg font-semibold text-slate-900">Example Sentences</h3>
               </div>
               <Tabs defaultValue="business">
@@ -257,8 +257,8 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
 function MeaningCard({ label, italic, children }: any) {
   return (
     <div className="rounded-xl border border-slate-200 p-4">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</div>
-      <p className={`mt-1.5 text-[14px] leading-relaxed text-slate-800 ${italic ? "italic" : ""}`}>{children}</p>
+      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</div>
+      <p className={`mt-1.5 text-sm leading-relaxed text-slate-800 ${italic ? "italic" : ""}`}>{children}</p>
     </div>
   );
 }
@@ -266,7 +266,7 @@ function MeaningCard({ label, italic, children }: any) {
 function ExampleBlock({ text }: { text?: string }) {
   if (!text) return <p className="text-sm text-slate-500">No example for this context yet.</p>;
   return (
-    <blockquote className="rounded-xl border-l-2 border-sky-400 bg-sky-50/50 px-4 py-3 text-[14px] italic leading-relaxed text-slate-800">
+    <blockquote className="rounded-xl border-l-2 border-sky-400 bg-sky-50/50 px-4 py-3 text-sm italic leading-relaxed text-slate-800">
       "{text}"
     </blockquote>
   );
@@ -324,7 +324,7 @@ function FormulaDialog({ slug, onClose }: { slug: string | null; onClose: () => 
           <div className="space-y-5">
             {/* Hero */}
             <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-blue-50 p-4 sm:p-5">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-sky-700">
                 <Calculator className="h-3 w-3" /> {formula.topic_slug?.replace(/-/g, " ")}
               </div>
               <h1 className="font-heading mt-2 text-xl sm:text-2xl font-bold text-slate-900">{formula.name}</h1>

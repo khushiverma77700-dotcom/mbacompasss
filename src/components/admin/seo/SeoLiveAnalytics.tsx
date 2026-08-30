@@ -113,7 +113,7 @@ const Tile = ({ icon: Icon, label, value, sub, tone = "" }: any) => (
   >
     <div className="flex items-center justify-between">
       <Icon className="h-4 w-4 text-muted-foreground" />
-      {sub && <span className={`text-[10px] font-semibold tracking-wide ${tone || "text-muted-foreground"}`}>{sub}</span>}
+      {sub && <span className={`text-xs font-semibold tracking-wide ${tone || "text-muted-foreground"}`}>{sub}</span>}
     </div>
     <div className="mt-2 text-xl font-semibold">{typeof value === "number" ? <Counter value={value} /> : value}</div>
     <div className="text-xs text-muted-foreground">{label}</div>
@@ -304,15 +304,15 @@ const SeoLiveAnalytics = ({
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-md border bg-emerald-50 p-2">
                     <div className="text-lg font-semibold text-emerald-700"><Counter value={pulse.outcomes.improved} /></div>
-                    <div className="text-[11px] text-emerald-800">Improved</div>
+                    <div className="text-xs text-emerald-800">Improved</div>
                   </div>
                   <div className="rounded-md border bg-muted/50 p-2">
                     <div className="text-lg font-semibold"><Counter value={pulse.outcomes.neutral} /></div>
-                    <div className="text-[11px] text-muted-foreground">No change</div>
+                    <div className="text-xs text-muted-foreground">No change</div>
                   </div>
                   <div className="rounded-md border bg-red-50 p-2">
                     <div className="text-lg font-semibold text-red-700"><Counter value={pulse.outcomes.declined} /></div>
-                    <div className="text-[11px] text-red-800">Declined</div>
+                    <div className="text-xs text-red-800">Declined</div>
                   </div>
                 </div>
                 <div className="text-xs text-muted-foreground">
@@ -371,7 +371,7 @@ const SeoLiveAnalytics = ({
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="text-xs font-medium leading-snug">{l.id}. {l.name}</div>
-                          <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                             {l.measured ? pctOf(l.coverage) : "—"}
                           </span>
                         </div>
@@ -383,7 +383,7 @@ const SeoLiveAnalytics = ({
                             transition={{ duration: 0.9, ease: "easeOut" }}
                           />
                         </div>
-                        <div className="mt-1 text-[11px] text-muted-foreground">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           {l.measured
                             ? `${nf(l.passed)} pass · ${nf(l.failed)} to fix (of ${nf(l.applicable)} ${l.scope === "keyword" ? "keywords" : "pages"})`
                             : "Not measured yet — run the matching scan"}

@@ -157,7 +157,7 @@ export default function AIAnalysisPanel({ attemptId }: { attemptId: string }) {
                       <div className="text-sm font-medium">{b.source}</div>
                       {b.fix && <div className="text-xs text-muted-foreground mt-0.5">{b.fix}</div>}
                     </div>
-                    <Badge variant="destructive" className="text-[10px] shrink-0">−{b.marks}</Badge>
+                    <Badge variant="destructive" className="text-xs shrink-0">−{b.marks}</Badge>
                   </div>
                 ))}
               </div>
@@ -248,7 +248,7 @@ export default function AIAnalysisPanel({ attemptId }: { attemptId: string }) {
                       style={{ borderColor: w.priority === "high" ? "hsl(0 80% 60%)" : w.priority === "medium" ? "hsl(45 95% 55%)" : "hsl(215 20% 70%)" }}>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-sm">{w.area}</span>
-                        {w.priority && <Badge variant={w.priority === "high" ? "destructive" : "secondary"} className="text-[10px]">{w.priority}</Badge>}
+                        {w.priority && <Badge variant={w.priority === "high" ? "destructive" : "secondary"} className="text-xs">{w.priority}</Badge>}
                       </div>
                       {w.why && <div className="text-xs text-muted-foreground mt-1">{w.why}</div>}
                       {w.fix && <div className="text-xs mt-1"><span className="font-semibold text-sky-700">Fix: </span>{w.fix}</div>}

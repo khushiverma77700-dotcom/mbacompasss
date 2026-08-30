@@ -81,7 +81,7 @@ export const GaugeRing = ({
           <span className="font-mono text-sm font-semibold tabular-nums">{value}</span>
         </div>
       </div>
-      <span className="text-center text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-center text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
     </div>
   );
 };
@@ -114,7 +114,7 @@ export const PipelineFlow = ({ stages }: { stages: FxStage[] }) => (
           )}
           <div className="relative flex items-center gap-1.5">
             {s.icon && <s.icon className={cn("h-3.5 w-3.5", s.active ? "text-emerald-600" : "text-muted-foreground")} />}
-            <span className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{s.label}</span>
+            <span className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">{s.label}</span>
           </div>
           <div className="relative mt-0.5 font-mono text-lg font-semibold tabular-nums">
             <FxCounter value={s.count} format={(v) => (v === null ? "—" : Math.round(v).toLocaleString("en-IN"))} />
@@ -219,8 +219,8 @@ export const TerminalStream = ({
 }) => {
   const toneClass = { ok: "text-emerald-400", warn: "text-amber-300", err: "text-red-400", info: "text-sky-300" } as const;
   return (
-    <div className="relative overflow-hidden rounded-lg bg-slate-950 font-mono text-[11px] leading-relaxed" style={{ height }}>
-      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-1.5 text-[10px] uppercase tracking-widest text-slate-400">
+    <div className="relative overflow-hidden rounded-lg bg-slate-950 font-mono text-xs leading-relaxed" style={{ height }}>
+      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-1.5 text-xs uppercase tracking-widest text-slate-400">
         <span className="h-2 w-2 rounded-full bg-red-400/80" />
         <span className="h-2 w-2 rounded-full bg-amber-300/80" />
         <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
@@ -257,7 +257,7 @@ export const FxSpark = ({
 }: { values: number[]; tone?: "emerald" | "sky" | "amber"; height?: number }) => {
   const stroke = { emerald: "hsl(150 62% 42%)", sky: "hsl(205 90% 52%)", amber: "hsl(38 92% 50%)" }[tone];
   const pts = values.filter((v) => Number.isFinite(v));
-  if (pts.length < 2) return <div className="text-[11px] text-muted-foreground">not enough history</div>;
+  if (pts.length < 2) return <div className="text-xs text-muted-foreground">not enough history</div>;
   const min = Math.min(...pts);
   const max = Math.max(...pts);
   const span = max - min || 1;

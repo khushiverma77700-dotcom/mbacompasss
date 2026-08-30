@@ -549,7 +549,7 @@ export default function AdminMerittoLogs() {
                 value={manual.extraJson}
                 onChange={(e) => setManual({ ...manual, extraJson: e.target.value })}
               />
-              <p className="text-[11px] text-muted-foreground mt-1">Any extra Meritto fields as JSON. Leave empty if not needed.</p>
+              <p className="text-xs text-muted-foreground mt-1">Any extra Meritto fields as JSON. Leave empty if not needed.</p>
             </div>
           </div>
           <DialogFooter>
@@ -570,7 +570,7 @@ export default function AdminMerittoLogs() {
           <div className="flex items-center gap-2 text-xs mb-2">
             {(["upload", "map", "review"] as const).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
-                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${bulkStep === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</div>
+                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold ${bulkStep === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</div>
                 <span className={bulkStep === s ? "font-semibold" : "text-muted-foreground"}>{s === "upload" ? "Upload CSV" : s === "map" ? "Map columns" : "Review & push"}</span>
                 {i < 2 && <div className="w-6 h-px bg-border" />}
               </div>
@@ -593,7 +593,7 @@ export default function AdminMerittoLogs() {
                     <SelectItem value="mbacompass.in">mbacompass.in</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Meritto's URL fixes <code>source=bschoolbuzz</code>, so we tag the actual origin domain into <code>sub_source</code>, <code>utm_source</code>, <code>lead_origin</code>, <code>medium</code> and <code>campaign</code> — visible on the Meritto dashboard without triggering "Invalid Source".
                 </p>
               </div>
@@ -607,7 +607,7 @@ export default function AdminMerittoLogs() {
               <div>
                 <div className="font-medium mb-1">Step 2 — Upload your CSV</div>
                 <Input type="file" accept=".csv,text/csv" onChange={(e) => { const f = e.target.files?.[0]; if (f) onBulkFile(f); }} />
-                <p className="text-[11px] text-muted-foreground mt-1">You'll review headers, mapping and validation before anything is sent.</p>
+                <p className="text-xs text-muted-foreground mt-1">You'll review headers, mapping and validation before anything is sent.</p>
               </div>
             </div>
           )}
@@ -660,7 +660,7 @@ export default function AdminMerittoLogs() {
                       ))}
                     </tbody>
                   </table>
-                  {mapped.length > 20 && <div className="p-2 text-[11px] text-muted-foreground">Showing first 20 of {mapped.length} rows.</div>}
+                  {mapped.length > 20 && <div className="p-2 text-xs text-muted-foreground">Showing first 20 of {mapped.length} rows.</div>}
                 </div>
               </div>
             );
@@ -703,7 +703,7 @@ export default function AdminMerittoLogs() {
                         <td className="px-2 py-1">{r.mapped.email || "-"}</td>
                         <td className="px-2 py-1">{r.mapped.mobile || "-"}</td>
                         <td className="px-2 py-1">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] border ${
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs border ${
                             r.status === "success" ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                             : r.status === "duplicate" ? "bg-sky-100 text-sky-800 border-sky-200"
                             : r.status === "failed" ? "bg-red-100 text-red-800 border-red-200"
@@ -773,7 +773,7 @@ function StatCard({ icon, label, value, tone }: { icon: React.ReactNode; label: 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="font-medium">{value || "-"}</div>
     </div>
   );
@@ -783,7 +783,7 @@ function ResultChip({ label, value, tone }: { label: string; value: number; tone
   const cls = tone === "emerald" ? "text-emerald-600" : tone === "red" ? "text-red-600" : tone === "amber" ? "text-amber-600" : tone === "sky" ? "text-sky-600" : "";
   return (
     <div className="rounded-md border p-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`text-lg font-bold ${cls}`}>{value}</div>
     </div>
   );

@@ -131,7 +131,7 @@ export default function PlacementsBySectorSection() {
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sector share</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sector share</div>
                     <div className="text-2xl font-extrabold text-foreground leading-none">{s.share}</div>
                   </div>
                 </div>
@@ -140,22 +140,22 @@ export default function PlacementsBySectorSection() {
 
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <div className="rounded-lg bg-white/70 border border-white/60 px-3 py-2">
-                    <div className="text-[10px] font-bold uppercase text-muted-foreground">Avg CTC</div>
+                    <div className="text-xs font-bold uppercase text-muted-foreground">Avg CTC</div>
                     <div className="text-sm font-extrabold text-foreground">{s.avgCTC}</div>
                   </div>
                   <div className="rounded-lg bg-white/70 border border-white/60 px-3 py-2">
-                    <div className="text-[10px] font-bold uppercase text-muted-foreground">Top CTC</div>
+                    <div className="text-xs font-bold uppercase text-muted-foreground">Top CTC</div>
                     <div className="text-sm font-extrabold text-emerald-700">{s.topCTC}</div>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Top recruiters</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Top recruiters</div>
                   <div className="flex flex-wrap gap-1.5">
                     {s.recruiters.map((r) => (
                       <span
                         key={r}
-                        className="text-[11px] font-semibold bg-white/80 border border-white/70 text-foreground/80 px-2 py-0.5 rounded-md"
+                        className="text-xs font-semibold bg-white/80 border border-white/70 text-foreground/80 px-2 py-0.5 rounded-md"
                       >
                         {r}
                       </span>
@@ -168,7 +168,7 @@ export default function PlacementsBySectorSection() {
         </div>
 
         <div className="max-w-6xl mx-auto mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <TrendingUp className="w-3.5 h-3.5 text-primary" /> Aggregated from IIM A/B/C, XLRI, MDI, SPJIMR, FMS, ISB & IIFT 2025 reports.
           </div>
           <Link to="/colleges" className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors">

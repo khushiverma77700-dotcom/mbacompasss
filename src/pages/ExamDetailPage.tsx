@@ -273,9 +273,9 @@ const ExamDetailPage = () => {
                   className="h-12 w-12 rounded-lg object-contain bg-card border border-border p-1" />
               )}
               <div className="flex flex-wrap gap-2">
-                {cleanValue(hero.exam_category) && <Badge variant="secondary" className="text-[11px]">{hero.exam_category}</Badge>}
-                {cleanValue(hero.exam_status) && <Badge className="text-[11px]">{hero.exam_status}</Badge>}
-                {cleanValue(hero.registration_status) && <Badge variant="outline" className="text-[11px]">{hero.registration_status}</Badge>}
+                {cleanValue(hero.exam_category) && <Badge variant="secondary" className="text-xs">{hero.exam_category}</Badge>}
+                {cleanValue(hero.exam_status) && <Badge className="text-xs">{hero.exam_status}</Badge>}
+                {cleanValue(hero.registration_status) && <Badge variant="outline" className="text-xs">{hero.registration_status}</Badge>}
               </div>
             </div>
             <h1 className="font-heading text-2xl md:text-4xl font-bold text-foreground">{cleanValue(dbExam?.h1_tag) || sections.seo?.h1 || titleLabel}</h1>
@@ -450,7 +450,7 @@ const ExamDetailPage = () => {
                     <Card key={i}><CardContent className="p-4">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-foreground">{cleanValue(p.year) || "Question paper"}</p>
-                        {cleanValue(p.difficulty) && <Badge variant="secondary" className="text-[11px]">{p.difficulty}</Badge>}
+                        {cleanValue(p.difficulty) && <Badge variant="secondary" className="text-xs">{p.difficulty}</Badge>}
                       </div>
                       <div className="flex flex-wrap gap-3 mt-2">
                         {cleanValue(p.paper_url) && (

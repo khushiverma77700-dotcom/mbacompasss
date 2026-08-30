@@ -192,12 +192,12 @@ export default function AdminUsers() {
                   <TableCell className="max-w-[320px]">
                     <div className="flex flex-wrap gap-1">
                       {u.purchases.slice(0, 3).map((p, i) => (
-                        <Badge key={i} variant="secondary" className="text-[10px]" title={p.status ? `${p.status}${p.amount ? ` • ₹${p.amount}` : ""}` : undefined}>
+                        <Badge key={i} variant="secondary" className="text-xs" title={p.status ? `${p.status}${p.amount ? ` • ₹${p.amount}` : ""}` : undefined}>
                           {p.label}{p.status && p.status !== "enrolled" ? ` · ${p.status}` : ""}
                         </Badge>
                       ))}
                       {u.purchases.length > 3 && (
-                        <Badge variant="outline" className="text-[10px]">+{u.purchases.length - 3} more</Badge>
+                        <Badge variant="outline" className="text-xs">+{u.purchases.length - 3} more</Badge>
                       )}
                     </div>
                   </TableCell>
@@ -206,13 +206,13 @@ export default function AdminUsers() {
                   </TableCell>
                   <TableCell>
                     {u.status === "blocked" ? (
-                      <Badge variant="destructive" className="text-[10px]">Blocked</Badge>
+                      <Badge variant="destructive" className="text-xs">Blocked</Badge>
                     ) : u.status === "guest_paid" ? (
-                      <Badge className="text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-100">Guest · Paid</Badge>
+                      <Badge className="text-xs bg-amber-100 text-amber-800 hover:bg-amber-100">Guest · Paid</Badge>
                     ) : u.status === "guest" ? (
-                      <Badge variant="outline" className="text-[10px]">Guest</Badge>
+                      <Badge variant="outline" className="text-xs">Guest</Badge>
                     ) : (
-                      <Badge className="text-[10px] bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Active</Badge>
+                      <Badge className="text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Active</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">

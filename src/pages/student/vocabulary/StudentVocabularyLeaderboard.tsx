@@ -39,7 +39,7 @@ export default function StudentVocabularyLeaderboard() {
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-bold text-muted-foreground w-8 text-sm">#{r.rank}</span>
                     <div className="min-w-0">
-                      <p className="font-medium text-foreground truncate">{r.display_name}{r.is_self && <Badge variant="secondary" className="ml-2 text-[10px]">You</Badge>}</p>
+                      <p className="font-medium text-foreground truncate">{r.display_name}{r.is_self && <Badge variant="secondary" className="ml-2 text-xs">You</Badge>}</p>
                       <p className="text-xs text-muted-foreground">Level {r.level} · {r.current_streak}d streak</p>
                     </div>
                   </div>

@@ -69,7 +69,7 @@ export const InternalLinksSection = ({ exam, city, state, course }: Props) => {
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="w-4 h-4 text-primary" />
             <h4 className="text-sm font-semibold">Related exam categories</h4>
-            <Badge variant="secondary" className="text-[10px]">{relatedExams.length}</Badge>
+            <Badge variant="secondary" className="text-xs">{relatedExams.length}</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
             {relatedExams.map((e) => (
@@ -90,7 +90,7 @@ export const InternalLinksSection = ({ exam, city, state, course }: Props) => {
             <h4 className="text-sm font-semibold">
               {state ? `MBA hubs in ${state}` : city ? `Near ${city}` : "Top MBA cities"}
             </h4>
-            <Badge variant="secondary" className="text-[10px]">{cityList.length}</Badge>
+            <Badge variant="secondary" className="text-xs">{cityList.length}</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
             {cityList.map((c) => (
@@ -109,7 +109,7 @@ export const InternalLinksSection = ({ exam, city, state, course }: Props) => {
           <div className="flex items-center gap-2 mb-2">
             <Layers className="w-4 h-4 text-primary" />
             <h4 className="text-sm font-semibold">Popular MBA specialisations</h4>
-            <Badge variant="secondary" className="text-[10px]">{courseList.length}</Badge>
+            <Badge variant="secondary" className="text-xs">{courseList.length}</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
             {courseList.map((c) => (

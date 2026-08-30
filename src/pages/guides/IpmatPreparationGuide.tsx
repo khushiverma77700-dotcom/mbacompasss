@@ -35,7 +35,7 @@ const IpmatPreparationGuide = () => {
             <span className="mx-2">/</span>
             <span className="text-slate-700 font-medium">IPMAT Preparation Guide</span>
           </nav>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-sky-700 bg-sky-100 px-3 py-1 rounded-full mb-4">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-sky-700 bg-sky-100 px-3 py-1 rounded-full mb-4">
             <Target className="w-3 h-3" /> Integrated Programme in Management
           </span>
           <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -66,7 +66,7 @@ const IpmatPreparationGuide = () => {
       <div className="container mx-auto px-4 py-10 md:py-14 max-w-5xl grid md:grid-cols-[220px,1fr] gap-10">
         {/* TOC */}
         <aside className="hidden md:block sticky top-24 self-start">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3">On this page</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">On this page</p>
           <ul className="space-y-2 text-sm">
             {sections.map((s) => (
               <li key={s.id}>

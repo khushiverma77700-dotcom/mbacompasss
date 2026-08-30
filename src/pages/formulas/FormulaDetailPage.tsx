@@ -146,7 +146,7 @@ export default function FormulaDetailPage() {
         <div className="relative bg-gradient-to-br from-sky-50 via-white to-blue-50 p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-sky-700">
                 <Calculator className="h-3 w-3" /> {formula.topic_slug?.replace(/-/g, " ")}
               </div>
               <h1 className="font-heading mt-2 text-3xl font-bold text-slate-900">{formula.name}</h1>
@@ -276,7 +276,7 @@ export default function FormulaDetailPage() {
             {related.map((r) => (
               <Link key={r.slug} to={`${detailBase}/${r.slug}`} className="group rounded-xl border border-slate-200 bg-white p-3 transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md">
                 <div className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-sky-700">{r.name}</div>
-                <div className="mt-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-500">
+                <div className="mt-1 flex items-center gap-1.5 text-xs uppercase tracking-wider text-slate-500">
                   <BookOpen className="h-3 w-3" /> {r.difficulty}
                 </div>
               </Link>

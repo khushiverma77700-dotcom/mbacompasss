@@ -424,7 +424,7 @@ const CATScoreCalculatorPage: React.FC = () => {
               <button onClick={() => setInputMode("url")}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${inputMode === "url" ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
                 <Globe className="w-4 h-4" /> Paste URL
-                <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-bold ml-1">EASY</span>
+                <span className="text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-bold ml-1">EASY</span>
               </button>
               <button onClick={() => setInputMode("paste")}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${inputMode === "paste" ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>

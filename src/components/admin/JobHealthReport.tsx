@@ -143,8 +143,8 @@ const JobHealthReport = ({
                     variant="outline"
                     className={
                       r.status === "failed"
-                        ? "border-destructive/40 text-destructive text-[10px]"
-                        : "border-amber-500/40 text-amber-700 text-[10px]"
+                        ? "border-destructive/40 text-destructive text-xs"
+                        : "border-amber-500/40 text-amber-700 text-xs"
                     }
                   >
                     {r.status}
@@ -152,7 +152,7 @@ const JobHealthReport = ({
                 </div>
               ))}
               {failedRows.length > 50 && (
-                <div className="px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                <div className="px-2.5 py-1.5 text-xs text-muted-foreground">
                   +{failedRows.length - 50} more — see downloaded report.
                 </div>
               )}
@@ -172,7 +172,7 @@ const Stat = ({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
     : "text-muted-foreground bg-muted/40 border-border";
   return (
     <div className={`rounded-md border px-2.5 py-1.5 ${cls}`}>
-      <div className="flex items-center gap-1.5 text-[11px] font-medium opacity-80">{icon}{label}</div>
+      <div className="flex items-center gap-1.5 text-xs font-medium opacity-80">{icon}{label}</div>
       <div className="text-lg font-bold leading-tight mt-0.5">{value}</div>
     </div>
   );
@@ -180,7 +180,7 @@ const Stat = ({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
 
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-md bg-muted/30 px-2.5 py-1.5">
-    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+    <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
     <div className="text-foreground font-medium truncate">{value}</div>
   </div>
 );

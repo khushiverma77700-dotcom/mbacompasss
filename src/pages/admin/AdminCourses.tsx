@@ -347,8 +347,8 @@ const AdminCourses = () => {
                       <div className="font-medium text-foreground">{c.name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                         {c.syllabus_url && <span className="text-xs text-primary">📄 Syllabus</span>}
-                        {(c as any).course_categories?.name && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{(c as any).course_categories.name}</Badge>}
-                        {c.discount_text && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{c.discount_text}</Badge>}
+                        {(c as any).course_categories?.name && <Badge variant="outline" className="text-xs px-1.5 py-0">{(c as any).course_categories.name}</Badge>}
+                        {c.discount_text && <Badge variant="destructive" className="text-xs px-1.5 py-0">{c.discount_text}</Badge>}
                       </div>
                     </div>
                   </TableCell>
@@ -360,7 +360,7 @@ const AdminCourses = () => {
                   <TableCell><span className="font-heading font-semibold text-primary">{c.fees ? `₹${Number(c.fees).toLocaleString()}` : "—"}</span></TableCell>
                   <TableCell>{c.rating ? <span className="flex items-center gap-1 text-sm"><Star className="w-3 h-3 text-amber-500 fill-amber-500" /> {Number(c.rating).toFixed(1)}</span> : "—"}</TableCell>
                   <TableCell>{c.enrolled_count ? <span className="flex items-center gap-1 text-sm"><Users className="w-3 h-3" /> {c.enrolled_count}</span> : "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-xs">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                   <TableCell className="text-right space-x-2">
                     <RefreshContentButton entityType="course" entityId={c.id} entityName={c.name} />
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}><Pencil className="w-4 h-4" /></Button>

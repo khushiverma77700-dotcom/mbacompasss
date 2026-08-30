@@ -141,7 +141,7 @@ const SOURCE_LABEL: Record<string, { text: string; cls: string }> = {
 
 const SourceTag = ({ kind }: { kind: keyof typeof SOURCE_LABEL }) => {
   const l = SOURCE_LABEL[kind] ?? SOURCE_LABEL.unavailable;
-  return <span className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${l.cls}`}>{l.text}</span>;
+  return <span className={`inline-block rounded border px-1.5 py-0.5 text-xs font-semibold tracking-wide ${l.cls}`}>{l.text}</span>;
 };
 
 const num = (v: any) => (v === null || v === undefined ? "—" : Number(v).toLocaleString("en-IN"));

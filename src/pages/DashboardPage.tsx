@@ -154,12 +154,12 @@ const DashboardPage = () => {
                               <p className="font-heading font-semibold text-foreground text-sm">{r.name || "MBA ROI Analysis"}</p>
                               <p className="text-xs text-muted-foreground mt-0.5">{new Date(r.created_at).toLocaleDateString()} · {r.expected_tier}</p>
                             </div>
-                            {r.roi_category && <Badge variant={r.roi_category === "High" ? "default" : "secondary"} className="text-[10px]">{r.roi_category} ROI</Badge>}
+                            {r.roi_category && <Badge variant={r.roi_category === "High" ? "default" : "secondary"} className="text-xs">{r.roi_category} ROI</Badge>}
                           </div>
                           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/60">
-                            <div><p className="text-[10px] text-muted-foreground">Investment</p><p className="text-sm font-bold text-foreground">₹{r.total_investment_lakhs || 0}L</p></div>
-                            <div><p className="text-[10px] text-muted-foreground">Salary</p><p className="text-sm font-bold text-emerald-600">₹{r.expected_salary_lakhs || 0}L</p></div>
-                            <div><p className="text-[10px] text-muted-foreground">Payback</p><p className="text-sm font-bold text-primary">{r.payback_years || 0}y</p></div>
+                            <div><p className="text-xs text-muted-foreground">Investment</p><p className="text-sm font-bold text-foreground">₹{r.total_investment_lakhs || 0}L</p></div>
+                            <div><p className="text-xs text-muted-foreground">Salary</p><p className="text-sm font-bold text-emerald-600">₹{r.expected_salary_lakhs || 0}L</p></div>
+                            <div><p className="text-xs text-muted-foreground">Payback</p><p className="text-sm font-bold text-primary">{r.payback_years || 0}y</p></div>
                           </div>
                           <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                             <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Score: <span className="font-semibold text-foreground">{r.roi_score || 0}/100</span>
@@ -194,7 +194,7 @@ const DashboardPage = () => {
                               <p className="font-heading font-semibold text-foreground text-sm">{r.name || "Profile Analysis"}</p>
                               <p className="text-xs text-muted-foreground mt-0.5">{new Date(r.created_at).toLocaleDateString()} · Target: {r.target_exam}</p>
                             </div>
-                            <Badge variant="secondary" className="text-[10px]">Score {r.profile_score || 0}/10</Badge>
+                            <Badge variant="secondary" className="text-xs">Score {r.profile_score || 0}/10</Badge>
                           </div>
                           <Link to="/profile-analyzer"><Button size="sm" variant="ghost" className="mt-3 w-full gap-1"><Eye className="w-3.5 h-3.5" /> View</Button></Link>
                         </CardContent>

@@ -127,7 +127,7 @@ const MBALandscapeSection = () => {
             role="region"
             aria-label="B-Schools table, scrollable"
           >
-          <div className="hidden md:grid grid-cols-[60px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 px-4 py-2.5 bg-sky-50/95 backdrop-blur border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80 sticky top-0 z-10">
+          <div className="hidden md:grid grid-cols-[60px_1.4fr_1fr_0.9fr_0.9fr_1fr] gap-3 px-4 py-2.5 bg-sky-50/95 backdrop-blur border-b border-primary/10 text-xs font-bold uppercase tracking-wider text-primary/80 sticky top-0 z-10">
 
             <div>Rank</div>
             <div>B-School</div>
@@ -150,16 +150,16 @@ const MBALandscapeSection = () => {
               </div>
               <div className="min-w-0 md:col-span-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="font-semibold text-foreground text-[13px] md:text-[15px] group-hover:text-primary transition-colors truncate">
+                  <div className="font-semibold text-foreground text-sm md:text-sm group-hover:text-primary transition-colors truncate">
                     {row.name}
                   </div>
                   {row.highlight && (
-                    <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                    <span className="text-xs md:text-xs font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
                       <Trophy className="inline w-2.5 h-2.5 mr-0.5 -mt-0.5" />{row.highlight}
                     </span>
                   )}
                 </div>
-                <div className="md:hidden mt-0.5 grid grid-cols-2 gap-1 text-[10px] text-muted-foreground leading-tight">
+                <div className="md:hidden mt-0.5 grid grid-cols-2 gap-1 text-xs text-muted-foreground leading-tight">
                   <div>{row.city} · {row.fees}</div>
                   <div>{row.cutoff} · <span className="text-emerald-700 font-semibold">{row.medianCTC}</span></div>
                 </div>

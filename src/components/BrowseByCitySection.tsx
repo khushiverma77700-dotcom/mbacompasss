@@ -154,7 +154,7 @@ const BrowseByCitySection = () => {
                         {featured.name}
                       </h3>
                       {featured.state && (
-                        <p className="text-white/60 text-[10px] font-medium tracking-wide uppercase">
+                        <p className="text-white/60 text-xs font-medium tracking-wide uppercase">
                           {featured.state}, India
                         </p>
                       )}
@@ -163,16 +163,16 @@ const BrowseByCitySection = () => {
 
                   <div>
                     <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-[10px] font-semibold border border-white/10">
+                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-xs font-semibold border border-white/10">
                         <Building2 className="w-3 h-3" />
                         {featured.count} Colleges
                       </span>
-                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-[10px] font-semibold border border-white/10">
+                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-xs font-semibold border border-white/10">
                         <GraduationCap className="w-3 h-3" />
                         Top MBA
                       </span>
                       {featured.count >= 5 && (
-                        <span className="inline-flex items-center gap-1 bg-primary/60 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-[10px] font-semibold border border-primary/30">
+                        <span className="inline-flex items-center gap-1 bg-primary/60 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-xs font-semibold border border-primary/30">
                           🔥 Popular
                         </span>
                       )}
@@ -239,7 +239,7 @@ const BrowseByCitySection = () => {
                   />
                   <div className="absolute inset-0 bg-[#2c1810]/30 pointer-events-none" />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1">
-                    <span className="text-white text-[8px] font-bold leading-none">{city.name}</span>
+                    <span className="text-white text-xs font-bold leading-none">{city.name}</span>
                   </div>
                 </button>
               ))}
@@ -432,7 +432,7 @@ const BrowseByCitySection = () => {
                       <h3 className="text-white text-sm md:text-base font-bold leading-tight drop-shadow-lg">
                         {city.name}
                       </h3>
-                      <p className="text-white/80 text-[11px] md:text-xs font-medium mt-1.5 flex items-center gap-1">
+                      <p className="text-white/80 text-xs md:text-xs font-medium mt-1.5 flex items-center gap-1">
                         <Building2 className="w-3 h-3" />
                         {city.count} {city.count === 1 ? "College" : "Colleges"}
                       </p>

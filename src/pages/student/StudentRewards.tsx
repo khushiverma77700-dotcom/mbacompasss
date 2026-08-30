@@ -104,9 +104,9 @@ export default function StudentRewards() {
                 <div className="text-sm font-semibold text-gray-900">{b.name}</div>
                 <div className="text-xs text-muted-foreground mt-1">{b.desc}</div>
                 {earned ? (
-                  <div className="text-[10px] text-amber-700 mt-2 font-medium">Earned</div>
+                  <div className="text-xs text-amber-700 mt-2 font-medium">Earned</div>
                 ) : (
-                  <div className="text-[10px] text-gray-500 mt-2">Locked</div>
+                  <div className="text-xs text-gray-500 mt-2">Locked</div>
                 )}
               </div>
             );
@@ -122,7 +122,7 @@ function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: s
     <Card className="p-4 border-sky-100">
       <div className="flex items-center gap-2 mb-1">{icon}<span className="text-xs text-muted-foreground">{label}</span></div>
       <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>
+      <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>
     </Card>
   );
 }

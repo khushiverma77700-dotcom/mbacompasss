@@ -96,7 +96,7 @@ const ProfileAnalyzerPopup = () => {
                 </div>
                 <div>
                   <h2 className="font-heading text-lg md:text-xl font-bold text-white leading-tight">AI Profile Analyser</h2>
-                  <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Free • Instant • AI-Powered</p>
+                  <p className="text-white/60 text-xs uppercase tracking-widest font-semibold">Free • Instant • AI-Powered</p>
                 </div>
               </div>
 
@@ -160,7 +160,7 @@ const ProfileAnalyzerPopup = () => {
                   <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-foreground leading-tight">{item.title}</div>
-                    <div className="text-[11px] text-muted-foreground leading-snug">{item.sub}</div>
+                    <div className="text-xs text-muted-foreground leading-snug">{item.sub}</div>
                   </div>
                 </div>
               ))}
@@ -177,7 +177,7 @@ const ProfileAnalyzerPopup = () => {
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
 
-            <p className="text-center text-[11px] text-muted-foreground mt-3">
+            <p className="text-center text-xs text-muted-foreground mt-3">
               Takes only 2 minutes • Mobile verified for your privacy
             </p>
 

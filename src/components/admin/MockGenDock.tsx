@@ -139,7 +139,7 @@ export default function MockGenDock() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-bold text-slate-900">AI Mock Generation</div>
-                    <div className="text-[11px] text-slate-600">
+                    <div className="text-xs text-slate-600">
                       {activeCount} running · {pendingCount} queued · {doneCount} done
                       {failCount ? ` · ${failCount} failed` : ""}
                     </div>
@@ -159,13 +159,13 @@ export default function MockGenDock() {
               </div>
               {/* Concurrency hint + overall progress */}
               <div className="relative mt-2 space-y-1.5">
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-600">
+                <div className="flex items-center gap-1.5 text-xs text-slate-600">
                   <Layers className="h-3 w-3" />
                   <span>Up to 3 mocks generate in parallel — server keeps running even if you close your laptop.</span>
                 </div>
                 {totalRequested > 0 && (
                   <div>
-                    <div className="flex items-center justify-between text-[10px] text-slate-600 mb-0.5">
+                    <div className="flex items-center justify-between text-xs text-slate-600 mb-0.5">
                       <span>Overall progress</span>
                       <span className="font-semibold tabular-nums">{totalGenerated} / {totalRequested} · {overallPct}%</span>
                     </div>
@@ -186,7 +186,7 @@ export default function MockGenDock() {
                     <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
                   <div className="text-sm font-semibold text-slate-800">Queuing your mock…</div>
-                  <div className="text-[11px] text-slate-600 mt-1">
+                  <div className="text-xs text-slate-600 mt-1">
                     Spinning up the generator on our servers. Progress will appear here in a moment.
                   </div>
                 </div>
@@ -207,7 +207,7 @@ export default function MockGenDock() {
               )}
             </div>
 
-            <div className="px-3 py-2 border-t border-sky-100/80 bg-white/40 text-[11px] text-slate-500 text-center">
+            <div className="px-3 py-2 border-t border-sky-100/80 bg-white/40 text-xs text-slate-500 text-center">
               Click outside to minimize · The dock keeps running across pages
             </div>
 
@@ -336,20 +336,20 @@ function JobRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-slate-900 truncate">{job.label}</div>
-            <Badge variant="outline" className={`text-[10px] font-semibold ${meta.color} bg-white/70 border-current/40 shadow-sm shrink-0`}>
+            <Badge variant="outline" className={`text-xs font-semibold ${meta.color} bg-white/70 border-current/40 shadow-sm shrink-0`}>
               <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
               {meta.label}
             </Badge>
           </div>
 
           {job.status === "pending" && queuePos && (
-            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/70 border border-rose-200 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/70 border border-rose-200 px-2 py-0.5 text-xs font-semibold text-rose-700">
               <ListOrdered className="h-3 w-3" />
               Queue position {queuePos} of {totalPending}
             </div>
           )}
 
-          <div className="mt-1 text-[11px] text-slate-700 flex items-center justify-between gap-2">
+          <div className="mt-1 text-xs text-slate-700 flex items-center justify-between gap-2">
             <span className="tabular-nums">
               {generated}/{requested || "?"} questions
               {pct > 0 ? ` · ${pct}%` : ""}
@@ -358,7 +358,7 @@ function JobRow({
           </div>
 
           {(runningLabel || etaLabel) && (
-            <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-600">
+            <div className="mt-1 flex items-center gap-2 text-xs text-slate-600">
               {runningLabel && (
                 <span className="inline-flex items-center gap-1"><Timer className="h-3 w-3" /> {runningLabel}</span>
               )}
@@ -369,7 +369,7 @@ function JobRow({
           )}
 
           {job.error && (
-            <div className="mt-1 text-[10px] text-rose-700/90 line-clamp-2">
+            <div className="mt-1 text-xs text-rose-700/90 line-clamp-2">
               {job.error}
             </div>
           )}
@@ -380,20 +380,20 @@ function JobRow({
 
       <div className="flex items-center justify-end gap-1 px-3 pb-2">
         {job.status === "pending" && (
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-sky-700 hover:bg-sky-50"
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-sky-700 hover:bg-sky-50"
             onClick={(e) => { e.stopPropagation(); onRunNow(); }}
             title="Force this mock to start now (skip queue)">
             <Zap className="h-3 w-3 mr-1" /> Run now
           </Button>
         )}
         {job.status === "failed" && (
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-amber-700 hover:bg-amber-50"
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-amber-700 hover:bg-amber-50"
             onClick={(e) => { e.stopPropagation(); onRetry(); }}>
             <RotateCw className="h-3 w-3 mr-1" /> Retry
           </Button>
         )}
         {job.status === "completed" && job.hasFailedSections && (
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-amber-700 hover:bg-amber-50"
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-amber-700 hover:bg-amber-50"
             onClick={(e) => { e.stopPropagation(); onRegenerateFailed(); }}
             title="Re-generate only the sections that failed">
             <RotateCw className="h-3 w-3 mr-1" /> Regenerate failed
@@ -401,13 +401,13 @@ function JobRow({
         )}
 
         {!isFinal && (
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-rose-600 hover:bg-rose-50"
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-rose-600 hover:bg-rose-50"
             onClick={(e) => { e.stopPropagation(); onCancel(); }}>
             <StopCircle className="h-3 w-3 mr-1" /> Cancel
           </Button>
         )}
         {isFinal && (
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] text-slate-600 hover:bg-slate-100"
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-slate-600 hover:bg-slate-100"
             onClick={(e) => { e.stopPropagation(); onDismiss(); }}>
             <X className="h-3 w-3 mr-1" /> Dismiss
           </Button>
@@ -435,7 +435,7 @@ function JobRow({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-t border-current/10 bg-white/50"
           >
-            <div className="px-3 py-2 text-[11px] text-slate-600 space-y-1">
+            <div className="px-3 py-2 text-xs text-slate-600 space-y-1">
               <p>
                 {job.status === "pending"
                   ? `Waiting in queue${queuePos ? ` (position ${queuePos})` : ""}. The server dispatches the next 3 pending mocks automatically every minute.`

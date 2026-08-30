@@ -240,10 +240,10 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
             <div className="flex-1 min-w-0">
               <h4 className="font-bold text-foreground text-base leading-tight">{rec.college_name}</h4>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-semibold">{rec.tier}</Badge>
-                {rec.type && <Badge variant="outline" className="text-[10px] px-2 py-0.5">{rec.type}</Badge>}
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 font-semibold">{rec.tier}</Badge>
+                {rec.type && <Badge variant="outline" className="text-xs px-2 py-0.5">{rec.type}</Badge>}
                 {rec.difficulty && rec.difficulty !== "Unknown" && (
-                  <Badge className={`text-[10px] px-2 py-0.5 border-0 ${rec.difficulty === "Safe" ? "bg-emerald-100 text-emerald-800" : rec.difficulty === "Target" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
+                  <Badge className={`text-xs px-2 py-0.5 border-0 ${rec.difficulty === "Safe" ? "bg-emerald-100 text-emerald-800" : rec.difficulty === "Target" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
                     {rec.difficulty}
                   </Badge>
                 )}
@@ -257,7 +257,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
             <div className="shrink-0 text-center">
               <div className={`w-14 h-14 rounded-full ${colors.light} border-2 ${colors.ring} flex flex-col items-center justify-center`}>
                 <span className={`text-lg font-black ${colors.text}`}>{rec.match_score}</span>
-                <span className="text-[8px] font-semibold text-muted-foreground -mt-0.5">MATCH</span>
+                <span className="text-xs font-semibold text-muted-foreground -mt-0.5">MATCH</span>
               </div>
             </div>
           </div>
@@ -285,8 +285,8 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
               ].map((m) => (
                 <div key={m.label} className={`rounded-xl p-2 text-center border ${m.bg}`}>
                   <m.icon className={`w-3.5 h-3.5 mx-auto mb-0.5 ${m.accent}`} />
-                  <div className="text-[8px] text-muted-foreground uppercase tracking-wider font-medium">{m.label}</div>
-                  <div className={`text-[10px] font-bold mt-0.5 ${m.accent}`}>{m.value || "N/A"}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{m.label}</div>
+                  <div className={`text-xs font-bold mt-0.5 ${m.accent}`}>{m.value || "N/A"}</div>
                 </div>
               ))}
             </div>
@@ -295,12 +295,12 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
           {/* Strengths & Accreditations row */}
           <div className="px-4 pt-3 flex flex-wrap gap-1.5">
             {rec.key_strengths?.slice(0, 4).map((s, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-2.5 py-0.5 font-medium">
+              <span key={i} className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-2.5 py-0.5 font-medium">
                 <CheckCircle2 className="w-2.5 h-2.5" /> {s}
               </span>
             ))}
             {rec.accreditations?.slice(0, 3).map((a, i) => (
-              <span key={`acc-${i}`} className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2.5 py-0.5 font-medium">
+              <span key={`acc-${i}`} className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2.5 py-0.5 font-medium">
                 <Shield className="w-2.5 h-2.5" /> {a}
               </span>
             ))}
@@ -323,18 +323,18 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                   <div className="grid grid-cols-3 gap-2">
                     {rec.median_package && (
                       <div className="bg-muted/40 rounded-xl p-2.5 text-center">
-                        <div className="text-[9px] text-muted-foreground uppercase">Median CTC</div>
+                        <div className="text-xs text-muted-foreground uppercase">Median CTC</div>
                         <div className="text-xs font-bold text-foreground mt-0.5">{rec.median_package}</div>
                       </div>
                     )}
                     {rec.total_students && (
                       <div className="bg-muted/40 rounded-xl p-2.5 text-center">
-                        <div className="text-[9px] text-muted-foreground uppercase">Students</div>
+                        <div className="text-xs text-muted-foreground uppercase">Students</div>
                         <div className="text-xs font-bold text-foreground mt-0.5">{rec.total_students}</div>
                       </div>
                     )}
                     <div className="bg-muted/40 rounded-xl p-2.5 text-center">
-                      <div className="text-[9px] text-muted-foreground uppercase">Exams</div>
+                      <div className="text-xs text-muted-foreground uppercase">Exams</div>
                       <div className="text-xs font-bold text-foreground mt-0.5">{rec.exams_accepted?.length || 0}+</div>
                     </div>
                   </div>
@@ -342,10 +342,10 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                   {/* Exams */}
                   {rec.exams_accepted?.length > 0 && (
                     <div>
-                      <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1.5">Accepted Exams</div>
+                      <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1.5">Accepted Exams</div>
                       <div className="flex flex-wrap gap-1">
                         {rec.exams_accepted.map((e, i) => (
-                          <Badge key={i} variant="outline" className="text-[9px] px-2 py-0.5">{e}</Badge>
+                          <Badge key={i} variant="outline" className="text-xs px-2 py-0.5">{e}</Badge>
                         ))}
                       </div>
                     </div>
@@ -354,10 +354,10 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                   {/* Top Recruiters */}
                   {rec.top_recruiters && rec.top_recruiters.length > 0 && (
                     <div>
-                      <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1.5">Top Recruiters</div>
+                      <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1.5">Top Recruiters</div>
                       <div className="flex flex-wrap gap-1">
                         {rec.top_recruiters.slice(0, 8).map((r, i) => (
-                          <span key={i} className="text-[10px] bg-muted/60 text-foreground/80 rounded-lg px-2 py-0.5">{r}</span>
+                          <span key={i} className="text-xs bg-muted/60 text-foreground/80 rounded-lg px-2 py-0.5">{r}</span>
                         ))}
                       </div>
                     </div>
@@ -367,7 +367,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                     <div className="flex items-center gap-2">
                       <Layers className="w-3.5 h-3.5 text-primary" />
                       <span className="text-xs text-muted-foreground">Strong in: </span>
-                      <Badge className="bg-primary/10 text-primary border-0 text-[10px]">{rec.specialization_strength}</Badge>
+                      <Badge className="bg-primary/10 text-primary border-0 text-xs">{rec.specialization_strength}</Badge>
                     </div>
                   )}
                 </div>
@@ -378,25 +378,25 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
           {/* Footer CTAs */}
           <div className="p-4 pt-3 grid grid-cols-3 gap-2">
             <Link to={`/college/${rec.college_slug}#admission`}>
-              <Button size="sm" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+              <Button size="sm" className="w-full gap-1.5 text-xs h-10 font-semibold rounded-xl">
                 <BadgeCheck className="w-3.5 h-3.5" /> Apply Now
               </Button>
             </Link>
             {rec.website ? (
               <a href={rec.website} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" variant="outline" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                <Button size="sm" variant="outline" className="w-full gap-1.5 text-xs h-10 font-semibold rounded-xl">
                   <Globe2 className="w-3.5 h-3.5" /> Visit College
                 </Button>
               </a>
             ) : (
               <Link to={`/college/${rec.college_slug}`}>
-                <Button size="sm" variant="outline" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+                <Button size="sm" variant="outline" className="w-full gap-1.5 text-xs h-10 font-semibold rounded-xl">
                   <Globe2 className="w-3.5 h-3.5" /> Visit College
                 </Button>
               </Link>
             )}
             <Link to={`/college/${rec.college_slug}`}>
-              <Button size="sm" variant="secondary" className="w-full gap-1.5 text-[11px] h-10 font-semibold rounded-xl">
+              <Button size="sm" variant="secondary" className="w-full gap-1.5 text-xs h-10 font-semibold rounded-xl">
                 <ExternalLink className="w-3.5 h-3.5" /> See More
               </Button>
             </Link>
@@ -432,7 +432,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
             </AnimatePresence>
             <div className="max-w-sm mx-auto">
               <Progress value={((loadingStage + 1) / LOADING_STAGES.length) * 100} className="h-2" />
-              <p className="text-center text-[11px] text-muted-foreground mt-2">Analyzing {totalSteps} preference dimensions</p>
+              <p className="text-center text-xs text-muted-foreground mt-2">Analyzing {totalSteps} preference dimensions</p>
             </div>
           </motion.div>
         )}
@@ -461,7 +461,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-base">Your AI College Report</h3>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {aiResult.stats?.total_matches ?? aiResult.recommendations?.length ?? 0} matching colleges from our verified database of {aiResult.stats?.total_in_database ?? 0} B-Schools
                     </p>
 
@@ -474,12 +474,12 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
 
               {/* Preference pills */}
               <div className="flex flex-wrap gap-1.5">
-                {collegeTier && collegeTier !== "any" && <Badge className="bg-blue-100 text-blue-800 border-0 text-[10px]"><Building2 className="w-2.5 h-2.5 mr-1" />{collegeTier}</Badge>}
-                {selectedExams.map(e => <Badge key={e} className="bg-violet-100 text-violet-800 border-0 text-[10px]"><BookOpen className="w-2.5 h-2.5 mr-1" />{e}</Badge>)}
-                {expectedScore && <Badge className="bg-emerald-100 text-emerald-800 border-0 text-[10px]"><Target className="w-2.5 h-2.5 mr-1" />{expectedScore}%ile</Badge>}
-                {budget && budget !== "any" && <Badge className="bg-amber-100 text-amber-800 border-0 text-[10px]"><IndianRupee className="w-2.5 h-2.5 mr-1" />{budget}</Badge>}
-                {location && location !== "any" && <Badge className="bg-rose-100 text-rose-800 border-0 text-[10px]"><MapPin className="w-2.5 h-2.5 mr-1" />{location}</Badge>}
-                {specialization && specialization !== "any" && <Badge className="bg-cyan-100 text-cyan-800 border-0 text-[10px]"><Layers className="w-2.5 h-2.5 mr-1" />{specialization}</Badge>}
+                {collegeTier && collegeTier !== "any" && <Badge className="bg-blue-100 text-blue-800 border-0 text-xs"><Building2 className="w-2.5 h-2.5 mr-1" />{collegeTier}</Badge>}
+                {selectedExams.map(e => <Badge key={e} className="bg-violet-100 text-violet-800 border-0 text-xs"><BookOpen className="w-2.5 h-2.5 mr-1" />{e}</Badge>)}
+                {expectedScore && <Badge className="bg-emerald-100 text-emerald-800 border-0 text-xs"><Target className="w-2.5 h-2.5 mr-1" />{expectedScore}%ile</Badge>}
+                {budget && budget !== "any" && <Badge className="bg-amber-100 text-amber-800 border-0 text-xs"><IndianRupee className="w-2.5 h-2.5 mr-1" />{budget}</Badge>}
+                {location && location !== "any" && <Badge className="bg-rose-100 text-rose-800 border-0 text-xs"><MapPin className="w-2.5 h-2.5 mr-1" />{location}</Badge>}
+                {specialization && specialization !== "any" && <Badge className="bg-cyan-100 text-cyan-800 border-0 text-xs"><Layers className="w-2.5 h-2.5 mr-1" />{specialization}</Badge>}
               </div>
             </div>
 
@@ -505,7 +505,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                 ].map((s) => (
                   <div key={s.label} className={`rounded-xl border p-3 text-center ${s.cls}`}>
                     <div className="text-xl font-black">{s.value}</div>
-                    <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-0.5">{s.label}</div>
+                    <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mt-0.5">{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -521,7 +521,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-bold text-foreground text-sm flex items-center gap-2">
                           <Medal className="w-4 h-4 text-primary" /> {g.label}
-                          <Badge variant="secondary" className="text-[10px]">{g.colleges.length} colleges</Badge>
+                          <Badge variant="secondary" className="text-xs">{g.colleges.length} colleges</Badge>
                         </h4>
                       </div>
                       <div className="space-y-4">
@@ -564,7 +564,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                     <div key={i} className={`rounded-xl p-3 border ${s.color}`}>
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <s.icon className="w-3.5 h-3.5 text-foreground" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">{s.label}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">{s.label}</span>
                       </div>
                       <p className="text-xs text-muted-foreground leading-relaxed">{s.text}</p>
                     </div>
@@ -620,7 +620,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
           </div>
           <div>
             <h3 className="font-bold text-white text-base">AI College Finder</h3>
-            <p className="text-white/70 text-[11px]">Answer {totalSteps} quick questions for personalized picks</p>
+            <p className="text-white/70 text-xs">Answer {totalSteps} quick questions for personalized picks</p>
           </div>
         </div>
 
@@ -636,7 +636,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                 {isActive && (
                   <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-1 mt-1.5">
                     <config.icon className="w-3 h-3 text-white/80" />
-                    <span className="text-[9px] text-white/80 font-medium">{config.title}</span>
+                    <span className="text-xs text-white/80 font-medium">{config.title}</span>
                   </motion.div>
                 )}
               </div>

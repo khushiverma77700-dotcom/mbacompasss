@@ -226,7 +226,7 @@ export default function StudentDailyTestReportPage() {
             <div key={d.difficulty} className="border rounded-lg p-3 bg-white">
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-semibold capitalize">{d.difficulty}</span>
-                <Badge variant="outline" className="text-[10px]">{d.total} Q</Badge>
+                <Badge variant="outline" className="text-xs">{d.total} Q</Badge>
               </div>
               <div className="text-xs text-muted-foreground mb-2">Correct {d.correct} · Wrong {d.wrong}</div>
               <Progress value={d.accuracy} className="h-2" />
@@ -291,8 +291,8 @@ export default function StudentDailyTestReportPage() {
                         <div className="min-w-0 flex-1">
                           <div className="text-xs text-muted-foreground mb-1 flex flex-wrap items-center gap-2">
                             <span>Q{i + 1}</span>
-                            {q.difficulty && <Badge variant="outline" className="text-[10px] capitalize">{q.difficulty}</Badge>}
-                            {q.topic && <Badge variant="secondary" className="text-[10px]">{q.topic}</Badge>}
+                            {q.difficulty && <Badge variant="outline" className="text-xs capitalize">{q.difficulty}</Badge>}
+                            {q.topic && <Badge variant="secondary" className="text-xs">{q.topic}</Badge>}
                             {r && <span><Clock className="h-3 w-3 inline mr-1" />{fmtTime(r.time_spent_seconds)}</span>}
                             <span className="ml-auto">{r ? `${(Number(r.marks_awarded) || 0).toFixed(2)} marks` : "—"}</span>
                           </div>
@@ -368,7 +368,7 @@ function KPI({ label, value, icon, tone }: { label: string; value: any; icon: an
   const bg = { orange: "bg-orange-50 border-orange-200", emerald: "bg-emerald-50 border-emerald-200", sky: "bg-sky-50 border-sky-200", amber: "bg-amber-50 border-amber-200" }[tone];
   return (
     <div className={`rounded-lg border p-3 ${bg}`}>
-      <div className="text-[11px] text-muted-foreground flex items-center gap-1">{icon} {label}</div>
+      <div className="text-xs text-muted-foreground flex items-center gap-1">{icon} {label}</div>
       <div className="text-lg font-bold mt-0.5">{value}</div>
     </div>
   );
@@ -386,7 +386,7 @@ function Mini({ label, value, tone }: { label: string; value: any; tone?: "ok" |
   const color = tone === "ok" ? "text-emerald-600" : tone === "bad" ? "text-rose-600" : tone === "sky" ? "text-sky-700" : "text-gray-700";
   return (
     <div className="bg-gray-50 rounded p-2 text-center">
-      <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</div>
+      <div className="text-xs text-muted-foreground uppercase tracking-wider">{label}</div>
       <div className={`text-sm font-bold ${color}`}>{value}</div>
     </div>
   );

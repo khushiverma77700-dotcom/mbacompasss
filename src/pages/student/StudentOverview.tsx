@@ -569,7 +569,7 @@ export default function StudentOverview() {
                 {initial}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-xs text-sky-100/90">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-xs text-sky-100/90">
                   <span className="inline-flex items-center gap-1">
                     <CalendarDays className="h-3.5 w-3.5" />
                     <span>{todayLabel}</span>
@@ -583,7 +583,7 @@ export default function StudentOverview() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 leading-tight break-words">
                   {greeting}, <span className="text-cyan-200">{firstName}</span>
                 </h1>
-                <p className="text-sky-100/90 mt-1.5 text-[13px] sm:text-sm max-w-lg">
+                <p className="text-sky-100/90 mt-1.5 text-sm sm:text-sm max-w-lg">
                   {target && gap != null
                     ? gap > 0
                       ? `You're ${gap}% away from your ${target}% score target — let's close the gap.`
@@ -640,12 +640,12 @@ export default function StudentOverview() {
                   <div className="absolute inset-0 grid place-items-center text-center">
                     <div>
                       <div className="text-xl sm:text-2xl font-bold leading-none">{predicted ?? "—"}</div>
-                      <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">score %</div>
+                      <div className="text-xs uppercase tracking-wider text-sky-100/80 mt-0.5">score %</div>
                     </div>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Score %</div>
+                  <div className="text-xs uppercase tracking-wider text-sky-100/80">Projected Score %</div>
                   <div className="text-sm font-semibold mt-0.5">
                     {target > 0 ? `Target ${target}%` : "Set a target to track gap"}
                   </div>
@@ -657,7 +657,7 @@ export default function StudentOverview() {
                           style={{ width: `${targetProgress}%` }}
                         />
                       </div>
-                      <div className="text-[10px] text-sky-100/80 mt-1">{targetProgress}% to target</div>
+                      <div className="text-xs text-sky-100/80 mt-1">{targetProgress}% to target</div>
                     </div>
                   )}
                   <Link to="/student/performance" className="inline-flex items-center text-xs text-cyan-200 hover:text-white mt-2">
@@ -870,7 +870,7 @@ export default function StudentOverview() {
             <h2 className="font-semibold flex items-center gap-2">
               <Activity className="h-4 w-4 text-sky-600" /> 35-Day Activity Heatmap
             </h2>
-            <Badge variant="secondary" className="text-[10px]">{heatmap.total} mocks</Badge>
+            <Badge variant="secondary" className="text-xs">{heatmap.total} mocks</Badge>
           </div>
           <p className="text-xs text-muted-foreground mb-3">Each cell = one day. Darker means more mocks attempted.</p>
           <ActivityHeatmap days={heatmap.days} max={heatmap.max} />
@@ -950,7 +950,7 @@ export default function StudentOverview() {
                   <div key={t.id} className="flex items-center gap-2 text-sm">
                     <span className={`h-2 w-2 rounded-full ${t.is_completed ? "bg-emerald-500" : "bg-sky-300"}`} />
                     <span className={`flex-1 truncate ${t.is_completed ? "line-through text-muted-foreground" : ""}`}>{t.title}</span>
-                    {t.section && <Badge variant="outline" className="text-[10px]">{t.section}</Badge>}
+                    {t.section && <Badge variant="outline" className="text-xs">{t.section}</Badge>}
                   </div>
                 ))}
               </div>
@@ -973,7 +973,7 @@ export default function StudentOverview() {
                   <div
                     key={w.id}
                     title={`${w.topic} • ${w.section} • ${w.level}`}
-                    className={`text-[10px] px-2 py-2 rounded-md text-center truncate ${
+                    className={`text-xs px-2 py-2 rounded-md text-center truncate ${
                       w.level === "red" ? "bg-rose-100 text-rose-800 border border-rose-200"
                       : w.level === "yellow" ? "bg-amber-100 text-amber-800 border border-amber-200"
                       : "bg-emerald-100 text-emerald-800 border border-emerald-200"
@@ -983,7 +983,7 @@ export default function StudentOverview() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-3 mt-3 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-400" /> Critical</span>
                 <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-400" /> Improving</span>
                 <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Strong</span>
@@ -1020,7 +1020,7 @@ export default function StudentOverview() {
                     {a.status !== "in_progress" && (
                       <div className="text-right">
                         <div className="text-sm font-semibold">{a.total_score ?? 0}/{a.max_score ?? 0}</div>
-                        <div className="text-[11px] text-muted-foreground">Acc {a.accuracy ?? 0}%</div>
+                        <div className="text-xs text-muted-foreground">Acc {a.accuracy ?? 0}%</div>
                       </div>
                     )}
                     {a.status === "in_progress" ? (
@@ -1079,7 +1079,7 @@ const PredictorGauge = memo(function PredictorGauge({ value }: { value: number }
         <div className="h-full w-full rounded-full bg-card grid place-items-center border border-border">
           <div className="text-center">
             <div className="text-3xl font-bold text-primary tabular-nums">{value}</div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected score %</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">projected score %</div>
           </div>
         </div>
       </div>
@@ -1102,7 +1102,7 @@ const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }
 
   return (
     <div className="space-y-3">
-      <div className="hidden md:grid grid-cols-12 gap-3 px-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+      <div className="hidden md:grid grid-cols-12 gap-3 px-3 text-xs uppercase tracking-wider text-muted-foreground">
         <div className="col-span-4">Section</div>
         <div className="col-span-5">Score % of max</div>
         <div className="col-span-3 text-right">Accuracy · Attempts</div>
@@ -1118,7 +1118,7 @@ const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }
             </div>
             <div className="min-w-0">
               <div className="font-medium text-sm truncate text-foreground" title={s.name}>{s.name}</div>
-              <div className="text-[11px] text-muted-foreground dark:text-slate-300">
+              <div className="text-xs text-muted-foreground dark:text-slate-300">
                 Avg {s.avgScore} / {s.avgMax}
               </div>
             </div>
@@ -1141,7 +1141,7 @@ const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }
                   style={{ width: `${Math.min(100, s.avgAccuracy)}%` }}
                 />
               </div>
-              <div className="w-10 text-right text-[11px] text-muted-foreground dark:text-slate-300 tabular-nums">{s.avgAccuracy}%</div>
+              <div className="w-10 text-right text-xs text-muted-foreground dark:text-slate-300 tabular-nums">{s.avgAccuracy}%</div>
             </div>
           </div>
 
@@ -1179,7 +1179,7 @@ const ActivityHeatmap = memo(function ActivityHeatmap({ days, max }: { days: { d
   return (
     <div className="space-y-3">
       <div className="flex gap-1.5">
-        <div className="flex flex-col justify-between text-[9px] text-muted-foreground pr-1 py-0.5">
+        <div className="flex flex-col justify-between text-xs text-muted-foreground pr-1 py-0.5">
           <span>Mon</span><span>Wed</span><span>Fri</span><span>Sun</span>
         </div>
         <div className="flex-1 grid grid-cols-5 gap-1.5">
@@ -1200,7 +1200,7 @@ const ActivityHeatmap = memo(function ActivityHeatmap({ days, max }: { days: { d
           ))}
         </div>
       </div>
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Less</span>
         <div className="flex items-center gap-1">
           <span className="h-2.5 w-2.5 rounded-sm bg-slate-100" />
@@ -1220,7 +1220,7 @@ const ActivityHeatmap = memo(function ActivityHeatmap({ days, max }: { days: { d
 const Kpi = memo(function Kpi({ label, value, icon }: any) {
   return (
     <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-2.5 sm:px-3 py-2 sm:py-2.5 border border-white/20 min-w-0">
-      <div className="text-[9.5px] sm:text-[10px] uppercase tracking-wider text-white/75 flex items-center gap-1 truncate">
+      <div className="text-xs sm:text-xs uppercase tracking-wider text-white/75 flex items-center gap-1 truncate">
         {icon} <span className="truncate">{label}</span>
       </div>
       <div className="text-base sm:text-xl font-bold mt-0.5 tabular-nums">{value}</div>
@@ -1253,9 +1253,9 @@ const StatTile = memo(function StatTile({ icon: Icon, label, value, sub, tone = 
         </div>
         <div className={`absolute top-0 right-0 h-1 w-8 rounded-bl-md ${t.bar} opacity-80`} />
       </div>
-      <div className="relative mt-3 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
+      <div className="relative mt-3 text-xs uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
       <div className="relative text-2xl font-bold mt-0.5 tabular-nums">{value}</div>
-      {sub && <div className={`relative text-[11px] mt-1 truncate ${trendColor}`}>{sub}</div>}
+      {sub && <div className={`relative text-xs mt-1 truncate ${trendColor}`}>{sub}</div>}
     </Card>
   );
 });
@@ -1271,8 +1271,8 @@ const QuickAction = memo(function QuickAction({ to, icon: Icon, label, desc, ton
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-[13px] sm:text-sm leading-tight">{label}</div>
-        <div className="text-[10.5px] sm:text-[11px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{desc}</div>
+        <div className="font-semibold text-sm sm:text-sm leading-tight">{label}</div>
+        <div className="text-xs sm:text-xs text-muted-foreground leading-tight mt-0.5 line-clamp-2">{desc}</div>
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
     </Link>
@@ -1286,7 +1286,7 @@ const SectionHeading = memo(function SectionHeading({ icon: Icon, title, subtitl
         <h2 className="text-sm font-semibold flex items-center gap-2 text-foreground">
           {Icon && <Icon className="h-4 w-4 text-sky-600 dark:text-sky-300" />} {title}
         </h2>
-        {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
     </div>
   );
@@ -1325,9 +1325,9 @@ const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { r
             <Star className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Level</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Level</div>
             <div className="text-xl font-bold leading-tight">Lv. {level}</div>
-            <div className="text-[10px] text-muted-foreground">{xpToNext} XP to next</div>
+            <div className="text-xs text-muted-foreground">{xpToNext} XP to next</div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -1335,7 +1335,7 @@ const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { r
             <Zap className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">XP</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">XP</div>
             <div className="text-xl font-bold tabular-nums leading-tight">{xp.toLocaleString("en-IN")}</div>
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mt-1">
               <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${pct}%` }} />
@@ -1347,9 +1347,9 @@ const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { r
             <Flame className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Streak</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Streak</div>
             <div className="text-xl font-bold leading-tight">{streak}d</div>
-            <div className="text-[10px] text-muted-foreground">Best: {longest}d</div>
+            <div className="text-xs text-muted-foreground">Best: {longest}d</div>
           </div>
         </div>
         <Link to="/student/leaderboard" className="flex items-center gap-3 group">
@@ -1357,9 +1357,9 @@ const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { r
             <Trophy className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank · {coins} coins</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Rank · {coins} coins</div>
             <div className="text-xl font-bold leading-tight">{rank ? `#${rank}` : "—"}</div>
-            <div className="text-[10px] text-sky-700 group-hover:underline">View leaderboard →</div>
+            <div className="text-xs text-sky-700 group-hover:underline">View leaderboard →</div>
           </div>
         </Link>
       </div>
@@ -1401,8 +1401,8 @@ const ExamCountdownStrip = memo(function ExamCountdownStrip({ exams }: { exams: 
             </span>
             Exam Countdowns
           </h2>
-          <p className="text-[11px] text-muted-foreground mt-0.5 ml-9">Track every D-day. Updates live.</p>
-          <p className="text-[11px] italic text-muted-foreground/70 mt-0.5 ml-9">*Dates are tentative and subject to change. Please verify with official exam websites.</p>
+          <p className="text-xs text-muted-foreground mt-0.5 ml-9">Track every D-day. Updates live.</p>
+          <p className="text-xs italic text-muted-foreground/70 mt-0.5 ml-9">*Dates are tentative and subject to change. Please verify with official exam websites.</p>
         </div>
         <Link to="/exams" className="text-xs font-medium text-sky-700 dark:text-sky-300 hover:underline">View all →</Link>
       </div>
@@ -1481,10 +1481,10 @@ const ExamCountdownStrip = memo(function ExamCountdownStrip({ exams }: { exams: 
             >
               {/* Badge: full-width row on top so it never overlaps exam name */}
               <div className="flex items-center justify-between mb-2 gap-2">
-                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeTone} truncate`}>
+                <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeTone} truncate`}>
                   {badgeLabel}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground truncate text-right">
+                <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground truncate text-right">
                   {ex.name}
                 </span>
               </div>
@@ -1508,10 +1508,10 @@ const ExamCountdownStrip = memo(function ExamCountdownStrip({ exams }: { exams: 
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className={`text-[13px] sm:text-sm font-bold ${numberTone} leading-tight`}>
+                  <div className={`text-sm sm:text-sm font-bold ${numberTone} leading-tight`}>
                     {past ? "Concluded" : days === 0 ? "Today!" : days === 1 ? "1 day left" : `${days} days left`}
                   </div>
-                  <div className="text-[10.5px] sm:text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                  <div className="text-xs sm:text-xs text-muted-foreground mt-1 flex items-center gap-1">
                     <CalendarDays className="h-3 w-3 shrink-0" />
                     <span className="truncate">{weekday}, {dateLabel}</span>
                   </div>

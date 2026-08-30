@@ -114,7 +114,7 @@ export default function DayPlannerShowcase({ block }: { block?: DayPlannerBlock 
                     <div className={`flex-1 text-sm font-medium ${t.done ? "line-through text-muted-foreground" : ""}`}>
                       {t.title}
                     </div>
-                    <Badge variant="secondary" className="text-[10px] bg-slate-100">
+                    <Badge variant="secondary" className="text-xs bg-slate-100">
                       {t.min}m
                     </Badge>
                   </div>
@@ -147,7 +147,7 @@ export default function DayPlannerShowcase({ block }: { block?: DayPlannerBlock 
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">{m.val}%</div>
                     </div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1 font-medium">{m.name}</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mt-1 font-medium">{m.name}</div>
                   </div>
                 ))}
               </div>
@@ -182,7 +182,7 @@ export default function DayPlannerShowcase({ block }: { block?: DayPlannerBlock 
                     <div className="text-base md:text-lg font-bold bg-gradient-to-br from-sky-700 to-sky-500 bg-clip-text text-transparent">
                       {s.value}
                     </div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5 font-medium">{s.label}</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mt-0.5 font-medium">{s.label}</div>
                   </div>
                 ))}
               </div>

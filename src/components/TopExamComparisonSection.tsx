@@ -100,7 +100,7 @@ const TopExamComparisonSection = () => {
               >
                 <Link to={item.link} className="block h-full p-5 bg-card border border-border rounded-xl hover:border-primary/40 hover:shadow-md transition-all group">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center justify-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary ring-1 ring-primary/20">
+                    <span className="inline-flex items-center justify-center rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-primary ring-1 ring-primary/20">
                       VS
                     </span>
                     <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">{item.title}</h3>

@@ -131,7 +131,7 @@ export default function PersonalizedMockGeneratingOverlay({
               transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
             />
           </div>
-          <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
+          <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
             <span>Step {Math.min(idx + 1, steps.length)} of {steps.length}</span>
             <span>{progress}%</span>
           </div>
@@ -206,7 +206,7 @@ export default function PersonalizedMockGeneratingOverlay({
           })}
         </div>
 
-        <div className="px-6 pb-5 pt-1 text-center text-[11px] text-slate-500">
+        <div className="px-6 pb-5 pt-1 text-center text-xs text-slate-500">
           Keep this window open — your personalized mock will load automatically.
         </div>
       </motion.div>

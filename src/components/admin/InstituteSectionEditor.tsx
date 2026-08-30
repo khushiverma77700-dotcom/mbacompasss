@@ -39,7 +39,7 @@ const InstituteSectionEditor = ({ def, enabled, data, onChange, defaultOpen = tr
             </div>
           </button>
           <div className="flex items-center gap-2 shrink-0">
-            {!empty && <span className="text-[10px] uppercase tracking-wide text-emerald-600 font-semibold">Has data</span>}
+            {!empty && <span className="text-xs uppercase tracking-wide text-emerald-600 font-semibold">Has data</span>}
             <Label className="text-xs text-muted-foreground">Show on site</Label>
             <Switch checked={enabled} onCheckedChange={(v) => onChange({ enabled: v, data: safeData })} />
           </div>

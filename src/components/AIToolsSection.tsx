@@ -144,7 +144,7 @@ const AIToolsSection = () => {
               AI-Powered Toolkit
             </span>
             <span className="w-1 h-1 rounded-full bg-primary/50" />
-            <span className="text-[10px] font-medium text-primary/80">100% Free</span>
+            <span className="text-xs font-medium text-primary/80">100% Free</span>
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight break-words">
             Your{" "}
@@ -196,7 +196,7 @@ const AIToolsSection = () => {
                 {/* Tag */}
                 <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                   <span
-                    className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-white shadow-sm"
+                    className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-white shadow-sm"
                     style={{
                       background: `linear-gradient(135deg, rgba(${tool.accent},1), rgba(${tool.accent},0.75))`,
                     }}
@@ -227,11 +227,11 @@ const AIToolsSection = () => {
                     <div className="flex flex-col items-end gap-1 mr-14">
                       <div className="flex items-center gap-0.5 text-amber-500">
                         <Star className="w-3 h-3 fill-current" />
-                        <span className="text-[11px] font-bold text-foreground">
+                        <span className="text-xs font-bold text-foreground">
                           {tool.rating}
                         </span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground font-medium">
+                      <span className="text-xs text-muted-foreground font-medium">
                         {tool.runs} runs
                       </span>
                     </div>
@@ -243,7 +243,7 @@ const AIToolsSection = () => {
                   </h3>
 
                   {/* Description */}
-                  <p className="text-muted-foreground text-[13px] leading-relaxed mb-4 line-clamp-3">
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">
                     {tool.description}
                   </p>
 
@@ -252,7 +252,7 @@ const AIToolsSection = () => {
                     {tool.stats.map((s) => (
                       <span
                         key={s.label}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted/60 border border-border/50 text-[10.5px] font-medium text-foreground/80"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted/60 border border-border/50 text-xs font-medium text-foreground/80"
                       >
                         <s.icon
                           className="w-3 h-3"
@@ -272,7 +272,7 @@ const AIToolsSection = () => {
                     }}
                   >
                     <span
-                      className="text-[12.5px] font-semibold flex items-center gap-1.5"
+                      className="text-xs font-semibold flex items-center gap-1.5"
                       style={{ color: `rgba(${tool.accent}, 1)` }}
                     >
                       <Zap className="w-3.5 h-3.5" />

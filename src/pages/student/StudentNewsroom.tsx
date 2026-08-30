@@ -333,12 +333,12 @@ export default function StudentNewsroom() {
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap justify-end">
                           {isFresh && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                               Fresh
                             </span>
                           )}
-                          <Badge variant="outline" className={`text-[10px] ${importanceBadge(a.importance)}`}>
+                          <Badge variant="outline" className={`text-xs ${importanceBadge(a.importance)}`}>
                             {a.importance === "high" && <Flame className="h-2.5 w-2.5 mr-0.5" />}
                             {a.importance.toUpperCase()}
                           </Badge>
@@ -346,7 +346,7 @@ export default function StudentNewsroom() {
                       </div>
 
                       {/* Date + meta strip */}
-                      <div className="flex items-center gap-2 mb-3 text-[11px] text-slate-500 flex-wrap">
+                      <div className="flex items-center gap-2 mb-3 text-xs text-slate-500 flex-wrap">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-100 font-semibold">
                           <Calendar className="h-3 w-3" />
                           {dateLabel}
@@ -495,7 +495,7 @@ export default function StudentNewsroom() {
                   {open.source_name && (
                     <span className="text-xs text-muted-foreground">{open.source_name}</span>
                   )}
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-md px-1.5 py-0.5">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-md px-1.5 py-0.5">
                     <Calendar className="h-2.5 w-2.5" /> {formatDate(open.published_at)}
                   </span>
                 </div>
@@ -522,7 +522,7 @@ export default function StudentNewsroom() {
                           key={o.k}
                           disabled={!o.available}
                           onClick={() => setLang(o.k)}
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded border transition ${
+                          className={`text-xs font-bold px-2 py-0.5 rounded border transition ${
                             lang === o.k
                               ? "bg-primary text-primary-foreground border-primary"
                               : o.available
@@ -603,7 +603,7 @@ export default function StudentNewsroom() {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Exam Relevance</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(open.exam_relevance).map(([k, v]) => (
-                      <Badge key={k} variant="secondary" className="text-[11px]">
+                      <Badge key={k} variant="secondary" className="text-xs">
                         {k.toUpperCase()} · {v}/10
                       </Badge>
                     ))}

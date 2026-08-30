@@ -156,7 +156,7 @@ const CollegeFinderPage = () => {
                     <div key={i} className="bg-card rounded-xl p-3 border border-border text-center shadow-sm">
                       <s.icon className="w-4 h-4 text-primary mx-auto mb-1" />
                       <div className="font-black text-foreground text-lg">{s.value}</div>
-                      <div className="text-[10px] text-muted-foreground font-medium">{s.label}</div>
+                      <div className="text-xs text-muted-foreground font-medium">{s.label}</div>
                     </div>
                   ))}
                 </div>
@@ -177,7 +177,7 @@ const CollegeFinderPage = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="font-bold text-foreground text-xs">{f.title}</div>
-                      <div className="text-[10px] text-muted-foreground leading-snug">{f.desc}</div>
+                      <div className="text-xs text-muted-foreground leading-snug">{f.desc}</div>
                     </div>
                   </motion.div>
                 ))}
@@ -237,16 +237,16 @@ const CollegeFinderPage = () => {
                       {/* Mini stats */}
                       <div className="grid grid-cols-3 gap-1.5">
                         <div className="bg-primary/5 rounded-lg p-1.5 text-center border border-primary/10">
-                          <div className="text-[8px] text-muted-foreground">Fees</div>
-                          <div className="text-[10px] font-bold text-primary">{c.fees || "N/A"}</div>
+                          <div className="text-xs text-muted-foreground">Fees</div>
+                          <div className="text-xs font-bold text-primary">{c.fees || "N/A"}</div>
                         </div>
                         <div className="bg-emerald-50 rounded-lg p-1.5 text-center border border-emerald-100">
-                          <div className="text-[8px] text-muted-foreground">Avg CTC</div>
-                          <div className="text-[10px] font-bold text-emerald-600">{c.placement_avg || "N/A"}</div>
+                          <div className="text-xs text-muted-foreground">Avg CTC</div>
+                          <div className="text-xs font-bold text-emerald-600">{c.placement_avg || "N/A"}</div>
                         </div>
                         <div className="bg-violet-50 rounded-lg p-1.5 text-center border border-violet-100">
-                          <div className="text-[8px] text-muted-foreground">ROI</div>
-                          <div className="text-[10px] font-bold text-violet-600">{calcROI(c)}x</div>
+                          <div className="text-xs text-muted-foreground">ROI</div>
+                          <div className="text-xs font-bold text-violet-600">{calcROI(c)}x</div>
                         </div>
                       </div>
                     </div>
@@ -300,7 +300,7 @@ const CollegeFinderPage = () => {
                                 <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${colColors[i]}`} />
                                 <div>
                                   <div className="font-bold text-foreground text-xs">{c.name}</div>
-                                  <div className="text-[10px] font-normal text-muted-foreground">{c.type || "B-School"}</div>
+                                  <div className="text-xs font-normal text-muted-foreground">{c.type || "B-School"}</div>
                                 </div>
                               </div>
                             </th>
@@ -311,7 +311,7 @@ const CollegeFinderPage = () => {
                         {([
                           { label: "NIRF Ranking", icon: Trophy, render: (c: DBCollege) => c.ranking ? <span className="font-bold text-primary">#{c.ranking}</span> : "N/A" },
                           { label: "Established", icon: Calendar, render: (c: DBCollege) => c.established ? <span className="font-semibold">{c.established}</span> : "N/A" },
-                          { label: "Type", icon: Building2, render: (c: DBCollege) => <Badge variant="secondary" className="text-[10px]">{c.type || "N/A"}</Badge> },
+                          { label: "Type", icon: Building2, render: (c: DBCollege) => <Badge variant="secondary" className="text-xs">{c.type || "N/A"}</Badge> },
                           { label: "Total Fees", icon: IndianRupee, render: (c: DBCollege) => <span className="font-bold text-primary text-sm">{c.fees || "N/A"}</span> },
                           { label: "Avg Package", icon: TrendingUp, render: (c: DBCollege) => <span className="font-bold text-emerald-600">{c.placement_avg || "N/A"}</span> },
                           { label: "Highest Package", icon: ArrowUpRight, render: (c: DBCollege) => <span className="font-semibold text-blue-600">{c.placement_highest || "N/A"}</span> },
@@ -325,13 +325,13 @@ const CollegeFinderPage = () => {
                           { label: "Location", icon: MapPin, render: (c: DBCollege) => `${c.city || "N/A"}, ${c.state || ""}`.replace(/, $/, "") },
                           { label: "Accreditations", icon: Shield, render: (c: DBCollege) => (
                             <div className="flex flex-wrap gap-1">
-                              {(c.accreditations || []).slice(0, 3).map((a, i) => <Badge key={i} variant="outline" className="text-[9px] px-1.5 py-0">{a}</Badge>)}
+                              {(c.accreditations || []).slice(0, 3).map((a, i) => <Badge key={i} variant="outline" className="text-xs px-1.5 py-0">{a}</Badge>)}
                               {(!c.accreditations || c.accreditations.length === 0) && "N/A"}
                             </div>
                           )},
                           { label: "Exams Accepted", icon: BookOpen, render: (c: DBCollege) => (
                             <div className="flex flex-wrap gap-1">
-                              {(c.exams_accepted || []).slice(0, 4).map((e, i) => <Badge key={i} className="bg-primary/10 text-primary border-0 text-[9px] px-1.5 py-0">{e}</Badge>)}
+                              {(c.exams_accepted || []).slice(0, 4).map((e, i) => <Badge key={i} className="bg-primary/10 text-primary border-0 text-xs px-1.5 py-0">{e}</Badge>)}
                               {(!c.exams_accepted || c.exams_accepted.length === 0) && "N/A"}
                             </div>
                           )},
@@ -389,9 +389,9 @@ const CollegeFinderPage = () => {
 
                           {/* ROI highlight */}
                           <div className="mt-3 bg-gradient-to-r from-violet-50 to-primary/5 rounded-xl p-4 border border-violet-100 text-center">
-                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Return on Investment</div>
+                            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Return on Investment</div>
                             <div className={`font-black text-3xl ${roiNum >= 2 ? "text-emerald-600" : roiNum >= 1 ? "text-primary" : "text-amber-600"}`}>{roi}x</div>
-                            <div className="text-[10px] text-muted-foreground mt-1">Avg Package ÷ Total Fees</div>
+                            <div className="text-xs text-muted-foreground mt-1">Avg Package ÷ Total Fees</div>
                             {/* Mini bar */}
                             <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
                               <div className={`h-full rounded-full transition-all duration-500 ${roiNum >= 2 ? "bg-emerald-500" : roiNum >= 1 ? "bg-primary" : "bg-amber-500"}`}
@@ -402,10 +402,10 @@ const CollegeFinderPage = () => {
                           {/* Top recruiters */}
                           {c.top_recruiters && c.top_recruiters.length > 0 && (
                             <div className="mt-3">
-                              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Top Recruiters</div>
+                              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Top Recruiters</div>
                               <div className="flex flex-wrap gap-1">
                                 {c.top_recruiters.slice(0, 6).map((r, i) => (
-                                  <span key={i} className="text-[10px] bg-muted/60 text-foreground/80 rounded-lg px-2 py-0.5">{r}</span>
+                                  <span key={i} className="text-xs bg-muted/60 text-foreground/80 rounded-lg px-2 py-0.5">{r}</span>
                                 ))}
                               </div>
                             </div>
@@ -444,21 +444,21 @@ const CollegeFinderPage = () => {
                                 <item.icon className="w-4 h-4 text-primary" />
                               </div>
                               <div className="flex-1">
-                                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-wider">{item.label}</div>
                                 <div className="font-bold text-foreground text-sm">{item.value}</div>
-                                {item.desc && <div className="text-[10px] text-muted-foreground">{item.desc}</div>}
+                                {item.desc && <div className="text-xs text-muted-foreground">{item.desc}</div>}
                               </div>
                             </div>
                           ))}
 
                           {/* Accreditations */}
                           <div className="bg-muted/20 rounded-xl p-3 border border-border">
-                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
                               <Shield className="w-3.5 h-3.5 text-primary" /> Accreditations & Recognition
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {(c.accreditations || []).map((a, i) => (
-                                <Badge key={i} className="bg-blue-50 text-blue-700 border-blue-100 text-[10px]">{a}</Badge>
+                                <Badge key={i} className="bg-blue-50 text-blue-700 border-blue-100 text-xs">{a}</Badge>
                               ))}
                               {(!c.accreditations || c.accreditations.length === 0) && <span className="text-xs text-muted-foreground italic">Not specified</span>}
                             </div>
@@ -482,16 +482,16 @@ const CollegeFinderPage = () => {
                         <h3 className="font-bold text-foreground text-sm mb-4">{c.name}</h3>
                         <div className="space-y-3">
                           <div>
-                            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Exams Accepted</h4>
+                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Exams Accepted</h4>
                             <div className="flex flex-wrap gap-1.5">
                               {(c.exams_accepted || []).map((e, i) => (
-                                <Badge key={i} className="bg-primary/10 text-primary border-0 text-[10px] font-semibold">{e}</Badge>
+                                <Badge key={i} className="bg-primary/10 text-primary border-0 text-xs font-semibold">{e}</Badge>
                               ))}
                               {(!c.exams_accepted || c.exams_accepted.length === 0) && <span className="text-xs text-muted-foreground italic">Not specified</span>}
                             </div>
                           </div>
                           <div>
-                            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Courses Offered</h4>
+                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Courses Offered</h4>
                             <div className="space-y-1 max-h-36 overflow-y-auto">
                               {(c.courses || []).map((course, idx) => (
                                 <div key={idx} className="flex items-start gap-1.5 text-xs">
@@ -504,11 +504,11 @@ const CollegeFinderPage = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10">
-                              <div className="text-[9px] text-muted-foreground uppercase">Total Fees</div>
+                              <div className="text-xs text-muted-foreground uppercase">Total Fees</div>
                               <div className="font-bold text-primary text-sm mt-0.5">{c.fees || "N/A"}</div>
                             </div>
                             <div className="bg-muted/40 rounded-xl p-3 text-center">
-                              <div className="text-[9px] text-muted-foreground uppercase">NIRF Rank</div>
+                              <div className="text-xs text-muted-foreground uppercase">NIRF Rank</div>
                               <div className="font-bold text-foreground text-sm mt-0.5">{c.ranking ? `#${c.ranking}` : "N/A"}</div>
                             </div>
                           </div>
@@ -538,7 +538,7 @@ const CollegeFinderPage = () => {
                       ].map((w, i) => (
                         <div key={i} className={`rounded-xl p-3 text-center border ${w.color}`}>
                           <w.icon className="w-4 h-4 mx-auto mb-1" />
-                          <div className="text-[9px] font-semibold uppercase">{w.label}</div>
+                          <div className="text-xs font-semibold uppercase">{w.label}</div>
                           <div className="font-black text-lg mt-0.5">{w.weight}</div>
                         </div>
                       ))}
@@ -561,7 +561,7 @@ const CollegeFinderPage = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h3 className="font-bold text-foreground text-sm">{c.name}</h3>
-                                  {i === 0 && <Badge className="bg-primary text-primary-foreground text-[10px]">🏆 Top Pick</Badge>}
+                                  {i === 0 && <Badge className="bg-primary text-primary-foreground text-xs">🏆 Top Pick</Badge>}
                                 </div>
                                 <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground flex-wrap">
                                   {c.ranking && <span className="flex items-center gap-0.5"><Trophy className="w-3 h-3 text-amber-500" /> #{c.ranking}</span>}
@@ -571,7 +571,7 @@ const CollegeFinderPage = () => {
                                 </div>
                               </div>
                               <div className="text-right shrink-0">
-                                <div className="text-[10px] text-muted-foreground font-semibold">ROI</div>
+                                <div className="text-xs text-muted-foreground font-semibold">ROI</div>
                                 <div className={`font-black text-2xl ${i === 0 ? "text-primary" : "text-foreground"}`}>{roi}x</div>
                               </div>
                             </div>
@@ -635,7 +635,7 @@ const CollegeFinderPage = () => {
               <Link key={i} to={link.path} className="bg-card rounded-xl p-4 border-2 border-border hover:border-primary/30 hover:shadow-md transition-all group">
                 <link.icon className="w-5 h-5 text-primary mb-2 group-hover:scale-110 transition-transform" />
                 <h3 className="font-bold text-foreground group-hover:text-primary transition-colors text-xs">{link.label}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{link.desc}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{link.desc}</p>
               </Link>
             ))}
           </div>

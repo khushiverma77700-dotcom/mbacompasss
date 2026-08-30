@@ -57,7 +57,7 @@ const InstituteGridCard = ({ inst, index = 0, rank }: Props) => {
       <button
         onClick={handleCompareToggle}
         aria-label={isInCompare ? "Remove from compare" : "Add to compare"}
-        className={`absolute top-3 right-3 z-10 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-full border-2 transition-all ${
+        className={`absolute top-3 right-3 z-10 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-full border-2 transition-all ${
           isInCompare
             ? "bg-sky-600 text-white border-sky-600 shadow-md"
             : "bg-white/95 backdrop-blur text-slate-700 border-slate-200 hover:border-sky-400 hover:text-sky-700"
@@ -85,7 +85,7 @@ const InstituteGridCard = ({ inst, index = 0, rank }: Props) => {
             </div>
             <div className="min-w-0 flex-1">
               {rank !== undefined && rank <= 50 && (
-                <div className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md mb-1.5 uppercase tracking-wider">
+                <div className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md mb-1.5 uppercase tracking-wider">
                   <Trophy className="w-2.5 h-2.5" /> Rank #{rank}
                 </div>
               )}
@@ -101,21 +101,21 @@ const InstituteGridCard = ({ inst, index = 0, rank }: Props) => {
 
           <div className="flex flex-wrap items-center gap-1.5 mt-3">
             {inst.featured && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
                 <ShieldCheck className="w-2.5 h-2.5" /> Verified
               </span>
             )}
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
               <ModeIcon mode={inst.mode} /> {inst.mode || "Offline"}
             </span>
             {inst.rating > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md">
                 <Star className="w-2.5 h-2.5 fill-current" /> {inst.rating}
                 {inst.total_reviews ? <span className="font-normal text-amber-700/70">({inst.total_reviews})</span> : null}
               </span>
             )}
             {inst.offer && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
                 <Tag className="w-2.5 h-2.5" /> Offer
               </span>
             )}
@@ -140,10 +140,10 @@ const InstituteGridCard = ({ inst, index = 0, rank }: Props) => {
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {specs.slice(0, 2).map((s: string) => (
-                <Badge key={s} variant="secondary" className="text-[10px] font-medium">{s}</Badge>
+                <Badge key={s} variant="secondary" className="text-xs font-medium">{s}</Badge>
               ))}
               {features.slice(0, 2).map((f: string) => (
-                <Badge key={f} variant="outline" className="text-[10px] gap-1 font-medium">
+                <Badge key={f} variant="outline" className="text-xs gap-1 font-medium">
                   <BadgeCheck className="w-2.5 h-2.5 text-emerald-600" /> {f}
                 </Badge>
               ))}
@@ -155,12 +155,12 @@ const InstituteGridCard = ({ inst, index = 0, rank }: Props) => {
               <GraduationCap className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
               <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                 {courses.slice(0, 3).map((c: any) => (
-                  <span key={c.id} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15 line-clamp-1">
+                  <span key={c.id} className="text-xs font-semibold px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15 line-clamp-1">
                     {c.name}
                   </span>
                 ))}
                 {courses.length > 3 && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
                     +{courses.length - 3} more
                   </span>
                 )}
@@ -174,17 +174,17 @@ const InstituteGridCard = ({ inst, index = 0, rank }: Props) => {
           <div>
             {feeDisplay ? (
               <>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">Fee Range</span>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold block">Fee Range</span>
                 <span className="font-heading font-extrabold text-foreground text-base block leading-tight mt-0.5">
                   {feeDisplay}
                 </span>
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                   <Phone className="w-2.5 h-2.5" /> Free Counselling
                 </span>
               </>
             ) : (
               <>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">View</span>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold block">View</span>
                 <span className="font-heading font-extrabold text-foreground text-base block mt-0.5">Pricing</span>
               </>
             )}
@@ -200,7 +200,7 @@ const InstituteGridCard = ({ inst, index = 0, rank }: Props) => {
 
 const Stat = ({ icon: Icon, label, value }: any) => (
   <div className="rounded-lg border border-border bg-muted/30 px-2.5 py-2">
-    <div className="flex items-center gap-1 text-[9px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
+    <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
       <Icon className="w-2.5 h-2.5" /> {label}
     </div>
     <p className="text-sm font-extrabold text-foreground leading-none">{value}</p>

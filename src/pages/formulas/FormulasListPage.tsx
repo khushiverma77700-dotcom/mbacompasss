@@ -50,7 +50,7 @@ export default function FormulasListPage() {
         <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #0ea5e9 1px, transparent 0)", backgroundSize: "24px 24px" }} />
 
         <div className="relative">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
             <Sparkles className="h-3 w-3" /> The Only Formula Book You Need
           </div>
 
@@ -73,7 +73,7 @@ export default function FormulasListPage() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-bold text-slate-900">{p.label}</div>
-                  <div className="text-[11px] leading-tight text-slate-600">{p.desc}</div>
+                  <div className="text-xs leading-tight text-slate-600">{p.desc}</div>
                 </div>
               </div>
             ))}
@@ -87,7 +87,7 @@ export default function FormulasListPage() {
               onChange={(e) => { const p = new URLSearchParams(params); e.target.value ? p.set("q", e.target.value) : p.delete("q"); setParams(p); }}
               className="h-12 rounded-xl border-sky-200 bg-white/90 pl-10 pr-4 text-sm shadow-sm backdrop-blur focus-visible:ring-sky-400"
             />
-            <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 md:inline-flex">
+            <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-500 md:inline-flex">
               <Zap className="h-3 w-3" /> {formulas.length}+ formulas
             </div>
           </div>
@@ -108,15 +108,15 @@ export default function FormulasListPage() {
           <Link key={f.slug} to={`/formula/${f.slug}`} className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md">
             <div className="flex items-start justify-between gap-2">
               <Sigma className="mt-0.5 h-4 w-4 text-sky-600" />
-              {f.is_high_weightage && <Badge className="border-0 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" />Important</Badge>}
+              {f.is_high_weightage && <Badge className="border-0 bg-amber-100 text-xs text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" />Important</Badge>}
             </div>
             <div className="mt-1 line-clamp-2 font-heading text-base font-bold text-slate-900 group-hover:text-sky-700">{f.name}</div>
             <div className="mt-1 line-clamp-2 text-xs text-slate-600">{f.explanation}</div>
             <div className="mt-2 flex flex-wrap items-center gap-1">
-              <Badge variant="outline" className="border-sky-200 text-[10px] text-sky-700">{f.difficulty}</Badge>
-              {(f.exam_tags || []).slice(0, 3).map((e: string) => <Badge key={e} className="border-0 bg-sky-50 text-[10px] text-sky-700">{e}</Badge>)}
+              <Badge variant="outline" className="border-sky-200 text-xs text-sky-700">{f.difficulty}</Badge>
+              {(f.exam_tags || []).slice(0, 3).map((e: string) => <Badge key={e} className="border-0 bg-sky-50 text-xs text-sky-700">{e}</Badge>)}
             </div>
-            <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700">Open <ChevronRight className="h-3 w-3" /></div>
+            <div className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">Open <ChevronRight className="h-3 w-3" /></div>
           </Link>
         ))}
       </div>

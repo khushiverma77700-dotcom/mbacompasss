@@ -103,7 +103,7 @@ const HomeAdmissionTimeline = () => (
                       {p.window}
                     </span>
                     {isActive && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-primary">
                         You are here
                       </span>
                     )}

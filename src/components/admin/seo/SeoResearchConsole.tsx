@@ -74,7 +74,7 @@ const ResearchPulse = ({ jobs }: { jobs: RunningJob[] }) => {
                 <p className="mt-0.5 truncate text-xs text-sky-700/80">{active.progress.target}</p>
               )}
               <Progress value={active.progress?.pct ?? 5} className="mt-2 h-1.5" />
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Running for {ago(active.started_at).replace(" ago", "")} · updated {ago(active.progress?.at ?? active.started_at)}
                 {jobs.length > 1 ? ` · ${jobs.length - 1} more job(s) in flight` : ""}
               </p>
@@ -102,7 +102,7 @@ const GainTile = ({ icon: Icon, label, value, hint }: { icon: any; label: string
       <Icon className="h-3.5 w-3.5" /> {label}
     </div>
     <div className="mt-1 text-2xl font-semibold tabular-nums">{num(value)}</div>
-    {hint && <p className="mt-0.5 text-[11px] text-muted-foreground">{hint}</p>}
+    {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
   </motion.div>
 );
 
@@ -246,14 +246,14 @@ const SeoResearchConsole = () => {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <p className={`text-sm font-medium ${LEVEL_STYLES[a.level] ?? ""}`}>{a.event}</p>
-                      <span className="whitespace-nowrap text-[11px] text-muted-foreground">{ago(a.created_at)}</span>
+                      <span className="whitespace-nowrap text-xs text-muted-foreground">{ago(a.created_at)}</span>
                     </div>
                     {a.detail && <p className="mt-0.5 text-xs text-muted-foreground">{asText(a.detail, "")}</p>}
                     {(a.label || a.records) && (
                       <div className="mt-1 flex flex-wrap gap-1.5">
-                        {a.label && <Badge variant="outline" className="text-[10px]">{a.label}</Badge>}
-                        {a.records ? <Badge variant="secondary" className="text-[10px]">{num(a.records)} records</Badge> : null}
-                        {a.data_source && <Badge variant="outline" className="text-[10px]">{a.data_source}</Badge>}
+                        {a.label && <Badge variant="outline" className="text-xs">{a.label}</Badge>}
+                        {a.records ? <Badge variant="secondary" className="text-xs">{num(a.records)} records</Badge> : null}
+                        {a.data_source && <Badge variant="outline" className="text-xs">{a.data_source}</Badge>}
                       </div>
                     )}
                   </motion.div>
@@ -290,15 +290,15 @@ const SeoResearchConsole = () => {
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1.5">
-                    {k.intent && <Badge variant="outline" className="text-[10px]">{k.intent}</Badge>}
-                    {k.difficulty != null && <Badge variant="secondary" className="text-[10px]">KD {Math.round(k.difficulty)}</Badge>}
-                    {k.current_position != null && <Badge variant="outline" className="text-[10px]">now #{Math.round(k.current_position)}</Badge>}
-                    <Badge variant="outline" className="text-[10px]">
+                    {k.intent && <Badge variant="outline" className="text-xs">{k.intent}</Badge>}
+                    {k.difficulty != null && <Badge variant="secondary" className="text-xs">KD {Math.round(k.difficulty)}</Badge>}
+                    {k.current_position != null && <Badge variant="outline" className="text-xs">now #{Math.round(k.current_position)}</Badge>}
+                    <Badge variant="outline" className="text-xs">
                       {k.discovery_source === "gsc" ? "Search Console (actual)" : "Semrush (estimated)"}
                     </Badge>
                   </div>
                   {k.discovered_from && (
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">from our ranking query “{k.discovered_from}”</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">from our ranking query “{k.discovered_from}”</p>
                   )}
                 </motion.div>
               ))}
@@ -326,15 +326,15 @@ const SeoResearchConsole = () => {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold">{c.domain}</p>
-                    {c.their_position != null && <Badge className="text-[10px]">they #{Math.round(c.their_position)}</Badge>}
-                    {c.our_position != null && <Badge variant="outline" className="text-[10px]">us #{Math.round(c.our_position)}</Badge>}
-                    {c.keyword && <Badge variant="secondary" className="text-[10px]">{c.keyword}</Badge>}
+                    {c.their_position != null && <Badge className="text-xs">they #{Math.round(c.their_position)}</Badge>}
+                    {c.our_position != null && <Badge variant="outline" className="text-xs">us #{Math.round(c.our_position)}</Badge>}
+                    {c.keyword && <Badge variant="secondary" className="text-xs">{c.keyword}</Badge>}
                   </div>
                   {c.why_outranking && <p className="mt-1 text-xs text-muted-foreground">{c.why_outranking}</p>}
                   {c.what_to_change && (
                     <p className="mt-1 whitespace-pre-line text-xs">{c.what_to_change}</p>
                   )}
-                  <p className="mt-1 text-[11px] text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {c.word_count ? `${num(c.word_count)} words` : "word count unavailable"}
                     {c.faq_count ? ` · ${c.faq_count} FAQ blocks` : ""}
                     {c.schema_types?.length ? ` · schema: ${c.schema_types.slice(0, 4).join(", ")}` : ""}
@@ -364,15 +364,15 @@ const SeoResearchConsole = () => {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm font-medium">{g.title}</p>
-                    <Badge variant={g.priority === "high" ? "default" : "outline"} className="text-[10px]">
+                    <Badge variant={g.priority === "high" ? "default" : "outline"} className="text-xs">
                       {g.priority}
                     </Badge>
                   </div>
                   {g.description && <p className="mt-0.5 text-xs text-muted-foreground">{g.description}</p>}
                   <div className="mt-1 flex flex-wrap gap-1.5">
-                    <Badge variant="outline" className="text-[10px]">{g.gap_type}</Badge>
-                    {g.keyword && <Badge variant="secondary" className="text-[10px]">{g.keyword}</Badge>}
-                    {g.path && <Badge variant="outline" className="text-[10px]">{g.path}</Badge>}
+                    <Badge variant="outline" className="text-xs">{g.gap_type}</Badge>
+                    {g.keyword && <Badge variant="secondary" className="text-xs">{g.keyword}</Badge>}
+                    {g.path && <Badge variant="outline" className="text-xs">{g.path}</Badge>}
                   </div>
                 </motion.div>
               ))}
@@ -398,10 +398,10 @@ const SeoResearchConsole = () => {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium">{c.path}</p>
                     <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[10px]">{c.change_type}</Badge>
+                      <Badge variant="outline" className="text-xs">{c.change_type}</Badge>
                       <Badge
                         variant={c.outcome === "improved" ? "default" : c.outcome === "declined" ? "destructive" : "secondary"}
-                        className="text-[10px]"
+                        className="text-xs"
                       >
                         {c.outcome ?? "pending"}
                       </Badge>
@@ -412,7 +412,7 @@ const SeoResearchConsole = () => {
                     <p className="text-muted-foreground">Before: {asText(c.before_value)}</p>
                     <p>After: {asText(c.after_value)}</p>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Changed {c.changed_on}
                     {c.baseline_position != null ? ` · baseline position ${Number(c.baseline_position).toFixed(1)}` : ""}
                     {c.measure_after ? ` · measured after ${c.measure_after}` : ""}

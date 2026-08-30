@@ -144,7 +144,7 @@ const NarrativeBlock: React.FC<Props> = ({
               </motion.div>
               <div>
                 <h3 className="font-bold text-foreground text-sm md:text-base leading-tight">{title}</h3>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mt-0.5">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1 mt-0.5">
                   <Zap className="w-2.5 h-2.5" /> AI personalized • Live insight
                 </p>
               </div>
@@ -173,7 +173,7 @@ const NarrativeBlock: React.FC<Props> = ({
                   >
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <span className={`w-1.5 h-1.5 rounded-full ${tone.text.replace("text-", "bg-")}`} />
-                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{s.label}</p>
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{s.label}</p>
                     </div>
                     <p className={`text-base md:text-lg font-bold ${tone.text} group-hover:scale-105 transition-transform origin-left`}>
                       {s.value}
@@ -189,7 +189,7 @@ const NarrativeBlock: React.FC<Props> = ({
             <div className={`${chart !== "none" ? "lg:col-span-3" : "lg:col-span-5"} space-y-4`}>
               {takeaways.length >= 2 && (
                 <div className="space-y-2.5">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
                     <Sparkles className={`w-3 h-3 ${a.text}`} /> Key Takeaways
                   </p>
                   <div className="space-y-2">
@@ -208,7 +208,7 @@ const NarrativeBlock: React.FC<Props> = ({
                         >
                           <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.dot}`} />
                           <SentIcon className={`w-4 h-4 ${s.text} mt-0.5 shrink-0`} />
-                          <p className="text-xs md:text-[13px] text-foreground/90 leading-relaxed">{t.text}</p>
+                          <p className="text-xs md:text-sm text-foreground/90 leading-relaxed">{t.text}</p>
                         </motion.div>
                       );
                     })}
@@ -219,7 +219,7 @@ const NarrativeBlock: React.FC<Props> = ({
               {/* Toggle for raw narrative — hidden by default */}
               <button
                 onClick={() => setShowRaw((v) => !v)}
-                className={`w-full mt-2 text-[11px] font-semibold ${a.text} hover:underline flex items-center justify-center gap-1.5 py-2 rounded-lg ${a.bg} border ${a.border}`}
+                className={`w-full mt-2 text-xs font-semibold ${a.text} hover:underline flex items-center justify-center gap-1.5 py-2 rounded-lg ${a.bg} border ${a.border}`}
               >
                 <Quote className="w-3 h-3" />
                 {showRaw ? "Hide full advisor narrative" : "Read full advisor narrative"}
@@ -290,7 +290,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
     const gradId = `grad-area-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold flex items-center gap-1">
+        <p className="text-xs uppercase text-muted-foreground mb-2 font-semibold flex items-center gap-1">
           <TrendingUp className="w-3 h-3" /> 10-Year Trajectory
         </p>
         <ResponsiveContainer width="100%" height={210}>
@@ -326,7 +326,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
   if (variant === "milestones" && data?.length > 0) {
     return (
       <div className={`${a.bg} rounded-xl p-4 h-full border ${a.border}`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-3 font-semibold flex items-center gap-1">
+        <p className="text-xs uppercase text-muted-foreground mb-3 font-semibold flex items-center gap-1">
           <Target className="w-3 h-3" /> Career Milestones
         </p>
         <div className="space-y-3 relative">
@@ -340,12 +340,12 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
               transition={{ delay: i * 0.1 }}
               className="flex items-center gap-3 relative"
             >
-              <div className={`w-9 h-9 rounded-full ${a.chip} flex items-center justify-center text-[10px] font-bold shrink-0 ring-4 ring-background z-10 shadow-sm`}>
+              <div className={`w-9 h-9 rounded-full ${a.chip} flex items-center justify-center text-xs font-bold shrink-0 ring-4 ring-background z-10 shadow-sm`}>
                 {m.year}
               </div>
               <div className="flex-1 min-w-0 bg-card border border-border rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <p className="text-xs font-semibold text-foreground truncate">{m.role}</p>
-                <p className={`text-[11px] ${a.text} font-bold`}>₹{m.salary} LPA</p>
+                <p className={`text-xs ${a.text} font-bold`}>₹{m.salary} LPA</p>
               </div>
             </motion.div>
           ))}
@@ -362,7 +362,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
     const gradId = `grad-risk-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-4 h-full flex flex-col items-center justify-center border ${a.border}`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold tracking-wider">Overall Risk</p>
+        <p className="text-xs uppercase text-muted-foreground mb-2 font-semibold tracking-wider">Overall Risk</p>
         <ResponsiveContainer width="100%" height={170}>
           <RadialBarChart innerRadius="62%" outerRadius="100%" data={[{ value: score }]} startAngle={180} endAngle={0}>
             <defs>
@@ -391,8 +391,8 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
         >
           {score}
         </motion.p>
-        <p className="text-[11px] uppercase tracking-wider mt-7 font-bold" style={{ color }}>{label}</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
+        <p className="text-xs uppercase tracking-wider mt-7 font-bold" style={{ color }}>{label}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
       </div>
     );
   }
@@ -401,7 +401,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
     const gradId = `grad-bar-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold">Tier Breakdown</p>
+        <p className="text-xs uppercase text-muted-foreground mb-2 font-semibold">Tier Breakdown</p>
         <ResponsiveContainer width="100%" height={210}>
           <BarChart data={data} layout="vertical" margin={{ top: 6, right: 30, left: 0, bottom: 0 }}>
             <defs>
@@ -426,7 +426,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
     const total = data.reduce((s: number, d: any) => s + (Number(d.value) || 0), 0);
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold">Distribution</p>
+        <p className="text-xs uppercase text-muted-foreground mb-2 font-semibold">Distribution</p>
         <div className="relative">
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -448,13 +448,13 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Total</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total</p>
             <p className="text-lg font-extrabold text-foreground tabular-nums">{total}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 justify-center mt-2">
           {data.map((d: any, i: number) => (
-            <span key={i} className="flex items-center gap-1 text-[10px] text-foreground/70 bg-card border border-border rounded-full px-2 py-0.5">
+            <span key={i} className="flex items-center gap-1 text-xs text-foreground/70 bg-card border border-border rounded-full px-2 py-0.5">
               <span className="w-2 h-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
               {d.label}
             </span>
@@ -467,7 +467,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
   if (variant === "sparkline" && data?.length > 0) {
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border} flex flex-col`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-1 font-semibold">Trend</p>
+        <p className="text-xs uppercase text-muted-foreground mb-1 font-semibold">Trend</p>
         <ResponsiveContainer width="100%" height={170}>
           <LineChart data={data} margin={{ top: 6, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.5} vertical={false} />
@@ -494,7 +494,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
     const gradB = `grad-cmp-b-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold flex items-center gap-1">
+        <p className="text-xs uppercase text-muted-foreground mb-2 font-semibold flex items-center gap-1">
           <Lightbulb className="w-3 h-3" /> Side-by-Side
         </p>
         <ResponsiveContainer width="100%" height={210}>

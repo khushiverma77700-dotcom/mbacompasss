@@ -292,7 +292,7 @@ const FlaggedUrlsTracker = () => {
                     </div>
                     <div className="text-xs font-medium leading-tight">{cat.label}</div>
                     {s.total > 0 && (
-                      <div className="flex gap-2 mt-1.5 text-[10px]">
+                      <div className="flex gap-2 mt-1.5 text-xs">
                         {s.pending > 0 && <span className="text-amber-600">{s.pending} pending</span>}
                         {s.resolved > 0 && <span className="text-emerald-600">{s.resolved} done</span>}
                       </div>
@@ -379,7 +379,7 @@ const FlaggedUrlsTracker = () => {
                           onSave={(val) => updateRow(item.id, { notes: val })}
                         />
 
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>Reported {new Date(item.reported_at).toLocaleDateString()}</span>
                           <Button
                             variant="ghost"

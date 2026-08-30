@@ -449,7 +449,7 @@ const AdminFreebies = () => {
                     <div className="flex items-start gap-2">
                       <GripVertical className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-700">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
                           <span className="rounded bg-amber-100 px-1.5 py-0.5">#{idx + 1}</span>
                           {f.category && <span className="text-slate-500">{f.category}</span>}
                         </div>

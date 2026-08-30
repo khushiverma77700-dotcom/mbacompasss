@@ -104,7 +104,7 @@ const InlineAIToolCTA = ({ variant }: InlineAIToolCTAProps) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex min-w-0 items-center gap-2 mb-1">
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    <span className="min-w-0 text-[11px] font-bold uppercase tracking-widest text-primary break-words">{tool.subtitle}</span>
+                    <span className="min-w-0 text-xs font-bold uppercase tracking-widest text-primary break-words">{tool.subtitle}</span>
                   </div>
                   <h3 className="font-heading text-lg md:text-xl font-bold text-foreground mb-2">
                     {tool.title}

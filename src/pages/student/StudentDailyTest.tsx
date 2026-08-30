@@ -304,7 +304,7 @@ export default function StudentDailyTest() {
           <div className="text-3xl font-bold text-orange-700">{streak} <span className="text-base font-normal text-muted-foreground">days</span></div>
           <div className="text-xs text-muted-foreground mt-1">Longest streak: <b>{longestStreak} days</b></div>
           <Progress value={Math.min(100, (streak / Math.max(longestStreak, 7)) * 100)} className="h-2 mt-3" />
-          <div className="text-[11px] text-muted-foreground mt-2">
+          <div className="text-xs text-muted-foreground mt-2">
             {streak === 0 ? "Attempt today's test to start a streak." : streak < 3 ? "Great start — keep it going for a 3-day badge." : streak < 7 ? "On fire — 7 days unlocks a Flame badge." : "Legendary consistency."}
           </div>
         </Card>
@@ -325,7 +325,7 @@ export default function StudentDailyTest() {
             )}
             {!improvement && "Submit a test to see your trend"}
           </div>
-          <div className="text-[11px] text-muted-foreground mt-3">Across last {recentAttempts.length || 0} attempts</div>
+          <div className="text-xs text-muted-foreground mt-3">Across last {recentAttempts.length || 0} attempts</div>
         </Card>
 
         <Card className="p-4 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50/40">
@@ -333,14 +333,14 @@ export default function StudentDailyTest() {
             <div className="text-xs uppercase font-semibold text-sky-700 tracking-wider">Accuracy Trend</div>
             <TrendingUp className="h-4 w-4 text-sky-600" />
           </div>
-          <div className="text-[11px] text-muted-foreground mb-3">
+          <div className="text-xs text-muted-foreground mb-3">
             Your accuracy % on the last 7 attempts — taller bar means a better attempt.
           </div>
           {improvement && improvement.attempts.length > 0 ? (
             <>
               <div className="relative h-24 mt-2 pl-7">
                 {/* Y-axis labels */}
-                <div className="absolute left-0 top-0 bottom-5 w-6 flex flex-col justify-between text-[9px] text-muted-foreground text-right pr-1">
+                <div className="absolute left-0 top-0 bottom-5 w-6 flex flex-col justify-between text-xs text-muted-foreground text-right pr-1">
                   <span>100%</span>
                   <span>50%</span>
                   <span>0%</span>
@@ -356,7 +356,7 @@ export default function StudentDailyTest() {
                     const d = new Date(a.submitted_at);
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                        <span className="text-[9px] font-semibold text-sky-700 mb-0.5">{Math.round(acc)}%</span>
+                        <span className="text-xs font-semibold text-sky-700 mb-0.5">{Math.round(acc)}%</span>
                         <div
                           className="w-full bg-gradient-to-t from-sky-500 to-sky-400 rounded-t"
                           style={{ height: `${Math.max(4, acc)}%` }}
@@ -371,7 +371,7 @@ export default function StudentDailyTest() {
                   {improvement.attempts.slice(-7).map((a: any, i: number) => {
                     const d = new Date(a.submitted_at);
                     return (
-                      <div key={i} className="flex-1 text-center text-[9px] text-muted-foreground truncate">
+                      <div key={i} className="flex-1 text-center text-xs text-muted-foreground truncate">
                         {d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                       </div>
                     );
@@ -409,18 +409,18 @@ export default function StudentDailyTest() {
 
         <Tabs defaultValue="missed" className="w-full">
           <TabsList className="grid grid-cols-4 w-full max-w-2xl h-auto p-1 gap-1">
-            <TabsTrigger value="missed" className="gap-1 px-1.5 sm:px-3 text-[11px] sm:text-sm whitespace-nowrap">
+            <TabsTrigger value="missed" className="gap-1 px-1.5 sm:px-3 text-xs sm:text-sm whitespace-nowrap">
               <AlertCircle className="h-3.5 w-3.5 hidden sm:inline" /> Missed
-              {missed.length > 0 && <Badge variant="secondary" className="ml-0.5 bg-rose-100 text-rose-700 border-0 h-4 px-1 text-[10px]">{missed.length}</Badge>}
+              {missed.length > 0 && <Badge variant="secondary" className="ml-0.5 bg-rose-100 text-rose-700 border-0 h-4 px-1 text-xs">{missed.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="upcoming" className="gap-1 px-1.5 sm:px-3 text-[11px] sm:text-sm whitespace-nowrap">
+            <TabsTrigger value="upcoming" className="gap-1 px-1.5 sm:px-3 text-xs sm:text-sm whitespace-nowrap">
               <CalendarClock className="h-3.5 w-3.5 hidden sm:inline" /> Upcoming
-              {upcoming.length > 0 && <Badge variant="secondary" className="ml-0.5 bg-sky-100 text-sky-700 border-0 h-4 px-1 text-[10px]">{upcoming.length}</Badge>}
+              {upcoming.length > 0 && <Badge variant="secondary" className="ml-0.5 bg-sky-100 text-sky-700 border-0 h-4 px-1 text-xs">{upcoming.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="completed" className="gap-1 px-1.5 sm:px-3 text-[11px] sm:text-sm whitespace-nowrap">
+            <TabsTrigger value="completed" className="gap-1 px-1.5 sm:px-3 text-xs sm:text-sm whitespace-nowrap">
               <CheckCircle2 className="h-3.5 w-3.5 hidden sm:inline" /> Done
             </TabsTrigger>
-            <TabsTrigger value="all" className="px-1.5 sm:px-3 text-[11px] sm:text-sm">All</TabsTrigger>
+            <TabsTrigger value="all" className="px-1.5 sm:px-3 text-xs sm:text-sm">All</TabsTrigger>
           </TabsList>
 
           <TabsContent value="missed" className="mt-4">
@@ -446,7 +446,7 @@ export default function StudentDailyTest() {
 function Stat({ label, value, icon }: any) {
   return (
     <div className="bg-white/15 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
-      <div className="text-[10px] uppercase tracking-wider text-white/80 flex items-center gap-1">{icon} {label}</div>
+      <div className="text-xs uppercase tracking-wider text-white/80 flex items-center gap-1">{icon} {label}</div>
       <div className="text-lg font-bold">{value}</div>
     </div>
   );

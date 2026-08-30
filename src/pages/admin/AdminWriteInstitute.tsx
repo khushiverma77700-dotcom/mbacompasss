@@ -474,7 +474,7 @@ const AdminWriteInstitute = () => {
                 <ul className="space-y-1.5">
                   {reviewData.factCheck.warnings.map((w: any, i: number) => (
                     <li key={i} className="flex gap-2 items-start">
-                      <Badge variant="outline" className={`text-[10px] ${w.severity === "high" ? "bg-red-100 text-red-800 border-red-300" : w.severity === "medium" ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-muted"}`}>
+                      <Badge variant="outline" className={`text-xs ${w.severity === "high" ? "bg-red-100 text-red-800 border-red-300" : w.severity === "medium" ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-muted"}`}>
                         {w.severity}
                       </Badge>
                       <span><strong>{w.field}:</strong> {w.message}{w.suggested ? ` → suggested: ${w.suggested}` : ""}</span>

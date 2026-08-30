@@ -456,7 +456,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
               </motion.div>
               <motion.h1
                 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }}
-                className="text-3xl md:text-5xl lg:text-[3.5rem] font-bold text-foreground mb-5 leading-[1.1]"
+                className="text-3xl md:text-5xl lg:text-4xl font-bold text-foreground mb-5 leading-[1.1]"
               >
                 Check Your MBA ROI<br />
                 <span className="text-primary">Before You Invest ₹30L+</span>
@@ -494,10 +494,10 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-foreground">Sample ROI Report</p>
-                        <p className="text-[10px] text-muted-foreground">Live preview • Updates every 4s</p>
+                        <p className="text-xs text-muted-foreground">Live preview • Updates every 4s</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">Live</Badge>
+                    <Badge variant="outline" className="text-xs">Live</Badge>
                   </div>
                 </div>
                 <CardContent className="p-5 space-y-4">
@@ -534,7 +534,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-border/40">
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary" /> With MBA</span>
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-muted-foreground/50" /> Without MBA</span>
                     <span className="text-foreground font-semibold">10-yr lead: ₹57L</span>
@@ -557,7 +557,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
                   <CardContent className="p-4">
                     <c.icon className="w-5 h-5 text-primary mb-2" />
                     <p className="text-2xl md:text-3xl font-bold text-foreground">{c.v}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">{c.l}</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mt-1">{c.l}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -731,7 +731,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
 const PreviewCell = ({ label, value, icon: Icon, accent }: any) => (
   <div className={`p-3 rounded-lg border ${accent ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border"}`}>
     <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-      <Icon className="w-3 h-3" /><span className="text-[9px] uppercase tracking-wider font-medium">{label}</span>
+      <Icon className="w-3 h-3" /><span className="text-xs uppercase tracking-wider font-medium">{label}</span>
     </div>
     <p className={`text-base font-bold ${accent ? "text-primary" : "text-foreground"}`}>{value}</p>
   </div>
@@ -890,12 +890,12 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
               <div className="w-3 h-3 rounded-full bg-emerald-400" />
             </div>
             <div className="flex-1 mx-4">
-              <div className="bg-background border border-border rounded-md px-3 py-1 text-[11px] text-muted-foreground flex items-center gap-2">
+              <div className="bg-background border border-border rounded-md px-3 py-1 text-xs text-muted-foreground flex items-center gap-2">
                 <Lock className="w-3 h-3 text-emerald-600" />
                 <span className="truncate">mbacompass.in/roi-calculator/report/{p.name.toLowerCase().replace(" ", "-")}</span>
               </div>
             </div>
-            <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">
+            <Badge variant="outline" className="text-xs border-emerald-300 text-emerald-700 bg-emerald-50">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" /> LIVE
             </Badge>
           </div>
@@ -921,7 +921,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
                   <Badge className={`${verdictColors[p.verdictColor]} font-semibold text-xs px-3 py-1`}>
                     <Trophy className="w-3 h-3 mr-1" /> {p.verdict}
                   </Badge>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-xs">
                     <Clock className="w-2.5 h-2.5 mr-1" /> {generatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </Badge>
                 </div>
@@ -982,7 +982,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <m.icon className="w-4 h-4 text-primary" />
-                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{m.l}</span>
+                            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{m.l}</span>
                           </div>
                           <p className="text-xl font-bold text-foreground">{m.v}</p>
                         </motion.div>
@@ -1071,7 +1071,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
                       </div>
                       <div className="grid grid-cols-2 gap-1.5 mt-2">
                         {p.sectorMix.map((s, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-[10px]">
+                          <div key={i} className="flex items-center gap-1.5 text-xs">
                             <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: s.color }} />
                             <span className="text-muted-foreground">{s.name}</span>
                             <span className="ml-auto font-semibold text-foreground">{s.value}%</span>
@@ -1111,15 +1111,15 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
                           </div>
                           <div className="grid grid-cols-3 gap-2 mt-3 text-center">
                             <div className="p-2 rounded bg-card">
-                              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Fees</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground">Fees</p>
                               <p className="text-sm font-bold text-foreground">₹{p.investment - 10}L</p>
                             </div>
                             <div className="p-2 rounded bg-card">
-                              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Avg CTC</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground">Avg CTC</p>
                               <p className="text-sm font-bold text-emerald-700">₹{p.salary}L</p>
                             </div>
                             <div className="p-2 rounded bg-card">
-                              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">ROI</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground">ROI</p>
                               <p className="text-sm font-bold text-primary">{p.roi}</p>
                             </div>
                           </div>
@@ -1191,13 +1191,13 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-0.5">
                               <p className="text-xs font-semibold text-foreground">{r.f}</p>
-                              <Badge variant="outline" className={`text-[9px] ${
+                              <Badge variant="outline" className={`text-xs ${
                                 r.s === "High" ? "border-rose-300 text-rose-700" :
                                 r.s === "Medium" ? "border-amber-300 text-amber-700" :
                                 "border-emerald-300 text-emerald-700"
                               }`}>{r.s}</Badge>
                             </div>
-                            <p className="text-[11px] text-muted-foreground">→ {r.m}</p>
+                            <p className="text-xs text-muted-foreground">→ {r.m}</p>
                           </div>
                         </div>
                       ))}
@@ -1211,7 +1211,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
           <div className="bg-muted/30 border-t border-border px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <p className="text-[11px] text-muted-foreground">Auto-rotating every 9s • Click pills to switch profiles</p>
+              <p className="text-xs text-muted-foreground">Auto-rotating every 9s • Click pills to switch profiles</p>
             </div>
             <div className="flex gap-1.5">
               {SAMPLE_PROFILES.map((_, i) => (
@@ -1407,7 +1407,7 @@ const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSen
                         if (form.target_colleges.includes(c)) setForm({ ...form, target_colleges: form.target_colleges.filter(x => x !== c) });
                         else if (form.target_colleges.length < 5) setForm({ ...form, target_colleges: [...form.target_colleges, c] });
                       }}
-                      className={`px-2.5 py-1 rounded-full text-[11px] border transition ${form.target_colleges.includes(c) ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>
+                      className={`px-2.5 py-1 rounded-full text-xs border transition ${form.target_colleges.includes(c) ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>
                       {c}
                     </button>
                   ))}
@@ -1821,7 +1821,7 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                   <CardContent className="p-5 relative">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-bold text-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Why MBA fits you</h4>
-                      <Badge className="bg-blue-100 text-blue-700 text-[10px]">{ai.why_mba_makes_sense.length} reasons</Badge>
+                      <Badge className="bg-blue-100 text-blue-700 text-xs">{ai.why_mba_makes_sense.length} reasons</Badge>
                     </div>
                     <div className="space-y-2">
                       {ai.why_mba_makes_sense.map((r: string, i: number) => (
@@ -1833,7 +1833,7 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                           transition={{ delay: i * 0.06 }}
                           className="flex gap-2 p-2.5 rounded-lg bg-blue-50/50 border border-blue-100 text-sm text-foreground/85"
                         >
-                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
                           {r}
                         </motion.div>
                       ))}
@@ -1847,7 +1847,7 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                   <CardContent className="p-5 relative">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-bold text-rose-700 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Honest red flags</h4>
-                      <Badge className="bg-rose-100 text-rose-700 text-[10px]">{ai.why_mba_might_not.length} flags</Badge>
+                      <Badge className="bg-rose-100 text-rose-700 text-xs">{ai.why_mba_might_not.length} flags</Badge>
                     </div>
                     <div className="space-y-2">
                       {ai.why_mba_might_not.map((r: string, i: number) => (
@@ -1954,7 +1954,7 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                     <div key={i} className="p-4 rounded-lg border border-border bg-gradient-to-br from-card to-blue-50/30">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-500 text-white flex items-center justify-center text-xs font-bold">{a.name.split(" ").map((n: string) => n[0]).join("")}</div>
-                        <div><p className="text-sm font-bold text-foreground">{a.name}</p><p className="text-[10px] text-muted-foreground">{a.college}</p></div>
+                        <div><p className="text-sm font-bold text-foreground">{a.name}</p><p className="text-xs text-muted-foreground">{a.college}</p></div>
                       </div>
                       <p className="text-xs text-muted-foreground mb-2"><span className="font-semibold text-foreground">Background:</span> {a.background}</p>
                       <p className="text-xs text-foreground/80 italic">"{a.outcome}"</p>
@@ -2176,10 +2176,10 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                           <TableCell>
                             <div>
                               <p className="font-semibold text-sm">{c.name}</p>
-                              <p className="text-[10px] text-muted-foreground">{c.city}{c.state ? `, ${c.state}` : ""}</p>
+                              <p className="text-xs text-muted-foreground">{c.city}{c.state ? `, ${c.state}` : ""}</p>
                             </div>
                           </TableCell>
-                          <TableCell><Badge variant="outline" className="text-[10px]">{c.tier}</Badge></TableCell>
+                          <TableCell><Badge variant="outline" className="text-xs">{c.tier}</Badge></TableCell>
                           <TableCell className="text-right">₹{c.fees_lakhs}L</TableCell>
                           <TableCell className="text-right text-emerald-600 font-medium">₹{c.expected_salary_lakhs}L</TableCell>
                           <TableCell className="text-right text-muted-foreground">₹{c.highest_salary_lakhs}L</TableCell>
@@ -2415,7 +2415,7 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                       <div key={i} className={`p-4 rounded-lg border ${sevColor}`}>
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <h5 className="font-semibold text-sm text-foreground">{rf.factor}</h5>
-                          <Badge className={`text-[10px] ${sevBadge}`}>{rf.severity}</Badge>
+                          <Badge className={`text-xs ${sevBadge}`}>{rf.severity}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground"><strong className="text-foreground">Mitigation: </strong>{rf.mitigation}</p>
                       </div>
@@ -2457,8 +2457,8 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                   {ai.recommendations.map((r: any, i: number) => (
                     <div key={i} className="p-4 rounded-lg border border-border bg-card">
                       <div className="flex items-start gap-2 mb-1 flex-wrap">
-                        <Badge variant={r.priority === "critical" ? "destructive" : r.priority === "high" ? "default" : "secondary"} className="text-[10px] uppercase">{r.priority}</Badge>
-                        {r.timeline && <Badge variant="outline" className="text-[10px]"><Clock className="w-2.5 h-2.5 mr-0.5" />{r.timeline}</Badge>}
+                        <Badge variant={r.priority === "critical" ? "destructive" : r.priority === "high" ? "default" : "secondary"} className="text-xs uppercase">{r.priority}</Badge>
+                        {r.timeline && <Badge variant="outline" className="text-xs"><Clock className="w-2.5 h-2.5 mr-0.5" />{r.timeline}</Badge>}
                       </div>
                       <h5 className="font-semibold text-sm text-foreground mt-1">{r.title}</h5>
                       <p className="text-xs text-muted-foreground mt-1">{r.description}</p>
@@ -2518,7 +2518,7 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                     <Award className="w-6 h-6 text-white" />
                   </motion.div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-primary font-bold">AI Final Verdict</p>
+                    <p className="text-xs uppercase tracking-wider text-primary font-bold">AI Final Verdict</p>
                     <h3 className="text-xl font-bold text-foreground">Your decision, decoded</h3>
                   </div>
                 </div>
@@ -2590,16 +2590,16 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 const Metric = ({ icon: Icon, label, value, sub, valueClass }: any) => (
   <div>
     <div className="flex items-center gap-2 text-muted-foreground mb-1">
-      <Icon className="w-3.5 h-3.5" /><span className="text-[10px] uppercase tracking-wider font-medium">{label}</span>
+      <Icon className="w-3.5 h-3.5" /><span className="text-xs uppercase tracking-wider font-medium">{label}</span>
     </div>
     <p className={`text-xl md:text-2xl font-bold ${valueClass || "text-foreground"}`}>{value}</p>
-    <p className="text-[10px] text-muted-foreground">{sub}</p>
+    <p className="text-xs text-muted-foreground">{sub}</p>
   </div>
 );
 
 const Info = ({ label, value }: { label: string; value?: string }) => (
   <div>
-    <p className="text-[10px] uppercase text-muted-foreground tracking-wider">{label}</p>
+    <p className="text-xs uppercase text-muted-foreground tracking-wider">{label}</p>
     <p className="text-sm font-medium text-foreground truncate">{value || "—"}</p>
   </div>
 );
@@ -2619,13 +2619,13 @@ const CollegeBucket = ({ title, subtitle, colleges, accent, badgeClass, icon: Ic
           <div key={i} className="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50">
             <div className="min-w-0 flex-1">
               <Link to={`/college/${c.slug}`} className="font-semibold text-sm text-foreground truncate hover:text-primary transition-colors">{c.name}</Link>
-              <p className="text-[11px] text-muted-foreground">{c.city}{c.state ? `, ${c.state}` : ""} • {c.tier}{c.ranking ? ` • Rank #${c.ranking}` : ""}</p>
+              <p className="text-xs text-muted-foreground">{c.city}{c.state ? `, ${c.state}` : ""} • {c.tier}{c.ranking ? ` • Rank #${c.ranking}` : ""}</p>
             </div>
             <div className="grid grid-cols-4 gap-3 text-right shrink-0 ml-3">
-              <div><p className="text-[9px] uppercase text-muted-foreground">Fees</p><p className="text-xs font-bold text-foreground">₹{c.fees_lakhs}L</p></div>
-              <div><p className="text-[9px] uppercase text-muted-foreground">Salary</p><p className="text-xs font-bold text-emerald-600">₹{c.expected_salary_lakhs}L</p></div>
-              <div><p className="text-[9px] uppercase text-muted-foreground">Payback</p><p className="text-xs font-bold text-primary">{c.payback_years}y</p></div>
-              <div><p className="text-[9px] uppercase text-muted-foreground">ROI</p><p className="text-xs font-bold text-foreground">{c.roi_score}</p></div>
+              <div><p className="text-xs uppercase text-muted-foreground">Fees</p><p className="text-xs font-bold text-foreground">₹{c.fees_lakhs}L</p></div>
+              <div><p className="text-xs uppercase text-muted-foreground">Salary</p><p className="text-xs font-bold text-emerald-600">₹{c.expected_salary_lakhs}L</p></div>
+              <div><p className="text-xs uppercase text-muted-foreground">Payback</p><p className="text-xs font-bold text-primary">{c.payback_years}y</p></div>
+              <div><p className="text-xs uppercase text-muted-foreground">ROI</p><p className="text-xs font-bold text-foreground">{c.roi_score}</p></div>
             </div>
           </div>
         ))}

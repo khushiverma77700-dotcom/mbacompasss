@@ -59,7 +59,7 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
       <button
         onClick={handleCompareToggle}
         aria-label={isInCompare ? "Remove from compare" : "Add to compare"}
-        className={`absolute top-3 right-3 z-10 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-full border-2 transition-all ${
+        className={`absolute top-3 right-3 z-10 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-full border-2 transition-all ${
           isInCompare
             ? "bg-sky-600 text-white border-sky-600 shadow-md"
             : "bg-white/90 backdrop-blur text-slate-700 border-slate-200 hover:border-sky-400 hover:text-sky-700"
@@ -88,7 +88,7 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
               </div>
               <div className="min-w-0 flex-1 pr-20">
                 {rank !== undefined && rank <= 50 && (
-                  <div className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md mb-1.5 uppercase tracking-wider">
+                  <div className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md mb-1.5 uppercase tracking-wider">
                     <Trophy className="w-2.5 h-2.5" /> Rank #{rank}
                   </div>
                 )}
@@ -104,20 +104,20 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
 
             <div className="flex flex-wrap items-center gap-1.5 mb-4">
               {inst.featured && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
                   <ShieldCheck className="w-2.5 h-2.5" /> Verified
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
                 <ModeIcon mode={inst.mode} /> {inst.mode || "Offline"}
               </span>
               {inst.rating > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md">
                   <Star className="w-2.5 h-2.5 fill-current" /> {inst.rating}
                 </span>
               )}
               {inst.offer && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
                   <Tag className="w-2.5 h-2.5" /> Offer
                 </span>
               )}
@@ -127,12 +127,12 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
               <div className="flex items-center gap-2 pt-3 border-t border-border">
                 <div className="flex -space-x-2">
                   {faculty.slice(0, 4).map((f: any, idx: number) => (
-                    <div key={idx} className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/80 to-primary/50 ring-2 ring-card flex items-center justify-center text-[10px] text-primary-foreground font-bold">
+                    <div key={idx} className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/80 to-primary/50 ring-2 ring-card flex items-center justify-center text-xs text-primary-foreground font-bold">
                       {f.name?.charAt(0) || "F"}
                     </div>
                   ))}
                 </div>
-                <div className="text-[11px] text-muted-foreground leading-tight">
+                <div className="text-xs text-muted-foreground leading-tight">
                   <span className="font-bold text-foreground">{faculty.length}+</span> Expert<br />Faculty
                 </div>
               </div>
@@ -156,15 +156,15 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
 
             {(specs.length > 0 || features.length > 0) && (
               <div className="mb-3">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
                   <Award className="w-2.5 h-2.5" /> Specializations & USPs
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {specs.slice(0, 3).map((s: string) => (
-                    <Badge key={s} variant="secondary" className="text-[10px] font-medium">{s}</Badge>
+                    <Badge key={s} variant="secondary" className="text-xs font-medium">{s}</Badge>
                   ))}
                   {features.slice(0, 3).map((f: string) => (
-                    <Badge key={f} variant="outline" className="text-[10px] gap-1 font-medium">
+                    <Badge key={f} variant="outline" className="text-xs gap-1 font-medium">
                       <BadgeCheck className="w-2.5 h-2.5 text-emerald-600" /> {f}
                     </Badge>
                   ))}
@@ -177,12 +177,12 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
                 <GraduationCap className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
                 <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                   {courses.slice(0, 4).map((c: any) => (
-                    <span key={c.id} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15">
+                    <span key={c.id} className="text-xs font-semibold px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15">
                       {c.name}
                     </span>
                   ))}
                   {courses.length > 4 && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
                       +{courses.length - 4} more
                     </span>
                   )}
@@ -196,15 +196,15 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
             <div className="text-center">
               {feeDisplay ? (
                 <>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">Fee Range</span>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold block">Fee Range</span>
                   <span className="font-heading font-extrabold text-foreground text-lg block leading-tight mt-1">
                     {feeDisplay}
                   </span>
-                  <span className="text-[10px] text-muted-foreground block mt-1">across {courses.length || 0} course{courses.length !== 1 ? "s" : ""}</span>
+                  <span className="text-xs text-muted-foreground block mt-1">across {courses.length || 0} course{courses.length !== 1 ? "s" : ""}</span>
                 </>
               ) : (
                 <>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">View</span>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold block">View</span>
                   <span className="font-heading font-extrabold text-foreground text-base block mt-1">Pricing</span>
                 </>
               )}
@@ -214,7 +214,7 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
               <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-xs group-hover:bg-primary/90 transition-all shadow-sm">
                 View Details <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>
-              <span className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
+              <span className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                 <Phone className="w-2.5 h-2.5" /> Free Counselling
               </span>
             </div>
@@ -227,11 +227,11 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
 
 const Stat = ({ icon: Icon, label, value, sub }: any) => (
   <div>
-    <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+    <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
       <Icon className="w-2.5 h-2.5" /> {label}
     </div>
     <p className="text-base font-extrabold text-foreground leading-none">
-      {value}{sub && <span className="text-[10px] text-muted-foreground font-normal ml-1">{sub}</span>}
+      {value}{sub && <span className="text-xs text-muted-foreground font-normal ml-1">{sub}</span>}
     </p>
   </div>
 );

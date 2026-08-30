@@ -73,7 +73,7 @@ function StatCard({ icon: Icon, label, value, hint }: any) {
       <CardContent className="pt-4 pb-4">
         <div className="flex items-center gap-2 text-muted-foreground text-xs"><Icon className="w-4 h-4" /> {label}</div>
         <div className="font-heading font-bold text-xl text-foreground mt-1">{value}</div>
-        {hint && <div className="text-[10px] text-muted-foreground">{hint}</div>}
+        {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
       </CardContent>
     </Card>
   );

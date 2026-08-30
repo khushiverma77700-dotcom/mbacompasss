@@ -17,7 +17,7 @@ import { cleanValue, tableHasRows, type ExamSections, type ExamSource, type Tabl
 export const Section = ({ id, title, kicker, intro, children }: { id: string; title: string; kicker?: string; intro?: string; children: ReactNode }) => (
   <section id={id} className="scroll-mt-28 min-w-0 rounded-2xl border border-border bg-card/60 p-5 md:p-7">
     <div className="mb-5 border-b border-border/70 pb-4">
-      {kicker && <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary mb-1.5">{kicker}</p>}
+      {kicker && <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary mb-1.5">{kicker}</p>}
       <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground leading-snug">{title}</h2>
       {intro && <p className="text-sm text-muted-foreground mt-2 max-w-3xl">{intro}</p>}
     </div>
@@ -154,7 +154,7 @@ export const HighlightCards = ({ items }: { items: NonNullable<ExamSections["hig
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               </span>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground leading-tight">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground leading-tight">
                 {item.label}
               </p>
             </div>
@@ -187,7 +187,7 @@ export const HighlightCards = ({ items }: { items: NonNullable<ExamSections["hig
                 </Button>
               </div>
             ) : (
-              <p className="text-sm md:text-[15px] font-semibold text-foreground leading-snug">{value}</p>
+              <p className="text-sm md:text-sm font-semibold text-foreground leading-snug">{value}</p>
             )}
           </div>
         );
@@ -236,7 +236,7 @@ export const FactList = ({ items }: { items: { label?: string; value?: string }[
     <div className="grid gap-2 sm:grid-cols-2">
       {valid.map((item, i) => (
         <div key={i} className="rounded-lg border border-border bg-card px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</p>
           <p className="text-sm text-foreground mt-0.5">{item.value}</p>
         </div>
       ))}
@@ -275,7 +275,7 @@ export const SyllabusAccordion = ({ subjects }: { subjects: NonNullable<ExamSect
                   {!!topic.subtopics?.filter((s) => cleanValue(s)).length && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {topic.subtopics!.filter((s) => cleanValue(s)).map((sub, si) => (
-                        <Badge key={si} variant="secondary" className="text-[11px] font-normal">{sub}</Badge>
+                        <Badge key={si} variant="secondary" className="text-xs font-normal">{sub}</Badge>
                       ))}
                     </div>
                   )}
@@ -407,7 +407,7 @@ export const UpdatesList = ({ items }: { items: NonNullable<ExamSections["update
       {valid.map((update, i) => (
         <div key={i} className="rounded-xl border border-border bg-card p-4">
           <div className="flex flex-wrap items-center gap-2">
-            {cleanValue(update.date) && <Badge variant="secondary" className="text-[11px]">{update.date}</Badge>}
+            {cleanValue(update.date) && <Badge variant="secondary" className="text-xs">{update.date}</Badge>}
             <p className="text-sm font-semibold text-foreground">{update.headline}</p>
           </div>
           {cleanValue(update.summary) && <p className="text-sm text-muted-foreground mt-1">{update.summary}</p>}

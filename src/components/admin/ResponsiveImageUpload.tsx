@@ -42,7 +42,7 @@ const ResponsiveImageUpload = ({
         <div className="flex items-center gap-1.5 mb-1">
           <Monitor className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">Desktop & Tablet</span>
-          <span className="text-[10px] text-blue-500 dark:text-blue-400 ml-auto">Visible on screens ≥768px</span>
+          <span className="text-xs text-blue-500 dark:text-blue-400 ml-auto">Visible on screens ≥768px</span>
         </div>
         <FileUpload
           bucket={bucket}
@@ -61,7 +61,7 @@ const ResponsiveImageUpload = ({
         <div className="flex items-center gap-1.5 mb-1">
           <Smartphone className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
           <span className="text-xs font-semibold text-green-700 dark:text-green-300">Mobile Only</span>
-          <span className="text-[10px] text-green-500 dark:text-green-400 ml-auto">Visible on screens &lt;768px</span>
+          <span className="text-xs text-green-500 dark:text-green-400 ml-auto">Visible on screens &lt;768px</span>
         </div>
         <FileUpload
           bucket={bucket}

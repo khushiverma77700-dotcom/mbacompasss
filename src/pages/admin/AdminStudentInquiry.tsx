@@ -366,7 +366,7 @@ const AdminStudentInquiry = () => {
                   stage === s.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                 }`}
               >
-                <span className="block text-[11px] text-muted-foreground">{s.label}</span>
+                <span className="block text-xs text-muted-foreground">{s.label}</span>
                 <span className="text-sm font-semibold text-foreground">
                   {s.filtered}
                   <span className="text-muted-foreground font-normal"> / {s.total}</span>
@@ -515,10 +515,10 @@ const AdminStudentInquiry = () => {
                   <TableCell className="max-w-[200px]">
                     <div className="flex flex-wrap gap-1">
                       {(r.help_topics || []).slice(0, 2).map((t: string) => (
-                        <Badge key={t} variant="outline" className="text-[10px] font-normal">{t}</Badge>
+                        <Badge key={t} variant="outline" className="text-xs font-normal">{t}</Badge>
                       ))}
                       {(r.help_topics || []).length > 2 && (
-                        <Badge variant="outline" className="text-[10px] font-normal">
+                        <Badge variant="outline" className="text-xs font-normal">
                           +{(r.help_topics || []).length - 2}
                         </Badge>
                       )}
@@ -526,7 +526,7 @@ const AdminStudentInquiry = () => {
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {format(new Date(r.created_at), "dd MMM yyyy")}
-                    <br /><span className="text-[10px]">{format(new Date(r.created_at), "hh:mm a")}</span>
+                    <br /><span className="text-xs">{format(new Date(r.created_at), "hh:mm a")}</span>
                   </TableCell>
                   <TableCell>
                     <Select
@@ -592,7 +592,7 @@ const AdminStudentInquiry = () => {
                   ["Lead Stage", stageLabel(detail.lead_stage || "not_contacted")],
                 ].map(([label, value]) => (
                   <div key={String(label)} className="rounded-lg border border-border p-3">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
                     <p className="text-foreground mt-0.5 break-words">{value || "—"}</p>
                   </div>
                 ))}
@@ -603,7 +603,7 @@ const AdminStudentInquiry = () => {
                 <div className="flex flex-wrap gap-1.5">
                   {(detail.help_topics || []).length === 0 && <span className="text-sm text-muted-foreground">—</span>}
                   {(detail.help_topics || []).map((t: string) => (
-                    <Badge key={t} variant="secondary" className="text-[11px]">{t}</Badge>
+                    <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
                   ))}
                 </div>
               </div>
@@ -656,7 +656,7 @@ const AdminStudentInquiry = () => {
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {format(new Date(n.created_at), "dd MMM yyyy, hh:mm a")}
                         {n.created_by_email ? ` · ${n.created_by_email}` : ""}
                         {n.stage_at_note ? ` · ${stageLabel(n.stage_at_note)}` : ""}

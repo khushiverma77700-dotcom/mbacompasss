@@ -203,13 +203,13 @@ export default function StudentGoals() {
           </div>
           <div className="flex flex-wrap gap-2">
             <div className="bg-white/15 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-white/80 flex items-center justify-center gap-1">
+              <div className="text-xs uppercase tracking-wider text-white/80 flex items-center justify-center gap-1">
                 <Flame className="h-3.5 w-3.5" /> Streak
               </div>
               <div className="text-2xl font-bold">{streak} days</div>
             </div>
             <div className="bg-white/15 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-white/80">Today</div>
+              <div className="text-xs uppercase tracking-wider text-white/80">Today</div>
               <div className="text-2xl font-bold">{todayProgress}%</div>
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function StudentGoals() {
                           <div className="text-xs font-bold mb-1">{d.day}</div>
                           <div className="space-y-1">
                             {(d.tasks || []).map((t: any, j: number) => (
-                              <div key={j} className="text-[11px] text-muted-foreground">
+                              <div key={j} className="text-xs text-muted-foreground">
                                 <span className="font-medium text-sky-800">{t.section}</span> · {t.title}
                                 {t.minutes ? ` (${t.minutes}m)` : ""}
                               </div>
@@ -434,7 +434,7 @@ export default function StudentGoals() {
                         {t.title}
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2">
-                        {t.section && <Badge variant="outline" className="text-[10px]">{t.section}</Badge>}
+                        {t.section && <Badge variant="outline" className="text-xs">{t.section}</Badge>}
                         {t.duration_minutes && <span>{t.duration_minutes} min</span>}
                         {t.target_value && <span>· target {t.target_value}</span>}
                       </div>
@@ -473,7 +473,7 @@ export default function StudentGoals() {
                       }`}
                       title={`${w.section} • ${w.accuracy ?? 0}% accuracy`}>
                       <div className="font-semibold truncate">{w.topic}</div>
-                      <div className="text-[10px] opacity-80">{w.section}</div>
+                      <div className="text-xs opacity-80">{w.section}</div>
                     </div>
                   ))}
                 </div>

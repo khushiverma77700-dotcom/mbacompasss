@@ -69,7 +69,7 @@ const Counter = ({ value, format, replay = 0 }: { value: number | null; format: 
 const WinPill = ({ improved, pct, unitLabel }: { improved: boolean; pct: number | null; unitLabel: string }) => {
   const Icon = improved ? ArrowUpRight : ArrowDownRight;
   return (
-    <Badge className={`gap-1 text-[10px] ${improved ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}>
+    <Badge className={`gap-1 text-xs ${improved ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}>
       <Icon className="h-3 w-3" /> {fmtPct(pct)} {unitLabel}
     </Badge>
   );
@@ -200,7 +200,7 @@ export default function SeoWinsBoard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-xs">
               {data?.data_label === "actual" ? "ACTUAL — Search Console + engine" : "NO DATA"}
             </Badge>
             <RawPayloadDrawer title="wins_report payload" payload={data} />
@@ -250,7 +250,7 @@ export default function SeoWinsBoard() {
                             className="min-w-0 rounded-md border bg-muted/20 px-2.5 py-1.5"
                           >
                             <div className="truncate text-xs font-semibold">{h.title}</div>
-                            <div className="truncate text-[11px] text-emerald-700">{h.detail || "improving"}</div>
+                            <div className="truncate text-xs text-emerald-700">{h.detail || "improving"}</div>
                           </motion.div>
                         </AnimatePresence>
                       );
@@ -304,7 +304,7 @@ export default function SeoWinsBoard() {
             <div className="flex flex-wrap justify-center gap-1.5">
               {siteWins.map((w, i) => (
                 <motion.div key={`${w.label}-${tick}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                  <Badge variant="outline" className="gap-1 text-[10px]">
+                  <Badge variant="outline" className="gap-1 text-xs">
                     {safeText(w.label)}
                     <WinPill improved={!!w.improved} pct={w.pct} unitLabel="" />
                   </Badge>
@@ -352,13 +352,13 @@ export default function SeoWinsBoard() {
                   return (
                     <motion.div key={`${c.metric}-${tick}`} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.08 }} className="rounded-lg border bg-muted/20 p-3">
-                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{safeText(c.metric)}</div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground">{safeText(c.metric)}</div>
                       <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
                         <Counter value={c.current ?? null} format={(v) => fmtDec(v, 2)} replay={tick} />
                       </div>
-                      <div className="mt-1 text-[11px] text-muted-foreground">was {fmtDec(c.previous, 2)} · all-time {fmtDec(c.all_time, 2)}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">was {fmtDec(c.previous, 2)} · all-time {fmtDec(c.all_time, 2)}</div>
                       {improved === null
-                        ? <Badge variant="outline" className="mt-1 text-[10px]">No baseline yet</Badge>
+                        ? <Badge variant="outline" className="mt-1 text-xs">No baseline yet</Badge>
                         : <div className="mt-1"><WinPill improved={improved} pct={pct} unitLabel="vs last week" /></div>}
                     </motion.div>
                   );
@@ -400,9 +400,9 @@ export default function SeoWinsBoard() {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {p.click_delta > 0 && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-[10px]"><MousePointerClick className="mr-1 h-3 w-3" />+{fmtInt(p.click_delta)} clicks</Badge>}
-                        {p.position_gain > 0 && <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 text-[10px]"><TrendingUp className="mr-1 h-3 w-3" />+{fmtDec(p.position_gain, 1)} places</Badge>}
-                        {p.ctr_pct > 0 && <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100 text-[10px]"><Search className="mr-1 h-3 w-3" />CTR {fmtPct(p.ctr_pct)}</Badge>}
+                        {p.click_delta > 0 && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-xs"><MousePointerClick className="mr-1 h-3 w-3" />+{fmtInt(p.click_delta)} clicks</Badge>}
+                        {p.position_gain > 0 && <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 text-xs"><TrendingUp className="mr-1 h-3 w-3" />+{fmtDec(p.position_gain, 1)} places</Badge>}
+                        {p.ctr_pct > 0 && <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100 text-xs"><Search className="mr-1 h-3 w-3" />CTR {fmtPct(p.ctr_pct)}</Badge>}
                       </div>
                     </motion.div>
                   ))}
@@ -427,9 +427,9 @@ export default function SeoWinsBoard() {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {k.position_gain > 0 && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-[10px]"><TrendingUp className="mr-1 h-3 w-3" />+{fmtDec(k.position_gain, 1)} places</Badge>}
-                        {k.entered_top3 && <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px]"><Trophy className="mr-1 h-3 w-3" />Top 3</Badge>}
-                        {!k.entered_top3 && k.entered_top10 && <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 text-[10px]"><Award className="mr-1 h-3 w-3" />Page 1</Badge>}
+                        {k.position_gain > 0 && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-xs"><TrendingUp className="mr-1 h-3 w-3" />+{fmtDec(k.position_gain, 1)} places</Badge>}
+                        {k.entered_top3 && <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 text-xs"><Trophy className="mr-1 h-3 w-3" />Top 3</Badge>}
+                        {!k.entered_top3 && k.entered_top10 && <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 text-xs"><Award className="mr-1 h-3 w-3" />Page 1</Badge>}
                       </div>
                     </motion.div>
                   ))}

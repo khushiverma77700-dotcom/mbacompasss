@@ -216,7 +216,7 @@ export const SummaryHighlights = ({ text, name }: Props) => {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Key Numbers from Your Profile
             </p>
-            <span className="text-[10px] font-medium text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground">
               {stats.length} metric{stats.length > 1 ? "s" : ""}
             </span>
           </div>
@@ -238,13 +238,13 @@ export const SummaryHighlights = ({ text, name }: Props) => {
                       <Icon className="w-4 h-4" />
                     </div>
                   </div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     {stat.label}
                   </p>
                   <p className={`text-2xl font-bold leading-none ${styles.valueColor} mb-1.5`}>
                     {stat.value}
                   </p>
-                  <p className="text-[11px] text-muted-foreground leading-tight">
+                  <p className="text-xs text-muted-foreground leading-tight">
                     {stat.context}
                   </p>
                 </motion.div>
@@ -280,7 +280,7 @@ export const SummaryHighlights = ({ text, name }: Props) => {
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1.5 ${styles.chip}`}>
+                      <span className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1.5 ${styles.chip}`}>
                         {p.title}
                       </span>
                       <p className="text-sm leading-relaxed text-foreground/90">{p.text}</p>

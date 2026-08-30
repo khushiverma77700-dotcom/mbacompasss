@@ -36,7 +36,7 @@ const MobileActionBar = ({ actions, className }: MobileActionBarProps) => {
             onClick={a.onClick}
             aria-label={a.label}
             className={cn(
-              "flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold transition-all active:scale-95",
+              "flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-semibold transition-all active:scale-95",
               a.primary
                 ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                 : a.active

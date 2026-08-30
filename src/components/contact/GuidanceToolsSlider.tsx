@@ -56,7 +56,7 @@ const GuidanceToolsSlider = () => {
     <div className="mt-10 rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/5 via-card to-card p-4 sm:p-5">
       <div className="flex items-center gap-2">
         <Sparkles className="h-3.5 w-3.5 text-primary" />
-        <h2 className="text-[11px] font-bold uppercase tracking-widest text-primary">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-primary">
           Free AI tools while you wait
         </h2>
       </div>

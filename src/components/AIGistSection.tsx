@@ -129,7 +129,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
           <div className="min-w-0 max-w-full flex-1">
             <p className="text-sm font-bold text-foreground leading-snug flex min-w-0 flex-wrap items-center gap-1.5">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">B School Buzz AI</span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider border border-blue-500/15">Beta</span>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider border border-blue-500/15">Beta</span>
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 max-w-full break-words leading-relaxed">
               Get the gist fast — converts {pageLabel.toLowerCase()}s into crisp, actionable insights

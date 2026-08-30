@@ -375,9 +375,9 @@ export default function StudentPlannerPerformance() {
 function Kpi({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: string; hint?: string }) {
   return (
     <Card className="p-3">
-      <div className="flex items-center gap-2">{icon}<div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div></div>
+      <div className="flex items-center gap-2">{icon}<div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div></div>
       <div className="text-2xl font-bold mt-1">{value}</div>
-      {hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}
+      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
     </Card>
   );
 }

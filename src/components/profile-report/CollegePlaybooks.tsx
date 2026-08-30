@@ -111,7 +111,7 @@ export const CollegePlaybooks = ({ playbooks, coverage }: Props) => {
             {TIERS.map((t) => (
               <TabsTrigger key={t} value={t} className="flex flex-col items-center py-2">
                 <span className="text-xs font-semibold">{t}</span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {counts[t]} {counts[t] === 1 ? "college" : "colleges"}
                   {bestFit[t] ? ` · Best: ${bestFit[t]}` : ""}
                 </span>
@@ -133,9 +133,9 @@ export const CollegePlaybooks = ({ playbooks, coverage }: Props) => {
                           <div className="flex-1">
                             <p className="font-semibold text-sm md:text-base">{p.college_name}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              <Badge variant="outline" className={`text-[10px] ${tierBadge(p.tier)}`}>{p.tier}</Badge>
-                              <Badge variant="outline" className="text-[10px]">{p.admission_exam}</Badge>
-                              <span className="text-[11px] text-muted-foreground">{p.percentile_goal}</span>
+                              <Badge variant="outline" className={`text-xs ${tierBadge(p.tier)}`}>{p.tier}</Badge>
+                              <Badge variant="outline" className="text-xs">{p.admission_exam}</Badge>
+                              <span className="text-xs text-muted-foreground">{p.percentile_goal}</span>
                             </div>
                           </div>
                         </div>

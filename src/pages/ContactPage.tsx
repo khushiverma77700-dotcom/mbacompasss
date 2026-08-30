@@ -172,7 +172,7 @@ const ContactPage = () => {
               <Gift className="w-3.5 h-3.5 mr-1.5" /> FREE MBA COUNSELLING FOR STUDENTS
             </Badge>
 
-            <h1 className="font-heading text-3xl md:text-5xl lg:text-[3.5rem] font-bold text-foreground leading-[1.08] tracking-tight">
+            <h1 className="font-heading text-3xl md:text-5xl lg:text-4xl font-bold text-foreground leading-[1.08] tracking-tight">
               Free MBA Guidance &{" "}
               <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
                 Counselling
@@ -224,7 +224,7 @@ const ContactPage = () => {
               ].map((stat) => (
                 <div key={stat.label} className="text-center px-2">
                   <p className="font-heading text-xl md:text-2xl font-bold text-primary">{stat.value}</p>
-                  <p className="mt-1 text-[11px] md:text-xs leading-tight text-muted-foreground">{stat.label}</p>
+                  <p className="mt-1 text-xs md:text-xs leading-tight text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
             </div>

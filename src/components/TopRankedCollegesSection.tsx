@@ -46,7 +46,7 @@ const TopRankedCollegesSection = () => {
     <section className="py-20 md:py-24 bg-background border-y border-border/60">
       <div className="container mx-auto px-4">
         <div className="text-center mb-14 max-w-2xl mx-auto animate-fade-in">
-          <div className="inline-flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-primary font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 text-xs tracking-[0.18em] uppercase text-primary font-semibold mb-4">
             <span className="h-px w-8 bg-primary/40" />
             Top Rankings 2025
             <span className="h-px w-8 bg-primary/40" />
@@ -76,13 +76,13 @@ const TopRankedCollegesSection = () => {
                   <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-sky-50 border border-primary/15 flex items-center justify-center">
                     <span className="font-heading font-bold text-base text-primary tracking-tight">{initials}</span>
                   </div>
-                  <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/10 whitespace-nowrap">
+                  <span className="inline-flex items-center text-xs font-bold uppercase tracking-wider bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/10 whitespace-nowrap">
                     {badge}
                   </span>
                 </div>
 
                 <div className="min-h-[3.5rem]">
-                  <h3 className="font-heading font-bold text-[17px] md:text-lg text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                  <h3 className="font-heading font-bold text-base md:text-lg text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2">
                     {college.name}
                   </h3>
                 </div>
@@ -93,14 +93,14 @@ const TopRankedCollegesSection = () => {
 
                 <div className="grid grid-cols-2 gap-3 mt-5 py-4 border-y border-border/60">
                   <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Total Fees</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Total Fees</p>
                     <div className="flex items-center gap-1">
                       <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
                       <p className="text-sm font-bold text-foreground truncate">{college.fees || "N/A"}</p>
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Avg Package</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Avg Package</p>
                     <div className="flex items-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5 text-emerald-600/70 flex-shrink-0" />
                       <p className="text-sm font-bold text-emerald-600 truncate">{college.placement_avg || "N/A"}</p>

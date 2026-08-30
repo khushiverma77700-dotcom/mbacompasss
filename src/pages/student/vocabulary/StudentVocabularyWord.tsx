@@ -115,7 +115,7 @@ export default function StudentVocabularyWord() {
 
               {syllables.length > 0 && (
                 <div className="mt-3">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Pronunciation</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Pronunciation</div>
                   <button onClick={() => speak(word.word)} className="mt-1 inline-flex flex-wrap items-center gap-1.5">
                     {syllables.map((p: string, i: number) => (
                       <span key={i} className="rounded-md border border-sky-200 bg-sky-50/70 px-2 py-0.5 text-sm font-mono font-semibold text-sky-700">
@@ -136,7 +136,7 @@ export default function StudentVocabularyWord() {
                   <GraduationCap className="h-4 w-4 text-sky-600" />
                   <span className="text-xs font-medium text-slate-600">Appeared in</span>
                   {word.exam_appearances.map((e: string) => (
-                    <Badge key={e} className="border-0 bg-white text-[10px] text-sky-700 shadow-sm hover:bg-white">{e}</Badge>
+                    <Badge key={e} className="border-0 bg-white text-xs text-sky-700 shadow-sm hover:bg-white">{e}</Badge>
                   ))}
                 </div>
               )}
@@ -171,7 +171,7 @@ export default function StudentVocabularyWord() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-slate-200">
           <CardContent className="p-5">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">Synonyms</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">Synonyms</div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {(word.synonyms || []).length
                 ? word.synonyms.map((s: string) => (
@@ -183,7 +183,7 @@ export default function StudentVocabularyWord() {
         </Card>
         <Card className="border-slate-200">
           <CardContent className="p-5">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-rose-600">Antonyms</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">Antonyms</div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {(word.antonyms || []).length
                 ? word.antonyms.map((s: string) => (
@@ -199,7 +199,7 @@ export default function StudentVocabularyWord() {
       <Card className="border-slate-200">
         <CardContent className="p-5 sm:p-6">
           <div className="mb-4">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">In Context</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">In Context</div>
             <h3 className="font-heading text-xl font-semibold text-slate-900">Example Sentences &amp; Usage Guide</h3>
             <p className="mt-1 text-xs text-slate-500">See how <span className="font-semibold text-slate-700">{word.word}</span> is used across real MBA situations — pick the tab that matches your scenario.</p>
           </div>
@@ -257,8 +257,8 @@ function MeaningCard({ label, tone, italic, children }: any) {
     <Card className="relative overflow-hidden border-slate-200">
       <div aria-hidden className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${grad}`} />
       <CardContent className="p-5">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</div>
-        <p className={`mt-1.5 text-[15px] leading-relaxed text-slate-800 ${italic ? "italic" : ""}`}>{children}</p>
+        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</div>
+        <p className={`mt-1.5 text-sm leading-relaxed text-slate-800 ${italic ? "italic" : ""}`}>{children}</p>
       </CardContent>
     </Card>
   );
@@ -272,13 +272,13 @@ function ExampleBlock({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
         <Target className="h-3.5 w-3.5 text-slate-400" />
         <span className="font-semibold uppercase tracking-wider text-slate-600">When to use:</span>
         <span>{scenario}</span>
       </div>
 
-      <blockquote className={`relative rounded-xl border-l-2 ${border} ${bg} px-5 py-4 text-[15px] leading-relaxed text-slate-800`}>
+      <blockquote className={`relative rounded-xl border-l-2 ${border} ${bg} px-5 py-4 text-sm leading-relaxed text-slate-800`}>
         <Quote className="absolute -left-1 -top-2 h-5 w-5 text-sky-300" />
         {text ? (
           <span className="italic">{text}</span>
@@ -289,27 +289,27 @@ function ExampleBlock({
 
       <div className="grid gap-3 md:grid-cols-2">
         <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700">
             <Lightbulb className="h-3.5 w-3.5" /> Pro tip
           </div>
-          <p className="mt-1 text-[13px] leading-6 text-slate-700">{tip}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-700">{tip}</p>
         </div>
         <div className="rounded-xl border border-sky-100 bg-white p-3">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-sky-700">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-700">
             <Sparkles className="h-3.5 w-3.5" /> Power phrase
           </div>
-          <p className="mt-1 text-[13px] leading-6 text-slate-800">
+          <p className="mt-1 text-sm leading-6 text-slate-800">
             <span className="font-medium">“{power}”</span>
           </p>
-          <p className="mt-1 text-[11px] text-slate-400">Swap the surrounding words to fit your story — keep <span className="font-semibold text-slate-600">{word}</span> in place.</p>
+          <p className="mt-1 text-xs text-slate-400">Swap the surrounding words to fit your story — keep <span className="font-semibold text-slate-600">{word}</span> in place.</p>
         </div>
       </div>
 
       <div className="flex items-start gap-2 rounded-xl border border-rose-100 bg-rose-50/40 p-3">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600" />
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Common pitfall</div>
-          <p className="mt-0.5 text-[13px] leading-6 text-slate-700">{pitfall}</p>
+          <div className="text-xs font-bold uppercase tracking-wider text-rose-700">Common pitfall</div>
+          <p className="mt-0.5 text-sm leading-6 text-slate-700">{pitfall}</p>
         </div>
       </div>
     </div>

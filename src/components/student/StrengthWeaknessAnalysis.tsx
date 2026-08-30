@@ -466,7 +466,7 @@ export function ReadinessBadge({ label, value, suffix = "%", tone }: { label: st
   return (
     <div className="text-right">
       <div className={`text-2xl font-semibold ${color}`}>{value}{suffix}</div>
-      <div className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</div>
+      <div className="text-xs text-muted-foreground uppercase tracking-wide">{label}</div>
     </div>
   );
 }
@@ -572,18 +572,18 @@ export function TopicAnalysisPanel({ heading, description, topics, tone }: {
                 <div className="flex flex-1 items-center justify-between pr-3 gap-3">
                   <div className="text-left">
                     <div className="text-sm font-medium text-slate-900">{t.topic}</div>
-                    <div className="text-[11px] text-muted-foreground">{t.section} · {t.attempted} attempts · {t.correct} correct · {t.incorrect} wrong</div>
+                    <div className="text-xs text-muted-foreground">{t.section} · {t.attempted} attempts · {t.correct} correct · {t.incorrect} wrong</div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
                       <div className={`text-sm font-semibold ${t.accuracy < 50 ? "text-red-600" : t.accuracy < 70 ? "text-amber-600" : "text-sky-700"}`}>
                         {t.accuracy}%
                       </div>
-                      <div className="text-[10px] text-muted-foreground">accuracy</div>
+                      <div className="text-xs text-muted-foreground">accuracy</div>
                     </div>
                     <div className="w-28 hidden sm:block">
                       <Progress value={t.readiness} className="h-1.5" />
-                      <div className="text-[10px] text-muted-foreground mt-0.5 text-right">readiness {t.readiness}%</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 text-right">readiness {t.readiness}%</div>
                     </div>
                   </div>
                 </div>
@@ -630,7 +630,7 @@ export function TopicAnalysisPanel({ heading, description, topics, tone }: {
                   {/* Trend line for the topic (sub-topic averages) */}
                   {t.subs.some((s) => s.trend.length >= 2) && (
                     <div className="mt-4 h-40">
-                      <div className="text-[11px] text-muted-foreground mb-1">Accuracy trend across mocks</div>
+                      <div className="text-xs text-muted-foreground mb-1">Accuracy trend across mocks</div>
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={buildTrend(t)}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -702,7 +702,7 @@ export function FullReportTable({ sections }: { sections: SectionAgg[] }) {
     <Card className="p-5">
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-sm font-semibold">Full performance report</h4>
-        <span className="text-[11px] text-muted-foreground">{rows.length} rows · sorted by improvement scope</span>
+        <span className="text-xs text-muted-foreground">{rows.length} rows · sorted by improvement scope</span>
       </div>
       <div className="overflow-x-auto max-h-[520px]">
         <Table>

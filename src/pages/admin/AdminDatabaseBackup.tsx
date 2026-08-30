@@ -362,7 +362,7 @@ const AdminDatabaseBackup = () => {
                   <summary className="cursor-pointer font-medium hover:text-foreground">View all {ALL_TABLES.length} tables included</summary>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {ALL_TABLES.map((t) => (
-                      <span key={t} className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{t}</span>
+                      <span key={t} className="bg-muted px-1.5 py-0.5 rounded text-xs">{t}</span>
                     ))}
                   </div>
                 </details>
@@ -408,7 +408,7 @@ const AdminDatabaseBackup = () => {
                       </div>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {Object.entries(importPreview.table_counts).map(([table, count]) => (
-                          <span key={table} className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">
+                          <span key={table} className="bg-background border border-border px-1.5 py-0.5 rounded text-xs">
                             {table}: {count}
                           </span>
                         ))}
@@ -478,7 +478,7 @@ const AdminDatabaseBackup = () => {
                     <summary className="cursor-pointer font-medium hover:text-foreground">View all {storageFiles.length} files</summary>
                     <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
                       {storageFiles.map((f) => (
-                        <div key={f.name} className="flex items-center justify-between bg-muted/50 px-2 py-1 rounded text-[11px]">
+                        <div key={f.name} className="flex items-center justify-between bg-muted/50 px-2 py-1 rounded text-xs">
                           <span className="truncate max-w-[70%]">{f.name}</span>
                           <span className="text-muted-foreground shrink-0">{formatSize(f.metadata?.size)}</span>
                         </div>

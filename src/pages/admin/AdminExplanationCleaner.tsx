@@ -424,7 +424,7 @@ export default function AdminExplanationCleaner() {
                   style={{ left: `${Math.max(0, pct - 10)}%` }}
                 />
               )}
-              <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-slate-700 mix-blend-difference">
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-slate-700 mix-blend-difference">
                 {pct}% · {done}/{rs.total}
               </div>
             </div>
@@ -438,7 +438,7 @@ export default function AdminExplanationCleaner() {
               {rs.running && <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> running in background</span>}
               {rs.paused && <span className="flex items-center gap-1 text-amber-600"><Pause className="h-3 w-3" /> paused — click Resume to continue</span>}
             </div>
-            <div className="text-[10px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Pricing model: Gemini 2.5 Flash · ${PRICING.PRICE_IN_PER_M}/M input · ${PRICING.PRICE_OUT_PER_M}/M output (estimate)
             </div>
           </div>
@@ -549,7 +549,7 @@ export default function AdminExplanationCleaner() {
                       onClick={() => browseStatus === "done" && openDiff(r.id)}
                       title={browseStatus === "done" ? "Click to view before/after" : undefined}
                     >
-                      <td className="px-2 py-2 font-mono text-[10px] truncate max-w-[140px]">{r.id}</td>
+                      <td className="px-2 py-2 font-mono text-xs truncate max-w-[140px]">{r.id}</td>
                       <td className="px-2 py-2">{r.mock_sections?.code ?? "—"}</td>
                       <td className="px-2 py-2">{r.topic ?? "—"}</td>
                       <td className="px-2 py-2 max-w-[400px] truncate text-muted-foreground">
@@ -565,14 +565,14 @@ export default function AdminExplanationCleaner() {
                 </tbody>
               </table>
               {browseCount != null && browseCount > browseRows.length && (
-                <div className="text-[11px] text-muted-foreground pt-2 text-center">
+                <div className="text-xs text-muted-foreground pt-2 text-center">
                   Showing first {browseRows.length} of {browseCount}.
                 </div>
               )}
             </div>
           )}
 
-          <div className="text-[11px] text-muted-foreground border-t pt-3 mt-3">
+          <div className="text-xs text-muted-foreground border-t pt-3 mt-3">
             "Pending" = explanation has no <code>&lt;h4&gt;</code> headers. "Done" = already has structured headers. Filter respects the scope you picked above.
           </div>
         </CardContent>
@@ -588,7 +588,7 @@ export default function AdminExplanationCleaner() {
                   <Eye className="h-5 w-5 text-sky-600" />
                   Before / After review
                 </DialogTitle>
-                <DialogDescription className="font-mono text-[11px]">
+                <DialogDescription className="font-mono text-xs">
                   {diffRow?.id}
                 </DialogDescription>
               </div>

@@ -52,7 +52,7 @@ export default function PurchaseSuccessDialog({
             <Link to="/student/mocks">My Mocks <ArrowRight className="h-3.5 w-3.5 ml-1" /></Link>
           </Button>
         </div>
-        <p className="text-[11px] text-muted-foreground text-center mt-1">
+        <p className="text-xs text-muted-foreground text-center mt-1">
           Forgot your password? <Link to="/forgot-password" className="text-primary hover:underline">Reset via OTP</Link>
         </p>
       </DialogContent>
@@ -65,7 +65,7 @@ function Row({ icon: Icon, label, value, onCopy, link, muted }: { icon: any; lab
     <div className="flex items-start gap-3">
       <Icon className="h-4 w-4 text-sky-600 mt-1 shrink-0" />
       <div className="flex-1 min-w-0">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
         <div className={`text-sm font-medium break-all ${muted ? "text-muted-foreground" : ""}`}>
           {link ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-sky-700 hover:underline">{value}</a> : value}
         </div>

@@ -168,7 +168,7 @@ const DifficultyIllustration = () => {
             <button
               key={l}
               className={cn(
-                "text-[11px] font-bold py-2 rounded-lg border transition-all",
+                "text-xs font-bold py-2 rounded-lg border transition-all",
                 active === i
                   ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow"
                   : "bg-white text-gray-600 border-gray-200"
@@ -179,7 +179,7 @@ const DifficultyIllustration = () => {
           ))}
         </div>
         <div>
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
             <span className="font-semibold">Questions</span>
             <span className="font-bold text-sky-600">15Q</span>
           </div>
@@ -191,7 +191,7 @@ const DifficultyIllustration = () => {
             />
           </div>
         </div>
-        <div className="inline-flex items-center gap-1.5 text-[11px] text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2.5 py-1">
+        <div className="inline-flex items-center gap-1.5 text-xs text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2.5 py-1">
           <Timer className="h-3 w-3" /> Auto: 1 min / question
         </div>
       </div>
@@ -251,7 +251,7 @@ const AttemptIllustration = () => {
   return (
     <div className="relative h-full w-full grid place-items-center p-5">
       <div className="w-full max-w-[280px] rounded-xl bg-white border border-gray-200 shadow-md p-3 space-y-3">
-        <div className="flex items-center justify-between text-[11px]">
+        <div className="flex items-center justify-between text-xs">
           <span className="font-bold text-gray-700">Q3 / 15</span>
           <motion.span
             animate={{ opacity: [1, 0.5, 1] }}
@@ -303,7 +303,7 @@ const ReportIllustration = () => (
             transition={{ delay: i * 0.15 }}
             className="rounded-lg border bg-white p-2 text-center"
           >
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.l}</div>
             <div className={cn("text-lg font-extrabold bg-clip-text text-transparent bg-gradient-to-br", s.c)}>
               {s.v}
             </div>
@@ -312,10 +312,10 @@ const ReportIllustration = () => (
       </div>
       <div className="rounded-lg bg-gradient-to-br from-sky-50 to-violet-50 p-2.5">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] font-semibold text-gray-700 inline-flex items-center gap-1">
+          <span className="text-xs font-semibold text-gray-700 inline-flex items-center gap-1">
             <BarChart3 className="h-3 w-3 text-rose-500" /> Trend (8 attempts)
           </span>
-          <span className="text-[10px] font-bold text-emerald-600">+34% ↑</span>
+          <span className="text-xs font-bold text-emerald-600">+34% ↑</span>
         </div>
         <svg viewBox="0 0 200 50" className="w-full h-10">
           <defs>
@@ -539,7 +539,7 @@ export default function PersonalizedHubGuide({
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 18 }}
-                    className={cn("inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white px-2.5 py-1 rounded-full bg-gradient-to-r", step.accent)}
+                    className={cn("inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-white px-2.5 py-1 rounded-full bg-gradient-to-r", step.accent)}
                   >
                     <Sparkles className="h-3 w-3" /> {step.badge}
                   </motion.span>
@@ -547,7 +547,7 @@ export default function PersonalizedHubGuide({
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.18, duration: 0.45, ease: "easeOut" }}
-                    className="mt-3 text-2xl sm:text-[26px] font-extrabold text-gray-900 leading-tight"
+                    className="mt-3 text-2xl sm:text-2xl font-extrabold text-gray-900 leading-tight"
                   >
                     {step.title}
                   </motion.h2>
@@ -555,7 +555,7 @@ export default function PersonalizedHubGuide({
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.28, duration: 0.45, ease: "easeOut" }}
-                    className="mt-3 text-sm sm:text-[15px] text-gray-600 leading-relaxed"
+                    className="mt-3 text-sm sm:text-sm text-gray-600 leading-relaxed"
                   >
                     {step.desc}
                   </motion.p>
@@ -634,7 +634,7 @@ export default function PersonalizedHubGuide({
 
               <button
                 onClick={handleClose}
-                className="mt-3 text-[11px] text-muted-foreground hover:text-foreground transition-colors self-center"
+                className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors self-center"
               >
                 Skip tour
               </button>

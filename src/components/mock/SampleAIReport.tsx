@@ -71,7 +71,7 @@ function Stat({ icon: Icon, label, value, sub, accent }: any) {
         <div className="text-xs text-muted-foreground">{label}</div>
       </div>
       <div className="mt-2 text-2xl font-bold tabular-nums">{value}</div>
-      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
+      {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
     </Card>
   );
 }

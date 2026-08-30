@@ -590,27 +590,27 @@ export default function AdminBulkGenerateSections() {
             {/* Stats grid */}
             <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-center">
               <div className="rounded-md border border-border bg-background p-2">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Colleges</div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">Colleges</div>
                 <div className="text-base font-bold text-foreground">{job.total_rows}</div>
               </div>
               <div className="rounded-md border border-border bg-background p-2">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Steps Done</div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">Steps Done</div>
                 <div className="text-base font-bold text-primary">{liveMetrics.stepsDone} / {liveMetrics.totalSteps}</div>
               </div>
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2">
-                <div className="text-[10px] uppercase tracking-wide text-emerald-700">Succeeded</div>
+                <div className="text-xs uppercase tracking-wide text-emerald-700">Succeeded</div>
                 <div className="text-base font-bold text-emerald-700">{liveMetrics.succeeded}</div>
               </div>
               <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2">
-                <div className="text-[10px] uppercase tracking-wide text-destructive">Failed</div>
+                <div className="text-xs uppercase tracking-wide text-destructive">Failed</div>
                 <div className="text-base font-bold text-destructive">{liveMetrics.failed}</div>
               </div>
               <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
-                <div className="text-[10px] uppercase tracking-wide text-amber-700">Not Found</div>
+                <div className="text-xs uppercase tracking-wide text-amber-700">Not Found</div>
                 <div className="text-base font-bold text-amber-700">{liveMetrics.notFound}</div>
               </div>
               <div className="rounded-md border border-border bg-background p-2">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1 justify-center"><Clock className="w-3 h-3" /> ETA</div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1 justify-center"><Clock className="w-3 h-3" /> ETA</div>
                 <div className="text-base font-bold text-foreground">
                   {job.status === "completed" || job.status === "failed"
                     ? formatDuration(elapsed || 0)
@@ -668,10 +668,10 @@ export default function AdminBulkGenerateSections() {
                       {row.collegeId && totalSteps > 0 && (
                         <div className="hidden md:flex items-center gap-2 w-44">
                           <Progress value={rowPct} className="h-1.5 flex-1" />
-                          <span className="text-[10px] font-mono text-muted-foreground w-10 text-right">{stepsDone}/{totalSteps}</span>
+                          <span className="text-xs font-mono text-muted-foreground w-10 text-right">{stepsDone}/{totalSteps}</span>
                         </div>
                       )}
-                      <Badge className={`${badge.cls} border-0 text-[10px] px-1.5 py-0.5`}>
+                      <Badge className={`${badge.cls} border-0 text-xs px-1.5 py-0.5`}>
                         {Icon && <Icon className={`w-3 h-3 mr-1 ${row.status === "processing" ? "animate-spin" : ""}`} />}
                         {badge.label}
                       </Badge>
@@ -697,7 +697,7 @@ export default function AdminBulkGenerateSections() {
                                   <SIcon className={`w-3 h-3 mt-0.5 flex-shrink-0 ${s.status === "processing" ? "animate-spin" : ""}`} />
                                   <div className="flex-1 min-w-0">
                                     <div className="truncate font-medium">{s.label}</div>
-                                    {s.error && <div className="text-[10px] truncate" title={s.error}>{s.error}</div>}
+                                    {s.error && <div className="text-xs truncate" title={s.error}>{s.error}</div>}
                                   </div>
                                 </div>
                               );
@@ -745,7 +745,7 @@ export default function AdminBulkGenerateSections() {
                           <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Retry Failed ({j.failed})
                         </Button>
                       )}
-                      <Badge variant="outline" className="text-[10px]">{j.status}</Badge>
+                      <Badge variant="outline" className="text-xs">{j.status}</Badge>
                     </div>
                   </div>
                 );

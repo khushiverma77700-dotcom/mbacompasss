@@ -87,7 +87,7 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
               <GraduationCap className="w-5 h-5 text-primary" />
             </div>
             Programme Portfolio
-            <Badge variant="secondary" className="ml-1 text-[10px] uppercase tracking-wider">
+            <Badge variant="secondary" className="ml-1 text-xs uppercase tracking-wider">
               {programmes.length} programmes
             </Badge>
           </CardTitle>
@@ -107,10 +107,10 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                 <div>
                   <div className="font-semibold text-foreground leading-snug">{p.name}</div>
                   <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                    <Badge variant="outline" className="text-[10px] py-0 px-1.5">{p.programme_type}</Badge>
-                    {p.mode && <span className="text-[10px] text-muted-foreground">{p.mode}</span>}
+                    <Badge variant="outline" className="text-xs py-0 px-1.5">{p.programme_type}</Badge>
+                    {p.mode && <span className="text-xs text-muted-foreground">{p.mode}</span>}
                     {p.duration && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" /> {p.duration}
                       </span>
                     )}
@@ -119,24 +119,24 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                 {exams.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {exams.slice(0, 6).map((e) => (
-                      <Badge key={e} variant="secondary" className="text-[10px] py-0 px-1.5">{e}</Badge>
+                      <Badge key={e} variant="secondary" className="text-xs py-0 px-1.5">{e}</Badge>
                     ))}
                   </div>
                 )}
                 {specs.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {specs.slice(0, 4).map((s) => (
-                      <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{s}</span>
+                      <span key={s} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{s}</span>
                     ))}
                   </div>
                 )}
                 <div className="flex items-end justify-between gap-3 pt-1">
-                  <div className="text-[11px] text-muted-foreground leading-snug">{eligibilitySummary(p)}</div>
+                  <div className="text-xs text-muted-foreground leading-snug">{eligibilitySummary(p)}</div>
                   <div className="text-right shrink-0">
                     <div className="font-heading font-bold text-primary text-sm">
                       {p.fees_total_lakhs ? `₹${p.fees_total_lakhs} L` : "—"}
                     </div>
-                    {p.intake_seats && <div className="text-[10px] text-muted-foreground">{p.intake_seats} seats</div>}
+                    {p.intake_seats && <div className="text-xs text-muted-foreground">{p.intake_seats} seats</div>}
                   </div>
                 </div>
               </div>
@@ -173,8 +173,8 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                     <td className="py-3 px-3">
                       <div className="font-semibold text-foreground">{p.name}</div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Badge variant="outline" className="text-[10px] py-0 px-1.5">{p.programme_type}</Badge>
-                        {p.mode && <span className="text-[10px] text-muted-foreground">{p.mode}</span>}
+                        <Badge variant="outline" className="text-xs py-0 px-1.5">{p.programme_type}</Badge>
+                        {p.mode && <span className="text-xs text-muted-foreground">{p.mode}</span>}
                       </div>
                     </td>
                     <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">
@@ -187,18 +187,18 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                       <div className="flex flex-wrap gap-1">
                         {exams.length === 0 && <span className="text-xs text-muted-foreground">Profile-based</span>}
                         {exams.slice(0, 4).map((e) => (
-                          <Badge key={e} variant="secondary" className="text-[10px] py-0 px-1.5">{e}</Badge>
+                          <Badge key={e} variant="secondary" className="text-xs py-0 px-1.5">{e}</Badge>
                         ))}
-                        {exams.length > 4 && <span className="text-[10px] text-muted-foreground">+{exams.length - 4}</span>}
+                        {exams.length > 4 && <span className="text-xs text-muted-foreground">+{exams.length - 4}</span>}
                       </div>
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex flex-wrap gap-1">
                         {specs.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
                         {specs.slice(0, 3).map((s) => (
-                          <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{s}</span>
+                          <span key={s} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{s}</span>
                         ))}
-                        {specs.length > 3 && <span className="text-[10px] text-muted-foreground self-center">+{specs.length - 3}</span>}
+                        {specs.length > 3 && <span className="text-xs text-muted-foreground self-center">+{specs.length - 3}</span>}
                       </div>
                     </td>
                     <td className="py-3 px-3 text-xs text-muted-foreground">{eligibilitySummary(p)}</td>
@@ -207,7 +207,7 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                       <div className="font-heading font-bold text-primary">
                         {p.fees_total_lakhs ? `₹${p.fees_total_lakhs} L` : "—"}
                       </div>
-                      {p.fees_year && <div className="text-[10px] text-muted-foreground">{p.fees_year}</div>}
+                      {p.fees_year && <div className="text-xs text-muted-foreground">{p.fees_year}</div>}
                     </td>
                   </motion.tr>
                 );

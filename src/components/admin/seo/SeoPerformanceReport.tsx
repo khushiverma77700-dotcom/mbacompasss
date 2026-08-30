@@ -115,9 +115,9 @@ const VersusBar = ({
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
         {improved === null ? (
-          <Badge variant="outline" className="text-[10px]">No baseline yet</Badge>
+          <Badge variant="outline" className="text-xs">No baseline yet</Badge>
         ) : (
-          <Badge className={`gap-1 text-[10px] ${improved ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}>
+          <Badge className={`gap-1 text-xs ${improved ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}>
             {improved ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
             {improved ? "Improving" : "Declining"} · {fmtPct(pct)}
           </Badge>
@@ -126,7 +126,7 @@ const VersusBar = ({
       <div className="mt-2 space-y-1.5">
         {rows.map((r) => (
           <div key={r.k} className="flex items-center gap-2">
-            <span className="w-28 shrink-0 text-[11px] text-muted-foreground">{r.k}</span>
+            <span className="w-28 shrink-0 text-xs text-muted-foreground">{r.k}</span>
             <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
               <motion.div
                 key={`${label}-${r.k}-${replay}`}
@@ -136,7 +136,7 @@ const VersusBar = ({
                 transition={{ duration: 1, ease: "easeOut" }}
               />
             </div>
-            <span className="w-16 shrink-0 text-right font-mono text-[11px] tabular-nums">
+            <span className="w-16 shrink-0 text-right font-mono text-xs tabular-nums">
               <Counter value={r.v ?? null} format={(v) => fmtDec(v, digits)} replay={replay} />
             </span>
           </div>
@@ -148,11 +148,11 @@ const VersusBar = ({
 
 const DirBadge = ({ cmp, unitLabel }: { cmp: Cmp | undefined; unitLabel: string }) => {
   if (!cmp || cmp.direction === "no_data") {
-    return <Badge variant="outline" className="text-[10px]">No baseline yet</Badge>;
+    return <Badge variant="outline" className="text-xs">No baseline yet</Badge>;
   }
   if (cmp.direction === "flat") {
     return (
-      <Badge variant="secondary" className="gap-1 text-[10px]">
+      <Badge variant="secondary" className="gap-1 text-xs">
         <Minus className="h-3 w-3" /> Same as average
       </Badge>
     );
@@ -161,7 +161,7 @@ const DirBadge = ({ cmp, unitLabel }: { cmp: Cmp | undefined; unitLabel: string 
   const Icon = up ? ArrowUpRight : ArrowDownRight;
   return (
     <Badge
-      className={`gap-1 text-[10px] ${up ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}
+      className={`gap-1 text-xs ${up ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}
     >
       <Icon className="h-3 w-3" />
       {up ? "Higher" : "Lower"} than average · {fmtPct(cmp.pct)} {unitLabel}
@@ -322,7 +322,7 @@ export default function SeoPerformanceReport() {
                 <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">New data detected</Badge>
               </motion.div>
             )}
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-xs">
               {report?.data_label === "actual" ? "ACTUAL — Search Console" : "NO DATA"}
             </Badge>
             <RawPayloadDrawer title="performance_report payload" payload={report} validation={validation} />
@@ -420,7 +420,7 @@ export default function SeoPerformanceReport() {
             { k: "Avg position", v: <Counter value={overall?.avg_position ?? null} format={(v) => fmtDec(v, 2)} replay={tick} /> },
           ].map((s) => (
             <div key={s.k} className="rounded-lg border bg-muted/20 p-3">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.k}</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">{s.k}</div>
               <div className="mt-1 font-mono text-lg font-semibold tabular-nums">{s.v}</div>
             </div>
           ))}
@@ -439,7 +439,7 @@ export default function SeoPerformanceReport() {
               </CardDescription>
             </div>
             <Badge
-              className={`text-[11px] ${
+              className={`text-xs ${
                 verdict.tone === "up" ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
                 : verdict.tone === "down" ? "bg-red-100 text-red-800 hover:bg-red-100"
                 : verdict.tone === "mixed" ? "bg-amber-100 text-amber-900 hover:bg-amber-100"

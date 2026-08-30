@@ -68,12 +68,12 @@ const LatestArticlesSection = () => {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-                <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground shadow-lg text-[10px]">
+                <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground shadow-lg text-xs">
                   <Flame className="w-3 h-3 mr-1" /> Latest
                 </Badge>
               </div>
               <div className="p-6">
-                <Badge variant="secondary" className="text-[10px] mb-3">{featured.category}</Badge>
+                <Badge variant="secondary" className="text-xs mb-3">{featured.category}</Badge>
                 <h3 className="font-heading font-bold text-foreground text-lg mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{featured.title}</h3>
                 {featured.excerpt && <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">{featured.excerpt}</p>}
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -101,9 +101,9 @@ const LatestArticlesSection = () => {
 
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <Badge variant="secondary" className="text-[10px] w-fit mb-2">{article.category}</Badge>
+                    <Badge variant="secondary" className="text-xs w-fit mb-2">{article.category}</Badge>
                     <h4 className="font-heading font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug mb-2">{article.title}</h4>
-                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><Calendar className="w-2.5 h-2.5" /> {formatDate(article.created_at)}</span>
                       <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {getReadTime(article.content_chars)}</span>
                     </div>

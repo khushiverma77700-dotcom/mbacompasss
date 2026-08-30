@@ -57,7 +57,7 @@ export default function AIStudyPlannerSection() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-sky-600">+33<span className="text-base">%ile</span></div>
-                <div className="text-[11px] text-muted-foreground">avg gain by Week 8</div>
+                <div className="text-xs text-muted-foreground">avg gain by Week 8</div>
               </div>
             </div>
             <Suspense fallback={<ChartSkeleton h={240} />}>
@@ -89,7 +89,7 @@ export default function AIStudyPlannerSection() {
                   <CalendarDays className="h-4 w-4 text-sky-600" />
                   <h3 className="font-semibold text-sm text-gray-900">Today's auto-generated plan</h3>
                 </div>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Live</span>
+                <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Live</span>
               </div>
               <ul className="space-y-2">
                 {todayPlan.map((p, i) => (
@@ -97,7 +97,7 @@ export default function AIStudyPlannerSection() {
                     <CheckCircle2 className={`h-4 w-4 shrink-0 ${p.done ? "text-emerald-500" : "text-slate-300"}`} />
                     <span className="text-xs text-muted-foreground w-12 shrink-0">{p.time}</span>
                     <span className={`flex-1 truncate ${p.done ? "line-through text-muted-foreground" : "text-gray-800"}`}>{p.task}</span>
-                    <span className="text-[11px] text-muted-foreground">{p.mins}m</span>
+                    <span className="text-xs text-muted-foreground">{p.mins}m</span>
                   </li>
                 ))}
               </ul>
@@ -143,7 +143,7 @@ export default function AIStudyPlannerSection() {
 function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-lg bg-sky-50/60 border border-sky-100 px-3 py-2">
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">{icon}{label}</div>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">{icon}{label}</div>
       <div className="font-semibold text-sm text-gray-900 mt-0.5">{value}</div>
     </div>
   );

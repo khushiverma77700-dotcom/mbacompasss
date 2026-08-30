@@ -187,7 +187,7 @@ export default function AdminStudentMocks() {
                     <Phone className="h-3 w-3" /> {s.phone}
                   </div>
                 )}
-                <Badge variant="secondary" className="mt-1 text-[10px]">{s.enrolled_count} mock(s)</Badge>
+                <Badge variant="secondary" className="mt-1 text-xs">{s.enrolled_count} mock(s)</Badge>
               </button>
             ))}
             {!loading && students.length === 0 && (
@@ -206,7 +206,7 @@ export default function AdminStudentMocks() {
                   <div className="font-semibold flex items-center gap-2 flex-wrap">
                     {selected.display_name}
                     {isBlocked(selected) && (
-                      <Badge variant="destructive" className="text-[10px]">Blocked</Badge>
+                      <Badge variant="destructive" className="text-xs">Blocked</Badge>
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground">{selected.email}</div>

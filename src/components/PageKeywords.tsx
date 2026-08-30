@@ -77,7 +77,7 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
                       <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
                         {link.anchorText}
                       </p>
-                      {link.targetName && <p className="text-[11px] text-muted-foreground truncate">{link.targetName}</p>}
+                      {link.targetName && <p className="text-xs text-muted-foreground truncate">{link.targetName}</p>}
                     </div>
                   </Link>
                 </motion.div>
@@ -144,7 +144,7 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
                         <div className="flex-1">
                           <h3 className="text-sm font-bold text-foreground">{section.label}</h3>
                         </div>
-                        <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                           {section.items.length}
                         </span>
                       </div>
@@ -154,7 +154,7 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
                           <Badge
                             key={`${section.label}-${i}`}
                             variant="outline"
-                            className={`px-2.5 py-1 text-[11px] font-medium rounded-full cursor-default transition-all duration-200 ${section.badgeBg}`}
+                            className={`px-2.5 py-1 text-xs font-medium rounded-full cursor-default transition-all duration-200 ${section.badgeBg}`}
                           >
                             {kw}
                           </Badge>

@@ -80,8 +80,8 @@ const RingGauge = ({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="text-xl font-bold font-mono leading-none" style={{ color }}>{Math.round(value)}<span className="text-xs">%</span></div>
-        <div className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wider">{label}</div>
-        {sublabel && <div className="text-[9px] text-muted-foreground/80 font-mono">{sublabel}</div>}
+        <div className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wider">{label}</div>
+        {sublabel && <div className="text-xs text-muted-foreground/80 font-mono">{sublabel}</div>}
       </div>
     </div>
   );
@@ -630,7 +630,7 @@ const BulkLiveControlPanel = ({
           <CardTitle className="text-base flex items-center gap-2">
             <Server className="w-4 h-4 text-primary" />
             Live Control Center
-            <Badge variant="outline" className="ml-2 gap-1 font-mono text-[10px]">
+            <Badge variant="outline" className="ml-2 gap-1 font-mono text-xs">
               <span className={`inline-block w-1.5 h-1.5 rounded-full ${paused ? "bg-amber-500" : isTerminal ? "bg-muted-foreground" : "bg-emerald-500 animate-pulse"}`} />
               {paused ? "PAUSED" : status.toUpperCase()}
             </Badge>
@@ -657,40 +657,40 @@ const BulkLiveControlPanel = ({
           {/* Server Load gauge */}
           <div className={`rounded-lg border ${loadTone.border} ${loadTone.bg} p-3`}>
             <div className="flex items-center justify-between mb-1.5">
-              <div className={`flex items-center gap-1.5 text-[11px] font-semibold ${loadTone.color}`}>
+              <div className={`flex items-center gap-1.5 text-xs font-semibold ${loadTone.color}`}>
                 <Gauge className="w-3.5 h-3.5" /> SERVER CPU
               </div>
-              <Badge variant="outline" className={`${loadTone.color} border-current text-[10px] h-5`}>{loadTone.label}</Badge>
+              <Badge variant="outline" className={`${loadTone.color} border-current text-xs h-5`}>{loadTone.label}</Badge>
             </div>
             <div className={`text-2xl font-bold font-mono leading-tight ${loadTone.color}`}>{serverLoad}%</div>
             <Sparkline data={loadHistory} color={serverLoad >= 80 ? "hsl(var(--destructive))" : serverLoad >= 55 ? "rgb(217 119 6)" : "rgb(5 150 105)"} />
-            <div className="text-[10px] text-muted-foreground mt-0.5">worker runtime · real telemetry</div>
-            {memory && <div className="text-[10px] text-muted-foreground font-mono mt-1">mem {memoryUsedMb}/{memoryTotalMb || "?"} MB · {memoryPct}%</div>}
+            <div className="text-xs text-muted-foreground mt-0.5">worker runtime · real telemetry</div>
+            {memory && <div className="text-xs text-muted-foreground font-mono mt-1">mem {memoryUsedMb}/{memoryTotalMb || "?"} MB · {memoryPct}%</div>}
           </div>
 
           {/* Browser CPU */}
           <div className="rounded-lg border bg-card p-3">
             <div className="flex items-center justify-between mb-1.5">
-              <div className={`flex items-center gap-1.5 text-[11px] font-semibold ${cpuTone.color}`}>
+              <div className={`flex items-center gap-1.5 text-xs font-semibold ${cpuTone.color}`}>
                 <Cpu className="w-3.5 h-3.5" /> BROWSER CPU
               </div>
-              <Badge variant="outline" className={`${cpuTone.color} border-current text-[10px] h-5`}>{cpuTone.label}</Badge>
+              <Badge variant="outline" className={`${cpuTone.color} border-current text-xs h-5`}>{cpuTone.label}</Badge>
             </div>
             <div className={`text-2xl font-bold font-mono leading-tight ${cpuTone.color}`}>{Math.round(browserCpu)}%</div>
             <Sparkline data={cpuHistory} color={browserCpu >= 70 ? "hsl(var(--destructive))" : browserCpu >= 35 ? "rgb(217 119 6)" : "rgb(5 150 105)"} />
-            <div className="text-[10px] text-muted-foreground mt-0.5">your device · est. via timer drift</div>
+            <div className="text-xs text-muted-foreground mt-0.5">your device · est. via timer drift</div>
           </div>
 
           {/* Throughput */}
           <div className="rounded-lg border bg-card p-3">
             <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                 <Zap className="w-3.5 h-3.5" /> THROUGHPUT
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 border-primary/40 text-primary">{networkRequests} req</Badge>
+              <Badge variant="outline" className="text-xs h-5 border-primary/40 text-primary">{networkRequests} req</Badge>
             </div>
             <div className="text-2xl font-bold font-mono leading-tight text-primary">{tickRate.toFixed(1)}</div>
-            <div className="grid grid-cols-3 gap-1 mt-2 text-[10px]">
+            <div className="grid grid-cols-3 gap-1 mt-2 text-xs">
               <div className="rounded bg-emerald-500/10 text-emerald-700 px-1 py-0.5 text-center font-mono">✓ {succeeded}</div>
               <div className="rounded bg-destructive/10 text-destructive px-1 py-0.5 text-center font-mono">✗ {failed}</div>
               <div className="rounded bg-muted px-1 py-0.5 text-center font-mono">⋯ {pending}</div>
@@ -700,10 +700,10 @@ const BulkLiveControlPanel = ({
           {/* Active workers visualisation */}
           <div className="rounded-lg border bg-card p-3">
             <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
                 <Layers className="w-3.5 h-3.5" /> WORKERS
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 font-mono">{liveActiveWorkers}/{concurrency}</Badge>
+              <Badge variant="outline" className="text-xs h-5 font-mono">{liveActiveWorkers}/{concurrency}</Badge>
             </div>
             <div className="grid grid-cols-5 gap-1 mt-1">
               {Array.from({ length: 10 }).map((_, i) => {
@@ -726,7 +726,7 @@ const BulkLiveControlPanel = ({
                 );
               })}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1.5 font-mono">
+            <div className="text-xs text-muted-foreground mt-1.5 font-mono">
               {paused ? "all slots paused" : `${liveActiveWorkers} active · ${Math.max(0, concurrency - liveActiveWorkers)} idle · ${10 - concurrency} disabled`}
             </div>
           </div>
@@ -754,7 +754,7 @@ const BulkLiveControlPanel = ({
             <div className="flex items-center gap-1.5 text-xs font-semibold">
               <CircuitBoard className="w-3.5 h-3.5 text-primary" /> AI Provider (live)
             </div>
-            <Badge variant="default" className="text-[10px]">
+            <Badge variant="default" className="text-xs">
               {PROVIDER_LABEL[(aiProvider as AIProviderId) ?? "gemini"]}
             </Badge>
           </div>
@@ -800,14 +800,14 @@ const BulkLiveControlPanel = ({
                       className={`h-auto min-h-[58px] py-2 px-2 flex flex-col items-start justify-between gap-1 text-left whitespace-normal ${toneClass(p.tone, active)}`}
                     >
                       <div className="flex items-center justify-between w-full gap-1">
-                        <span className="text-[11px] font-semibold leading-tight">{p.name}</span>
+                        <span className="text-xs font-semibold leading-tight">{p.name}</span>
                         {p.savings && (
-                          <Badge className={`text-[9px] px-1.5 py-0 h-4 font-bold border ${badgeClass(p.tone)}`}>
+                          <Badge className={`text-xs px-1.5 py-0 h-4 font-bold border ${badgeClass(p.tone)}`}>
                             {p.savings}
                           </Badge>
                         )}
                       </div>
-                      <span className="text-[9px] opacity-70 leading-tight">{p.sub}</span>
+                      <span className="text-xs opacity-70 leading-tight">{p.sub}</span>
                     </Button>
                   );
                 })}
@@ -815,7 +815,7 @@ const BulkLiveControlPanel = ({
             );
           })()}
 
-          <p className="text-[10px] text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Switch instantly — applies to the next AI call. Output stays identical across providers; only cost & speed change. Use cheaper options to reduce credit burn.
           </p>
         </div>
@@ -826,22 +826,22 @@ const BulkLiveControlPanel = ({
             <div className="flex items-center gap-1.5 text-xs font-semibold">
               <Coins className="w-4 h-4 text-amber-600" />
               Live Cost Tracker
-              <span className="text-[10px] text-muted-foreground font-normal ml-1">
+              <span className="text-xs text-muted-foreground font-normal ml-1">
                 — since job start · updates every {isTerminal || paused ? "15s" : "4s"}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] h-5 font-mono gap-1">
+              <Badge variant="outline" className="text-xs h-5 font-mono gap-1">
                 <Activity className="w-3 h-3" /> {costCalls} call{costCalls === 1 ? "" : "s"}
               </Badge>
-              <Badge variant="outline" className="text-[10px] h-5 font-mono">
+              <Badge variant="outline" className="text-xs h-5 font-mono">
                 {costTokens.toLocaleString()} tokens
               </Badge>
               <input
                 type="number"
                 value={usdInr}
                 onChange={(e) => setUsdInr(Math.max(1, Number(e.target.value) || 83.5))}
-                className="w-16 h-6 text-[10px] font-mono px-1.5 rounded border bg-background"
+                className="w-16 h-6 text-xs font-mono px-1.5 rounded border bg-background"
                 title="USD → INR rate (editable)"
                 step={0.1}
               />
@@ -851,26 +851,26 @@ const BulkLiveControlPanel = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="rounded-lg border bg-card p-3">
               <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
                   <DollarSign className="w-3.5 h-3.5" /> USD SPENT
                 </div>
-                <Badge variant="outline" className="text-[10px] h-5 border-emerald-500/40 text-emerald-700">live</Badge>
+                <Badge variant="outline" className="text-xs h-5 border-emerald-500/40 text-emerald-700">live</Badge>
               </div>
               <div className="text-2xl font-bold font-mono leading-tight text-emerald-700">
                 ${costUsd.toFixed(costUsd < 0.01 ? 6 : 4)}
               </div>
               <Sparkline data={costSeries.map((v) => v * 1_000_000)} color="rgb(5 150 105)" />
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-xs text-muted-foreground mt-0.5">
                 avg ${costCalls > 0 ? (costUsd / costCalls).toFixed(5) : "0.00000"} / call
               </div>
             </div>
 
             <div className="rounded-lg border bg-card p-3">
               <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-700">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
                   <IndianRupee className="w-3.5 h-3.5" /> INR ESTIMATE
                 </div>
-                <Badge variant="outline" className="text-[10px] h-5 border-amber-500/40 text-amber-700">
+                <Badge variant="outline" className="text-xs h-5 border-amber-500/40 text-amber-700">
                   ₹{usdInr.toFixed(2)}/USD
                 </Badge>
               </div>
@@ -878,36 +878,36 @@ const BulkLiveControlPanel = ({
                 ₹{costInr.toFixed(costInr < 1 ? 4 : 2)}
               </div>
               <Sparkline data={costSeries.map((v) => v * usdInr * 1_000_000)} color="rgb(217 119 6)" />
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-xs text-muted-foreground mt-0.5">
                 projected: ₹{totalUnits > 0 && processedUnits > 0 ? ((costInr / processedUnits) * totalUnits).toFixed(2) : "—"} for full job
               </div>
             </div>
 
             <div className="rounded-lg border bg-card p-3">
               <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                <div className="flex items-center gap-1.5 text-xs font-semibold">
                   <CircuitBoard className="w-3.5 h-3.5 text-primary" /> BY MODEL
                 </div>
-                <Badge variant="outline" className="text-[10px] h-5">
+                <Badge variant="outline" className="text-xs h-5">
                   {costBreakdown.length} model{costBreakdown.length === 1 ? "" : "s"}
                 </Badge>
               </div>
               {costBreakdown.length === 0 ? (
-                <div className="text-[11px] text-muted-foreground py-3 font-mono text-center">// no AI calls recorded yet</div>
+                <div className="text-xs text-muted-foreground py-3 font-mono text-center">// no AI calls recorded yet</div>
               ) : (
                 <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
                   {costBreakdown.slice(0, 5).map((b) => {
                     const pct = costUsd > 0 ? (b.usd / costUsd) * 100 : 0;
                     return (
                       <div key={b.model}>
-                        <div className="flex items-center justify-between text-[10px]">
+                        <div className="flex items-center justify-between text-xs">
                           <span className="font-mono truncate" title={b.model}>{b.model}</span>
                           <span className="font-mono">${b.usd.toFixed(5)}</span>
                         </div>
                         <div className="h-1 bg-muted rounded-full overflow-hidden">
                           <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                         </div>
-                        <div className="text-[9px] text-muted-foreground font-mono">
+                        <div className="text-xs text-muted-foreground font-mono">
                           {b.calls} calls · {b.tokens.toLocaleString()} tokens
                         </div>
                       </div>
@@ -918,7 +918,7 @@ const BulkLiveControlPanel = ({
             </div>
           </div>
 
-          <div className="mt-2 text-[10px] text-muted-foreground flex items-center gap-2 flex-wrap">
+          <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
             <ShieldCheck className="w-3 h-3 text-primary" />
             <span>Cost is computed from <code className="font-mono bg-muted px-1 rounded">ai_usage_logs</code> using per-model pricing. INR rate is editable above.</span>
           </div>
@@ -932,7 +932,7 @@ const BulkLiveControlPanel = ({
               <div className="flex items-center gap-1.5 text-xs font-semibold">
                 <Network className="w-3.5 h-3.5 text-primary" /> Parallel jobs (live)
               </div>
-              <Badge variant="outline" className="font-mono text-[11px]">{draftConcurrency} / 10</Badge>
+              <Badge variant="outline" className="font-mono text-xs">{draftConcurrency} / 10</Badge>
             </div>
             <Slider
               value={[draftConcurrency]}
@@ -942,7 +942,7 @@ const BulkLiveControlPanel = ({
               className="my-2"
             />
             <div className="flex items-center justify-between gap-2 mt-2">
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Currently saved: <span className="font-mono font-semibold text-foreground">{concurrency}</span>
                 {draftConcurrency !== concurrency && <span className="text-amber-600 ml-1.5">· unsaved change</span>}
               </div>
@@ -955,7 +955,7 @@ const BulkLiveControlPanel = ({
                 <Save className="w-3.5 h-3.5" /> {saving ? "Saving…" : "Save"}
               </Button>
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1.5">
+            <div className="text-xs text-muted-foreground mt-1.5">
               Applies on the next batch tick (~5s). Already-running items always finish.
             </div>
             <Button
@@ -992,13 +992,13 @@ const BulkLiveControlPanel = ({
               >
                 {paused ? "OFF — worker idle" : "ON — worker running"}
               </Badge>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {paused
                   ? "Toggle ON to resume immediately."
                   : "Toggle OFF to halt new items within ~5s."}
               </span>
             </div>
-            <div className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1.5">
+            <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3 text-primary" />
               Watchdog skips paused jobs — they stay off until you re-enable them.
             </div>
@@ -1031,10 +1031,10 @@ const BulkLiveControlPanel = ({
               <div className="flex items-center gap-1.5 text-xs font-semibold">
                 <Layers className="w-3.5 h-3.5 text-primary" /> Worker Slot Live Table
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 font-mono">{liveActiveWorkers} active · {Math.max(0, concurrency - liveActiveWorkers)} idle</Badge>
+              <Badge variant="outline" className="text-xs h-5 font-mono">{liveActiveWorkers} active · {Math.max(0, concurrency - liveActiveWorkers)} idle</Badge>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-[11px]">
+              <table className="w-full text-xs">
                 <thead className="text-muted-foreground border-b">
                   <tr>
                     <th className="text-left py-2 pr-3 font-medium">Slot</th>
@@ -1054,7 +1054,7 @@ const BulkLiveControlPanel = ({
                       <tr key={slot.slot} className={stuck ? "bg-amber-500/10" : undefined}>
                         <td className="py-2 pr-3 font-mono">#{slot.slot}</td>
                         <td className="py-2 pr-3">
-                          <Badge variant="outline" className={`h-5 text-[10px] ${
+                          <Badge variant="outline" className={`h-5 text-xs ${
                             stuck ? "border-amber-500/60 text-amber-800 bg-amber-500/10"
                             : slot.state === "active" ? "border-emerald-500/60 text-emerald-700 bg-emerald-500/10"
                             : slot.state === "idle" ? "border-primary/40 text-primary bg-primary/5"
@@ -1079,7 +1079,7 @@ const BulkLiveControlPanel = ({
               <div className="flex items-center gap-1.5 text-xs font-semibold">
                 <Clock className="w-3.5 h-3.5 text-primary" /> Job Health Timeline
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 font-mono">DB live</Badge>
+              <Badge variant="outline" className="text-xs h-5 font-mono">DB live</Badge>
             </div>
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {healthTimeline.map((event, i) => (
@@ -1094,10 +1094,10 @@ const BulkLiveControlPanel = ({
                   {i < healthTimeline.length - 1 && <span className="absolute left-[3px] top-4 bottom-0 w-px bg-border" />}
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold capitalize">{event.state}</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">{toTime(event.ts)}</span>
+                    <span className="text-xs text-muted-foreground font-mono">{toTime(event.ts)}</span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground leading-snug">{event.label}</div>
-                  <div className="text-[10px] text-muted-foreground font-mono mt-0.5">job {shortId(event.job_id)} · worker {shortId(event.worker_id)}</div>
+                  <div className="text-xs text-muted-foreground leading-snug">{event.label}</div>
+                  <div className="text-xs text-muted-foreground font-mono mt-0.5">job {shortId(event.job_id)} · worker {shortId(event.worker_id)}</div>
                 </div>
               ))}
             </div>
@@ -1113,9 +1113,9 @@ const BulkLiveControlPanel = ({
               <div className="flex items-center gap-1.5 text-xs font-semibold">
                 <BarChart3 className="w-3.5 h-3.5 text-primary" />
                 Throughput Heatmap
-                <span className="text-[10px] text-muted-foreground font-normal ml-1">— ops/sec · last 60s</span>
+                <span className="text-xs text-muted-foreground font-normal ml-1">— ops/sec · last 60s</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px]">
+              <div className="flex items-center gap-1.5 text-xs">
                 <span className="text-muted-foreground">low</span>
                 <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "hsl(160 84% 39% / 0.35)" }} />
                 <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "hsl(160 84% 39% / 0.7)" }} />
@@ -1125,7 +1125,7 @@ const BulkLiveControlPanel = ({
               </div>
             </div>
             <ActivityHeatmap data={opsHistory} />
-            <div className="grid grid-cols-4 gap-2 mt-3 text-[10px]">
+            <div className="grid grid-cols-4 gap-2 mt-3 text-xs">
               <div className="rounded border bg-card px-2 py-1.5">
                 <div className="text-muted-foreground">peak/s</div>
                 <div className="font-mono font-semibold text-sm">{Math.max(0, ...opsHistory)}</div>
@@ -1153,7 +1153,7 @@ const BulkLiveControlPanel = ({
               <RingGauge value={successRate} label="Success" sublabel={`${succeeded}`} color="hsl(160 84% 39%)" size={100} />
               <RingGauge value={failureRatePct} label="Failure" sublabel={`${failed}`} color="hsl(0 84% 60%)" size={100} />
             </div>
-            <div className="mt-2 flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
+            <div className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <span>{completedAll} processed</span><span>·</span><span>{remaining} remaining</span>
             </div>
           </div>
@@ -1175,7 +1175,7 @@ const BulkLiveControlPanel = ({
                 <div className="absolute inset-y-0 bg-primary/40 animate-pulse" style={{ left: `${totalUnits > 0 ? (processedUnits / totalUnits) * 100 : 0}%`, width: `${totalUnits > 0 ? (active / totalUnits) * 100 : 0}%` }} />
               )}
             </div>
-            <div className="grid grid-cols-4 gap-2 mt-3 text-[10px]">
+            <div className="grid grid-cols-4 gap-2 mt-3 text-xs">
               <div><div className="text-emerald-700 font-mono font-semibold">{succeeded}</div><div className="text-muted-foreground">done</div></div>
               <div><div className="text-destructive font-mono font-semibold">{failed}</div><div className="text-muted-foreground">failed</div></div>
               <div><div className="text-primary font-mono font-semibold">{active}</div><div className="text-muted-foreground">active</div></div>
@@ -1185,27 +1185,27 @@ const BulkLiveControlPanel = ({
 
           <div className="rounded-lg border bg-gradient-to-br from-card to-primary/5 p-3">
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                 <Clock className="w-3.5 h-3.5" /> ETA
               </div>
-              <Badge variant="outline" className="text-[10px] h-5">{tickRate > 0 ? "live" : "idle"}</Badge>
+              <Badge variant="outline" className="text-xs h-5">{tickRate > 0 ? "live" : "idle"}</Badge>
             </div>
             <div className="text-2xl font-bold font-mono leading-tight">{paused ? "—" : fmtEta(etaSec)}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">{remaining} left @ {tickRate.toFixed(1)}/min</div>
+            <div className="text-xs text-muted-foreground mt-1">{remaining} left @ {tickRate.toFixed(1)}/min</div>
           </div>
 
           <div className="rounded-lg border bg-card p-3">
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
                 <Timer className={`w-3.5 h-3.5 ${latencyMs > 8000 ? "text-destructive" : latencyMs > 4000 ? "text-amber-600" : "text-emerald-600"}`} />
                 AI LATENCY
               </div>
-              <Badge variant="outline" className="text-[10px] h-5">avg</Badge>
+              <Badge variant="outline" className="text-xs h-5">avg</Badge>
             </div>
             <div className={`text-2xl font-bold font-mono leading-tight ${latencyMs > 8000 ? "text-destructive" : latencyMs > 4000 ? "text-amber-700" : "text-emerald-700"}`}>
               {latencyMs > 0 ? `${(latencyMs / 1000).toFixed(1)}s` : "—"}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">real avg · worker HTTP</div>
+            <div className="text-xs text-muted-foreground mt-1">real avg · worker HTTP</div>
           </div>
         </div>
 
@@ -1221,7 +1221,7 @@ const BulkLiveControlPanel = ({
               { label: "DB writes", value: Math.min(100, Number(telemetry?.db?.writes || 0) * 2), unit: `${Number(telemetry?.db?.writes || 0)} writes`, color: "bg-secondary" },
             ].map((row) => (
               <div key={row.label} className="mb-2 last:mb-0">
-                <div className="flex items-center justify-between text-[10px] mb-0.5">
+                <div className="flex items-center justify-between text-xs mb-0.5">
                   <span className="text-muted-foreground">{row.label}</span>
                   <span className="font-mono">{row.unit}</span>
                 </div>
@@ -1230,7 +1230,7 @@ const BulkLiveControlPanel = ({
                 </div>
               </div>
             ))}
-            <div className="mt-3 pt-2 border-t grid grid-cols-3 gap-2 text-[10px]">
+            <div className="mt-3 pt-2 border-t grid grid-cols-3 gap-2 text-xs">
               <div><span className="text-muted-foreground">ok</span><div className="font-mono text-emerald-700">{networkSuccess}</div></div>
               <div><span className="text-muted-foreground">fail</span><div className="font-mono text-destructive">{networkFailures}</div></div>
               <div><span className="text-muted-foreground flex items-center gap-1"><Database className="w-3 h-3" /> queue</span><div className="font-mono">{pending}</div></div>
@@ -1243,15 +1243,15 @@ const BulkLiveControlPanel = ({
                 <Radio className={`w-3.5 h-3.5 ${paused ? "text-muted-foreground" : "text-emerald-600 animate-pulse"}`} />
                 Live Event Stream
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 font-mono">{events.length} event{events.length === 1 ? "" : "s"}</Badge>
+              <Badge variant="outline" className="text-xs h-5 font-mono">{events.length} event{events.length === 1 ? "" : "s"}</Badge>
             </div>
             <div className="space-y-1 max-h-44 overflow-hidden">
               {events.length === 0 ? (
-                <div className="text-[11px] text-muted-foreground py-6 text-center font-mono">// waiting for worker activity…</div>
+                <div className="text-xs text-muted-foreground py-6 text-center font-mono">// waiting for worker activity…</div>
               ) : events.map((e, i) => (
                 <div
                   key={`${e.ts}-${i}`}
-                  className={`flex items-center gap-2 text-[11px] font-mono px-2 py-1 rounded border-l-2 ${
+                  className={`flex items-center gap-2 text-xs font-mono px-2 py-1 rounded border-l-2 ${
                     e.kind === "ok" ? "border-emerald-500 bg-emerald-500/5"
                     : e.kind === "fail" ? "border-destructive bg-destructive/5"
                     : "border-primary bg-primary/5"
@@ -1274,7 +1274,7 @@ const BulkLiveControlPanel = ({
             <div className="flex items-center gap-1.5 text-xs font-semibold">
               <Thermometer className="w-3.5 h-3.5 text-amber-600" /> System Thermal Strip
             </div>
-            <span className="text-[10px] text-muted-foreground font-mono">cool → hot · 60s window</span>
+            <span className="text-xs text-muted-foreground font-mono">cool → hot · 60s window</span>
           </div>
           <div className="flex h-3 rounded-full overflow-hidden border">
             {(loadHistory.length > 0 ? loadHistory : [0]).map((v, i, arr) => {
@@ -1285,7 +1285,7 @@ const BulkLiveControlPanel = ({
               );
             })}
           </div>
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5 font-mono">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1.5 font-mono">
             <span>min {Math.min(...(loadHistory.length ? loadHistory : [0]))}%</span>
             <span>now {serverLoad}%</span>
             <span>max {Math.max(...(loadHistory.length ? loadHistory : [0]))}%</span>
@@ -1293,7 +1293,7 @@ const BulkLiveControlPanel = ({
         </div>
 
         {/* Activity strip */}
-        <div className="rounded-md bg-muted/30 border px-3 py-2 flex items-center gap-3 text-[11px] flex-wrap">
+        <div className="rounded-md bg-muted/30 border px-3 py-2 flex items-center gap-3 text-xs flex-wrap">
           <Activity className="w-3.5 h-3.5 text-primary" />
           <span className="font-mono text-muted-foreground">JOB</span>
           <span className="font-mono">{jobId.slice(0, 8)}</span>

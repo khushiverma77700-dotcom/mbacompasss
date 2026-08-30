@@ -422,17 +422,17 @@ export default function AdminSystemCheck() {
                                   <span className="font-medium">{r.name}</span>
                                 </div>
                                 {r.target && (
-                                  <div className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">{r.target}</div>
+                                  <div className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{r.target}</div>
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
                                 {r.latency_ms != null && (
-                                  <span className="text-[11px] text-muted-foreground">{r.latency_ms} ms</span>
+                                  <span className="text-xs text-muted-foreground">{r.latency_ms} ms</span>
                                 )}
                                 {r.http_status != null && (
-                                  <Badge variant="outline" className="text-[11px]">HTTP {r.http_status}</Badge>
+                                  <Badge variant="outline" className="text-xs">HTTP {r.http_status}</Badge>
                                 )}
-                                <Badge variant="outline" className={`text-[11px] ${meta.className}`}>{meta.label}</Badge>
+                                <Badge variant="outline" className={`text-xs ${meta.className}`}>{meta.label}</Badge>
                               </div>
                             </div>
 
@@ -455,9 +455,9 @@ export default function AdminSystemCheck() {
 
                             {(r.used_in?.length ?? 0) > 0 && (
                               <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                <span className="text-[11px] font-medium text-muted-foreground">Used in:</span>
+                                <span className="text-xs font-medium text-muted-foreground">Used in:</span>
                                 {r.used_in!.map((u) => (
-                                  <Badge key={u} variant="secondary" className="text-[11px] font-normal">{u}</Badge>
+                                  <Badge key={u} variant="secondary" className="text-xs font-normal">{u}</Badge>
                                 ))}
                               </div>
                             )}
@@ -484,8 +484,8 @@ export default function AdminSystemCheck() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-semibold">{r.name}</span>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[11px]">{r.section}</Badge>
-                        <Badge variant="outline" className={`text-[11px] ${STATUS_META[r.status].className}`}>
+                        <Badge variant="outline" className="text-xs">{r.section}</Badge>
+                        <Badge variant="outline" className={`text-xs ${STATUS_META[r.status].className}`}>
                           {STATUS_META[r.status].label}
                         </Badge>
                       </div>
@@ -498,16 +498,16 @@ export default function AdminSystemCheck() {
                     )}
                     {(r.used_in?.length ?? 0) > 0 && (
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-[11px] font-medium text-muted-foreground">Impact:</span>
+                        <span className="text-xs font-medium text-muted-foreground">Impact:</span>
                         {r.used_in!.map((u) => (
-                          <Badge key={u} variant="secondary" className="text-[11px] font-normal">{u}</Badge>
+                          <Badge key={u} variant="secondary" className="text-xs font-normal">{u}</Badge>
                         ))}
                       </div>
                     )}
                     {r.detail && Object.keys(r.detail).length > 0 && (
                       <details className="text-xs text-muted-foreground">
                         <summary className="cursor-pointer">Raw response / diagnostics</summary>
-                        <pre className="mt-2 max-h-56 overflow-auto rounded-md bg-muted p-3 text-[11px]">
+                        <pre className="mt-2 max-h-56 overflow-auto rounded-md bg-muted p-3 text-xs">
                           {JSON.stringify(r.detail, null, 2)}
                         </pre>
                       </details>
@@ -542,12 +542,12 @@ export default function AdminSystemCheck() {
                       <tr key={r.id} className={`border-b last:border-0 ${r.id === activeRunId ? "bg-muted/40" : ""}`}>
                         <td className="py-2">{fmtTime(r.started_at)}</td>
                         <td className="py-2">
-                          <Badge variant="outline" className="text-[11px]">{r.trigger === "daily" ? "Daily auto" : "Manual"}</Badge>
+                          <Badge variant="outline" className="text-xs">{r.trigger === "daily" ? "Daily auto" : "Manual"}</Badge>
                         </td>
                         <td className="py-2">
                           <Badge
                             variant="outline"
-                            className={`text-[11px] ${
+                            className={`text-xs ${
                               r.status === "failed"
                                 ? STATUS_META.fail.className
                                 : r.status === "degraded"
@@ -606,7 +606,7 @@ export default function AdminSystemCheck() {
                         <tr key={row.key} className="border-b last:border-0">
                           <td className="py-2 pr-3">
                             <div className="font-medium">{row.name}</div>
-                            <div className="text-[11px] text-muted-foreground">{row.section}</div>
+                            <div className="text-xs text-muted-foreground">{row.section}</div>
                           </td>
                           {days.map((d) => {
                             const st = row.days[d];
@@ -636,7 +636,7 @@ export default function AdminSystemCheck() {
                     </tbody>
                   </table>
                 )}
-                <div className="mt-4 flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-emerald-500" /> Working</span>
                   <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-amber-400" /> Needs attention</span>
                   <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-red-500" /> Broken</span>

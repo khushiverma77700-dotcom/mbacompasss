@@ -192,7 +192,7 @@ const ComparePage = () => {
                   <stat.icon className="w-4 h-4 text-primary-foreground/70" />
                   <div className="text-left">
                     <div className="font-heading font-bold text-primary-foreground text-sm">{stat.value}</div>
-                    <div className="text-[10px] text-primary-foreground/50">{stat.label}</div>
+                    <div className="text-xs text-primary-foreground/50">{stat.label}</div>
                   </div>
                 </motion.div>
               ))}
@@ -382,7 +382,7 @@ const ComparePage = () => {
                             <stat.icon className="w-4 h-4" style={{ color: `rgba(${stat.color}, 1)` }} />
                           </div>
                           <div>
-                            <div className="text-[10px] text-muted-foreground">{stat.label}</div>
+                            <div className="text-xs text-muted-foreground">{stat.label}</div>
                             <div className="font-heading font-bold text-foreground text-sm">{stat.value}</div>
                           </div>
                         </div>
@@ -412,7 +412,7 @@ const ComparePage = () => {
                                     />
                                     <div>
                                       <div className="font-heading font-semibold text-foreground text-xs">{s.institutes?.name}</div>
-                                      <div className="text-[10px] font-normal text-muted-foreground">{s.name}</div>
+                                      <div className="text-xs font-normal text-muted-foreground">{s.name}</div>
                                     </div>
                                   </div>
                                 </th>
@@ -428,7 +428,7 @@ const ComparePage = () => {
                               )},
                               { label: "Duration", icon: Clock, render: (s: DBCourse) => s.duration || "N/A" },
                               { label: "Batch Info", icon: Users, render: (s: DBCourse) => s.batch_info || "N/A" },
-                              { label: "Mode", icon: Globe, render: (s: DBCourse) => <Badge variant="secondary" className="text-[10px]">{s.institutes?.mode || "N/A"}</Badge> },
+                              { label: "Mode", icon: Globe, render: (s: DBCourse) => <Badge variant="secondary" className="text-xs">{s.institutes?.mode || "N/A"}</Badge> },
                               { label: "Rating", icon: Star, render: (s: DBCourse) => (
                                 <div className="space-y-1.5">
                                   <span className="flex items-center gap-1 font-semibold text-xs"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {s.institutes?.rating || "N/A"}/5</span>
@@ -446,7 +446,7 @@ const ComparePage = () => {
                               { label: "Features", icon: CheckCircle, render: (s: DBCourse) => (
                                 <div className="space-y-1">
                                   {(s.institutes?.features || []).slice(0, 3).map((f, j) => (
-                                    <div key={j} className="text-[11px] flex items-start gap-1.5"><CheckCircle className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" /><span className="line-clamp-1">{f}</span></div>
+                                    <div key={j} className="text-xs flex items-start gap-1.5"><CheckCircle className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" /><span className="line-clamp-1">{f}</span></div>
                                   ))}
                                 </div>
                               )},
@@ -490,7 +490,7 @@ const ComparePage = () => {
                                   className="h-full rounded-xl flex items-center justify-end pr-3"
                                   style={{ background: `linear-gradient(90deg, rgba(${cardColors[i]}, 0.7), rgba(${cardColors[i]}, 0.9))` }}
                                 >
-                                  <span className="text-[10px] font-bold text-white drop-shadow-sm">₹{Number(s.fees || 0).toLocaleString()}</span>
+                                  <span className="text-xs font-bold text-white drop-shadow-sm">₹{Number(s.fees || 0).toLocaleString()}</span>
                                 </motion.div>
                               </div>
                             </div>
@@ -525,12 +525,12 @@ const ComparePage = () => {
                           <div className="grid grid-cols-2 gap-2 mb-4">
                             <div className="rounded-lg p-2.5 text-center border border-border bg-muted/30">
                               <Clock className="w-3.5 h-3.5 mx-auto mb-1 text-muted-foreground" />
-                              <div className="text-[10px] text-muted-foreground">Duration</div>
+                              <div className="text-xs text-muted-foreground">Duration</div>
                               <div className="font-semibold text-foreground text-xs">{s.duration || "N/A"}</div>
                             </div>
                             <div className="rounded-lg p-2.5 text-center border border-border bg-muted/30">
                               <IndianRupee className="w-3.5 h-3.5 mx-auto mb-1 text-muted-foreground" />
-                              <div className="text-[10px] text-muted-foreground">Fees</div>
+                              <div className="text-xs text-muted-foreground">Fees</div>
                               <div className="font-semibold text-xs" style={{ color: `rgba(${cardColors[i]}, 1)` }}>{s.fees ? `₹${Number(s.fees).toLocaleString()}` : "N/A"}</div>
                             </div>
                           </div>
@@ -653,7 +653,7 @@ const ComparePage = () => {
                             <div className="w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center" style={{ background: `rgba(${w.color}, 0.1)` }}>
                               <w.icon className="w-4 h-4" style={{ color: `rgba(${w.color}, 1)` }} />
                             </div>
-                            <div className="text-[10px] text-muted-foreground">{w.label}</div>
+                            <div className="text-xs text-muted-foreground">{w.label}</div>
                             <div className="font-heading font-bold text-foreground text-sm">{w.weight}</div>
                           </motion.div>
                         ))}
@@ -682,7 +682,7 @@ const ComparePage = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h3 className="font-heading font-bold text-foreground">{s.institutes?.name}</h3>
-                                  {i === 0 && <Badge className="bg-primary text-primary-foreground text-[10px] px-2">🏆 Top Pick</Badge>}
+                                  {i === 0 && <Badge className="bg-primary text-primary-foreground text-xs px-2">🏆 Top Pick</Badge>}
                                 </div>
                                 <p className="text-xs text-primary font-medium">{s.name}</p>
                                 <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
@@ -692,7 +692,7 @@ const ComparePage = () => {
                                 </div>
                               </div>
                               <div className="text-right flex-shrink-0">
-                                <div className="text-[10px] text-muted-foreground mb-0.5">Score</div>
+                                <div className="text-xs text-muted-foreground mb-0.5">Score</div>
                                 <motion.div
                                   className={`font-heading font-bold text-2xl ${i === 0 ? "text-primary" : "text-foreground"}`}
                                   initial={{ scale: 0 }}
@@ -798,7 +798,7 @@ const ComparePage = () => {
                     <link.icon className="w-4 h-4 text-primary" />
                     <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors text-xs">{link.label}</h3>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">{link.desc}</p>
+                  <p className="text-xs text-muted-foreground">{link.desc}</p>
                 </Link>
               </motion.div>
             ))}

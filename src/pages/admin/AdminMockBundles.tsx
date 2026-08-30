@@ -437,11 +437,11 @@ export default function AdminMockBundles() {
                   <Badge variant={b.is_published ? "default" : "secondary"}>{b.is_published ? "Published" : "Draft"}</Badge>
                   {b.exam_code && <Badge variant="outline">{b.exam_code}</Badge>}
                   {(b.filter_exams ?? []).map((x) => (
-                    <Badge key={`fe-${x}`} variant="outline" className="border-sky-300 text-sky-700 bg-sky-50 text-[10px]">{x}</Badge>
+                    <Badge key={`fe-${x}`} variant="outline" className="border-sky-300 text-sky-700 bg-sky-50 text-xs">{x}</Badge>
                   ))}
                   {(b.filter_types ?? []).map((x) => {
                     const lbl = BUNDLE_TYPE_OPTIONS.find((o) => o.v === x)?.l ?? x;
-                    return <Badge key={`ft-${x}`} variant="outline" className="border-violet-300 text-violet-700 bg-violet-50 text-[10px]">{lbl}</Badge>;
+                    return <Badge key={`ft-${x}`} variant="outline" className="border-violet-300 text-violet-700 bg-violet-50 text-xs">{lbl}</Badge>;
                   })}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">/{b.slug} · ₹{Number(b.price_inr).toLocaleString()} · {b.validity_days}d access</div>
@@ -477,7 +477,7 @@ export default function AdminMockBundles() {
               <div className="rounded-lg border border-sky-100 bg-sky-50/30 p-3 space-y-3">
                 <div>
                   <Label className="text-xs font-semibold uppercase tracking-wide text-sky-800">Exam tags</Label>
-                  <p className="text-[11px] text-muted-foreground mb-1.5">Pick one or more exams this bundle is for. Used to filter bundles on the catalog.</p>
+                  <p className="text-xs text-muted-foreground mb-1.5">Pick one or more exams this bundle is for. Used to filter bundles on the catalog.</p>
                   <div className="flex flex-wrap gap-1.5">
                     {BUNDLE_EXAM_OPTIONS.map((e) => {
                       const on = (editing.filter_exams ?? []).includes(e);
@@ -490,7 +490,7 @@ export default function AdminMockBundles() {
                             on ? cur.delete(e) : cur.add(e);
                             setEditing({ ...editing, filter_exams: Array.from(cur) });
                           }}
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${on ? "bg-sky-600 text-white border-sky-600" : "bg-white border-sky-200 text-sky-700 hover:bg-sky-50"}`}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${on ? "bg-sky-600 text-white border-sky-600" : "bg-white border-sky-200 text-sky-700 hover:bg-sky-50"}`}
                         >
                           {e}
                         </button>
@@ -501,7 +501,7 @@ export default function AdminMockBundles() {
 
                 <div>
                   <Label className="text-xs font-semibold uppercase tracking-wide text-violet-800">Type / Category tags</Label>
-                  <p className="text-[11px] text-muted-foreground mb-1.5">Full Length, Sectional, Topic-wise, etc. Multiple allowed.</p>
+                  <p className="text-xs text-muted-foreground mb-1.5">Full Length, Sectional, Topic-wise, etc. Multiple allowed.</p>
                   <div className="flex flex-wrap gap-1.5">
                     {BUNDLE_TYPE_OPTIONS.map((t) => {
                       const on = (editing.filter_types ?? []).includes(t.v);
@@ -514,7 +514,7 @@ export default function AdminMockBundles() {
                             on ? cur.delete(t.v) : cur.add(t.v);
                             setEditing({ ...editing, filter_types: Array.from(cur) });
                           }}
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${on ? "bg-violet-600 text-white border-violet-600" : "bg-white border-violet-200 text-violet-700 hover:bg-violet-50"}`}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${on ? "bg-violet-600 text-white border-violet-600" : "bg-white border-violet-200 text-violet-700 hover:bg-violet-50"}`}
                         >
                           {t.l}
                         </button>
@@ -540,22 +540,22 @@ export default function AdminMockBundles() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Exam</div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Exam</div>
                       <div className="flex flex-wrap gap-1">
                         {examCodes.map((c) => (
                           <button key={c} type="button" onClick={() => setExamFilter(c)}
-                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${examFilter === c ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            className={`px-2 py-1 rounded-full text-xs font-medium border transition ${examFilter === c ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
                             {c === "all" ? "All" : c}
                           </button>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Category (pick one)</div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Category (pick one)</div>
                       <div className="flex flex-wrap gap-1">
                         {TYPE_OPTIONS.map((t) => (
                           <button key={t.v} type="button" onClick={() => { setTypeFilter(t.v); setSectionFilter("all"); setTopicFilter("all"); }}
-                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${typeFilter === t.v ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            className={`px-2 py-1 rounded-full text-xs font-medium border transition ${typeFilter === t.v ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
                             {t.l}
                           </button>
                         ))}
@@ -563,11 +563,11 @@ export default function AdminMockBundles() {
                     </div>
 
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Status</div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Status</div>
                       <div className="flex flex-wrap gap-1">
                         {(["all","live","draft"] as const).map((s) => (
                           <button key={s} type="button" onClick={() => setStatusFilter(s)}
-                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition capitalize ${statusFilter === s ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            className={`px-2 py-1 rounded-full text-xs font-medium border transition capitalize ${statusFilter === s ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
                             {s}
                           </button>
                         ))}
@@ -578,25 +578,25 @@ export default function AdminMockBundles() {
                   {showAdvancedFilters && (
                     <div className="grid grid-cols-1 gap-2 rounded-md border border-sky-100 bg-sky-50/40 p-2">
                       <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Section</div>
+                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Section</div>
                         <div className="flex flex-wrap gap-1">
                           <button type="button" onClick={() => { setSectionFilter("all"); setTopicFilter("all"); }}
-                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${sectionFilter === "all" ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>All</button>
+                            className={`px-2 py-1 rounded-full text-xs font-medium border transition ${sectionFilter === "all" ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>All</button>
                           {sectionOptions.map((s) => (
                             <button key={s} type="button" onClick={() => { setSectionFilter(s); setTopicFilter("all"); }}
-                              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${sectionFilter === s ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>{s}</button>
+                              className={`px-2 py-1 rounded-full text-xs font-medium border transition ${sectionFilter === s ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>{s}</button>
                           ))}
                         </div>
                       </div>
                       {showTopicFilter && (
                         <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Topic</div>
+                          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Topic</div>
                           <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto">
                             <button type="button" onClick={() => setTopicFilter("all")}
-                              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${topicFilter === "all" ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>All Topics</button>
+                              className={`px-2 py-1 rounded-full text-xs font-medium border transition ${topicFilter === "all" ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>All Topics</button>
                             {topicOptions.map((t) => (
                               <button key={t} type="button" onClick={() => setTopicFilter(t)}
-                                className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${topicFilter === t ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>{t}</button>
+                                className={`px-2 py-1 rounded-full text-xs font-medium border transition ${topicFilter === t ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>{t}</button>
                             ))}
                           </div>
                         </div>
@@ -609,12 +609,12 @@ export default function AdminMockBundles() {
                     <div className="flex gap-1">
                       {(["all","selected","unselected"] as const).map((s) => (
                         <button key={s} type="button" onClick={() => setSelectionFilter(s)}
-                          className={`px-2 py-1 rounded-full text-[11px] font-medium border transition capitalize ${selectionFilter === s ? "bg-emerald-500 text-white border-emerald-500" : "bg-background border-border hover:bg-muted"}`}>
+                          className={`px-2 py-1 rounded-full text-xs font-medium border transition capitalize ${selectionFilter === s ? "bg-emerald-500 text-white border-emerald-500" : "bg-background border-border hover:bg-muted"}`}>
                           {s === "all" ? "All mocks" : s}
                         </button>
                       ))}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>Showing <strong>{filteredMocks.length}</strong> · <strong>{editingItems.length}</strong> selected</span>
                       <button type="button" onClick={clearFilters} className="text-sky-600 hover:underline">Clear filters</button>
                     </div>
@@ -648,11 +648,11 @@ export default function AdminMockBundles() {
                                 <td className="px-3 py-2"><Checkbox checked={checked} onCheckedChange={() => toggleMock(m.id)} /></td>
                                 <td className="px-3 py-2">
                                   <div className="font-medium">{m.name}</div>
-                                  <div className="text-[10px] text-muted-foreground">/{m.slug}</div>
+                                  <div className="text-xs text-muted-foreground">/{m.slug}</div>
                                 </td>
-                                <td className="px-3 py-2">{m.exam_code && <Badge variant="outline" className="text-[10px]">{m.exam_code}</Badge>}</td>
+                                <td className="px-3 py-2">{m.exam_code && <Badge variant="outline" className="text-xs">{m.exam_code}</Badge>}</td>
                                 <td className="px-3 py-2">
-                                  {m.is_published ? <Badge className="text-[10px] bg-emerald-600">Live</Badge> : <Badge variant="secondary" className="text-[10px]">Draft</Badge>}
+                                  {m.is_published ? <Badge className="text-xs bg-emerald-600">Live</Badge> : <Badge variant="secondary" className="text-xs">Draft</Badge>}
                                 </td>
                               </tr>
                             );
@@ -668,7 +668,7 @@ export default function AdminMockBundles() {
                   <Card className="p-3 bg-sky-50/40 border-sky-100">
                     <div className="flex items-center justify-between mb-2">
                       <Label className="text-sm">Display Order ({editingItems.length})</Label>
-                      <span className="text-[10px] text-muted-foreground">Serial # = order shown to students</span>
+                      <span className="text-xs text-muted-foreground">Serial # = order shown to students</span>
                     </div>
                     <div className="space-y-1 max-h-64 overflow-y-auto">
                       {editingItems.map((tid, idx) => {
@@ -690,7 +690,7 @@ export default function AdminMockBundles() {
                             />
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-medium truncate">{m?.name ?? tid}</div>
-                              <div className="text-[10px] text-muted-foreground truncate">
+                              <div className="text-xs text-muted-foreground truncate">
                                 {m?.exam_code} · {(m?.test_type ?? "").replace(/_/g, " ")}
                               </div>
                             </div>

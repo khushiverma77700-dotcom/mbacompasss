@@ -57,7 +57,7 @@ const ROIComparisonTable = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6 md:mb-8">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
               <TrendingUp className="w-3.5 h-3.5" /> ROI Snapshot 2026
             </div>
             <h2 className="text-2xl md:text-3xl font-bold mt-3 text-foreground">
@@ -85,7 +85,7 @@ const ROIComparisonTable = () => {
             <table className="w-full text-sm">
               <thead className="bg-sky-50/95 backdrop-blur border-b border-primary/10 sticky top-0 z-10">
 
-                <tr className="text-left text-[11px] uppercase tracking-wider text-primary/80">
+                <tr className="text-left text-xs uppercase tracking-wider text-primary/80">
                   <th className="py-3 px-4 font-semibold">B-School</th>
                   <th className="py-3 px-4 font-semibold text-right"><span className="inline-flex items-center gap-1"><IndianRupee className="w-3 h-3" /> Fees</span></th>
                   <th className="py-3 px-4 font-semibold text-right">Avg CTC</th>
@@ -111,7 +111,7 @@ const ROIComparisonTable = () => {
                     <td className="py-3 px-4 text-right tabular-nums font-semibold text-emerald-700">₹{r.avgCtc.toFixed(1)} L</td>
                     <td className="py-3 px-4 text-right tabular-nums text-primary font-semibold">{r.payback}</td>
                     <td className="py-3 px-4 hidden md:table-cell">
-                      <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ring-1 ${tagStyle[r.tag]}`}>
+                      <span className={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ring-1 ${tagStyle[r.tag]}`}>
                         {r.tag}
                       </span>
                     </td>
@@ -120,7 +120,7 @@ const ROIComparisonTable = () => {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-2.5 bg-sky-50/50 text-[11px] text-muted-foreground border-t border-primary/5">
+          <div className="px-4 py-2.5 bg-sky-50/50 text-xs text-muted-foreground border-t border-primary/5">
             Payback = Fees ÷ Avg CTC. Approximate figures based on latest institute placement reports.
           </div>
         </div>

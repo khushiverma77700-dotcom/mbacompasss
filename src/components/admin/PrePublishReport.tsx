@@ -44,7 +44,7 @@ const PrePublishReport = ({ seo, html, cycle, title = "Pre-publish checks" }: Pr
                 const b = levelBadge(c.status);
                 return (
                   <li key={c.key} className="flex items-start gap-2">
-                    <Badge variant="outline" className={`text-[10px] gap-1 ${b.cls}`}>{b.icon}{c.status}</Badge>
+                    <Badge variant="outline" className={`text-xs gap-1 ${b.cls}`}>{b.icon}{c.status}</Badge>
                     <span><strong>{c.label}:</strong> {c.message}{c.fix ? <span className="text-muted-foreground"> — {c.fix}</span> : null}</span>
                   </li>
                 );
@@ -74,7 +74,7 @@ const PrePublishReport = ({ seo, html, cycle, title = "Pre-publish checks" }: Pr
                   const b = levelBadge(i.level === "error" ? "fail" : "warn");
                   return (
                     <li key={idx} className="flex items-start gap-2">
-                      <Badge variant="outline" className={`text-[10px] gap-1 ${b.cls}`}>{b.icon}{i.level}</Badge>
+                      <Badge variant="outline" className={`text-xs gap-1 ${b.cls}`}>{b.icon}{i.level}</Badge>
                       <span><strong>{i.rule}:</strong> {i.message}{i.fix ? <span className="text-muted-foreground"> — {i.fix}</span> : null}</span>
                     </li>
                   );
@@ -107,7 +107,7 @@ const PrePublishReport = ({ seo, html, cycle, title = "Pre-publish checks" }: Pr
                     const b = levelBadge(m.severity === "high" ? "fail" : "warn");
                     return (
                       <li key={idx} className="flex items-start gap-2">
-                        <Badge variant="outline" className={`text-[10px] gap-1 ${b.cls}`}>{b.icon}{m.severity}</Badge>
+                        <Badge variant="outline" className={`text-xs gap-1 ${b.cls}`}>{b.icon}{m.severity}</Badge>
                         <span>
                           <strong>{m.year}</strong> ({m.category}) — &ldquo;…{m.context}…&rdquo;
                         </span>

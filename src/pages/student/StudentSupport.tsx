@@ -358,10 +358,10 @@ export default function StudentSupport() {
             </div>
             <div>
               <div className="text-sm font-semibold">Your Support Overview</div>
-              <div className="text-[11px] text-muted-foreground">Live snapshot of your ticket activity</div>
+              <div className="text-xs text-muted-foreground">Live snapshot of your ticket activity</div>
             </div>
           </div>
-          <Badge variant="outline" className="bg-white/70 border-sky-200 text-sky-700 gap-1 text-[10px]">
+          <Badge variant="outline" className="bg-white/70 border-sky-200 text-sky-700 gap-1 text-xs">
             <Sparkles className="h-3 w-3" /> Live
           </Badge>
         </div>
@@ -501,15 +501,15 @@ export default function StudentSupport() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-sm truncate">{t.title}</span>
-                            <span className="text-[11px] text-muted-foreground">{t.code}</span>
+                            <span className="text-xs text-muted-foreground">{t.code}</span>
                           </div>
                           <div className="text-xs text-muted-foreground line-clamp-1">{t.description}</div>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <Badge variant="outline" className={cn("text-[10px]", PRIORITY_META[t.priority])}>
+                          <Badge variant="outline" className={cn("text-xs", PRIORITY_META[t.priority])}>
                             {t.priority}
                           </Badge>
-                          <Badge variant="outline" className={cn("text-[10px]", sm.cls)}>{sm.label}</Badge>
+                          <Badge variant="outline" className={cn("text-xs", sm.cls)}>{sm.label}</Badge>
                         </div>
                       </button>
                     );
@@ -629,9 +629,9 @@ function TicketThread({
             <Button size="sm" variant="ghost" onClick={onBack} className="h-7 px-2 -ml-2">
               <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
-            <span className="text-[11px] text-muted-foreground">{ticket.code}</span>
-            <Badge variant="outline" className={cn("text-[10px]", sm.cls)}>{sm.label}</Badge>
-            <Badge variant="outline" className={cn("text-[10px]", PRIORITY_META[ticket.priority])}>
+            <span className="text-xs text-muted-foreground">{ticket.code}</span>
+            <Badge variant="outline" className={cn("text-xs", sm.cls)}>{sm.label}</Badge>
+            <Badge variant="outline" className={cn("text-xs", PRIORITY_META[ticket.priority])}>
               {ticket.priority}
             </Badge>
           </div>
@@ -671,7 +671,7 @@ function TicketThread({
                     <Paperclip className="h-3 w-3" /> {m.attachment_name ?? "Attachment"}
                   </a>
                 )}
-                <div className={cn("text-[10px] mt-1", mine ? "text-white/80" : "text-muted-foreground")}>
+                <div className={cn("text-xs mt-1", mine ? "text-white/80" : "text-muted-foreground")}>
                   {format(new Date(m.created_at), "PP p")} · {mine ? "You" : "Support"}
                 </div>
               </div>
@@ -734,8 +734,8 @@ function StatTile({
         </div>
       </div>
       <div className={cn("mt-2 text-xl font-bold leading-none tabular-nums", t.value)}>{value}</div>
-      <div className="mt-1 text-[11px] font-medium text-muted-foreground">{label}</div>
-      {hint && <div className="text-[10px] text-muted-foreground/80 mt-0.5">{hint}</div>}
+      <div className="mt-1 text-xs font-medium text-muted-foreground">{label}</div>
+      {hint && <div className="text-xs text-muted-foreground/80 mt-0.5">{hint}</div>}
     </div>
   );
 }

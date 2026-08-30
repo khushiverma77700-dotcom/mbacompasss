@@ -279,7 +279,7 @@ const InstitutePage = () => {
         )}
 
         <div className="relative container mx-auto px-4 py-12 md:py-14 max-w-6xl">
-          <nav className="flex items-center gap-1.5 text-[13px] text-muted-foreground mb-5">
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-5">
             <Link to="/" className="hover:text-foreground">Home</Link>
             <ChevronRight className="w-3 h-3" />
             <Link to="/coaching" className="hover:text-foreground">Coaching Institutes</Link>
@@ -303,23 +303,23 @@ const InstitutePage = () => {
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="gap-1 bg-white text-[12px] py-0.5">
+                  <Badge variant="outline" className="gap-1 bg-white text-xs py-0.5">
                     {isHybrid ? <Globe className="w-3 h-3" /> : <Building2 className="w-3 h-3" />}
                     {isHybrid ? "Hybrid (Online + Offline)" : "City-wise Centers"}
                   </Badge>
                   {institute.featured && (
-                    <Badge className="gap-1 bg-amber-500 hover:bg-amber-500 text-[12px] py-0.5">
+                    <Badge className="gap-1 bg-amber-500 hover:bg-amber-500 text-xs py-0.5">
                       <Sparkles className="w-3 h-3" /> Featured
                     </Badge>
                   )}
-                  <Badge variant="outline" className="gap-1 bg-white text-[12px] py-0.5">
+                  <Badge variant="outline" className="gap-1 bg-white text-xs py-0.5">
                     <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified
                   </Badge>
                   {inst.category?.name && (
-                    <Badge variant="outline" className="gap-1 bg-white text-[12px] py-0.5">{inst.category.name}</Badge>
+                    <Badge variant="outline" className="gap-1 bg-white text-xs py-0.5">{inst.category.name}</Badge>
                   )}
                 </div>
-                <h1 className="font-heading text-[30px] md:text-[44px] leading-[1.05] font-extrabold mt-3 tracking-tight text-slate-900">
+                <h1 className="font-heading text-2xl md:text-4xl leading-[1.05] font-extrabold mt-3 tracking-tight text-slate-900">
                   {(() => {
                     const words = (institute.name || "").split(" ");
                     if (words.length < 2) return institute.name;
@@ -329,11 +329,11 @@ const InstitutePage = () => {
                   })()}
                 </h1>
                 <div className="h-px w-12 bg-sky-300 mt-3 mb-3" />
-                <p className="text-[15px] text-slate-600 font-medium">
+                <p className="text-sm text-slate-600 font-medium">
                   <span className="font-editorial italic text-slate-700">{isHybrid ? "Online + Offline MBA Coaching" : "MBA Entrance Coaching Institute"}</span>
                   {institute.city ? ` · ${institute.city}` : ""}{institute.state ? `, ${institute.state}` : ""}
                 </p>
-                <div className="flex items-center gap-x-4 gap-y-1.5 mt-3 text-[13px] text-slate-600 flex-wrap">
+                <div className="flex items-center gap-x-4 gap-y-1.5 mt-3 text-sm text-slate-600 flex-wrap">
                   {institute.city && (
                     <span className="inline-flex items-center gap-1.5">
                       <MapPin className="w-4 h-4 text-sky-600" /> {institute.city}{institute.state ? `, ${institute.state}` : ""}
@@ -357,16 +357,16 @@ const InstitutePage = () => {
                   )}
                 </div>
                 {institute.description && (
-                  <p className="mt-4 text-[15px] text-slate-700 max-w-3xl leading-relaxed">{stripHtml(institute.description, 320)}</p>
+                  <p className="mt-4 text-sm text-slate-700 max-w-3xl leading-relaxed">{stripHtml(institute.description, 320)}</p>
                 )}
                 <div className="mt-6 flex flex-wrap gap-2.5">
                   <a href="#enquiry">
-                    <Button size="lg" className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-md text-[14px] font-semibold">
+                    <Button size="lg" className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-md text-sm font-semibold">
                       Book Free Demo Class
                     </Button>
                   </a>
-                  <a href="#enquiry"><Button size="lg" variant="outline" className="text-[14px] font-semibold border-slate-300">Talk to Counselor</Button></a>
-                  <Link to="/compare"><Button size="lg" variant="ghost" className="text-[14px] font-semibold">Compare</Button></Link>
+                  <a href="#enquiry"><Button size="lg" variant="outline" className="text-sm font-semibold border-slate-300">Talk to Counselor</Button></a>
+                  <Link to="/compare"><Button size="lg" variant="ghost" className="text-sm font-semibold">Compare</Button></Link>
                 </div>
               </div>
             </div>
@@ -375,7 +375,7 @@ const InstitutePage = () => {
             <Card className="border-sky-100 bg-white/90 backdrop-blur shadow-lg">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-sky-700">At a Glance</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-sky-700">At a Glance</div>
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 </div>
                 {heroStats.length > 0 ? (
@@ -383,29 +383,29 @@ const InstitutePage = () => {
                     {heroStats.map((s, i) => (
                       <div key={i} className="rounded-xl border bg-gradient-to-br from-sky-50/70 to-white p-3">
                         <s.icon className="w-4 h-4 text-sky-600 mb-1.5" />
-                        <div className="text-[18px] font-extrabold text-slate-900 leading-tight">{s.value}</div>
-                        <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wide mt-0.5">{s.label}</div>
+                        <div className="text-base font-extrabold text-slate-900 leading-tight">{s.value}</div>
+                        <div className="text-xs text-slate-500 font-medium uppercase tracking-wide mt-0.5">{s.label}</div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[13px] text-slate-600">Get personalised batch info, fees and scholarship details.</p>
+                  <p className="text-sm text-slate-600">Get personalised batch info, fees and scholarship details.</p>
                 )}
                 <div className="mt-4 space-y-2">
                   <a href="#enquiry" className="block">
-                    <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-[13px] font-semibold">
+                    <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-sm font-semibold">
                       Get Fees & Brochure
                     </Button>
                   </a>
                   {institute.phone && (
                     <a href={`tel:${institute.phone}`} className="block">
-                      <Button variant="outline" className="w-full text-[13px] font-semibold gap-1.5">
+                      <Button variant="outline" className="w-full text-sm font-semibold gap-1.5">
                         <Phone className="w-3.5 h-3.5" /> Call Now
                       </Button>
                     </a>
                   )}
                 </div>
-                <div className="mt-3 pt-3 border-t flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                <div className="mt-3 pt-3 border-t flex items-center justify-center gap-1.5 text-xs text-slate-500">
                   <ShieldCheck className="w-3 h-3 text-emerald-600" /> 100% Free Counselling · No Spam
                 </div>
               </CardContent>
@@ -417,7 +417,7 @@ const InstitutePage = () => {
             {trustItems.map((t, i) => (
               <div key={i} className="flex items-center gap-2 rounded-xl bg-white/80 backdrop-blur border border-sky-100 px-3.5 py-2.5 shadow-sm">
                 <t.icon className="w-4 h-4 text-sky-600 shrink-0" />
-                <span className="text-[13px] font-semibold text-slate-700">{t.label}</span>
+                <span className="text-sm font-semibold text-slate-700">{t.label}</span>
               </div>
             ))}
           </div>
@@ -515,7 +515,7 @@ const InstitutePage = () => {
                         key={m}
                         type="button"
                         onClick={() => setCourseMode(m)}
-                        className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border transition ${courseMode === m ? "bg-sky-600 text-white border-sky-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-700"}`}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition ${courseMode === m ? "bg-sky-600 text-white border-sky-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-700"}`}
                       >
                         {m}
                       </button>
@@ -524,7 +524,7 @@ const InstitutePage = () => {
                   <select
                     value={courseSort}
                     onChange={(e) => setCourseSort(e.target.value)}
-                    className="h-9 text-[12px] font-medium border border-slate-200 rounded-md px-2 bg-white text-slate-700"
+                    className="h-9 text-xs font-medium border border-slate-200 rounded-md px-2 bg-white text-slate-700"
                   >
                     <option value="default">Sort: Default</option>
                     <option value="name">Name A-Z</option>
@@ -532,13 +532,13 @@ const InstitutePage = () => {
                     <option value="fees-desc">Fees: High → Low</option>
                   </select>
                   <Link to="/compare" className="ml-auto">
-                    <Button variant="outline" size="sm" className="h-9 text-[12px] gap-1 border-sky-200 text-sky-700 hover:bg-sky-50">
+                    <Button variant="outline" size="sm" className="h-9 text-xs gap-1 border-sky-200 text-sky-700 hover:bg-sky-50">
                       <TrendingUp className="w-3.5 h-3.5" /> Compare Coachings
                     </Button>
                   </Link>
                 </div>
 
-                <div className="text-[12px] text-slate-500 mb-3">
+                <div className="text-xs text-slate-500 mb-3">
                   Showing <span className="font-semibold text-slate-700">{filteredCourses.length}</span> of {linkedCourses.length} programs
                 </div>
 
@@ -572,15 +572,15 @@ const InstitutePage = () => {
                             <GraduationCap className="w-6 h-6" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Program #{String(i + 1).padStart(2, "0")}</div>
-                            <h3 className="font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-sky-700 transition-colors mt-0.5">
+                            <div className="text-xs uppercase tracking-wider text-slate-400 font-bold">Program #{String(i + 1).padStart(2, "0")}</div>
+                            <h3 className="font-bold text-sm text-slate-900 leading-snug line-clamp-2 group-hover:text-sky-700 transition-colors mt-0.5">
                               {c.name}
                             </h3>
                           </div>
                         </div>
 
                         {preview && (
-                          <p className="mt-3 text-[13px] text-slate-600 line-clamp-3 leading-relaxed">
+                          <p className="mt-3 text-sm text-slate-600 line-clamp-3 leading-relaxed">
                             {preview}
                           </p>
                         )}
@@ -588,7 +588,7 @@ const InstitutePage = () => {
                         {highlights.length > 0 && (
                           <ul className="mt-3 space-y-1.5">
                             {highlights.slice(0, 3).map((h, idx) => (
-                              <li key={idx} className="flex items-start gap-1.5 text-[12px] text-slate-700">
+                              <li key={idx} className="flex items-start gap-1.5 text-xs text-slate-700">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                                 <span className="line-clamp-1">{h}</span>
                               </li>
@@ -598,29 +598,29 @@ const InstitutePage = () => {
 
                         <div className="mt-4 flex flex-wrap gap-1.5">
                           {c.mode && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
                               <BookOpen className="w-3 h-3" /> {c.mode}
                             </span>
                           )}
                           {c.duration && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
                               <Clock className="w-3 h-3" /> {c.duration}
                             </span>
                           )}
                           {c.fees && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
                               ₹{typeof c.fees === "number" ? c.fees.toLocaleString("en-IN") : c.fees}
                             </span>
                           )}
                           {c.start_date && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100">
                               <Calendar className="w-3 h-3" /> {c.start_date}
                             </span>
                           )}
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500 font-medium">View full details</span>
+                          <span className="text-xs text-slate-500 font-medium">View full details</span>
                           <span className="inline-flex items-center gap-1 text-sm font-semibold text-sky-700 group-hover:text-sky-900">
                             Open <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                           </span>
@@ -722,7 +722,7 @@ const SectionShell = ({
 }: { id: string; title: string; subtitle?: string; children: React.ReactNode }) => (
   <section id={id} className="scroll-mt-36 md:scroll-mt-24">
     <div className="mb-5">
-      <h2 className="text-2xl md:text-[26px] font-bold text-slate-900">{title}</h2>
+      <h2 className="text-2xl md:text-2xl font-bold text-slate-900">{title}</h2>
       {subtitle && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>}
       <div className="mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600" />
     </div>

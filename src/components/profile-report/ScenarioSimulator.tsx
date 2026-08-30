@@ -52,7 +52,7 @@ export const ScenarioSimulator = ({ rows, profile }: Props) => {
                       </div>
                       <span className="text-xs font-bold w-10 text-right">{c.chance}%</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Cutoff: {c.required}%ile</p>
+                    <p className="text-xs text-muted-foreground mt-1">Cutoff: {c.required}%ile</p>
                   </div>
                 ))}
               </div>

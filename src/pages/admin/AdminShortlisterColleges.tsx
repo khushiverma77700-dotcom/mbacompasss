@@ -194,8 +194,8 @@ const AdminShortlisterColleges = () => {
 
                 <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
                   <Gauge className="w-5 h-5 text-muted-foreground" />
-                  <div className="flex-1"><p className="text-xs font-semibold text-foreground">Difficulty Score</p><p className="text-[10px] text-muted-foreground">Auto-calculated from Tier, Ranking, Package, Fees, Accreditations & Category</p></div>
-                  <div className="text-right"><span className={`text-2xl font-bold ${getScoreColor(difficultyScore)}`}>{difficultyScore}</span><span className="text-xs text-muted-foreground">/100</span><p className={`text-[10px] font-semibold ${getScoreColor(difficultyScore)}`}>{getScoreLabel(difficultyScore)}</p></div>
+                  <div className="flex-1"><p className="text-xs font-semibold text-foreground">Difficulty Score</p><p className="text-xs text-muted-foreground">Auto-calculated from Tier, Ranking, Package, Fees, Accreditations & Category</p></div>
+                  <div className="text-right"><span className={`text-2xl font-bold ${getScoreColor(difficultyScore)}`}>{difficultyScore}</span><span className="text-xs text-muted-foreground">/100</span><p className={`text-xs font-semibold ${getScoreColor(difficultyScore)}`}>{getScoreLabel(difficultyScore)}</p></div>
                   <div className="w-20 h-2 bg-muted rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${difficultyScore >= 80 ? 'bg-red-500' : difficultyScore >= 60 ? 'bg-amber-500' : difficultyScore >= 40 ? 'bg-blue-500' : 'bg-emerald-500'}`} style={{ width: `${difficultyScore}%` }} /></div>
                 </div>
 
@@ -228,7 +228,7 @@ const AdminShortlisterColleges = () => {
                       <Label className="text-xs font-semibold block">Minimum Percentile / Score Required</Label>
                       <div className="grid grid-cols-2 gap-3">
                         {form.exams_accepted.map(exam => { const isGMAT = exam === "GMAT"; const ranges = isGMAT ? GMAT_SCORE_RANGES : PERCENTILE_RANGES; return (
-                          <div key={exam}><Label className="text-[10px] font-semibold mb-1 block text-muted-foreground">{exam} {isGMAT ? "Score" : "Percentile"}</Label><Select value={form.exam_cutoffs[exam] || "_none"} onValueChange={v => updateExamCutoff(exam, v === "_none" ? "" : v)}><SelectTrigger className="h-8 text-xs"><SelectValue placeholder={`Select ${isGMAT ? "score" : "percentile"}`} /></SelectTrigger><SelectContent><SelectItem value="_none">Not set</SelectItem>{ranges.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></div>
+                          <div key={exam}><Label className="text-xs font-semibold mb-1 block text-muted-foreground">{exam} {isGMAT ? "Score" : "Percentile"}</Label><Select value={form.exam_cutoffs[exam] || "_none"} onValueChange={v => updateExamCutoff(exam, v === "_none" ? "" : v)}><SelectTrigger className="h-8 text-xs"><SelectValue placeholder={`Select ${isGMAT ? "score" : "percentile"}`} /></SelectTrigger><SelectContent><SelectItem value="_none">Not set</SelectItem>{ranges.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></div>
                         ); })}
                       </div>
                     </div>
@@ -267,7 +267,7 @@ const AdminShortlisterColleges = () => {
           { label: "IIM Colleges", value: stats.iim, icon: GraduationCap, color: "text-amber-600" },
           { label: "Tier 1", value: stats.tier1, icon: TrendingUp, color: "text-emerald-600" },
           { label: "Tier 2+", value: stats.tier2, icon: MapPin, color: "text-blue-600" },
-        ].map((s, i) => (<Card key={i} className="border-border/50"><CardContent className="pt-4 pb-3 text-center"><s.icon className={`w-5 h-5 mx-auto mb-1 ${s.color}`} /><div className="text-2xl font-bold text-foreground">{s.value}</div><div className="text-[10px] text-muted-foreground">{s.label}</div></CardContent></Card>))}
+        ].map((s, i) => (<Card key={i} className="border-border/50"><CardContent className="pt-4 pb-3 text-center"><s.icon className={`w-5 h-5 mx-auto mb-1 ${s.color}`} /><div className="text-2xl font-bold text-foreground">{s.value}</div><div className="text-xs text-muted-foreground">{s.label}</div></CardContent></Card>))}
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
@@ -286,12 +286,12 @@ const AdminShortlisterColleges = () => {
                 return (
                   <TableRow key={c.id}>
                     <TableCell><div className="flex items-center gap-2">{c.logo_url ? <img src={c.logo_url} className="w-7 h-7 rounded object-contain" alt=""  loading="lazy" decoding="async" /> : <Building2 className="w-4 h-4 text-muted-foreground" />}<span className="font-medium text-xs">{c.name}</span></div></TableCell>
-                    <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "outline"} className="text-[10px]">{c.college_category || "—"}</Badge></TableCell>
-                    <TableCell><Badge variant="outline" className="text-[10px]">{c.tier || "—"}</Badge></TableCell>
+                    <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "outline"} className="text-xs">{c.college_category || "—"}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className="text-xs">{c.tier || "—"}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{c.city || "—"}</TableCell>
                     <TableCell className="text-xs">{c.fees || "—"}</TableCell>
                     <TableCell className="text-xs">{c.placement_avg || "—"}</TableCell>
-                    <TableCell><span className={`text-xs font-bold ${getScoreColor(score)}`}>{score}</span><span className="text-[9px] text-muted-foreground ml-0.5">/ 100</span></TableCell>
+                    <TableCell><span className={`text-xs font-bold ${getScoreColor(score)}`}>{score}</span><span className="text-xs text-muted-foreground ml-0.5">/ 100</span></TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>

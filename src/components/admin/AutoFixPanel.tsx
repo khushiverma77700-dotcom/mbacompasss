@@ -83,7 +83,7 @@ export const AutoFixPanel = ({
         <div className="flex-1">
           <h3 className="font-semibold text-foreground flex items-center gap-2">
             {title}
-            <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">Hybrid auto-fix</Badge>
+            <Badge variant="secondary" className="text-xs uppercase tracking-wide">Hybrid auto-fix</Badge>
           </h3>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
@@ -109,7 +109,7 @@ export const AutoFixPanel = ({
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium leading-tight">{meta.label}</div>
-                  <div className="text-[11px] opacity-75 mt-0.5 whitespace-normal leading-snug">{meta.hint}</div>
+                  <div className="text-xs opacity-75 mt-0.5 whitespace-normal leading-snug">{meta.hint}</div>
                 </div>
               </div>
             </Button>

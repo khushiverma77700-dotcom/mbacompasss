@@ -94,7 +94,7 @@ const StateCitySelect = ({
           </SelectContent>
         </Select>
         {state && cities.length > 0 && (
-          <p className="text-[10px] text-muted-foreground mt-1">{cities.length} cities available</p>
+          <p className="text-xs text-muted-foreground mt-1">{cities.length} cities available</p>
         )}
       </div>
     </div>

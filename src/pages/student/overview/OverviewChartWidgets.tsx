@@ -109,25 +109,25 @@ export const XpProgress = memo(function XpProgress({ xp, level, streak, rank }: 
         </ResponsiveContainer>
         <div className="absolute inset-0 grid place-items-center pointer-events-none">
           <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Level</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Level</div>
             <div className="text-3xl font-bold text-amber-600 leading-none">{level}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">{current}/{needed} XP</div>
+            <div className="text-xs text-muted-foreground mt-1">{current}/{needed} XP</div>
           </div>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg bg-amber-50 border border-amber-100 p-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total XP</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Total XP</div>
           <div className="text-sm font-bold text-amber-700 tabular-nums">{xp.toLocaleString("en-IN")}</div>
         </div>
         <div className="rounded-lg bg-rose-50 border border-rose-100 p-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Streak</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Streak</div>
           <div className="text-sm font-bold text-rose-600 tabular-nums inline-flex items-center gap-1">
             <Flame className="h-3 w-3" /> {streak}d
           </div>
         </div>
         <div className="rounded-lg bg-sky-50 border border-sky-100 p-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Rank</div>
           <div className="text-sm font-bold text-sky-700 tabular-nums">{rank ? `#${rank}` : "—"}</div>
         </div>
       </div>

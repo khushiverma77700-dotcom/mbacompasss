@@ -28,10 +28,10 @@ const CoachingMapView = ({ institutes, onCityClick }: Props) => {
           <MapPin className="w-4 h-4" />
         </div>
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-wider text-sky-700">Map View</div>
+          <div className="text-xs font-bold uppercase tracking-wider text-sky-700">Map View</div>
           <h3 className="text-base font-bold text-slate-900">Coaching clusters by city</h3>
         </div>
-        <span className="ml-auto text-[12px] text-slate-500 font-medium">{clusters.length} cities</span>
+        <span className="ml-auto text-xs text-slate-500 font-medium">{clusters.length} cities</span>
       </div>
 
       {clusters.length === 0 ? (
@@ -53,14 +53,14 @@ const CoachingMapView = ({ institutes, onCityClick }: Props) => {
                 <div className="relative">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="font-bold text-slate-900 text-[15px] leading-tight truncate">{cl.city}</div>
-                      {cl.state && <div className="text-[11px] text-slate-500 truncate">{cl.state}</div>}
+                      <div className="font-bold text-slate-900 text-sm leading-tight truncate">{cl.city}</div>
+                      {cl.state && <div className="text-xs text-slate-500 truncate">{cl.state}</div>}
                     </div>
-                    <div className="w-9 h-9 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center font-extrabold text-[14px] shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center font-extrabold text-sm shrink-0">
                       {cl.count}
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-600">
+                  <div className="mt-3 flex items-center gap-3 text-xs text-slate-600">
                     <span className="inline-flex items-center gap-1">
                       <Building2 className="w-3 h-3" /> {cl.count} institute{cl.count !== 1 ? "s" : ""}
                     </span>
@@ -70,7 +70,7 @@ const CoachingMapView = ({ institutes, onCityClick }: Props) => {
                       </span>
                     )}
                   </div>
-                  <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-sky-700 group-hover:gap-2 transition-all">
+                  <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-sky-700 group-hover:gap-2 transition-all">
                     Explore <ArrowRight className="w-3 h-3" />
                   </div>
                 </div>

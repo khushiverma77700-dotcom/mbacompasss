@@ -359,11 +359,11 @@ export default function AdminNewsroom() {
               <div key={a.id} className="flex items-start justify-between gap-3 rounded-lg border p-3 hover:bg-accent/30">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <Badge variant="outline" className="text-[10px]">{a.category}</Badge>
-                    <Badge variant="secondary" className="text-[10px]">{a.importance?.toUpperCase()}</Badge>
-                    <span className="text-[11px] text-muted-foreground">{a.news_date}</span>
-                    {a.short_summary_hi && <Badge className="text-[10px] bg-orange-100 text-orange-700 border-orange-200" variant="outline">हिंदी</Badge>}
-                    {a.short_summary_hinglish && <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200" variant="outline">Hinglish</Badge>}
+                    <Badge variant="outline" className="text-xs">{a.category}</Badge>
+                    <Badge variant="secondary" className="text-xs">{a.importance?.toUpperCase()}</Badge>
+                    <span className="text-xs text-muted-foreground">{a.news_date}</span>
+                    {a.short_summary_hi && <Badge className="text-xs bg-orange-100 text-orange-700 border-orange-200" variant="outline">हिंदी</Badge>}
+                    {a.short_summary_hinglish && <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200" variant="outline">Hinglish</Badge>}
                   </div>
                   <p className="font-medium text-sm line-clamp-2">{a.headline}</p>
                   {a.one_liner && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{a.one_liner}</p>}
