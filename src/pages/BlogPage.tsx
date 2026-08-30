@@ -220,30 +220,33 @@ const BlogPage = () => {
               >
                 <Link to={`/article/${featuredArticle.slug}`} className="group block relative">
                   {/* stacked "magazine" effect */}
-                  <div className="absolute inset-0 rounded-3xl bg-sky-100 rotate-2 translate-x-2 translate-y-2" aria-hidden />
-                  <div className="absolute inset-0 rounded-3xl bg-white border border-sky-100 rotate-1 translate-x-1 translate-y-1" aria-hidden />
+                  <div className="absolute inset-0 rounded-3xl bg-sky-100 rotate-2 translate-x-2 translate-y-2 pointer-events-none" aria-hidden />
+                  <div className="absolute inset-0 rounded-3xl bg-white border border-sky-100 rotate-1 translate-x-1 translate-y-1 pointer-events-none" aria-hidden />
 
                   <article className="relative rounded-3xl overflow-hidden bg-white border border-slate-200 shadow-2xl shadow-sky-100/60">
-                    <div className="relative aspect-[4/5] bg-sky-50 overflow-hidden">
-                      {(featuredArticle.image_url || featuredArticle.banner_url) && (
+                    {/* Image area — full image visible, never cropped */}
+                    <div className="relative aspect-[4/3] bg-sky-50 overflow-hidden">
+                      {(featuredArticle.image_url || featuredArticle.banner_url) ? (
                         <>
                           <img
                             src={(featuredArticle.image_url || featuredArticle.banner_url)!}
                             alt=""
                             aria-hidden
-                            className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-50"
+                            className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-40"
                           />
                           <img
                             src={(featuredArticle.image_url || featuredArticle.banner_url)!}
                             alt={featuredArticle.title}
-                            className="relative w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+                            className="relative w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-700"
                             loading="eager"
                           />
                         </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-sky-100 to-sky-50">
+                          <BookOpen className="w-16 h-16 text-sky-300" />
+                        </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent" />
-
-                      <div className="absolute top-5 left-5 flex items-center gap-2">
+                      <div className="absolute top-4 left-4 flex items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur text-sky-700 rounded-full text-[10px] font-bold uppercase tracking-widest shadow">
                           <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" /> Cover Story
                         </span>
@@ -253,19 +256,20 @@ const BlogPage = () => {
                           </span>
                         )}
                       </div>
+                    </div>
 
-                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                        <div className="text-[11px] uppercase tracking-[0.25em] text-sky-200 mb-2 flex items-center gap-3">
-                          <Calendar className="w-3 h-3" /> {formatDate(featuredArticle.created_at)}
-                          <span className="opacity-50">·</span>
-                          <Clock className="w-3 h-3" /> {getReadTime(featuredArticle.content)}
-                        </div>
-                        <h2 className="font-editorial text-2xl md:text-3xl leading-tight tracking-tight line-clamp-3">
-                          {featuredArticle.title}
-                        </h2>
-                        <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-white/90 group-hover:text-sky-200 transition-colors">
-                          Read the cover story <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </div>
+                    {/* Text block below the image — clean white panel */}
+                    <div className="p-6 border-t border-sky-50">
+                      <div className="text-[11px] uppercase tracking-[0.25em] text-sky-500 mb-2 flex items-center gap-3">
+                        <Calendar className="w-3 h-3" /> {formatDate(featuredArticle.created_at)}
+                        <span className="opacity-40">·</span>
+                        <Clock className="w-3 h-3" /> {getReadTime(featuredArticle.content)}
+                      </div>
+                      <h2 className="font-editorial text-xl md:text-2xl leading-tight tracking-tight text-slate-900 line-clamp-3 group-hover:text-sky-600 transition-colors">
+                        {featuredArticle.title}
+                      </h2>
+                      <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-sky-600 group-hover:text-sky-700 transition-colors">
+                        Read the cover story <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </article>
