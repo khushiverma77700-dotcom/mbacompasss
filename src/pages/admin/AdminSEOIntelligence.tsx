@@ -446,6 +446,19 @@ const AdminSEOIntelligence = () => {
           <SeoWinsBoard />
         </TabsContent>
 
+        <TabsContent value="timeline" className="pt-4">
+          <ErrorBoundary>
+            <SeoWinTimeline />
+          </ErrorBoundary>
+        </TabsContent>
+
+        <TabsContent value="playback" className="pt-4">
+          <ErrorBoundary>
+            <SeoPlayback />
+          </ErrorBoundary>
+        </TabsContent>
+
+
 
 
         <TabsContent value="analytics" className="pt-4">
