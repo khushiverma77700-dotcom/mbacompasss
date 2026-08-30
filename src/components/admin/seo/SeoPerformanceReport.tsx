@@ -208,6 +208,7 @@ export default function SeoPerformanceReport() {
   const [seriesValidation, setSeriesValidation] = useState<ValidationResult>({ ok: true, issues: [] });
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [newData, setNewData] = useState(false);
+  const [tick, setTick] = useState(0);
   const phase = useLivePhase(busy || loading);
 
   const load = useCallback(async (force = false) => {
