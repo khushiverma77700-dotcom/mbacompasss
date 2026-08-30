@@ -264,7 +264,7 @@ export default function StudentLayout() {
                   <img src={BRAND_LOGO_URL} alt="MBA Compass" className="h-full w-full object-contain"  loading="lazy" decoding="async" />
                 </div>
                 <div className="leading-tight min-w-0">
-                  <div className="text-[13px] sm:text-sm font-semibold flex items-center gap-1.5 min-w-0">
+                  <div className="text-sm sm:text-sm font-semibold flex items-center gap-1.5 min-w-0">
                     <span className="truncate">MBA Compass</span>
                     {displayName && (
                       <>
@@ -275,7 +275,7 @@ export default function StudentLayout() {
                       </>
                     )}
                   </div>
-                  <div className="text-[10px] text-muted-foreground hidden sm:block">CAT Prep LMS</div>
+                  <div className="text-xs text-muted-foreground hidden sm:block">CAT Prep LMS</div>
                 </div>
               </Link>
             </div>
@@ -301,7 +301,7 @@ export default function StudentLayout() {
                   {(displayName || "S").charAt(0).toUpperCase()}
                 </div>
                 <div className="leading-tight">
-                  <div className="text-[10px] text-muted-foreground">Welcome</div>
+                  <div className="text-xs text-muted-foreground">Welcome</div>
                   <div className="text-sm font-medium truncate max-w-[140px]">{displayName || "Student"}</div>
                 </div>
               </div>
@@ -420,7 +420,7 @@ function SidebarContent() {
         >
           <Icon className="h-4 w-4 opacity-70" />
           <span className="flex-1 truncate">{item.label}</span>
-          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-semibold">
+          <span className="text-xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-semibold">
             Locked
           </span>
         </Link>
@@ -440,7 +440,7 @@ function SidebarContent() {
         className={({ isActive }) =>
           cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
-            opts.indent && "ml-3 py-1.5 text-[13px]",
+            opts.indent && "ml-3 py-1.5 text-sm",
             isActive
               ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm dark:from-sky-500/20 dark:to-blue-500/10 dark:text-sky-200"
               : "text-foreground/80 hover:bg-accent hover:text-foreground"
@@ -458,7 +458,7 @@ function SidebarContent() {
         </span>
         <span className="flex-1 truncate">{item.label}</span>
         {badge > 0 && (
-          <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+          <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold bg-rose-500 text-white">
             {badge > 9 ? "9+" : badge}
           </span>
         )}
@@ -512,7 +512,7 @@ function SidebarContent() {
         <span className="relative flex-1 text-left truncate">
           {item.label}
           {opts.badge && (
-            <span className={cn("ml-1.5 text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded text-white font-black", opts.badge)}>
+            <span className={cn("ml-1.5 text-xs uppercase tracking-wider px-1.5 py-0.5 rounded text-white font-black", opts.badge)}>
               Hot
             </span>
           )}
@@ -547,7 +547,7 @@ function SidebarContent() {
           </span>
           <span className="flex-1 text-left">My Mocks</span>
           {groupBadgeTotal > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold bg-rose-500 text-white">
               {groupBadgeTotal > 9 ? "9+" : groupBadgeTotal}
             </span>
           )}
@@ -594,7 +594,7 @@ function SidebarContent() {
           </span>
           <span className="flex-1 text-left">My Insights</span>
           {insightsBadgeTotal > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold bg-rose-500 text-white">
               {insightsBadgeTotal > 9 ? "9+" : insightsBadgeTotal}
             </span>
           )}
@@ -637,7 +637,7 @@ function SidebarContent() {
         </span>
         <span className="relative flex-1 text-left flex items-center gap-1.5">
           PerformX
-          <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black">
+          <span className="text-xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black">
             New
           </span>
         </span>
@@ -646,10 +646,10 @@ function SidebarContent() {
       {/* Knowledge Duo — B-School Vocabulary + Quant Formula Book side by side / stacked premium cards */}
       <div className="my-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/90 via-white to-sky-50/80 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-sky-900/10 dark:border-slate-700/40 shadow-sm backdrop-blur p-2 space-y-1.5">
         <div className="flex items-center gap-2 px-1 pb-1">
-          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-[10px] shadow-sm">
+          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs shadow-sm">
             <Sparkles className="h-3 w-3" />
           </span>
-          <span className="text-[11px] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">
+          <span className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">
             Knowledge Hub
           </span>
         </div>
@@ -688,7 +688,7 @@ function SidebarContent() {
 
           className="flex items-center gap-2 text-xs font-medium text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-md px-3 py-2"
         >
-          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-[10px]">↓</span>
+          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs">↓</span>
           Install app
         </Link>
       </div>

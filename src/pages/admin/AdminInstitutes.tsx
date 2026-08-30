@@ -459,10 +459,10 @@ const AdminInstitutes = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span>{inst.name}</span>
                       {inst.source === "user" && (
-                        <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-700">User-submitted</Badge>
+                        <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">User-submitted</Badge>
                       )}
                       {inst.last_updated_by === "user-verified" && (
-                        <Badge variant="outline" className="text-[10px] border-green-300 text-green-700">User-edited (verified)</Badge>
+                        <Badge variant="outline" className="text-xs border-green-300 text-green-700">User-edited (verified)</Badge>
                       )}
                     </div>
                   </TableCell>
@@ -472,7 +472,7 @@ const AdminInstitutes = () => {
                   <TableCell>{inst.students_count || 0}</TableCell>
                   <TableCell>{inst.success_rate || 0}%</TableCell>
                   <TableCell>{inst.featured ? <Badge className="bg-primary text-primary-foreground text-xs">Yes</Badge> : "No"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{inst.created_at ? new Date(inst.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{inst.created_at ? new Date(inst.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{inst.created_at ? new Date(inst.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-xs">{inst.created_at ? new Date(inst.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
                   <TableCell className="text-right space-x-2">
                     <FullPageReauditButton kind="institute" entityId={inst.id} entityName={inst.name} />
                     <RefreshContentButton entityType="institute" entityId={inst.id} entityName={inst.name} />

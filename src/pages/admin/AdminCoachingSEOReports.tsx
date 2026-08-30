@@ -324,17 +324,17 @@ const AdminCoachingSEOReports = () => {
                       <div>
                         <div className="font-medium flex items-center gap-2 flex-wrap">
                           {inst.name}
-                          <Badge variant="outline" className="text-[10px]">{inst.institute_type || "city"}</Badge>
-                          <Badge variant="secondary" className="text-[10px] gap-1">
+                          <Badge variant="outline" className="text-xs">{inst.institute_type || "city"}</Badge>
+                          <Badge variant="secondary" className="text-xs gap-1">
                             <BookOpen className="w-3 h-3" /> {pages.length} pages
                           </Badge>
                           {doneCount > 0 && (
-                            <Badge className="text-[10px] bg-emerald-600 hover:bg-emerald-600">
+                            <Badge className="text-xs bg-emerald-600 hover:bg-emerald-600">
                               {doneCount}/{pages.length} reports
                             </Badge>
                           )}
                           {errorCount > 0 && (
-                            <Badge variant="destructive" className="text-[10px]">{errorCount} failed</Badge>
+                            <Badge variant="destructive" className="text-xs">{errorCount} failed</Badge>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -427,7 +427,7 @@ const PageReportCard = ({
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-xs">
                 {page.type === "institute" ? "Institute page" : "Course page"}
               </Badge>
               <span className="truncate">{page.name}</span>
@@ -441,12 +441,12 @@ const PageReportCard = ({
           <div className="flex items-center gap-2 flex-wrap">
             {report?.status === "done" && (
               <div className="text-right">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">SEO score</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">SEO score</div>
                 <div className={`text-2xl font-bold leading-none ${scoreColor(overall)}`}>
                   {overall ?? "—"}<span className="text-xs text-muted-foreground">/100</span>
                 </div>
                 {projected != null && (
-                  <div className="text-[10px] text-emerald-700">→ {projected} after fixes</div>
+                  <div className="text-xs text-emerald-700">→ {projected} after fixes</div>
                 )}
               </div>
             )}
@@ -493,7 +493,7 @@ const PageReportCard = ({
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-center">
               {Object.entries<any>(s.seoScore.breakdown).map(([k, v]) => (
                 <div key={k} className="rounded border bg-muted/30 p-2">
-                  <div className="text-[10px] text-muted-foreground capitalize">{k.replace(/([A-Z])/g, " $1")}</div>
+                  <div className="text-xs text-muted-foreground capitalize">{k.replace(/([A-Z])/g, " $1")}</div>
                   <div className={`text-lg font-bold ${scoreColor(v)}`}>{v}</div>
                 </div>
               ))}
@@ -546,7 +546,7 @@ const PageReportCard = ({
                       <div className="text-xs font-semibold capitalize text-muted-foreground mb-1">{bucket}</div>
                       <div className="flex flex-wrap gap-1">
                         {(arr || []).map((k: string, i: number) => (
-                          <Badge key={i} variant="outline" className="text-[10px]">{k}</Badge>
+                          <Badge key={i} variant="outline" className="text-xs">{k}</Badge>
                         ))}
                       </div>
                     </div>
@@ -638,14 +638,14 @@ const PageReportCard = ({
 
               {s.schemaMarkup?.length > 0 && (
                 <Section title="Schema markup (JSON-LD)">
-                  <pre className="text-[10px] bg-slate-900 text-slate-100 p-2 rounded overflow-auto max-h-64">
+                  <pre className="text-xs bg-slate-900 text-slate-100 p-2 rounded overflow-auto max-h-64">
 {JSON.stringify(s.schemaMarkup, null, 2)}
                   </pre>
                 </Section>
               )}
 
               {a && (
-                <div className="text-[10px] text-muted-foreground border-t pt-2">
+                <div className="text-xs text-muted-foreground border-t pt-2">
                   Assembled {a.wordCount} words • {a.imageCount} images ({a.imagesMissingAlt} missing alt) •
                   {a.sectionsCount != null && ` ${a.sectionsCount} sections •`}
                   {a.coursesCount != null && ` ${a.coursesCount} courses •`}

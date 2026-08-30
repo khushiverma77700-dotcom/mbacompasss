@@ -252,7 +252,7 @@ export const AdvancedCharts = ({ breakdown, rows, profileScore }: Props) => {
               {funnelData.map((b) => (
                 <div key={b.band} className="rounded-lg border border-border p-2 text-center">
                   <div className="w-2 h-2 rounded-full mx-auto mb-1" style={{ background: b.color }} />
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{b.band}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{b.band}</p>
                   <p className="text-lg font-bold">{b.count}</p>
                 </div>
               ))}

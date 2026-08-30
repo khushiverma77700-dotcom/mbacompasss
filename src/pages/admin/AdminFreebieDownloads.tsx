@@ -295,7 +295,7 @@ const AdminFreebieDownloads = () => {
                       <TableCell className="text-xs">{r.email || <span className="text-muted-foreground">—</span>}</TableCell>
                       <TableCell className="text-xs">{r.phone || <span className="text-muted-foreground">—</span>}</TableCell>
                       <TableCell>
-                        {r.user_id ? <Badge variant="secondary" className="text-[10px]">Logged-in</Badge> : <Badge variant="outline" className="text-[10px]">Guest</Badge>}
+                        {r.user_id ? <Badge variant="secondary" className="text-xs">Logged-in</Badge> : <Badge variant="outline" className="text-xs">Guest</Badge>}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -319,7 +319,7 @@ const StatCard = ({ icon, label, value, sub }: { icon: React.ReactNode; label: s
     <CardContent className="pt-4 pb-3">
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
       <div className="mt-1 text-2xl font-bold">{value}</div>
-      {sub && <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>}
+      {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
     </CardContent>
   </Card>
 );

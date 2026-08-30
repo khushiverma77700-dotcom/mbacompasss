@@ -45,7 +45,7 @@ const JumpToMenu = () => {
           aria-label="Jump to section"
           className="absolute bottom-14 right-0 w-44 overflow-hidden rounded-xl border border-border bg-background/95 p-1.5 shadow-lg backdrop-blur"
         >
-          <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Jump to
           </p>
           <ul>

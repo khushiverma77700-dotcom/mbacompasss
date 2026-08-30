@@ -332,7 +332,7 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
                     <p className="text-lg font-bold font-mono">{formatUsd(cost, 4)}</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground border-t pt-2 mt-2">{billing}</p>
+                <p className="text-xs text-muted-foreground border-t pt-2 mt-2">{billing}</p>
               </div>
             );
 
@@ -863,24 +863,24 @@ function CloudUsageTab({ registerRefresh, registerLoading }: CloudUsageTabProps)
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="rounded-lg border bg-card p-3">
-              <p className="text-[11px] text-muted-foreground uppercase">DB Storage</p>
+              <p className="text-xs text-muted-foreground uppercase">DB Storage</p>
               <p className="text-base font-bold">{formatUsd(cloudCost.dbStorageCost, 5)}</p>
-              <p className="text-[10px] text-muted-foreground">{cloudCost.dbStorageGb.toFixed(4)} GB</p>
+              <p className="text-xs text-muted-foreground">{cloudCost.dbStorageGb.toFixed(4)} GB</p>
             </div>
             <div className="rounded-lg border bg-card p-3">
-              <p className="text-[11px] text-muted-foreground uppercase">File Storage</p>
+              <p className="text-xs text-muted-foreground uppercase">File Storage</p>
               <p className="text-base font-bold">{formatUsd(cloudCost.fileStorageCost, 5)}</p>
-              <p className="text-[10px] text-muted-foreground">{cloudCost.fileStorageGb.toFixed(4)} GB</p>
+              <p className="text-xs text-muted-foreground">{cloudCost.fileStorageGb.toFixed(4)} GB</p>
             </div>
             <div className="rounded-lg border bg-card p-3">
-              <p className="text-[11px] text-muted-foreground uppercase">Edge Invocations (30d)</p>
+              <p className="text-xs text-muted-foreground uppercase">Edge Invocations (30d)</p>
               <p className="text-base font-bold">{formatUsd(cloudCost.edgeInvocationsCost, 5)}</p>
-              <p className="text-[10px] text-muted-foreground">{edgeInvocations30d.toLocaleString()} calls</p>
+              <p className="text-xs text-muted-foreground">{edgeInvocations30d.toLocaleString()} calls</p>
             </div>
             <div className="rounded-lg border bg-card p-3">
-              <p className="text-[11px] text-muted-foreground uppercase">Auth (MAU)</p>
+              <p className="text-xs text-muted-foreground uppercase">Auth (MAU)</p>
               <p className="text-base font-bold">{formatUsd(cloudCost.authCost, 5)}</p>
-              <p className="text-[10px] text-muted-foreground">{totalUsers.toLocaleString()} users (free under 100k)</p>
+              <p className="text-xs text-muted-foreground">{totalUsers.toLocaleString()} users (free under 100k)</p>
             </div>
           </div>
           <div className="flex items-center justify-between rounded-lg bg-card border p-3">
@@ -897,7 +897,7 @@ function CloudUsageTab({ registerRefresh, registerLoading }: CloudUsageTabProps)
               </p>
             </div>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Estimate based on Supabase pay-as-you-go rates: $0.125/GB-month DB,
             $0.021/GB-month file storage, $2/1M edge invocations. Edge call
             volume is approximated from AI usage logs ×3 to cover non-AI

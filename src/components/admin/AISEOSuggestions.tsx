@@ -489,7 +489,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                       {displayScore}<span className="text-lg">/100</span>
                     </div>
                     {autoApplied && (
-                      <Badge className="bg-green-500 text-white text-[9px]">
+                      <Badge className="bg-green-500 text-white text-xs">
                         <TrendingUp className="h-3 w-3 mr-0.5" />
                         +{displayScore - suggestions.seoScore.overall}
                       </Badge>
@@ -500,7 +500,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                   {Object.entries(displayBreakdown).map(([key, val]) => (
                     <div key={key} className="text-center p-2 rounded-lg bg-background/50 border">
                       <p className={`text-lg font-bold ${scoreColor(val)}`}>{val}</p>
-                      <p className="text-[10px] text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
                     </div>
                   ))}
                 </div>
@@ -528,7 +528,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div className="space-y-1.5 p-2 rounded bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30">
-                      <p className="font-semibold text-red-700 dark:text-red-400 text-[11px] uppercase tracking-wide">Before (Original)</p>
+                      <p className="font-semibold text-red-700 dark:text-red-400 text-xs uppercase tracking-wide">Before (Original)</p>
                       <p className={suggestions.currentState.hasMetaTitle ? "text-green-600" : "text-red-600"}>
                         Meta Title: {suggestions.currentState.hasMetaTitle ? `${suggestions.currentState.metaTitleLength} chars` : "Missing"}
                       </p>
@@ -545,7 +545,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                       <p className="text-muted-foreground">Social Meta: None</p>
                     </div>
                     <div className="space-y-1.5 p-2 rounded bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30">
-                      <p className="font-semibold text-green-700 dark:text-green-400 text-[11px] uppercase tracking-wide">After (AI Optimized)</p>
+                      <p className="font-semibold text-green-700 dark:text-green-400 text-xs uppercase tracking-wide">After (AI Optimized)</p>
                       <p className="text-green-600">Meta Title: {(suggestions.meta_title || "").length} chars</p>
                       <p className="text-green-600">Meta Desc: {(suggestions.meta_description || "").length} chars</p>
                       <p className="text-green-600">H1 Tag: {suggestions.h1_tag ? "Optimized" : "—"}</p>
@@ -585,7 +585,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                   <TabsTrigger value="social" className="text-xs">Social</TabsTrigger>
                   <TabsTrigger value="schema" className="text-xs flex items-center gap-1">
                     Schema
-                    {schemaCount > 0 && <Badge variant="secondary" className="text-[9px] h-4 px-1">{schemaCount}</Badge>}
+                    {schemaCount > 0 && <Badge variant="secondary" className="text-xs h-4 px-1">{schemaCount}</Badge>}
                   </TabsTrigger>
                   <TabsTrigger value="links" className="text-xs">Links</TabsTrigger>
                   <TabsTrigger value="audit" className="text-xs">Audit</TabsTrigger>
@@ -740,7 +740,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                       <h4 className="font-semibold flex items-center gap-2">
                         <Code className="h-4 w-4" /> JSON-LD Schema Markup
                         <Badge variant="default" className="text-xs">{schemaCount} {schemaCount === 1 ? 'schema' : 'schemas'}</Badge>
-                        {autoApplied && <Badge className="bg-green-500 text-white text-[9px]">Auto-Saved</Badge>}
+                        {autoApplied && <Badge className="bg-green-500 text-white text-xs">Auto-Saved</Badge>}
                       </h4>
                       <p className="text-xs text-muted-foreground mt-1">
                         Schema markup auto-injected into page &lt;head&gt;.
@@ -758,11 +758,11 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                           <Code className="h-3 w-3" />
                           <span className="text-xs font-semibold">{schema?.["@type"] || `Schema ${i + 1}`}</span>
                         </div>
-                        <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => copyToClipboard(JSON.stringify(schema, null, 2))}>
+                        <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => copyToClipboard(JSON.stringify(schema, null, 2))}>
                           <Copy className="h-3 w-3 mr-1" /> Copy
                         </Button>
                       </div>
-                      <pre className="bg-muted/30 p-3 text-[11px] overflow-auto max-h-60 font-mono">
+                      <pre className="bg-muted/30 p-3 text-xs overflow-auto max-h-60 font-mono">
                         {JSON.stringify(schema, null, 2)}
                       </pre>
                     </div>
@@ -784,7 +784,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                       <Link className="h-3 w-3 text-primary shrink-0" />
                       <code className="text-xs flex-1">{link}</code>
                       {suggestions.internalLinks.anchorTexts[i] && (
-                        <Badge variant="outline" className="text-[10px]">Anchor: {suggestions.internalLinks.anchorTexts[i]}</Badge>
+                        <Badge variant="outline" className="text-xs">Anchor: {suggestions.internalLinks.anchorTexts[i]}</Badge>
                       )}
                     </div>
                   ))}
@@ -863,7 +863,7 @@ function EditableSuggestionField({ label, value, current, charLimit, fieldKey, e
         <div className="flex items-center gap-2">
           {applied ? <CheckCircle className="h-4 w-4 text-green-500" /> : <ArrowRight className="h-4 w-4 text-primary" />}
           <span className="text-sm font-medium">{label}</span>
-          {applied && hasChanged && <Badge variant="outline" className="text-[9px] text-green-600 border-green-300">Saved</Badge>}
+          {applied && hasChanged && <Badge variant="outline" className="text-xs text-green-600 border-green-300">Saved</Badge>}
         </div>
         <div className="flex items-center gap-1">
           {charLimit && (
@@ -922,7 +922,7 @@ function KeywordGroup({ title, icon, keywords, color }: {
   if (!keywords || keywords.length === 0) return null;
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold flex items-center gap-2">{icon} {title} <Badge variant="outline" className="text-[10px]">{keywords.length}</Badge></h4>
+      <h4 className="text-sm font-semibold flex items-center gap-2">{icon} {title} <Badge variant="outline" className="text-xs">{keywords.length}</Badge></h4>
       <div className="flex flex-wrap gap-1.5">
         {keywords.map((kw, i) => (
           <Badge key={i} variant="secondary" className={`text-xs ${color}`}>{kw}</Badge>

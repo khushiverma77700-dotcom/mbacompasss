@@ -840,7 +840,7 @@ const AdminMockTests = () => {
                       value={form.scheduled_start_at}
                       onChange={(e) => setForm({ ...form, scheduled_start_at: e.target.value })}
                     />
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Students will see the mock card with a countdown. It unlocks automatically at this time. Leave empty to show "To be launched soon".
                     </p>
                   </div>
@@ -1147,7 +1147,7 @@ const AdminMockTests = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 px-2 text-[10px] border-amber-300 text-amber-700 hover:bg-amber-50"
+                              className="h-6 px-2 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
                               disabled={isFilling}
                               onClick={() => handleFillMissingQuestions(t.id, t.name)}
                               title="Generate the missing questions in each section that came up short"
@@ -1329,18 +1329,18 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
       <div className="flex flex-wrap gap-1">
         <Button
           size="sm" variant={mode === "draft" ? "default" : "outline"}
-          className="h-7 px-2 text-[11px]" disabled={saving}
+          className="h-7 px-2 text-xs" disabled={saving}
           onClick={() => apply({ is_published: false, is_live: false, scheduled_start_at: null })}
         >Draft</Button>
         <Button
           size="sm" variant={mode === "publish" ? "default" : "outline"}
-          className={`h-7 px-2 text-[11px] ${mode === "publish" ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
+          className={`h-7 px-2 text-xs ${mode === "publish" ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
           disabled={saving}
           onClick={() => apply({ is_published: true, is_live: false, scheduled_start_at: null })}
         >Publish</Button>
         <Button
           size="sm" variant={mode === "live" ? "default" : "outline"}
-          className={`h-7 px-2 text-[11px] ${mode === "live" ? "bg-orange-500 hover:bg-orange-600" : ""}`}
+          className={`h-7 px-2 text-xs ${mode === "live" ? "bg-orange-500 hover:bg-orange-600" : ""}`}
           disabled={saving}
           onClick={() => { setDt(isoToLocalInput(test.scheduled_start_at) || ""); setShowSchedule(true); }}
         >Live</Button>
@@ -1351,7 +1351,7 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
         <PopoverTrigger asChild>
           <button
             type="button"
-            className={`group inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] transition ${
+            className={`group inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs transition ${
               test.scheduled_start_at
                 ? "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
                 : "border-dashed border-slate-300 text-muted-foreground hover:bg-slate-50"
@@ -1382,10 +1382,10 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
             className={cn("p-3 pointer-events-auto")}
           />
           <div className="flex items-center justify-between gap-2 border-t px-2 py-1.5 bg-slate-50">
-            <span className="text-[10px] text-slate-500">Want it live immediately?</span>
+            <span className="text-xs text-slate-500">Want it live immediately?</span>
             <Button
               size="sm" variant="ghost"
-              className="h-7 px-2 text-[11px] text-orange-600 hover:bg-orange-50"
+              className="h-7 px-2 text-xs text-orange-600 hover:bg-orange-50"
               disabled={saving}
               onClick={async () => {
                 await apply({ is_published: true, is_live: true, scheduled_start_at: null });

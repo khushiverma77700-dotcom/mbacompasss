@@ -70,7 +70,7 @@ export default function MockLeaderboardPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span>{r.display_name}</span>
-                  {r.is_self && <Badge variant="secondary" className="text-[10px]">You</Badge>}
+                  {r.is_self && <Badge variant="secondary" className="text-xs">You</Badge>}
                 </div>
                 <div className="text-right font-mono">{Number(r.total_score).toFixed(0)}/{Number(r.max_score ?? 0).toFixed(0)}</div>
                 <div className="text-right">{Number(r.percentile ?? 0).toFixed(2)}</div>

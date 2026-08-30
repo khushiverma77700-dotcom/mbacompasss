@@ -305,7 +305,7 @@ export default function MockBundleDetailPage() {
                       <o.icon className="h-5 w-5 text-sky-600 shrink-0 mt-0.5" />
                       <div>
                         <div className="text-sm font-semibold leading-tight">{o.title}</div>
-                        {o.sub && <div className="text-[11px] text-muted-foreground mt-0.5">{o.sub}</div>}
+                        {o.sub && <div className="text-xs text-muted-foreground mt-0.5">{o.sub}</div>}
                       </div>
                     </div>
                   ))}
@@ -542,8 +542,8 @@ export default function MockBundleDetailPage() {
                     )}
                     <div className="p-4 flex-1 flex flex-col">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        {b.exam_code && <Badge variant="outline" className="text-[10px]">{b.exam_code}</Badge>}
-                        <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                        {b.exam_code && <Badge variant="outline" className="text-xs">{b.exam_code}</Badge>}
+                        <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
                           {b.items?.length ?? 0} mocks
                         </Badge>
                       </div>

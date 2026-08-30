@@ -359,16 +359,16 @@ const AdminCoachingRefreshHub = () => {
                           <div>
                             <div className="font-medium flex items-center gap-2 flex-wrap">
                               {inst.name}
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge variant="outline" className="text-xs">
                                 {inst.institute_type || "city"}
                               </Badge>
                               {courses.length > 0 && (
-                                <Badge variant="secondary" className="text-[10px] gap-1">
+                                <Badge variant="secondary" className="text-xs gap-1">
                                   <BookOpen className="w-3 h-3" /> {courses.length} courses
                                 </Badge>
                               )}
                               {pending > 0 && (
-                                <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500">
+                                <Badge className="text-xs bg-amber-500 hover:bg-amber-500">
                                   {pending} pending
                                 </Badge>
                               )}

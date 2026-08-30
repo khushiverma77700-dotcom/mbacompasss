@@ -58,7 +58,7 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
     <div className="space-y-2">
       <Label className="text-xs font-semibold text-muted-foreground block">{label}</Label>
       {sizeHint && (
-        <p className="text-[10px] text-muted-foreground/70 -mt-1 flex items-center gap-1">
+        <p className="text-xs text-muted-foreground/70 -mt-1 flex items-center gap-1">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/50" />
           Recommended: {sizeHint}
         </p>

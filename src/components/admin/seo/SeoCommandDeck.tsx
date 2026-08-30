@@ -179,11 +179,11 @@ export default function SeoCommandDeck() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="gap-1 text-[10px]">
+            <Badge variant="outline" className="gap-1 text-xs">
               <Wifi className={`h-3 w-3 ${rt.connected ? "text-emerald-600" : "text-muted-foreground"}`} />
               {rt.connected ? `streaming · ${fmtInt(rt.eventCount, "0")} events` : "polling"}
             </Badge>
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-xs">
               {okSources}/{sources.length || 0} data sources live
             </Badge>
 
@@ -210,7 +210,7 @@ export default function SeoCommandDeck() {
           {m.heavy && (
             <div className="flex flex-col items-center gap-2">
               <RadarSweep blips={Math.max(4, running.length + Math.min(20, queued.length))} active={working} />
-              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Scanner</span>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Scanner</span>
             </div>
           )}
 
@@ -231,14 +231,14 @@ export default function SeoCommandDeck() {
                     <div className="mt-1 font-mono text-xl font-semibold tabular-nums text-emerald-700">
                       <FxCounter value={k.value === null ? null : Number(k.value)} replay={tick} format={(v) => fmtInt(v, "0")} />
                     </div>
-                    <div className="text-[11px] text-muted-foreground">{k.label}</div>
+                    <div className="text-xs text-muted-foreground">{k.label}</div>
                   </div>
                 </BurstOnIncrease>
               ))}
             </div>
             {m.heavy && (
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
                   <Activity className="h-3.5 w-3.5" /> Stage load, last 24 hours
                 </div>
                 <HeatGrid cells={heatCells} />
@@ -259,7 +259,7 @@ export default function SeoCommandDeck() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: m.dur(0.25) }}
-                  className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-800"
+                  className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-xs text-emerald-800"
                 >
                   {e.type.toLowerCase()} · {e.table.replace("seo_intel_", "")}
                 </motion.span>
@@ -283,7 +283,7 @@ export default function SeoCommandDeck() {
                 <div className="relative flex items-center gap-2 text-sm font-medium">
                   <CheckCircle2 className="h-3.5 w-3.5 text-sky-600" /> {safeText(r.label ?? r.job_type)}
                 </div>
-                <div className="relative text-[11px] text-muted-foreground">
+                <div className="relative text-xs text-muted-foreground">
                   started {agoText(r.started_at)} · {fmtInt(r.records_processed, "0")} records · {safeText(r.progress, "working")}
                 </div>
               </div>

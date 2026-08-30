@@ -427,10 +427,10 @@ const AdminMockBuilder = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary">Q{q.question_number}</Badge>
-                        <Badge variant="outline" className="text-[10px] uppercase">{q.question_type}</Badge>
-                        <Badge variant="outline" className="text-[10px] capitalize">{q.difficulty}</Badge>
-                        {q.topic && <Badge variant="outline" className="text-[10px]">{q.topic}</Badge>}
-                        {q.passage_id && <Badge variant="outline" className="text-[10px]">linked passage</Badge>}
+                        <Badge variant="outline" className="text-xs uppercase">{q.question_type}</Badge>
+                        <Badge variant="outline" className="text-xs capitalize">{q.difficulty}</Badge>
+                        {q.topic && <Badge variant="outline" className="text-xs">{q.topic}</Badge>}
+                        {q.passage_id && <Badge variant="outline" className="text-xs">linked passage</Badge>}
                       </div>
                       <MathContent html={q.question_html} className="prose prose-sm max-w-none line-clamp-2" />
                     </div>
@@ -508,7 +508,7 @@ const AdminMockBuilder = () => {
               <div>
                 <Label className="text-xs mb-1.5 block">Question (use $...$ for inline math, $$...$$ for block)</Label>
                 <RichTextEditor content={editorState.question_html} onChange={(html) => setEditorState({ ...editorState, question_html: html })} />
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Enter only the question text. Question number, set badge and option letters (A/B/C/D) are added automatically by the test UI — do not type "Q1.", "Set 1:", "A)" etc.
                 </p>
               </div>
@@ -595,11 +595,11 @@ const AdminMockBuilder = () => {
             </p>
             <details className="bg-muted/40 rounded p-2">
               <summary className="cursor-pointer font-medium text-xs">CSV header format</summary>
-              <pre className="text-[10px] mt-2 whitespace-pre-wrap">question_html,option_a,option_b,option_c,option_d,correct_label,topic,difficulty,positive_marks,negative_marks</pre>
+              <pre className="text-xs mt-2 whitespace-pre-wrap">question_html,option_a,option_b,option_c,option_d,correct_label,topic,difficulty,positive_marks,negative_marks</pre>
             </details>
             <details className="bg-muted/40 rounded p-2">
               <summary className="cursor-pointer font-medium text-xs">JSON example</summary>
-              <pre className="text-[10px] mt-2 whitespace-pre-wrap">{`[
+              <pre className="text-xs mt-2 whitespace-pre-wrap">{`[
   {
     "question_html": "<p>If $x+2=5$ then $x$ = ?</p>",
     "question_type": "mcq",

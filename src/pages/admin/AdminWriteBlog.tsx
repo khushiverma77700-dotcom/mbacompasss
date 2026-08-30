@@ -269,7 +269,7 @@ const AdminWriteBlog = () => {
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground">{filtered.length} options · {Object.values(selectedUrls).filter(s => list.some(l => l.url === s.url)).length} selected</span>
+          <span className="text-xs text-muted-foreground">{filtered.length} options · {Object.values(selectedUrls).filter(s => list.some(l => l.url === s.url)).length} selected</span>
           <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => selectAllVisible(list)}>
             Select all visible
           </Button>
@@ -282,7 +282,7 @@ const AdminWriteBlog = () => {
                 <Checkbox checked={!!selectedUrls[opt.url]} onCheckedChange={() => toggleUrl(opt)} className="mt-0.5" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{opt.label}</p>
-                  <p className="truncate text-[11px] text-muted-foreground font-mono">{opt.url}</p>
+                  <p className="truncate text-xs text-muted-foreground font-mono">{opt.url}</p>
                 </div>
               </label>
             ))}
@@ -488,7 +488,7 @@ const AdminWriteBlog = () => {
               </div>
               <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
                 {Object.values(selectedUrls).map(opt => (
-                  <Badge key={opt.url} variant="outline" className="gap-1 text-[11px] font-normal">
+                  <Badge key={opt.url} variant="outline" className="gap-1 text-xs font-normal">
                     {opt.label}
                     <button onClick={() => toggleUrl(opt)}><X className="h-3 w-3" /></button>
                   </Badge>
@@ -543,11 +543,11 @@ const AdminWriteBlog = () => {
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant={item.severity === "error" ? "destructive" : "outline"}>{item.severity || "warn"}</Badge>
                         <Badge variant="secondary">{item.field || "content"}</Badge>
-                        <span className="font-mono text-[11px] text-muted-foreground">{item.rule || "quality_rule"}</span>
+                        <span className="font-mono text-xs text-muted-foreground">{item.rule || "quality_rule"}</span>
                         {item.autoFixed && <Badge variant="outline">auto-corrected</Badge>}
                       </div>
                       <p className="mt-1 text-muted-foreground">{item.message || "Validation warning"}</p>
-                      <p className="mt-1 rounded border bg-background px-2 py-1 font-mono text-[11px] text-foreground break-words">
+                      <p className="mt-1 rounded border bg-background px-2 py-1 font-mono text-xs text-foreground break-words">
                         {item.matchedText || "Matched text was changed during sanitization."}
                       </p>
                     </div>

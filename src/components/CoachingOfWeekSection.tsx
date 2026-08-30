@@ -131,7 +131,7 @@ const CoachingOfWeekSection = () => {
                               <span>({inst.total_reviews} reviews)</span>
                             </span>
                           )}
-                          <Badge variant="secondary" className="text-[10px] py-0">{inst?.mode || "Offline"}</Badge>
+                          <Badge variant="secondary" className="text-xs py-0">{inst?.mode || "Offline"}</Badge>
                         </div>
                       </div>
 
@@ -159,7 +159,7 @@ const CoachingOfWeekSection = () => {
                           <div key={i} className="bg-muted/40 rounded-lg p-2.5 text-center border border-border/50">
                             <s.icon className={`w-4 h-4 ${s.color} mx-auto mb-1`} />
                             <div className="text-sm font-extrabold text-foreground leading-none">{s.value}</div>
-                            <div className="text-[9px] text-muted-foreground font-semibold mt-0.5 uppercase tracking-wider">{s.label}</div>
+                            <div className="text-xs text-muted-foreground font-semibold mt-0.5 uppercase tracking-wider">{s.label}</div>
                           </div>
                         ))}
                       </div>
@@ -168,7 +168,7 @@ const CoachingOfWeekSection = () => {
                       {(inst?.features || []).length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mb-4">
                           {(inst.features as string[]).slice(0, 4).map((f: string, i: number) => (
-                            <span key={i} className="inline-flex items-center gap-1 text-[10px] bg-muted rounded-full px-2.5 py-1 text-foreground font-medium border border-border/50">
+                            <span key={i} className="inline-flex items-center gap-1 text-xs bg-muted rounded-full px-2.5 py-1 text-foreground font-medium border border-border/50">
                               <CheckCircle className="w-2.5 h-2.5 text-primary flex-shrink-0" />{f}
                             </span>
                           ))}

@@ -77,7 +77,7 @@ export default function AnalysisDashboard({ mode }: { mode: Mode }) {
             <div className="flex items-start gap-3">
               <div className={`p-3 rounded-xl border bg-white shadow-sm ${meta.border}`}>{meta.icon}</div>
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-sky-700">{meta.chip}</div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-sky-700">{meta.chip}</div>
                 <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 leading-tight">{meta.title}</h1>
                 <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{meta.desc}</p>
               </div>
@@ -223,7 +223,7 @@ function Kpi({ label, value, icon, accent }: { label: string; value: React.React
   return (
     <div className="rounded-xl border bg-white p-3 shadow-sm">
       <div className="flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
+        <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
         <div className={`p-1.5 rounded-md border ${map[accent]}`}>{icon}</div>
       </div>
       <div className="text-2xl font-semibold text-slate-900 mt-1.5">{value}</div>
@@ -243,7 +243,7 @@ function StrengthBlock({ data }: { data: ReturnType<typeof useStrengthWeaknessDa
         <Card className="p-4 lg:col-span-2 bg-white">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-slate-900">Top strengths by readiness</h3>
-            <Badge variant="outline" className="text-[10px]">Top {top.length}</Badge>
+            <Badge variant="outline" className="text-xs">Top {top.length}</Badge>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -269,7 +269,7 @@ function StrengthBlock({ data }: { data: ReturnType<typeof useStrengthWeaknessDa
                   <span className="text-emerald-700 font-semibold">{t.readiness}%</span>
                 </div>
                 <Progress value={t.readiness} className="h-1.5" />
-                <div className="text-[10px] text-muted-foreground mt-0.5">{t.section} · {t.attempted} attempts · {t.accuracy}% accurate</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{t.section} · {t.attempted} attempts · {t.accuracy}% accurate</div>
               </div>
             ))}
           </div>
@@ -297,7 +297,7 @@ function WeakBlock({ data }: { data: ReturnType<typeof useStrengthWeaknessData> 
         <Card className="p-4 lg:col-span-2 bg-white">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-slate-900">Lowest readiness topics</h3>
-            <Badge variant="outline" className="text-[10px] border-rose-200 text-rose-700 bg-rose-50">Fix first</Badge>
+            <Badge variant="outline" className="text-xs border-rose-200 text-rose-700 bg-rose-50">Fix first</Badge>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -318,10 +318,10 @@ function WeakBlock({ data }: { data: ReturnType<typeof useStrengthWeaknessData> 
           <div className="space-y-2.5">
             {top.slice(0, 6).map((t, i) => (
               <div key={t.key} className="flex items-start gap-2">
-                <div className="w-6 h-6 rounded-md bg-rose-50 border border-rose-100 text-rose-700 text-[11px] font-semibold flex items-center justify-center shrink-0">{i + 1}</div>
+                <div className="w-6 h-6 rounded-md bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold flex items-center justify-center shrink-0">{i + 1}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-slate-800 truncate">{t.topic}</div>
-                  <div className="text-[10px] text-muted-foreground">{t.section} · {t.accuracy}% acc · {t.attempted} attempts</div>
+                  <div className="text-xs text-muted-foreground">{t.section} · {t.accuracy}% acc · {t.attempted} attempts</div>
                   <Progress value={t.readiness} className="h-1 mt-1" />
                 </div>
               </div>
@@ -411,7 +411,7 @@ function PerformanceBlock({
         <Card className="p-4 bg-white">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-semibold">All topics — sorted by improvement scope</h4>
-            <Badge variant="outline" className="text-[10px]">{data.allTopics.length} topics</Badge>
+            <Badge variant="outline" className="text-xs">{data.allTopics.length} topics</Badge>
           </div>
           <div className="overflow-x-auto max-h-[480px]">
             <Table>
@@ -608,7 +608,7 @@ function LeaderboardBlock() {
                 </TableCell>
                 <TableCell className="text-xs">
                   {r.display_handle}
-                  {r.is_self && <Badge variant="outline" className="ml-2 text-[9px] border-sky-200 text-sky-700 bg-sky-50">You</Badge>}
+                  {r.is_self && <Badge variant="outline" className="ml-2 text-xs border-sky-200 text-sky-700 bg-sky-50">You</Badge>}
                 </TableCell>
                 <TableCell className="text-right text-xs font-semibold text-sky-700">{r.xp}</TableCell>
                 <TableCell className="text-right text-xs">{r.level}</TableCell>
@@ -624,21 +624,21 @@ function LeaderboardBlock() {
         {me ? (
           <>
             <div className="text-center py-3">
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Global rank</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Global rank</div>
               <div className="text-4xl font-bold text-sky-700">#{me.rank}</div>
               <div className="text-xs text-muted-foreground mt-1">out of {rows.length}+ aspirants</div>
             </div>
             <div className="grid grid-cols-3 gap-2 mt-2">
               <div className="text-center rounded-lg border bg-sky-50/40 p-2">
-                <div className="text-[10px] uppercase text-muted-foreground">XP</div>
+                <div className="text-xs uppercase text-muted-foreground">XP</div>
                 <div className="text-base font-semibold text-sky-700">{me.xp}</div>
               </div>
               <div className="text-center rounded-lg border bg-emerald-50/40 p-2">
-                <div className="text-[10px] uppercase text-muted-foreground">Streak</div>
+                <div className="text-xs uppercase text-muted-foreground">Streak</div>
                 <div className="text-base font-semibold text-emerald-700">{me.streak_days}d</div>
               </div>
               <div className="text-center rounded-lg border bg-amber-50/40 p-2">
-                <div className="text-[10px] uppercase text-muted-foreground">Level</div>
+                <div className="text-xs uppercase text-muted-foreground">Level</div>
                 <div className="text-base font-semibold text-amber-700">{me.level}</div>
               </div>
             </div>

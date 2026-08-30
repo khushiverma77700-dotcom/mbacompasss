@@ -376,7 +376,7 @@ export default function StudentSOPReview() {
               </div>
               <div className="text-sm font-semibold">Upload SOP File</div>
               <div className="text-xs text-muted-foreground mt-1">PDF, DOCX, TXT, MD</div>
-              <div className="text-[10px] text-muted-foreground mt-1">Max 10 MB</div>
+              <div className="text-xs text-muted-foreground mt-1">Max 10 MB</div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -928,11 +928,11 @@ function Report({ evaluation, onReset, onDownload }: { evaluation: any; onReset:
               <div key={i} className="space-y-2 rounded-lg border border-slate-200 p-3">
                 <div className="text-xs font-bold uppercase tracking-wider text-sky-700">{r.section}</div>
                 <div className="bg-red-50 border border-red-200 rounded p-2 text-sm">
-                  <div className="text-[10px] font-bold text-red-700 uppercase mb-0.5">Original</div>
+                  <div className="text-xs font-bold text-red-700 uppercase mb-0.5">Original</div>
                   <div className="text-slate-700">{r.original_excerpt}</div>
                 </div>
                 <div className="bg-emerald-50 border border-emerald-200 rounded p-2 text-sm">
-                  <div className="text-[10px] font-bold text-emerald-700 uppercase mb-0.5">Rewritten</div>
+                  <div className="text-xs font-bold text-emerald-700 uppercase mb-0.5">Rewritten</div>
                   <div className="text-slate-700">{r.rewritten}</div>
                 </div>
                 {r.why_better && (
@@ -976,7 +976,7 @@ function Metric({ label, value, flag }: { label: string; value: any; flag?: "goo
                 "text-slate-800 bg-slate-50 border-slate-200";
   return (
     <div className={`rounded-lg border p-2.5 ${color}`}>
-      <div className="text-[10px] uppercase font-semibold opacity-70">{label}</div>
+      <div className="text-xs uppercase font-semibold opacity-70">{label}</div>
       <div className="text-lg font-bold">{value ?? "—"}</div>
     </div>
   );

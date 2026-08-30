@@ -209,7 +209,7 @@ export default function AdminPageSEOReview() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Step {i + 1}</span>
                     <div className="font-medium">{s.label}</div>
-                    <Badge variant="outline" className="text-[10px] uppercase">{s.status}</Badge>
+                    <Badge variant="outline" className="text-xs uppercase">{s.status}</Badge>
                   </div>
                   {s.data && (
                     <div className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">

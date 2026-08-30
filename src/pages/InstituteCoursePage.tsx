@@ -186,7 +186,7 @@ const InstituteCoursePage = () => {
         <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgb(15 23 42) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
 
         <div className="relative container mx-auto px-4 py-8 md:py-12 max-w-6xl">
-          <nav className="flex items-center gap-1.5 text-[13px] text-muted-foreground mb-5 flex-wrap">
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-5 flex-wrap">
             <Link to="/" className="hover:text-foreground">Home</Link>
             <ChevronRight className="w-3 h-3" />
             <Link to="/coaching" className="hover:text-foreground">Coaching</Link>
@@ -202,7 +202,7 @@ const InstituteCoursePage = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 <Link
                   to={`/institute/${inst.slug}`}
-                  className="inline-flex items-center gap-2 text-[12px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-sky-100 rounded-full px-3 py-1.5 shadow-sm transition"
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-sky-700 hover:text-sky-900 bg-white border border-sky-100 rounded-full px-3 py-1.5 shadow-sm transition"
                 >
                   {inst.logo_url ? (
                     <img src={inst.logo_url} alt={inst.name} width={20} height={20} className="w-5 h-5 rounded object-contain" loading="lazy" decoding="async" />
@@ -211,20 +211,20 @@ const InstituteCoursePage = () => {
                   )}
                   {inst.name}
                 </Link>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2.5 py-1">
+                <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2.5 py-1">
                   <GraduationCap className="w-3 h-3" /> Coaching Program
                 </span>
                 {c.rating && (
-                  <span className="inline-flex items-center gap-1 text-[12px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
                     <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {c.rating}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1">
                   <Flame className="w-3 h-3" /> Trending
                 </span>
               </div>
 
-              <h1 className="font-heading text-[28px] md:text-[44px] leading-[1.05] font-extrabold mt-4 tracking-tight text-slate-900">
+              <h1 className="font-heading text-2xl md:text-4xl leading-[1.05] font-extrabold mt-4 tracking-tight text-slate-900">
                 {(() => {
                   const words = (c.name || "").split(" ");
                   if (words.length < 2) return c.name;
@@ -234,7 +234,7 @@ const InstituteCoursePage = () => {
                 })()}
               </h1>
               <div className="h-px w-12 bg-sky-300 mt-3" />
-              <p className="mt-2 text-[15px] text-slate-600">
+              <p className="mt-2 text-sm text-slate-600">
                 Offered by <Link to={`/institute/${inst.slug}`} className="font-semibold text-slate-800 hover:text-sky-700">{inst.name}</Link>
                 {inst.city ? <> · <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{inst.city}</span></> : ""}
                 {inst.state ? `, ${inst.state}` : ""}
@@ -243,7 +243,7 @@ const InstituteCoursePage = () => {
               {/* Feature pills */}
               <div className="mt-5 flex flex-wrap gap-1.5">
                 {courseFeatures.map((f, i) => (
-                  <span key={i} className={`inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full bg-${f.color}-50 text-${f.color}-700 border border-${f.color}-100`}>
+                  <span key={i} className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-${f.color}-50 text-${f.color}-700 border border-${f.color}-100`}>
                     <f.icon className="w-3.5 h-3.5" /> {f.label}
                   </span>
                 ))}
@@ -258,10 +258,10 @@ const InstituteCoursePage = () => {
                   { icon: TrendingUp, label: "Mode", value: c.mode || "Hybrid", accent: "text-violet-700" },
                 ].map((s, i) => (
                   <div key={i} className="rounded-xl bg-white border border-sky-100 px-3 py-2.5 shadow-sm">
-                    <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                    <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                       <s.icon className="w-3 h-3" /> {s.label}
                     </div>
-                    <div className={`text-[14px] font-bold mt-0.5 ${s.accent}`}>{s.value}</div>
+                    <div className={`text-sm font-bold mt-0.5 ${s.accent}`}>{s.value}</div>
                   </div>
                 ))}
               </div>
@@ -269,34 +269,34 @@ const InstituteCoursePage = () => {
               {/* CTA row */}
               <div className="mt-6 flex flex-wrap gap-2">
                 <a href="#enquiry">
-                  <Button size="lg" className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-md text-[14px] font-semibold gap-1.5">
+                  <Button size="lg" className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-md text-sm font-semibold gap-1.5">
                     <Zap className="w-4 h-4" /> Enquire Now — Free
                   </Button>
                 </a>
                 {c.brochure_url && (
                   <a href={c.brochure_url} target="_blank" rel="noreferrer">
-                    <Button size="lg" variant="outline" className="text-[14px] font-semibold gap-1.5">
+                    <Button size="lg" variant="outline" className="text-sm font-semibold gap-1.5">
                       <Download className="w-4 h-4" /> Brochure
                     </Button>
                   </a>
                 )}
                 {inst.phone && (
                   <a href={`tel:${inst.phone}`}>
-                    <Button size="lg" variant="outline" className="text-[14px] font-semibold gap-1.5">
+                    <Button size="lg" variant="outline" className="text-sm font-semibold gap-1.5">
                       <Phone className="w-4 h-4" /> Call
                     </Button>
                   </a>
                 )}
-                <Button size="lg" variant="ghost" onClick={handleShare} className="text-[14px] font-semibold gap-1.5">
+                <Button size="lg" variant="ghost" onClick={handleShare} className="text-sm font-semibold gap-1.5">
                   <Share2 className="w-4 h-4" /> Share
                 </Button>
-                <Button size="lg" variant="ghost" onClick={() => { setLiked(v => !v); toast.success(liked ? "Removed from saved" : "Saved to your list"); }} className={`text-[14px] font-semibold gap-1.5 ${liked ? "text-rose-600" : ""}`}>
+                <Button size="lg" variant="ghost" onClick={() => { setLiked(v => !v); toast.success(liked ? "Removed from saved" : "Saved to your list"); }} className={`text-sm font-semibold gap-1.5 ${liked ? "text-rose-600" : ""}`}>
                   <Heart className={`w-4 h-4 ${liked ? "fill-rose-500 text-rose-500" : ""}`} /> {liked ? "Saved" : "Save"}
                 </Button>
               </div>
 
               {/* Trust strip */}
-              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-600">
+              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-600">
                 <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Verified Institute</span>
                 <span className="inline-flex items-center gap-1.5"><CircleCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% Free Counselling</span>
                 <span className="inline-flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-amber-600" /> EMI Available</span>
@@ -308,21 +308,21 @@ const InstituteCoursePage = () => {
             <div className="lg:sticky lg:top-24">
               <div className="rounded-2xl border-2 border-sky-100 bg-white shadow-xl overflow-hidden">
                 {c.discount_text && (
-                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[12px] font-bold px-4 py-2 text-center flex items-center justify-center gap-1.5">
+                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-4 py-2 text-center flex items-center justify-center gap-1.5">
                     <Tag className="w-3.5 h-3.5" /> {c.discount_text}
                   </div>
                 )}
                 <div className="p-5">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-sky-700">Course Fee</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-sky-700">Course Fee</div>
                   <div className="flex items-baseline gap-2 mt-1">
                     <span className="text-3xl font-extrabold text-slate-900">{feesDisplay}</span>
-                    <span className="text-[12px] text-slate-500">incl. taxes</span>
+                    <span className="text-xs text-slate-500">incl. taxes</span>
                   </div>
 
                   {/* Seats progress (visual only — based on total_seats existence) */}
                   {c.total_seats ? (
                     <div className="mt-4">
-                      <div className="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                      <div className="flex justify-between text-xs font-semibold text-slate-600 mb-1">
                         <span>Seats filling fast</span>
                         <span className="text-rose-600">Limited</span>
                       </div>
@@ -353,7 +353,7 @@ const InstituteCoursePage = () => {
                     )}
                   </div>
 
-                  <div className="mt-4 pt-4 border-t flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                  <div className="mt-4 pt-4 border-t flex items-center justify-center gap-1.5 text-xs text-slate-500">
                     <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified · No Spam · Free Counselling
                   </div>
                 </div>
@@ -379,7 +379,7 @@ const InstituteCoursePage = () => {
                 <TabsTrigger
                   key={t.v}
                   value={t.v}
-                  className="data-[state=active]:bg-sky-50 data-[state=active]:text-sky-700 data-[state=active]:shadow-none rounded-md px-3 text-[13px] font-semibold border-b-2 border-transparent data-[state=active]:border-sky-600"
+                  className="data-[state=active]:bg-sky-50 data-[state=active]:text-sky-700 data-[state=active]:shadow-none rounded-md px-3 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-sky-600"
                 >
                   {t.l}
                 </TabsTrigger>
@@ -429,8 +429,8 @@ const InstituteCoursePage = () => {
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-100 to-blue-100 text-sky-700 flex items-center justify-center mb-3 group-hover:scale-110 transition">
                       <p.icon className="w-5 h-5" />
                     </div>
-                    <div className="font-bold text-slate-900 text-[15px]">{p.title}</div>
-                    <div className="text-[13px] text-slate-600 mt-1 leading-relaxed">{p.desc}</div>
+                    <div className="font-bold text-slate-900 text-sm">{p.title}</div>
+                    <div className="text-sm text-slate-600 mt-1 leading-relaxed">{p.desc}</div>
                   </div>
                 ))}
               </div>
@@ -442,7 +442,7 @@ const InstituteCoursePage = () => {
               <div className="pointer-events-none absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
               <div className="relative grid md:grid-cols-[1fr_auto] gap-6 items-center">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider opacity-90 bg-white/15 rounded-full px-2.5 py-1 backdrop-blur">
+                  <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider opacity-90 bg-white/15 rounded-full px-2.5 py-1 backdrop-blur">
                     <Trophy className="w-3 h-3" /> Outcome focused
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold mt-3">Your shortest path to a top B-school</h2>
@@ -457,7 +457,7 @@ const InstituteCoursePage = () => {
                     ].map((s, i) => (
                       <div key={i} className="rounded-xl bg-white/10 border border-white/20 p-3 backdrop-blur">
                         <div className="text-2xl font-extrabold">{s.v}</div>
-                        <div className="text-[11px] uppercase tracking-wider opacity-90">{s.l}</div>
+                        <div className="text-xs uppercase tracking-wider opacity-90">{s.l}</div>
                       </div>
                     ))}
                   </div>
@@ -512,8 +512,8 @@ const InstituteCoursePage = () => {
                   <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center mb-3">
                     <f.icon className="w-5 h-5" />
                   </div>
-                  <div className="font-bold text-slate-900 text-[14px]">{f.title}</div>
-                  <div className="text-[13px] text-slate-600 mt-0.5">{f.desc}</div>
+                  <div className="font-bold text-slate-900 text-sm">{f.title}</div>
+                  <div className="text-sm text-slate-600 mt-0.5">{f.desc}</div>
                 </div>
               ))}
             </div>
@@ -525,7 +525,7 @@ const InstituteCoursePage = () => {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-sky-700 mb-3">Upcoming batch</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-sky-700 mb-3">Upcoming batch</div>
                 <div className="space-y-2.5 text-sm">
                   {c.start_date && <Row k="Start date" v={c.start_date} />}
                   {c.duration && <Row k="Duration" v={c.duration} />}
@@ -536,7 +536,7 @@ const InstituteCoursePage = () => {
               </div>
 
               <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-amber-700 mb-3">Fee structure</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-3">Fee structure</div>
                 <div className="space-y-2.5 text-sm">
                   <Row k="Total fees" v={feesDisplay} accent="text-amber-700 font-bold" />
                   {c.discount_text && <Row k="Current offer" v={c.discount_text} accent="text-emerald-700 font-bold" />}
@@ -553,7 +553,7 @@ const InstituteCoursePage = () => {
 
             {c.batch_info && (
               <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-sky-700 mb-2">Additional batch info</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-sky-700 mb-2">Additional batch info</div>
                 <p className="text-sm text-slate-700 leading-relaxed">{c.batch_info}</p>
               </div>
             )}
@@ -565,10 +565,10 @@ const InstituteCoursePage = () => {
             <Accordion type="single" collapsible className="bg-white border border-sky-100 rounded-2xl shadow-sm divide-y">
               {faqs.map((f, i) => (
                 <AccordionItem key={i} value={`f-${i}`} className="border-0 px-5">
-                  <AccordionTrigger className="text-left font-semibold text-slate-900 text-[14px] py-4 hover:no-underline">
+                  <AccordionTrigger className="text-left font-semibold text-slate-900 text-sm py-4 hover:no-underline">
                     {f.q}
                   </AccordionTrigger>
-                  <AccordionContent className="text-[13.5px] text-slate-700 leading-relaxed pb-4">
+                  <AccordionContent className="text-sm text-slate-700 leading-relaxed pb-4">
                     {f.a}
                   </AccordionContent>
                 </AccordionItem>
@@ -587,28 +587,28 @@ const InstituteCoursePage = () => {
                   {inst.phone && (
                     <a href={`tel:${inst.phone}`} className="rounded-xl border border-sky-100 bg-sky-50/50 hover:bg-sky-50 p-4 transition group">
                       <Phone className="w-5 h-5 text-sky-700 mb-2" />
-                      <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Call</div>
+                      <div className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Call</div>
                       <div className="text-sm font-bold text-slate-900 group-hover:text-sky-700 truncate">{inst.phone}</div>
                     </a>
                   )}
                   {inst.whatsapp && (
                     <a href={`https://wa.me/${inst.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="rounded-xl border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 p-4 transition group">
                       <MessageCircle className="w-5 h-5 text-emerald-700 mb-2" />
-                      <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">WhatsApp</div>
+                      <div className="text-xs uppercase tracking-wider text-slate-500 font-semibold">WhatsApp</div>
                       <div className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 truncate">{inst.whatsapp}</div>
                     </a>
                   )}
                   {inst.email && (
                     <a href={`mailto:${inst.email}`} className="rounded-xl border border-violet-100 bg-violet-50/50 hover:bg-violet-50 p-4 transition group">
                       <Mail className="w-5 h-5 text-violet-700 mb-2" />
-                      <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Email</div>
+                      <div className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Email</div>
                       <div className="text-sm font-bold text-slate-900 group-hover:text-violet-700 truncate">{inst.email}</div>
                     </a>
                   )}
                   {inst.website && (
                     <a href={inst.website} target="_blank" rel="noreferrer" className="rounded-xl border border-amber-100 bg-amber-50/50 hover:bg-amber-50 p-4 transition group">
                       <Globe className="w-5 h-5 text-amber-700 mb-2" />
-                      <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Website</div>
+                      <div className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Website</div>
                       <div className="text-sm font-bold text-slate-900 group-hover:text-amber-700 truncate">Visit site</div>
                     </a>
                   )}
@@ -637,11 +637,11 @@ const InstituteCoursePage = () => {
                   to={`/institute/${inst.slug}/course/${slugify(oc.name || "")}`}
                   className="group rounded-2xl bg-white border border-sky-100 p-4 shadow-sm hover:shadow-lg hover:border-sky-300 hover:-translate-y-0.5 transition-all"
                 >
-                  <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
+                  <div className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
                     <GraduationCap className="w-2.5 h-2.5" /> Course
                   </div>
-                  <div className="font-bold text-slate-900 mt-2 text-[14px] leading-snug line-clamp-2 group-hover:text-sky-700">{oc.name}</div>
-                  <div className="mt-2 flex items-center justify-between text-[12px] text-slate-600">
+                  <div className="font-bold text-slate-900 mt-2 text-sm leading-snug line-clamp-2 group-hover:text-sky-700">{oc.name}</div>
+                  <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
                     <span>{oc.duration || "Flexible"}</span>
                     <span className="font-bold text-amber-700">
                       {oc.fees ? (typeof oc.fees === "number" ? `₹${oc.fees.toLocaleString("en-IN")}` : `₹${oc.fees}`) : "Enquire"}
@@ -676,7 +676,7 @@ const InstituteCoursePage = () => {
       {/* Mobile sticky CTA */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-2xl p-3 flex gap-2">
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Course Fee</div>
+          <div className="text-xs uppercase tracking-wider text-slate-500 font-bold">Course Fee</div>
           <div className="text-sm font-extrabold text-amber-700 truncate">{feesDisplay}</div>
         </div>
         <a href="#enquiry" className="flex-1">
@@ -704,7 +704,7 @@ const Row = ({ k, v, accent }: { k: string; v: string; accent?: string }) => (
 const SectionTitle = ({ eyebrow, title }: { eyebrow: string; title: string }) => (
   <div>
     <div className="text-xs font-semibold uppercase tracking-wider text-sky-700">{eyebrow}</div>
-    <h2 className="text-2xl md:text-[26px] font-bold mt-1 text-slate-900">{title}</h2>
+    <h2 className="text-2xl md:text-2xl font-bold mt-1 text-slate-900">{title}</h2>
     <div className="mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600" />
   </div>
 );

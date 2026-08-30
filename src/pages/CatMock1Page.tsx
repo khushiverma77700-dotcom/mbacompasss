@@ -87,7 +87,7 @@ const BrowserFrame = memo(({ label, children }: { label: string; children: React
         <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
       </div>
-      <div className="flex-1 text-center text-[10px] sm:text-[11px] text-slate-500 font-mono truncate px-2">{label}</div>
+      <div className="flex-1 text-center text-xs sm:text-xs text-slate-500 font-mono truncate px-2">{label}</div>
       <Maximize2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
     </div>
     <div className="p-3 sm:p-4 bg-gradient-to-br from-slate-50 to-white">{children}</div>
@@ -101,10 +101,10 @@ const MockFullLengthSnap = () => (
   <BrowserFrame label="dashboard.mbacompass.in / mocks">
     <div className="flex items-center justify-between mb-3 gap-2">
       <div className="min-w-0">
-        <div className="text-[11px] text-slate-500">CAT Full-Length</div>
+        <div className="text-xs text-slate-500">CAT Full-Length</div>
         <div className="font-semibold text-slate-900 text-sm truncate">CAT Mock #12 — Advanced</div>
       </div>
-      <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 shrink-0 text-[10px]">Difficulty 4/5</Badge>
+      <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-0 shrink-0 text-xs">Difficulty 4/5</Badge>
     </div>
     <div className="grid grid-cols-3 gap-2 mb-3">
       {[
@@ -117,9 +117,9 @@ const MockFullLengthSnap = () => (
           className="rounded-lg border border-slate-200 p-2 bg-white anim-pop"
           style={{ animationDelay: `${i * 120}ms` }}
         >
-          <div className="text-[10px] font-semibold text-sky-600">{s.l}</div>
+          <div className="text-xs font-semibold text-sky-600">{s.l}</div>
           <div className="text-xs text-slate-800 mt-0.5">{s.q}</div>
-          <div className="text-[10px] text-slate-500 flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {s.t}</div>
+          <div className="text-xs text-slate-500 flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {s.t}</div>
         </div>
       ))}
     </div>
@@ -138,12 +138,12 @@ const MockInsightsSnap = () => {
     <BrowserFrame label="dashboard.mbacompass.in / insights">
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="min-w-0">
-          <div className="text-[11px] text-slate-500">My Insights</div>
+          <div className="text-xs text-slate-500">My Insights</div>
           <div className="font-semibold text-slate-900 text-sm">All India Rank</div>
         </div>
         <div className="text-right shrink-0">
           <div className="text-lg font-bold text-sky-600 anim-ticker">#1,284</div>
-          <div className="text-[10px] text-emerald-600 flex items-center gap-0.5 justify-end">
+          <div className="text-xs text-emerald-600 flex items-center gap-0.5 justify-end">
             <TrendingUp className="w-3 h-3 anim-float" /> +362
           </div>
         </div>
@@ -159,15 +159,15 @@ const MockInsightsSnap = () => {
       </div>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-md bg-emerald-50 p-1.5">
-          <div className="text-[10px] text-slate-500">Accuracy</div>
+          <div className="text-xs text-slate-500">Accuracy</div>
           <div className="text-xs font-bold text-emerald-600">84%</div>
         </div>
         <div className="rounded-md bg-sky-50 p-1.5">
-          <div className="text-[10px] text-slate-500">Attempts</div>
+          <div className="text-xs text-slate-500">Attempts</div>
           <div className="text-xs font-bold text-sky-600">58</div>
         </div>
         <div className="rounded-md bg-amber-50 p-1.5">
-          <div className="text-[10px] text-slate-500">Percentile</div>
+          <div className="text-xs text-slate-500">Percentile</div>
           <div className="text-xs font-bold text-amber-600">96.4</div>
         </div>
       </div>
@@ -182,7 +182,7 @@ const MockPlannerSnap = () => {
     <BrowserFrame label="dashboard.mbacompass.in / day-planner">
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="min-w-0">
-          <div className="text-[11px] text-slate-500">My Day Planner</div>
+          <div className="text-xs text-slate-500">My Day Planner</div>
           <div className="font-semibold text-slate-900 text-sm">Consistency Heatmap</div>
         </div>
         <div className="inline-flex items-center gap-1 text-xs text-orange-600 font-semibold shrink-0">
@@ -212,7 +212,7 @@ const MockPlannerSnap = () => {
             <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${task.done ? "text-emerald-500" : "text-slate-300"}`} />
             <div className="flex-1 min-w-0">
               <div className={`text-xs font-medium truncate ${task.done ? "text-slate-500 line-through" : "text-slate-800"}`}>{task.t}</div>
-              <div className="text-[10px] text-slate-400 truncate">{task.d}</div>
+              <div className="text-xs text-slate-400 truncate">{task.d}</div>
             </div>
           </div>
         ))}
@@ -225,11 +225,11 @@ const MockVocabSnap = () => (
   <BrowserFrame label="dashboard.mbacompass.in / vocabulary">
     <div className="flex items-center justify-between mb-3 gap-2">
       <div className="min-w-0">
-        <div className="text-[11px] text-slate-500">Word of the Day</div>
+        <div className="text-xs text-slate-500">Word of the Day</div>
         <div className="font-semibold text-slate-900 text-lg anim-typing anim-caret">Ubiquitous</div>
-        <div className="text-[11px] text-slate-500 mt-0.5 truncate">/juːˈbɪk.wɪ.təs/ · adjective</div>
+        <div className="text-xs text-slate-500 mt-0.5 truncate">/juːˈbɪk.wɪ.təs/ · adjective</div>
       </div>
-      <Badge className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-100 border-0 shrink-0 text-[10px]">CAT · XAT</Badge>
+      <Badge className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-100 border-0 shrink-0 text-xs">CAT · XAT</Badge>
     </div>
     <div className="space-y-2 text-xs">
       {[
@@ -242,12 +242,12 @@ const MockVocabSnap = () => (
           className="rounded-md bg-slate-50 p-2 anim-pop"
           style={{ animationDelay: `${300 + i * 180}ms` }}
         >
-          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{r.l}</div>
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{r.l}</div>
           <div className="text-slate-800 break-words">{r.v}</div>
         </div>
       ))}
     </div>
-    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
       <span>Progress today</span>
       <span className="font-semibold text-sky-600">12 / 15 words</span>
     </div>
@@ -260,7 +260,7 @@ const MockVocabSnap = () => (
 const MockPersonalizedSnap = () => (
   <BrowserFrame label="dashboard.mbacompass.in / personalized-hub">
     <div className="mb-3">
-      <div className="text-[11px] text-slate-500">Personalized Hub</div>
+      <div className="text-xs text-slate-500">Personalized Hub</div>
       <div className="font-semibold text-slate-900 text-sm">Build a mock in one click</div>
     </div>
     <div className="space-y-2 text-xs">
@@ -289,12 +289,12 @@ const MockPersonalizedSnap = () => (
 const MockFormulaSnap = () => (
   <BrowserFrame label="dashboard.mbacompass.in / formulas">
     <div className="mb-2">
-      <div className="text-[11px] text-slate-500">Quants Formula Book</div>
+      <div className="text-xs text-slate-500">Quants Formula Book</div>
       <div className="font-semibold text-slate-900 text-sm">Time · Speed · Distance</div>
     </div>
     <div className="rounded-lg bg-gradient-to-br from-violet-50 to-white border border-violet-100 p-3 text-center anim-pop">
       <div className="font-mono text-base sm:text-lg text-violet-700 break-words">Distance = Speed × Time</div>
-      <div className="text-[10px] text-slate-500 mt-1">D = S × T</div>
+      <div className="text-xs text-slate-500 mt-1">D = S × T</div>
     </div>
     <div className="mt-3 space-y-1.5 text-xs text-slate-700">
       <div className="flex gap-2 anim-pop" style={{ animationDelay: "300ms" }}><span className="text-violet-500">•</span> Use when two variables are known</div>
@@ -434,7 +434,7 @@ const SnapshotButton = ({ title, children, onOpen }: { title: string; children: 
     className="group relative block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-xl"
   >
     {children}
-    <span className="pointer-events-none absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-[10px] font-medium px-2 py-1 rounded-md inline-flex items-center gap-1">
+    <span className="pointer-events-none absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1">
       <Maximize2 className="w-3 h-3" /> View
     </span>
   </button>
@@ -861,10 +861,10 @@ const CatMock1Page = () => {
                 transition={{ duration: 0.4, ease: EASE, delay: i * 0.05 }}
               >
                 <Card className="p-5 h-full border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all bg-white">
-                  <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r ${e.accent}`}>
+                  <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold text-white bg-gradient-to-r ${e.accent}`}>
                     <Rocket className="w-3 h-3" /> {e.name}
                   </div>
-                  <div className="text-[11px] text-slate-500 mt-2">{e.tag}</div>
+                  <div className="text-xs text-slate-500 mt-2">{e.tag}</div>
                   <div className="mt-4 space-y-2 text-sm">
                     <div className="flex items-center justify-between"><span className="text-slate-600">Full-length mocks</span><span className="font-bold text-slate-900">{e.full}</span></div>
                     <div className="flex items-center justify-between"><span className="text-slate-600">Sectional tests</span><span className="font-bold text-slate-900">{e.sec}</span></div>
@@ -1300,7 +1300,7 @@ const CatMock1Page = () => {
         {/* Sticky mobile Buy CTA */}
         <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2.5 flex items-center gap-2 shadow-[0_-6px_20px_rgba(0,0,0,0.06)]">
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] text-slate-500">Complete access</div>
+            <div className="text-xs text-slate-500">Complete access</div>
             <div className="font-bold text-slate-900">₹999 <span className="text-xs font-normal text-slate-500">/ one-time</span></div>
           </div>
           <BuyNowButton size="default" label="Buy Now" />

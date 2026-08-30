@@ -394,7 +394,7 @@ const CollegeDetailPage = () => {
             >
               <Share2 className="w-3.5 h-3.5" /> Share
             </button>
-            <Badge className="bg-amber-400/95 text-amber-950 border-none font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 shadow-md">
+            <Badge className="bg-amber-400/95 text-amber-950 border-none font-bold text-xs uppercase tracking-wider px-2.5 py-1 shadow-md">
               ✦ Verified Profile
             </Badge>
           </div>
@@ -416,17 +416,17 @@ const CollegeDetailPage = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   {Number(college.ranking) > 0 && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-950 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-md uppercase tracking-wider shadow-md">
+                    <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-950 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-md uppercase tracking-wider shadow-md">
                       <Award className="w-3 h-3" /> NIRF Rank #{college.ranking}
                     </span>
                   )}
                   {college.tier && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-foreground bg-white/15 backdrop-blur-sm border border-white/25 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-foreground bg-white/15 backdrop-blur-sm border border-white/25 px-2.5 py-1 rounded-md uppercase tracking-wider">
                       {college.tier}
                     </span>
                   )}
                   {college.type && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-foreground bg-white/15 backdrop-blur-sm border border-white/25 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-foreground bg-white/15 backdrop-blur-sm border border-white/25 px-2.5 py-1 rounded-md uppercase tracking-wider">
                       <Building className="w-3 h-3" /> {college.type}
                     </span>
                   )}
@@ -472,9 +472,9 @@ const CollegeDetailPage = () => {
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                     <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
                       <Icon className="w-3.5 h-3.5 text-primary-foreground/70 flex-shrink-0" />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70 truncate">{s.label}</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70 truncate">{s.label}</span>
                     </div>
-                    <div className="font-heading font-extrabold text-primary-foreground text-[0.95rem] sm:text-base md:text-lg leading-tight truncate" title={s.value}>{s.value}</div>
+                    <div className="font-heading font-extrabold text-primary-foreground text-sm sm:text-base md:text-lg leading-tight truncate" title={s.value}>{s.value}</div>
 
                     <div className="mt-1.5">
                       <CitationLink source={s.source} year={s.year} entityName={college.name} entityWebsite={(college as any).website} className="!bg-white/10 !border-white/20 !text-primary-foreground/80" />
@@ -528,7 +528,7 @@ const CollegeDetailPage = () => {
               {rankAccreditations.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {rankAccreditations.slice(0, 6).map((a: string) => (
-                    <span key={a} className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-400/95 text-emerald-950 shadow-sm">
+                    <span key={a} className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-400/95 text-emerald-950 shadow-sm">
                       ✓ {a}
                     </span>
                   ))}
@@ -640,7 +640,7 @@ const CollegeDetailPage = () => {
                       <div className="flex items-center gap-0.5 justify-center mt-1">
                         {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />)}
                       </div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">Overall</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mt-1">Overall</div>
                     </div>
                     <div className="flex-1 w-full space-y-2.5 min-w-0">
                       {whyJoinRatings.map((a: any) => (
@@ -756,7 +756,7 @@ const CollegeDetailPage = () => {
                       <div key={s.label} className={`relative bg-gradient-to-br ${s.color} rounded-xl p-4 text-center border border-border/40 hover:shadow-md hover:-translate-y-0.5 transition-all`}>
                         <s.icon className={`w-5 h-5 ${s.iconColor} mx-auto mb-2`} />
                         <div className="font-heading text-lg font-extrabold text-foreground leading-tight">{s.value}</div>
-                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">{s.label}</div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mt-1">{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -817,7 +817,7 @@ const CollegeDetailPage = () => {
                           </tbody>
                         </table>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-2 sm:hidden">← Swipe to view all columns →</p>
+                      <p className="text-xs text-muted-foreground mt-2 sm:hidden">← Swipe to view all columns →</p>
                     </div>
                   ) : cutoffInfo ? (
                     <div className="overflow-x-auto rounded-lg border border-border">
@@ -868,7 +868,7 @@ const CollegeDetailPage = () => {
                         </div>
                         <div className="min-w-0">
                           <div className="font-bold text-foreground text-sm">{r.body}</div>
-                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mt-0.5">{r.year} Ranking</div>
+                          <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mt-0.5">{r.year} Ranking</div>
                         </div>
                       </div>
                     ))}
@@ -1114,10 +1114,10 @@ const CollegeDetailPage = () => {
                 <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
                 <CardContent className="px-5 py-5 relative z-10">
                   <div className="flex flex-col gap-2 mb-3.5">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md self-start">
+                    <span className="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md self-start">
                       ★ Featured
                     </span>
-                    <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
+                    <span className="text-xs uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
                   </div>
                   <p className="font-heading text-2xl xl:text-3xl font-extrabold leading-tight mb-1 break-words [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
                     {college.fees_lakhs ? `₹${college.fees_lakhs}L` : numericStat(college.fees, "Contact College")}
@@ -1135,15 +1135,15 @@ const CollegeDetailPage = () => {
                   <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-3 gap-2 text-center">
                     <div>
                       <div className="text-base font-extrabold">100%</div>
-                      <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Verified</div>
+                      <div className="text-xs text-primary-foreground/70 uppercase tracking-wider">Verified</div>
                     </div>
                     <div className="border-x border-white/20">
                       <div className="text-base font-extrabold">Free</div>
-                      <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Brochure</div>
+                      <div className="text-xs text-primary-foreground/70 uppercase tracking-wider">Brochure</div>
                     </div>
                     <div>
                       <div className="text-base font-extrabold">24h</div>
-                      <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Response</div>
+                      <div className="text-xs text-primary-foreground/70 uppercase tracking-wider">Response</div>
                     </div>
                   </div>
                 </CardContent>
@@ -1185,11 +1185,11 @@ const CollegeDetailPage = () => {
                           <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-xl hover:bg-primary/5 border border-border hover:border-primary/30 transition-all group/sc">
                             <div className="flex items-start gap-2">
                               {sc.ranking && (
-                                <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">#{sc.ranking}</span>
+                                <span className="text-xs font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">#{sc.ranking}</span>
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
-                                <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {numericStat(sc.fees)}</div>
+                                <div className="text-xs text-muted-foreground line-clamp-1">{sc.city} · {numericStat(sc.fees)}</div>
                               </div>
                               <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
                             </div>
@@ -1244,7 +1244,7 @@ const CollegeDetailPage = () => {
                             <item.icon className="w-4 h-4 text-primary" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{item.label}</div>
+                            <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{item.label}</div>
                             <div className="font-bold text-foreground text-sm truncate">{item.value}</div>
                           </div>
                         </div>

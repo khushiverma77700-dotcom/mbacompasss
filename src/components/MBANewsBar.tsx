@@ -76,7 +76,7 @@ const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
             <Newspaper className="w-4 h-4 text-primary" />
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary">
+            <span className="text-xs md:text-xs font-bold uppercase tracking-wider text-primary">
               <span className="md:hidden">News</span>
               <span className="hidden md:inline">MBA Newsroom</span>
             </span>
@@ -88,7 +88,7 @@ const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true
                 const content = (
                   <>
                     {n.tag && (
-                      <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded shrink-0">
+                      <span className="text-xs md:text-xs font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded shrink-0">
                         {n.tag}
                       </span>
                     )}

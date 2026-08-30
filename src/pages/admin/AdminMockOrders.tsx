@@ -264,7 +264,7 @@ export default function AdminMockOrders() {
                     </td>
                     <td className="p-3">
                       <div>{r.bundle_name}</div>
-                      <Badge variant="outline" className="mt-1 text-[10px] uppercase tracking-wide">
+                      <Badge variant="outline" className="mt-1 text-xs uppercase tracking-wide">
                         {r.product_kind === "course" ? "Course" : "Bundle"}
                       </Badge>
                     </td>

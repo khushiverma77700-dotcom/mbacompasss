@@ -273,13 +273,13 @@ export default function StudentVocabularyFeed() {
         <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700 backdrop-blur">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/80 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-sky-700 backdrop-blur">
                 <Sparkles className="h-3 w-3" /> B-School Vocabulary
               </div>
               <h1 className="font-heading mt-2 text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">
                 Level {level} · {xp.toLocaleString()} XP
               </h1>
-              <p className="mt-1 text-[13px] text-slate-600 sm:text-sm">
+              <p className="mt-1 text-sm text-slate-600 sm:text-sm">
                 Daily streak builds your CAT/GDPI vocabulary muscle. Hit your target every day.
               </p>
             </div>
@@ -294,7 +294,7 @@ export default function StudentVocabularyFeed() {
 
             {/* XP bar */}
             <div>
-              <div className="mb-1 flex items-center justify-between text-[11px] font-medium text-slate-600">
+              <div className="mb-1 flex items-center justify-between text-xs font-medium text-slate-600">
                 <span className="inline-flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" /> Level {level}</span>
                 <span>{xpInLevel} / 500 XP</span>
               </div>
@@ -311,7 +311,7 @@ export default function StudentVocabularyFeed() {
           {/* Target ring */}
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-sky-100 bg-white/70 p-5 backdrop-blur lg:min-w-[240px]">
             <div className="flex items-center justify-between gap-2 self-stretch">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <Target className="h-3.5 w-3.5 text-sky-600" /> Daily Target
               </span>
               <Dialog open={targetOpen} onOpenChange={setTargetOpen}>
@@ -337,7 +337,7 @@ export default function StudentVocabularyFeed() {
                       />
                     </div>
                     <div>
-                      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Quick picks</div>
+                      <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Quick picks</div>
                       <div className="flex flex-wrap gap-1.5">
                         {TARGET_PRESETS.map((n) => (
                           <button
@@ -384,16 +384,16 @@ export default function StudentVocabularyFeed() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <div className="font-heading text-2xl font-bold text-slate-900">{readTodayCount}<span className="text-base text-slate-400">/{dailyTarget}</span></div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500">{targetPct}%</div>
+                <div className="text-xs uppercase tracking-wider text-slate-500">{targetPct}%</div>
               </div>
             </div>
 
             {targetMet ? (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold text-emerald-700">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                 <Crown className="h-3.5 w-3.5" /> Target smashed!
               </div>
             ) : (
-              <div className="text-center text-[11px] text-slate-500">
+              <div className="text-center text-xs text-slate-500">
                 {dailyTarget - readTodayCount} more to lock today's streak
               </div>
             )}
@@ -411,12 +411,12 @@ export default function StudentVocabularyFeed() {
                 <Star className="mr-1 h-3 w-3 fill-current" /> Word of the Day
               </Badge>
               {wotd.difficulty && (
-                <Badge variant="outline" className="border-amber-300 text-[10px] uppercase tracking-wide text-amber-800">
+                <Badge variant="outline" className="border-amber-300 text-xs uppercase tracking-wide text-amber-800">
                   {wotd.difficulty}
                 </Badge>
               )}
               {wotd.category && (
-                <Badge variant="secondary" className="bg-white/80 text-[10px] capitalize text-slate-700">
+                <Badge variant="secondary" className="bg-white/80 text-xs capitalize text-slate-700">
                   {String(wotd.category).replace("_", " ")}
                 </Badge>
               )}
@@ -448,15 +448,15 @@ export default function StudentVocabularyFeed() {
                         </span>
                       ))}
                     </span>
-                    <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">Tap to play</span>
+                    <span className="mt-0.5 text-xs font-semibold uppercase tracking-wider text-amber-700">Tap to play</span>
                   </span>
                 </button>
 
                 <div className="mt-4 space-y-1.5">
-                  <p className="text-[15px] leading-relaxed text-slate-800 sm:text-base">{wotd.meaning}</p>
+                  <p className="text-sm leading-relaxed text-slate-800 sm:text-base">{wotd.meaning}</p>
                   {wotd.meaning_hindi && (
                     <p className="text-sm text-slate-600">
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">हिन्दी · </span>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">हिन्दी · </span>
                       {wotd.meaning_hindi}
                     </p>
                   )}
@@ -511,7 +511,7 @@ export default function StudentVocabularyFeed() {
 
           {newToday.length > 0 && (
             <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50/40 p-3">
-              <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-violet-700">
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-violet-700">
                 <PlusCircle className="h-3 w-3" /> Just added today
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -546,7 +546,7 @@ export default function StudentVocabularyFeed() {
             >
               <Search className="h-4 w-4 text-sky-600" />
               <span className="flex-1">Search a word… we'll show it in the same card format</span>
-              <kbd className="hidden rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-mono text-slate-500 sm:inline">↵</kbd>
+              <kbd className="hidden rounded border border-slate-200 bg-white px-1.5 py-0.5 text-xs font-mono text-slate-500 sm:inline">↵</kbd>
             </button>
           ) : (
             <div className="space-y-2 rounded-xl border-2 border-sky-300 bg-sky-50/40 p-2 dark:bg-sky-500/5">
@@ -569,14 +569,14 @@ export default function StudentVocabularyFeed() {
                   {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} Search
                 </Button>
               </div>
-              <div className="px-1 text-[11px] text-slate-500">
+              <div className="px-1 text-xs text-slate-500">
                 Searches the library first. If not found, AI will explain & save the word.
               </div>
             </div>
           )}
 
           <div className="flex items-center justify-end border-t pt-3">
-            <span className="text-[11px] text-slate-500">{visible.length} new words to learn</span>
+            <span className="text-xs text-slate-500">{visible.length} new words to learn</span>
           </div>
         </CardContent>
 
@@ -658,7 +658,7 @@ export default function StudentVocabularyFeed() {
                         <div className="mt-1 text-xs italic text-slate-500">{w.part_of_speech}</div>
                       )}
                     </div>
-                    <Badge variant="outline" className="shrink-0 border-sky-200 text-[10px] uppercase tracking-wide text-sky-700">
+                    <Badge variant="outline" className="shrink-0 border-sky-200 text-xs uppercase tracking-wide text-sky-700">
                       {w.difficulty}
                     </Badge>
                   </div>
@@ -675,20 +675,20 @@ export default function StudentVocabularyFeed() {
                     <span className="flex flex-col text-left">
                       <span className="flex flex-wrap gap-0.5">
                         {syllables.map((p: string, i: number) => (
-                          <span key={i} className="rounded border border-sky-200 bg-white px-1.5 py-px font-mono text-[11px] font-semibold text-sky-800">
+                          <span key={i} className="rounded border border-sky-200 bg-white px-1.5 py-px font-mono text-xs font-semibold text-sky-800">
                             {p}
                           </span>
                         ))}
                       </span>
-                      <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-700">Tap to play</span>
+                      <span className="mt-0.5 text-xs font-bold uppercase tracking-wider text-sky-700">Tap to play</span>
                     </span>
                   </button>
 
                   <div className="relative z-10 mt-4 space-y-2 pointer-events-none">
-                    <p className="text-[15px] leading-relaxed text-slate-800">{w.meaning}</p>
+                    <p className="text-sm leading-relaxed text-slate-800">{w.meaning}</p>
                     {w.meaning_hindi && (
                       <p className="text-sm text-slate-600">
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">HI · </span>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">HI · </span>
                         {w.meaning_hindi}
                       </p>
                     )}
@@ -701,18 +701,18 @@ export default function StudentVocabularyFeed() {
                     <div className="relative z-10 mt-3 flex flex-wrap items-center gap-1 pointer-events-none">
                       <GraduationCap className="h-3 w-3 text-sky-600" />
                       {w.exam_appearances.slice(0, 4).map((e: string) => (
-                        <Badge key={e} className="border-0 bg-sky-100 text-[10px] text-sky-700 hover:bg-sky-100">{e}</Badge>
+                        <Badge key={e} className="border-0 bg-sky-100 text-xs text-sky-700 hover:bg-sky-100">{e}</Badge>
                       ))}
                     </div>
                   )}
 
-                  <div className="relative z-10 mt-3 flex items-center gap-1.5 rounded-lg border border-dashed border-sky-300 bg-sky-50/70 px-2.5 py-1.5 text-[11px] font-medium text-sky-700 pointer-events-none">
+                  <div className="relative z-10 mt-3 flex items-center gap-1.5 rounded-lg border border-dashed border-sky-300 bg-sky-50/70 px-2.5 py-1.5 text-xs font-medium text-sky-700 pointer-events-none">
                     <ArrowUpRight className="h-3.5 w-3.5" />
                     <span>Tap card for full analysis — examples, synonyms, mnemonics & usage</span>
                   </div>
 
                   <div className="relative z-10 mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
-                    <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">
+                    <Badge variant="secondary" className="bg-slate-100 text-xs capitalize text-slate-600">
                       {w.category?.replace("_", " ")}
                     </Badge>
                     <div className="flex flex-1 justify-end gap-1.5 sm:flex-none">
@@ -789,7 +789,7 @@ const TONE: Record<string, string> = {
 function StatPill({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: number; tone: keyof typeof TONE }) {
   return (
     <div className={cn("relative overflow-hidden rounded-xl border border-white/60 bg-gradient-to-br p-3 backdrop-blur", TONE[tone])}>
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider opacity-90">
+      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-90">
         {icon} {label}
       </div>
       <div className="mt-1 font-heading text-xl font-bold text-slate-900">{value}</div>
@@ -801,9 +801,9 @@ function ReportTile({ label, value, accent, badge }: { label: string; value: num
   return (
     <div className={cn("relative rounded-xl border border-slate-100 bg-gradient-to-br p-3", TONE[accent])}>
       {badge && (
-        <span className="absolute right-2 top-2 rounded-full bg-rose-500 px-1.5 py-px text-[9px] font-bold text-white">{badge}</span>
+        <span className="absolute right-2 top-2 rounded-full bg-rose-500 px-1.5 py-px text-xs font-bold text-white">{badge}</span>
       )}
-      <div className="text-[10px] font-semibold uppercase tracking-wider opacity-80">{label}</div>
+      <div className="text-xs font-semibold uppercase tracking-wider opacity-80">{label}</div>
       <div className="mt-1 font-heading text-2xl font-bold text-slate-900">{value}</div>
     </div>
   );

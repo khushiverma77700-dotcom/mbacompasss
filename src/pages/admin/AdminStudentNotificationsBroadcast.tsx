@@ -174,8 +174,8 @@ export default function AdminStudentNotifications() {
           <div className="rounded-xl border ring-1 ring-sky-200/60 overflow-hidden">
             <div className="p-4 bg-gradient-to-br from-sky-50 to-white">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-sky-100 text-sky-700">{TYPES.find(t => t.value === type)?.label}</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500 text-white">New</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-sky-100 text-sky-700">{TYPES.find(t => t.value === type)?.label}</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-rose-500 text-white">New</span>
               </div>
               <div className="font-semibold">{title || "Notification title"}</div>
               {message && <div className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{message}</div>}
@@ -201,14 +201,14 @@ export default function AdminStudentNotifications() {
                 <div className="min-w-0">
                   <div className="font-medium truncate">{n.title}</div>
                   {n.message && <div className="text-xs text-muted-foreground line-clamp-2">{n.message}</div>}
-                  <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                     <span className="uppercase font-semibold">{n.type}</span>
                     {n.image_url && <span>· image</span>}
                     {n.link_url && <span>· button</span>}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(n.created_at).toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">{new Date(n.created_at).toLocaleString()}</div>
                   <Button size="sm" variant="ghost" className="text-rose-600 h-7 px-2" onClick={() => remove(n.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>

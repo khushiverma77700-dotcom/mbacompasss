@@ -197,7 +197,7 @@ function PlatformCard({
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold">{title}</h3>
         {active && (
-          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500 text-white font-semibold">
+          <span className="text-xs uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500 text-white font-semibold">
             Your device
           </span>
         )}
@@ -207,7 +207,7 @@ function PlatformCard({
           const Icon = s.icon;
           return (
             <li key={i} className="flex items-start gap-3 text-sm">
-              <span className="h-6 w-6 shrink-0 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 grid place-items-center text-[11px] font-bold">
+              <span className="h-6 w-6 shrink-0 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 grid place-items-center text-xs font-bold">
                 {i + 1}
               </span>
               <span className="flex items-start gap-2">

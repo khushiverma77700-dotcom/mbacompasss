@@ -509,7 +509,7 @@ const AdminAllLeads = () => {
                           {lead.source_page}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`text-[10px] whitespace-nowrap ${sc.color}`}>
+                          <Badge variant="outline" className={`text-xs whitespace-nowrap ${sc.color}`}>
                             <sc.icon className="w-3 h-3 mr-1" />
                             {sc.label}
                           </Badge>

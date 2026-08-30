@@ -649,7 +649,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                         return (
                           <>
                             {examSections.length > 0 && (
-                              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {exam} sections
                               </div>
                             )}
@@ -660,7 +660,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                             ))}
                             {otherExams.map(([examCode, profile]) => (
                               <div key={examCode}>
-                                <div className="px-2 py-1 mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-t">
+                                <div className="px-2 py-1 mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground border-t">
                                   {examCode} sections
                                 </div>
                                 {profile.sections.map((s) => (
@@ -675,7 +675,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                       })()}
                     </SelectContent>
                   </Select>
-                  <p className="text-[11px] text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {category === "sectional"
                       ? "All questions will come from this section only."
                       : category === "topic"
@@ -709,13 +709,13 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                               <SelectValue placeholder={`Pick a ${exam} ${sectionCode} topic`} />
                             </SelectTrigger>
                             <SelectContent className="max-h-72">
-                              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {exam} — {sectionCode} topics
                               </div>
                               {topicOptions.map((t) => (
                                 <SelectItem key={t} value={t}>{t}</SelectItem>
                               ))}
-                              <div className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-t mt-1">
+                              <div className="px-2 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground border-t mt-1">
                                 Custom
                               </div>
                               <SelectItem value="__custom__">Other (type a custom topic)</SelectItem>
@@ -739,7 +739,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                         />
                       )}
                       {category === "topic" && (
-                        <p className="text-[11px] text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Every question will be strictly from this topic — no mixing. Auto-grouped on the student dashboard under <strong>Topic-wise → {topic || "Topic"}</strong>.
                         </p>
                       )}
@@ -752,7 +752,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
             {category === "daily" && (
               <Card className="p-3 bg-primary/5 border-primary/20">
                 <Label className="text-sm font-semibold">Daily Test mix</Label>
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Daily Tests are always a balanced 3-section mix for {exam}: <strong>{DAILY_MIX_LABELS[exam] || "the first three exam sections"}</strong>. Section selection is disabled.
                 </p>
               </Card>
@@ -764,7 +764,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-sm font-semibold">Section-wise plan ({exam})</Label>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Set questions, MCQ/TITA split, sets (passages/caselets) and duration per section. AI generates accordingly. Use <strong>Sets = 0</strong> for sections with only standalone questions (e.g. QA).
                     </p>
                   </div>
@@ -794,7 +794,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                           <tr key={`${row.code}-${idx}`} className="border-t">
                             <td className="px-2 py-1.5">
                               <div className="font-medium">{row.code}</div>
-                              <div className="text-[10px] text-muted-foreground line-clamp-1">{row.name}</div>
+                              <div className="text-xs text-muted-foreground line-clamp-1">{row.name}</div>
                             </td>
                             <td className="px-2 py-1.5">
                               <Input type="number" min={0} className="h-8 text-xs"
@@ -824,7 +824,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                             <td className="px-2 py-1.5">
                               {ok
                                 ? <Badge variant="outline" className="text-emerald-700 border-emerald-300">OK</Badge>
-                                : <Badge variant="destructive" className="text-[10px]">Mismatch</Badge>}
+                                : <Badge variant="destructive" className="text-xs">Mismatch</Badge>}
                             </td>
                           </tr>
                         );
@@ -860,7 +860,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   <div>
                     <Label className="text-xs">Number of Questions {perLabel}</Label>
                     <Input type="number" min={1} value={perSet} onChange={(e) => onPerSetChange(parseInt(e.target.value) || 1)} />
-                    <p className="text-[11px] text-muted-foreground mt-1">Auto-filled from exam pattern, editable.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from exam pattern, editable.</p>
                   </div>
                   <div>
                     <Label className="text-xs">Level of Question</Label>
@@ -890,7 +890,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   </div>
                 </div>
                 <div className="flex items-center justify-between -mt-2">
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     MCQ + TITA must equal {perSet}. Currently: <strong className={mcq + tita === perSet ? "text-emerald-600" : "text-destructive"}>{mcq + tita}</strong>
                   </p>
                   {mcq + tita !== perSet && (
@@ -909,7 +909,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 <div>
                   <Label className="text-xs">Number of Sets</Label>
                   <Input type="number" min={1} max={10} value={sets} onChange={(e) => setSets(parseInt(e.target.value) || 1)} />
-                  <p className="text-[11px] text-muted-foreground mt-1">Each set is a separate full-length mock.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Each set is a separate full-length mock.</p>
                 </div>
                 <div>
                   <Label className="text-xs">Level of Question</Label>
@@ -938,7 +938,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm font-semibold">Verify against the public web</Label>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Uses Firecrawl to search exact-phrase matches. Slower (~+1s/question) but enforces uniqueness.
                   </p>
                 </div>
@@ -966,7 +966,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   <Label className="text-sm font-semibold flex items-center gap-1.5">
                     <ListPlus className="w-4 h-4 text-primary" /> Batch queue
                   </Label>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Configure each request above, then "Add to batch". Click "Run batch" to generate all in the background with a live report.
                   </p>
                 </div>
@@ -1005,7 +1005,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 )}
               </div>
               {category === "full_length" && (
-                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
                   Note: batch runs use the standard exam pattern for Full-Length mocks. For a custom section plan, use Generate (single).
                 </p>
               )}
@@ -1049,7 +1049,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
               onEdit={() => { setStep(1); }}
               onClosed={() => { setStep(1); setGenerationId(null); }}
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               You can safely close this dialog — generation continues in the background and will appear in the Mock Tests list as it finishes.
               Use <strong>Pause</strong> to temporarily stop new questions, <strong>Cancel</strong> to stop entirely (already-saved questions are kept), or <strong>Edit settings</strong> to tweak the form and start a new run.
             </p>
@@ -1063,7 +1063,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 <Label className="text-sm font-semibold flex items-center gap-1.5">
                   <Play className="w-4 h-4 text-primary" /> Batch live report
                 </Label>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {batchItems.filter((i) => i.status === "completed").length} completed ·
                   {" "}{batchItems.filter((i) => i.status === "processing").length} processing ·
                   {" "}{batchItems.filter((i) => i.status === "pending").length} pending ·
@@ -1084,7 +1084,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
             ) : (
               <Card className="p-4 border-dashed bg-muted/30">
                 <div className="text-sm font-medium">Waiting for the dispatcher to attach a generation id…</div>
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   The queue watchdog is now re-pumping pending rows automatically. Telemetry appears here as soon as the first AI worker starts.
                 </p>
               </Card>
@@ -1109,20 +1109,20 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                           {it.section_code ? ` · ${it.section_code}` : ""}
                           {it.topic ? ` · "${it.topic}"` : ""}
                         </div>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           Level: {it.level} · {it.questions_per_set}Q × {it.sets} set{it.sets > 1 ? "s" : ""} · Generated {generated}/{requested}
                         </div>
                       </div>
-                      <Badge variant="outline" className={`shrink-0 text-[10px] ${statusColor}`}>
+                      <Badge variant="outline" className={`shrink-0 text-xs ${statusColor}`}>
                         {it.status}
                       </Badge>
                     </div>
                     <Progress value={pct} className="h-1.5" />
                     {it.error_message && (
-                      <p className="text-[11px] text-destructive">{it.error_message}</p>
+                      <p className="text-xs text-destructive">{it.error_message}</p>
                     )}
                     {it.status === "processing" && !it.generation_id && (
-                      <p className="text-[11px] text-amber-700">Dispatcher is recovering this row and will retry automatically.</p>
+                      <p className="text-xs text-amber-700">Dispatcher is recovering this row and will retry automatically.</p>
                     )}
                   </Card>
                 );
@@ -1131,7 +1131,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 <p className="text-xs text-muted-foreground text-center py-6">Loading queued items…</p>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Generation runs in the background. You can close this dialog — the batch keeps running and finished mocks appear in the Mock Tests list.
             </p>
           </div>

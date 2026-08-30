@@ -290,7 +290,7 @@ const CategoryPage = () => {
                 <div key={s.label} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10">
                   <s.icon className="w-4 h-4 text-primary-foreground/70 mx-auto mb-1" />
                   <p className="font-heading font-extrabold text-primary-foreground text-xl">{s.value}</p>
-                  <p className="text-primary-foreground/60 text-[10px] uppercase tracking-wider">{s.label}</p>
+                  <p className="text-primary-foreground/60 text-xs uppercase tracking-wider">{s.label}</p>
                 </div>
               ))}
             </motion.div>

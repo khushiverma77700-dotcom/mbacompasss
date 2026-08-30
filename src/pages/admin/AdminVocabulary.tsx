@@ -386,7 +386,7 @@ export default function AdminVocabulary() {
                     className={`text-left rounded-md border p-3 transition ${bulkProvider === "lovable" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/40"}`}
                   >
                     <div className="text-sm font-semibold">Lovable AI (Gemini Flash)</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">Default. Billed via workspace credits. ~$1–3 / 1,000 words.</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Default. Billed via workspace credits. ~$1–3 / 1,000 words.</div>
                   </button>
                   <button
                     type="button"
@@ -394,7 +394,7 @@ export default function AdminVocabulary() {
                     className={`text-left rounded-md border p-3 transition ${bulkProvider === "openai" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/40"}`}
                   >
                     <div className="text-sm font-semibold">Your OpenAI API (gpt-4o-mini)</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">Billed to your OpenAI account. ~$0.40–0.80 / 1,000 words (larger batches, compact prompt).</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Billed to your OpenAI account. ~$0.40–0.80 / 1,000 words (larger batches, compact prompt).</div>
                   </button>
                 </div>
               </div>
@@ -509,13 +509,13 @@ export default function AdminVocabulary() {
                       </div>
                       <div className="text-right">
                         <div className="text-3xl font-bold tabular-nums text-foreground">{pct}%</div>
-                        <div className="text-[11px] text-muted-foreground">{done.toLocaleString()} / {req.toLocaleString()} saved</div>
+                        <div className="text-xs text-muted-foreground">{done.toLocaleString()} / {req.toLocaleString()} saved</div>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Progress value={pct} className="h-4" />
-                      <div className="grid grid-cols-4 gap-1 text-[10px] text-muted-foreground">
+                      <div className="grid grid-cols-4 gap-1 text-xs text-muted-foreground">
                         <span>Queued</span><span>Generate</span><span>Deduplicate</span><span className="text-right">Save</span>
                       </div>
                     </div>
@@ -528,7 +528,7 @@ export default function AdminVocabulary() {
                         ["Duplicates", (bulkJob.duplicates || 0).toLocaleString(), Zap],
                       ].map(([label, value, Icon]: any) => (
                         <div key={label} className="rounded-lg border border-border bg-background p-3">
-                          <div className="flex items-center gap-2 text-[11px] uppercase text-muted-foreground"><Icon className="w-3.5 h-3.5" /> {label}</div>
+                          <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground"><Icon className="w-3.5 h-3.5" /> {label}</div>
                           <div className="text-xl font-bold tabular-nums text-foreground mt-1">{value}</div>
                         </div>
                       ))}
@@ -538,17 +538,17 @@ export default function AdminVocabulary() {
                       <div className="rounded-lg border border-border bg-background p-3 space-y-2">
                         <div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1.5 text-muted-foreground"><Cpu className="w-4 h-4" /> Compute load</span><b className={`tabular-nums ${metricTone(cpuProxy)}`}>{cpuProxy}%</b></div>
                         <Progress value={cpuProxy} className="h-2" />
-                        <p className="text-[11px] text-muted-foreground">Estimated from AI call time and batch processing load.</p>
+                        <p className="text-xs text-muted-foreground">Estimated from AI call time and batch processing load.</p>
                       </div>
                       <div className="rounded-lg border border-border bg-background p-3 space-y-2">
                         <div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1.5 text-muted-foreground"><DollarSign className="w-4 h-4" /> Estimated cost</span><b className="tabular-nums text-foreground">${cost.toFixed(4)}</b></div>
-                        <div className="text-[11px] text-muted-foreground">Tokens: {tokenTotal.toLocaleString()} · Provider: {bulkJob.provider || bulkProvider}</div>
-                        <div className="text-[11px] text-muted-foreground">Input {(bulkJob.estimated_input_tokens || 0).toLocaleString()} · Output {(bulkJob.estimated_output_tokens || 0).toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Tokens: {tokenTotal.toLocaleString()} · Provider: {bulkJob.provider || bulkProvider}</div>
+                        <div className="text-xs text-muted-foreground">Input {(bulkJob.estimated_input_tokens || 0).toLocaleString()} · Output {(bulkJob.estimated_output_tokens || 0).toLocaleString()}</div>
                       </div>
                       <div className="rounded-lg border border-border bg-background p-3 space-y-2">
                         <div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1.5 text-muted-foreground"><Gauge className="w-4 h-4" /> Throughput</span><b className="tabular-nums text-foreground">{throughput}/min</b></div>
-                        <div className="text-[11px] text-muted-foreground">Runtime: {runtime} · Batch time: {details.last_batch_seconds || 0}s</div>
-                        <div className="text-[11px] text-muted-foreground">Quality pass: {qualityRate}% · Duplicate rate: {duplicateRate}%</div>
+                        <div className="text-xs text-muted-foreground">Runtime: {runtime} · Batch time: {details.last_batch_seconds || 0}s</div>
+                        <div className="text-xs text-muted-foreground">Quality pass: {qualityRate}% · Duplicate rate: {duplicateRate}%</div>
                       </div>
                     </div>
 
@@ -679,9 +679,9 @@ export default function AdminVocabulary() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-semibold text-foreground">{w.word}</h4>
-                        <Badge variant="outline" className="text-[10px] capitalize">{w.difficulty}</Badge>
-                        <Badge variant="secondary" className="text-[10px] capitalize">{w.category?.replace("_", " ")}</Badge>
-                        {w.source && <Badge variant="outline" className="text-[10px]">{w.source}</Badge>}
+                        <Badge variant="outline" className="text-xs capitalize">{w.difficulty}</Badge>
+                        <Badge variant="secondary" className="text-xs capitalize">{w.category?.replace("_", " ")}</Badge>
+                        {w.source && <Badge variant="outline" className="text-xs">{w.source}</Badge>}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-1 mt-1">{w.meaning}</p>
                     </div>

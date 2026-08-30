@@ -86,7 +86,7 @@ export const RawPayloadDrawer = ({
         <Button variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-xs text-muted-foreground">
           <Bug className="h-3.5 w-3.5" />
           {label}
-          {bad && <Badge variant="destructive" className="ml-1 h-4 px-1 text-[10px]">{validation!.issues.length}</Badge>}
+          {bad && <Badge variant="destructive" className="ml-1 h-4 px-1 text-xs">{validation!.issues.length}</Badge>}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-2xl">
@@ -97,7 +97,7 @@ export const RawPayloadDrawer = ({
         <div className="mt-4 space-y-3">
           {validation && <ValidationNotice result={validation} source="Schema check" />}
           <ScrollArea className="h-[70vh] rounded-md border bg-muted/30">
-            <pre className="p-3 text-[11px] leading-relaxed">{safeJson(payload)}</pre>
+            <pre className="p-3 text-xs leading-relaxed">{safeJson(payload)}</pre>
           </ScrollArea>
         </div>
       </SheetContent>

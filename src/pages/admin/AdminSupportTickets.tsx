@@ -338,16 +338,16 @@ export default function AdminSupportTickets() {
                       <tr key={t.id} className="border-t hover:bg-sky-50/40 cursor-pointer" onClick={() => openTicket(t)}>
                         <td className="p-3">
                           <div className="font-medium">{t.title}</div>
-                          <div className="text-[11px] text-muted-foreground">{t.code}</div>
+                          <div className="text-xs text-muted-foreground">{t.code}</div>
                         </td>
                         <td className="p-3">
                           <div className="text-sm">{t.student_name ?? "—"}</div>
-                          <div className="text-[11px] text-muted-foreground">{t.student_email}</div>
+                          <div className="text-xs text-muted-foreground">{t.student_email}</div>
                         </td>
                         <td className="p-3">{t.student_phone ?? "—"}</td>
                         <td className="p-3 capitalize">{CATS.find((c) => c.value === t.category)?.label}</td>
-                        <td className="p-3"><Badge variant="outline" className={cn("text-[10px]", PRIORITY_CLS[t.priority])}>{t.priority}</Badge></td>
-                        <td className="p-3"><Badge variant="outline" className={cn("text-[10px]", STATUS_CLS[t.status])}>{t.status.replace("_", " ")}</Badge></td>
+                        <td className="p-3"><Badge variant="outline" className={cn("text-xs", PRIORITY_CLS[t.priority])}>{t.priority}</Badge></td>
+                        <td className="p-3"><Badge variant="outline" className={cn("text-xs", STATUS_CLS[t.status])}>{t.status.replace("_", " ")}</Badge></td>
                         <td className="p-3 text-xs">{format(new Date(t.created_at), "PP")}</td>
                         <td className="p-3 text-xs">{format(new Date(t.updated_at), "PP")}</td>
                       </tr>
@@ -465,11 +465,11 @@ function TicketDetail({
           <div>
             <Button size="sm" variant="ghost" className="h-7 px-2 -ml-2" onClick={onBack}><ArrowLeft className="h-4 w-4 mr-1" /> Back</Button>
             <div className="font-semibold mt-1">{ticket.title}</div>
-            <div className="text-[11px] text-muted-foreground">{ticket.code} · {format(new Date(ticket.created_at), "PPp")}</div>
+            <div className="text-xs text-muted-foreground">{ticket.code} · {format(new Date(ticket.created_at), "PPp")}</div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className={cn("text-[10px]", PRIORITY_CLS[ticket.priority])}>{ticket.priority}</Badge>
-            <Badge variant="outline" className={cn("text-[10px]", STATUS_CLS[ticket.status])}>{ticket.status.replace("_", " ")}</Badge>
+            <Badge variant="outline" className={cn("text-xs", PRIORITY_CLS[ticket.priority])}>{ticket.priority}</Badge>
+            <Badge variant="outline" className={cn("text-xs", STATUS_CLS[ticket.status])}>{ticket.status.replace("_", " ")}</Badge>
           </div>
         </div>
         <div className="p-4 space-y-3 max-h-[55vh] overflow-y-auto">
@@ -478,7 +478,7 @@ function TicketDetail({
               m.is_internal ? "bg-amber-50 border-amber-200" :
               m.sender_role === "admin" ? "bg-sky-50 border-sky-100" : "bg-white border-gray-200"
             )}>
-              <div className="text-[11px] text-muted-foreground mb-1">
+              <div className="text-xs text-muted-foreground mb-1">
                 {m.is_internal ? "Internal note" : m.sender_role === "admin" ? "Admin" : "Student"} · {format(new Date(m.created_at), "PP p")}
               </div>
               <div className="whitespace-pre-wrap">{m.body}</div>
@@ -551,7 +551,7 @@ function TicketDetail({
               {history.map((h: any) => (
                 <div key={h.id} className="text-xs flex items-center justify-between border-b py-1">
                   <span className="truncate">{h.title}</span>
-                  <Badge variant="outline" className={cn("text-[9px] ml-1", STATUS_CLS[h.status])}>{h.status}</Badge>
+                  <Badge variant="outline" className={cn("text-xs ml-1", STATUS_CLS[h.status])}>{h.status}</Badge>
                 </div>
               ))}
             </div>

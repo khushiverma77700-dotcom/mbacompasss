@@ -19,8 +19,8 @@ const CompareDrawer = () => {
               <Scale className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-sky-700">Compare</div>
-              <div className="text-[12px] text-slate-600 font-medium">{items.length} of {max} selected</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-sky-700">Compare</div>
+              <div className="text-xs text-slate-600 font-medium">{items.length} of {max} selected</div>
             </div>
           </div>
 
@@ -37,15 +37,15 @@ const CompareDrawer = () => {
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <div className="text-[12px] font-bold text-slate-900 truncate leading-tight">{s.name}</div>
-                      {s.city && <div className="text-[10px] text-slate-500 truncate">{s.city}</div>}
+                      <div className="text-xs font-bold text-slate-900 truncate leading-tight">{s.name}</div>
+                      {s.city && <div className="text-xs text-slate-500 truncate">{s.city}</div>}
                     </div>
                     <button onClick={() => remove(s.id)} className="p-1 rounded hover:bg-white shrink-0" aria-label="Remove">
                       <X className="w-3.5 h-3.5 text-slate-500" />
                     </button>
                   </>
                 ) : (
-                  <span className="text-[11px] text-slate-400 font-medium">Pick another institute</span>
+                  <span className="text-xs text-slate-400 font-medium">Pick another institute</span>
                 )}
               </div>
             ))}

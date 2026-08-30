@@ -670,10 +670,10 @@ const AdminColleges = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span>{c.name}</span>
                       {c.source === "user" && (
-                        <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-700">User-submitted</Badge>
+                        <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">User-submitted</Badge>
                       )}
                       {c.last_updated_by === "user-verified" && (
-                        <Badge variant="outline" className="text-[10px] border-green-300 text-green-700">User-edited (verified)</Badge>
+                        <Badge variant="outline" className="text-xs border-green-300 text-green-700">User-edited (verified)</Badge>
                       )}
                     </div>
                   </TableCell>
@@ -681,7 +681,7 @@ const AdminColleges = () => {
                   <TableCell><Badge variant="outline">{c.tier ?? "—"}</Badge></TableCell>
                   <TableCell>{c.city ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{c.type ?? "—"}</Badge></TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{c.created_at ? new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{c.created_at ? new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{c.created_at ? new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-xs">{c.created_at ? new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1 flex-nowrap whitespace-nowrap">
                       <CollegeReSeoRowButton college={{ id: c.id, name: c.name, slug: c.slug }} />

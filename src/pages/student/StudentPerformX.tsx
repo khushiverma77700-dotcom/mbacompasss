@@ -440,9 +440,9 @@ export default function StudentPerformX() {
                 <Gauge className="h-5 w-5 text-violet-600" />
                 <div className="font-bold">Power Score</div>
               </div>
-              <UIBadge className="bg-violet-600 hover:bg-violet-600 text-[10px]">LIVE</UIBadge>
+              <UIBadge className="bg-violet-600 hover:bg-violet-600 text-xs">LIVE</UIBadge>
             </div>
-            <p className="text-[11px] text-muted-foreground mb-2">Overall mastery composite — weighted across accuracy, consistency, speed and rank.</p>
+            <p className="text-xs text-muted-foreground mb-2">Overall mastery composite — weighted across accuracy, consistency, speed and rank.</p>
             <div className="h-44 relative">
               <ResponsiveContainer>
                 <RadialBarChart innerRadius="62%" outerRadius="100%" startAngle={210} endAngle={-30}
@@ -463,11 +463,11 @@ export default function StudentPerformX() {
                   <div className="text-5xl font-black bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-500 bg-clip-text text-transparent leading-none">
                     {Math.round((avgAccuracy * 0.3) + (consistencyScore * 0.25) + (balanceScore * 0.2) + (bestPercentile * 0.25))}
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Power Score</div>
+                  <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1 font-bold">Power Score</div>
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-1 mt-2 text-[10px] text-center">
+            <div className="grid grid-cols-4 gap-1 mt-2 text-xs text-center">
               <div><div className="font-bold text-emerald-600">{Math.round(avgAccuracy)}</div><div className="text-muted-foreground">ACC</div></div>
               <div><div className="font-bold text-sky-600">{consistencyScore}</div><div className="text-muted-foreground">CON</div></div>
               <div><div className="font-bold text-violet-600">{balanceScore}</div><div className="text-muted-foreground">SPD</div></div>
@@ -482,9 +482,9 @@ export default function StudentPerformX() {
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               <div className="font-bold">Today's Quests</div>
-              <UIBadge variant="secondary" className="text-[10px]">Resets in 24h</UIBadge>
+              <UIBadge variant="secondary" className="text-xs">Resets in 24h</UIBadge>
             </div>
-            <div className="text-[11px] text-muted-foreground">Streak × {rewards?.streak_days ?? 0}</div>
+            <div className="text-xs text-muted-foreground">Streak × {rewards?.streak_days ?? 0}</div>
           </div>
           <div className="space-y-2">
             {[
@@ -507,7 +507,7 @@ export default function StudentPerformX() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className={cn("text-sm font-semibold truncate", q.done && "line-through text-muted-foreground")}>{q.title}</div>
-                  <div className="text-[11px] text-emerald-600 font-bold">{q.reward}</div>
+                  <div className="text-xs text-emerald-600 font-bold">{q.reward}</div>
                 </div>
                 {q.done && <Sparkles className="h-4 w-4 text-amber-500" />}
               </div>
@@ -526,7 +526,7 @@ export default function StudentPerformX() {
             <div className="font-bold">XP Vault</div>
           </div>
           <div className="text-3xl font-black text-amber-600">{xp.toLocaleString()}</div>
-          <div className="text-[11px] text-muted-foreground mb-3">Total XP earned</div>
+          <div className="text-xs text-muted-foreground mb-3">Total XP earned</div>
           <div className="space-y-2">
             {[
               { goal: 500, label: "Tier I" },
@@ -537,7 +537,7 @@ export default function StudentPerformX() {
               const unlocked = xp >= g.goal;
               return (
                 <div key={g.goal}>
-                  <div className="flex items-center justify-between text-[11px] mb-1">
+                  <div className="flex items-center justify-between text-xs mb-1">
                     <span className={cn("font-semibold", unlocked && "text-amber-600")}>{g.label} · {g.goal.toLocaleString()} XP</span>
                     <span className="text-muted-foreground">{unlocked ? "Unlocked" : `${Math.round(pct)}%`}</span>
                   </div>
@@ -575,9 +575,9 @@ export default function StudentPerformX() {
                 </ResponsiveContainer>
               </div>
               <div className="text-center -mt-14 sm:-mt-16 pointer-events-none">
-                <div className="text-lg sm:text-xl font-black" style={{ color: d.color }}>{d.val}<span className="text-[10px] text-muted-foreground font-medium">/100</span></div>
+                <div className="text-lg sm:text-xl font-black" style={{ color: d.color }}>{d.val}<span className="text-xs text-muted-foreground font-medium">/100</span></div>
               </div>
-              <div className="text-center mt-7 sm:mt-9 text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">{d.label}</div>
+              <div className="text-center mt-7 sm:mt-9 text-xs sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">{d.label}</div>
             </div>
           ))}
         </div>
@@ -588,7 +588,7 @@ export default function StudentPerformX() {
         <Card className="lg:col-span-1 p-5 border-emerald-100 bg-gradient-to-br from-emerald-50/50 to-white dark:from-emerald-500/10 dark:to-background overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2"><Radio className="h-5 w-5 text-emerald-600 animate-pulse" /><div className="font-bold">Live Activity</div></div>
-            <UIBadge variant="secondary" className="text-[10px]">Realtime</UIBadge>
+            <UIBadge variant="secondary" className="text-xs">Realtime</UIBadge>
           </div>
           <div className="space-y-2 min-h-[260px]">
             {liveFeed.map((e, i) => (
@@ -727,7 +727,7 @@ export default function StudentPerformX() {
                 )} />
             ))}
           </div>
-          <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground justify-end">
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground justify-end">
             Less <span className="h-2.5 w-2.5 rounded bg-muted/60" /> <span className="h-2.5 w-2.5 rounded bg-sky-200 dark:bg-sky-500/40" /> <span className="h-2.5 w-2.5 rounded bg-sky-400" /> <span className="h-2.5 w-2.5 rounded bg-sky-500" /> <span className="h-2.5 w-2.5 rounded bg-blue-700" /> More
           </div>
         </Card>
@@ -780,9 +780,9 @@ export default function StudentPerformX() {
         <Card className="p-5 border-sky-100">
           <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
             <div className="flex items-center gap-2"><Target className="h-5 w-5 text-violet-600" /><div className="font-bold">Section Mastery</div></div>
-            <UIBadge variant="secondary" className="text-[10px]">Avg score / 100</UIBadge>
+            <UIBadge variant="secondary" className="text-xs">Avg score / 100</UIBadge>
           </div>
-          <p className="text-[11px] text-muted-foreground mb-3">Your average sectional score across all mocks — higher means stronger mastery.</p>
+          <p className="text-xs text-muted-foreground mb-3">Your average sectional score across all mocks — higher means stronger mastery.</p>
           {radarData.length ? (
             <div className="space-y-2.5">
               {radarData.slice(0, 8).map((r, i) => {
@@ -795,7 +795,7 @@ export default function StudentPerformX() {
                       <span className="font-medium text-foreground truncate">{r.section}</span>
                       <span className="shrink-0 tabular-nums font-semibold" style={{ color: c }}>
                         {r.value}<span className="text-muted-foreground font-normal">/100</span>
-                        <span className="ml-1.5 text-[10px] font-medium text-muted-foreground">· {tone}</span>
+                        <span className="ml-1.5 text-xs font-medium text-muted-foreground">· {tone}</span>
                       </span>
                     </div>
                     <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -823,7 +823,7 @@ export default function StudentPerformX() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="grid grid-cols-4 gap-1 text-[10px] text-center mt-1">
+            <div className="grid grid-cols-4 gap-1 text-xs text-center mt-1">
               {timeOfDay.map((t, i) => (
                 <div key={t.name}>
                   <span className="inline-block h-2 w-2 rounded-full mr-1" style={{ background: ["#fbbf24","#f97316","#8b5cf6","#1e40af"][i] }} />
@@ -895,7 +895,7 @@ export default function StudentPerformX() {
           <div className="flex items-center gap-2">
             <Award className="h-5 w-5 text-amber-600" />
             <div className="font-bold">Badges & Achievements</div>
-            <UIBadge variant="secondary" className="text-[10px]">{earnedCount}/{allBadges.length} unlocked</UIBadge>
+            <UIBadge variant="secondary" className="text-xs">{earnedCount}/{allBadges.length} unlocked</UIBadge>
           </div>
           <Button size="sm" variant="outline" className="text-xs"><Share2 className="h-3.5 w-3.5 mr-1" /> Share progress</Button>
         </div>
@@ -913,8 +913,8 @@ export default function StudentPerformX() {
                 <div className={cn("relative h-11 w-11 mx-auto rounded-xl grid place-items-center mb-2 bg-gradient-to-br text-white shadow", earned ? b.color : "from-slate-300 to-slate-400")}>
                   {earned ? <Icon className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
                 </div>
-                <div className="relative text-[11px] font-bold leading-tight">{b.name}</div>
-                {earned && <div className="relative text-[9px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Unlocked</div>}
+                <div className="relative text-xs font-bold leading-tight">{b.name}</div>
+                {earned && <div className="relative text-xs text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Unlocked</div>}
               </div>
             );
           })}
@@ -939,7 +939,7 @@ export default function StudentPerformX() {
                   </div>
                   <div className="flex-1 flex items-center justify-between">
                     <div className={cn("text-sm font-semibold", !m.done && "text-muted-foreground")}>{m.label}</div>
-                    {m.done && <UIBadge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">Achieved</UIBadge>}
+                    {m.done && <UIBadge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">Achieved</UIBadge>}
                   </div>
                 </div>
               );
@@ -1019,7 +1019,7 @@ export default function StudentPerformX() {
             <div>
               <div className="text-xs text-white/60 line-through">₹4,999/year</div>
               <div className="text-3xl font-black bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">₹1,499<span className="text-base text-white/70 font-medium">/year</span></div>
-              <div className="text-[11px] text-white/60">First 500 students · 70% off</div>
+              <div className="text-xs text-white/60">First 500 students · 70% off</div>
             </div>
             <div className="flex items-center gap-2">
               <Link to="/courses">
@@ -1048,7 +1048,7 @@ function HeroStat({ icon, value, label }: { icon: React.ReactNode; value: string
     <div className="rounded-xl bg-white/15 backdrop-blur border border-white/20 px-3 py-2 text-center min-w-[70px]">
       <div className="flex items-center justify-center gap-1 text-white/80">{icon}</div>
       <div className="text-base font-black leading-tight">{value}</div>
-      <div className="text-[9px] uppercase tracking-wider text-white/70">{label}</div>
+      <div className="text-xs uppercase tracking-wider text-white/70">{label}</div>
     </div>
   );
 }
@@ -1067,7 +1067,7 @@ function KpiCard({ icon: Icon, label, value, suffix, tone, hint }: { icon: any; 
         <div className={cn("h-9 w-9 rounded-xl bg-gradient-to-br grid place-items-center text-white shadow", tones.grad)}>
           <Icon className="h-4 w-4" />
         </div>
-        {hint && <span className="text-[10px] text-muted-foreground">{hint}</span>}
+        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
       </div>
       <div className="text-2xl font-black leading-tight">{value}<span className="text-sm font-medium text-muted-foreground">{suffix}</span></div>
       <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
@@ -1096,13 +1096,13 @@ function LbRowItem({ row }: { row: LbRow }) {
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold truncate flex items-center gap-1.5">
           {row.display_handle}
-          {row.is_self && <UIBadge className="bg-sky-600 text-[10px] px-1.5 py-0">You</UIBadge>}
+          {row.is_self && <UIBadge className="bg-sky-600 text-xs px-1.5 py-0">You</UIBadge>}
         </div>
-        <div className="text-[11px] text-muted-foreground">L{row.level} · {row.streak_days}d streak · {row.total_mocks_completed} mocks</div>
+        <div className="text-xs text-muted-foreground">L{row.level} · {row.streak_days}d streak · {row.total_mocks_completed} mocks</div>
       </div>
       <div className="text-right shrink-0">
         <div className="text-sm font-black text-sky-700 dark:text-sky-300">{row.xp.toLocaleString()}</div>
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">XP</div>
+        <div className="text-xs uppercase tracking-wider text-muted-foreground">XP</div>
       </div>
     </div>
   );

@@ -219,7 +219,7 @@ const AdminAllLinks = () => {
                   <div className="space-y-1 max-h-[150px] overflow-y-auto">
                     {items.map((l) => (
                       <div key={l.url} className="flex items-center gap-2 text-xs">
-                        <Badge variant="outline" className="text-green-600 border-green-500/50 text-[10px]">NEW</Badge>
+                        <Badge variant="outline" className="text-green-600 border-green-500/50 text-xs">NEW</Badge>
                         <span className="font-medium truncate max-w-[180px]">{l.label}</span>
                         <span className="text-muted-foreground truncate flex-1">{SITE_URL}{l.url}</span>
                       </div>
@@ -267,7 +267,7 @@ const AdminAllLinks = () => {
                   className="flex items-center gap-2 text-sm py-1.5 px-2 rounded-md hover:bg-muted/50 transition-colors"
                 >
                   {isNew(link.url) && (
-                    <Badge variant="outline" className="text-green-600 border-green-500/50 text-[10px] px-1.5 py-0">NEW</Badge>
+                    <Badge variant="outline" className="text-green-600 border-green-500/50 text-xs px-1.5 py-0">NEW</Badge>
                   )}
                   <span className={`text-xs px-2 py-0.5 rounded-full ${typeColors[type] || "bg-muted text-muted-foreground"}`}>
                     {type}

@@ -343,10 +343,10 @@ export const BulkOptimizeProgressDialog = ({
           <DialogTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-primary" />
             Bulk SEO Optimization — Live Control Panel
-            <span className={`ml-2 inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded ${perf.online ? "bg-emerald-500/10 text-emerald-700" : "bg-destructive/10 text-destructive"}`}>
+            <span className={`ml-2 inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded ${perf.online ? "bg-emerald-500/10 text-emerald-700" : "bg-destructive/10 text-destructive"}`}>
               <Wifi className="w-3 h-3" /> {perf.online ? "ONLINE" : "OFFLINE"}
             </span>
-            <span className="ml-1 inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-700">
+            <span className="ml-1 inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-700">
               <Activity className="w-3 h-3 animate-pulse" /> LIVE 1Hz
             </span>
           </DialogTitle>
@@ -365,7 +365,7 @@ export const BulkOptimizeProgressDialog = ({
               <span className="font-semibold truncate">
                 {finished ? `Optimization complete — ${stats.verifiedSaves}/${stats.total} saves verified` : paused ? "Paused — click Resume to continue" : currentItem ? `Optimizing: ${currentItem.name}` : "Starting…"}
               </span>
-              <Badge variant="outline" className="ml-1 font-mono text-[10px] shrink-0">{model.split("/").pop()}</Badge>
+              <Badge variant="outline" className="ml-1 font-mono text-xs shrink-0">{model.split("/").pop()}</Badge>
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="ghost" onClick={exportReport} disabled={items.length === 0}>
@@ -596,9 +596,9 @@ export const BulkOptimizeProgressDialog = ({
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-sm font-bold flex items-center gap-1.5"><Flame className="w-4 h-4 text-orange-500" /> Server &amp; client load — last 60 seconds</h3>
-                  <p className="text-[11px] text-muted-foreground">Each cell = 1 second. Cooler = healthy, hotter = under load. Updates live every second.</p>
+                  <p className="text-xs text-muted-foreground">Each cell = 1 second. Cooler = healthy, hotter = under load. Updates live every second.</p>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span>cool</span>
                   <div className="flex">
                     {Array.from({ length: 10 }).map((_, i) => (
@@ -611,7 +611,7 @@ export const BulkOptimizeProgressDialog = ({
               <div className="space-y-2">
                 {heatRows.map((row) => (
                   <div key={row.label} className="flex items-center gap-3">
-                    <div className="w-28 text-[11px] font-mono text-muted-foreground shrink-0">{row.label}</div>
+                    <div className="w-28 text-xs font-mono text-muted-foreground shrink-0">{row.label}</div>
                     <div className="flex-1 grid gap-[2px]" style={{ gridTemplateColumns: `repeat(${HEATMAP_COLS}, minmax(0, 1fr))` }}>
                       {row.values.map((v, i) => (
                         <div
@@ -625,8 +625,8 @@ export const BulkOptimizeProgressDialog = ({
                   </div>
                 ))}
                 <div className="flex items-center gap-3 pt-1">
-                  <div className="w-28 text-[11px] font-mono text-muted-foreground shrink-0">timeline</div>
-                  <div className="flex-1 grid gap-[2px] text-[9px] text-muted-foreground" style={{ gridTemplateColumns: `repeat(${HEATMAP_COLS}, minmax(0, 1fr))` }}>
+                  <div className="w-28 text-xs font-mono text-muted-foreground shrink-0">timeline</div>
+                  <div className="flex-1 grid gap-[2px] text-xs text-muted-foreground" style={{ gridTemplateColumns: `repeat(${HEATMAP_COLS}, minmax(0, 1fr))` }}>
                     <div className="col-span-10">-60s</div>
                     <div className="col-span-10 text-center">-45s</div>
                     <div className="col-span-10 text-center">-30s</div>
@@ -734,7 +734,7 @@ export const BulkOptimizeProgressDialog = ({
             </div>
             <div
               ref={logScrollRef}
-              className="flex-1 min-h-0 overflow-y-auto border rounded-md bg-foreground/[0.02] font-mono text-[11px] p-3 space-y-0.5"
+              className="flex-1 min-h-0 overflow-y-auto border rounded-md bg-foreground/[0.02] font-mono text-xs p-3 space-y-0.5"
             >
               {logs.length === 0 && <p className="text-muted-foreground italic">Waiting for events…</p>}
               {logs.map((l, i) => (
@@ -760,7 +760,7 @@ const MetricTile = ({
   icon: Icon, label, value, accent, mono, tone,
 }: { icon: any; label: string; value: string; accent?: boolean; mono?: boolean; tone?: "warn" }) => (
   <div className={`rounded-md border p-2.5 ${accent ? "border-primary/40 bg-primary/5" : "bg-card"} ${tone === "warn" ? "border-amber-400/60 bg-amber-50" : ""}`}>
-    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+    <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">
       <Icon className="w-3 h-3" />{label}
     </div>
     <div className={`mt-0.5 text-sm font-bold truncate ${mono ? "font-mono text-xs" : ""} ${accent ? "text-primary" : "text-foreground"}`}>{value}</div>
@@ -771,7 +771,7 @@ const ChartCard = ({ title, subtitle, children }: { title: string; subtitle?: st
   <div className="rounded-md border bg-card p-3">
     <div className="mb-2">
       <h4 className="text-xs font-bold">{title}</h4>
-      {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
     </div>
     {children}
   </div>
@@ -779,9 +779,9 @@ const ChartCard = ({ title, subtitle, children }: { title: string; subtitle?: st
 
 const SignalCard = ({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: "ok" | "warn" }) => (
   <div className={`rounded-md border p-3 ${tone === "warn" ? "border-amber-400/60 bg-amber-50" : "bg-card"}`}>
-    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
     <div className="text-2xl font-bold tabular-nums">{value}</div>
-    {hint && <div className="text-[10px] text-muted-foreground">{hint}</div>}
+    {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
   </div>
 );
 

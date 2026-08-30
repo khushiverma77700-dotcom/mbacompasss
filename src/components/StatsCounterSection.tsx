@@ -26,8 +26,8 @@ const StatsCounterSection = () => (
                 <p className="text-lg md:text-2xl font-extrabold text-foreground mb-0.5 tracking-tight font-heading leading-tight">
                   {stat.value.toLocaleString("en-IN")}{stat.suffix}
                 </p>
-                <p className="text-foreground font-semibold text-[11px] md:text-xs mb-0.5 leading-tight">{stat.label}</p>
-                <p className="text-muted-foreground text-[9px] md:text-[11px] leading-tight">{stat.desc}</p>
+                <p className="text-foreground font-semibold text-xs md:text-xs mb-0.5 leading-tight">{stat.label}</p>
+                <p className="text-muted-foreground text-xs md:text-xs leading-tight">{stat.desc}</p>
               </div>
             </div>
           );

@@ -575,7 +575,7 @@ export default function AdminMBACompassCourses() {
                               <div className="font-medium text-sm truncate">{b.name}</div>
                               <div className="text-xs text-muted-foreground">{b.exam_code ?? "Mixed"}</div>
                             </div>
-                            {!b.is_published && <Badge variant="outline" className="text-[10px]">Draft</Badge>}
+                            {!b.is_published && <Badge variant="outline" className="text-xs">Draft</Badge>}
                           </label>
                         );
                       })}
@@ -610,7 +610,7 @@ export default function AdminMBACompassCourses() {
                       </Button>
                     </div>
                     {edit.last_seo_refresh && (
-                      <p className="text-[11px] text-muted-foreground mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         Last refreshed: {new Date(edit.last_seo_refresh).toLocaleString()}
                       </p>
                     )}
@@ -639,7 +639,7 @@ export default function AdminMBACompassCourses() {
                         value={edit.meta_title ?? edit.seo_title ?? ""}
                         onChange={(e) => setEdit({ ...edit, meta_title: e.target.value, seo_title: e.target.value })}
                       />
-                      <p className="text-[11px] text-muted-foreground mt-1">{(edit.meta_title || edit.seo_title || "").length}/60</p>
+                      <p className="text-xs text-muted-foreground mt-1">{(edit.meta_title || edit.seo_title || "").length}/60</p>
                     </div>
                     <div>
                       <Label>Meta description (max 160 chars)</Label>
@@ -649,7 +649,7 @@ export default function AdminMBACompassCourses() {
                         value={edit.meta_description ?? edit.seo_description ?? ""}
                         onChange={(e) => setEdit({ ...edit, meta_description: e.target.value, seo_description: e.target.value })}
                       />
-                      <p className="text-[11px] text-muted-foreground mt-1">{(edit.meta_description || edit.seo_description || "").length}/160</p>
+                      <p className="text-xs text-muted-foreground mt-1">{(edit.meta_description || edit.seo_description || "").length}/160</p>
                     </div>
                     <div>
                       <Label>H1 tag (page heading override)</Label>
@@ -668,28 +668,28 @@ export default function AdminMBACompassCourses() {
                       </div>
                       {snapshot.keywordBuckets.shortTail?.length > 0 && (
                         <div>
-                          <div className="text-[11px] font-semibold text-violet-700 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3"/> Short-tail ({snapshot.keywordBuckets.shortTail.length})</div>
+                          <div className="text-xs font-semibold text-violet-700 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3"/> Short-tail ({snapshot.keywordBuckets.shortTail.length})</div>
                           <div className="flex flex-wrap gap-1">
                             {snapshot.keywordBuckets.shortTail.map((k: string, i: number) => (
-                              <Badge key={i} variant="outline" className="text-[10px] bg-violet-50 border-violet-200 text-violet-700">{k}</Badge>
+                              <Badge key={i} variant="outline" className="text-xs bg-violet-50 border-violet-200 text-violet-700">{k}</Badge>
                             ))}
                           </div>
                         </div>
                       )}
                       {snapshot.keywordBuckets.longTail?.length > 0 && (
                         <div>
-                          <div className="text-[11px] font-semibold text-sky-700 mb-1 flex items-center gap-1"><Search className="h-3 w-3"/> Long-tail ({snapshot.keywordBuckets.longTail.length})</div>
+                          <div className="text-xs font-semibold text-sky-700 mb-1 flex items-center gap-1"><Search className="h-3 w-3"/> Long-tail ({snapshot.keywordBuckets.longTail.length})</div>
                           <div className="flex flex-wrap gap-1">
                             {snapshot.keywordBuckets.longTail.map((k: string, i: number) => (
-                              <Badge key={i} variant="outline" className="text-[10px] bg-sky-50 border-sky-200 text-sky-700">{k}</Badge>
+                              <Badge key={i} variant="outline" className="text-xs bg-sky-50 border-sky-200 text-sky-700">{k}</Badge>
                             ))}
                           </div>
                         </div>
                       )}
                       {snapshot.internalLinks?.suggested?.length > 0 && (
                         <div>
-                          <div className="text-[11px] font-semibold text-emerald-700 mb-1">Internal link suggestions</div>
-                          <div className="text-[11px] text-muted-foreground">{snapshot.internalLinks.suggested.slice(0,8).join(" / ")}</div>
+                          <div className="text-xs font-semibold text-emerald-700 mb-1">Internal link suggestions</div>
+                          <div className="text-xs text-muted-foreground">{snapshot.internalLinks.suggested.slice(0,8).join(" / ")}</div>
                         </div>
                       )}
                     </div>
@@ -729,10 +729,10 @@ export default function AdminMBACompassCourses() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {(c.exam_focus ?? []).map((e) => <Badge key={e} variant="outline" className="text-[10px]">{e}</Badge>)}
-                  {c.is_featured && <Badge className="bg-amber-500 hover:bg-amber-500 text-[10px] border-0"><Star className="h-3 w-3 mr-0.5" /> Featured</Badge>}
-                  {!c.is_active && <Badge variant="outline" className="text-[10px] text-rose-600 border-rose-200">Inactive</Badge>}
-                  {(bundleCounts[c.id] ?? 0) > 0 && <Badge variant="outline" className="text-[10px] gap-1"><Package className="h-3 w-3" /> {bundleCounts[c.id]} bundle{bundleCounts[c.id] === 1 ? "" : "s"}</Badge>}
+                  {(c.exam_focus ?? []).map((e) => <Badge key={e} variant="outline" className="text-xs">{e}</Badge>)}
+                  {c.is_featured && <Badge className="bg-amber-500 hover:bg-amber-500 text-xs border-0"><Star className="h-3 w-3 mr-0.5" /> Featured</Badge>}
+                  {!c.is_active && <Badge variant="outline" className="text-xs text-rose-600 border-rose-200">Inactive</Badge>}
+                  {(bundleCounts[c.id] ?? 0) > 0 && <Badge variant="outline" className="text-xs gap-1"><Package className="h-3 w-3" /> {bundleCounts[c.id]} bundle{bundleCounts[c.id] === 1 ? "" : "s"}</Badge>}
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
                   {(c.full_mocks_count ?? 0) + (c.sectional_mocks_count ?? 0) + (c.topic_tests_count ?? 0)} total mocks · {c.full_mocks_count ?? 0} full · {c.sectional_mocks_count ?? 0} sectional · {c.topic_tests_count ?? 0} topic

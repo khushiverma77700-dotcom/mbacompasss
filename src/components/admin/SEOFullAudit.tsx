@@ -460,12 +460,12 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="flex gap-1">
-                    <Badge className="bg-green-100 text-green-700 text-[10px]">{passCount}✅</Badge>
-                    {warnCount > 0 && <Badge className="bg-amber-100 text-amber-700 text-[10px]">{warnCount}⚠️</Badge>}
-                    {failCount > 0 && <Badge className="bg-red-100 text-red-700 text-[10px]">{failCount}❌</Badge>}
+                    <Badge className="bg-green-100 text-green-700 text-xs">{passCount}✅</Badge>
+                    {warnCount > 0 && <Badge className="bg-amber-100 text-amber-700 text-xs">{warnCount}⚠️</Badge>}
+                    {failCount > 0 && <Badge className="bg-red-100 text-red-700 text-xs">{failCount}❌</Badge>}
                   </div>
                   {fixableCount > 0 && (
-                    <Badge variant="outline" className="text-[10px] border-primary text-primary">
+                    <Badge variant="outline" className="text-xs border-primary text-primary">
                       {fixableCount} fixable
                     </Badge>
                   )}
@@ -589,7 +589,7 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
                         <p className="text-xs font-medium text-muted-foreground mb-1">Keywords ({result.suggestedValues.keywords.length})</p>
                         <div className="flex flex-wrap gap-1">
                           {result.suggestedValues.keywords.slice(0, 15).map((kw: string, i: number) => (
-                            <Badge key={i} variant="outline" className="text-[10px]">{kw}</Badge>
+                            <Badge key={i} variant="outline" className="text-xs">{kw}</Badge>
                           ))}
                         </div>
                       </div>

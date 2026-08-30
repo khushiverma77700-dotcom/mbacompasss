@@ -225,7 +225,7 @@ export default function StudentNotifications() {
               <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-lg shadow-sky-500/25 relative">
                 <BellRing className="h-5 w-5" />
                 {kpi.unread > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center ring-2 ring-white dark:ring-background">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-xs font-bold grid place-items-center ring-2 ring-white dark:ring-background">
                     {kpi.unread > 99 ? "99+" : kpi.unread}
                   </span>
                 )}
@@ -321,7 +321,7 @@ export default function StudentNotifications() {
                 <Icon className="h-3.5 w-3.5" />
                 {t.label}
                 <span className={cn(
-                  "min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold grid place-items-center",
+                  "min-w-[18px] h-[18px] px-1 rounded-full text-xs font-bold grid place-items-center",
                   active ? "bg-white/25 text-white" : "bg-muted text-muted-foreground"
                 )}>{count}</span>
               </button>
@@ -371,7 +371,7 @@ export default function StudentNotifications() {
                 <Pin className="h-3.5 w-3.5 text-amber-500" />
                 <div className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-300">Pinned</div>
                 <div className="h-px flex-1 bg-amber-200/50 dark:bg-amber-500/20" />
-                <span className="text-[11px] text-muted-foreground">{pinnedItems.length}</span>
+                <span className="text-xs text-muted-foreground">{pinnedItems.length}</span>
               </div>
               <div className="space-y-4">
                 {pinnedItems.map((n, idx) => (
@@ -392,7 +392,7 @@ export default function StudentNotifications() {
                   <div className="flex items-center gap-2 ml-12">
                     <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{g.label}</div>
                     <div className="h-px flex-1 bg-border" />
-                    <span className="text-[11px] text-muted-foreground">{g.items.length}</span>
+                    <span className="text-xs text-muted-foreground">{g.items.length}</span>
                   </div>
                 </div>
                 <div className="space-y-4 mt-3">
@@ -438,7 +438,7 @@ function Stat({ label, value, tone, icon: Icon, highlight }: any) {
           <Icon className="h-3.5 w-3.5" />
         </div>
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
           <div className="text-lg font-bold leading-none mt-0.5 tabular-nums">{value}</div>
         </div>
       </div>
@@ -490,20 +490,20 @@ function TimelineCard({
         )}
         <div className="relative p-5">
           <div className="flex items-center gap-2 flex-wrap mb-2">
-            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider", tone.chip)}>
+            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider", tone.chip)}>
               {meta.label}
             </span>
             {isLatest && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500 text-white">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500 text-white">
                 New
               </span>
             )}
             {pinned && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">
                 <Pin className="h-2.5 w-2.5" /> Pinned
               </span>
             )}
-            <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" /> {timeAgo(n.created_at)}
               <span className="hidden sm:inline">· {new Date(n.created_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
             </span>

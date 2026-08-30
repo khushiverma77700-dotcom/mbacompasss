@@ -142,7 +142,7 @@ const OfferBanners = () => {
                     <h3 className="font-heading font-semibold text-sm md:text-base text-foreground leading-tight mb-1 md:mb-1.5">
                       {offer.title}
                     </h3>
-                    <p className="text-[11px] md:text-xs text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-3 flex-1 mb-3 md:mb-4">
+                    <p className="text-xs md:text-xs text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-3 flex-1 mb-3 md:mb-4">
                       {offer.subtitle}
                     </p>
 

@@ -205,13 +205,13 @@ const ExamListCard = ({ exam, compact }: { exam: ExamCard; compact?: boolean }) 
               <p className="line-clamp-1 text-xs text-muted-foreground sm:text-sm">{exam.fullName}</p>
             )}
           </div>
-          <Badge variant="outline" className={`shrink-0 text-[10px] sm:text-xs ${status.tone}`}>{status.label}</Badge>
+          <Badge variant="outline" className={`shrink-0 text-xs sm:text-xs ${status.tone}`}>{status.label}</Badge>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <Badge variant="secondary" className="text-[10px] sm:text-xs">{category}</Badge>
-          {level !== category && <Badge variant="secondary" className="text-[10px] sm:text-xs">{level}</Badge>}
-          {exam.mode && <Badge variant="secondary" className="max-w-[11rem] truncate text-[10px] sm:text-xs">{exam.mode}</Badge>}
+          <Badge variant="secondary" className="text-xs sm:text-xs">{category}</Badge>
+          {level !== category && <Badge variant="secondary" className="text-xs sm:text-xs">{level}</Badge>}
+          {exam.mode && <Badge variant="secondary" className="max-w-[11rem] truncate text-xs sm:text-xs">{exam.mode}</Badge>}
         </div>
 
         {!compact && exam.description && (
@@ -220,20 +220,20 @@ const ExamListCard = ({ exam, compact }: { exam: ExamCard; compact?: boolean }) 
 
         <dl className="mt-4 grid grid-cols-2 gap-2 text-xs sm:text-sm">
           <div className="rounded-lg border border-border/60 bg-muted/30 p-2.5">
-            <dt className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">
+            <dt className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground sm:text-xs">
               <CalendarDays className="h-3 w-3" /> Exam date
             </dt>
             <dd className="mt-0.5 line-clamp-1 font-medium text-foreground">{exam.examDate || "To be announced"}</dd>
           </div>
           <div className="rounded-lg border border-border/60 bg-muted/30 p-2.5">
-            <dt className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">
+            <dt className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground sm:text-xs">
               <Clock className="h-3 w-3" /> Registration ends
             </dt>
             <dd className="mt-0.5 line-clamp-1 font-medium text-foreground">{exam.registrationDeadline || "To be announced"}</dd>
           </div>
           {exam.conductingBody && (
             <div className="rounded-lg border border-border/60 bg-muted/30 p-2.5">
-              <dt className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">
+              <dt className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground sm:text-xs">
                 <BookOpen className="h-3 w-3" /> Conducted by
               </dt>
               <dd className="mt-0.5 line-clamp-1 font-medium text-foreground">{exam.conductingBody}</dd>
@@ -241,7 +241,7 @@ const ExamListCard = ({ exam, compact }: { exam: ExamCard; compact?: boolean }) 
           )}
           {(exam.duration || exam.frequency) && (
             <div className="rounded-lg border border-border/60 bg-muted/30 p-2.5">
-              <dt className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">
+              <dt className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground sm:text-xs">
                 <Timer className="h-3 w-3" /> {exam.duration ? "Duration" : "Frequency"}
               </dt>
               <dd className="mt-0.5 line-clamp-1 font-medium text-foreground">{exam.duration || exam.frequency}</dd>
@@ -551,7 +551,7 @@ const ExamsListingPage = () => {
             ].map((s) => (
               <div key={s.label} className="rounded-xl border border-border/60 bg-card p-3 text-center">
                 <div className="text-lg font-bold text-primary sm:text-2xl">{s.value}</div>
-                <div className="text-[11px] text-muted-foreground sm:text-xs">{s.label}</div>
+                <div className="text-xs text-muted-foreground sm:text-xs">{s.label}</div>
               </div>
             ))}
           </div>

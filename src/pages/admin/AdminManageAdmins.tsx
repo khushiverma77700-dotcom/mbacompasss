@@ -247,7 +247,7 @@ const AdminManageAdmins = () => {
                       <div key={group.label} className="border-b last:border-b-0 pb-2 last:pb-0">
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            {group.label} <span className="ml-1 text-[10px] text-muted-foreground/70">({groupSelected}/{group.items.length})</span>
+                            {group.label} <span className="ml-1 text-xs text-muted-foreground/70">({groupSelected}/{group.items.length})</span>
                           </span>
                           <Button type="button" size="sm" variant="ghost" className="h-6 text-xs" onClick={() => toggleGroup(group.items, allOn)}>
                             {allOn ? "Clear" : "All"}
@@ -348,7 +348,7 @@ const AdminManageAdmins = () => {
                                 <Unlock className="w-3 h-3 mr-1" /> Full Access
                               </Badge>
                               {stale && (
-                                <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">
+                                <Badge variant="outline" className="text-xs border-amber-400 text-amber-700">
                                   Needs sync ({admin.allowed_sections.length}/{totalSections})
                                 </Badge>
                               )}
@@ -361,11 +361,11 @@ const AdminManageAdmins = () => {
                               {admin.allowed_sections.slice(0, 3).map((path) => {
                                 const section = ADMIN_SECTIONS.find((s) => s.path === path);
                                 return section ? (
-                                  <Badge key={path} variant="outline" className="text-[10px]">{section.label}</Badge>
+                                  <Badge key={path} variant="outline" className="text-xs">{section.label}</Badge>
                                 ) : null;
                               })}
                               {admin.allowed_sections.length > 3 && (
-                                <Badge variant="outline" className="text-[10px]">+{admin.allowed_sections.length - 3} more</Badge>
+                                <Badge variant="outline" className="text-xs">+{admin.allowed_sections.length - 3} more</Badge>
                               )}
                             </>
                           )}

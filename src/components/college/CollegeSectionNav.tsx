@@ -69,7 +69,7 @@ const CollegeSectionNav = ({ items, topOffset = 96, className }: CollegeSectionN
       className={cn("w-full min-w-0", className)}
     >
       <div className="w-full min-w-0 rounded-xl border border-border/60 bg-card shadow-sm p-3">
-        <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2 pb-2 mb-2 border-b border-border/40">
+        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-2 pb-2 mb-2 border-b border-border/40">
           On this page
         </div>
         <ul className="space-y-0.5">
@@ -97,7 +97,7 @@ const CollegeSectionNav = ({ items, topOffset = 96, className }: CollegeSectionN
                   {item.hasAI && (
                     <span
                       title="Extended AI insights available"
-                      className="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded"
+                      className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded"
                     >
                       AI+
                     </span>

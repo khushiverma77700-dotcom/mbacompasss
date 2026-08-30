@@ -268,7 +268,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
         <Card className={`overflow-hidden border-2 hover:shadow-xl transition-all duration-300 group ${rankStyle.border}`}>
           {/* Rank header */}
           <div className={`px-4 py-3 flex items-center justify-between border-b ${rankStyle.header}`}>
-            <Badge variant="outline" className="text-[10px] px-2 py-0.5 font-bold border-primary/20 bg-background/80">
+            <Badge variant="outline" className="text-xs px-2 py-0.5 font-bold border-primary/20 bg-background/80">
               {rankStyle.badge}
             </Badge>
             <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold ${getScoreColor(rec.match_score)}`}>
@@ -291,28 +291,28 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                 <h4 className="font-bold text-foreground text-sm leading-tight">{rec.institute_name}</h4>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {rec.city && (
-                    <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                       <MapPin className="w-3 h-3" /> {rec.city}{rec.state ? `, ${rec.state}` : ""}
                     </span>
                   )}
                   {rec.rating && rec.rating > 0 && (
-                    <span className="flex items-center gap-0.5 text-[11px] text-amber-600 font-semibold">
+                    <span className="flex items-center gap-0.5 text-xs text-amber-600 font-semibold">
                       <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {rec.rating}
                     </span>
                   )}
                   {rec.mode && (
-                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{rec.mode}</Badge>
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0">{rec.mode}</Badge>
                   )}
                 </div>
                 {/* Quick stats row */}
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                   {rec.students_count && rec.students_count > 0 && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                       <Users className="w-2.5 h-2.5" /> {rec.students_count.toLocaleString()}+ students
                     </span>
                   )}
                   {rec.success_rate && rec.success_rate > 0 && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 font-medium">
+                    <span className="flex items-center gap-0.5 text-xs text-emerald-600 font-medium">
                       <TrendingUp className="w-2.5 h-2.5" /> {rec.success_rate}% success
                     </span>
                   )}
@@ -332,7 +332,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
             <div className="mb-3">
               <div className="flex flex-wrap gap-1.5">
                 {rec.key_strengths.slice(0, 4).map((s, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-2 py-0.5">
+                  <span key={i} className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-2 py-0.5">
                     <CheckCircle2 className="w-2.5 h-2.5" /> {s}
                   </span>
                 ))}
@@ -342,16 +342,16 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
             {/* Course details grid */}
             <div className="grid grid-cols-3 gap-1.5 mb-3">
               <div className="bg-muted/40 rounded-lg p-2 text-center">
-                <div className="text-[8px] text-muted-foreground uppercase tracking-wider">Course</div>
-                <div className="text-[10px] font-semibold text-foreground truncate mt-0.5">{rec.recommended_course}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">Course</div>
+                <div className="text-xs font-semibold text-foreground truncate mt-0.5">{rec.recommended_course}</div>
               </div>
               <div className="bg-primary/5 rounded-lg p-2 text-center border border-primary/10">
-                <div className="text-[8px] text-muted-foreground uppercase tracking-wider">Fees</div>
-                <div className="text-[10px] font-bold text-primary mt-0.5">{rec.course_fees}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">Fees</div>
+                <div className="text-xs font-bold text-primary mt-0.5">{rec.course_fees}</div>
               </div>
               <div className="bg-muted/40 rounded-lg p-2 text-center">
-                <div className="text-[8px] text-muted-foreground uppercase tracking-wider">Duration</div>
-                <div className="text-[10px] font-semibold text-foreground mt-0.5">{rec.course_duration}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">Duration</div>
+                <div className="text-xs font-semibold text-foreground mt-0.5">{rec.course_duration}</div>
               </div>
             </div>
 
@@ -394,7 +394,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
           <div className="text-left min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-bold text-foreground text-sm sm:text-base">AI Coaching Finder</h3>
-              <Badge className="bg-primary/10 text-primary border border-primary/15 text-[10px] px-2 py-0.5 font-semibold hover:bg-primary/15">
+              <Badge className="bg-primary/10 text-primary border border-primary/15 text-xs px-2 py-0.5 font-semibold hover:bg-primary/15">
                 <Sparkles className="w-3 h-3 mr-1" /> AI
               </Badge>
             </div>
@@ -641,10 +641,10 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                         {/* Results header */}
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Badge className="bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-0 text-[10px] px-2 py-0.5 font-semibold">
+                            <Badge className="bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-0 text-xs px-2 py-0.5 font-semibold">
                               <Sparkles className="w-3 h-3 mr-1" /> AI Picks
                             </Badge>
-                            <span className="text-[11px] text-muted-foreground font-medium">
+                            <span className="text-xs text-muted-foreground font-medium">
                               {aiResult.recommendations?.length || 0} coaching{(aiResult.recommendations?.length || 0) !== 1 ? "s" : ""} recommended
                             </span>
                           </div>
@@ -652,13 +652,13 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
 
                         {/* Preference tags */}
                         <div className="flex flex-wrap gap-1 mb-3">
-                          {mode && mode !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">{mode}</Badge>}
-                          {budget && budget !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">≤₹{parseInt(budget).toLocaleString()}</Badge>}
-                          {state && state !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">{state}</Badge>}
+                          {mode && mode !== "any" && <Badge variant="outline" className="text-xs py-0 px-1.5 bg-muted/50">{mode}</Badge>}
+                          {budget && budget !== "any" && <Badge variant="outline" className="text-xs py-0 px-1.5 bg-muted/50">≤₹{parseInt(budget).toLocaleString()}</Badge>}
+                          {state && state !== "any" && <Badge variant="outline" className="text-xs py-0 px-1.5 bg-muted/50">{state}</Badge>}
                           {selectedExams.length > 0 && selectedExams.map(e => (
-                            <Badge key={e} variant="outline" className="text-[9px] py-0 px-1.5 bg-primary/5 border-primary/20 text-primary">{e}</Badge>
+                            <Badge key={e} variant="outline" className="text-xs py-0 px-1.5 bg-primary/5 border-primary/20 text-primary">{e}</Badge>
                           ))}
-                          {experience && experience !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">{experience}</Badge>}
+                          {experience && experience !== "any" && <Badge variant="outline" className="text-xs py-0 px-1.5 bg-muted/50">{experience}</Badge>}
                         </div>
 
                         {/* AI Summary */}
@@ -692,11 +692,11 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                           >
                             <div className="flex items-center gap-1.5 mb-2">
                               <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
-                              <h5 className="text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Pro Tips</h5>
+                              <h5 className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Pro Tips</h5>
                             </div>
                             <ul className="space-y-1">
                               {aiResult.pro_tips.map((tip, i) => (
-                                <li key={i} className="flex items-start gap-1.5 text-[11px] text-amber-700 dark:text-amber-300">
+                                <li key={i} className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300">
                                   <TrendingUp className="w-2.5 h-2.5 mt-0.5 shrink-0" />
                                   {tip}
                                 </li>

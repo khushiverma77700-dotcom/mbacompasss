@@ -76,7 +76,7 @@ const Navbar = () => {
                 brandName
               )}
             </span>
-            <span className="text-[9px] font-medium text-muted-foreground -mt-0.5 tracking-wide">
+            <span className="text-xs font-medium text-muted-foreground -mt-0.5 tracking-wide">
               by B School Buzz
             </span>
           </div>

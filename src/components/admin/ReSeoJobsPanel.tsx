@@ -146,10 +146,10 @@ export default function ReSeoJobsPanel({ onOpenRun }: { onOpenRun: (runId: strin
                       >
                         {r.label || `Run ${r.id.slice(0, 8)}`}
                       </button>
-                      <Badge variant="outline" className={`text-[10px] ${b.cls} flex items-center gap-1`}>{b.icon}{b.label}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{r.scope}</Badge>
+                      <Badge variant="outline" className={`text-xs ${b.cls} flex items-center gap-1`}>{b.icon}{b.label}</Badge>
+                      <Badge variant="outline" className="text-xs">{r.scope}</Badge>
                       {scheduled && (
-                        <Badge variant="outline" className="text-[10px] bg-indigo-50 text-indigo-700 border-indigo-200">
+                        <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
                           runs {formatDistanceToNow(scheduled, { addSuffix: true })}
                         </Badge>
                       )}

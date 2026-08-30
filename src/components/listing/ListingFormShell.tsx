@@ -263,7 +263,7 @@ const ListingFormShell = ({ listing, type }: Props) => {
             <span className="text-xs font-semibold">{progress}%</span>
           </div>
           <Progress value={progress} className="h-2" />
-          <p className="text-[11px] text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             {completedCount} of {sections.length} sections marked complete
           </p>
         </Card>
@@ -284,9 +284,9 @@ const ListingFormShell = ({ listing, type }: Props) => {
                 <div className="min-w-0">
                   <div className="text-sm font-medium truncate flex items-center gap-1.5">
                     {s.label}
-                    {s.required && <span className="text-[10px] opacity-70">*</span>}
+                    {s.required && <span className="text-xs opacity-70">*</span>}
                   </div>
-                  <div className={cn("text-[11px] truncate", isActive ? "opacity-80" : "text-muted-foreground")}>
+                  <div className={cn("text-xs truncate", isActive ? "opacity-80" : "text-muted-foreground")}>
                     {s.description}
                   </div>
                 </div>

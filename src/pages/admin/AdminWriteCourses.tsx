@@ -490,7 +490,7 @@ const AdminWriteCourses = () => {
                       <SelectItem value="Hybrid">Hybrid</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Badge variant="outline" className={`text-[10px] hidden md:inline-flex ${confidenceTone(c.confidence)}`}>
+                  <Badge variant="outline" className={`text-xs hidden md:inline-flex ${confidenceTone(c.confidence)}`}>
                     {c.confidence}
                   </Badge>
                   <Button variant="ghost" size="sm" onClick={() => removeDiscovered(idx)}>
@@ -608,7 +608,7 @@ const AdminWriteCourses = () => {
                       <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Highlights</div>
                       <div className="flex flex-wrap gap-1.5">
                         {g.highlights.map((h, i) => (
-                          <Badge key={i} variant="secondary" className="text-[11px]">{h}</Badge>
+                          <Badge key={i} variant="secondary" className="text-xs">{h}</Badge>
                         ))}
                       </div>
                     </div>
@@ -632,7 +632,7 @@ const AdminWriteCourses = () => {
                   </details>
 
                   {g.accuracy_notes && (
-                    <div className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                    <div className="text-xs text-muted-foreground flex items-start gap-1.5">
                       <ShieldCheck className="w-3 h-3 mt-0.5 shrink-0 text-emerald-600" />
                       <span>{g.accuracy_notes}</span>
                     </div>

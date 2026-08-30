@@ -132,7 +132,7 @@ const AdminComparisons = () => {
                 <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">{item.description || "—"}</TableCell>
                 <TableCell className="text-sm">{item.link}</TableCell>
                 <TableCell><Badge variant={item.active ? "default" : "secondary"}>{item.active ? "Active" : "Inactive"}</Badge></TableCell>
-                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(item.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-xs">{new Date(item.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                 <TableCell className="text-right space-x-1">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>

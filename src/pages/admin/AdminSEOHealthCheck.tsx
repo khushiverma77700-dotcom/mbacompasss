@@ -280,9 +280,9 @@ export default function AdminSEOHealthCheck() {
                             <TableCell>
                               <div className="flex flex-wrap gap-1 max-w-md">
                                 {r.issues.slice(0, 4).map((iss, i) => (
-                                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border">{iss}</span>
+                                  <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border">{iss}</span>
                                 ))}
-                                {r.issues.length > 4 && <span className="text-[10px] text-slate-500">+{r.issues.length - 4} more</span>}
+                                {r.issues.length > 4 && <span className="text-xs text-slate-500">+{r.issues.length - 4} more</span>}
                               </div>
                             </TableCell>
                           </TableRow>

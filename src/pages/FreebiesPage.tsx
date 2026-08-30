@@ -293,7 +293,7 @@ const FreebiesPage = () => {
         </div>
 
         <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8 sm:pt-20 sm:pb-14 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 sm:px-3.5 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-sky-700 shadow-sm max-w-full">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 sm:px-3.5 sm:py-1.5 text-xs sm:text-xs font-semibold text-sky-700 shadow-sm max-w-full">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
@@ -353,7 +353,7 @@ const FreebiesPage = () => {
           </div>
 
           {/* Trust row */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-slate-500">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-xs text-slate-500">
             <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Verified by advisors</span>
             <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-sky-600" /> 50,000+ aspirants</span>
             <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> Rated 4.9/5</span>
@@ -368,7 +368,7 @@ const FreebiesPage = () => {
           <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
             <div className="flex items-end justify-between mb-4 sm:mb-6">
               <div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-[10px] sm:text-xs font-semibold">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-xs sm:text-xs font-semibold">
                   <Star className="h-3 w-3 fill-amber-500" /> Editor's picks
                 </div>
                 <h2 className="mt-2 text-xl sm:text-3xl font-bold text-slate-900 leading-tight">
@@ -401,11 +401,11 @@ const FreebiesPage = () => {
                               <FileText className="h-14 w-14" />
                             </div>
                           )}
-                          <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 text-amber-700 px-2 py-1 text-[10px] font-bold shadow">
+                          <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 text-amber-700 px-2 py-1 text-xs font-bold shadow">
                             <Star className="h-3 w-3 fill-amber-500" /> Featured #{idx + 1}
                           </div>
                           {f.category && (
-                            <div className="absolute top-3 right-3 rounded-full bg-black/40 backdrop-blur text-white px-2 py-1 text-[10px] font-medium">
+                            <div className="absolute top-3 right-3 rounded-full bg-black/40 backdrop-blur text-white px-2 py-1 text-xs font-medium">
                               {f.category}
                             </div>
                           )}
@@ -419,7 +419,7 @@ const FreebiesPage = () => {
                               {f.description}
                             </p>
                           )}
-                          <div className="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+                          <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
                             <span className="flex items-center gap-1"><Download className="h-3 w-3" /> {compactNum(f.download_count || 0)}</span>
                             <span>·</span>
                             <span>{formatBytes(f.file_size)}</span>
@@ -470,7 +470,7 @@ const FreebiesPage = () => {
                   <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${s.g} text-white grid place-items-center shadow-md`}>
                     {s.icon}
                   </div>
-                  <div className="text-[11px] font-bold text-slate-400 tabular-nums tracking-widest">STEP {s.n}</div>
+                  <div className="text-xs font-bold text-slate-400 tabular-nums tracking-widest">STEP {s.n}</div>
                 </div>
                 <h3 className="mt-3 font-bold text-slate-900">{s.t}</h3>
                 <p className="mt-1 text-sm text-slate-600 leading-relaxed">{s.d}</p>
@@ -535,14 +535,14 @@ const FreebiesPage = () => {
                 onClick={() => handleDownload(f)}
                 className="group relative text-left overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 hover:border-sky-300 hover:shadow-lg transition-all"
               >
-                <div className="absolute top-3 right-3 text-[10px] font-bold text-slate-300 tabular-nums">#{idx + 1}</div>
+                <div className="absolute top-3 right-3 text-xs font-bold text-slate-300 tabular-nums">#{idx + 1}</div>
                 <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${GRADIENTS[hashIdx(f.id)]} grid place-items-center text-white shadow-md`}>
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <h3 className="mt-3 font-semibold text-sm text-slate-900 line-clamp-2 group-hover:text-sky-700">
                   {f.title}
                 </h3>
-                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
                   <span>{compactNum(f.download_count || 0)} downloads</span>
                   <span className="flex items-center gap-0.5 text-sky-600 group-hover:translate-x-0.5 transition-transform">
                     Get it <ChevronRight className="h-3.5 w-3.5" />
@@ -581,10 +581,10 @@ const FreebiesPage = () => {
                   }`}
                 >
                   {c !== "All" && CATEGORY_ICONS[c] && (
-                    <span className="text-[13px] leading-none">{CATEGORY_ICONS[c]}</span>
+                    <span className="text-sm leading-none">{CATEGORY_ICONS[c]}</span>
                   )}
                   {c}
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>
                     {count}
                   </span>
                 </button>
@@ -658,7 +658,7 @@ const FreebiesPage = () => {
                         <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur border border-white/30 grid place-items-center shadow-xl group-hover:scale-110 transition-transform duration-500">
                           <FileText className="h-8 w-8" />
                         </div>
-                        <span className="mt-3 text-[10px] uppercase tracking-[0.2em] font-bold text-white/90">
+                        <span className="mt-3 text-xs uppercase tracking-[0.2em] font-bold text-white/90">
                           {isPdf ? "PDF Document" : "Document"}
                         </span>
                       </div>
@@ -666,7 +666,7 @@ const FreebiesPage = () => {
 
                     {/* Category badge */}
                     {f.category && (
-                      <div className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm">
+                      <div className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-xs font-bold text-slate-800 shadow-sm">
                         {CATEGORY_ICONS[f.category] && <span>{CATEGORY_ICONS[f.category]}</span>}
                         {f.category}
                       </div>
@@ -674,13 +674,13 @@ const FreebiesPage = () => {
 
                     {/* Hot badge */}
                     {isHot && (
-                      <div className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 rounded-full bg-orange-500 text-white px-2 py-1 text-[10px] font-bold shadow-md">
+                      <div className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 rounded-full bg-orange-500 text-white px-2 py-1 text-xs font-bold shadow-md">
                         <Flame className="h-3 w-3" /> HOT
                       </div>
                     )}
 
                     {/* File size — bottom right */}
-                    <div className="absolute bottom-3 right-3 z-20 rounded-md bg-black/40 backdrop-blur text-white px-2 py-0.5 text-[10px] font-medium">
+                    <div className="absolute bottom-3 right-3 z-20 rounded-md bg-black/40 backdrop-blur text-white px-2 py-0.5 text-xs font-medium">
                       {formatBytes(f.file_size)}
                     </div>
                   </div>
@@ -701,7 +701,7 @@ const FreebiesPage = () => {
                         {f.tags.slice(0, 3).map((t) => (
                           <span
                             key={t}
-                            className="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200 font-medium"
+                            className="text-xs px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200 font-medium"
                           >
                             #{t}
                           </span>
@@ -709,7 +709,7 @@ const FreebiesPage = () => {
                       </div>
                     )}
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                       <span className="flex items-center gap-1">
                         <Download className="h-3 w-3" /> {compactNum(f.download_count || 0)}
                       </span>
@@ -777,7 +777,7 @@ const FreebiesPage = () => {
                   </div>
                   <div>
                     <div className="font-semibold text-slate-900 text-sm">{t.n}</div>
-                    <div className="text-[11px] text-slate-500">{t.r}</div>
+                    <div className="text-xs text-slate-500">{t.r}</div>
                   </div>
                 </figcaption>
               </figure>
@@ -798,7 +798,7 @@ const FreebiesPage = () => {
                 </div>
                 <div>
                   <div className="text-lg font-bold text-slate-900 leading-none tabular-nums">{b.v}</div>
-                  <div className="text-[11px] text-slate-500 mt-1 font-medium">{b.l}</div>
+                  <div className="text-xs text-slate-500 mt-1 font-medium">{b.l}</div>
                 </div>
               </div>
             ))}
@@ -937,7 +937,7 @@ function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number
       </div>
       <div className="min-w-0">
         <div className="text-base sm:text-xl font-bold text-slate-900 leading-none tabular-nums">{value}</div>
-        <div className="text-[9px] sm:text-[11px] text-slate-500 mt-0.5 uppercase tracking-wider font-medium">{label}</div>
+        <div className="text-xs sm:text-xs text-slate-500 mt-0.5 uppercase tracking-wider font-medium">{label}</div>
       </div>
     </div>
   );
@@ -990,12 +990,12 @@ function MarqueeCard({
           <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur border border-white/30 grid place-items-center shadow">
             <FileText className="h-5 w-5" />
           </div>
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">
+          <div className="text-xs uppercase tracking-[0.18em] font-bold text-white/90">
             {isPdf ? "PDF" : "DOC"} · {formatBytes(f.file_size)}
           </div>
         </div>
         {f.category && (
-          <div className="absolute top-2 right-2 rounded-full bg-white/95 text-slate-800 px-2 py-0.5 text-[10px] font-bold shadow-sm">
+          <div className="absolute top-2 right-2 rounded-full bg-white/95 text-slate-800 px-2 py-0.5 text-xs font-bold shadow-sm">
             {f.category}
           </div>
         )}
@@ -1004,7 +1004,7 @@ function MarqueeCard({
         <h3 className="font-semibold text-sm text-slate-900 line-clamp-2 group-hover:text-sky-700 min-h-[2.5rem]">
           {f.title}
         </h3>
-        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+        <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
           <span className="flex items-center gap-1">
             <Download className="h-3 w-3" /> {compactNum(f.download_count || 0)}
           </span>

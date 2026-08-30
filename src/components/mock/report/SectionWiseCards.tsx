@@ -77,7 +77,7 @@ export default function SectionWiseCards({ rows }: { rows: SectionRow[] }) {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="flex justify-center gap-3 text-[10px] -mt-2">
+                <div className="flex justify-center gap-3 text-xs -mt-2">
                   {donut.map((d) => (
                     <span key={d.name} className="flex items-center gap-1">
                       <span className="inline-block h-2 w-2 rounded-full" style={{ background: d.color }} />

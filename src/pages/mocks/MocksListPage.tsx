@@ -286,7 +286,7 @@ export default function MocksListPage() {
                     ].map(([l, v]) => (
                       <div key={l as string} className="rounded-lg bg-gradient-to-b from-sky-50 to-sky-100/60 py-2 border border-sky-100">
                         <div className="text-xl font-bold tabular-nums">{String(v).padStart(2, "0")}</div>
-                        <div className="text-[10px] uppercase text-muted-foreground">{l}</div>
+                        <div className="text-xs uppercase text-muted-foreground">{l}</div>
                       </div>
                     ))}
                   </div>
@@ -545,13 +545,13 @@ export default function MocksListPage() {
               <div className="grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr]">
                 <div className="bg-slate-50 px-4 py-5 font-semibold text-sm text-muted-foreground uppercase tracking-wider">Feature</div>
                 <div className="bg-gradient-to-br from-sky-600 to-sky-700 text-white px-4 py-5 text-center relative">
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-950 hover:bg-amber-400 border-0 shadow-md text-[10px]">RECOMMENDED</Badge>
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-950 hover:bg-amber-400 border-0 shadow-md text-xs">RECOMMENDED</Badge>
                   <div className="font-bold text-base">MBA Compass</div>
-                  <div className="text-[11px] text-sky-100 mt-1">Premium · ₹{settings.price_current}</div>
+                  <div className="text-xs text-sky-100 mt-1">Premium · ₹{settings.price_current}</div>
                 </div>
                 <div className="bg-slate-100 px-4 py-5 text-center text-muted-foreground">
                   <div className="font-semibold text-base text-slate-700">Others</div>
-                  <div className="text-[11px] mt-1">Generic platforms</div>
+                  <div className="text-xs mt-1">Generic platforms</div>
                 </div>
               </div>
 
@@ -559,7 +559,7 @@ export default function MocksListPage() {
                 <div key={i} className={`grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr] border-t text-sm items-stretch ${i % 2 === 0 ? "bg-white" : "bg-sky-50/40"}`}>
                   <div className="px-4 py-4 font-medium flex items-center">
                     {row.feature}
-                    {row.highlight && <Badge className="ml-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 text-[10px]">FREE</Badge>}
+                    {row.highlight && <Badge className="ml-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 text-xs">FREE</Badge>}
                   </div>
                   <div className="px-4 py-4 flex flex-col items-center justify-center bg-sky-50/60 border-x border-sky-100">
                     {row.us_value ? (

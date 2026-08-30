@@ -45,7 +45,7 @@ const FloatingCalendar = () => (
     >
       <CalendarDays className="h-10 w-10 mb-1" />
       <div className="text-3xl font-extrabold leading-none">{new Date().getDate()}</div>
-      <div className="text-[11px] uppercase tracking-widest opacity-80 mt-1">
+      <div className="text-xs uppercase tracking-widest opacity-80 mt-1">
         {new Date().toLocaleDateString(undefined, { month: "short" })}
       </div>
     </motion.div>
@@ -90,7 +90,7 @@ const AddTaskIllustration = () => (
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <div className="text-sm font-semibold text-gray-900">Sectional · QA — 30 mins</div>
-            <span className="text-[10px] font-bold uppercase tracking-wider rounded-full bg-rose-100 text-rose-700 px-2 py-0.5">High</span>
+            <span className="text-xs font-bold uppercase tracking-wider rounded-full bg-rose-100 text-rose-700 px-2 py-0.5">High</span>
           </div>
           <div className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1.5">
             <Clock className="h-3 w-3" /> 6:30 PM · Today · Auto rollover
@@ -102,7 +102,7 @@ const AddTaskIllustration = () => (
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + ["Time", "Priority", "Repeat", "Link mock"].indexOf(chip) * 0.12 }}
-                className="text-[10px] rounded-full bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5"
+                className="text-xs rounded-full bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5"
               >
                 {chip}
               </motion.span>
@@ -116,7 +116,7 @@ const AddTaskIllustration = () => (
 
 const SuggestionsIllustration = () => (
   <div className="relative h-full w-full overflow-hidden grid place-items-center">
-    <div className="absolute top-2 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600">
+    <div className="absolute top-2 left-3 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
       <Lightbulb className="h-3.5 w-3.5" /> Smart Suggestions for you
     </div>
     <div className="w-[88%] space-y-2 mt-6">
@@ -188,7 +188,7 @@ const CompleteXPIllustration = () => {
           <div className={cn("text-sm font-semibold", checked && "line-through text-emerald-700")}>
             Full Mock · CAT Mock 12
           </div>
-          <div className="text-[11px] text-muted-foreground">3:00 PM · 180 mins</div>
+          <div className="text-xs text-muted-foreground">3:00 PM · 180 mins</div>
         </div>
       </motion.div>
       <AnimatePresence>
@@ -223,7 +223,7 @@ const StreakIllustration = () => (
         12-day streak
       </div>
     </motion.div>
-    <div className="absolute top-3 left-4 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+    <div className="absolute top-3 left-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
       <Trophy className="h-3.5 w-3.5 text-amber-500" /> Longest: 27 days
     </div>
     {[0, 1, 2, 3, 4].map((i) => (
@@ -285,7 +285,7 @@ const TabsFlowIllustration = () => {
               <div key={n} className="flex items-center gap-2 rounded-lg bg-white border border-gray-100 px-3 py-2">
                 <div className="h-4 w-4 rounded-full border-2 border-sky-300" />
                 <div className="h-2 rounded-full bg-gray-100 flex-1" style={{ width: `${60 + n * 8}%` }} />
-                <div className="text-[10px] text-muted-foreground">{30 * n}m</div>
+                <div className="text-xs text-muted-foreground">{30 * n}m</div>
               </div>
             ))}
           </motion.div>
@@ -304,7 +304,7 @@ const PerformanceIllustration = () => {
           <div className="text-xs font-semibold text-gray-800 inline-flex items-center gap-1.5">
             <BarChart3 className="h-4 w-4 text-rose-500" /> Last 7 days
           </div>
-          <div className="text-[11px] text-emerald-600 font-semibold">+22% ↑</div>
+          <div className="text-xs text-emerald-600 font-semibold">+22% ↑</div>
         </div>
         <div className="flex items-end justify-between gap-1.5 h-24">
           {bars.map((v, i) => (
@@ -317,7 +317,7 @@ const PerformanceIllustration = () => {
             />
           ))}
         </div>
-        <div className="mt-2 grid grid-cols-7 gap-1.5 text-[9px] text-muted-foreground text-center">
+        <div className="mt-2 grid grid-cols-7 gap-1.5 text-xs text-muted-foreground text-center">
           {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <div key={i}>{d}</div>)}
         </div>
       </div>
@@ -487,13 +487,13 @@ export default function DayPlannerAnimatedTour({ open, onClose }: Props) {
                   transition={{ duration: 0.35 }}
                   className="flex-1"
                 >
-                  <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white px-2.5 py-1 rounded-full bg-gradient-to-r", step.accent)}>
+                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-white px-2.5 py-1 rounded-full bg-gradient-to-r", step.accent)}>
                     <Sparkles className="h-3 w-3" /> {step.badge}
                   </span>
-                  <h2 className="mt-3 text-2xl sm:text-[26px] font-extrabold text-gray-900 leading-tight">
+                  <h2 className="mt-3 text-2xl sm:text-2xl font-extrabold text-gray-900 leading-tight">
                     {step.title}
                   </h2>
-                  <p className="mt-3 text-sm sm:text-[15px] text-gray-600 leading-relaxed">
+                  <p className="mt-3 text-sm sm:text-sm text-gray-600 leading-relaxed">
                     {step.desc}
                   </p>
 
@@ -570,7 +570,7 @@ export default function DayPlannerAnimatedTour({ open, onClose }: Props) {
 
               <button
                 onClick={onClose}
-                className="mt-3 text-[11px] text-muted-foreground hover:text-foreground transition-colors self-center"
+                className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors self-center"
               >
                 Skip tour
               </button>

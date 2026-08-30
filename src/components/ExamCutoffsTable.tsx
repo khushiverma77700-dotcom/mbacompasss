@@ -218,7 +218,7 @@ export default function ExamCutoffsTable() {
             <div className="text-sm md:text-base font-bold text-foreground">{current.fullName}</div>
             <div className="text-xs text-muted-foreground">{current.window} · Score type: <span className="font-semibold text-primary">{current.scoreLabel}</span></div>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
             <Info className="w-3.5 h-3.5" /> {current.note}
           </div>
         </div>
@@ -232,7 +232,7 @@ export default function ExamCutoffsTable() {
             aria-label="Exam cut-offs table, scrollable"
           >
           {/* Desktop header */}
-          <div className="hidden md:grid grid-cols-[1.6fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr_0.9fr_0.9fr] gap-3 px-5 py-3 bg-sky-50/95 backdrop-blur border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-primary/80 sticky top-0 z-10">
+          <div className="hidden md:grid grid-cols-[1.6fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr_0.9fr_0.9fr] gap-3 px-5 py-3 bg-sky-50/95 backdrop-blur border-b border-primary/10 text-xs font-bold uppercase tracking-wider text-primary/80 sticky top-0 z-10">
 
             <div>B-School</div>
             <div className="text-center">General</div>
@@ -250,10 +250,10 @@ export default function ExamCutoffsTable() {
               className="grid grid-cols-1 md:grid-cols-[1.6fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr_0.9fr_0.9fr] gap-2 md:gap-3 px-4 md:px-5 py-3.5 md:py-4 border-b border-primary/5 last:border-0 hover:bg-sky-50/60 transition-colors"
             >
               <Link to={`/college/${row.slug}`} className="min-w-0 group">
-                <div className="font-bold text-foreground text-sm md:text-[15px] group-hover:text-primary transition-colors truncate">
+                <div className="font-bold text-foreground text-sm md:text-sm group-hover:text-primary transition-colors truncate">
                   {row.college}
                 </div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">
+                <div className="text-xs text-muted-foreground mt-0.5">
                   {row.intake && <>Intake · {row.intake}</>} {row.intake && "·"} Closing {current.scoreLabel.toLowerCase()}
                 </div>
               </Link>
@@ -265,7 +265,7 @@ export default function ExamCutoffsTable() {
                   if (!val) return null;
                   return (
                     <div key={c.key} className="rounded-lg bg-sky-50/70 border border-primary/10 px-1.5 py-1 text-center">
-                      <div className="text-[9px] font-bold uppercase text-muted-foreground">{c.label}</div>
+                      <div className="text-xs font-bold uppercase text-muted-foreground">{c.label}</div>
                       <div className={`text-xs font-extrabold ${c.tone}`}>{val}</div>
                     </div>
                   );
@@ -293,7 +293,7 @@ export default function ExamCutoffsTable() {
 
 
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 mt-5 px-1">
-          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             Cut-offs vary each cycle; treat as directional benchmarks, not admission guarantees.
           </div>

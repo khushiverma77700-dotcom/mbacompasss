@@ -1289,19 +1289,19 @@ const AdminSEODashboard = () => {
       return (
         <div className="space-y-0.5">
           <span className="text-xs text-muted-foreground">No provider data</span>
-          <Badge variant="outline" className="block w-fit text-[10px] border-amber-300 text-amber-700">unverified</Badge>
+          <Badge variant="outline" className="block w-fit text-xs border-amber-300 text-amber-700">unverified</Badge>
         </div>
       );
     }
     return (
       <div className="space-y-0.5">
-        <span className="font-mono text-sm">{Number(row.searchVolume).toLocaleString()}<span className="text-[10px] text-muted-foreground">/mo</span></span>
-        {row.cpc ? <span className="text-[10px] text-muted-foreground block">₹{row.cpc} CPC</span> : null}
-        <Badge variant="outline" className="block w-fit text-[10px] border-emerald-300 text-emerald-700">
+        <span className="font-mono text-sm">{Number(row.searchVolume).toLocaleString()}<span className="text-xs text-muted-foreground">/mo</span></span>
+        {row.cpc ? <span className="text-xs text-muted-foreground block">₹{row.cpc} CPC</span> : null}
+        <Badge variant="outline" className="block w-fit text-xs border-emerald-300 text-emerald-700">
           {sourceLabel[row.volumeSource || ""] || row.volumeSource || "real"}
         </Badge>
         {row.gsc ? (
-          <span className="text-[10px] text-blue-700 block">
+          <span className="text-xs text-blue-700 block">
             GSC: #{row.gsc.position.toFixed(1)} · {row.gsc.impressions.toLocaleString()} impr
           </span>
         ) : null}
@@ -1375,9 +1375,9 @@ const AdminSEODashboard = () => {
                   <span className="font-medium">{pct(stats.withSchema)}%</span>
                 </div>
                 <div className="grid grid-cols-3 gap-1 mt-2">
-                  <div className="text-center p-1.5 rounded bg-green-50"><p className="text-xs font-bold text-green-700">{stats.good}</p><p className="text-[9px] text-green-600">Good</p></div>
-                  <div className="text-center p-1.5 rounded bg-amber-50"><p className="text-xs font-bold text-amber-700">{stats.warning}</p><p className="text-[9px] text-amber-600">Warn</p></div>
-                  <div className="text-center p-1.5 rounded bg-red-50"><p className="text-xs font-bold text-red-700">{stats.poor}</p><p className="text-[9px] text-red-600">Poor</p></div>
+                  <div className="text-center p-1.5 rounded bg-green-50"><p className="text-xs font-bold text-green-700">{stats.good}</p><p className="text-xs text-green-600">Good</p></div>
+                  <div className="text-center p-1.5 rounded bg-amber-50"><p className="text-xs font-bold text-amber-700">{stats.warning}</p><p className="text-xs text-amber-600">Warn</p></div>
+                  <div className="text-center p-1.5 rounded bg-red-50"><p className="text-xs font-bold text-red-700">{stats.poor}</p><p className="text-xs text-red-600">Poor</p></div>
                 </div>
               </div>
             </CardContent>
@@ -1475,11 +1475,11 @@ const AdminSEODashboard = () => {
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
                 {newRows.map((r) => (
                   <div key={r.key} className="flex items-center gap-3 text-sm py-1.5 px-3 rounded-md bg-green-500/5 border border-green-500/20">
-                    <Badge variant="outline" className="text-green-600 border-green-500/50 text-[10px] px-1.5 py-0">NEW</Badge>
-                    <Badge variant="secondary" className="text-[10px]">{contentTypeConfig[r.contentType].label}</Badge>
+                    <Badge variant="outline" className="text-green-600 border-green-500/50 text-xs px-1.5 py-0">NEW</Badge>
+                    <Badge variant="secondary" className="text-xs">{contentTypeConfig[r.contentType].label}</Badge>
                     <span className="font-medium text-foreground truncate flex-1">{r.name}</span>
                     <span className="text-muted-foreground text-xs">{r.slug ? `/${r.slug}` : ""}</span>
-                    <Badge className={`text-[10px] ${r.audit.status === "good" ? "bg-green-100 text-green-700" : r.audit.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                    <Badge className={`text-xs ${r.audit.status === "good" ? "bg-green-100 text-green-700" : r.audit.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
                       {r.audit.score}%
                     </Badge>
                     <AISEOButton contentType={r.contentType} data={r.item} recordId={r.id} onApply={fetchDashboardData} />
@@ -1515,9 +1515,9 @@ const AdminSEODashboard = () => {
                       const height = stats.total ? (count / stats.total) * 100 : 0;
                       return (
                         <div key={b} className="flex-1 flex flex-col items-center gap-1">
-                          <span className="text-[9px] text-muted-foreground font-medium">{count}</span>
+                          <span className="text-xs text-muted-foreground font-medium">{count}</span>
                           <div className={`w-full rounded-t transition-all ${low >= 80 ? "bg-green-500" : low >= 55 ? "bg-amber-500" : "bg-red-500"}`} style={{ height: `${Math.max(height, 2)}%` }} />
-                          <span className="text-[9px] text-muted-foreground">{low}</span>
+                          <span className="text-xs text-muted-foreground">{low}</span>
                         </div>
                       );
                     })}
@@ -1583,12 +1583,12 @@ const AdminSEODashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Total Pages</p><p className="text-xl font-bold">{reseoStats.total}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Re-SEO Completed</p><p className="text-xl font-bold text-green-600">{reseoStats.completed}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pending</p><p className="text-xl font-bold text-slate-600">{reseoStats.pending}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">In Progress</p><p className="text-xl font-bold text-blue-600">{reseoStats.inProgress}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Failed</p><p className="text-xl font-bold text-red-600">{reseoStats.failed}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Avg Score ↑</p><p className={`text-xl font-bold ${reseoStats.avgImprovement >= 0 ? "text-green-600" : "text-red-600"}`}>{reseoStats.avgImprovement >= 0 ? "+" : ""}{reseoStats.avgImprovement}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Total Pages</p><p className="text-xl font-bold">{reseoStats.total}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Re-SEO Completed</p><p className="text-xl font-bold text-green-600">{reseoStats.completed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Pending</p><p className="text-xl font-bold text-slate-600">{reseoStats.pending}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">In Progress</p><p className="text-xl font-bold text-blue-600">{reseoStats.inProgress}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Failed</p><p className="text-xl font-bold text-red-600">{reseoStats.failed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Avg Score ↑</p><p className={`text-xl font-bold ${reseoStats.avgImprovement >= 0 ? "text-green-600" : "text-red-600"}`}>{reseoStats.avgImprovement >= 0 ? "+" : ""}{reseoStats.avgImprovement}</p></div>
                 </div>
                 {reseoStats.needsReview > 0 && (
                   <p className="text-xs text-amber-600 mt-2"><AlertTriangle className="inline h-3 w-3 mr-1" />{reseoStats.needsReview} completed pages need review (rewrite applied or small score gain).</p>
@@ -1775,7 +1775,7 @@ const AdminSEODashboard = () => {
                           <TableCell className="text-xs whitespace-nowrap">
                             {(() => {
                               const rs = reseoStatusMap[row.slug || row.key];
-                              if (!rs) return <Badge variant="outline" className="text-[10px]">Not Optimized</Badge>;
+                              if (!rs) return <Badge variant="outline" className="text-xs">Not Optimized</Badge>;
                               const delta = (rs.score_after ?? 0) - (rs.score_before ?? 0);
                               const tone =
                                 rs.status === "done" ? "bg-green-100 text-green-700 border-green-200" :
@@ -1784,12 +1784,12 @@ const AdminSEODashboard = () => {
                                 "bg-slate-100 text-slate-700 border-slate-200";
                               return (
                                 <button onClick={() => openReport(row)} className={`inline-flex flex-col items-start rounded px-1.5 py-0.5 border text-left hover:opacity-80 ${tone}`}>
-                                  <span className="text-[10px] font-semibold capitalize">{rs.status === "done" ? "Completed" : rs.status}</span>
-                                  {rs.new_primary_keyword && <span className="text-[10px] text-slate-600 max-w-[140px] truncate">KW: {rs.new_primary_keyword}</span>}
+                                  <span className="text-xs font-semibold capitalize">{rs.status === "done" ? "Completed" : rs.status}</span>
+                                  {rs.new_primary_keyword && <span className="text-xs text-slate-600 max-w-[140px] truncate">KW: {rs.new_primary_keyword}</span>}
                                   {rs.status === "done" && rs.score_after != null && (
-                                    <span className="text-[10px]">Score {rs.score_before ?? "—"}→{rs.score_after} <span className={delta >= 0 ? "text-green-700" : "text-red-700"}>({delta >= 0 ? "+" : ""}{delta})</span></span>
+                                    <span className="text-xs">Score {rs.score_before ?? "—"}→{rs.score_after} <span className={delta >= 0 ? "text-green-700" : "text-red-700"}>({delta >= 0 ? "+" : ""}{delta})</span></span>
                                   )}
-                                  {rs.finished_at && <span className="text-[10px] text-slate-500">{new Date(rs.finished_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>}
+                                  {rs.finished_at && <span className="text-xs text-slate-500">{new Date(rs.finished_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>}
                                 </button>
                               );
                             })()}
@@ -1857,12 +1857,12 @@ const AdminSEODashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Total Pages</p><p className="text-xl font-bold">{reseoStats.total}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Re-SEO Completed</p><p className="text-xl font-bold text-green-600">{reseoStats.completed}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pending</p><p className="text-xl font-bold text-slate-600">{reseoStats.pending}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">In Progress</p><p className="text-xl font-bold text-blue-600">{reseoStats.inProgress}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Failed</p><p className="text-xl font-bold text-red-600">{reseoStats.failed}</p></div>
-                  <div className="rounded-md border bg-background p-3"><p className="text-[11px] text-muted-foreground">Avg Score ↑</p><p className={`text-xl font-bold ${reseoStats.avgImprovement >= 0 ? "text-green-600" : "text-red-600"}`}>{reseoStats.avgImprovement >= 0 ? "+" : ""}{reseoStats.avgImprovement}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Total Pages</p><p className="text-xl font-bold">{reseoStats.total}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Re-SEO Completed</p><p className="text-xl font-bold text-green-600">{reseoStats.completed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Pending</p><p className="text-xl font-bold text-slate-600">{reseoStats.pending}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">In Progress</p><p className="text-xl font-bold text-blue-600">{reseoStats.inProgress}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Failed</p><p className="text-xl font-bold text-red-600">{reseoStats.failed}</p></div>
+                  <div className="rounded-md border bg-background p-3"><p className="text-xs text-muted-foreground">Avg Score ↑</p><p className={`text-xl font-bold ${reseoStats.avgImprovement >= 0 ? "text-green-600" : "text-red-600"}`}>{reseoStats.avgImprovement >= 0 ? "+" : ""}{reseoStats.avgImprovement}</p></div>
                 </div>
                 {reseoStats.needsReview > 0 && (
                   <p className="text-xs text-amber-600 mt-2"><AlertTriangle className="inline h-3 w-3 mr-1" />{reseoStats.needsReview} completed pages need review (rewrite applied or small score gain).</p>
@@ -1946,7 +1946,7 @@ const AdminSEODashboard = () => {
                             </TableCell>
                             <TableCell><Badge variant={row.isStatic ? "secondary" : "outline"} className="text-xs">{row.isStatic ? "Static" : contentTypeConfig[row.contentType].label}</Badge></TableCell>
                             <TableCell>
-                              <button onClick={() => openReport(row)} className={`inline-flex items-center rounded px-1.5 py-0.5 border text-[10px] font-semibold capitalize hover:opacity-80 ${tone}`}>{statusLabel}</button>
+                              <button onClick={() => openReport(row)} className={`inline-flex items-center rounded px-1.5 py-0.5 border text-xs font-semibold capitalize hover:opacity-80 ${tone}`}>{statusLabel}</button>
                             </TableCell>
                             <TableCell className="text-xs max-w-[200px] truncate">{rs?.new_primary_keyword || <span className="text-muted-foreground">—</span>}</TableCell>
                             <TableCell className="text-xs whitespace-nowrap">
@@ -2066,7 +2066,7 @@ const AdminSEODashboard = () => {
                       <div key={i} className="flex items-center gap-3 py-1.5 border-b last:border-0">
                         <Badge variant="outline" className="text-xs">{m.contentType}</Badge>
                         <span className="text-sm flex-1">/{m.slug}</span>
-                        <Badge variant="destructive" className="text-[10px]">Missing {m.missing}</Badge>
+                        <Badge variant="destructive" className="text-xs">Missing {m.missing}</Badge>
                       </div>
                     ))}</CardContent>
                   </Card>
@@ -2199,10 +2199,10 @@ const AdminSEODashboard = () => {
                           <div className="flex-1">
                             <p className="text-sm font-medium">{a.action}</p>
                             <div className="flex gap-2 mt-1">
-                              <Badge className={`text-[10px] ${a.impact === "high" ? "bg-red-100 text-red-700" : a.impact === "medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>Impact: {a.impact}</Badge>
-                              <Badge variant="outline" className="text-[10px]">Effort: {a.effort}</Badge>
+                              <Badge className={`text-xs ${a.impact === "high" ? "bg-red-100 text-red-700" : a.impact === "medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>Impact: {a.impact}</Badge>
+                              <Badge variant="outline" className="text-xs">Effort: {a.effort}</Badge>
                             </div>
-                            {a.targetPages?.length > 0 && <p className="text-[10px] text-muted-foreground mt-1">Target: {a.targetPages.join(", ")}</p>}
+                            {a.targetPages?.length > 0 && <p className="text-xs text-muted-foreground mt-1">Target: {a.targetPages.join(", ")}</p>}
                           </div>
                           <Button size="sm" variant="outline" onClick={() => handleImplementAction(a)}>
                             <Sparkles className="h-3 w-3 mr-1" /> Implement
@@ -2303,7 +2303,7 @@ const AdminSEODashboard = () => {
                           {kwDataQuality.totalRealKeywords || 0} real • {kwDataQuality.totalAiEnriched || 0} AI-enriched
                         </span>
                         {kwDataQuality.dataSourcesUsed?.length ? (
-                          <div className="flex gap-1">{kwDataQuality.dataSourcesUsed.map((s, i) => <Badge key={i} variant="outline" className="text-[10px]">{s}</Badge>)}</div>
+                          <div className="flex gap-1">{kwDataQuality.dataSourcesUsed.map((s, i) => <Badge key={i} variant="outline" className="text-xs">{s}</Badge>)}</div>
                         ) : null}
                         {kwDataQuality.notes && <p className="text-xs text-muted-foreground w-full">{kwDataQuality.notes}</p>}
                       </div>
@@ -2430,7 +2430,7 @@ const AdminSEODashboard = () => {
                             <TableCell><Badge variant="outline" className={`text-xs ${kw.competition === "low" ? "border-green-300 text-green-700" : kw.competition === "high" ? "border-red-300 text-red-700" : "border-amber-300 text-amber-700"}`}>{kw.competition}</Badge></TableCell>
                             <TableCell><Badge variant="secondary" className="text-xs">{kw.intent}</Badge></TableCell>
                             <TableCell>{trendIcon(kw.trending)}</TableCell>
-                            <TableCell><Badge variant="outline" className={`text-[10px] ${kw.source === "google_suggest" ? "border-blue-300 text-blue-700" : kw.source === "paa" ? "border-purple-300 text-purple-700" : kw.source === "alphabet" ? "border-cyan-300 text-cyan-700" : kw.source === "trends" ? "border-green-300 text-green-700" : kw.source === "ai_enriched" ? "border-amber-300 text-amber-700" : ""}`}>{kw.source || "—"}</Badge></TableCell>
+                            <TableCell><Badge variant="outline" className={`text-xs ${kw.source === "google_suggest" ? "border-blue-300 text-blue-700" : kw.source === "paa" ? "border-purple-300 text-purple-700" : kw.source === "alphabet" ? "border-cyan-300 text-cyan-700" : kw.source === "trends" ? "border-green-300 text-green-700" : kw.source === "ai_enriched" ? "border-amber-300 text-amber-700" : ""}`}>{kw.source || "—"}</Badge></TableCell>
                             <TableCell className="text-xs text-muted-foreground">{kw.category || "—"}</TableCell>
                           </TableRow>
                         ))}
@@ -2448,10 +2448,10 @@ const AdminSEODashboard = () => {
                         <div key={i} className="p-3 rounded-lg border bg-card">
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-medium text-sm">{c.clusterName}</span>
-                            {c.suggestedContentType && <Badge variant="outline" className="text-[10px]">{c.suggestedContentType}</Badge>}
+                            {c.suggestedContentType && <Badge variant="outline" className="text-xs">{c.suggestedContentType}</Badge>}
                           </div>
                           <p className="text-xs text-primary font-medium mb-1">Pillar: {c.pillarKeyword}</p>
-                          <div className="flex flex-wrap gap-1">{c.supportingKeywords.map((sk, j) => <Badge key={j} variant="secondary" className="text-[10px]">{sk}</Badge>)}</div>
+                          <div className="flex flex-wrap gap-1">{c.supportingKeywords.map((sk, j) => <Badge key={j} variant="secondary" className="text-xs">{sk}</Badge>)}</div>
                         </div>
                       ))}
                     </CardContent>
@@ -2464,7 +2464,7 @@ const AdminSEODashboard = () => {
                     <div key={i} className="text-sm py-1 border-b last:border-0">
                       <p className="font-medium">{typeof g === "string" ? g : g.gap}</p>
                       {typeof g !== "string" && g.suggestedTitle && <p className="text-xs text-primary">→ {g.suggestedTitle}</p>}
-                      {typeof g !== "string" && g.estimatedTraffic && <span className="text-[10px] text-muted-foreground">{g.estimatedTraffic.toLocaleString()} est. traffic</span>}
+                      {typeof g !== "string" && g.estimatedTraffic && <span className="text-xs text-muted-foreground">{g.estimatedTraffic.toLocaleString()} est. traffic</span>}
                     </div>
                   ))}</CardContent></Card>
                   <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4" /> Seasonal</CardTitle></CardHeader><CardContent className="space-y-2">{kwSeasonal.map((s, i) => (
@@ -2476,7 +2476,7 @@ const AdminSEODashboard = () => {
                   <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4" /> Snippet Opportunities</CardTitle></CardHeader><CardContent className="space-y-2">{kwSnippets.map((s, i) => (
                     <div key={i} className="text-sm py-1 border-b last:border-0">
                       <p className="font-medium">{typeof s === "string" ? s : s.question}</p>
-                      {typeof s !== "string" && s.currentRanker && <p className="text-[10px] text-muted-foreground">Current: {s.currentRanker}</p>}
+                      {typeof s !== "string" && s.currentRanker && <p className="text-xs text-muted-foreground">Current: {s.currentRanker}</p>}
                     </div>
                   ))}</CardContent></Card>
                 </div>
@@ -2549,9 +2549,9 @@ const AdminSEODashboard = () => {
                           <TableRow key={i}>
                             <TableCell className="max-w-[350px]">
                               <p className="font-medium text-sm">{bt.title}</p>
-                              <p className="text-[11px] text-blue-600 mt-0.5">Meta: {bt.metaTitle}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{bt.metaDescription}</p>
-                              <p className="text-[10px] text-green-600 mt-0.5">/{bt.slug}</p>
+                              <p className="text-xs text-blue-600 mt-0.5">Meta: {bt.metaTitle}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{bt.metaDescription}</p>
+                              <p className="text-xs text-green-600 mt-0.5">/{bt.slug}</p>
                             </TableCell>
                             <TableCell className="text-xs">{bt.targetKeyword}</TableCell>
                             <TableCell><VolumeCell row={bt} /></TableCell>
@@ -2624,11 +2624,11 @@ const AdminSEODashboard = () => {
                             </div>
                           </TableCell>
                           <TableCell className="font-mono text-xs">{idea.searchVolume?.toLocaleString()}</TableCell>
-                          <TableCell><Badge className={`text-[10px] ${priorityColor(idea.priority)}`}>{idea.priority}</Badge></TableCell>
-                          <TableCell className="text-[10px] text-muted-foreground">{new Date(idea.savedAt).toLocaleDateString()}</TableCell>
+                          <TableCell><Badge className={`text-xs ${priorityColor(idea.priority)}`}>{idea.priority}</Badge></TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{new Date(idea.savedAt).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <div className="flex gap-1 justify-end">
-                              <Button variant="default" size="sm" className="h-6 px-2 gap-1 text-[10px]" onClick={() => handleWriteBlogViaAI({ title: idea.title, slug: idea.slug, targetKeyword: idea.targetKeyword, metaTitle: idea.metaTitle, metaDescription: idea.metaDescription, category: "news" })}>
+                              <Button variant="default" size="sm" className="h-6 px-2 gap-1 text-xs" onClick={() => handleWriteBlogViaAI({ title: idea.title, slug: idea.slug, targetKeyword: idea.targetKeyword, metaTitle: idea.metaTitle, metaDescription: idea.metaDescription, category: "news" })}>
                                 <Wand2 className="h-3 w-3" /> AI
                               </Button>
                               <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteBlogIdea(idea.id)}><Trash2 className="h-3 w-3" /></Button>
@@ -2794,7 +2794,7 @@ const AdminSEODashboard = () => {
                           </div>
                           <div>
                             <p className="text-xs font-semibold text-muted-foreground mb-1">Unique Keywords We Don't Target</p>
-                            <div className="flex flex-wrap gap-1">{comp.uniqueKeywords.map((k, j) => <Badge key={j} variant="secondary" className="text-[10px]">{k}</Badge>)}</div>
+                            <div className="flex flex-wrap gap-1">{comp.uniqueKeywords.map((k, j) => <Badge key={j} variant="secondary" className="text-xs">{k}</Badge>)}</div>
                           </div>
                         </CardContent>
                       </Card>
@@ -2844,7 +2844,7 @@ const AdminSEODashboard = () => {
                                   <TableCell className="text-xs">{gap.competitorRanking || "—"}</TableCell>
                                   <TableCell className="text-xs font-mono">{gap.rankingPosition || "—"}</TableCell>
                                   <TableCell className="text-xs">{gap.opportunity}</TableCell>
-                                  <TableCell><Badge variant="outline" className="text-[10px]">{gap.recommendedAction || "Create"}</Badge></TableCell>
+                                  <TableCell><Badge variant="outline" className="text-xs">{gap.recommendedAction || "Create"}</Badge></TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
@@ -2954,7 +2954,7 @@ const AdminSEODashboard = () => {
                       <div className="flex-1"><Progress value={avgScore} className="h-2" /></div>
                       <span className="text-xs font-mono w-12 text-right">{avgScore}%</span>
                       <span className="text-xs text-muted-foreground w-24">~{avgWc} words</span>
-                      {thin > 0 && <Badge variant="destructive" className="text-[10px]">{thin} thin</Badge>}
+                      {thin > 0 && <Badge variant="destructive" className="text-xs">{thin} thin</Badge>}
                     </div>
                   );
                 })}
@@ -3294,8 +3294,8 @@ const AdminSEODashboard = () => {
                             <Checkbox checked={isSelected} onCheckedChange={() => toggleInterlinkSelect(originalIdx)} className="mt-1" />
                             <div className="flex-1 min-w-0 space-y-1.5">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <Badge className={`text-[10px] ${link.priority === "high" ? "bg-red-100 text-red-700" : link.priority === "medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>{link.priority}</Badge>
-                                {link.theme && <Badge variant="outline" className="text-[10px]">{link.theme}</Badge>}
+                                <Badge className={`text-xs ${link.priority === "high" ? "bg-red-100 text-red-700" : link.priority === "medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>{link.priority}</Badge>
+                                {link.theme && <Badge variant="outline" className="text-xs">{link.theme}</Badge>}
                               </div>
                               <div className="flex items-center gap-2 text-sm flex-wrap">
                                 <span className="font-medium truncate max-w-[200px]">{link.sourceName}</span>
@@ -3303,9 +3303,9 @@ const AdminSEODashboard = () => {
                                 <span className="font-medium truncate max-w-[200px] text-primary">{link.targetName}</span>
                               </div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                                <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{link.sourcePath}</code>
+                                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{link.sourcePath}</code>
                                 <ArrowRight className="h-2.5 w-2.5 shrink-0" />
-                                <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{link.targetPath}</code>
+                                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{link.targetPath}</code>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">Anchor:</span>
@@ -3367,7 +3367,7 @@ const AdminSEODashboard = () => {
         >
           <Loader2 className="w-4 h-4 animate-spin" />
           Bulk SEO running — {bulkItems.filter(i => i.status === "ok" || i.status === "fail").length}/{bulkItems.length}
-          {bulkRun.lastSavedAt && <span className="text-[10px] opacity-80 ml-1">auto-saved</span>}
+          {bulkRun.lastSavedAt && <span className="text-xs opacity-80 ml-1">auto-saved</span>}
         </button>
       )}
 
@@ -3450,14 +3450,14 @@ function StatCard({ label, value, helper, tone = "default", icon }: { label: str
           <p className={`text-2xl font-bold ${toneClass}`}>{value}</p>
         </div>
         <p className="text-xs text-muted-foreground">{label}</p>
-        {helper && <p className="text-[10px] text-muted-foreground mt-1">{helper}</p>}
+        {helper && <p className="text-xs text-muted-foreground mt-1">{helper}</p>}
       </CardContent>
     </Card>
   );
 }
 
 function MiniBadge({ active, children }: { active: boolean; children: React.ReactNode }) {
-  return <Badge variant={active ? "secondary" : "outline"} className="text-[10px]">{children}</Badge>;
+  return <Badge variant={active ? "secondary" : "outline"} className="text-xs">{children}</Badge>;
 }
 
 function CoverageBar({ label, count, total, icon }: { label: string; count: number; total: number; icon: React.ReactNode }) {
@@ -3489,7 +3489,7 @@ function RecommendationRow({ icon, text, severity }: { icon: React.ReactNode; te
     <div className={`flex items-center gap-3 p-2.5 rounded border-l-4 ${colors}`}>
       <span className="text-muted-foreground shrink-0">{icon}</span>
       <p className="text-sm flex-1">{text}</p>
-      <Badge className={`text-[10px] ${severity === "high" ? "bg-red-100 text-red-700" : severity === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{severity}</Badge>
+      <Badge className={`text-xs ${severity === "high" ? "bg-red-100 text-red-700" : severity === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{severity}</Badge>
     </div>
   );
 }
@@ -3620,14 +3620,14 @@ function TopicClustersPanel() {
                   <Card key={i} className="bg-muted/30">
                     <CardContent className="py-3 space-y-1">
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-[10px]">{s.funnelStage || s.funnel_stage || "TOFU"}</Badge>
+                        <Badge variant="secondary" className="text-xs">{s.funnelStage || s.funnel_stage || "TOFU"}</Badge>
                         <p className="text-sm font-semibold">{s.clusterName || s.name || s.title}</p>
                       </div>
                       <p className="text-xs text-muted-foreground">{s.primaryKeyword || s.pillarKeyword}</p>
                       {Array.isArray(s.supportingKeywords) && (
                         <div className="flex flex-wrap gap-1 pt-1">
                           {s.supportingKeywords.slice(0, 6).map((k: string, j: number) => (
-                            <Badge key={j} variant="outline" className="text-[10px]">{k}</Badge>
+                            <Badge key={j} variant="outline" className="text-xs">{k}</Badge>
                           ))}
                         </div>
                       )}
@@ -3713,10 +3713,10 @@ function ContentFreshnessPanel({ rows, onRefresh }: { rows: DashboardRow[]; onRe
             <p className="text-sm text-muted-foreground mb-3">{staleRows.length} stale pages</p>
             {staleRows.slice(0, 50).map(({ row, ageDays }) => (
               <div key={row.key} className="flex items-center gap-3 p-2.5 border rounded">
-                <Badge variant="outline" className="text-[10px]">{row.contentType}</Badge>
+                <Badge variant="outline" className="text-xs">{row.contentType}</Badge>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{row.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{ageDays} days old</p>
+                  <p className="text-xs text-muted-foreground">{ageDays} days old</p>
                 </div>
                 <Badge className={ageDays > 180 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}>
                   {ageDays > 180 ? "Critical" : "Stale"}
@@ -3813,10 +3813,10 @@ function ImageAuditPanel() {
           <div className="space-y-2">
             {results.slice(0, 100).map((r) => (
               <div key={`${r.contentType}-${r.id}`} className="flex items-center gap-3 p-2.5 border rounded">
-                <Badge variant="outline" className="text-[10px]">{r.contentType}</Badge>
+                <Badge variant="outline" className="text-xs">{r.contentType}</Badge>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{r.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{r.path}</p>
+                  <p className="text-xs text-muted-foreground truncate">{r.path}</p>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <Badge variant="outline" className="border-amber-200 text-amber-700">

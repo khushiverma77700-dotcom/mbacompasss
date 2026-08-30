@@ -33,7 +33,7 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
     case "prose":
       return (
         <div
-          className="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-base prose-h3:mt-5 prose-h3:text-sky-800 prose-p:leading-[1.75] prose-p:text-slate-700 prose-p:text-[15px] prose-li:text-[15px] prose-li:text-slate-700 prose-strong:text-slate-900 prose-a:text-sky-700 prose-a:no-underline hover:prose-a:underline prose-table:text-sm prose-th:bg-sky-50"
+          className="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-base prose-h3:mt-5 prose-h3:text-sky-800 prose-p:leading-[1.75] prose-p:text-slate-700 prose-p:text-sm prose-li:text-sm prose-li:text-slate-700 prose-strong:text-slate-900 prose-a:text-sky-700 prose-a:no-underline hover:prose-a:underline prose-table:text-sm prose-th:bg-sky-50"
           dangerouslySetInnerHTML={{ __html: stripLeadingHeadings(data.body || "") }}
         />
       );
@@ -96,14 +96,14 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
                         </div>
                       )}
                       {t.score && (
-                        <span className="absolute -bottom-1 -right-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm whitespace-nowrap">
+                        <span className="absolute -bottom-1 -right-1 text-xs font-extrabold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm whitespace-nowrap">
                           {t.score}
                         </span>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-slate-900 text-[15px] leading-tight">{t.name}</span>
+                        <span className="font-bold text-slate-900 text-sm leading-tight">{t.name}</span>
                         {rating > 0 && (
                           <span className="inline-flex items-center text-amber-500">
                             {Array.from({ length: rating }).map((_, k) => <Star key={k} className="w-3 h-3 fill-current" />)}
@@ -112,12 +112,12 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 mt-1">
                         {t.exam && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
+                          <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
                             <GraduationCap className="w-2.5 h-2.5" /> {t.exam}{t.year ? ` · ${t.year}` : ""}
                           </span>
                         )}
                         {t.college && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
+                          <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
                             <Trophy className="w-2.5 h-2.5" /> {t.college}
                           </span>
                         )}
@@ -125,9 +125,9 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
                     </div>
                     <Quote className="w-6 h-6 text-sky-200 shrink-0" />
                   </div>
-                  {t.text && <p className="text-[14px] text-slate-700 leading-[1.7] mt-3">"{t.text}"</p>}
+                  {t.text && <p className="text-sm text-slate-700 leading-[1.7] mt-3">"{t.text}"</p>}
                   {t.video_url && (
-                    <a href={t.video_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-sky-700 hover:text-sky-900">
+                    <a href={t.video_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-700 hover:text-sky-900">
                       <Play className="w-3.5 h-3.5 fill-current" /> Watch video story
                     </a>
                   )}
@@ -151,15 +151,15 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
               <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
               <div className="relative">
-                <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-bold bg-white/15 rounded-full px-2.5 py-1 backdrop-blur">
+                <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider font-bold bg-white/15 rounded-full px-2.5 py-1 backdrop-blur">
                   <TrendingUp className="w-3 h-3" /> Headline Results
                 </div>
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {stats.map((s: any, i: number) => (
                     <div key={i} className="rounded-xl bg-white/10 border border-white/20 p-4 backdrop-blur">
                       <div className="text-2xl md:text-3xl font-extrabold leading-none">{s.value}</div>
-                      <div className="text-[12px] font-semibold mt-1.5 opacity-95">{s.label}</div>
-                      {s.sub && <div className="text-[10px] uppercase tracking-wider opacity-75 mt-0.5">{s.sub}</div>}
+                      <div className="text-xs font-semibold mt-1.5 opacity-95">{s.label}</div>
+                      {s.sub && <div className="text-xs uppercase tracking-wider opacity-75 mt-0.5">{s.sub}</div>}
                     </div>
                   ))}
                 </div>
@@ -170,8 +170,8 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Medal className="w-4 h-4 text-amber-600" />
-                <h3 className="font-bold text-slate-900 text-[15px]">Star Performers</h3>
-                <span className="ml-auto text-[12px] text-slate-500 font-medium">{toppers.length} selections</span>
+                <h3 className="font-bold text-slate-900 text-sm">Star Performers</h3>
+                <span className="ml-auto text-xs text-slate-500 font-medium">{toppers.length} selections</span>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {toppers.map((t: any, i: number) => (
@@ -186,13 +186,13 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="font-bold text-slate-900 text-[14px] leading-tight truncate">{t.name}</div>
+                        <div className="font-bold text-slate-900 text-sm leading-tight truncate">{t.name}</div>
                         {t.rank && (
-                          <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5 mt-1">
+                          <div className="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5 mt-1">
                             <Trophy className="w-2.5 h-2.5" /> {t.rank}
                           </div>
                         )}
-                        <div className="mt-2 space-y-0.5 text-[11px] text-slate-600">
+                        <div className="mt-2 space-y-0.5 text-xs text-slate-600">
                           {(t.exam || t.year) && (
                             <div className="flex items-center gap-1"><GraduationCap className="w-3 h-3 text-sky-600" /> {[t.exam, t.year].filter(Boolean).join(" · ")}</div>
                           )}
@@ -212,7 +212,7 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
           )}
           {body && (
             <div
-              className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-base prose-h3:mt-5 prose-h3:text-sky-800 prose-p:leading-[1.75] prose-p:text-slate-700 prose-p:text-[15px] prose-li:text-[15px] prose-li:text-slate-700 prose-strong:text-slate-900 prose-a:text-sky-700 hover:prose-a:underline prose-table:text-sm prose-th:bg-sky-50 bg-white border border-sky-100 rounded-2xl p-5"
+              className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-base prose-h3:mt-5 prose-h3:text-sky-800 prose-p:leading-[1.75] prose-p:text-slate-700 prose-p:text-sm prose-li:text-sm prose-li:text-slate-700 prose-strong:text-slate-900 prose-a:text-sky-700 hover:prose-a:underline prose-table:text-sm prose-th:bg-sky-50 bg-white border border-sky-100 rounded-2xl p-5"
               dangerouslySetInnerHTML={{ __html: stripLeadingHeadings(body) }}
             />
           )}

@@ -343,7 +343,7 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
           <Card><CardContent className="p-4">
             <div className="text-xs text-muted-foreground flex items-center gap-1"><ListChecks className="h-3 w-3" /> SEO parameters</div>
             <div className="text-2xl font-bold">{loadingInv ? "…" : inv.checksDone}<span className="text-sm text-muted-foreground">/{inv.checksTotal}</span></div>
-            <div className="text-[11px] text-muted-foreground">{loadingInv ? "" : `${Math.max(0, inv.checksTotal - inv.checksDone)} pending`}</div>
+            <div className="text-xs text-muted-foreground">{loadingInv ? "" : `${Math.max(0, inv.checksTotal - inv.checksDone)} pending`}</div>
           </CardContent></Card>
         </div>
 

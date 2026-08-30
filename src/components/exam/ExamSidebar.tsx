@@ -77,7 +77,7 @@ export const ExamTocCard = ({ items }: { items: TocItem[] }) => {
       <CardContent className="p-0">
         <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-3">
           <BarChart3 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             On this page
           </p>
         </div>
@@ -97,7 +97,7 @@ export const ExamTocCard = ({ items }: { items: TocItem[] }) => {
                     }`}
                   >
                     <span
-                      className={`w-4 shrink-0 text-right text-[11px] tabular-nums ${
+                      className={`w-4 shrink-0 text-right text-xs tabular-nums ${
                         isActive ? "text-primary" : "text-muted-foreground/60"
                       }`}
                     >
@@ -119,7 +119,7 @@ export const ExamPlannerCard = () => (
   <Card className="overflow-hidden border-primary/20">
     <CardContent className="p-0">
       <div className="border-b border-border bg-gradient-to-r from-primary/10 to-transparent px-4 py-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
           Plan your admission
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">

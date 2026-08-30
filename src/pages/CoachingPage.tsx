@@ -427,7 +427,7 @@ const CoachingPage = () => {
 
         {/* Quick filters + View toggle */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
-          <span className="text-[11px] uppercase tracking-wider font-bold text-slate-500 mr-1 inline-flex items-center gap-1">
+          <span className="text-xs uppercase tracking-wider font-bold text-slate-500 mr-1 inline-flex items-center gap-1">
             <Sparkles className="w-3 h-3" /> Quick
           </span>
           {[
@@ -439,7 +439,7 @@ const CoachingPage = () => {
               <button
                 key={q.k}
                 onClick={() => setFilter("quick", active ? "" : q.k)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                   active ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-white text-slate-700 border-slate-200 hover:border-primary/40"
                 }`}
               >
@@ -459,7 +459,7 @@ const CoachingPage = () => {
                 <button
                   key={t.v}
                   onClick={() => setFilter("view", t.v)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     active ? "bg-primary text-primary-foreground shadow-sm" : "text-slate-600 hover:text-slate-900"
                   }`}
                   aria-label={t.label}

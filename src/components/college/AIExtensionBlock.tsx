@@ -37,7 +37,7 @@ const AIExtensionBlock = ({ section, extensionLabel, entityName, entityWebsite }
         <h4 className="text-sm font-heading font-bold text-foreground">
           {extensionLabel}
         </h4>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
+        <span className="text-xs font-semibold uppercase tracking-wider text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
           Extended Insights
         </span>
       </div>

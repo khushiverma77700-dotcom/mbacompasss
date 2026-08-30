@@ -108,7 +108,7 @@ const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden max-h-80 overflow-y-auto animate-fade-in">
           <div className="px-3 py-2 border-b border-border/50">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Results</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Results</span>
           </div>
           {results.map((s, i) => {
             const Icon = iconMap[s.type];
@@ -125,7 +125,7 @@ const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?
                   <div className="text-sm font-medium text-foreground truncate">{s.label}</div>
                   <div className="text-xs text-muted-foreground truncate">{s.sub}</div>
                 </div>
-                <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full capitalize flex-shrink-0">{s.type}</span>
+                <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full capitalize flex-shrink-0">{s.type}</span>
               </button>
             );
           })}

@@ -158,11 +158,11 @@ const AdminCTAManager = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium">{row.label}</span>
                       {row.requires_login ? (
-                        <Badge variant="default" className="text-[10px] gap-1">
+                        <Badge variant="default" className="text-xs gap-1">
                           <Lock className="w-3 h-3" /> Login required
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[10px] gap-1">
+                        <Badge variant="outline" className="text-xs gap-1">
                           <Unlock className="w-3 h-3" /> Public
                         </Badge>
                       )}
@@ -175,7 +175,7 @@ const AdminCTAManager = () => {
                         <span className="font-medium">Where:</span> {row.location_hint}
                       </p>
                     )}
-                    <code className="text-[10px] text-muted-foreground/70">{row.cta_key}</code>
+                    <code className="text-xs text-muted-foreground/70">{row.cta_key}</code>
                   </div>
                   <div className="flex items-center gap-2 pt-1">
                     {savingKey === row.cta_key && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}

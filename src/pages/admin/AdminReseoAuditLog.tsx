@@ -177,7 +177,7 @@ export default function AdminReseoAuditLog() {
                       <TableCell><Badge variant="outline" className={ACTION_COLORS[r.action] || ""}>{r.action.replace(/_/g, " ")}</Badge></TableCell>
                       <TableCell className="max-w-[280px] truncate" title={r.url}>
                         <div className="font-medium truncate">{r.page_name || r.slug || r.url}</div>
-                        <div className="text-[10px] text-muted-foreground truncate">{r.url}</div>
+                        <div className="text-xs text-muted-foreground truncate">{r.url}</div>
                       </TableCell>
                       <TableCell className="max-w-[160px] truncate">{r.primary_keyword || "—"}</TableCell>
                       <TableCell className="text-right whitespace-nowrap">
@@ -191,7 +191,7 @@ export default function AdminReseoAuditLog() {
                       </TableCell>
                       <TableCell className="max-w-[180px] truncate">
                         {changed.length ? <Badge variant="secondary">{changed.length} field{changed.length > 1 ? "s" : ""}</Badge> : <span className="text-muted-foreground">—</span>}
-                        {changed.length > 0 && <div className="text-[10px] text-muted-foreground truncate mt-0.5">{changed.join(", ")}</div>}
+                        {changed.length > 0 && <div className="text-xs text-muted-foreground truncate mt-0.5">{changed.join(", ")}</div>}
                       </TableCell>
                       <TableCell><Button size="sm" variant="ghost" className="h-7" onClick={() => setSelected(r)}>View</Button></TableCell>
                     </TableRow>
@@ -214,8 +214,8 @@ export default function AdminReseoAuditLog() {
                 <div className="grid gap-2 md:grid-cols-2">
                   <div><span className="text-muted-foreground">When:</span> {new Date(selected.created_at).toLocaleString()}</div>
                   <div><span className="text-muted-foreground">Actor:</span> {selected.actor_role || "—"} {selected.actor_id ? `(${selected.actor_id.slice(0, 8)}…)` : ""}</div>
-                  <div><span className="text-muted-foreground">Run:</span> <code className="text-[10px]">{selected.run_id || "—"}</code></div>
-                  <div><span className="text-muted-foreground">Item:</span> <code className="text-[10px]">{selected.item_id || "—"}</code></div>
+                  <div><span className="text-muted-foreground">Run:</span> <code className="text-xs">{selected.run_id || "—"}</code></div>
+                  <div><span className="text-muted-foreground">Item:</span> <code className="text-xs">{selected.item_id || "—"}</code></div>
                   <div className="md:col-span-2"><span className="text-muted-foreground">URL:</span> <a href={selected.url} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all">{selected.url}</a></div>
                   <div><span className="text-muted-foreground">Primary keyword:</span> {selected.primary_keyword || "—"}</div>
                   <div><span className="text-muted-foreground">Secondary keyword:</span> {selected.secondary_keyword || "—"}</div>
@@ -234,12 +234,12 @@ export default function AdminReseoAuditLog() {
                           <div className="px-3 py-1.5 bg-muted text-xs font-medium">{field}</div>
                           <div className="grid md:grid-cols-2 divide-x">
                             <div className="p-2 bg-red-50">
-                              <div className="text-[10px] font-semibold text-red-700 mb-1">BEFORE</div>
-                              <pre className="text-[11px] whitespace-pre-wrap break-words max-h-64 overflow-auto">{fmt(diff.before)}</pre>
+                              <div className="text-xs font-semibold text-red-700 mb-1">BEFORE</div>
+                              <pre className="text-xs whitespace-pre-wrap break-words max-h-64 overflow-auto">{fmt(diff.before)}</pre>
                             </div>
                             <div className="p-2 bg-green-50">
-                              <div className="text-[10px] font-semibold text-green-700 mb-1">AFTER</div>
-                              <pre className="text-[11px] whitespace-pre-wrap break-words max-h-64 overflow-auto">{fmt(diff.after)}</pre>
+                              <div className="text-xs font-semibold text-green-700 mb-1">AFTER</div>
+                              <pre className="text-xs whitespace-pre-wrap break-words max-h-64 overflow-auto">{fmt(diff.after)}</pre>
                             </div>
                           </div>
                         </div>

@@ -371,7 +371,7 @@ const kickWorker = () =>
                 { label: "Progress", value: `${stats.pct}%`, cls: "text-primary" },
               ].map((s) => (
                 <div key={s.label} className="rounded-lg border border-border bg-muted/30 p-3">
-                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.label}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
                   <p className={`text-xl font-bold ${s.cls}`}>{s.value}</p>
                 </div>
               ))}
@@ -411,7 +411,7 @@ const kickWorker = () =>
                         <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
                         <TableCell>
                           <div className="font-medium text-sm">{job.exam_name}{job.exam_year ? ` ${job.exam_year}` : ""}</div>
-                          <div className="text-[11px] text-muted-foreground">{job.exam_category || "—"}</div>
+                          <div className="text-xs text-muted-foreground">{job.exam_category || "—"}</div>
                         </TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${meta.className}`}>
@@ -420,7 +420,7 @@ const kickWorker = () =>
                         </TableCell>
                         <TableCell className="min-w-[120px]">
                           <Progress value={pct} className="h-1.5" />
-                          <span className="text-[11px] text-muted-foreground">{job.steps_done}/{job.steps_total}</span>
+                          <span className="text-xs text-muted-foreground">{job.steps_done}/{job.steps_total}</span>
                         </TableCell>
                         <TableCell className="max-w-[280px]">
                           {job.error

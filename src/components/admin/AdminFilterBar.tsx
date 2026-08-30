@@ -130,7 +130,7 @@ const AdminFilterBar = ({
           if (f.type === "select") {
             return (
               <div key={f.key} className="flex flex-col gap-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {f.label}
                 </span>
                 <Select value={values[f.key] ?? "all"} onValueChange={(v) => onFilterChange(f.key, v)}>
@@ -150,7 +150,7 @@ const AdminFilterBar = ({
           }
           return (
             <div key={f.key} className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {f.label}
               </span>
               {f.render()}

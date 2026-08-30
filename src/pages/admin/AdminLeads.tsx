@@ -189,7 +189,7 @@ const AdminLeads = () => {
                         {lead.target_exams && lead.target_exams.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {lead.target_exams.map((e) => (
-                              <span key={e} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary">
+                              <span key={e} className="px-1.5 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
                                 {e}
                               </span>
                             ))}
@@ -204,14 +204,14 @@ const AdminLeads = () => {
                           <div>
                             <div className="text-xs font-medium">{lead.signup_page_name}</div>
                             {lead.signup_page_url && (
-                              <div className="text-[10px] text-muted-foreground truncate max-w-[150px]">{lead.signup_page_url}</div>
+                              <div className="text-xs text-muted-foreground truncate max-w-[150px]">{lead.signup_page_url}</div>
                             )}
                           </div>
                         ) : "—"}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {format(new Date(lead.created_at), "dd MMM yyyy")}
-                        <br/><span className="text-[10px]">{format(new Date(lead.created_at), "hh:mm a")}</span>
+                        <br/><span className="text-xs">{format(new Date(lead.created_at), "hh:mm a")}</span>
                       </TableCell>
                     </TableRow>
                   ))

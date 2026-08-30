@@ -89,8 +89,8 @@ function Podium({ top }: { top: LeaderRow[] }) {
         <div className={cn("w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center shadow-sm", ring)}>
           <Icon className={cn("h-5 w-5", accent)} />
         </div>
-        <div className="text-[11px] font-semibold truncate max-w-full text-center">{r.name}</div>
-        <div className="text-[10px] text-muted-foreground">AIR {r.rank}</div>
+        <div className="text-xs font-semibold truncate max-w-full text-center">{r.name}</div>
+        <div className="text-xs text-muted-foreground">AIR {r.rank}</div>
         <div className={cn("w-full rounded-t-md bg-gradient-to-t flex items-end justify-center text-white font-bold text-xs pb-1", h)}>
           {r.score.toFixed(0)}
         </div>
@@ -110,7 +110,7 @@ function LeaderTable({ rows, label }: { rows: LeaderRow[]; label: string }) {
   if (!rows?.length) return null;
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{label}</div>
+      <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{label}</div>
       <div className="rounded-lg border border-sky-100 overflow-hidden">
         {rows.map((r) => (
           <div
@@ -120,7 +120,7 @@ function LeaderTable({ rows, label }: { rows: LeaderRow[]; label: string }) {
               r.is_self ? "bg-sky-100 font-semibold text-sky-900" : "bg-white"
             )}
           >
-            <div className="font-mono text-[11px]">
+            <div className="font-mono text-xs">
               {r.rank <= 3 ? (
                 <span className="inline-flex items-center gap-1">
                   {r.rank === 1 && <Crown className="h-3 w-3 text-amber-500" />}
@@ -132,7 +132,7 @@ function LeaderTable({ rows, label }: { rows: LeaderRow[]; label: string }) {
             </div>
             <div className="truncate flex items-center gap-1.5">
               {r.name}
-              {r.is_self && <Badge variant="secondary" className="text-[9px] h-4 px-1.5">You</Badge>}
+              {r.is_self && <Badge variant="secondary" className="text-xs h-4 px-1.5">You</Badge>}
             </div>
             <div className="text-right font-mono tabular-nums">{r.score.toFixed(0)}</div>
           </div>
@@ -145,7 +145,7 @@ function LeaderTable({ rows, label }: { rows: LeaderRow[]; label: string }) {
 function Stat({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
   return (
     <div className="rounded-lg border border-sky-100 bg-white p-2">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className={cn("text-sm font-bold", accent ?? "text-foreground")}>{value}</div>
     </div>
   );
@@ -163,7 +163,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
     return (
       <Card className="p-4 border-amber-200 bg-amber-50/50">
         <div className="font-semibold text-sm truncate">{attempt.test?.name ?? "Mock"}</div>
-        <div className="text-[11px] text-amber-700 mt-1">Projected AIR temporarily unavailable. {error}</div>
+        <div className="text-xs text-amber-700 mt-1">Projected AIR temporarily unavailable. {error}</div>
       </Card>
     );
   }
@@ -175,7 +175,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <div className="font-semibold truncate">{attempt.test?.name ?? "Mock"}</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
+            <div className="text-xs text-muted-foreground mt-0.5">
               Submitted {submittedFmt} · Score {attempt.total_score ?? 0}/{attempt.max_score ?? 0}
             </div>
           </div>
@@ -186,7 +186,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
             </div>
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           All India Rank is finalized 7 days after submission, once the benchmark cohort is locked.
         </p>
       </Card>
@@ -201,16 +201,16 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="font-semibold truncate">{attempt.test?.name ?? "Mock"}</div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
+          <div className="text-xs text-muted-foreground mt-0.5">
             Submitted {submittedFmt} · Score {attempt.total_score ?? 0}/{attempt.max_score ?? 0} · {data.difficulty}
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Your All India Rank</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Your All India Rank</div>
           <div className="text-3xl font-extrabold text-sky-700 leading-none">
             #{data.projected_air?.toLocaleString()}
           </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">
+          <div className="text-xs text-muted-foreground mt-0.5">
             out of {data.pool_size?.toLocaleString()} aspirants
           </div>
         </div>
@@ -219,7 +219,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
       {/* Position bar — visualize where the student stands */}
       {data.pool_size && data.projected_air ? (
         <div className="mt-3 rounded-lg border border-sky-100 bg-gradient-to-r from-amber-50 via-white to-sky-50 p-2.5">
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
             <span>Topper</span>
             <span className="font-semibold text-sky-800">
               You stand at position {data.projected_air.toLocaleString()} of {data.pool_size.toLocaleString()}
@@ -251,7 +251,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
         <div className="mt-4 rounded-lg bg-gradient-to-br from-amber-50 via-white to-sky-50 border border-amber-100 p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <Crown className="h-3.5 w-3.5 text-amber-600" />
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-800">Top 3 Rankers</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-amber-800">Top 3 Rankers</div>
           </div>
           <Podium top={lb.top.slice(0, 3)} />
         </div>
@@ -259,7 +259,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="mt-3 text-[11px] text-sky-700 hover:underline inline-flex items-center gap-1"
+        className="mt-3 text-xs text-sky-700 hover:underline inline-flex items-center gap-1"
       >
         {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
         {open ? "Hide" : "Show"} full leaderboard & sectional AIR
@@ -276,12 +276,12 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
 
           {sectional.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Sectional Projected AIR</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Sectional Projected AIR</div>
               <div className="grid sm:grid-cols-2 gap-2">
                 {sectional.map(([k, v]: any) => (
                   <div key={k} className="rounded border border-sky-100 bg-sky-50/40 p-2">
-                    <div className="text-[11px] font-semibold text-sky-800">{v.section ?? k}</div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs font-semibold text-sky-800">{v.section ?? k}</div>
+                    <div className="text-xs text-muted-foreground">
                       AIR #{Number(v.projected_air ?? 0).toLocaleString()} · {v.projected_percentile?.toFixed(2)}%ile · {v.difficulty}
                     </div>
                   </div>
@@ -293,14 +293,14 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
       )}
 
       <div className="mt-3 flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-border/40">
-        <Badge variant="secondary" className="text-[10px]">
+        <Badge variant="secondary" className="text-xs">
           Benchmark pool: {data.pool_size?.toLocaleString()} aspirants ({data.real_pool_size} real)
         </Badge>
         <Link
           to={mockResultPath(attempt.id)}
           onClick={ensureStudentMode}
           onPointerDown={ensureStudentMode}
-          className="text-[11px] text-sky-700 hover:underline"
+          className="text-xs text-sky-700 hover:underline"
         >
           View full report →
         </Link>
@@ -425,9 +425,9 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-sky-700" />
               <h3 className="font-bold text-base">National Ranking Engine</h3>
-              <Badge variant="secondary" className="text-[10px]">AI-powered</Badge>
+              <Badge variant="secondary" className="text-xs">AI-powered</Badge>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1 max-w-md">
+            <p className="text-xs text-muted-foreground mt-1 max-w-md">
               Your exact All India Rank, benchmarked against a live aspirant pool that grows each day. Stable seed — your rank never changes on refresh.
             </p>
           </div>
@@ -445,11 +445,11 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
       {/* EXAM FILTER (purchased only — derived from attempts) */}
       {examOptions.length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] text-muted-foreground mr-1">Exam:</span>
+          <span className="text-xs text-muted-foreground mr-1">Exam:</span>
           <button
             onClick={() => setExam("ALL")}
             className={cn(
-              "text-[11px] px-2.5 py-1 rounded-full border transition",
+              "text-xs px-2.5 py-1 rounded-full border transition",
               exam === "ALL" ? "bg-sky-600 text-white border-sky-600" : "bg-white border-sky-200 hover:bg-sky-50"
             )}
           >
@@ -460,7 +460,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
               key={o.code}
               onClick={() => setExam(o.code)}
               className={cn(
-                "text-[11px] px-2.5 py-1 rounded-full border transition",
+                "text-xs px-2.5 py-1 rounded-full border transition",
                 exam === o.code ? "bg-sky-600 text-white border-sky-600" : "bg-white border-sky-200 hover:bg-sky-50"
               )}
             >
@@ -489,7 +489,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
                 <Line type="monotone" dataKey="bestAir" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 3" name="Best AIR (cumulative)" />
               </LineChart>
             </ResponsiveContainer>
-            <p className="text-[10px] text-muted-foreground mt-1">Lower is better. Dashed line = your personal best so far.</p>
+            <p className="text-xs text-muted-foreground mt-1">Lower is better. Dashed line = your personal best so far.</p>
           </Card>
 
           <Card className="p-3 sm:p-4">
@@ -532,13 +532,13 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
           <div className="flex items-center gap-1.5">
             <Target className="h-4 w-4 text-sky-700" />
             <h4 className="font-semibold text-sm">Mock-wise Analysis</h4>
-            <Badge variant="secondary" className="text-[10px] ml-1">{filtered.length} mocks</Badge>
+            <Badge variant="secondary" className="text-xs ml-1">{filtered.length} mocks</Badge>
           </div>
           {filtered.map((a) => <AttemptCard key={a.id} attempt={a} />)}
         </div>
       )}
 
-      <div className="text-[10px] text-muted-foreground flex items-center gap-1 justify-center pt-1">
+      <div className="text-xs text-muted-foreground flex items-center gap-1 justify-center pt-1">
         <Users className="h-3 w-3" /> Stable seeded benchmark — rankings do not change on refresh.
       </div>
     </div>

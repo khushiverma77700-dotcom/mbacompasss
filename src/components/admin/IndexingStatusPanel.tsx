@@ -224,7 +224,7 @@ export default function IndexingStatusPanel({
           ].map(s => (
             <button key={s.k} onClick={() => setStatusFilter(s.k)}
               className={`rounded-md border bg-background p-3 text-left hover:border-primary transition ${statusFilter === s.k ? "border-primary ring-1 ring-primary" : ""}`}>
-              <p className="text-[11px] text-muted-foreground">{s.label}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
               <p className={`text-xl font-bold ${s.cls}`}>{s.val}</p>
             </button>
           ))}
@@ -265,18 +265,18 @@ export default function IndexingStatusPanel({
                   <TableRow key={r.url} className="text-xs">
                     <TableCell className="max-w-[380px]">
                       <div className="font-medium truncate">{r.slug || r.url}</div>
-                      <a href={r.url} target="_blank" rel="noreferrer" className="text-[10px] text-muted-foreground hover:text-primary truncate flex items-center gap-1">
+                      <a href={r.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-primary truncate flex items-center gap-1">
                         {r.url} <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
                       {canonicalMismatch && (
-                        <div className="text-[10px] text-amber-700 mt-0.5">⚠ Canonical mismatch → {r.google_canonical}</div>
+                        <div className="text-xs text-amber-700 mt-0.5">⚠ Canonical mismatch → {r.google_canonical}</div>
                       )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={meta.cls}>
                         <Icon className="h-3 w-3 mr-1" />{meta.label}
                       </Badge>
-                      {r.error && <div className="text-[10px] text-red-600 mt-1 truncate max-w-[200px]" title={r.error}>{r.error}</div>}
+                      {r.error && <div className="text-xs text-red-600 mt-1 truncate max-w-[200px]" title={r.error}>{r.error}</div>}
                     </TableCell>
                     <TableCell className="max-w-[160px] truncate" title={r.coverage_state || ""}>{r.coverage_state || "—"}</TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">

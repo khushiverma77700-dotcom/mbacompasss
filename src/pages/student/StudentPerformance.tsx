@@ -229,16 +229,16 @@ export default function StudentPerformance() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold text-sm truncate">{a.test?.name ?? "—"}</div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                        <div className="text-xs text-muted-foreground mt-0.5">
                           {a.submitted_at ? new Date(a.submitted_at).toLocaleDateString() : "—"}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-base font-bold text-sky-700">{a.total_score ?? 0}<span className="text-[10px] font-normal text-muted-foreground">/{a.max_score ?? 0}</span></div>
-                        <div className="text-[10px] text-muted-foreground">{sp}%</div>
+                        <div className="text-base font-bold text-sky-700">{a.total_score ?? 0}<span className="text-xs font-normal text-muted-foreground">/{a.max_score ?? 0}</span></div>
+                        <div className="text-xs text-muted-foreground">{sp}%</div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/40 text-[11px]">
+                    <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/40 text-xs">
                       <div>
                         <div className="text-muted-foreground">Score %</div>
                         <div className="font-semibold">{sp}%</div>

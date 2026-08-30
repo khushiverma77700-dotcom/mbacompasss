@@ -173,7 +173,7 @@ function CompareInner() {
                           </div>
                         ) : null}
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {(c.exam_focus ?? []).slice(0, 3).map((e) => <Badge key={e} variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">{e}</Badge>)}
+                          {(c.exam_focus ?? []).slice(0, 3).map((e) => <Badge key={e} variant="outline" className="text-xs border-sky-200 text-sky-700 bg-sky-50">{e}</Badge>)}
                         </div>
                         <Button size="sm" variant="ghost" className="mt-2 text-rose-600 hover:bg-rose-50 hover:text-rose-700 w-full" onClick={() => compare.remove(c.id)}>
                           <Trash2 className="h-3 w-3 mr-1" /> Remove

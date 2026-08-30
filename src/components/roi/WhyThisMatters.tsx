@@ -35,7 +35,7 @@ const WhyThisMatters: React.FC<Props> = ({ icon: Icon, title, purpose, bullets, 
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${t.chip}`}>Why this matters</span>
+            <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${t.chip}`}>Why this matters</span>
             <h3 className="text-sm md:text-base font-bold text-foreground">{title}</h3>
           </div>
           <p className="text-xs md:text-sm text-foreground/80 font-medium leading-relaxed mb-2.5">
@@ -43,7 +43,7 @@ const WhyThisMatters: React.FC<Props> = ({ icon: Icon, title, purpose, bullets, 
           </p>
           <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1.5">
             {bullets.map((b, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[11px] md:text-xs text-foreground/75 leading-snug">
+              <li key={i} className="flex items-start gap-1.5 text-xs md:text-xs text-foreground/75 leading-snug">
                 <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${t.dot}`} />
                 <span>{b}</span>
               </li>

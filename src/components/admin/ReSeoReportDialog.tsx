@@ -70,11 +70,11 @@ function Diff({ label, before, after }: { label: string; before?: string; after?
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
       <div className="grid gap-2 md:grid-cols-2">
         <div className="rounded border border-red-200 bg-red-50/50 p-2 text-xs">
-          <p className="text-[10px] uppercase text-red-700 font-semibold mb-1">Before</p>
+          <p className="text-xs uppercase text-red-700 font-semibold mb-1">Before</p>
           <p className="text-slate-700 break-words whitespace-pre-wrap">{before || <span className="italic text-slate-400">(empty)</span>}</p>
         </div>
         <div className="rounded border border-green-200 bg-green-50/50 p-2 text-xs">
-          <p className="text-[10px] uppercase text-green-700 font-semibold mb-1">After</p>
+          <p className="text-xs uppercase text-green-700 font-semibold mb-1">After</p>
           <p className="text-slate-800 break-words whitespace-pre-wrap">{after || <span className="italic text-slate-400">(empty)</span>}</p>
         </div>
       </div>
@@ -90,8 +90,8 @@ function DensityBar({ kw, pct, target }: { kw: string; pct: number; target?: boo
   const width = Math.min(100, (pct / 5) * 100);
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-[11px]">
-        <span className="font-medium truncate max-w-[60%]" title={kw}>{kw}{target && <span className="ml-1 text-[9px] text-slate-500">(primary • target 2.5–3.5%)</span>}</span>
+      <div className="flex justify-between text-xs">
+        <span className="font-medium truncate max-w-[60%]" title={kw}>{kw}{target && <span className="ml-1 text-xs text-slate-500">(primary • target 2.5–3.5%)</span>}</span>
         <span className={target ? (inRange ? "text-green-700 font-semibold" : "text-red-600 font-semibold") : "text-slate-600"}>{pct.toFixed(1)}%</span>
       </div>
       <div className="h-1.5 w-full rounded bg-slate-100 overflow-hidden">
@@ -273,7 +273,7 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                     <CardTitle className="text-base flex items-center gap-2">
                       <span className={`h-2 w-2 rounded-full ${STATUS_TONE[active.status] || "bg-slate-400"}`} />
                       Status: <span className="capitalize">{active.status}</span>
-                      {active.rewrite_applied && <Badge className="bg-amber-500 text-white text-[10px]">Content added</Badge>}
+                      {active.rewrite_applied && <Badge className="bg-amber-500 text-white text-xs">Content added</Badge>}
                     </CardTitle>
                     <a href={active.url} target="_blank" rel="noreferrer" className="text-xs text-primary flex items-center gap-1 hover:underline">
                       Visit page <ExternalLink className="h-3 w-3" />
@@ -311,18 +311,18 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
 
                   {longTail.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase mb-1">Long-tail keywords used</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Long-tail keywords used</p>
                       <div className="flex flex-wrap gap-1">
-                        {longTail.map((k) => <Badge key={k} variant="secondary" className="text-[10px]">{k}</Badge>)}
+                        {longTail.map((k) => <Badge key={k} variant="secondary" className="text-xs">{k}</Badge>)}
                       </div>
                     </div>
                   )}
 
                   {relatedQ.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase mb-1 flex items-center gap-1"><MessageSquare className="h-3 w-3" /> Most-searched queries targeted</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1 flex items-center gap-1"><MessageSquare className="h-3 w-3" /> Most-searched queries targeted</p>
                       <ul className="space-y-0.5">
-                        {relatedQ.map((q, i) => <li key={i} className="text-[11px] text-slate-700">• {q}</li>)}
+                        {relatedQ.map((q, i) => <li key={i} className="text-xs text-slate-700">• {q}</li>)}
                       </ul>
                     </div>
                   )}
@@ -350,11 +350,11 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                     <TabsContent value="body" className="space-y-3 mt-3">
                       <div className="grid gap-2 md:grid-cols-2">
                         <div className="rounded border border-red-200 bg-red-50/50 p-3 text-xs">
-                          <p className="text-[10px] uppercase text-red-700 font-semibold mb-1">Before ({active.content_word_count_before ?? 0} words)</p>
+                          <p className="text-xs uppercase text-red-700 font-semibold mb-1">Before ({active.content_word_count_before ?? 0} words)</p>
                           <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap text-slate-700" dangerouslySetInnerHTML={{ __html: (active.full_content_before || before.body_html || "<span class='italic text-slate-400'>(empty)</span>") }} />
                         </div>
                         <div className="rounded border border-green-200 bg-green-50/50 p-3 text-xs">
-                          <p className="text-[10px] uppercase text-green-700 font-semibold mb-1">After ({active.content_word_count_after ?? 0} words • AEO/SEO/GEO optimized, original content kept)</p>
+                          <p className="text-xs uppercase text-green-700 font-semibold mb-1">After ({active.content_word_count_after ?? 0} words • AEO/SEO/GEO optimized, original content kept)</p>
                           <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap text-slate-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: (active.full_content_after || after.body_html || "<span class='italic text-slate-400'>(empty)</span>") }} />
                         </div>
                       </div>
@@ -366,7 +366,7 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">New H2/H3 outline</p>
                           <ul className="text-xs space-y-1 list-disc pl-5">
                             {after.outline.map((h: any, i: number) => (
-                              <li key={i}><span className="text-slate-400 mr-1 uppercase text-[9px]">{h.level}</span>{h.text}</li>
+                              <li key={i}><span className="text-slate-400 mr-1 uppercase text-xs">{h.level}</span>{h.text}</li>
                             ))}
                           </ul>
                         </div>
@@ -464,7 +464,7 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
               {active.status === "failed" && active.error && (
                 <Card className="border-red-200 bg-red-50/50">
                   <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2 text-red-700"><XCircle className="h-4 w-4" /> Failure reason</CardTitle></CardHeader>
-                  <CardContent><p className="text-xs text-red-800 whitespace-pre-wrap">{active.error}</p><p className="text-[11px] text-red-600 mt-1">Attempts: {active.attempts}</p></CardContent>
+                  <CardContent><p className="text-xs text-red-800 whitespace-pre-wrap">{active.error}</p><p className="text-xs text-red-600 mt-1">Attempts: {active.attempts}</p></CardContent>
                 </Card>
               )}
 

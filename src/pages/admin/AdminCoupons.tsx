@@ -174,7 +174,7 @@ const AdminCoupons = () => {
                   <TableCell>{c.current_uses}/{c.max_uses || "∞"}</TableCell>
                   <TableCell><Badge variant={c.active ? "default" : "secondary"}>{c.active ? "Active" : "Inactive"}</Badge></TableCell>
                   <TableCell>{c.valid_until ? new Date(c.valid_until).toLocaleDateString() : "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-xs">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => viewClaims(c.id)}><Eye className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>

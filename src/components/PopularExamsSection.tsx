@@ -119,7 +119,7 @@ const PopularExamsSection = () => {
                             {exam.name}
                           </h3>
                           {exam.conducting_body && (
-                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
                               <Award className="w-3 h-3 flex-shrink-0" />
                               <span className="truncate">{exam.conducting_body}</span>
                             </p>
@@ -132,7 +132,7 @@ const PopularExamsSection = () => {
                           <div className={`text-xl md:text-2xl font-extrabold ${isUrgent ? "text-destructive" : accent.text} leading-none`}>
                             {daysLeft}
                           </div>
-                          <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">days left</div>
+                          <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">days left</div>
                         </div>
                       )}
                     </div>
@@ -166,8 +166,8 @@ const PopularExamsSection = () => {
                     {daysLeft !== null && daysLeft >= 0 && (
                       <div className="mb-3">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold">Countdown</span>
-                          <span className={`text-[9px] font-bold ${isUrgent ? "text-destructive" : accent.text}`}>
+                          <span className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Countdown</span>
+                          <span className={`text-xs font-bold ${isUrgent ? "text-destructive" : accent.text}`}>
                             {daysLeft === 0 ? "Today" : `${daysLeft} days remaining`}
                           </span>
                         </div>

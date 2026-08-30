@@ -773,7 +773,7 @@ function SummaryStat({ label, value, tone }: { label: string; value: number; ton
   };
   return (
     <div className={cn("rounded-md border px-3 py-2", toneCls[tone])}>
-      <div className="text-[11px] uppercase tracking-wide opacity-80">{label}</div>
+      <div className="text-xs uppercase tracking-wide opacity-80">{label}</div>
       <div className="text-xl font-bold">{value}</div>
     </div>
   );
@@ -879,7 +879,7 @@ function PaletteContent({
               key={q.id}
               onClick={() => goToQuestion(q.id)}
               className={cn(
-                "h-7 w-7 rounded-sm text-[11px] font-semibold border relative leading-none",
+                "h-7 w-7 rounded-sm text-xs font-semibold border relative leading-none",
                 status === "answered" && "bg-green-600 text-white border-green-700",
                 status === "not_answered" && "bg-red-500 text-white border-red-600",
                 status === "marked" && "bg-purple-600 text-white border-purple-700",

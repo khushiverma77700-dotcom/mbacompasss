@@ -114,7 +114,7 @@ export default function DemoBanner() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white text-[12px] sm:text-sm shadow-md"
+      className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white text-xs sm:text-sm shadow-md"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-9">
@@ -127,7 +127,7 @@ export default function DemoBanner() {
         <Link
           to="/student/login"
           data-demo-allow="true"
-          className="inline-flex items-center gap-1 rounded-md bg-white/15 hover:bg-white/25 px-2 py-1 text-[11px] sm:text-xs font-semibold whitespace-nowrap"
+          className="inline-flex items-center gap-1 rounded-md bg-white/15 hover:bg-white/25 px-2 py-1 text-xs sm:text-xs font-semibold whitespace-nowrap"
         >
           <LogOut className="h-3 w-3" /> Exit demo
         </Link>

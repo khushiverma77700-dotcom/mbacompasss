@@ -598,8 +598,8 @@ function DetailInner() {
                   <AccordionItem key={g.group} value={`g-${gi}`} className="border rounded-xl px-4 bg-white">
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex flex-1 items-center justify-between gap-2 text-left pr-2">
-                        <span className="text-[13px] sm:text-sm font-semibold text-gray-900 whitespace-nowrap">{g.group}</span>
-                        <span className="text-[11px] sm:text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5 whitespace-nowrap shrink-0">
+                        <span className="text-sm sm:text-sm font-semibold text-gray-900 whitespace-nowrap">{g.group}</span>
+                        <span className="text-xs sm:text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5 whitespace-nowrap shrink-0">
                           {g.items.length} sec • {g.total} Qs
                         </span>
                       </div>

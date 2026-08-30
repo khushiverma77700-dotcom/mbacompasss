@@ -435,7 +435,7 @@ const AdminBulkCreateColleges = () => {
                 </Button>
               </div>
             </div>
-            <pre className="font-mono text-[11px] overflow-x-auto whitespace-pre">{SAMPLE_CSV}</pre>
+            <pre className="font-mono text-xs overflow-x-auto whitespace-pre">{SAMPLE_CSV}</pre>
           </div>
         </CardContent>
       </Card>
@@ -505,7 +505,7 @@ const AdminBulkCreateColleges = () => {
                             <td className="p-2">{r.city}</td>
                             <td className="p-2">{r.state}</td>
                             <td className="p-2 text-muted-foreground truncate max-w-[200px]">{r.primaryKeyword}</td>
-                            <td className="p-2"><Badge variant="outline" className="text-[10px]">{r.type || "Private"}</Badge></td>
+                            <td className="p-2"><Badge variant="outline" className="text-xs">{r.type || "Private"}</Badge></td>
                           </tr>
                         ))}
                       </tbody>
@@ -626,7 +626,7 @@ const AdminBulkCreateColleges = () => {
               </div>
             )}
 
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               💡 You can switch tabs or close this page — the job runs in the background. Come back anytime to check progress.
             </div>
 
@@ -651,7 +651,7 @@ const AdminBulkCreateColleges = () => {
                         <td className="p-2 font-medium">{r.name}</td>
                         <td className="p-2 text-muted-foreground">{r.city}, {r.state}</td>
                         <td className="p-2">
-                          <Badge variant="outline" className={`text-[10px] ${statusBadge(r.status)}`}>
+                          <Badge variant="outline" className={`text-xs ${statusBadge(r.status)}`}>
                             {r.status === "processing" && <Loader2 className="h-2.5 w-2.5 mr-1 animate-spin inline" />}
                             {r.status === "succeeded" && <CheckCircle2 className="h-2.5 w-2.5 mr-1 inline" />}
                             {r.status === "failed" && <XCircle className="h-2.5 w-2.5 mr-1 inline" />}

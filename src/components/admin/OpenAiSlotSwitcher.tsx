@@ -64,7 +64,7 @@ export default function OpenAiSlotSwitcher() {
                 <p className="mt-1 text-xs text-muted-foreground">Secret: <code>{slot.secret_name}</code></p>
                 <p className="mt-2 text-xs text-muted-foreground">{slot.message}</p>
                 {slot.fingerprint && slot.fingerprint !== "missing" && (
-                  <p className="mt-1 text-[11px] text-muted-foreground">Key fingerprint: {slot.fingerprint}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Key fingerprint: {slot.fingerprint}</p>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-2">

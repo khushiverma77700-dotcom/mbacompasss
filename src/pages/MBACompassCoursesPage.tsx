@@ -333,10 +333,10 @@ function CourseCard({ course }: { course: Course }) {
       <div className="p-5 flex-1 flex flex-col">
         <div className="flex flex-wrap gap-1.5 mb-2">
           {(course.exam_focus ?? []).slice(0, 3).map((e) => (
-            <Badge key={e} variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">{e}</Badge>
+            <Badge key={e} variant="outline" className="text-xs border-sky-200 text-sky-700 bg-sky-50">{e}</Badge>
           ))}
-          {course.mode && <Badge variant="outline" className="text-[10px] capitalize">{course.mode}</Badge>}
-          {course.level && <Badge variant="outline" className="text-[10px] capitalize text-violet-700 border-violet-200 bg-violet-50">{course.level}</Badge>}
+          {course.mode && <Badge variant="outline" className="text-xs capitalize">{course.mode}</Badge>}
+          {course.level && <Badge variant="outline" className="text-xs capitalize text-violet-700 border-violet-200 bg-violet-50">{course.level}</Badge>}
         </div>
 
         <Link to={`/mba-compass/${course.slug}`} onMouseEnter={prefetchDetail} onTouchStart={prefetchDetail}>
@@ -356,7 +356,7 @@ function CourseCard({ course }: { course: Course }) {
         {highlights.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mt-3 text-center">
             {highlights.map((h, i) => (
-              <div key={i} className="text-[10px] bg-sky-50/60 rounded-md px-2 py-1.5 border border-sky-100 text-sky-700 font-medium">
+              <div key={i} className="text-xs bg-sky-50/60 rounded-md px-2 py-1.5 border border-sky-100 text-sky-700 font-medium">
                 {h}
               </div>
             ))}
@@ -364,7 +364,7 @@ function CourseCard({ course }: { course: Course }) {
         )}
 
         {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] text-center">
+        <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-center">
           {(course.full_mocks_count ?? 0) > 0 && <Stat n={`${course.full_mocks_count}`} l="Full Mocks" />}
           {(course.sectional_mocks_count ?? 0) > 0 && <Stat n={`${course.sectional_mocks_count}`} l="Sectionals" />}
           {(course.total_video_hours ?? 0) > 0 && <Stat n={`${course.total_video_hours}h`} l="Videos" />}
@@ -373,7 +373,7 @@ function CourseCard({ course }: { course: Course }) {
         {quickFeatures.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {quickFeatures.map((f, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">
+              <span key={i} className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">
                 <f.icon className="h-3 w-3" /> {f.label}
               </span>
             ))}
@@ -394,7 +394,7 @@ function CourseCard({ course }: { course: Course }) {
         <div className="mt-auto pt-4 flex items-end justify-between border-t border-sky-50 mt-4">
           <div>
             {course.duration_weeks ? (
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
+              <div className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
                 <Clock className="h-3 w-3" /> {course.duration_weeks} weeks
               </div>
             ) : null}

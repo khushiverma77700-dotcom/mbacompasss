@@ -261,12 +261,12 @@ const AdminBulkSEO = () => {
               <div className="rounded-lg border p-3">
                 <div className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3"/>Avg / page</div>
                 <div className="text-lg font-bold tabular-nums">{metrics.avgSec ? fmtSec(metrics.avgSec) : "—"}</div>
-                {metrics.etaSec > 0 && <div className="text-[10px] text-muted-foreground">ETA ~{fmtSec(metrics.etaSec)}</div>}
+                {metrics.etaSec > 0 && <div className="text-xs text-muted-foreground">ETA ~{fmtSec(metrics.etaSec)}</div>}
               </div>
               <div className="rounded-lg border p-3">
                 <div className="text-xs text-muted-foreground flex items-center gap-1"><Coins className="w-3 h-3"/>API cost</div>
                 <div className="text-lg font-bold tabular-nums">{metrics.cost.toFixed(3)} cr</div>
-                <div className="text-[10px] text-muted-foreground">{metrics.tokens.toLocaleString()} tokens</div>
+                <div className="text-xs text-muted-foreground">{metrics.tokens.toLocaleString()} tokens</div>
               </div>
               <div className="rounded-lg border p-3">
                 <div className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/>SEO fields live</div>

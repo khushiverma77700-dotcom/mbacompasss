@@ -110,10 +110,10 @@ const GuidanceForm = ({
       {/* Header band with trust signal */}
       <div className="border-b border-primary/10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-5 py-5 sm:px-7 sm:py-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
             <Users className="h-3.5 w-3.5" /> 2,000+ MBA Aspirants Mentored
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">
             <Star className="h-3.5 w-3.5 fill-emerald-600 text-emerald-600" /> 100% Free
           </span>
         </div>
@@ -249,8 +249,8 @@ const GuidanceForm = ({
         No consultation fee. No hidden charges. No obligation to purchase.
       </p>
       <div className="flex flex-wrap justify-center gap-1.5 mt-3">
-        <Badge variant="secondary" className="text-[11px]">100% Free for students</Badge>
-        <Badge variant="secondary" className="text-[11px]">Available for the next one month</Badge>
+        <Badge variant="secondary" className="text-xs">100% Free for students</Badge>
+        <Badge variant="secondary" className="text-xs">Available for the next one month</Badge>
       </div>
       </div>
     </form>

@@ -46,7 +46,7 @@ const TabHint: React.FC<Props> = ({
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`inline-flex items-center gap-2 text-[11px] font-semibold ${tones.text}`}
+        className={`inline-flex items-center gap-2 text-xs font-semibold ${tones.text}`}
       >
         <motion.span
           animate={{ x: [0, 4, 0] }}
@@ -85,7 +85,7 @@ const TabHint: React.FC<Props> = ({
           <span className={`text-xs font-bold ${tones.text} flex items-center gap-1.5`}>
             <Sparkles className="w-3 h-3" /> Tip
           </span>
-          <span className="text-[11px] md:text-xs text-foreground/80 font-medium leading-tight">
+          <span className="text-xs md:text-xs text-foreground/80 font-medium leading-tight">
             {message}
           </span>
         </div>

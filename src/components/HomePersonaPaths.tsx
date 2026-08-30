@@ -72,7 +72,7 @@ const HomePersonaPaths = () => (
             <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-sky-400 shadow-md shadow-sky-200/60">
               <Icon className="h-5 w-5 text-primary-foreground" strokeWidth={2.2} />
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-1">{tag}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-1">{tag}</p>
             <h3 className="font-heading text-lg md:text-xl font-bold text-foreground mb-2">{title}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">{body}</p>
             <div className="mt-auto flex flex-wrap gap-2">

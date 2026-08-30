@@ -22,6 +22,33 @@ export default {
         editorial: ['"Instrument Serif"', 'ui-serif', 'Georgia', 'serif'],
       },
 
+      // ── UNIFIED TYPE SCALE ───────────────────────────────────────────────
+      // The site previously used ~45 different font sizes, which looked
+      // inconsistent. Every Tailwind size utility now resolves to one of
+      // only FOUR real steps, so existing class names keep working while the
+      // rendered typography stays uniform sitewide:
+      //   detail  0.875rem  → text-xs / text-sm      (labels, meta, badges)
+      //   body    1rem      → text-base / text-lg     (all reading text)
+      //   subhead 1.375rem  → text-xl / text-2xl      (card + section titles)
+      //   heading 2rem      → text-3xl and above      (page / hero titles)
+      // Do NOT reintroduce arbitrary sizes such as text-[13px].
+      fontSize: {
+        xs: ["0.875rem", { lineHeight: "1.45" }],
+        sm: ["0.875rem", { lineHeight: "1.5" }],
+        base: ["1rem", { lineHeight: "1.65" }],
+        lg: ["1rem", { lineHeight: "1.65" }],
+        xl: ["clamp(1.25rem, 1.6vw, 1.375rem)", { lineHeight: "1.35" }],
+        "2xl": ["clamp(1.25rem, 1.6vw, 1.375rem)", { lineHeight: "1.3" }],
+        "3xl": ["clamp(1.75rem, 3.2vw, 2.25rem)", { lineHeight: "1.2" }],
+        "4xl": ["clamp(1.75rem, 3.2vw, 2.25rem)", { lineHeight: "1.2" }],
+        "5xl": ["clamp(1.75rem, 3.2vw, 2.25rem)", { lineHeight: "1.15" }],
+        "6xl": ["clamp(1.75rem, 3.2vw, 2.25rem)", { lineHeight: "1.1" }],
+        "7xl": ["clamp(1.75rem, 3.2vw, 2.25rem)", { lineHeight: "1.1" }],
+        "8xl": ["clamp(1.75rem, 3.2vw, 2.25rem)", { lineHeight: "1.05" }],
+        "9xl": ["clamp(1.75rem, 3.2vw, 2.25rem)", { lineHeight: "1.05" }],
+      },
+
+
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

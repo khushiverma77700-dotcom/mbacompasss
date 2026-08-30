@@ -393,10 +393,10 @@ const PageEditorWorkspace = () => {
                             <Icon className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-foreground truncate">{it.name}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">/{it.slug}</p>
+                              <p className="text-xs text-muted-foreground truncate">/{it.slug}</p>
                               <div className="flex items-center gap-1.5 mt-1">
-                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">{it.kind}</Badge>
-                                <span className={`text-[10px] font-semibold ${it.completion >= 80 ? "text-emerald-600" : it.completion >= 50 ? "text-amber-600" : "text-destructive"}`}>
+                                <Badge variant="outline" className="text-xs px-1 py-0 h-4">{it.kind}</Badge>
+                                <span className={`text-xs font-semibold ${it.completion >= 80 ? "text-emerald-600" : it.completion >= 50 ? "text-amber-600" : "text-destructive"}`}>
                                   {it.completion}%
                                 </span>
                               </div>
@@ -434,7 +434,7 @@ const PageEditorWorkspace = () => {
                     href={selected.publishedUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
                   >
                     {selected.publishedUrl} <ExternalLink className="w-3 h-3" />
                   </a>
@@ -482,7 +482,7 @@ const PageEditorWorkspace = () => {
                     <ScrollArea className="h-[70vh]">
                       <CardContent className="space-y-3 p-3">
                         <div>
-                          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Page Name / Title</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Page Name / Title</Label>
                           <Input
                             value={selected.kind === "article" ? (draft.title ?? "") : (draft.name ?? "")}
                             onChange={(e) => setDraft({ ...draft, [selected.kind === "article" ? "title" : "name"]: e.target.value })}
@@ -490,23 +490,23 @@ const PageEditorWorkspace = () => {
                           />
                         </div>
                         <div>
-                          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">H1 Tag</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">H1 Tag</Label>
                           <Input value={draft.h1_tag ?? ""} onChange={(e) => setDraft({ ...draft, h1_tag: e.target.value })} className="h-8 text-sm mt-0.5" />
                         </div>
                         <div>
-                          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Meta Title <span className="text-muted-foreground">({(draft.meta_title || "").length}/60)</span></Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Meta Title <span className="text-muted-foreground">({(draft.meta_title || "").length}/60)</span></Label>
                           <Input value={draft.meta_title ?? ""} onChange={(e) => setDraft({ ...draft, meta_title: e.target.value })} className="h-8 text-sm mt-0.5" maxLength={70} />
                         </div>
                         <div>
-                          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Meta Description <span className="text-muted-foreground">({(draft.meta_description || "").length}/160)</span></Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Meta Description <span className="text-muted-foreground">({(draft.meta_description || "").length}/160)</span></Label>
                           <Textarea value={draft.meta_description ?? ""} onChange={(e) => setDraft({ ...draft, meta_description: e.target.value })} rows={3} className="text-sm mt-0.5" maxLength={170} />
                         </div>
                         <div>
-                          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Primary Keyword</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Primary Keyword</Label>
                           <Input value={draft.primary_keyword ?? ""} onChange={(e) => setDraft({ ...draft, primary_keyword: e.target.value })} className="h-8 text-sm mt-0.5" />
                         </div>
                         <div>
-                          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Keywords (comma-separated)</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Keywords (comma-separated)</Label>
                           <Textarea
                             value={(draft.keywords || []).join(", ")}
                             onChange={(e) => setDraft({ ...draft, keywords: e.target.value.split(",").map((k: string) => k.trim()).filter(Boolean) })}
@@ -515,7 +515,7 @@ const PageEditorWorkspace = () => {
                         </div>
                         <Separator />
                         <div>
-                          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Description / Summary</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Description / Summary</Label>
                           <Textarea
                             value={draft.description ?? draft.excerpt ?? ""}
                             onChange={(e) => setDraft({ ...draft, [selected.kind === "article" ? "excerpt" : "description"]: e.target.value })}
@@ -524,7 +524,7 @@ const PageEditorWorkspace = () => {
                         </div>
                         {selected.kind === "article" && (
                           <div>
-                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Article Content (HTML)</Label>
+                            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Article Content (HTML)</Label>
                             <Textarea
                               value={draft.content ?? ""}
                               onChange={(e) => setDraft({ ...draft, content: e.target.value })}
@@ -533,13 +533,13 @@ const PageEditorWorkspace = () => {
                           </div>
                         )}
                         {selected.kind === "college" && (
-                          <p className="text-[11px] text-muted-foreground bg-muted/40 p-2 rounded">
+                          <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">
                             Section content (courses, cutoffs, FAQs…) is edited in <a href="/admin/college-sections" className="text-primary hover:underline">College Sections</a>.
                             The SEO audit reads ALL sections automatically.
                           </p>
                         )}
                         {selected.kind === "institute" && (
-                          <p className="text-[11px] text-muted-foreground bg-muted/40 p-2 rounded">
+                          <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">
                             Courses & faculty are edited in <a href="/admin/courses" className="text-primary hover:underline">Courses</a>. Audit reads them automatically.
                           </p>
                         )}
@@ -574,7 +574,7 @@ const PageEditorWorkspace = () => {
                   {auditResult && (
                     <CardContent className="space-y-4">
                       {auditResult.fromSnapshot && (
-                        <div className="border border-amber-500/30 bg-amber-500/5 rounded-md p-2 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                        <div className="border border-amber-500/30 bg-amber-500/5 rounded-md p-2 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
                           <AlertTriangle className="w-3.5 h-3.5" />
                           <span>Showing the last saved SEO snapshot {auditResult.savedAt && `(${new Date(auditResult.savedAt).toLocaleString()})`}. Click <strong>Run Audit</strong> to regenerate before applying.</span>
                         </div>
@@ -607,13 +607,13 @@ const PageEditorWorkspace = () => {
                       {/* Keywords */}
                       <div>
                         <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Keyword Buckets (all 6 saved on Apply)</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                           {(["primary","shortTail","longTail","faq","trending","lsi"] as const).map((k) => (
                             <div key={k} className="border border-border rounded-md p-2 bg-muted/20">
-                              <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">{k} ({(auditResult.suggestions?.keywords?.[k] || []).length})</p>
+                              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">{k} ({(auditResult.suggestions?.keywords?.[k] || []).length})</p>
                               <div className="flex flex-wrap gap-1">
                                 {(auditResult.suggestions?.keywords?.[k] || []).slice(0, 12).map((kw: string, idx: number) => (
-                                  <Badge key={idx} variant="secondary" className="text-[10px] font-normal">{kw}</Badge>
+                                  <Badge key={idx} variant="secondary" className="text-xs font-normal">{kw}</Badge>
                                 ))}
                               </div>
                             </div>
@@ -625,7 +625,7 @@ const PageEditorWorkspace = () => {
                       {auditResult.suggestions?.socialMeta && (
                         <div>
                           <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Open Graph & Twitter</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                             <KVRow k="OG Title" v={auditResult.suggestions.socialMeta.ogTitle} />
                             <KVRow k="OG Description" v={auditResult.suggestions.socialMeta.ogDescription} />
                             <KVRow k="Twitter Title" v={auditResult.suggestions.socialMeta.twitterTitle} />
@@ -638,7 +638,7 @@ const PageEditorWorkspace = () => {
                       {auditResult.suggestions?.technicalSEO && (
                         <div>
                           <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Technical SEO</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                             <KVRow k="Canonical URL" v={auditResult.suggestions.technicalSEO.canonicalUrl} />
                             <KVRow k="URL Slug" v={auditResult.suggestions.technicalSEO.urlSlugSuggestion} />
                             <KVRow k="Word Count Verdict" v={auditResult.suggestions.technicalSEO.contentLengthAnalysis?.verdict} />
@@ -669,8 +669,8 @@ const PageEditorWorkspace = () => {
                             {auditResult.competitors.map((c: any, i: number) => (
                               <a key={i} href={c.url} target="_blank" rel="noreferrer" className="block border border-border rounded-md p-2 hover:bg-muted/40 transition-colors">
                                 <p className="text-xs font-medium text-foreground truncate">{c.title}</p>
-                                <p className="text-[10px] text-primary truncate">{c.url}</p>
-                                <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{c.snippet}</p>
+                                <p className="text-xs text-primary truncate">{c.url}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{c.snippet}</p>
                               </a>
                             ))}
                           </div>
@@ -689,7 +689,7 @@ const PageEditorWorkspace = () => {
                           <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">
                             JSON-LD Schema ({Array.isArray(auditResult.suggestions.schemaMarkup) ? auditResult.suggestions.schemaMarkup.length : 1} blocks — auto-injected on Apply)
                           </h4>
-                          <pre className="text-[10px] bg-muted/40 p-2 rounded-md overflow-auto max-h-[30vh] border border-border">
+                          <pre className="text-xs bg-muted/40 p-2 rounded-md overflow-auto max-h-[30vh] border border-border">
                             {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
                           </pre>
                         </div>
@@ -697,7 +697,7 @@ const PageEditorWorkspace = () => {
 
                       {/* Apply */}
                       <div className="flex items-center justify-between gap-2 pt-2 border-t flex-wrap">
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           Apply will save: meta title/description, H1, primary keyword, all 6 keyword buckets, Open Graph, Twitter, JSON-LD schema, technical SEO, internal links & FAQs to the live page.
                         </p>
                         <div className="flex items-center gap-2">
@@ -717,7 +717,7 @@ const PageEditorWorkspace = () => {
               <TabsContent value="schema" className="m-0">
                 <Card>
                   <CardHeader className="py-3">
-                    <CardTitle className="text-sm">JSON-LD Schema {auditResult?.fromSnapshot && <Badge variant="outline" className="ml-2 text-[9px]">From saved snapshot</Badge>}</CardTitle>
+                    <CardTitle className="text-sm">JSON-LD Schema {auditResult?.fromSnapshot && <Badge variant="outline" className="ml-2 text-xs">From saved snapshot</Badge>}</CardTitle>
                     <CardDescription className="text-xs">
                       This is what gets injected into the live page's &lt;head&gt; via the SEO snapshot. Auto-applied when you click "Apply Full SEO" on the SEO Audit tab.
                     </CardDescription>
@@ -726,7 +726,7 @@ const PageEditorWorkspace = () => {
                     {auditResult?.suggestions?.schemaMarkup ? (
                       <>
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {Array.isArray(auditResult.suggestions.schemaMarkup) ? auditResult.suggestions.schemaMarkup.length : 1} schema block(s)
                             {Array.isArray(auditResult.suggestions.schemaMarkup) && auditResult.suggestions.schemaMarkup.length > 0 && (
                               <> — types: {auditResult.suggestions.schemaMarkup.map((b: any) => b?.["@type"]).filter(Boolean).join(", ")}</>
@@ -737,7 +737,7 @@ const PageEditorWorkspace = () => {
                             toast({ title: "Copied", description: "JSON-LD copied to clipboard." });
                           }}>Copy</Button>
                         </div>
-                        <pre className="text-[10px] bg-muted/40 p-3 rounded-md overflow-auto max-h-[60vh] border border-border">
+                        <pre className="text-xs bg-muted/40 p-3 rounded-md overflow-auto max-h-[60vh] border border-border">
                           {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
                         </pre>
                       </>
@@ -757,7 +757,7 @@ const PageEditorWorkspace = () => {
 
 const ScoreCard = ({ label, value, unit = "", positive }: { label: string; value: number; unit?: string; positive?: boolean }) => (
   <div className={`border rounded-md p-2.5 ${positive ? "border-emerald-500/40 bg-emerald-500/5" : "border-border bg-muted/20"}`}>
-    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+    <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
     <p className={`text-xl font-bold ${positive ? "text-emerald-600" : "text-foreground"}`}>{value}{unit !== undefined ? unit : "/100"}</p>
     {unit === undefined && <Progress value={Math.min(100, value)} className="h-1 mt-1.5" />}
   </div>
@@ -768,10 +768,10 @@ const SuggestedField = ({ label, current, suggested, multiline }: { label: strin
   return (
     <div className="border border-border rounded-md p-2.5 bg-muted/20">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">{label}</span>
-        {same ? <Badge variant="outline" className="text-[9px]">No change</Badge> : <Badge className="text-[9px] bg-primary/15 text-primary border-primary/30">Updated</Badge>}
+        <span className="text-xs uppercase tracking-wide font-semibold text-muted-foreground">{label}</span>
+        {same ? <Badge variant="outline" className="text-xs">No change</Badge> : <Badge className="text-xs bg-primary/15 text-primary border-primary/30">Updated</Badge>}
       </div>
-      <p className="text-[10px] text-muted-foreground line-through truncate">{current || "(empty)"}</p>
+      <p className="text-xs text-muted-foreground line-through truncate">{current || "(empty)"}</p>
       <p className={`text-xs text-foreground font-medium ${multiline ? "" : "truncate"}`}>{suggested || "(empty)"}</p>
     </div>
   );
@@ -784,8 +784,8 @@ const IssueList = ({ icon, title, items, tone }: { icon?: React.ReactNode; title
     : "border-border bg-muted/20";
   return (
     <div className={`border rounded-md p-2.5 ${toneClass}`}>
-      <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground flex items-center gap-1 mb-1.5">{icon}{title} ({items.length})</p>
-      <ul className="space-y-1 text-[11px] text-foreground">
+      <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground flex items-center gap-1 mb-1.5">{icon}{title} ({items.length})</p>
+      <ul className="space-y-1 text-xs text-foreground">
         {items.length === 0 ? <li className="text-muted-foreground">None</li> : items.slice(0, 8).map((it, i) => (
           <li key={i} className="leading-snug">• {it}</li>
         ))}
@@ -796,8 +796,8 @@ const IssueList = ({ icon, title, items, tone }: { icon?: React.ReactNode; title
 
 const KVRow = ({ k, v }: { k: string; v?: string }) => (
   <div className="border border-border rounded-md p-2 bg-muted/20">
-    <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold">{k}</p>
-    <p className="text-[11px] text-foreground break-words">{v || <span className="text-muted-foreground italic">not set</span>}</p>
+    <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">{k}</p>
+    <p className="text-xs text-foreground break-words">{v || <span className="text-muted-foreground italic">not set</span>}</p>
   </div>
 );
 

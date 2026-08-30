@@ -223,14 +223,14 @@ export default function StudentFormulaBook() {
         <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-8">
           <div className="space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-500" />
                 </span>
                 <Calculator className="h-3 w-3" /> Quant Formula Book
               </div>
-              <h1 className="font-heading mt-2 text-[1.4rem] font-bold leading-tight text-slate-900 sm:text-2xl md:text-3xl">
+              <h1 className="font-heading mt-2 text-2xl font-bold leading-tight text-slate-900 sm:text-2xl md:text-3xl">
                 <span className="bg-gradient-to-r from-slate-900 via-sky-700 to-blue-700 bg-clip-text text-transparent">
                   Level {level}
                 </span>
@@ -238,7 +238,7 @@ export default function StudentFormulaBook() {
                 <span className="tabular-nums">{xp.toLocaleString()}</span>
                 <span className="ml-1 text-base font-semibold text-slate-500">XP</span>
               </h1>
-              <p className="mt-1.5 max-w-xl text-[13px] leading-6 text-slate-600 md:text-sm">
+              <p className="mt-1.5 max-w-xl text-sm leading-6 text-slate-600 md:text-sm">
                 Search, master and revise MBA quant formulas. Mark complete, save, and revise daily to lock retention before mocks.
               </p>
             </div>
@@ -253,7 +253,7 @@ export default function StudentFormulaBook() {
 
             {/* XP bar */}
             <div>
-              <div className="mb-1 flex items-center justify-between text-[11px] font-medium text-slate-600">
+              <div className="mb-1 flex items-center justify-between text-xs font-medium text-slate-600">
                 <span className="inline-flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" /> Level {level}</span>
                 <span className="tabular-nums">{xpInLevel}/500 XP to Lv {level + 1}</span>
               </div>
@@ -281,14 +281,14 @@ export default function StudentFormulaBook() {
                 <div className="font-heading text-xl font-bold leading-none text-slate-900 lg:text-2xl">
                   {doneToday}<span className="text-sm text-slate-400 lg:text-base">/{dailyTarget}</span>
                 </div>
-                <div className="mt-1 text-[9px] uppercase tracking-wider text-slate-500 lg:text-[10px]">{targetPct}%</div>
+                <div className="mt-1 text-xs uppercase tracking-wider text-slate-500 lg:text-xs">{targetPct}%</div>
               </div>
             </div>
             <div className="flex flex-col lg:items-center">
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 lg:text-[11px]">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500 lg:text-xs">
                 <Target className="h-3 w-3 text-sky-600" /> Daily Target
               </span>
-              <span className="mt-0.5 text-[11px] text-slate-600 lg:text-center">
+              <span className="mt-0.5 text-xs text-slate-600 lg:text-center">
                 {targetPct >= 100 ? "Crushed it today" : `${dailyTarget - doneToday} to go`}
               </span>
             </div>
@@ -363,7 +363,7 @@ export default function StudentFormulaBook() {
                   >
                     {s.kind === "formula" ? <Sigma className="h-4 w-4 text-sky-600" /> : <Layers s={s} />}
                     <span className="flex-1 truncate font-medium text-slate-800">{s.label}</span>
-                    <span className="text-[10px] uppercase tracking-wider text-slate-400">{s.kind}</span>
+                    <span className="text-xs uppercase tracking-wider text-slate-400">{s.kind}</span>
                   </Link>
                 ))}
               </div>
@@ -382,7 +382,7 @@ export default function StudentFormulaBook() {
               {(section !== "all" || topic !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
                 <button
                   onClick={() => setParams(new URLSearchParams(q ? { q } : {}))}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600"
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600"
                 >
                   <X className="h-3 w-3" /> Clear
                 </button>
@@ -429,7 +429,7 @@ export default function StudentFormulaBook() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-sky-100 pt-3">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Quick:</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quick:</span>
               <Chip active={importantOnly} onClick={() => toggleFlag("important")}>★ High weightage</Chip>
               <Chip active={shortcutOnly} onClick={() => toggleFlag("shortcut")}>⚡ Shortcut</Chip>
             </div>
@@ -443,14 +443,14 @@ export default function StudentFormulaBook() {
           <CardContent className="p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-800">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white/80 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-800">
                   <Sparkles className="h-3 w-3" /> Daily Revision
                 </div>
                 <h2 className="font-heading mt-1 text-xl font-bold text-slate-900">Today's set · {dailySet.length} formulas</h2>
                 <p className="text-xs text-slate-600">Mix of weak, due-for-review and high-weightage picks.</p>
               </div>
               <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500">Progress</div>
+                <div className="text-xs uppercase tracking-wider text-slate-500">Progress</div>
                 <div className="font-heading text-2xl font-bold text-slate-900">{doneToday}/{dailyTarget}</div>
               </div>
             </div>
@@ -463,7 +463,7 @@ export default function StudentFormulaBook() {
                   className="group text-left rounded-xl border border-amber-200 bg-white/80 p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-amber-700">{f.name}</div>
-                  <div className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">{f.topic_slug?.replace(/-/g, " ")}</div>
+                  <div className="mt-1 text-xs uppercase tracking-wider text-slate-500">{f.topic_slug?.replace(/-/g, " ")}</div>
                 </button>
               ))}
             </div>
@@ -516,13 +516,13 @@ export default function StudentFormulaBook() {
                   {/* Title + badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-heading text-[1.15rem] font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
+                      <h3 className="font-heading text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">{f.name}</h3>
 
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <Badge variant="outline" className="border-sky-200 text-[10px] uppercase tracking-wide text-sky-700">{f.difficulty}</Badge>
-                        {f.is_high_weightage && <Badge className="border-1 bg-amber-100 text-[10px] text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
-                        {f.is_shortcut && <Badge className="border-1 bg-violet-100 text-[10px] text-violet-700">⚡ Shortcut</Badge>}
-                        <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">{f.topic_slug?.replace(/-/g, " ")}</Badge>
+                        <Badge variant="outline" className="border-sky-200 text-xs uppercase tracking-wide text-sky-700">{f.difficulty}</Badge>
+                        {f.is_high_weightage && <Badge className="border-1 bg-amber-100 text-xs text-amber-800"><Star className="mr-0.5 h-2.5 w-2.5 fill-current" /> Important</Badge>}
+                        {f.is_shortcut && <Badge className="border-1 bg-violet-100 text-xs text-violet-700">⚡ Shortcut</Badge>}
+                        <Badge variant="secondary" className="bg-slate-100 text-xs capitalize text-slate-600">{f.topic_slug?.replace(/-/g, " ")}</Badge>
                       </div>
                     </div>
                   </div>
@@ -540,7 +540,7 @@ export default function StudentFormulaBook() {
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] })); }}
                         onKeyDown={(e) => e.stopPropagation()}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-[11px] font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-xs font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                         aria-label={plainMode[f.id] ? "Switch to rendered math" : "Switch to plain text"}
                         title={plainMode[f.id] ? "Show rendered math" : "Show plain text"}
                       >
@@ -549,13 +549,13 @@ export default function StudentFormulaBook() {
                       </button>
                     </div>
                     {plainMode[f.id] ? (
-                      <code className="block w-full max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-black/30 px-3 py-3 font-mono text-[12px] leading-relaxed text-sky-100 sm:px-5 sm:py-4 sm:text-[15px]">
+                      <code className="block w-full max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-black/30 px-3 py-3 font-mono text-xs leading-relaxed text-sky-100 sm:px-5 sm:py-4 sm:text-sm">
                         {f.expression || f.expression_latex || ""}
                       </code>
                     ) : (
                       <div className="formula-scroll -mx-3 w-[calc(100%+1.5rem)] overflow-x-auto px-3 sm:mx-0 sm:w-full sm:px-0">
                         <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-sm text-sky-50 sm:text-lg md:text-xl" />
-                        <div className="mt-1 text-right text-[10px] uppercase tracking-wider text-slate-500 sm:hidden">swipe →</div>
+                        <div className="mt-1 text-right text-xs uppercase tracking-wider text-slate-500 sm:hidden">swipe →</div>
                       </div>
                     )}
                   </div>
@@ -563,19 +563,19 @@ export default function StudentFormulaBook() {
 
                   {/* Explanation */}
                   <div className="border-l-2 border-slate-200 pl-4">
-                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
                       <BookOpen className="h-3 w-3" /> Explanation
                     </div>
-                    <MathInlineText as="p" text={f.explanation} className="text-[0.92rem] leading-7 text-slate-700" />
+                    <MathInlineText as="p" text={f.explanation} className="text-sm leading-7 text-slate-700" />
                   </div>
 
                   {/* When to Use */}
                   {f.notes && (
                     <div className="border-l-2 border-sky-200 pl-4">
-                      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-600">
+                      <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-600">
                         <Zap className="h-3 w-3" /> When to Use
                       </div>
-                      <MathInlineText as="p" text={f.notes} className="text-[0.85rem] leading-6 text-slate-700" />
+                      <MathInlineText as="p" text={f.notes} className="text-xs leading-6 text-slate-700" />
                     </div>
                   )}
 
@@ -583,16 +583,16 @@ export default function StudentFormulaBook() {
                   {Array.isArray(f.examples) && f.examples[0]?.problem && (
                     <div className="border-l-2 border-emerald-200 pl-4">
                       <div className="mb-1.5 flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+                        <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700">
                           <Target className="h-3 w-3" /> Sample Usage
                         </span>
                         {Array.isArray(f.examples) && f.examples.length > 1 && (
-                          <span className="text-[10px] text-emerald-600/80">+{f.examples.length - 1} more</span>
+                          <span className="text-xs text-emerald-600/80">+{f.examples.length - 1} more</span>
                         )}
                       </div>
-                      <MathInlineText as="p" text={f.examples[0].problem} className="text-[0.85rem] leading-6 text-slate-700" />
+                      <MathInlineText as="p" text={f.examples[0].problem} className="text-xs leading-6 text-slate-700" />
                       {f.examples[0].answer && (
-                        <p className="mt-2 text-[12px] font-semibold text-emerald-800">Answer: <MathInlineText text={String(f.examples[0].answer)} /></p>
+                        <p className="mt-2 text-xs font-semibold text-emerald-800">Answer: <MathInlineText text={String(f.examples[0].answer)} /></p>
                       )}
                     </div>
                   )}
@@ -602,7 +602,7 @@ export default function StudentFormulaBook() {
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       <GraduationCap className="h-3.5 w-3.5 text-sky-600" />
                       {f.exam_tags.slice(0, 5).map((e: string) => (
-                        <Badge key={e} className="border-0 bg-sky-100 text-[10px] text-sky-700 hover:bg-sky-100">{e}</Badge>
+                        <Badge key={e} className="border-0 bg-sky-100 text-xs text-sky-700 hover:bg-sky-100">{e}</Badge>
                       ))}
                     </div>
                   )}
@@ -662,7 +662,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+      <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
         <Filter className="h-3 w-3" /> {label}
       </div>
       <div className="flex flex-wrap gap-1.5">{children}</div>
@@ -680,7 +680,7 @@ const TONE: Record<string, string> = {
 function Pill({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: number; tone: keyof typeof TONE }) {
   return (
     <div className={cn("relative overflow-hidden rounded-xl border border-white/60 bg-gradient-to-br p-3 backdrop-blur", TONE[tone])}>
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider opacity-90">{icon} {label}</div>
+      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-90">{icon} {label}</div>
       <div className="mt-1 font-heading text-xl font-bold text-slate-900">{value}</div>
     </div>
   );
@@ -701,12 +701,12 @@ function DropdownField({
   const active = value && value !== "all";
   return (
     <div>
-      <div className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+      <div className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-600">
         <span className={cn("inline-flex items-center justify-center rounded-md p-0.5", primary ? "bg-sky-600 text-white" : "bg-slate-200 text-slate-600")}>
           {icon}
         </span>
         {label}
-        {primary && <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-700">Start here</span>}
+        {primary && <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-amber-700">Start here</span>}
       </div>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger

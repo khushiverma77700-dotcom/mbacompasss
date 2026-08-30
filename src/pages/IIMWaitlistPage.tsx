@@ -156,25 +156,25 @@ function MiniBars({ values, labels, est }: { values: (number | null)[]; labels: 
         const h = Math.max(8, ((v ?? 0) / max) * 100);
         return (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
-            <div className="text-[10px] font-semibold tabular-nums text-slate-700">{v ?? 0}</div>
+            <div className="text-xs font-semibold tabular-nums text-slate-700">{v ?? 0}</div>
             <motion.div
               initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }}
               transition={{ duration: 0.7, delay: i * 0.05, ease: "easeOut" }}
               className="w-full rounded-t-md bg-gradient-to-t from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500"
             />
-            <div className="text-[10px] text-slate-500">{labels[i]}</div>
+            <div className="text-xs text-slate-500">{labels[i]}</div>
           </div>
         );
       })}
       {est !== undefined && (
         <div className="flex-1 flex flex-col items-center gap-1">
-          <div className="text-[10px] font-semibold tabular-nums text-blue-700">{est ?? 0}</div>
+          <div className="text-xs font-semibold tabular-nums text-blue-700">{est ?? 0}</div>
           <motion.div
             initial={{ height: 0 }} whileInView={{ height: `${Math.max(8, ((est ?? 0) / max) * 100)}%` }} viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.3, ease: "easeOut" }}
             className="w-full rounded-t-md bg-gradient-to-t from-sky-400 to-sky-200 ring-1 ring-sky-300"
           />
-          <div className="text-[10px] font-semibold text-blue-700">2026E</div>
+          <div className="text-xs font-semibold text-blue-700">2026E</div>
         </div>
       )}
     </div>
@@ -546,7 +546,7 @@ export default function IIMWaitlistPage() {
                       <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-100 to-blue-100 flex items-center justify-center text-violet-600">
                         {aiIcon(ins.icon)}
                       </div>
-                      <div className="text-[10px] uppercase tracking-wider text-violet-600 font-bold">AI Insight #{i + 1}</div>
+                      <div className="text-xs uppercase tracking-wider text-violet-600 font-bold">AI Insight #{i + 1}</div>
                     </div>
                     <h3 className="font-bold text-base mb-1.5">{ins.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{ins.text}</p>
@@ -742,11 +742,11 @@ export default function IIMWaitlistPage() {
                       <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white px-5 py-4 flex items-center justify-between">
                         <div>
                           <div className="font-bold text-base leading-tight">{fullName(row.college_short, name)}</div>
-                          <div className="text-[11px] text-white/60">{name}</div>
+                          <div className="text-xs text-white/60">{name}</div>
                         </div>
-                        <Badge className="bg-white/15 text-white border-white/20 text-[10px]">{row.college_type}</Badge>
+                        <Badge className="bg-white/15 text-white border-white/20 text-xs">{row.college_type}</Badge>
                       </div>
-                      <div className="px-4 pt-3 flex justify-between text-[11px] text-slate-500 font-medium">
+                      <div className="px-4 pt-3 flex justify-between text-xs text-slate-500 font-medium">
                         {["General","EWS","OBC","SC","ST"].map(c => (
                           <span key={c} className={c === category ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1" : ""}>{c}</span>
                         ))}
@@ -760,19 +760,19 @@ export default function IIMWaitlistPage() {
                       </div>
                       <div className="bg-slate-50 px-4 py-3 grid grid-cols-4 gap-2 text-center border-t">
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase">5yr Avg</div>
+                          <div className="text-xs text-slate-500 uppercase">5yr Avg</div>
                           <div className="font-bold text-slate-900 tabular-nums">{row.five_yr_avg ?? "—"}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase">2025</div>
+                          <div className="text-xs text-slate-500 uppercase">2025</div>
                           <div className="font-bold text-slate-900 tabular-nums">{row.wl_2025 ?? "—"}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase">2026 Est</div>
+                          <div className="text-xs text-slate-500 uppercase">2026 Est</div>
                           <div className="font-bold text-blue-700 tabular-nums">{row.wl_2026_est ?? "—"}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase">Trend</div>
+                          <div className="text-xs text-slate-500 uppercase">Trend</div>
                           <div className={`font-bold inline-flex items-center justify-center gap-0.5 ${t.cls}`}>
                             {t.icon}<span className="text-xs">{t.label}</span>
                           </div>
@@ -814,7 +814,7 @@ export default function IIMWaitlistPage() {
 
               <div className="space-y-4 relative">
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🎓 Category</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🎓 Category</label>
                   <div className="flex flex-wrap gap-1.5">
                     {["General","EWS","OBC","SC","ST"].map(c => (
                       <button key={c} type="button"
@@ -825,7 +825,7 @@ export default function IIMWaitlistPage() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🏛️ Target Institute</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🏛️ Target Institute</label>
                   <select value={predIIM} onChange={e => setPredIIM(e.target.value)}
                     className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
                     <option value="">Select institute…</option>
@@ -835,13 +835,13 @@ export default function IIMWaitlistPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🔢 WL Number</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🔢 WL Number</label>
                     <Input type="number" placeholder="e.g. 85" value={predWL}
                       onChange={e => setPredWL(e.target.value)}
                       className="bg-white/95 text-slate-900 border-0" />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📊 CAT %ile</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📊 CAT %ile</label>
                     <Input type="number" step="0.01" placeholder="e.g. 99.2" value={predCAT}
                       onChange={e => setPredCAT(e.target.value)}
                       className="bg-white/95 text-slate-900 border-0" />
@@ -850,14 +850,14 @@ export default function IIMWaitlistPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">👤 Gender</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 block">👤 Gender</label>
                     <select value={predGender} onChange={e => setPredGender(e.target.value)}
                       className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
                       {["Male","Female","Other"].map(g => <option key={g}>{g}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">💼 Work Ex (mo)</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 block">💼 Work Ex (mo)</label>
                     <Input type="number" placeholder="0" value={predWorkEx}
                       onChange={e => setPredWorkEx(e.target.value)}
                       className="bg-white/95 text-slate-900 border-0" />
@@ -865,7 +865,7 @@ export default function IIMWaitlistPage() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📚 Academic Background</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📚 Academic Background</label>
                   <select value={predAcad} onChange={e => setPredAcad(e.target.value)}
                     className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
                     {["Engineering","Commerce","Arts/Humanities","Science","Medical","Law","CA/CS/CMA","Other"].map(a => <option key={a}>{a}</option>)}
@@ -992,7 +992,7 @@ export default function IIMWaitlistPage() {
                       {[{i:ShieldCheck,t:"RTI verified"},{i:Brain,t:"AI calibrated"},{i:Target,t:"Personalised"}].map((x,i)=>(
                         <div key={i} className="text-center p-3 rounded-xl bg-white/70 border">
                           <x.i className="h-4 w-4 mx-auto mb-1 text-violet-600" />
-                          <div className="text-[10px] font-semibold text-slate-600">{x.t}</div>
+                          <div className="text-xs font-semibold text-slate-600">{x.t}</div>
                         </div>
                       ))}
                     </div>
@@ -1160,9 +1160,9 @@ export default function IIMWaitlistPage() {
                             <MapPin className="h-3 w-3" />
                             {[c.city, c.state].filter(Boolean).join(", ") || "India"}
                           </div>
-                          {c.tier && <Badge variant="outline" className="mt-2 text-[10px]">{c.tier}</Badge>}
+                          {c.tier && <Badge variant="outline" className="mt-2 text-xs">{c.tier}</Badge>}
                         </div>
-                        <Badge className="bg-emerald-500 text-white border-transparent text-[10px] shrink-0">
+                        <Badge className="bg-emerald-500 text-white border-transparent text-xs shrink-0">
                           <span className="relative flex h-1.5 w-1.5 mr-1">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
                             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
@@ -1175,17 +1175,17 @@ export default function IIMWaitlistPage() {
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="bg-slate-50 rounded-lg p-2.5">
                           <Award className="h-3.5 w-3.5 mx-auto text-amber-600 mb-1" />
-                          <div className="text-[10px] text-muted-foreground">Avg Placement</div>
+                          <div className="text-xs text-muted-foreground">Avg Placement</div>
                           <div className="text-xs font-bold truncate">{c.placement_avg || "—"}</div>
                         </div>
                         <div className="bg-slate-50 rounded-lg p-2.5">
                           <TrendingUp className="h-3.5 w-3.5 mx-auto text-emerald-600 mb-1" />
-                          <div className="text-[10px] text-muted-foreground">Highest</div>
+                          <div className="text-xs text-muted-foreground">Highest</div>
                           <div className="text-xs font-bold truncate">{c.placement_highest || "—"}</div>
                         </div>
                         <div className="bg-slate-50 rounded-lg p-2.5">
                           <IndianRupee className="h-3.5 w-3.5 mx-auto text-blue-600 mb-1" />
-                          <div className="text-[10px] text-muted-foreground">Fees</div>
+                          <div className="text-xs text-muted-foreground">Fees</div>
                           <div className="text-xs font-bold truncate">
                             {c.fees_lakhs ? `₹${c.fees_lakhs}L` : (c.fees || "—")}
                           </div>

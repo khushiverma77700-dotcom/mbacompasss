@@ -50,7 +50,7 @@ const HomeQuickAccessStrip = () => (
               className="group relative flex flex-col items-center text-center gap-1.5 md:gap-2 rounded-xl p-2.5 md:p-3 hover:bg-sky-50/70 transition-colors"
             >
               {tag && (
-                <span className="absolute top-1.5 left-1.5 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20">
+                <span className="absolute top-1.5 left-1.5 text-xs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20">
                   {tag}
                 </span>
               )}
@@ -59,7 +59,7 @@ const HomeQuickAccessStrip = () => (
               </div>
               <div>
                 <div className="text-xs md:text-sm font-bold text-foreground leading-tight">{label}</div>
-                <div className="hidden md:block text-[10px] text-muted-foreground mt-0.5">{sub}</div>
+                <div className="hidden md:block text-xs text-muted-foreground mt-0.5">{sub}</div>
               </div>
               <ArrowUpRight className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 absolute top-2 right-2 transition-opacity" />
             </Link>

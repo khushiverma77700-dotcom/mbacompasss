@@ -341,7 +341,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
         <div className="relative flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-white/15 backdrop-blur text-[10px] sm:text-[11px] font-medium mb-2 sm:mb-3">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-white/15 backdrop-blur text-xs sm:text-xs font-medium mb-2 sm:mb-3">
               <Zap className="h-3 w-3" /> Mock Test Hub
             </div>
             <h1 className="text-xl sm:text-3xl font-bold tracking-tight leading-tight">{heading.title}</h1>
@@ -365,7 +365,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
         {stats.totalUnlocked > 0 && (
           <div className="relative mt-3 sm:mt-4">
-            <div className="flex items-center justify-between text-[11px] sm:text-xs text-sky-100 mb-1.5">
+            <div className="flex items-center justify-between text-xs sm:text-xs text-sky-100 mb-1.5">
               <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> Course completion</span>
               <span className="font-semibold text-white">{completion}%</span>
             </div>
@@ -397,7 +397,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                     key={f}
                     onClick={() => setExamFilter(f)}
                     className={[
-                      "px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold border transition",
+                      "px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-xs font-semibold border transition",
                       active
                         ? "bg-sky-600 text-white border-sky-600 shadow-sm"
                         : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700",
@@ -473,7 +473,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span className="font-medium">{t.label}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 data-[state=active]:bg-sky-100 text-slate-600">
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-slate-200 data-[state=active]:bg-sky-100 text-slate-600">
                       {count}
                     </span>
                   </TabsTrigger>
@@ -542,7 +542,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 function StatTile({ icon: Icon, label, value }: { icon: any; label: string; value: number }) {
   return (
     <div className="rounded-xl bg-white/15 backdrop-blur border border-white/20 p-2.5 sm:p-3 hover:bg-white/20 transition-colors">
-      <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-sky-100 mb-0.5 sm:mb-1">
+      <div className="flex items-center gap-1.5 text-xs sm:text-xs text-sky-100 mb-0.5 sm:mb-1">
         <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {label}
       </div>
       <div className="text-lg sm:text-2xl font-bold tracking-tight">{value}</div>
@@ -566,12 +566,12 @@ function ChipStrip({
   return (
     <div className="-mx-1 px-1 overflow-x-auto scrollbar-none">
       <div className="flex gap-1.5 min-w-max items-center">
-        <span className="text-[11px] font-semibold text-slate-500 mr-1 shrink-0">{label}:</span>
+        <span className="text-xs font-semibold text-slate-500 mr-1 shrink-0">{label}:</span>
         {all.map((t) => (
           <button
             key={t}
             onClick={() => onChange(t)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all whitespace-nowrap ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
               value === t ? activeCls : inactiveCls
             }`}
           >
@@ -648,7 +648,7 @@ function TopicWiseView({
           <SummaryTile icon={Clock} label="Unattempted" value={summary.unattempted} tone="amber" />
         </div>
         <div className="mt-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-600 mb-1">
+          <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
             <span className="inline-flex items-center gap-1 font-medium"><Flame className="h-3 w-3 text-emerald-600" /> Topic-wise progress</span>
             <span className="font-semibold text-emerald-700">{summary.progress}%</span>
           </div>
@@ -727,10 +727,10 @@ function TopicWiseView({
               {topicKeys.map((tp) => (
                 <div key={tp} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-semibold text-emerald-700 inline-flex items-center gap-1">
+                    <span className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1">
                       <BookOpen className="h-3.5 w-3.5" /> {tp}
                     </span>
-                    <span className="text-[10px] text-slate-400">({grouped[sec][tp].length})</span>
+                    <span className="text-xs text-slate-400">({grouped[sec][tp].length})</span>
                     <div className="flex-1 h-px bg-slate-100" />
                   </div>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -762,7 +762,7 @@ function SummaryTile({ icon: Icon, label, value, tone }: { icon: any; label: str
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-wider text-slate-500 leading-none truncate">{label}</div>
+        <div className="text-xs uppercase tracking-wider text-slate-500 leading-none truncate">{label}</div>
         <div className="text-base sm:text-lg font-bold text-slate-800 leading-tight">{value}</div>
       </div>
     </div>
@@ -774,13 +774,13 @@ function TopicChipStrip({ topics, value, onChange }: { topics: string[]; value: 
   return (
     <div className="mb-3 -mx-1 px-1 overflow-x-auto scrollbar-none">
       <div className="flex gap-1.5 min-w-max items-center">
-        <span className="text-[11px] font-semibold text-slate-500 mr-1 shrink-0">Topic:</span>
+        <span className="text-xs font-semibold text-slate-500 mr-1 shrink-0">Topic:</span>
 
         {all.map((t) => (
           <button
             key={t}
             onClick={() => onChange(t)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all whitespace-nowrap ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
               value === t
                 ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-transparent shadow-sm"
                 : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700"
@@ -996,7 +996,7 @@ function UpcomingLaunchesStrip({ items }: { items: { test: Test; at: Date; owned
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-[10px] font-bold uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-bold uppercase tracking-wider mb-1">
               <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" /> New Mock Drop
             </div>
             <div className="text-base sm:text-lg font-bold leading-tight text-slate-900">
@@ -1010,7 +1010,7 @@ function UpcomingLaunchesStrip({ items }: { items: { test: Test; at: Date; owned
           {items.length > 1 && (
             <div className="hidden sm:flex items-center gap-2 shrink-0">
               <div className="h-10 w-px bg-slate-200" />
-              <div className="text-[11px] text-slate-600">
+              <div className="text-xs text-slate-600">
                 <div className="font-semibold text-slate-900">+{items.length - 1} more</div>
                 <div className="text-slate-500">queued to launch</div>
               </div>
@@ -1077,7 +1077,7 @@ function MockCardItem({
       {/* LIVE NOW corner ribbon for launched full-length mocks */}
       {isLaunchedFullLength && (
         <div className="absolute top-3 -right-9 z-10 rotate-45 pointer-events-none">
-          <div className="bg-gradient-to-r from-sky-600 to-blue-600 text-white text-[10px] font-bold tracking-wider px-10 py-1 shadow-md">
+          <div className="bg-gradient-to-r from-sky-600 to-blue-600 text-white text-xs font-bold tracking-wider px-10 py-1 shadow-md">
             LIVE
           </div>
         </div>
@@ -1102,15 +1102,15 @@ function MockCardItem({
           <div className="flex items-center gap-2 min-w-0">
             {test.exam_code && (
               <div className={`shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br ${statusTheme.grad} text-white shadow-sm ring-2 ring-white`}>
-                <span className="text-[10px] font-bold tracking-wide leading-none">{test.exam_code.slice(0,4).toUpperCase()}</span>
+                <span className="text-xs font-bold tracking-wide leading-none">{test.exam_code.slice(0,4).toUpperCase()}</span>
               </div>
             )}
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">{test.test_type || test.category || "Mock Test"}</div>
-              <div className="font-bold leading-tight text-[15px] line-clamp-2 text-slate-900 dark:text-slate-100">{test.name}</div>
+              <div className="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">{test.test_type || test.category || "Mock Test"}</div>
+              <div className="font-bold leading-tight text-sm line-clamp-2 text-slate-900 dark:text-slate-100">{test.name}</div>
             </div>
           </div>
-          <Badge variant="outline" className={`shrink-0 text-[10px] font-bold gap-1 ${statusTheme.chip} border ${isLaunchedFullLength ? "shadow-sm" : ""}`}>
+          <Badge variant="outline" className={`shrink-0 text-xs font-bold gap-1 ${statusTheme.chip} border ${isLaunchedFullLength ? "shadow-sm" : ""}`}>
             {isLaunchedFullLength ? (
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75 animate-ping" />
@@ -1123,16 +1123,16 @@ function MockCardItem({
 
         {/* meta chips */}
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-0.5">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-0.5">
             <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
           </span>
           {test.difficulty && (
-            <span className={`inline-flex items-center gap-1 text-[11px] font-medium rounded-md px-2 py-0.5 border ${difficultyTone(test.difficulty)}`}>
+            <span className={`inline-flex items-center gap-1 text-xs font-medium rounded-md px-2 py-0.5 border ${difficultyTone(test.difficulty)}`}>
               {test.difficulty}
             </span>
           )}
           {test.topic && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-0.5 max-w-[140px] truncate">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-0.5 max-w-[140px] truncate">
               {test.topic}
             </span>
           )}
@@ -1150,7 +1150,7 @@ function MockCardItem({
                   {isFullLength ? <Sparkles className="h-5 w-5" /> : <Calendar className="h-4 w-4" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-sky-700">
+                  <div className="text-xs uppercase tracking-wider font-bold text-sky-700">
                     {isFullLength && lock.kind === "scheduled" ? "New Mock — Goes Live" : lock.kind === "scheduled" ? "Unlocks on" : "Status"}
                   </div>
                   {isFullLength && daysLeft != null ? (
@@ -1162,11 +1162,11 @@ function MockCardItem({
                   )}
                   {lock.kind === "scheduled" && (
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 bg-white border border-sky-200 rounded-md px-1.5 py-0.5">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 bg-white border border-sky-200 rounded-md px-1.5 py-0.5">
                         <Clock className="h-2.5 w-2.5" /> <span className="tabular-nums">{countdown}</span>
                       </span>
                       {isFullLength && (
-                        <span className="text-[10px] text-slate-500 font-medium truncate">{lock.label}</span>
+                        <span className="text-xs text-slate-500 font-medium truncate">{lock.label}</span>
                       )}
                     </div>
                   )}
@@ -1198,17 +1198,17 @@ function MockCardItem({
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center flex-col leading-none">
                   <span className="text-base font-bold text-emerald-700 tabular-nums">{pct}</span>
-                  <span className="text-[8px] font-semibold text-emerald-600/80">%ile</span>
+                  <span className="text-xs font-semibold text-emerald-600/80">%ile</span>
                 </div>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] uppercase tracking-wider font-semibold text-emerald-700/80 inline-flex items-center gap-1">
+                <div className="text-xs uppercase tracking-wider font-semibold text-emerald-700/80 inline-flex items-center gap-1">
                   <Award className="h-3 w-3" /> Last Attempt
                 </div>
                 <div className="text-sm font-bold text-emerald-900">
                   {latestSubmitted.total_score ?? 0}<span className="text-emerald-700/60 font-medium">/{latestSubmitted.max_score ?? 0}</span>
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-[10px] text-emerald-700/80">
+                <div className="mt-1 flex items-center gap-2 text-xs text-emerald-700/80">
                   {accuracy != null && (
                     <span className="inline-flex items-center gap-0.5 bg-white/70 border border-emerald-200/70 rounded px-1.5 py-0.5 font-semibold">
                       {accuracy}% acc
@@ -1233,7 +1233,7 @@ function MockCardItem({
                 <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-sky-500" />
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wider font-semibold text-sky-700/80">Attempt in progress</div>
+                <div className="text-xs uppercase tracking-wider font-semibold text-sky-700/80">Attempt in progress</div>
                 <div className="text-sm font-bold text-sky-900">Resume now to keep your streak</div>
               </div>
             </div>
@@ -1333,14 +1333,14 @@ function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] })
             <div className={`bg-gradient-to-br ${tone} text-white p-4`}>
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="min-w-0">
-                  <div className="text-[11px] opacity-90 mb-0.5">{test.exam_code ?? "Mock"}</div>
+                  <div className="text-xs opacity-90 mb-0.5">{test.exam_code ?? "Mock"}</div>
                   <div className="font-semibold leading-tight line-clamp-2">{test.name}</div>
                 </div>
                 <Trophy className="h-5 w-5 opacity-80 shrink-0" />
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wider opacity-90">Percentile</div>
+                  <div className="text-xs uppercase tracking-wider opacity-90">Percentile</div>
                   <div className="text-3xl font-bold leading-none">{pct}</div>
                 </div>
                 <div className="text-right text-xs opacity-90">
@@ -1351,7 +1351,7 @@ function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] })
             </div>
 
             <div className="p-4 flex flex-col flex-1">
-              <div className="text-[11px] text-muted-foreground mb-3 inline-flex items-center gap-1">
+              <div className="text-xs text-muted-foreground mb-3 inline-flex items-center gap-1">
                 <Calendar className="h-3 w-3" /> Submitted {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
               </div>
               <div className="mt-auto flex gap-2">

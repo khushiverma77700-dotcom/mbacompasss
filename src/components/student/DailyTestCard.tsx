@@ -56,7 +56,7 @@ export default function DailyTestCard() {
                 <span className="flex items-center gap-1"><ListChecks className="h-3 w-3" />{meta.qCount} questions</span>
               )}
               {meta.difficulty && (
-                <Badge variant="outline" className="text-[10px] border-sky-200 capitalize gap-1">
+                <Badge variant="outline" className="text-xs border-sky-200 capitalize gap-1">
                   <Gauge className="h-3 w-3" /> {meta.difficulty}
                 </Badge>
               )}

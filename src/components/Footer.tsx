@@ -31,7 +31,7 @@ const Footer = () => {
               <img src={mbahubLogo} alt="MBA Compass Logo" width="32" height="32" className="w-8 h-8 rounded-lg object-contain"  loading="lazy" decoding="async" />
               <div className="flex flex-col leading-tight">
                 <span className="font-heading font-bold text-lg text-primary-foreground">MBA Compass</span>
-                <span className="text-[10px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
+                <span className="text-xs font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
               </div>
             </Link>
             <p className="text-sm text-primary-foreground/60">{brandDesc}</p>

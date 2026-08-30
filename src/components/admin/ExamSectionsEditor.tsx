@@ -221,8 +221,8 @@ const ExamSectionsEditor = ({
             <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm">{EXAM_MODULE_LABELS[key]}</CardTitle>
               <div className="flex items-center gap-2">
-                {isInvalid(key) && <Badge variant="destructive" className="text-[10px]">Invalid JSON</Badge>}
-                <Badge variant="secondary" className="text-[10px] font-mono">{key}</Badge>
+                {isInvalid(key) && <Badge variant="destructive" className="text-xs">Invalid JSON</Badge>}
+                <Badge variant="secondary" className="text-xs font-mono">{key}</Badge>
               </div>
             </CardHeader>
             <CardContent>

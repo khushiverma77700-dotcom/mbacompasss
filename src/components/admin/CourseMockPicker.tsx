@@ -144,14 +144,14 @@ export default function CourseMockPicker({ selectedCategories, selectedTestIds, 
                             <td className="px-3 py-2"><Checkbox checked={checked} onCheckedChange={() => toggle(m.id)} /></td>
                             <td className="px-3 py-2">
                               <div className="font-medium">{m.name}</div>
-                              <div className="text-[10px] text-muted-foreground">/{m.slug}</div>
+                              <div className="text-xs text-muted-foreground">/{m.slug}</div>
                             </td>
                             <td className="px-3 py-2">
-                              <Badge variant="outline" className="text-[10px]">{(m.test_type || m.category || "full_length").replace("_", " ")}</Badge>
+                              <Badge variant="outline" className="text-xs">{(m.test_type || m.category || "full_length").replace("_", " ")}</Badge>
                             </td>
                             <td className="px-3 py-2 text-xs">{m.total_duration_minutes ?? "—"} min</td>
                             <td className="px-3 py-2">
-                              {m.is_live ? <Badge className="text-[10px] bg-emerald-600">Live</Badge> : <Badge variant="secondary" className="text-[10px]">Draft</Badge>}
+                              {m.is_live ? <Badge className="text-xs bg-emerald-600">Live</Badge> : <Badge variant="secondary" className="text-xs">Draft</Badge>}
                             </td>
                           </tr>
                         );

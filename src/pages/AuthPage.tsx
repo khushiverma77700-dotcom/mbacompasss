@@ -356,7 +356,7 @@ const AuthPage = () => {
                   <Button onClick={handleSendOtp} className="w-full h-11" disabled={!canSendOtp || otpSending}>
                     {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP…</> : <>Send OTP <ArrowRight className="w-4 h-4 ml-1" /></>}
                   </Button>
-                  <p className="text-[11px] text-muted-foreground text-center">
+                  <p className="text-xs text-muted-foreground text-center">
                     The same password works with both email and mobile login.
                   </p>
                 </>

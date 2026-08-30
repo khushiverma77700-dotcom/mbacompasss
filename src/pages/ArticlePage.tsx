@@ -211,14 +211,14 @@ const ArticlePage = () => {
       {/* Mobile hero — stacked, no text-over-banner */}
       <div className="md:hidden bg-card border-b border-border">
         <div className="px-4 pt-5 pb-4">
-          <span className="inline-flex items-center gap-1.5 mb-3 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full">
+          <span className="inline-flex items-center gap-1.5 mb-3 bg-primary/10 text-primary text-xs font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
             {article.category}
           </span>
-          <h1 className="font-heading text-[1.6rem] font-extrabold text-foreground leading-[1.15] tracking-[-0.02em]">
+          <h1 className="font-heading text-2xl font-extrabold text-foreground leading-[1.15] tracking-[-0.02em]">
             {(article as any).h1_tag || article.title}
           </h1>
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted-foreground">
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
             {article.author && (
               <span className="flex items-center gap-1.5 font-semibold text-foreground/80">
                 <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -300,13 +300,13 @@ const ArticlePage = () => {
 
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
               {/* Category pill */}
-              <span className="inline-flex items-center gap-1.5 mb-4 bg-white/[0.12] backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1.5 rounded-full border border-white/[0.1]">
+              <span className="inline-flex items-center gap-1.5 mb-4 bg-white/[0.12] backdrop-blur-sm text-white text-xs font-bold uppercase tracking-[0.14em] px-3.5 py-1.5 rounded-full border border-white/[0.1]">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                 {article.category}
               </span>
 
               {/* Title */}
-              <h1 className="font-heading text-[1.85rem] md:text-[2.6rem] lg:text-[3.2rem] font-extrabold text-white mb-6 max-w-4xl leading-[1.08] tracking-[-0.025em]" style={{ textShadow: '0 2px 18px rgba(0,0,0,0.35)' }}>
+              <h1 className="font-heading text-2xl md:text-4xl lg:text-4xl font-extrabold text-white mb-6 max-w-4xl leading-[1.08] tracking-[-0.025em]" style={{ textShadow: '0 2px 18px rgba(0,0,0,0.35)' }}>
                 {(() => {
                   const text = (article as any).h1_tag || article.title || "";
                   const parts = text.trim().split(/\s+/);
@@ -324,7 +324,7 @@ const ArticlePage = () => {
                     <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
                       <User className="w-3 h-3 text-white/80" />
                     </div>
-                    <span className="font-semibold text-white/90 text-[13px]">{article.author}</span>
+                    <span className="font-semibold text-white/90 text-sm">{article.author}</span>
                   </span>
                 )}
                 {article.author && <span className="w-px h-3.5 bg-white/15 hidden sm:block" />}
@@ -375,12 +375,12 @@ const ArticlePage = () => {
 
             {article.excerpt && !answerText && (
               <div className="bg-gradient-to-r from-primary/[0.06] to-transparent border-l-[3px] border-primary rounded-r-xl p-5 mb-8">
-                <p className="text-foreground/80 font-medium italic text-[15px] leading-relaxed">{article.excerpt}</p>
+                <p className="text-foreground/80 font-medium italic text-sm leading-relaxed">{article.excerpt}</p>
               </div>
             )}
 
 
-            <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
+            <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-sm text-sm sm:text-base leading-relaxed">
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
@@ -443,7 +443,7 @@ const ArticlePage = () => {
                       )}
                       <div className="min-w-0">
                         <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug">{r.title}</h4>
-                        <span className="text-[11px] text-muted-foreground mt-1 block">{formatDate(r.created_at)}</span>
+                        <span className="text-xs text-muted-foreground mt-1 block">{formatDate(r.created_at)}</span>
                       </div>
                     </div>
                   </Link>
@@ -487,7 +487,7 @@ const ArticlePage = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                   </div>
                   <div className="p-5">
-                    <Badge variant="secondary" className="text-[10px] mb-3">{r.category}</Badge>
+                    <Badge variant="secondary" className="text-xs mb-3">{r.category}</Badge>
                     <h4 className="font-heading font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors text-sm leading-snug">{r.title}</h4>
                     {r.excerpt && <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{r.excerpt}</p>}
                   </div>

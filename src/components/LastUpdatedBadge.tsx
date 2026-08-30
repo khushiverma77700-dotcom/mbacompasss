@@ -31,7 +31,7 @@ export const LastUpdatedBadge = ({
 
   if (variant === "subtle") {
     return (
-      <span className={`inline-flex items-center gap-1 text-[11px] text-muted-foreground ${className || ""}`}>
+      <span className={`inline-flex items-center gap-1 text-xs text-muted-foreground ${className || ""}`}>
         <Clock className="w-3 h-3" />
         {text}
       </span>
@@ -50,7 +50,7 @@ export const LastUpdatedBadge = ({
   return (
     <span
       className={
-        "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground " +
+        "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground " +
         (className || "")
       }
     >

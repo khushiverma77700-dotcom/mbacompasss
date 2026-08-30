@@ -167,7 +167,7 @@ const ProfileAnalyzerCTA = () => {
                       <div className="flex items-center gap-2">
                         <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-xs font-semibold">{c.name}</span>
-                        <Badge variant="outline" className="text-[9px] px-1.5 py-0">{c.tier}</Badge>
+                        <Badge variant="outline" className="text-xs px-1.5 py-0">{c.tier}</Badge>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden">

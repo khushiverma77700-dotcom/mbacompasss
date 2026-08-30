@@ -436,7 +436,7 @@ export default function MockBundlesListPage() {
                         className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border-sky-100 relative"
                       >
                         {isFeatured && (
-                          <Badge className="absolute top-3 left-3 z-10 bg-amber-400 text-amber-950 hover:bg-amber-400 border-0 shadow-md text-[10px]">
+                          <Badge className="absolute top-3 left-3 z-10 bg-amber-400 text-amber-950 hover:bg-amber-400 border-0 shadow-md text-xs">
                             <Star className="h-3 w-3 mr-1 fill-current" /> FEATURED
                           </Badge>
                         )}
@@ -484,19 +484,19 @@ export default function MockBundlesListPage() {
                                 const def = FEATURE_DEFINITIONS.find((f) => f.key === k);
                                 const Ic = FEATURE_ICON[k] ?? CheckCircle2;
                                 return (
-                                  <span key={k} className="inline-flex items-center gap-1 text-[10px] font-medium bg-sky-50 text-sky-800 border border-sky-100 px-2 py-0.5 rounded-full">
+                                  <span key={k} className="inline-flex items-center gap-1 text-xs font-medium bg-sky-50 text-sky-800 border border-sky-100 px-2 py-0.5 rounded-full">
                                     <Ic className="h-3 w-3" /> {def?.label}
                                   </span>
                                 );
                               })}
                               {fkeys.length > 4 && (
-                                <span className="text-[10px] font-medium text-muted-foreground self-center">+{fkeys.length - 4}</span>
+                                <span className="text-xs font-medium text-muted-foreground self-center">+{fkeys.length - 4}</span>
                               )}
                             </div>
                           )}
 
                           {/* Quick stat strip */}
-                          <div className="mt-4 grid grid-cols-2 gap-2 text-[11px]">
+                          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                             <div className="rounded-md bg-sky-50/60 border border-sky-100 px-2 py-1.5">
                               <div className="text-muted-foreground">Per-mock</div>
                               <div className="font-semibold text-sky-800">₹{perMockCost.toLocaleString()}</div>

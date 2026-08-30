@@ -40,7 +40,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
 
         {/* Top-3 corner ribbon */}
         {displayRank && displayRank <= 3 && (
-          <div className="absolute -right-12 top-5 rotate-45 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-extrabold uppercase tracking-wider px-12 py-1 shadow-lg z-10">
+          <div className="absolute -right-12 top-5 rotate-45 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-extrabold uppercase tracking-wider px-12 py-1 shadow-lg z-10">
             TOP {displayRank}
           </div>
         )}
@@ -59,7 +59,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
 
               <div className="min-w-0 flex-1">
                 {displayRank && (
-                  <div className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 px-2 py-0.5 rounded-md mb-1.5 uppercase tracking-wider">
+                  <div className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 px-2 py-0.5 rounded-md mb-1.5 uppercase tracking-wider">
                     <Trophy className="w-2.5 h-2.5" /> Rank #{displayRank}
                   </div>
                 )}
@@ -76,17 +76,17 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             {/* Type / Tier / Established */}
             <div className="flex flex-wrap items-center gap-1.5 mb-4">
               {college.tier && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
                   <ShieldCheck className="w-2.5 h-2.5" /> {college.tier}
                 </span>
               )}
               {college.type && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
                   <Building2 className="w-2.5 h-2.5" /> {college.type}
                 </span>
               )}
               {college.established && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
                   <Calendar className="w-2.5 h-2.5" /> Est. {college.established}
                 </span>
               )}
@@ -95,12 +95,12 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             {/* Accreditations */}
             {accreditations.length > 0 && (
               <div className="pt-3 border-t border-border">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
                   <BadgeCheck className="w-2.5 h-2.5" /> Accreditations
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {accreditations.slice(0, 4).map((a: string) => (
-                    <span key={a} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40">
+                    <span key={a} className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40">
                       {a}
                     </span>
                   ))}
@@ -110,7 +110,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
 
             {/* Campus / Students */}
             {(college.campus_size || college.total_students) && (
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
                 {college.total_students && (
                   <div className="flex items-center gap-1">
                     <Users className="w-3 h-3" />
@@ -138,25 +138,25 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             {/* Key Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-3 mb-4 pb-4 border-b border-dashed border-border">
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <IndianRupee className="w-2.5 h-2.5" /> Total Fees
                 </div>
                 <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.fees)}</p>
               </div>
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <TrendingUp className="w-2.5 h-2.5" /> Avg CTC
                 </div>
                 <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.placement_avg)}</p>
               </div>
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <Star className="w-2.5 h-2.5" /> Highest CTC
                 </div>
                 <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.placement_highest)}</p>
               </div>
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <Award className="w-2.5 h-2.5" /> Median CTC
                 </div>
                 <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.placement_median)}</p>
@@ -166,17 +166,17 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             {/* Exams Accepted */}
             {exams.length > 0 && (
               <div className="mb-3">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
                   <BookOpen className="w-2.5 h-2.5" /> Exams Accepted
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {exams.slice(0, 5).map((e: string) => (
-                    <span key={e} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15">
+                    <span key={e} className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15">
                       {e}
                     </span>
                   ))}
                   {exams.length > 5 && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
                       +{exams.length - 5}
                     </span>
                   )}
@@ -187,15 +187,15 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             {/* Specializations */}
             {specs.length > 0 && (
               <div className="mb-3">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
                   <GraduationCap className="w-2.5 h-2.5" /> Specializations
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {specs.slice(0, 4).map((s: string) => (
-                    <Badge key={s} variant="secondary" className="text-[10px] font-medium">{s}</Badge>
+                    <Badge key={s} variant="secondary" className="text-xs font-medium">{s}</Badge>
                   ))}
                   {specs.length > 4 && (
-                    <Badge variant="secondary" className="text-[10px] font-medium">+{specs.length - 4}</Badge>
+                    <Badge variant="secondary" className="text-xs font-medium">+{specs.length - 4}</Badge>
                   )}
                 </div>
               </div>
@@ -205,7 +205,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             {recruiters.length > 0 && (
               <div className="flex items-start gap-2">
                 <Briefcase className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">Top Recruiters: </span>
                   <span className="line-clamp-1">{recruiters.slice(0, 5).join(" · ")}{recruiters.length > 5 ? ` +${recruiters.length - 5}` : ""}</span>
                 </div>
@@ -218,11 +218,11 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             <div className="text-center">
               {college.fees_lakhs ? (
                 <>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">Total Fees</span>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold block">Total Fees</span>
                   <span className="font-heading font-extrabold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent text-2xl block leading-none mt-1">
                     ₹{college.fees_lakhs}L
                   </span>
-                  <span className="text-[10px] text-muted-foreground block mt-1">Full Program</span>
+                  <span className="text-xs text-muted-foreground block mt-1">Full Program</span>
                 </>
               ) : (
                 <>
@@ -236,7 +236,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
               <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-primary/85 text-primary-foreground font-bold text-xs group-hover:shadow-lg group-hover:shadow-primary/30 transition-all">
                 View Details <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>
-              <span className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 font-medium">
+              <span className="text-xs text-muted-foreground flex items-center justify-center gap-1 font-medium">
                 <BadgeCheck className="w-2.5 h-2.5 text-primary" /> Free Brochure
               </span>
             </div>

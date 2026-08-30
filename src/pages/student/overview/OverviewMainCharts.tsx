@@ -26,7 +26,7 @@ function OverviewMainCharts({ strengthMatrix, outcomeData, accuracy, weekdayPerf
           <h2 className="font-semibold flex items-center gap-2">
             <Target className="h-4 w-4 text-sky-600" /> Strength vs Effort Matrix
           </h2>
-          <Badge variant="secondary" className="text-[10px]">By section</Badge>
+          <Badge variant="secondary" className="text-xs">By section</Badge>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
           Top-right = mastered. Bottom-right = high effort, low accuracy — focus here.
@@ -65,7 +65,7 @@ function OverviewMainCharts({ strengthMatrix, outcomeData, accuracy, weekdayPerf
         )}
         <div className="flex flex-wrap gap-2 mt-2">
           {strengthMatrix.slice(0, 6).map((s) => (
-            <span key={s.name} className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 border border-sky-100 text-slate-700">
+            <span key={s.name} className="text-xs px-2 py-0.5 rounded-full bg-sky-50 border border-sky-100 text-slate-700">
               <b>{s.short}</b> · {s.name}
             </span>
           ))}
@@ -121,7 +121,7 @@ function OverviewMainCharts({ strengthMatrix, outcomeData, accuracy, weekdayPerf
                 </div>
               );
             })}
-            <div className="text-[11px] text-muted-foreground pt-1">
+            <div className="text-xs text-muted-foreground pt-1">
               Overall accuracy: <b className="text-slate-800">{accuracy}%</b>
             </div>
           </div>
@@ -216,7 +216,7 @@ function OverviewMainCharts({ strengthMatrix, outcomeData, accuracy, weekdayPerf
             <h2 className="font-semibold flex items-center gap-2">
               <Trophy className="h-4 w-4 text-amber-600" /> Best vs Average Percentile
             </h2>
-            <Badge variant="secondary" className="text-[10px]">Per section</Badge>
+            <Badge variant="secondary" className="text-xs">Per section</Badge>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
             The gap between your peak and average reveals how much headroom you still have in each section.

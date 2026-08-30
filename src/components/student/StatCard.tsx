@@ -75,7 +75,7 @@ export default function StatCard({
         )}
       </div>
       {trend && (
-        <div className={cn("relative mt-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold", trendColor)}>
+        <div className={cn("relative mt-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold", trendColor)}>
           <TrendIcon className="h-3 w-3" />
           {delta! > 0 ? "+" : ""}{delta}{deltaSuffix}
         </div>

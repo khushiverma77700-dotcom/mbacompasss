@@ -217,7 +217,7 @@ export default function StudentLogin() {
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold text-slate-900">MBA Compass</div>
-              <div className="hidden min-[380px]:block text-[11px] text-slate-500">Student LMS</div>
+              <div className="hidden min-[380px]:block text-xs text-slate-500">Student LMS</div>
             </div>
           </Link>
 
@@ -389,7 +389,7 @@ export default function StudentLogin() {
           <div className="mt-4 sm:mt-6 rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2.5 sm:px-4 sm:py-3">
             <div className="flex items-start gap-2.5">
               <ShieldCheck className="h-4 w-4 text-sky-600 mt-0.5 shrink-0" />
-              <div className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+              <div className="text-xs sm:text-xs text-slate-600 leading-relaxed">
                 <span className="font-medium text-slate-800">New here?</span> Student accounts are created automatically after course purchase.{" "}
                 <a href="https://mbacompass.in/courses" className="text-sky-600 font-medium hover:underline">Browse courses →</a>
               </div>
@@ -397,7 +397,7 @@ export default function StudentLogin() {
           </div>
 
           {/* Demo — subtle secondary link */}
-          <div className="mt-3 sm:mt-4 flex items-center justify-center gap-1.5 text-[11px] sm:text-xs text-slate-500">
+          <div className="mt-3 sm:mt-4 flex items-center justify-center gap-1.5 text-xs sm:text-xs text-slate-500">
             <Sparkles className="h-3 w-3 text-amber-500" />
             <span>Just exploring?</span>
             <button
@@ -417,7 +417,7 @@ export default function StudentLogin() {
             </Link>
           </div>
 
-          <p className="mt-4 sm:mt-6 lg:mt-8 text-center text-[10px] sm:text-[11px] text-slate-400">
+          <p className="mt-4 sm:mt-6 lg:mt-8 text-center text-xs sm:text-xs text-slate-400">
             Protected by industry-standard encryption · MBA Compass © {new Date().getFullYear()}
           </p>
         </div>
@@ -495,7 +495,7 @@ function FeatureChip({ icon, title, desc }: { icon: React.ReactNode; title: stri
         </div>
         <div className="text-sm font-semibold text-white">{title}</div>
       </div>
-      <div className="text-[11px] text-white/60 leading-snug">{desc}</div>
+      <div className="text-xs text-white/60 leading-snug">{desc}</div>
     </div>
   );
 }

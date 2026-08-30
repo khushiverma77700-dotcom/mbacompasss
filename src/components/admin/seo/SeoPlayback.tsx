@@ -160,7 +160,7 @@ export default function SeoPlayback() {
               {s}×
             </Button>
           ))}
-          <Badge variant="outline" className="ml-auto font-mono text-[11px]">
+          <Badge variant="outline" className="ml-auto font-mono text-xs">
             {frame ? fmtDate(frame.date) : "—"} · day {fmtInt(cursor + 1, "0")}/{fmtInt(series.length, "0")}
           </Badge>
         </div>
@@ -191,7 +191,7 @@ export default function SeoPlayback() {
               <div className="font-mono text-xl font-semibold tabular-nums text-emerald-700">
                 <FxCounter value={s.value} replay={cursor} duration={m.intensity > 0 ? 350 : 1} format={s.fmt} />
               </div>
-              <div className="text-[11px] text-muted-foreground">{s.label}</div>
+              <div className="text-xs text-muted-foreground">{s.label}</div>
             </motion.div>
           ))}
         </div>

@@ -48,7 +48,7 @@ export default function StudentOrders() {
                 <div className="text-right">
                   <div className="text-xs text-muted-foreground">Total</div>
                   <div className="text-lg font-bold text-sky-700">₹{Number(o.final_amount).toFixed(0)}</div>
-                  <div className={`text-[10px] mt-1 inline-block px-2 py-0.5 rounded-full ${o.status === "paid" ? "bg-green-100 text-green-700" : o.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
+                  <div className={`text-xs mt-1 inline-block px-2 py-0.5 rounded-full ${o.status === "paid" ? "bg-green-100 text-green-700" : o.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
                     {o.status?.toUpperCase()}
                   </div>
                 </div>

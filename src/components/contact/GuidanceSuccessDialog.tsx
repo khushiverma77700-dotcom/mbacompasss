@@ -87,7 +87,7 @@ const GuidanceSuccessDialog = ({
                 <span className="flex items-center gap-1 text-xs font-semibold text-foreground">
                   {tool.title} <ArrowRight className="w-3 h-3 text-primary" />
                 </span>
-                <span className="block text-[11px] leading-tight text-muted-foreground mt-0.5 line-clamp-2">
+                <span className="block text-xs leading-tight text-muted-foreground mt-0.5 line-clamp-2">
                   {tool.description}
                 </span>
               </span>

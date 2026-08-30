@@ -49,7 +49,7 @@ const HomeSalaryInsights = () => (
                     ₹{b.avg} L avg · ₹{b.top} L top
                   </span>
                 </div>
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">{b.schools}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">{b.schools}</p>
                 <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-sky-50">
                   <div
                     className="absolute inset-y-0 left-0 rounded-full bg-primary/15"

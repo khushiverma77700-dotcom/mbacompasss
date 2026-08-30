@@ -119,7 +119,7 @@ export default function AdminFormulas() {
     <div className="space-y-6 p-4 md:p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-sky-700">
             <Sigma className="h-3 w-3" /> Quant Formula Book
           </div>
           <h1 className="font-heading mt-1 text-2xl font-bold text-slate-900">Formula Book — Admin</h1>
@@ -170,7 +170,7 @@ export default function AdminFormulas() {
                     <td className="p-3 capitalize text-slate-600">{f.topic_slug?.replace(/-/g, " ")}</td>
                     <td className="p-3"><Badge variant="outline">{f.difficulty}</Badge></td>
                     <td className="p-3">{f.importance}</td>
-                    <td className="p-3"><div className="flex flex-wrap gap-1">{(f.exam_tags || []).slice(0, 4).map((e: string) => <Badge key={e} className="bg-sky-100 text-[10px] text-sky-700">{e}</Badge>)}</div></td>
+                    <td className="p-3"><div className="flex flex-wrap gap-1">{(f.exam_tags || []).slice(0, 4).map((e: string) => <Badge key={e} className="bg-sky-100 text-xs text-sky-700">{e}</Badge>)}</div></td>
                     <td className="p-3"><Switch checked={f.published} onCheckedChange={() => togglePublish(f)} /></td>
                     <td className="p-3 text-right">
                       <Button size="sm" variant="ghost" onClick={() => setEditing(f)}>Edit</Button>
@@ -254,9 +254,9 @@ export default function AdminFormulas() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="truncate font-semibold text-slate-900">{t.name}</div>
-                        <div className="truncate text-[11px] text-slate-500">{t.slug}</div>
+                        <div className="truncate text-xs text-slate-500">{t.slug}</div>
                       </div>
-                      <Badge variant="outline" className="shrink-0 border-sky-200 text-[10px] text-sky-700">{topicCount} formulas</Badge>
+                      <Badge variant="outline" className="shrink-0 border-sky-200 text-xs text-sky-700">{topicCount} formulas</Badge>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <Button

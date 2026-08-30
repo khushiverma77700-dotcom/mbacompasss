@@ -425,7 +425,7 @@ const AdminArticles = () => {
                       <Badge className={`border-none text-xs ${seoScore >= 3 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : seoScore >= 2 ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}`}>{seoScore}/4</Badge>
                     </TableCell>
                     <TableCell>{a.featured ? "⭐" : "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(a.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(a.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(a.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-xs">{new Date(a.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" asChild><a href={`/article/${a.slug}`} target="_blank"><Eye className="w-4 h-4" /></a></Button>
                       <RefreshContentButton entityType="article" entityId={a.id} entityName={a.title} />

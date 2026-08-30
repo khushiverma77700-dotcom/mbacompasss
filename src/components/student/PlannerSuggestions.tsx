@@ -181,15 +181,15 @@ export default function PlannerSuggestions({ existingTitles, onAdded }: Props) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-semibold truncate">{s.title}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{s.hint}</div>
+                  <div className="text-xs text-muted-foreground truncate">{s.hint}</div>
                 </div>
               </div>
               <div className="flex gap-1.5 mt-2">
-                <Button size="sm" variant="outline" className="h-7 px-2 text-[11px] flex-1" onClick={() => addAsTask(s)}>
+                <Button size="sm" variant="outline" className="h-7 px-2 text-xs flex-1" onClick={() => addAsTask(s)}>
                   <Plus className="h-3 w-3 mr-1" /> Add
                 </Button>
                 <Link to={s.to} className="flex-1">
-                  <Button size="sm" className="h-7 px-2 text-[11px] w-full bg-sky-600 hover:bg-sky-700">
+                  <Button size="sm" className="h-7 px-2 text-xs w-full bg-sky-600 hover:bg-sky-700">
                     {s.cta} <ArrowRight className="h-3 w-3 ml-1" />
                   </Button>
                 </Link>

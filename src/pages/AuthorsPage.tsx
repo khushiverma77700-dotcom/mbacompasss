@@ -84,7 +84,7 @@ const AuthorsPage = () => {
                         {a.expertise.slice(0, 6).map((e) => (
                           <span
                             key={e}
-                            className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"
+                            className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"
                           >
                             {e}
                           </span>

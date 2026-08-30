@@ -549,12 +549,12 @@ export default function AdminMetaValidator() {
                           {c.ok ? (
                             <div className="inline-flex flex-col items-center gap-0.5">
                               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                              <span className="text-[10px] text-emerald-700">{c.detail}</span>
+                              <span className="text-xs text-emerald-700">{c.detail}</span>
                             </div>
                           ) : (
                             <div className="inline-flex flex-col items-center gap-0.5">
                               <AlertTriangle className="w-4 h-4 text-amber-600" />
-                              <span className="text-[10px] text-amber-700">{c.detail}</span>
+                              <span className="text-xs text-amber-700">{c.detail}</span>
                             </div>
                           )}
                         </TableCell>
@@ -661,7 +661,7 @@ export default function AdminMetaValidator() {
                         <div className="flex flex-wrap gap-1">
                           <span className="font-semibold">Keywords:</span>
                           {f.keywords.map((k: string, ki: number) => (
-                            <Badge key={ki} variant="outline" className="text-[10px] py-0 px-1.5">{k}</Badge>
+                            <Badge key={ki} variant="outline" className="text-xs py-0 px-1.5">{k}</Badge>
                           ))}
                         </div>
                       )}

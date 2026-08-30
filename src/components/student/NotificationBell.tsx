@@ -47,7 +47,7 @@ export default function NotificationBell() {
     <Link to="/student/notifications" className="relative p-2 rounded-md hover:bg-sky-50" aria-label="Notifications">
       <Bell className="h-5 w-5 text-gray-700" />
       {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center">
           {count > 99 ? "99+" : count}
         </span>
       )}

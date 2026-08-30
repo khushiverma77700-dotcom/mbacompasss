@@ -60,7 +60,7 @@ export default function StudentBottomNav() {
                 onTouchStart={() => preloadStudentRoute(tab.to)}
                 onMouseEnter={() => preloadStudentRoute(tab.to)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 py-2 mx-0.5 rounded-xl text-[10px] font-semibold transition-all duration-200",
+                  "relative flex flex-col items-center justify-center gap-1 py-2 mx-0.5 rounded-xl text-xs font-semibold transition-all duration-200",
                   isActive
                     ? "text-white bg-gradient-to-br from-sky-500 to-blue-600 shadow-md shadow-sky-500/30"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
@@ -70,7 +70,7 @@ export default function StudentBottomNav() {
                   <Icon className={cn("h-[18px] w-[18px] transition-transform", isActive && "scale-110")} />
                   {badge > 0 && (
                     <span className={cn(
-                      "absolute -top-1.5 -right-2 inline-flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-full text-[9px] font-bold ring-2",
+                      "absolute -top-1.5 -right-2 inline-flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-full text-xs font-bold ring-2",
                       isActive
                         ? "bg-white text-rose-600 ring-sky-500"
                         : "bg-rose-500 text-white ring-card"

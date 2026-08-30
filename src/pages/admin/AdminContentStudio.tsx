@@ -842,7 +842,7 @@ const AdminContentStudio = () => {
                           </CardHeader>
                           <CardContent className="grid md:grid-cols-2 gap-3 pt-0">
                             <div className="rounded border border-rose-500/30 bg-rose-500/5 p-3">
-                              <div className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 mb-1">Current</div>
+                              <div className="text-xs uppercase font-bold text-rose-700 dark:text-rose-400 mb-1">Current</div>
                               {html ? (
                                 <div className="ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(before, { entityName }) }} />
                               ) : (
@@ -850,7 +850,7 @@ const AdminContentStudio = () => {
                               )}
                             </div>
                             <div className="rounded border border-emerald-500/30 bg-emerald-500/5 p-3">
-                              <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 mb-1">Refreshed</div>
+                              <div className="text-xs uppercase font-bold text-emerald-700 dark:text-emerald-400 mb-1">Refreshed</div>
                               {html ? (
                                 <div className="ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(after, { entityName }) }} />
                               ) : (

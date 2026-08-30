@@ -171,7 +171,7 @@ const ForgotPasswordPage = () => {
               <Button className="w-full h-11" onClick={handleSendOtp} disabled={otpSending || phone.length !== 10}>
                 {otpSending ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP…</>) : "Send OTP"}
               </Button>
-              <p className="text-[11px] text-muted-foreground text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 Signed up with Google? Use the same mobile you provided during onboarding to set a password.
               </p>
             </>

@@ -129,7 +129,7 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="text-3xl font-bold leading-none">{p.pct}%</div>
-              <div className="text-[10px] uppercase tracking-wider text-white/80 mt-1">complete</div>
+              <div className="text-xs uppercase tracking-wider text-white/80 mt-1">complete</div>
             </div>
             {!p.isComplete && (
               <div className="absolute -top-1 -right-1 bg-white text-sky-600 rounded-full p-1.5 shadow-lg animate-bounce">
@@ -183,7 +183,7 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
 
       {/* Control bar — Cancel / Pause / Resume / Edit */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-white border-b border-sky-100">
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="text-xs">
           Status: {isCancelled ? "Cancelled" : isPaused ? "Paused" : p.isComplete ? "Done" : "Running"}
         </Badge>
         <div className="flex-1" />
@@ -350,11 +350,11 @@ function SectionHealthRow({ job: j }: { job: SectionJob }) {
               <div className="text-sm font-semibold truncate text-slate-900 flex items-center gap-2" title={j.section_name}>
                 {j.section_name}
                 {isStalled && (
-                  <Badge className="h-4 px-1.5 text-[10px] bg-amber-500 hover:bg-amber-500 text-white">Stuck</Badge>
+                  <Badge className="h-4 px-1.5 text-xs bg-amber-500 hover:bg-amber-500 text-white">Stuck</Badge>
                 )}
               </div>
-              <div className="text-[11px] text-slate-500 flex items-center gap-2">
-                <Badge variant="outline" className="h-4 px-1.5 text-[10px]">{j.section_code}</Badge>
+              <div className="text-xs text-slate-500 flex items-center gap-2">
+                <Badge variant="outline" className="h-4 px-1.5 text-xs">{j.section_code}</Badge>
                 {isActive && j.current_step && <span className="truncate">{j.current_step}</span>}
                 {isFailed && j.error_message && <span className="text-rose-600 truncate" title={j.error_message}>{j.error_message}</span>}
               </div>
@@ -362,7 +362,7 @@ function SectionHealthRow({ job: j }: { job: SectionJob }) {
             <div className="text-right shrink-0 flex items-center gap-2">
               <div>
                 <div className="text-sm font-bold text-slate-900 tabular-nums">{j.questions_done}/{j.total_questions}</div>
-                <div className="text-[10px] text-slate-500">{sectionPct}%</div>
+                <div className="text-xs text-slate-500">{sectionPct}%</div>
               </div>
               {canRetry && (
                 <RetryButton jobId={j.id} sectionName={j.section_name} />
@@ -386,12 +386,12 @@ function SectionHealthRow({ job: j }: { job: SectionJob }) {
             </div>
           </div>
           {/* Diagnostic mini-row */}
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
             <MiniChip icon={<ShieldCheck className="w-3 h-3" />} label={`${j.questions_done} produced`} tone="ok" />
             {dups > 0 && <MiniChip icon={<Copy className="w-3 h-3" />} label={`${dups} duplicates rejected`} tone="info" />}
             {(j.attempts || 0) > 1 && <MiniChip icon={<RotateCcw className="w-3 h-3" />} label={`${j.attempts} attempts`} />}
             {(isDone || isFailed) && j.final_reason && (
-              <span className="text-[10px] text-slate-600 italic truncate max-w-full" title={j.final_reason}>
+              <span className="text-xs text-slate-600 italic truncate max-w-full" title={j.final_reason}>
                 {j.final_reason}
               </span>
             )}
@@ -434,7 +434,7 @@ function DiagnosticsPanel({
             <AlertTriangle className="w-3.5 h-3.5" />
             Last failed hard / extreme run — {failedHard.section_name}
           </div>
-          <div className="mt-1 text-[11px] text-rose-700 leading-snug">
+          <div className="mt-1 text-xs text-rose-700 leading-snug">
             {failedHard.final_reason || failedHard.error_message || `Saved ${failedHard.questions_done}/${failedHard.total_questions}.`}
           </div>
         </div>
@@ -445,7 +445,7 @@ function DiagnosticsPanel({
           <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
             <BarChart3 className="w-3.5 h-3.5" /> Top duplicate reasons
           </div>
-          <Badge variant="outline" className="h-5 text-[10px]">{grandTotal} total</Badge>
+          <Badge variant="outline" className="h-5 text-xs">{grandTotal} total</Badge>
         </div>
         <div className="p-2 space-y-1.5">
           {grandTotal === 0 ? (
@@ -456,10 +456,10 @@ function DiagnosticsPanel({
               return (
                 <div key={r.key} className="px-2 py-1.5">
                   <div className="flex items-baseline justify-between gap-2">
-                    <div className="text-[12px] font-medium text-slate-800">{r.label}</div>
-                    <div className="text-[11px] tabular-nums text-slate-500">{r.count} ({pct}%)</div>
+                    <div className="text-xs font-medium text-slate-800">{r.label}</div>
+                    <div className="text-xs tabular-nums text-slate-500">{r.count} ({pct}%)</div>
                   </div>
-                  <div className="text-[10px] text-slate-500 mb-1">{r.desc}</div>
+                  <div className="text-xs text-slate-500 mb-1">{r.desc}</div>
                   <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                     <div
                       className={`h-full rounded-full ${r.bar}`}
@@ -493,7 +493,7 @@ function QueuePanel({
   return (
     <div className="space-y-3">
       <div>
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
           Worker queue (last 24 hours)
         </div>
         <div className="grid grid-cols-5 gap-2">
@@ -501,7 +501,7 @@ function QueuePanel({
         </div>
       </div>
       <div>
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
           This run only
         </div>
         <div className="grid grid-cols-5 gap-2">
@@ -530,7 +530,7 @@ function QueueCell({ label, value, tone, icon }: {
   };
   return (
     <div className={`rounded-lg border px-2 py-2 ${map[tone]}`}>
-      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+      <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide opacity-80">
         {icon}{label}
       </div>
       <div className="text-lg font-bold tabular-nums leading-tight">{value}</div>
@@ -552,7 +552,7 @@ function MiniChip({ icon, label, tone }: { icon: React.ReactNode; label: string;
 
 function EmptyHint({ text }: { text: string }) {
   return (
-    <div className="text-[12px] text-slate-500 italic px-2 py-3 text-center bg-slate-50/60 rounded-lg border border-dashed border-slate-200">
+    <div className="text-xs text-slate-500 italic px-2 py-3 text-center bg-slate-50/60 rounded-lg border border-dashed border-slate-200">
       {text}
     </div>
   );
@@ -563,7 +563,7 @@ function Chip({ icon, label, tone }: { icon: React.ReactNode; label: string; ton
     ? "bg-rose-500/30 border-rose-200/40"
     : "bg-white/15 border-white/25";
   return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full border ${cls} backdrop-blur-sm`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${cls} backdrop-blur-sm`}>
       {icon}{label}
     </span>
   );
@@ -580,7 +580,7 @@ function Stat({ label, value, tone }: { label: string; value: number | string; t
     tone === "danger" ? "bg-rose-50 border-rose-100" : "bg-white border-slate-200";
   return (
     <div className={`px-3 py-2 rounded-lg border ${bg}`}>
-      <div className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold">{label}</div>
+      <div className="text-xs text-slate-500 uppercase tracking-wide font-semibold">{label}</div>
       <div className={`text-base font-bold tabular-nums ${color}`}>{value}</div>
     </div>
   );
@@ -661,12 +661,12 @@ function TelemetryPanel({
           <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5" /> AI request latency
           </div>
-          <div className="text-[10px] text-slate-500">
+          <div className="text-xs text-slate-500">
             avg {tel.avgLatencyMs}ms · p50 {tel.p50LatencyMs}ms · p95 {tel.p95LatencyMs}ms
           </div>
         </div>
         <Sparkline data={tel.latencySparkline} color="hsl(213 94% 50%)" height={42} />
-        <div className="text-[10px] text-slate-500 mt-1">
+        <div className="text-xs text-slate-500 mt-1">
           Last {tel.latencySparkline.length} OpenAI batch calls (ms each).
         </div>
       </div>
@@ -677,13 +677,13 @@ function TelemetryPanel({
           <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
             <Server className="w-3.5 h-3.5" /> Server activity heatmap (last 60 seconds)
           </div>
-          <div className="text-[10px] text-slate-500 flex items-center gap-1">
+          <div className="text-xs text-slate-500 flex items-center gap-1">
             <Flame className="w-3 h-3" /> brighter = more concurrent AI calls finishing
           </div>
         </div>
         <Heatmap data={tel.heatmapPerSec} />
         <div className="mt-3">
-          <div className="text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
+          <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
             <BarChart3 className="w-3 h-3" /> Calls per 5-second bucket (last 5 minutes)
           </div>
           <Sparkline data={tel.callsSparkline} color="hsl(160 84% 39%)" height={36} />
@@ -696,7 +696,7 @@ function TelemetryPanel({
           <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
             <Brain className="w-3.5 h-3.5" /> Model usage
           </div>
-          <Badge variant="outline" className="h-5 text-[10px]">{tel.modelBreakdown.length} model{tel.modelBreakdown.length === 1 ? "" : "s"}</Badge>
+          <Badge variant="outline" className="h-5 text-xs">{tel.modelBreakdown.length} model{tel.modelBreakdown.length === 1 ? "" : "s"}</Badge>
         </div>
         <div className="p-2 space-y-1.5">
           {tel.modelBreakdown.length === 0 ? (
@@ -706,11 +706,11 @@ function TelemetryPanel({
             return (
               <div key={m.model} className="px-2 py-1.5">
                 <div className="flex items-baseline justify-between gap-2">
-                  <div className="text-[12px] font-medium text-slate-800 flex items-center gap-1.5">
+                  <div className="text-xs font-medium text-slate-800 flex items-center gap-1.5">
                     <Cpu className="w-3 h-3 text-sky-600" />
                     {modelLabel(m.model)}
                   </div>
-                  <div className="text-[11px] tabular-nums text-slate-500">
+                  <div className="text-xs tabular-nums text-slate-500">
                     {m.calls} calls · {m.tokens.toLocaleString()} tok · ${m.costUsd.toFixed(4)}
                   </div>
                 </div>
@@ -731,7 +731,7 @@ function TelemetryPanel({
           </div>
           <ul className="space-y-1 max-h-32 overflow-y-auto">
             {tel.logs.filter((l) => l.status === "error").slice(0, 8).map((l) => (
-              <li key={l.id} className="text-[11px] text-rose-700 flex items-start gap-1.5">
+              <li key={l.id} className="text-xs text-rose-700 flex items-start gap-1.5">
                 <XCircle className="w-3 h-3 mt-0.5 shrink-0" />
                 <span className="font-mono truncate" title={l.error_message || ""}>
                   {new Date(l.created_at).toLocaleTimeString()} · {l.error_message || "error"}
@@ -762,18 +762,18 @@ function BigMetric({
   };
   return (
     <div className={`rounded-lg border bg-gradient-to-br p-2.5 ${map[tone]}`}>
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide font-semibold opacity-80">
+      <div className="flex items-center gap-1 text-xs uppercase tracking-wide font-semibold opacity-80">
         {icon}{label}
       </div>
       <div className="text-base font-bold tabular-nums leading-tight mt-0.5">{value}</div>
-      {sub && <div className="text-[10px] opacity-70 mt-0.5 truncate" title={sub}>{sub}</div>}
+      {sub && <div className="text-xs opacity-70 mt-0.5 truncate" title={sub}>{sub}</div>}
     </div>
   );
 }
 
 function Sparkline({ data, color = "hsl(var(--primary))", height = 36 }: { data: number[]; color?: string; height?: number }) {
   if (!data.length) {
-    return <div className="text-[10px] text-slate-400 italic text-center py-2">awaiting data…</div>;
+    return <div className="text-xs text-slate-400 italic text-center py-2">awaiting data…</div>;
   }
   const max = Math.max(1, ...data);
   const w = 100;

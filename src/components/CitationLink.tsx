@@ -101,7 +101,7 @@ export const CitationLink = ({ source, year, href, entityName, entityWebsite, cl
       target="_blank"
       rel="noopener noreferrer nofollow"
       className={
-        "inline-flex items-center gap-0.5 rounded-full border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10 hover:underline align-middle ml-1 " +
+        "inline-flex items-center gap-0.5 rounded-full border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/10 hover:underline align-middle ml-1 " +
         (className || "")
       }
       title={`View ${label} source`}

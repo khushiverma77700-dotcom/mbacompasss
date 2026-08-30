@@ -477,7 +477,7 @@ function QueueDashboard() {
                           </Badge>
                           {it.paused && <Badge className="ml-1 bg-amber-100 text-amber-900">paused</Badge>}
                           {it.error_message && (
-                            <div className="text-[11px] text-rose-700 mt-1 max-w-[240px]">{it.error_message}</div>
+                            <div className="text-xs text-rose-700 mt-1 max-w-[240px]">{it.error_message}</div>
                           )}
                         </td>
                         <td className="p-2 text-right whitespace-nowrap">

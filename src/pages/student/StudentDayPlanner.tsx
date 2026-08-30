@@ -403,7 +403,7 @@ export default function StudentDayPlanner() {
           <TabsTrigger value="yesterday">
             Yesterday
             {yesterdayTasks.filter((t) => t.status !== "completed").length > 0 && (
-              <Badge variant="secondary" className="ml-1.5 h-4 text-[10px]">
+              <Badge variant="secondary" className="ml-1.5 h-4 text-xs">
                 {yesterdayTasks.filter((t) => t.status !== "completed").length} missed
               </Badge>
             )}
@@ -411,7 +411,7 @@ export default function StudentDayPlanner() {
           <TabsTrigger value="today">
             Today
             {pendingToday > 0 && (
-              <Badge className="ml-1.5 h-4 text-[10px] bg-sky-500 text-white">{pendingToday}</Badge>
+              <Badge className="ml-1.5 h-4 text-xs bg-sky-500 text-white">{pendingToday}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="tomorrow">Tomorrow ({tomorrowTasks.length})</TabsTrigger>
@@ -544,7 +544,7 @@ export default function StudentDayPlanner() {
               <ArrowRightCircle className="h-4 w-4 text-sky-600" />
               <div className="text-left">
                 <div className="text-sm font-medium">Move to next day</div>
-                <div className="text-[11px] text-muted-foreground">Push this task forward by one day</div>
+                <div className="text-xs text-muted-foreground">Push this task forward by one day</div>
               </div>
             </Button>
             <Button
@@ -555,7 +555,7 @@ export default function StudentDayPlanner() {
               <SkipForward className="h-4 w-4 text-amber-600" />
               <div className="text-left">
                 <div className="text-sm font-medium">Skip just this day</div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   {skipDialog?.series_id ? "Removes this occurrence; future ones still appear" : "Removes this single task"}
                 </div>
               </div>
@@ -569,7 +569,7 @@ export default function StudentDayPlanner() {
                 <Trash2 className="h-4 w-4" />
                 <div className="text-left">
                   <div className="text-sm font-medium">End the whole series</div>
-                  <div className="text-[11px] text-muted-foreground">Removes this and all future occurrences</div>
+                  <div className="text-xs text-muted-foreground">Removes this and all future occurrences</div>
                 </div>
               </Button>
             )}
@@ -591,9 +591,9 @@ export default function StudentDayPlanner() {
 function Kpi({ icon, label, value, hint, progress }: { icon: React.ReactNode; label: string; value: string; hint?: string; progress?: number }) {
   return (
     <Card className="p-3">
-      <div className="flex items-center gap-2">{icon}<div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div></div>
+      <div className="flex items-center gap-2">{icon}<div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div></div>
       <div className="text-xl font-bold mt-1">{value}</div>
-      {hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}
+      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
       {typeof progress === "number" && <Progress value={progress} className="h-1 mt-2" />}
     </Card>
   );
@@ -682,28 +682,28 @@ function TaskCard({ task, onStatus, onEdit, onDelete, onSkip, extraActions, comp
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-            <Badge variant="outline" className="text-[10px] gap-1" style={{ borderColor: cat.color, color: cat.color }}>
+            <Badge variant="outline" className="text-xs gap-1" style={{ borderColor: cat.color, color: cat.color }}>
               <Icon className="h-3 w-3" /> {cat.label}
             </Badge>
-            <Badge variant="outline" className={`text-[10px] ${PRIORITY_COLOR[task.priority] ?? ""}`}>{task.priority}</Badge>
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Badge variant="outline" className={`text-xs ${PRIORITY_COLOR[task.priority] ?? ""}`}>{task.priority}</Badge>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               <CalendarDays className="h-3 w-3" /> {fmtDate(task.scheduled_date)}
               {task.scheduled_start_time && ` · ${task.scheduled_start_time.slice(0, 5)}`}
             </span>
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Clock className="h-3 w-3" /> {task.estimated_minutes}m
             </span>
             {recLabel && (
-              <Badge variant="secondary" className="text-[10px] gap-1">
+              <Badge variant="secondary" className="text-xs gap-1">
                 <Repeat className="h-3 w-3" /> {recLabel}
               </Badge>
             )}
             {task.rolled_over_from && task.rolled_over_from !== task.scheduled_date && (
-              <Badge variant="secondary" className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
+              <Badge variant="secondary" className="text-xs bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
                 Rolled over
               </Badge>
             )}
-            {inProgress && <Badge variant="outline" className="text-[10px] bg-sky-100 text-sky-700 border-sky-200">In progress</Badge>}
+            {inProgress && <Badge variant="outline" className="text-xs bg-sky-100 text-sky-700 border-sky-200">In progress</Badge>}
           </div>
 
           {!done && !compact && (
@@ -744,7 +744,7 @@ function GuideStep({ n, icon, title, desc }: { n: number; icon: React.ReactNode;
         <div className="h-10 w-10 rounded-xl bg-sky-50 ring-1 ring-sky-100 flex items-center justify-center">
           {icon}
         </div>
-        <span className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-sky-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+        <span className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-sky-600 text-white text-xs font-bold flex items-center justify-center ring-2 ring-white">
           {n}
         </span>
       </div>

@@ -43,28 +43,28 @@ const AnswerBlock = ({ question, answer, facts, updatedAt, className = "" }: Ans
       </div>
 
       {question && (
-        <p className="text-[13px] font-semibold text-foreground/70 mb-1.5">{question}</p>
+        <p className="text-sm font-semibold text-foreground/70 mb-1.5">{question}</p>
       )}
 
       {answer && (
-        <p className="text-[15px] sm:text-base leading-relaxed text-foreground m-0">{answer}</p>
+        <p className="text-sm sm:text-base leading-relaxed text-foreground m-0">{answer}</p>
       )}
 
       {cleanFacts.length > 0 && (
         <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 border-t border-border pt-4">
           {cleanFacts.map((f) => (
             <div key={f.label} className="flex flex-wrap items-baseline gap-x-2">
-              <dt className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {f.label}
               </dt>
-              <dd className="text-[14px] font-medium text-foreground m-0">{f.value}</dd>
+              <dd className="text-sm font-medium text-foreground m-0">{f.value}</dd>
             </div>
           ))}
         </dl>
       )}
 
       {updatedAt && (
-        <p className="mt-4 mb-0 text-[12px] text-muted-foreground">
+        <p className="mt-4 mb-0 text-xs text-muted-foreground">
           Last updated{" "}
           <time dateTime={new Date(updatedAt).toISOString()}>
             {new Date(updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}

@@ -846,7 +846,7 @@ export const IntelligenceOverview = ({ status }: { status: LiveStatus | null }) 
           <div key={c.label} className="rounded-lg border p-3">
             <div className="text-xl font-semibold">{c.value}</div>
             <div className="text-xs font-medium">{c.label}</div>
-            <div className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">{c.src}</div>
+            <div className="mt-0.5 text-xs uppercase tracking-wide text-muted-foreground">{c.src}</div>
           </div>
         ))}
       </div>
