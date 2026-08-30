@@ -413,16 +413,54 @@ export default function SeoPerformanceReport() {
         <CardContent className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {[
             { k: "Days of data", v: fmtInt(overall?.days, "0") },
-            { k: "Total clicks", v: <Counter value={overall?.total_clicks ?? null} format={(v) => fmtInt(v)} /> },
-            { k: "Total impressions", v: <Counter value={overall?.total_impressions ?? null} format={(v) => fmtInt(v)} /> },
-            { k: "Avg clicks / day", v: fmtDec(overall?.avg_daily_clicks, 1) },
+            { k: "Total clicks", v: <Counter value={overall?.total_clicks ?? null} format={(v) => fmtInt(v)} replay={tick} /> },
+            { k: "Total impressions", v: <Counter value={overall?.total_impressions ?? null} format={(v) => fmtInt(v)} replay={tick} /> },
+            { k: "Avg clicks / day", v: <Counter value={overall?.avg_daily_clicks ?? null} format={(v) => fmtDec(v, 1)} replay={tick} /> },
             { k: "Avg CTR", v: fmtRatioPct(overall?.avg_ctr) },
-            { k: "Avg position", v: fmtDec(overall?.avg_position, 2) },
+            { k: "Avg position", v: <Counter value={overall?.avg_position ?? null} format={(v) => fmtDec(v, 2)} replay={tick} /> },
           ].map((s) => (
             <div key={s.k} className="rounded-lg border bg-muted/20 p-3">
               <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.k}</div>
               <div className="mt-1 font-mono text-lg font-semibold tabular-nums">{s.v}</div>
             </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* is the average increasing? animated like-for-like comparison */}
+      <Card className="relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0"><Scanline active={live} /></div>
+        <CardHeader className="pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-base">Is the average increasing?</CardTitle>
+              <CardDescription>
+                Last 7 recorded days against the previous 7 days and the all-time daily average. Bars re-animate on every refresh.
+              </CardDescription>
+            </div>
+            <Badge
+              className={`text-[11px] ${
+                verdict.tone === "up" ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                : verdict.tone === "down" ? "bg-red-100 text-red-800 hover:bg-red-100"
+                : verdict.tone === "mixed" ? "bg-amber-100 text-amber-900 hover:bg-amber-100"
+                : "bg-muted text-muted-foreground hover:bg-muted"}`}
+            >
+              {verdict.text}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          {cmpWindows.map((c) => (
+            <VersusBar
+              key={c.label}
+              label={c.label}
+              current={c.current}
+              previous={c.previous}
+              allTime={c.allTime}
+              lowerIsBetter={c.lower}
+              digits={c.digits}
+              replay={tick}
+            />
           ))}
         </CardContent>
       </Card>
