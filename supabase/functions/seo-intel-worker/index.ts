@@ -769,6 +769,32 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
   }
 
   await markSource(sb, "openai", { configured: true, status: "connected", last_sync_at: nowIso() });
+
+  // Stamp the rotation so these pages move to the back of the queue and the
+  // next batch is a different slice of the site.
+  const analysedPaths = pages.map((p: any) => p.path);
+  for (const p of pages as any[]) {
+    await sb.from("seo_intel_pages").update({
+      last_analyzed_at: nowIso(),
+      analysis_round: Number(p.analysis_round ?? 0) + 1,
+      updated_at: nowIso(),
+    }).eq("path", p.path);
+  }
+
+  // Keep sweeping: how much of the site has never been analysed yet?
+  const { count: pending } = await sb.from("seo_intel_pages")
+    .select("path", { count: "exact", head: true })
+    .is("last_analyzed_at", null);
+  if ((pending ?? 0) > 0) {
+    await enqueue(sb, {
+      job_type: "analyze",
+      payload: { rotate: true },
+      priority: 2,
+      dedupe_key: `analyze:rotate:${nowIso().slice(0, 16)}`,
+      triggered_by: "worker",
+    }).catch(() => {});
+  }
+
   if (inserted) {
     await notify(sb, {
       kind: "recommendations", severity: "info",
@@ -778,8 +804,9 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
   }
   return {
     records: inserted,
-    detail: `${inserted} new, ${updated} refreshed, ${suppressed} suppressed for weak evidence`,
+    detail: `${analysedPaths.length} page(s) analysed · ${inserted} new, ${updated} refreshed, ${suppressed} suppressed · ${pending ?? 0} page(s) still awaiting first pass`,
   };
+
 
 }
 
