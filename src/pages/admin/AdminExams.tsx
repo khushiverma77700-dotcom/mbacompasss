@@ -272,7 +272,7 @@ const AdminExams = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Exams</h1>
         <div className="flex gap-2 flex-wrap">
           <ExportExcelButton
-            rows={sortedExams}
+            rows={filteredExams}
             fileName="exams"
             sheetName="Exams"
             columns={EXAM_EXPORT_COLUMNS}
@@ -286,8 +286,19 @@ const AdminExams = () => {
         <ExamAIGenerator onPublished={fetchExams} />
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search exams by name, full name or slug..."
+        filters={[]}
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`Showing ${filteredExams.length} of ${exams.length} exams`}
+      />
 
-      <Card>
+      <Card className="mt-4">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -302,7 +313,7 @@ const AdminExams = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedExams.map((e, idx) => (
+              {filteredExams.map((e, idx) => (
                 <TableRow key={e.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{e.name}</TableCell>
