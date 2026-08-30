@@ -322,7 +322,7 @@ async function runCrawlPages(ctx: Ctx) {
       job_type: "analyze",
       payload: { paths: newPaths.slice(0, 40), reason: "new_pages" },
       priority: 1,
-      dedupe_key: `analyze:new:${today()}:${cursor}`,
+      dedupe_key: `analyze:new:${today()}:${srcIdx}:${offset}`,
       triggered_by: "worker",
     }).catch(() => {});
     await notify(sb, {
@@ -332,13 +332,12 @@ async function runCrawlPages(ctx: Ctx) {
     }).catch(() => {});
   }
 
-  const next = cursor + limit;
-  if (next < all.length) {
+  if (!sweepDone) {
     await enqueue(sb, {
       job_type: "crawl_pages",
-      payload: { cursor: next },
+      payload: { src: nextSrc, offset: nextOffset },
       priority: 3,
-      dedupe_key: `crawl_pages:cursor:${next}`,
+      dedupe_key: `crawl_pages:${nextSrc}:${nextOffset}`,
       triggered_by: "worker",
     }).catch(() => {});
   } else {
@@ -353,8 +352,10 @@ async function runCrawlPages(ctx: Ctx) {
   }
   return {
     records: rows.length,
-    detail: `pages ${cursor}-${cursor + rows.length} of ${all.length}${newPaths.length ? ` · ${newPaths.length} new` : ""}`,
+    detail: `${label}${newPaths.length ? ` · ${newPaths.length} new` : ""}`,
   };
+}
+
 }
 
 
