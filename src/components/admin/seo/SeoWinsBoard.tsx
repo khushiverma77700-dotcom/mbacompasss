@@ -217,83 +217,103 @@ export default function SeoWinsBoard() {
         </Card>
       )}
 
-      {/* rotating spotlight */}
-      <Card className="relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0"><Scanline active={live} /></div>
-        <CardContent className="p-4">
-          {highlights.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No improvement recorded yet in the current comparison window. As soon as a page gains clicks, CTR or ranking
-              against its previous window it appears here automatically.
-            </p>
-          ) : (
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                <Flame className="h-4 w-4" />
-              </span>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${spotlight}-${tick}`}
-                  initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -16 }}
-                  transition={{ duration: 0.35 }}
-                  className="min-w-0"
-                >
-                  <div className="truncate text-sm font-semibold">{highlights[spotlight % highlights.length]?.title}</div>
-                  <div className="truncate text-xs text-emerald-700">{highlights[spotlight % highlights.length]?.detail}</div>
-                </motion.div>
-              </AnimatePresence>
-              <div className="ml-auto flex items-center gap-1">
-                {highlights.slice(0, 12).map((_, i) => (
-                  <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === spotlight % highlights.length ? "bg-emerald-600" : "bg-muted"}`} />
-                ))}
-              </div>
+      {/* win feed + counters + win-rate gauge in one compact deck */}
+      <div className="grid gap-3 xl:grid-cols-[1fr_auto]">
+        <div className="space-y-3">
+          {/* rotating spotlight — three wins visible, cycling */}
+          <Card className="relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0"><Scanline active={live} /></div>
+            <CardContent className="p-3">
+              {highlights.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No improvement recorded yet in the current comparison window. As soon as a page gains clicks, CTR or
+                  ranking against its previous window it appears here automatically.
+                </p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                    <Flame className="h-4 w-4" />
+                    {live && <span className="absolute inset-0 animate-ping rounded-lg bg-amber-300/50" />}
+                  </span>
+                  <div className="grid min-w-0 flex-1 gap-1.5 sm:grid-cols-3">
+                    {[0, 1, 2].map((off) => {
+                      const h = highlights[(spotlight + off) % highlights.length];
+                      if (!h) return null;
+                      return (
+                        <AnimatePresence mode="wait" key={off}>
+                          <motion.div
+                            key={`${h.title}-${off}-${spotlight}`}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.3, delay: off * 0.06 }}
+                            className="min-w-0 rounded-md border bg-muted/20 px-2.5 py-1.5"
+                          >
+                            <div className="truncate text-xs font-semibold">{h.title}</div>
+                            <div className="truncate text-[11px] text-emerald-700">{h.detail || "improving"}</div>
+                          </motion.div>
+                        </AnimatePresence>
+                      );
+                    })}
+                  </div>
+                  <div className="hidden shrink-0 items-center gap-1 sm:flex">
+                    {highlights.slice(0, 10).map((_, i) => (
+                      <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === spotlight % Math.min(10, highlights.length) ? "bg-emerald-600" : "bg-muted"}`} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* headline win counters */}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <BurstOnIncrease value={totals.clicks_gained ?? null}>
+              <HeroStat icon={MousePointerClick} live={live} replay={tick} label="Extra clicks won" value={totals.clicks_gained ?? null}
+                sub={`Across ${fmtInt(totals.page_wins, "0")} improving pages`} />
+            </BurstOnIncrease>
+            <BurstOnIncrease value={totals.positions_gained ?? null}>
+              <HeroStat icon={Gauge} live={live} replay={tick} label="Ranking places gained" value={totals.positions_gained ?? null}
+                sub={`${fmtInt(totals.keyword_wins, "0")} keywords moved up`} />
+            </BurstOnIncrease>
+            <BurstOnIncrease value={totals.top10_entries ?? null}>
+              <HeroStat icon={Award} live={live} replay={tick} label="New page-1 keywords" value={totals.top10_entries ?? null}
+                sub={`${fmtInt(totals.top3_entries, "0")} of them reached the top 3`} />
+            </BurstOnIncrease>
+            <BurstOnIncrease value={totals.site_wins ?? null}>
+              <HeroStat icon={Sparkles} live={live} replay={tick} label="Winning site metrics" value={totals.site_wins ?? null}
+                sub={`Out of ${fmtInt(totals.site_checks, "0")} site-level checks`} />
+            </BurstOnIncrease>
+          </div>
+        </div>
+
+        {/* win rate gauge + per-metric chips */}
+        <Card className="xl:w-[320px]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Win rate right now</CardTitle>
+            <CardDescription className="text-xs">Site-level comparisons currently beating their baseline.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-center gap-4">
+              <GaugeRing pct={winRate} value={`${winRate}%`} label="Checks improving" tone="emerald" live={live} size={116} />
+              <RadarSweep blips={Math.max(4, Math.min(20, pageWins.length))} active={live} size={104} />
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* headline win counters */}
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <HeroStat icon={MousePointerClick} live={live} replay={tick} label="Extra clicks won" value={totals.clicks_gained ?? null}
-          sub={`Across ${fmtInt(totals.page_wins, "0")} improving pages`} />
-        <HeroStat icon={Gauge} live={live} replay={tick} label="Ranking places gained" value={totals.positions_gained ?? null}
-          sub={`${fmtInt(totals.keyword_wins, "0")} keywords moved up`} />
-        <HeroStat icon={Award} live={live} replay={tick} label="New page-1 keywords" value={totals.top10_entries ?? null}
-          sub={`${fmtInt(totals.top3_entries, "0")} of them reached the top 3`} />
-        <HeroStat icon={Sparkles} live={live} replay={tick} label="Winning site metrics" value={totals.site_wins ?? null}
-          sub={`Out of ${fmtInt(totals.site_checks, "0")} site-level checks`} />
-      </div>
-
-      {/* win rate meter */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Overall win rate right now</CardTitle>
-          <CardDescription>Share of site-level comparisons that are currently better than their baseline.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-3xl font-semibold tabular-nums text-emerald-700">
-              <Counter value={winRate} format={(v) => `${fmtInt(v, "0")}%`} replay={tick} />
-            </span>
-            <span className="text-xs text-muted-foreground">
+            <div className="text-center text-xs text-muted-foreground">
               {fmtInt(totals.site_wins, "0")} of {fmtInt(totals.site_checks, "0")} checks improving
-            </span>
-          </div>
-          <Progress value={winRate} className="h-2" />
-          <div className="flex flex-wrap gap-2 pt-1">
-            {siteWins.map((w, i) => (
-              <motion.div key={`${w.label}-${tick}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Badge variant="outline" className="gap-1 text-[10px]">
-                  {safeText(w.label)}
-                  <WinPill improved={!!w.improved} pct={w.pct} unitLabel="" />
-                </Badge>
-              </motion.div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {siteWins.map((w, i) => (
+                <motion.div key={`${w.label}-${tick}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                  <Badge variant="outline" className="gap-1 text-[10px]">
+                    {safeText(w.label)}
+                    <WinPill improved={!!w.improved} pct={w.pct} unitLabel="" />
+                  </Badge>
+                </motion.div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* animated comparison chart */}
       <Card>
