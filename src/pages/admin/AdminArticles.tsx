@@ -25,6 +25,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 
 const categories = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
 const statusOptions = [
