@@ -194,7 +194,7 @@ const HeroSection = () => {
           </div>
 
           {/* Heading — editorial: bold sans + italic serif accent */}
-          <h1 className="font-heading text-2xl leading-[1.05] sm:text-4xl md:text-4xl lg:text-4xl font-extrabold text-primary-foreground mb-3 tracking-[-0.025em]">
+          <h1 className="font-heading text-[clamp(1.9rem,6.5vw,3.75rem)] leading-[1.06] font-extrabold text-primary-foreground mb-3 tracking-[-0.025em]">
             Find the Best{" "}
             <span className="font-editorial italic font-normal bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-200 bg-clip-text text-transparent tracking-tight">
               MBA Coaching
