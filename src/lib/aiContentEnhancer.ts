@@ -264,6 +264,12 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
   // 4. Collapse double spaces that the strips above may have created.
   out = out.replace(/[ \t]{2,}/g, " ");
 
+  // 4b. AEO/GEO structural pass — single H1 per page, no skipped heading
+  //     levels, header-scoped tables, lazy images with alt, and a marked
+  //     lead answer paragraph. See src/lib/contentStructure.ts.
+  out = normalizeContentStructure(out);
+
   // 5. Sanitize to prevent stored XSS — strip <script>, on* handlers, javascript: URLs, etc.
-  return DOMPurify.sanitize(out, { ADD_ATTR: ["target", "rel"] });
+  return DOMPurify.sanitize(out, { ADD_ATTR: ["target", "rel", "scope", "data-answer", "loading", "decoding"] });
 }
+
