@@ -10107,6 +10107,7 @@ export type Database = {
           max_retries: number
           payload: Json
           priority: number
+          progress: Json
           records_processed: number
           retry_count: number
           scheduled_for: string
@@ -10128,6 +10129,7 @@ export type Database = {
           max_retries?: number
           payload?: Json
           priority?: number
+          progress?: Json
           records_processed?: number
           retry_count?: number
           scheduled_for?: string
@@ -10149,6 +10151,7 @@ export type Database = {
           max_retries?: number
           payload?: Json
           priority?: number
+          progress?: Json
           records_processed?: number
           retry_count?: number
           scheduled_for?: string
@@ -10170,6 +10173,8 @@ export type Database = {
           current_position: number | null
           difficulty: number | null
           difficulty_source: string | null
+          discovered_from: string | null
+          discovery_source: string | null
           first_seen_on: string | null
           id: string
           impressions: number | null
@@ -10199,6 +10204,8 @@ export type Database = {
           current_position?: number | null
           difficulty?: number | null
           difficulty_source?: string | null
+          discovered_from?: string | null
+          discovery_source?: string | null
           first_seen_on?: string | null
           id?: string
           impressions?: number | null
@@ -10228,6 +10235,8 @@ export type Database = {
           current_position?: number | null
           difficulty?: number | null
           difficulty_source?: string | null
+          discovered_from?: string | null
+          discovery_source?: string | null
           first_seen_on?: string | null
           id?: string
           impressions?: number | null
@@ -10967,6 +10976,7 @@ export type Database = {
         Row: {
           active_days: number[]
           auto_apply_safe: boolean
+          autonomous_mode: boolean
           created_at: string
           cron_token: string
           engine_enabled: boolean
@@ -10993,6 +11003,7 @@ export type Database = {
         Insert: {
           active_days?: number[]
           auto_apply_safe?: boolean
+          autonomous_mode?: boolean
           created_at?: string
           cron_token?: string
           engine_enabled?: boolean
@@ -11019,6 +11030,7 @@ export type Database = {
         Update: {
           active_days?: number[]
           auto_apply_safe?: boolean
+          autonomous_mode?: boolean
           created_at?: string
           cron_token?: string
           engine_enabled?: boolean
@@ -14495,6 +14507,7 @@ export type Database = {
           max_retries: number
           payload: Json
           priority: number
+          progress: Json
           records_processed: number
           retry_count: number
           scheduled_for: string
