@@ -10539,6 +10539,10 @@ export type Database = {
       }
       seo_intel_pages: {
         Row: {
+          aeo_checked_at: string | null
+          aeo_failed: Json | null
+          aeo_grade: string | null
+          aeo_score: number | null
           analysis_round: number
           avg_position: number | null
           category: string | null
@@ -10603,6 +10607,10 @@ export type Database = {
           word_count: number | null
         }
         Insert: {
+          aeo_checked_at?: string | null
+          aeo_failed?: Json | null
+          aeo_grade?: string | null
+          aeo_score?: number | null
           analysis_round?: number
           avg_position?: number | null
           category?: string | null
@@ -10667,6 +10675,10 @@ export type Database = {
           word_count?: number | null
         }
         Update: {
+          aeo_checked_at?: string | null
+          aeo_failed?: Json | null
+          aeo_grade?: string | null
+          aeo_score?: number | null
           analysis_round?: number
           avg_position?: number | null
           category?: string | null
