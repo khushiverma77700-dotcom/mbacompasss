@@ -325,11 +325,22 @@ const ExamDetailPage = () => {
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-6 lg:gap-8 min-w-0">
           <main className="space-y-5 md:space-y-6 min-w-0">
+            {/* Answer-first block — feeds the page's speakable/QA schema. */}
+            {(answerText || answerFacts.length > 0) && (
+              <AnswerBlock
+                question={`What is ${titleLabel}?`}
+                answer={answerText}
+                facts={answerFacts}
+                updatedAt={dbExam?.updated_at || null}
+              />
+            )}
+
             {hasModuleContent(sections.quick_answer) && (
               <div id="quick-answer" className="scroll-mt-24">
                 <QuickAnswerBox items={sections.quick_answer!} title={`${titleLabel} at a glance`} />
               </div>
             )}
+
 
             {hasModuleContent(sections.highlights) && (
               <Section id="highlights" title={`${examName} highlights`}>
