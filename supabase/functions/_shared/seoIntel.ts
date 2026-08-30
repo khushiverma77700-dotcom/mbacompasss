@@ -103,7 +103,11 @@ export const JOB_LABELS: Record<string, string> = {
   impact_attribution: "SEO change impact attribution",
   knowledge_graph: "SEO knowledge graph",
   strategy: "AI SEO growth strategy",
+  keyword_discovery: "Keyword research & discovery",
+  competitor_deep: "Competitor page teardown (Firecrawl + AI)",
+  auto_apply: "Autonomous safe-change execution",
 };
+
 
 
 export interface IntelSettings {
