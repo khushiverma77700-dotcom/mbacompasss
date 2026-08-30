@@ -9062,6 +9062,33 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_gsc_daily: {
+        Row: {
+          avg_position: number | null
+          captured_on: string
+          clicks: number
+          ctr: number | null
+          impressions: number
+          synced_at: string
+        }
+        Insert: {
+          avg_position?: number | null
+          captured_on: string
+          clicks?: number
+          ctr?: number | null
+          impressions?: number
+          synced_at?: string
+        }
+        Update: {
+          avg_position?: number | null
+          captured_on?: string
+          clicks?: number
+          ctr?: number | null
+          impressions?: number
+          synced_at?: string
+        }
+        Relationships: []
+      }
       seo_health_page_results: {
         Row: {
           canonical_url: string | null
