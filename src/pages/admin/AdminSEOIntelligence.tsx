@@ -41,6 +41,7 @@ import SeoResearchConsole from "@/components/admin/seo/SeoResearchConsole";
 import SeoLiveAnalytics from "@/components/admin/seo/SeoLiveAnalytics";
 import SeoPerformanceReport from "@/components/admin/seo/SeoPerformanceReport";
 import SeoWinsBoard from "@/components/admin/seo/SeoWinsBoard";
+import SeoCommandDeck from "@/components/admin/seo/SeoCommandDeck";
 import { asText } from "@/components/admin/seo/SeoLiveOps";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -384,6 +385,10 @@ const AdminSEOIntelligence = () => {
           </div>
         </CardContent>
       </Card>
+
+      <ErrorBoundary>
+        <SeoCommandDeck />
+      </ErrorBoundary>
 
       {intel && <AdvancedHeaderStat intel={intel} />}
 
