@@ -96,6 +96,9 @@ export async function gscPageMetrics(
     ctr: Number(r.ctr ?? 0),
     position: r.position != null ? Number(r.position) : null,
   }));
+}
+
+
 
 /** Search Analytics query grouped by date — one row per day (actual GSC data). */
 export async function gscDailyMetrics(
