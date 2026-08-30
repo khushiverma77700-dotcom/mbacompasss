@@ -39,6 +39,7 @@ import {
 } from "@/components/admin/seo/SeoLiveOps";
 import SeoResearchConsole from "@/components/admin/seo/SeoResearchConsole";
 import SeoLiveAnalytics from "@/components/admin/seo/SeoLiveAnalytics";
+import SeoPerformanceReport from "@/components/admin/seo/SeoPerformanceReport";
 import { asText } from "@/components/admin/seo/SeoLiveOps";
 
 /* ── Navigation: 23 views grouped into 6 plain-language sections ── */
