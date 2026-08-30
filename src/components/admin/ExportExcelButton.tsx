@@ -58,15 +58,18 @@ const ExportExcelButton = ({
     try {
       const XLSX = await import("xlsx");
 
-      const cols: [string, string][] =
-        columns && columns.length > 0
-          ? columns
-          : Array.from(
-              rows.reduce((set: Set<string>, r: any) => {
-                Object.keys(r || {}).forEach((k) => set.add(k));
-                return set;
-              }, new Set<string>())
-            ).map((k) => [k, k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())] as [string, string]);
+      let cols: [string, string][];
+      if (columns && columns.length > 0) {
+        cols = columns;
+      } else {
+        const keys = new Set<string>();
+        rows.forEach((r: any) => Object.keys(r || {}).forEach((k) => keys.add(k)));
+        cols = Array.from(keys).map((k: string) => [
+          k,
+          k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        ]);
+      }
+
 
       const aoa: any[][] = [
         ["S.No", ...cols.map(([, header]) => header)],
