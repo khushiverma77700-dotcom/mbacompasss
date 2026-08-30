@@ -70,18 +70,17 @@ const useLivePhase = (busy: boolean) => {
   return phase;
 };
 
-/** Count-up animated number so every refresh is visibly "live". */
-const Counter = ({ value, format }: { value: number | null; format: (v: number | null) => string }) => {
+/** Count-up animated number so every refresh is visibly "live". Bump `replay` to re-run the count. */
+const Counter = ({ value, format, replay = 0 }: { value: number | null; format: (v: number | null) => string; replay?: number }) => {
   const [shown, setShown] = useState<number | null>(value);
-  const prev = useRef<number | null>(value);
+  const prev = useRef<number | null>(0);
   useEffect(() => {
     if (value === null) { setShown(null); prev.current = null; return; }
     const from = prev.current ?? 0;
     const to = value;
     prev.current = value;
-    if (from === to) { setShown(to); return; }
     const start = performance.now();
-    const dur = 700;
+    const dur = 900;
     let raf = 0;
     const tick = (now: number) => {
       const p = Math.min(1, (now - start) / dur);
@@ -90,8 +89,61 @@ const Counter = ({ value, format }: { value: number | null; format: (v: number |
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [value]);
+  }, [value, replay]);
   return <>{format(shown)}</>;
+};
+
+/** Animated horizontal comparison bar — makes "is the average rising?" obvious. */
+const VersusBar = ({
+  label, current, previous, allTime, lowerIsBetter, digits = 2, replay,
+}: {
+  label: string; current: number | null; previous: number | null; allTime: number | null;
+  lowerIsBetter?: boolean; digits?: number; replay: number;
+}) => {
+  const vals = [current, previous, allTime].filter((v) => v != null).map((v) => Math.abs(Number(v)));
+  const max = vals.length ? Math.max(...vals) : 1;
+  const improved = current != null && previous != null
+    ? (lowerIsBetter ? current < previous : current > previous) : null;
+  const pct = previous ? Number((((Number(current) - Number(previous)) / Math.abs(Number(previous))) * 100).toFixed(2)) : null;
+  const rows = [
+    { k: "Last 7 days", v: current, tone: improved === false ? "bg-red-500" : "bg-emerald-500" },
+    { k: "Previous 7 days", v: previous, tone: "bg-slate-300" },
+    { k: "All-time average", v: allTime, tone: "bg-sky-500" },
+  ];
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+        {improved === null ? (
+          <Badge variant="outline" className="text-[10px]">No baseline yet</Badge>
+        ) : (
+          <Badge className={`gap-1 text-[10px] ${improved ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-red-100 text-red-800 hover:bg-red-100"}`}>
+            {improved ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {improved ? "Improving" : "Declining"} · {fmtPct(pct)}
+          </Badge>
+        )}
+      </div>
+      <div className="mt-2 space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.k} className="flex items-center gap-2">
+            <span className="w-28 shrink-0 text-[11px] text-muted-foreground">{r.k}</span>
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+              <motion.div
+                key={`${label}-${r.k}-${replay}`}
+                className={`h-full rounded-full ${r.tone}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${r.v == null ? 0 : Math.min(100, (Math.abs(Number(r.v)) / max) * 100)}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              />
+            </div>
+            <span className="w-16 shrink-0 text-right font-mono text-[11px] tabular-nums">
+              <Counter value={r.v ?? null} format={(v) => fmtDec(v, digits)} replay={replay} />
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const DirBadge = ({ cmp, unitLabel }: { cmp: Cmp | undefined; unitLabel: string }) => {
@@ -156,6 +208,7 @@ export default function SeoPerformanceReport() {
   const [seriesValidation, setSeriesValidation] = useState<ValidationResult>({ ok: true, issues: [] });
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [newData, setNewData] = useState(false);
+  const [tick, setTick] = useState(0);
   const phase = useLivePhase(busy || loading);
 
   const load = useCallback(async (force = false) => {
@@ -178,6 +231,7 @@ export default function SeoPerformanceReport() {
         return data;
       });
       setLastUpdated(new Date().toISOString());
+      setTick((t) => t + 1);
       setErr(null);
     } catch (e) {
       setErr((e as Error).message);
@@ -189,7 +243,7 @@ export default function SeoPerformanceReport() {
 
   useEffect(() => {
     load(false);
-    const t = setInterval(() => load(false), 60_000);
+    const t = setInterval(() => load(false), 30_000);
     return () => clearInterval(t);
   }, [load]);
 
@@ -203,6 +257,33 @@ export default function SeoPerformanceReport() {
     ...d,
     date: safeText(d?.date, ""),
   }));
+
+  // Client-side 7-day windows straight off the real daily rows, so the panel can
+  // answer "is the average going up or down?" without another request.
+  const winAvg = (key: string, n: number, offset = 0) => {
+    const end = series.length - offset;
+    const slice = series.slice(Math.max(0, end - n), Math.max(0, end))
+      .filter((d) => d?.[key] != null).map((d) => Number(d[key]));
+    if (!slice.length) return null;
+    return Number((slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(4));
+  };
+  const cmpWindows = [
+    { label: "Clicks per day", key: "clicks", digits: 1, lower: false, allTime: overall?.avg_daily_clicks ?? null },
+    { label: "Impressions per day", key: "impressions", digits: 0, lower: false, allTime: overall?.avg_daily_impressions ?? null },
+    { label: "CTR %", key: "ctr", digits: 2, lower: false, allTime: overall?.avg_ctr == null ? null : Number((Number(overall.avg_ctr) * 100).toFixed(2)) },
+    { label: "Average position", key: "avg_position", digits: 2, lower: true, allTime: overall?.avg_position ?? null },
+  ].map((c) => ({ ...c, current: winAvg(c.key, 7), previous: winAvg(c.key, 7, 7) }));
+
+  const improvingCount = cmpWindows.filter((c) =>
+    c.current != null && c.previous != null && (c.lower ? c.current < c.previous : c.current > c.previous)).length;
+  const measurable = cmpWindows.filter((c) => c.current != null && c.previous != null).length;
+  const verdict = !measurable
+    ? { text: "Not enough recorded days to compare averages yet.", tone: "muted" as const }
+    : improvingCount >= 3
+      ? { text: `Averages are rising — ${improvingCount} of ${measurable} key metrics are better than last week.`, tone: "up" as const }
+      : improvingCount === 0
+        ? { text: `Averages are falling — none of the ${measurable} key metrics beat last week.`, tone: "down" as const }
+        : { text: `Mixed movement — ${improvingCount} of ${measurable} key metrics are better than last week.`, tone: "mixed" as const };
 
   return (
     <div className="space-y-4">
@@ -332,16 +413,54 @@ export default function SeoPerformanceReport() {
         <CardContent className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {[
             { k: "Days of data", v: fmtInt(overall?.days, "0") },
-            { k: "Total clicks", v: <Counter value={overall?.total_clicks ?? null} format={(v) => fmtInt(v)} /> },
-            { k: "Total impressions", v: <Counter value={overall?.total_impressions ?? null} format={(v) => fmtInt(v)} /> },
-            { k: "Avg clicks / day", v: fmtDec(overall?.avg_daily_clicks, 1) },
+            { k: "Total clicks", v: <Counter value={overall?.total_clicks ?? null} format={(v) => fmtInt(v)} replay={tick} /> },
+            { k: "Total impressions", v: <Counter value={overall?.total_impressions ?? null} format={(v) => fmtInt(v)} replay={tick} /> },
+            { k: "Avg clicks / day", v: <Counter value={overall?.avg_daily_clicks ?? null} format={(v) => fmtDec(v, 1)} replay={tick} /> },
             { k: "Avg CTR", v: fmtRatioPct(overall?.avg_ctr) },
-            { k: "Avg position", v: fmtDec(overall?.avg_position, 2) },
+            { k: "Avg position", v: <Counter value={overall?.avg_position ?? null} format={(v) => fmtDec(v, 2)} replay={tick} /> },
           ].map((s) => (
             <div key={s.k} className="rounded-lg border bg-muted/20 p-3">
               <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.k}</div>
               <div className="mt-1 font-mono text-lg font-semibold tabular-nums">{s.v}</div>
             </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* is the average increasing? animated like-for-like comparison */}
+      <Card className="relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0"><Scanline active={live} /></div>
+        <CardHeader className="pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-base">Is the average increasing?</CardTitle>
+              <CardDescription>
+                Last 7 recorded days against the previous 7 days and the all-time daily average. Bars re-animate on every refresh.
+              </CardDescription>
+            </div>
+            <Badge
+              className={`text-[11px] ${
+                verdict.tone === "up" ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                : verdict.tone === "down" ? "bg-red-100 text-red-800 hover:bg-red-100"
+                : verdict.tone === "mixed" ? "bg-amber-100 text-amber-900 hover:bg-amber-100"
+                : "bg-muted text-muted-foreground hover:bg-muted"}`}
+            >
+              {verdict.text}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          {cmpWindows.map((c) => (
+            <VersusBar
+              key={c.label}
+              label={c.label}
+              current={c.current}
+              previous={c.previous}
+              allTime={c.allTime}
+              lowerIsBetter={c.lower}
+              digits={c.digits}
+              replay={tick}
+            />
           ))}
         </CardContent>
       </Card>
@@ -371,7 +490,7 @@ export default function SeoPerformanceReport() {
               No Search Console daily data stored yet. Use “Re-sync now” once the connection is live.
             </div>
           ) : (
-            <div className="h-[360px]">
+            <div className="h-[360px]" key={`chart-${chart}-${tick}`}>
               <ResponsiveContainer width="100%" height="100%">
                 {chart === "clicks" ? (
                   <ComposedChart data={chartData}>

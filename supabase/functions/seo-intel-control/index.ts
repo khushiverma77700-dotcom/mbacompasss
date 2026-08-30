@@ -404,6 +404,198 @@ Deno.serve(async (req) => {
         });
       }
 
+      /* ─────────── wins board: every real improvement, nothing invented ─────────── */
+      case "wins_report": {
+        // 1. Site-level windows straight out of the stored Search Console history.
+        const dailyRows: any[] = [];
+        for (let from = 0; from < 20000; from += 1000) {
+          const { data, error } = await sb.from("seo_gsc_daily")
+            .select("captured_on, clicks, impressions, ctr, avg_position")
+            .order("captured_on", { ascending: true }).range(from, from + 999);
+          if (error) break;
+          dailyRows.push(...(data ?? []));
+          if ((data ?? []).length < 1000) break;
+        }
+        const mean = (v: number[]) => (v.length ? Number((v.reduce((a, b) => a + b, 0) / v.length).toFixed(4)) : null);
+        const win = (label: string, cur: number | null, prev: number | null, unit: string, lowerIsBetter = false) => {
+          if (cur == null || prev == null || !prev) return null;
+          const delta = Number((cur - prev).toFixed(4));
+          const pct = Number(((delta / Math.abs(prev)) * 100).toFixed(2));
+          const improved = lowerIsBetter ? delta < 0 : delta > 0;
+          return { label, current: cur, previous: prev, delta, pct, unit, improved, lower_is_better: lowerIsBetter };
+        };
+        const windowStats = (n: number, offset = 0) => {
+          const end = dailyRows.length - offset;
+          const slice = dailyRows.slice(Math.max(0, end - n), Math.max(0, end));
+          return {
+            days: slice.length,
+            clicks: mean(slice.map((d) => Number(d.clicks ?? 0))),
+            impressions: mean(slice.map((d) => Number(d.impressions ?? 0))),
+            ctr: mean(slice.filter((d) => d.ctr != null).map((d) => Number(d.ctr))),
+            avg_position: mean(slice.filter((d) => d.avg_position != null).map((d) => Number(d.avg_position))),
+            total_clicks: slice.reduce((a, b) => a + Number(b.clicks ?? 0), 0),
+            total_impressions: slice.reduce((a, b) => a + Number(b.impressions ?? 0), 0),
+          };
+        };
+        const last7 = windowStats(7);
+        const prev7 = windowStats(7, 7);
+        const last28 = windowStats(28);
+        const prev28 = windowStats(28, 28);
+        const allTime = {
+          days: dailyRows.length,
+          clicks: mean(dailyRows.map((d) => Number(d.clicks ?? 0))),
+          impressions: mean(dailyRows.map((d) => Number(d.impressions ?? 0))),
+          ctr: mean(dailyRows.filter((d) => d.ctr != null).map((d) => Number(d.ctr))),
+          avg_position: mean(dailyRows.filter((d) => d.avg_position != null).map((d) => Number(d.avg_position))),
+        };
+
+        const siteWins = [
+          win("Daily clicks (7d vs previous 7d)", last7.clicks, prev7.clicks, "clicks"),
+          win("CTR (7d vs previous 7d)", last7.ctr, prev7.ctr, "ratio"),
+          win("Average ranking (7d vs previous 7d)", last7.avg_position, prev7.avg_position, "position", true),
+          win("Impressions (7d vs previous 7d)", last7.impressions, prev7.impressions, "impressions"),
+          win("Daily clicks (28d vs previous 28d)", last28.clicks, prev28.clicks, "clicks"),
+          win("CTR (28d vs previous 28d)", last28.ctr, prev28.ctr, "ratio"),
+          win("Average ranking (28d vs previous 28d)", last28.avg_position, prev28.avg_position, "position", true),
+          win("Clicks vs all-time daily average", last7.clicks, allTime.clicks, "clicks"),
+          win("CTR vs all-time average", last7.ctr, allTime.ctr, "ratio"),
+          win("Ranking vs all-time average", last7.avg_position, allTime.avg_position, "position", true),
+        ].filter(Boolean);
+
+        // 2. Page-level wins (stored current vs previous window per page).
+        const pageRows: any[] = [];
+        for (let from = 0; from < 12000; from += 1000) {
+          const { data, error } = await sb.from("seo_intel_pages")
+            .select("path, title, clicks, prev_clicks, impressions, prev_impressions, ctr, avg_position, prev_avg_position, position_change, perf_updated_at, indexed_status")
+            .range(from, from + 999);
+          if (error) break;
+          pageRows.push(...(data ?? []));
+          if ((data ?? []).length < 1000) break;
+        }
+        const ratio = (num: number | null, den: number | null) =>
+          num == null || den == null || !den ? null : Number((Number(num) / Number(den)).toFixed(4));
+        const pageWins = pageRows.map((p) => {
+          const prevCtr = ratio(p.prev_clicks, p.prev_impressions);
+          const curCtr = p.ctr != null ? Number(p.ctr) : ratio(p.clicks, p.impressions);
+          const clickDelta = p.prev_clicks == null ? null : Number(p.clicks ?? 0) - Number(p.prev_clicks ?? 0);
+          const posDelta = p.prev_avg_position == null || p.avg_position == null
+            ? (p.position_change == null ? null : Number(p.position_change))
+            : Number((Number(p.prev_avg_position) - Number(p.avg_position)).toFixed(2));
+          const ctrDelta = prevCtr == null || curCtr == null ? null : Number((curCtr - prevCtr).toFixed(4));
+          const ctrPct = prevCtr && ctrDelta != null ? Number(((ctrDelta / prevCtr) * 100).toFixed(2)) : null;
+          const score =
+            (clickDelta && clickDelta > 0 ? clickDelta * 3 : 0) +
+            (posDelta && posDelta > 0 ? posDelta * 4 : 0) +
+            (ctrPct && ctrPct > 0 ? Math.min(ctrPct, 200) * 0.5 : 0);
+          const kinds: string[] = [];
+          if (clickDelta != null && clickDelta > 0) kinds.push("clicks");
+          if (posDelta != null && posDelta > 0) kinds.push("ranking");
+          if (ctrPct != null && ctrPct > 0) kinds.push("ctr");
+          return {
+            path: p.path, title: p.title ?? null,
+            clicks: Number(p.clicks ?? 0), prev_clicks: p.prev_clicks == null ? null : Number(p.prev_clicks),
+            impressions: Number(p.impressions ?? 0),
+            ctr: curCtr, prev_ctr: prevCtr, ctr_delta: ctrDelta, ctr_pct: ctrPct,
+            avg_position: p.avg_position == null ? null : Number(p.avg_position),
+            prev_avg_position: p.prev_avg_position == null ? null : Number(p.prev_avg_position),
+            position_gain: posDelta, click_delta: clickDelta,
+            indexed_status: p.indexed_status ?? null,
+            updated_at: p.perf_updated_at ?? null,
+            kinds, score: Number(score.toFixed(2)),
+          };
+        }).filter((p) => p.kinds.length > 0).sort((a, b) => b.score - a.score).slice(0, 60);
+
+        // 3. Keyword wins (ranking improvements + new page-1 entries).
+        const kwRows: any[] = [];
+        for (let from = 0; from < 12000; from += 1000) {
+          const { data, error } = await sb.from("seo_intel_keywords")
+            .select("keyword, locale, target_path, current_position, previous_position, position_change, best_position, clicks, impressions, ctr, search_volume, intent, last_checked_at")
+            .range(from, from + 999);
+          if (error) break;
+          kwRows.push(...(data ?? []));
+          if ((data ?? []).length < 1000) break;
+        }
+        const keywordWins = kwRows.map((k) => {
+          const cur = k.current_position == null ? null : Number(k.current_position);
+          const prev = k.previous_position == null ? null : Number(k.previous_position);
+          const gain = prev != null && cur != null ? Number((prev - cur).toFixed(2))
+            : (k.position_change == null ? null : Number(k.position_change));
+          const enteredTop10 = cur != null && cur <= 10 && prev != null && prev > 10;
+          const enteredTop3 = cur != null && cur <= 3 && prev != null && prev > 3;
+          const score = (gain && gain > 0 ? gain * 5 : 0)
+            + (enteredTop10 ? 40 : 0) + (enteredTop3 ? 60 : 0)
+            + Math.min(Number(k.search_volume ?? 0) / 100, 40);
+          return {
+            keyword: k.keyword, locale: k.locale, target_path: k.target_path ?? null,
+            current_position: cur, previous_position: prev, position_gain: gain,
+            best_position: k.best_position == null ? null : Number(k.best_position),
+            clicks: Number(k.clicks ?? 0), impressions: Number(k.impressions ?? 0),
+            ctr: k.ctr == null ? null : Number(k.ctr),
+            search_volume: k.search_volume == null ? null : Number(k.search_volume),
+            intent: k.intent ?? null, checked_at: k.last_checked_at ?? null,
+            entered_top10: enteredTop10, entered_top3: enteredTop3,
+            score: Number(score.toFixed(2)),
+          };
+        }).filter((k) => (k.position_gain != null && k.position_gain > 0) || k.entered_top10 || k.entered_top3)
+          .sort((a, b) => b.score - a.score).slice(0, 60);
+
+        // 4. Applied-change wins recorded by the engine.
+        const { data: outcomes } = await sb.from("seo_intel_rec_outcomes")
+          .select("category, change_type, implemented, succeeded, failed, inconclusive, avg_position_delta, avg_ctr_delta, avg_days_to_impact, updated_at")
+          .order("implemented", { ascending: false, nullsFirst: false }).limit(200);
+        const changeWins = (outcomes ?? []).filter((o: any) => {
+          const pos = o?.avg_position_delta == null ? null : Number(o.avg_position_delta);
+          const ctr = o?.avg_ctr_delta == null ? null : Number(o.avg_ctr_delta);
+          return Number(o?.succeeded ?? 0) > 0 || (pos != null && pos < 0) || (ctr != null && ctr > 0);
+        }).map((o: any) => ({
+          category: o.category, change_type: o.change_type,
+          implemented: Number(o.implemented ?? 0), succeeded: Number(o.succeeded ?? 0),
+          failed: Number(o.failed ?? 0), inconclusive: Number(o.inconclusive ?? 0),
+          avg_position_delta: o.avg_position_delta == null ? null : Number(o.avg_position_delta),
+          avg_ctr_delta: o.avg_ctr_delta == null ? null : Number(o.avg_ctr_delta),
+          avg_days_to_impact: o.avg_days_to_impact == null ? null : Number(o.avg_days_to_impact),
+          updated_at: o.updated_at ?? null,
+        })).slice(0, 40);
+
+        const totals = {
+          site_wins: siteWins.filter((w: any) => w.improved).length,
+          site_checks: siteWins.length,
+          page_wins: pageWins.length,
+          pages_tracked: pageRows.length,
+          keyword_wins: keywordWins.length,
+          keywords_tracked: kwRows.length,
+          change_wins: changeWins.length,
+          clicks_gained: pageWins.reduce((a, p) => a + Math.max(0, Number(p.click_delta ?? 0)), 0),
+          positions_gained: Number(keywordWins.reduce((a, k) => a + Math.max(0, Number(k.position_gain ?? 0)), 0).toFixed(1)),
+          top10_entries: keywordWins.filter((k) => k.entered_top10).length,
+          top3_entries: keywordWins.filter((k) => k.entered_top3).length,
+        };
+
+        // Compact comparison series for the animated versus-charts.
+        const compare = [
+          { metric: "Clicks / day", current: last7.clicks, previous: prev7.clicks, all_time: allTime.clicks, lower_is_better: false },
+          { metric: "Impressions / day", current: last7.impressions, previous: prev7.impressions, all_time: allTime.impressions, lower_is_better: false },
+          { metric: "CTR %", current: last7.ctr == null ? null : Number((last7.ctr * 100).toFixed(2)), previous: prev7.ctr == null ? null : Number((prev7.ctr * 100).toFixed(2)), all_time: allTime.ctr == null ? null : Number((allTime.ctr * 100).toFixed(2)), lower_is_better: false },
+          { metric: "Avg position", current: last7.avg_position, previous: prev7.avg_position, all_time: allTime.avg_position, lower_is_better: true },
+        ];
+
+        return json({
+          data_source: "gsc+engine",
+          data_label: dailyRows.length ? "actual" : "unavailable",
+          configured: gscConfigured(),
+          windows: { last7, prev7, last28, prev28, all_time: allTime },
+          compare,
+          site_wins: siteWins,
+          page_wins: pageWins,
+          keyword_wins: keywordWins,
+          change_wins: changeWins,
+          totals,
+          server_time: nowIso(),
+        });
+      }
+
+
+
       /* ─────────── live operations feed (polled by the dashboard) ─────────── */
       case "live_status": {
         const since24h = new Date(Date.now() - 864e5).toISOString();
