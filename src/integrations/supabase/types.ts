@@ -14068,6 +14068,13 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_table_row_estimates: {
+        Args: never
+        Returns: {
+          row_estimate: number
+          table_name: string
+        }[]
+      }
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
       award_quant_xp: {
         Args: { _activity_today?: boolean; _xp: number }
@@ -14466,6 +14473,13 @@ export type Database = {
       mirror_mock_question_to_personalized: {
         Args: { _question_id: string }
         Returns: undefined
+      }
+      mock_question_counts: {
+        Args: never
+        Returns: {
+          question_count: number
+          test_id: string
+        }[]
       }
       move_to_dlq: {
         Args: {
