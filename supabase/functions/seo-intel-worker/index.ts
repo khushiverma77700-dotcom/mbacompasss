@@ -200,17 +200,53 @@ async function runGscQueries(ctx: Ctx) {
 }
 
 /** On-page technical + content snapshot straight from our own content tables. */
+/**
+ * Full-site inventory: every CMS row from every silo source PLUS every public
+ * static route. Cached per invocation so a single crawl_pages job pages through
+ * one consistent snapshot.
+ */
+async function loadFullInventory(sb: any) {
+  const cms = await loadPages(sb);
+  const seen = new Set(cms.map((p) => p.path));
+  const statics = STATIC_ROUTES
+    .filter((r) => !seen.has(r.path))
+    .map((r) => ({
+      path: r.path,
+      name: null as string | null,
+      page_type: "static",
+      source_table: "static_routes",
+      source_id: r.path,
+      source_field: "",
+      keyword: null as string | null,
+      topic: null as string | null,
+      html: "",
+      text: "",
+      words: 0,
+    }));
+  return [...cms, ...statics];
+}
+
 async function runCrawlPages(ctx: Ctx) {
   const { sb, job } = ctx;
   const cursor = Number(job.payload?.cursor ?? 0);
   const limit = Number(ctx.settings.max_pages_per_run ?? 25) * 6; // DB reads are cheap
-  const all = await loadPages(sb);
+  const all = await loadFullInventory(sb);
   const slice = all.slice(cursor, cursor + limit);
 
-  const { data: perf } = await sb.from("seo_intel_pages")
-    .select("path, clicks, impressions, ctr, avg_position")
-    .in("path", slice.map((p) => p.path).slice(0, 500));
-  const perfMap = new Map((perf ?? []).map((p: any) => [p.path, p]));
+  const paths = slice.map((p) => p.path);
+  const known = new Set<string>();
+  const perfMap = new Map<string, any>();
+  // Chunked so a large slice never exceeds the URL length limit of `.in()`.
+  for (let i = 0; i < paths.length; i += 200) {
+    const { data: perf } = await sb.from("seo_intel_pages")
+      .select("path, clicks, impressions, ctr, avg_position")
+      .in("path", paths.slice(i, i + 200));
+    for (const row of perf ?? []) {
+      known.add(row.path);
+      perfMap.set(row.path, row);
+    }
+  }
+  const newPaths = paths.filter((p) => !known.has(p));
 
   const rows = slice.map((p) => {
     const html = p.html ?? "";
@@ -249,11 +285,33 @@ async function runCrawlPages(ctx: Ctx) {
       health_issues: health.issues,
       primary_keyword: p.keyword,
       last_crawl_at: nowIso(),
+      discovered_by: p.source_table === "static_routes" ? "static_routes" : p.source_table,
       data_sources: { onpage: "internal", label: "calculated" },
       updated_at: nowIso(),
     };
   });
   if (rows.length) await upsertRows(sb, "seo_intel_pages", rows, "path");
+
+  // Brand-new pages jump the queue: they get analysed (SEO/AEO/GEO) first.
+  if (newPaths.length) {
+    await logActivity(sb, {
+      event: `${newPaths.length} new page(s) discovered`,
+      detail: newPaths.slice(0, 12).join(", ") + (newPaths.length > 12 ? ` +${newPaths.length - 12} more` : ""),
+      level: "success", job_id: ctx.job.id, job_type: "crawl_pages", records: newPaths.length,
+    });
+    await enqueue(sb, {
+      job_type: "analyze",
+      payload: { paths: newPaths.slice(0, 40), reason: "new_pages" },
+      priority: 1,
+      dedupe_key: `analyze:new:${today()}:${cursor}`,
+      triggered_by: "worker",
+    }).catch(() => {});
+    await notify(sb, {
+      kind: "pages_discovered", severity: "info",
+      title: `${newPaths.length} new page(s) added to the SEO engine`,
+      body: `They are queued for SEO/AEO/GEO analysis right away: ${newPaths.slice(0, 5).join(", ")}`,
+    }).catch(() => {});
+  }
 
   const next = cursor + limit;
   if (next < all.length) {
@@ -264,9 +322,22 @@ async function runCrawlPages(ctx: Ctx) {
       dedupe_key: `crawl_pages:cursor:${next}`,
       triggered_by: "worker",
     }).catch(() => {});
+  } else {
+    // Inventory complete — start/continue the rotational optimisation sweep.
+    await enqueue(sb, {
+      job_type: "analyze",
+      payload: { rotate: true },
+      priority: 2,
+      dedupe_key: `analyze:rotate:${new Date().toISOString().slice(0, 13)}`,
+      triggered_by: "worker",
+    }).catch(() => {});
   }
-  return { records: rows.length, detail: `pages ${cursor}-${cursor + rows.length} of ${all.length}` };
+  return {
+    records: rows.length,
+    detail: `pages ${cursor}-${cursor + rows.length} of ${all.length}${newPaths.length ? ` · ${newPaths.length} new` : ""}`,
+  };
 }
+
 
 /** Semrush volume / difficulty / CPC / 12-month trend for tracked keywords. */
 async function runKeywordMetrics(ctx: Ctx) {
