@@ -1546,6 +1546,7 @@ export type Database = {
           created_at: string
           cutoff_info: Json | null
           description: string | null
+          description_short: string | null
           established: number | null
           exams_accepted: string[] | null
           faqs: Json | null
@@ -1594,6 +1595,7 @@ export type Database = {
           created_at?: string
           cutoff_info?: Json | null
           description?: string | null
+          description_short?: string | null
           established?: number | null
           exams_accepted?: string[] | null
           faqs?: Json | null
@@ -1642,6 +1644,7 @@ export type Database = {
           created_at?: string
           cutoff_info?: Json | null
           description?: string | null
+          description_short?: string | null
           established?: number | null
           exams_accepted?: string[] | null
           faqs?: Json | null
