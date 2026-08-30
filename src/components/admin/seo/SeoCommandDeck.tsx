@@ -235,7 +235,28 @@ export default function SeoCommandDeck() {
           </div>
         </div>
 
-        <TerminalStream lines={logLines} live={working} height={200} />
+        {/* realtime push ticker — the exact rows the engine just wrote */}
+        {m.intensity > 0 && rt.events.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <AnimatePresence initial={false}>
+              {rt.events.slice(0, 8).map((e) => (
+                <motion.span
+                  key={e.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: m.dur(0.25) }}
+                  className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-800"
+                >
+                  {e.type.toLowerCase()} · {e.table.replace("seo_intel_", "")}
+                </motion.span>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {m.heavy && <TerminalStream lines={logLines} live={working} height={200} />}
+
 
         {running.length > 0 && (
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
