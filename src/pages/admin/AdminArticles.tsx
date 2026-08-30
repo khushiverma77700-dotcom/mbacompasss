@@ -340,7 +340,34 @@ const AdminArticles = () => {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Blog Articles</h1>
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> New Article</Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <ExportExcelButton
+            rows={sortedArticles}
+            fileName="blog-articles"
+            sheetName="Articles"
+            label="Download Excel"
+            columns={[
+              ["title", "Title"],
+              ["slug", "Slug"],
+              ["category", "Category"],
+              ["status", "Status"],
+              ["author", "Author"],
+              ["featured", "Featured"],
+              ["published", "Published"],
+              ["meta_title", "Meta Title"],
+              ["meta_description", "Meta Description"],
+              ["h1_tag", "H1 Tag"],
+              ["primary_keyword", "Primary Keyword"],
+              ["funnel_stage", "Funnel Stage"],
+              ["priority", "Priority"],
+              ["keywords", "Keywords"],
+              ["created_at", "Created At"],
+              ["updated_at", "Updated At"],
+            ]}
+            className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
+          />
+          <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> New Article</Button>
+        </div>
       </div>
 
       <AdminFilterBar
