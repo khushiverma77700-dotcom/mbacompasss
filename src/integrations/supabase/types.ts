@@ -346,6 +346,7 @@ export type Database = {
           cluster_id: string | null
           comparison_id: string | null
           content: string | null
+          content_chars: number | null
           content_hash: string | null
           content_score: number | null
           created_at: string
@@ -378,6 +379,7 @@ export type Database = {
           cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_chars?: number | null
           content_hash?: string | null
           content_score?: number | null
           created_at?: string
@@ -410,6 +412,7 @@ export type Database = {
           cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_chars?: number | null
           content_hash?: string | null
           content_score?: number | null
           created_at?: string
