@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { fmtDec, fmtInt, fmtPct, fmtRatioPct, fmtWhen, agoText, safeText } from "@/lib/seoSafeRender";
 import { LiveDot, RawPayloadDrawer, Scanline } from "./SeoSafeUi";
+import { BurstOnIncrease, GaugeRing, RadarSweep } from "./SeoLiveFx";
 
 const PHASES = [
   "Reading Search Console windows…",
