@@ -14,6 +14,7 @@ import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
+import { buildWebPageSchema, buildBreadcrumbSchema, buildPageGraph } from "@/lib/aeoSchema";
 import { getCoachingListingSeo } from "@/lib/coachingSeoTemplates";
 import { canonicalUrl } from "@/lib/canonical";
 import PageKeywords from "@/components/PageKeywords";

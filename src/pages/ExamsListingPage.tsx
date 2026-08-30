@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
+import { buildWebPageSchema, buildBreadcrumbSchema, buildPageGraph } from "@/lib/aeoSchema";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import PageKeywords from "@/components/PageKeywords";
 import { canonicalUrl } from "@/lib/canonical";
