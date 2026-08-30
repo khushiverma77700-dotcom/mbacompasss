@@ -185,6 +185,10 @@ const Deferred = ({ height, rootMargin = "0px", id, children }: { height: number
 );
 
 const Index = () => {
+  useEffect(() => {
+    prefetchNextChunks();
+  }, []);
+
   return (
     <>
       <SEOHead
