@@ -231,6 +231,7 @@ export default function SeoPerformanceReport() {
         return data;
       });
       setLastUpdated(new Date().toISOString());
+      setTick((t) => t + 1);
       setErr(null);
     } catch (e) {
       setErr((e as Error).message);
@@ -242,7 +243,7 @@ export default function SeoPerformanceReport() {
 
   useEffect(() => {
     load(false);
-    const t = setInterval(() => load(false), 60_000);
+    const t = setInterval(() => load(false), 30_000);
     return () => clearInterval(t);
   }, [load]);
 
