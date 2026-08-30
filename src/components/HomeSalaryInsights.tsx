@@ -56,7 +56,7 @@ const HomeSalaryInsights = () => (
                     style={{ width: `${(b.top / MAX) * 100}%` }}
                   />
                   <div
-                    className="absolute inset-y-0 left-0 origin-left rounded-full bg-gradient-to-r from-primary to-sky-400 animate-[grow-x_1.1s_cubic-bezier(.22,1,.36,1)_both]"
+                    className="absolute inset-y-0 left-0 origin-left rounded-full bg-gradient-to-r from-primary to-sky-400 animate-grow-x"
                     style={{ width: `${(b.avg / MAX) * 100}%`, animationDelay: `${i * 90}ms` }}
                   />
                 </div>
