@@ -541,12 +541,21 @@ Deno.serve(async (req) => {
 
         // 4. Applied-change wins recorded by the engine.
         const { data: outcomes } = await sb.from("seo_intel_rec_outcomes")
-          .select("*").order("implemented", { ascending: false, nullsFirst: false }).limit(200);
+          .select("category, change_type, implemented, succeeded, failed, inconclusive, avg_position_delta, avg_ctr_delta, avg_days_to_impact, updated_at")
+          .order("implemented", { ascending: false, nullsFirst: false }).limit(200);
         const changeWins = (outcomes ?? []).filter((o: any) => {
-          const cd = Number(o?.clicks_after ?? 0) - Number(o?.clicks_before ?? 0);
-          const pd = Number(o?.position_before ?? 0) - Number(o?.position_after ?? 0);
-          return (Number.isFinite(cd) && cd > 0) || (Number.isFinite(pd) && pd > 0 && o?.position_before != null);
-        }).slice(0, 40);
+          const pos = o?.avg_position_delta == null ? null : Number(o.avg_position_delta);
+          const ctr = o?.avg_ctr_delta == null ? null : Number(o.avg_ctr_delta);
+          return Number(o?.succeeded ?? 0) > 0 || (pos != null && pos < 0) || (ctr != null && ctr > 0);
+        }).map((o: any) => ({
+          category: o.category, change_type: o.change_type,
+          implemented: Number(o.implemented ?? 0), succeeded: Number(o.succeeded ?? 0),
+          failed: Number(o.failed ?? 0), inconclusive: Number(o.inconclusive ?? 0),
+          avg_position_delta: o.avg_position_delta == null ? null : Number(o.avg_position_delta),
+          avg_ctr_delta: o.avg_ctr_delta == null ? null : Number(o.avg_ctr_delta),
+          avg_days_to_impact: o.avg_days_to_impact == null ? null : Number(o.avg_days_to_impact),
+          updated_at: o.updated_at ?? null,
+        })).slice(0, 40);
 
         const totals = {
           site_wins: siteWins.filter((w: any) => w.improved).length,
