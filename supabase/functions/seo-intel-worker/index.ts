@@ -203,37 +203,54 @@ async function runGscQueries(ctx: Ctx) {
 
 /** On-page technical + content snapshot straight from our own content tables. */
 /**
- * Full-site inventory: every CMS row from every silo source PLUS every public
- * static route. Cached per invocation so a single crawl_pages job pages through
- * one consistent snapshot.
+ * Static routes rendered as inventory rows (they have no CMS row).
  */
-async function loadFullInventory(sb: any) {
-  const cms = await loadPages(sb);
-  const seen = new Set(cms.map((p) => p.path));
-  const statics = STATIC_ROUTES
-    .filter((r) => !seen.has(r.path))
-    .map((r) => ({
-      path: r.path,
-      name: null as string | null,
-      page_type: "static",
-      source_table: "static_routes",
-      source_id: r.path,
-      source_field: "",
-      keyword: null as string | null,
-      topic: null as string | null,
-      html: "",
-      text: "",
-      words: 0,
-    }));
-  return [...cms, ...statics];
+function staticInventory(): any[] {
+  return STATIC_ROUTES.map((r) => ({
+    path: r.path,
+    name: null as string | null,
+    page_type: "static",
+    source_table: "static_routes",
+    source_id: r.path,
+    source_field: "",
+    keyword: null as string | null,
+    topic: null as string | null,
+    html: "",
+    text: "",
+    words: 0,
+  }));
 }
 
+/**
+ * Walks the whole site source-by-source using a (sourceIndex, offset) cursor so
+ * one invocation only materialises the window it is about to write. Index
+ * `SILO_SOURCES.length` is the static-routes pass, after which the sweep is
+ * complete.
+ */
 async function runCrawlPages(ctx: Ctx) {
   const { sb, job } = ctx;
-  const cursor = Number(job.payload?.cursor ?? 0);
-  const limit = Number(ctx.settings.max_pages_per_run ?? 25) * 6; // DB reads are cheap
-  const all = await loadFullInventory(sb);
-  const slice = all.slice(cursor, cursor + limit);
+  const srcIdx = Number(job.payload?.src ?? 0);
+  const offset = Number(job.payload?.offset ?? 0);
+  const limit = Math.max(25, Number(ctx.settings.max_pages_per_run ?? 25) * 6);
+  const sourceCount = SILO_SOURCES.length;
+
+  let slice: any[] = [];
+  let nextSrc = srcIdx;
+  let nextOffset = offset;
+  let label = "";
+
+  if (srcIdx < sourceCount) {
+    slice = await loadPagesSlice(sb, srcIdx, offset, limit);
+    label = `${SILO_SOURCES[srcIdx].table} ${offset}-${offset + slice.length}`;
+    if (slice.length < limit) { nextSrc = srcIdx + 1; nextOffset = 0; }
+    else { nextOffset = offset + limit; }
+  } else {
+    slice = staticInventory().slice(offset, offset + limit);
+    label = `static routes ${offset}-${offset + slice.length}`;
+    nextSrc = srcIdx + 1; nextOffset = 0;
+  }
+  const sweepDone = srcIdx >= sourceCount;
+
 
   const paths = slice.map((p) => p.path);
   const known = new Set<string>();
