@@ -16,6 +16,7 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 import ExamAIGenerator from "@/components/admin/ExamAIGenerator";
 
 const emptyForm = {
@@ -231,7 +232,16 @@ const AdminExams = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Exams</h1>
-        <Button variant="outline" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam Manually</Button>
+        <div className="flex gap-2 flex-wrap">
+          <ExportExcelButton
+            rows={sortedExams}
+            fileName="exams"
+            sheetName="Exams"
+            columns={EXAM_EXPORT_COLUMNS}
+            className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
+          />
+          <Button variant="outline" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam Manually</Button>
+        </div>
       </div>
 
       <div className="mb-6">

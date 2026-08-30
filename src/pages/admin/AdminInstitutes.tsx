@@ -28,6 +28,7 @@ import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 import FullPageReauditButton from "@/components/admin/FullPageReauditButton";
 
 type Institute = {
@@ -396,7 +397,13 @@ const AdminInstitutes = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Institutes</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <ExportExcelButton
+            rows={sortedInstitutes}
+            fileName="institutes"
+            sheetName="Institutes"
+            className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
+          />
           <Button
             variant="outline"
             onClick={() => window.location.assign("/admin/institutes/generate-ai")}

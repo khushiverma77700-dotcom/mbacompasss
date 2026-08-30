@@ -32,6 +32,7 @@ import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 import FullPageReauditButton from "@/components/admin/FullPageReauditButton";
 import CollegeReSeoPanel, { CollegeReSeoRowButton } from "@/components/admin/CollegeReSeoPanel";
 
@@ -535,6 +536,12 @@ const AdminColleges = () => {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Colleges</h1>
         <div className="flex gap-2 flex-wrap">
+          <ExportExcelButton
+            rows={sortedColleges}
+            fileName="colleges"
+            sheetName="Colleges"
+            className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
+          />
           <Button
             onClick={() => setReseoOpen(true)}
             className="bg-primary/90 hover:bg-primary"
