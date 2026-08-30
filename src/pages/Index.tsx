@@ -222,20 +222,24 @@ const Index = () => {
         <Deferred height={560} rootMargin="200px" id="home-tools"><FreeToolsShowcase /></Deferred>
         <Deferred height={320}><ExamDeadlinesTicker /></Deferred>
         <Deferred height={520}><TopRankedCollegesSection /></Deferred>
-
+        <Deferred height={620} rootMargin="240px" id="home-paths"><HomePersonaPaths /></Deferred>
 
         {/* Below-the-fold: code-split + mount on scroll */}
         <Deferred height={200}><StatsCounterSection /></Deferred>
         <Deferred height={520}><MBALandscapeSection /></Deferred>
         <Deferred height={360}><PopularExamsSection /></Deferred>
+        <Deferred height={700} id="home-timeline"><HomeAdmissionTimeline /></Deferred>
         <Deferred height={640}><ExamCutoffsTable /></Deferred>
+        <Deferred height={640} id="home-salary"><HomeSalaryInsights /></Deferred>
         <Deferred height={520}><ROIComparisonTable /></Deferred>
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={520}><PlacementsBySectorSection /></Deferred>
+        <Deferred height={560} id="home-specializations"><HomeSpecializations /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
         <Deferred height={320} id="home-cities"><TopCitiesSection /></Deferred>
         <Deferred height={420} id="home-comparisons"><TopExamComparisonSection /></Deferred>
         <Deferred height={520}><TopperWall /></Deferred>
+
         <Deferred height={420}><WhyChooseUs /></Deferred>
         <Deferred height={160}><AICoachingFinder /></Deferred>
         <Deferred height={360}><HowItWorksSection /></Deferred>
