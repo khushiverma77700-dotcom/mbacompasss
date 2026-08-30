@@ -573,6 +573,12 @@ async function runLiveCrawl(ctx: Ctx) {
       const ssrGap = words < 200 || !renderedTitle || !hasSchema;
       if (ssrGap) gaps++;
 
+      // AEO/GEO compliance of the crawler-visible HTML (deterministic, no AI cost).
+      const aeo = scoreAeoGeo(html, {
+        entityName: (p.title as string | null) ?? undefined,
+        requireFaq: true,
+      });
+
       await sb.from("seo_intel_pages").update({
         rendered_title: renderedTitle ? renderedTitle.slice(0, 300) : null,
         rendered_h1: renderedH1 ? stripHtml(renderedH1).slice(0, 300) : null,
@@ -580,10 +586,15 @@ async function runLiveCrawl(ctx: Ctx) {
         rendered_has_schema: hasSchema,
         rendered_links_out: linksOut,
         ssr_gap: ssrGap,
+        aeo_score: aeo.score,
+        aeo_grade: aeo.grade,
+        aeo_failed: aeo.failed.map((c) => ({ id: c.id, label: c.label, detail: c.detail ?? null })),
+        aeo_checked_at: nowIso(),
         live_crawl_at: nowIso(),
         live_crawl_error: null,
         updated_at: nowIso(),
       }).eq("path", p.path);
+
       done++;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
