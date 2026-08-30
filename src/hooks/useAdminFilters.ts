@@ -66,6 +66,7 @@ export function useAdminFilters({ storageKey, defaults, preserveKeys = [] }: Use
 
     // 2) URL overrides
     for (const key of Object.keys(defaults)) {
+      if (URL_EXCLUDED_KEYS.has(key)) continue;
       const urlVal = searchParams.get(key);
       if (urlVal != null) initial[key] = urlVal;
     }
@@ -83,8 +84,9 @@ export function useAdminFilters({ storageKey, defaults, preserveKeys = [] }: Use
     }
     // Remove all keys we own
     for (const key of Object.keys(defaults)) next.delete(key);
-    // Re-add only non-default values
+    // Re-add only non-default values (URL-excluded keys like "search" never go to the URL)
     for (const key of Object.keys(filters)) {
+      if (URL_EXCLUDED_KEYS.has(key)) continue;
       const val = filters[key];
       const def = defaults[key] ?? "";
       if (!isDefaultValue(val, def)) next.set(key, val);
