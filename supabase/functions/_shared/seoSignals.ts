@@ -96,7 +96,35 @@ export async function gscPageMetrics(
     ctr: Number(r.ctr ?? 0),
     position: r.position != null ? Number(r.position) : null,
   }));
+
+/** Search Analytics query grouped by date — one row per day (actual GSC data). */
+export async function gscDailyMetrics(
+  siteUrl: string,
+  startDate: string,
+  endDate: string,
+): Promise<Array<{ date: string; clicks: number; impressions: number; ctr: number; position: number | null }>> {
+  const res = await fetch(
+    `${GSC_GATEWAY}/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+    {
+      method: "POST",
+      headers: gscHeaders(),
+      body: JSON.stringify({ startDate, endDate, dimensions: ["date"], rowLimit: 25000 }),
+    },
+  );
+  if (!res.ok) throw new Error(`GSC daily query failed [${res.status}]: ${await res.text()}`);
+  const json = await res.json().catch(() => ({}));
+  return (json.rows ?? [])
+    .map((r: any) => ({
+      date: String(r.keys?.[0] ?? ""),
+      clicks: Math.round(r.clicks ?? 0),
+      impressions: Math.round(r.impressions ?? 0),
+      ctr: Number(r.ctr ?? 0),
+      position: r.position != null ? Number(r.position) : null,
+    }))
+    .filter((r: any) => /^\d{4}-\d{2}-\d{2}$/.test(r.date))
+    .sort((a: any, b: any) => a.date.localeCompare(b.date));
 }
+
 
 /** Search Analytics query grouped by page + query (keyword level). */
 export async function gscQueryMetrics(
