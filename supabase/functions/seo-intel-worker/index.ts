@@ -1260,11 +1260,14 @@ Deno.serve(async (req) => {
     sb, settings, job,
     siteUrl: null,
     note: async (msg, records) => { await logActivity(sb, { event: label, detail: msg, job_id: job.id, job_type: job.job_type, records }); },
+    beat: async (step, pct, detail, target) => { await beat(sb, job.id, { step, pct, detail, target }); },
   };
 
   try {
     if (!handler) throw new Error(`Unknown job type: ${job.job_type}`);
+    await ctx.beat(`Starting ${label}`, 1);
     if (["gsc_pages", "gsc_queries", "index_check"].includes(job.job_type)) {
+      await ctx.beat("Resolving the verified Search Console property", 3);
       ctx.siteUrl = await resolveSite(sb, settings);
     }
     const result = await handler(ctx);
@@ -1274,7 +1277,15 @@ Deno.serve(async (req) => {
       finished_at: nowIso(),
       lease_until: null,
       error: result.skipped ?? null,
+      progress: {
+        step: result.skipped ? "Skipped" : "Completed",
+        pct: 100,
+        detail: result.skipped ?? result.detail ?? null,
+        at: nowIso(),
+        records: result.records ?? 0,
+      },
     }).eq("id", job.id);
+
     await logActivity(sb, {
       event: label,
       detail: result.skipped ?? result.detail ?? `${result.records} record(s) processed in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
