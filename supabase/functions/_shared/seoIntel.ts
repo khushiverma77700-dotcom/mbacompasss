@@ -65,7 +65,12 @@ export const JOB_TYPES = [
   "impact_attribution", // isolate change impact from site-wide trend
   "knowledge_graph",    // entity/keyword/page/competitor graph
   "strategy",           // AI SEO growth strategy
+  // ── autonomous research & execution layer ──────────────────────
+  "keyword_discovery",  // find new + striking-distance keywords worth targeting
+  "competitor_deep",    // crawl the pages outranking us and extract what they do
+  "auto_apply",         // apply safe, evidence-backed changes without a human step
 ] as const;
+
 export type JobType = (typeof JOB_TYPES)[number];
 
 export const JOB_LABELS: Record<string, string> = {
