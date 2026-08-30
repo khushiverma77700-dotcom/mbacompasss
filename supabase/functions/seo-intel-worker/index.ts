@@ -18,6 +18,8 @@ import { firecrawlScrapeStrict, firecrawlConfigured, FirecrawlError } from "../_
 import { psiAudit, psiConfigured, PsiError } from "../_shared/pagespeed.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { ADVANCED_STAGES, validateRecommendation, upsertRecommendation } from "../_shared/seoIntel2.ts";
+import { STATIC_ROUTES } from "../_shared/staticRoutes.ts";
+
 
 
 const MAX_DEPTH = 25;
