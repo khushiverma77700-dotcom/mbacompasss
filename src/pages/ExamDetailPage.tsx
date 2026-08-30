@@ -9,6 +9,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead, { generateExamSchema } from "@/components/SEOHead";
+import AnswerBlock from "@/components/AnswerBlock";
+import {
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildDirectAnswerSchema,
+  buildKeyFactsSchema,
+  buildPageGraph,
+  deriveDirectAnswer,
+  SITE_ORIGIN,
+} from "@/lib/aeoSchema";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { canonicalUrl } from "@/lib/canonical";
 import { examDetails } from "@/data/mockData";
