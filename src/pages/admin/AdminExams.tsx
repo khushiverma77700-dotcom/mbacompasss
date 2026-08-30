@@ -16,6 +16,7 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 import ExamAIGenerator from "@/components/admin/ExamAIGenerator";
 
 const emptyForm = {
@@ -25,6 +26,28 @@ const emptyForm = {
   meta_title: "", meta_description: "", h1_tag: "",
   primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
+
+const EXAM_EXPORT_COLUMNS: [string, string][] = [
+  ["name", "Name"],
+  ["full_name", "Full Name"],
+  ["slug", "Slug"],
+  ["conducting_body", "Conducting Body"],
+  ["exam_date", "Exam Date"],
+  ["registration_deadline", "Registration Deadline"],
+  ["frequency", "Frequency"],
+  ["eligibility", "Eligibility"],
+  ["syllabus", "Syllabus"],
+  ["keywords", "Keywords"],
+  ["primary_keyword", "Primary Keyword"],
+  ["funnel_stage", "Funnel Stage"],
+  ["meta_title", "Meta Title"],
+  ["meta_description", "Meta Description"],
+  ["h1_tag", "H1 Tag"],
+  ["created_at", "Created At"],
+  ["updated_at", "Updated At"],
+];
+
+
 
 const AdminExams = () => {
   const [exams, setExams] = useState<any[]>([]);
@@ -231,7 +254,16 @@ const AdminExams = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Exams</h1>
-        <Button variant="outline" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam Manually</Button>
+        <div className="flex gap-2 flex-wrap">
+          <ExportExcelButton
+            rows={sortedExams}
+            fileName="exams"
+            sheetName="Exams"
+            columns={EXAM_EXPORT_COLUMNS}
+            className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
+          />
+          <Button variant="outline" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam Manually</Button>
+        </div>
       </div>
 
       <div className="mb-6">
