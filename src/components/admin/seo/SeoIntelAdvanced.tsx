@@ -14,10 +14,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
-import { asText } from "@/components/admin/seo/SeoLiveOps";
   ArrowUpRight, Activity, AlertTriangle, Gauge, GitBranch, Layers, LineChart,
   Link2, Loader2, RefreshCw, Sparkles, Target, TrendingUp,
 } from "lucide-react";
+import { asText } from "@/components/admin/seo/SeoLiveOps";
 
 export interface IntelData {
   locale: string;
