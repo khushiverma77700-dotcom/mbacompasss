@@ -651,12 +651,29 @@ async function runSpeedAudit(ctx: Ctx) {
 
 /** AI analysis over the stored signals → concrete, evidence-backed recommendations. */
 async function runAnalyze(ctx: Ctx) {
-  const { sb } = ctx;
-  const { data: pages } = await sb.from("seo_intel_pages")
-    .select("path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities")
-    .order("impressions", { ascending: false, nullsFirst: false })
-    .limit(12);
+  const { sb, job } = ctx;
+  const PAGE_COLS = "path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities, last_analyzed_at, analysis_round";
+  const batchSize = Math.max(6, Math.min(20, Number(ctx.settings.max_pages_per_run ?? 12)));
+  const explicitPaths: string[] = Array.isArray(job.payload?.paths) ? job.payload.paths : [];
+
+  let pages: any[] | null = null;
+  if (explicitPaths.length) {
+    // Newly discovered pages — analysed ahead of the rotation.
+    const { data } = await sb.from("seo_intel_pages").select(PAGE_COLS)
+      .in("path", explicitPaths.slice(0, batchSize));
+    pages = data ?? [];
+  } else {
+    // ROTATION: never-analysed pages first, then the longest-untouched ones, so
+    // 100% of the site (not just the high-impression head) keeps getting
+    // SEO / AEO / GEO work, round after round.
+    const { data } = await sb.from("seo_intel_pages").select(PAGE_COLS)
+      .order("last_analyzed_at", { ascending: true, nullsFirst: true })
+      .order("impressions", { ascending: false, nullsFirst: false })
+      .limit(batchSize);
+    pages = data ?? [];
+  }
   if (!pages?.length) return { skipped: "No page data collected yet.", records: 0 };
+
 
   const { data: comps } = await sb.from("seo_intel_competitors")
     .select("domain, keyword, their_position, our_position").limit(20);
