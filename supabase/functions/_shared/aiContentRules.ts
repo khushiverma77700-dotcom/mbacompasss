@@ -1,6 +1,10 @@
 // Shared rules appended to every long-form AI content generator
 // (blogs, college pages, college sections, institute pages, course pages, news, refresh).
-// Enforces: no AI buzzwords, mandatory "About MBA Compass" section, "Summary" not "Quick Summary".
+// Enforces: no AI buzzwords, mandatory "About MBA Compass" section, "Summary" not
+// "Quick Summary", plus the sitewide AEO/GEO rulebook (see aeoGeoRules.ts) so all
+// future AI content is answer-engine ready by default.
+
+import { AEO_GEO_RULES } from "./aeoGeoRules.ts";
 
 export const MBA_COMPASS_SECTION_RULES = `
 
