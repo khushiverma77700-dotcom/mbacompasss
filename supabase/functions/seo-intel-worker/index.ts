@@ -11,7 +11,7 @@ import {
 import { requireAdmin } from "../_shared/requireAdmin.ts";
 import {
   gscConfigured, resolveGscSite, gscPageMetrics, gscQueryMetrics, gscIndexState,
-  loadPages, loadPagesSlice, SILO_SOURCES, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
+  loadPagesSlice, SILO_SOURCES, scoreHealth, stripHtml, wordCount, classifyIntent, parseAIJson,
 } from "../_shared/seoSignals.ts";
 
 import { getKeywordMetrics, semrushSerp, semrushExpand, semrushConfigured } from "../_shared/keywordMetrics.ts";
