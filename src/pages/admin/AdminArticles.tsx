@@ -145,7 +145,13 @@ const AdminArticles = () => {
     setShowForm(false); setForm(emptyForm); setEditId(null); fetchArticles();
   };
 
-  const handleEdit = (article: any) => {
+  const handleEdit = async (listRow: any) => {
+    // The list row omits `content` for speed — pull the full record now.
+    let article = listRow;
+    if (listRow?.id && listRow.content === undefined) {
+      const { data } = await supabase.from("articles").select("*").eq("id", listRow.id).maybeSingle();
+      if (data) article = data;
+    }
     setForm({
       title: article.title || "", slug: article.slug || "", excerpt: article.excerpt || "",
       content: article.content || "", category: article.category || "news",
