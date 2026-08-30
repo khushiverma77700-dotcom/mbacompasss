@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?targe
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { getCredential } from "../_shared/getCredential.ts";
+import { scoreAeoGeo } from "../_shared/aeoGeoRules.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
