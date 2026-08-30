@@ -425,6 +425,16 @@ const InstitutePage = () => {
       </section>
 
       <div className="container mx-auto px-4 py-10 max-w-6xl">
+        {(answerText || answerFacts.length > 0) && (
+          <AnswerBlock
+            question={`What is ${institute.name}?`}
+            answer={answerText}
+            facts={answerFacts}
+            updatedAt={(institute as any).updated_at || null}
+            className="mb-8"
+          />
+        )}
+
         <div className="grid lg:grid-cols-[230px_1fr] gap-8">
           {/* ToC — always visible on desktop when there's any content */}
           {(activeSections.length > 0 || linkedCourses.length > 0) && (
