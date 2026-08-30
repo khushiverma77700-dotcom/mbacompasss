@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
         const allowed = [
           "schedule_mode", "window_start", "window_end", "active_days", "timezone",
           "freq_monitor_min", "freq_rank_min", "freq_competitor_min", "freq_crawl_min", "freq_report_min",
-          "auto_apply_safe", "gsc_site_url", "semrush_database", "semrush_campaign_id", "max_pages_per_run",
+          "auto_apply_safe", "autonomous_mode", "gsc_site_url", "semrush_database", "semrush_campaign_id", "max_pages_per_run",
         ];
         const patch: Record<string, unknown> = { updated_by: actor };
         for (const k of allowed) if (k in p) patch[k] = p[k];
