@@ -390,6 +390,8 @@ const AdminSEOIntelligence = () => {
             <Button size="sm" variant="ghost" onClick={() => { loadSnapshot(); loadTables(); reloadIntel(true); }}>
               <RefreshCw className="mr-2 h-4 w-4" /> Refresh view
             </Button>
+            <SeoMotionControl />
+
           </div>
         </CardContent>
       </Card>
