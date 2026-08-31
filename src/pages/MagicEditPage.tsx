@@ -3,47 +3,49 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/admin/RichTextEditor";
-import { AlertTriangle, ExternalLink, Loader2, Save, Sparkles } from "lucide-react";
+import StateCitySelect from "@/components/admin/StateCitySelect";
+import { magicSchemaFor, type MagicField } from "@/lib/magicEditSchema";
+import { AlertTriangle, ExternalLink, Loader2, Save, Sparkles, X } from "lucide-react";
 
 interface LoadResponse {
   entityType: string;
   label: string;
   titleField: string;
   bodyField: string;
-  extraFields: string[];
+  editableFields: string[];
   seoFields: string[];
   publicUrl: string;
+  note: string | null;
   record: Record<string, any>;
 }
-
-const prettyLabel = (field: string) =>
-  field.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-
-const LONG_TEXT_FIELDS = new Set(["admission_process", "eligibility", "excerpt", "intro"]);
 
 const MagicEditPage = () => {
   const { token } = useParams<{ token: string }>();
   const { toast } = useToast();
   const [meta, setMeta] = useState<LoadResponse | null>(null);
   const [values, setValues] = useState<Record<string, any>>({});
+  const [tagInputs, setTagInputs] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNotes, setAiNotes] = useState<string[]>([]);
 
+  const schema = useMemo(() => magicSchemaFor(meta?.entityType), [meta?.entityType]);
+
   const call = async (payload: Record<string, any>) => {
     const { data, error: fnError } = await supabase.functions.invoke("magic-edit", {
       body: { token, ...payload },
     });
     if (fnError) {
-      // Edge function returns a JSON error body with a helpful message.
       let msg = fnError.message;
       try {
         const ctx = (fnError as any).context;
@@ -61,7 +63,7 @@ const MagicEditPage = () => {
       try {
         const data = await call({ action: "load" });
         setMeta(data);
-        setValues({ ...data.record, keywords: (data.record.keywords || []).join(", ") });
+        setValues({ ...data.record });
       } catch (e: any) {
         setError(e.message || "Could not open this link.");
       } finally {
@@ -71,24 +73,35 @@ const MagicEditPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const editableFields = useMemo(() => {
-    if (!meta) return [] as string[];
-    return meta.extraFields.filter((f) => f in (meta.record || {}));
-  }, [meta]);
-
   const set = (k: string, v: any) => setValues((prev) => ({ ...prev, [k]: v }));
+
+  const addTag = (key: string) => {
+    const val = (tagInputs[key] || "").trim();
+    if (!val) return;
+    const list: string[] = Array.isArray(values[key]) ? values[key] : [];
+    if (!list.includes(val)) set(key, [...list, val]);
+    setTagInputs((p) => ({ ...p, [key]: "" }));
+  };
+  const removeTag = (key: string, val: string) =>
+    set(key, (Array.isArray(values[key]) ? values[key] : []).filter((x: string) => x !== val));
 
   const save = async () => {
     if (!meta) return;
     setSaving(true);
     try {
       const payload: Record<string, any> = {};
-      [meta.titleField, meta.bodyField, ...meta.extraFields, ...meta.seoFields].forEach((f) => {
+      meta.editableFields.forEach((f) => {
         if (f in values) payload[f] = values[f];
       });
       const data = await call({ action: "save", values: payload });
-      setValues({ ...data.record, keywords: (data.record.keywords || []).join(", ") });
-      toast({ title: "Changes published", description: "The live page has been updated." });
+      setValues({ ...data.record });
+      const n = (data.changedFields || []).length;
+      toast({
+        title: "Changes published",
+        description: n
+          ? `${n} field${n > 1 ? "s" : ""} updated on the live page. The site admin has been notified.`
+          : "The live page has been updated.",
+      });
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
@@ -103,8 +116,8 @@ const MagicEditPage = () => {
       const s = data.suggestions || {};
       setAiNotes(s.notes || []);
       if (apply && data.record) {
-        setValues({ ...data.record, keywords: (data.record.keywords || []).join(", ") });
-        toast({ title: "AI SEO applied", description: "Meta tags, H1 and keywords are live." });
+        setValues({ ...data.record });
+        toast({ title: "AI SEO applied", description: "Meta tags, H1 and keywords are live. The site admin has been notified." });
       } else {
         setValues((prev) => ({
           ...prev,
@@ -112,7 +125,7 @@ const MagicEditPage = () => {
           meta_description: s.meta_description || prev.meta_description,
           h1_tag: s.h1_tag || prev.h1_tag,
           primary_keyword: s.primary_keyword || prev.primary_keyword,
-          keywords: (s.keywords || []).join(", ") || prev.keywords,
+          keywords: (s.keywords || []).length ? s.keywords : prev.keywords,
         }));
         toast({ title: "AI SEO suggestions ready", description: "Review the fields, then press Publish." });
       }
@@ -120,6 +133,118 @@ const MagicEditPage = () => {
       toast({ title: "AI SEO failed", description: e.message, variant: "destructive" });
     } finally {
       setAiBusy(false);
+    }
+  };
+
+  const renderField = (f: MagicField) => {
+    if (f.type === "statecity") {
+      return (
+        <div key={f.key} className="md:col-span-2 grid grid-cols-2 gap-3">
+          <StateCitySelect
+            state={values.state || ""}
+            city={values.city || ""}
+            onStateChange={(s) => setValues((p) => ({ ...p, state: s, city: "" }))}
+            onCityChange={(c) => set("city", c)}
+            showLabels
+          />
+        </div>
+      );
+    }
+
+    const label = (
+      <Label className="text-sm font-semibold text-muted-foreground mb-1.5 block">{f.label}</Label>
+    );
+    const wrap = (node: React.ReactNode) => (
+      <div key={f.key} className={f.half ? "" : "md:col-span-2"}>
+        {label}
+        {node}
+        {f.hint && <p className="text-sm text-muted-foreground mt-1">{f.hint}</p>}
+      </div>
+    );
+
+    switch (f.type) {
+      case "richtext":
+        return (
+          <div key={f.key} className="md:col-span-2">
+            {label}
+            <RichTextEditor
+              content={values[f.key] || ""}
+              onChange={(html) => set(f.key, html)}
+              placeholder={f.placeholder}
+            />
+          </div>
+        );
+      case "number":
+        return wrap(
+          <Input
+            type="number"
+            value={values[f.key] ?? ""}
+            placeholder={f.placeholder}
+            onChange={(e) => set(f.key, e.target.value === "" ? null : Number(e.target.value))}
+          />,
+        );
+      case "select":
+        return wrap(
+          <Select value={values[f.key] || ""} onValueChange={(v) => set(f.key, v)}>
+            <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+            <SelectContent>
+              {(f.options || []).map((o) => (
+                <SelectItem key={o} value={o}>
+                  {f.optionLabels?.[o] || o.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>,
+        );
+      case "switch":
+        return (
+          <div key={f.key} className="flex items-center gap-3 pt-6">
+            <Switch checked={Boolean(values[f.key])} onCheckedChange={(v) => set(f.key, v)} />
+            <Label>{f.label}</Label>
+          </div>
+        );
+      case "tags": {
+        const list: string[] = Array.isArray(values[f.key]) ? values[f.key] : [];
+        return (
+          <div key={f.key} className="md:col-span-2">
+            {label}
+            <div className="flex gap-2 mb-2">
+              <Input
+                placeholder="Add and press Enter"
+                value={tagInputs[f.key] || ""}
+                onChange={(e) => setTagInputs((p) => ({ ...p, [f.key]: e.target.value }))}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(f.key); } }}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={() => addTag(f.key)}>Add</Button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {list.map((v) => (
+                <Badge key={v} variant="secondary" className="gap-1 text-sm">
+                  {v}
+                  <button onClick={() => removeTag(f.key, v)} className="hover:text-destructive"><X className="w-3 h-3" /></button>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      default: {
+        const val = values[f.key] ?? "";
+        return wrap(
+          <>
+            <Input
+              value={val}
+              placeholder={f.placeholder}
+              maxLength={f.maxLength}
+              className={f.mono ? "font-mono text-sm" : undefined}
+              onChange={(e) => set(f.key, e.target.value)}
+            />
+            {f.counter && (
+              <span className="text-sm text-muted-foreground">{String(val).length}/{f.counter}</span>
+            )}
+          </>,
+        );
+      }
     }
   };
 
@@ -133,14 +258,14 @@ const MagicEditPage = () => {
     );
   }
 
-  if (error || !meta) {
+  if (error || !meta || !schema) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center space-y-3">
             <AlertTriangle className="w-8 h-8 mx-auto text-destructive" />
             <h1 className="text-xl font-semibold">Link unavailable</h1>
-            <p className="text-sm text-muted-foreground">{error}</p>
+            <p className="text-sm text-muted-foreground">{error || "Unsupported content type."}</p>
           </CardContent>
         </Card>
       </div>
@@ -181,84 +306,51 @@ const MagicEditPage = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Page content</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>{prettyLabel(meta.titleField)}</Label>
-              <Input value={values[meta.titleField] || ""} onChange={(e) => set(meta.titleField, e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>{prettyLabel(meta.bodyField)}</Label>
-              <RichTextEditor
-                content={values[meta.bodyField] || ""}
-                onChange={(html) => set(meta.bodyField, html)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <p className="text-sm text-muted-foreground">
+          You are editing the live {meta.label.toLowerCase()} page. Every change you publish is logged and emailed to
+          the MBA Compass admin team automatically.
+        </p>
 
-        {editableFields.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Details</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              {editableFields.map((f) => (
-                <div key={f} className={`space-y-2 ${LONG_TEXT_FIELDS.has(f) ? "md:col-span-2" : ""}`}>
-                  <Label>{prettyLabel(f)}</Label>
-                  {LONG_TEXT_FIELDS.has(f) ? (
-                    <Textarea rows={4} value={values[f] || ""} onChange={(e) => set(f, e.target.value)} />
-                  ) : (
-                    <Input value={values[f] ?? ""} onChange={(e) => set(f, e.target.value)} />
-                  )}
-                </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle className="text-lg">Edit {meta.label}</CardTitle>
+            <Button size="sm" variant="outline" onClick={() => runAiSeo(true)} disabled={aiBusy}>
+              {aiBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              Run AI SEO &amp; publish
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue={schema.tabs[0].key} className="space-y-4">
+              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${schema.tabs.length}, minmax(0, 1fr))` }}>
+                {schema.tabs.map((t) => (
+                  <TabsTrigger key={t.key} value={t.key}>{t.label}</TabsTrigger>
+                ))}
+              </TabsList>
+
+              {schema.tabs.map((t) => (
+                <TabsContent key={t.key} value={t.key}>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {t.fields
+                      .filter((f) => f.type === "statecity" || meta.editableFields.includes(f.key))
+                      .map(renderField)}
+                  </div>
+                </TabsContent>
               ))}
-            </CardContent>
-          </Card>
-        )}
+            </Tabs>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between">
-              SEO &amp; AI optimisation
-              <Button size="sm" variant="outline" onClick={() => runAiSeo(true)} disabled={aiBusy}>
-                {aiBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                Run AI SEO &amp; publish
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Primary Keyword</Label>
-              <Input value={values.primary_keyword || ""} onChange={(e) => set("primary_keyword", e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Meta Title <span className="text-muted-foreground">({(values.meta_title || "").length}/60)</span></Label>
-              <Input value={values.meta_title || ""} onChange={(e) => set("meta_title", e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Meta Description <span className="text-muted-foreground">({(values.meta_description || "").length}/160)</span></Label>
-              <Textarea rows={3} value={values.meta_description || ""} onChange={(e) => set("meta_description", e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>H1 Tag</Label>
-              <Input value={values.h1_tag || ""} onChange={(e) => set("h1_tag", e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Keywords (comma separated)</Label>
-              <Textarea rows={3} value={values.keywords || ""} onChange={(e) => set("keywords", e.target.value)} />
-            </div>
             {aiNotes.length > 0 && (
-              <div className="rounded-md border bg-background p-3 space-y-1">
+              <div className="rounded-md border bg-background p-3 space-y-1 mt-4">
                 <p className="text-sm font-medium">AI suggestions</p>
                 <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
                   {aiNotes.map((n, i) => <li key={i}>{n}</li>)}
                 </ul>
               </div>
             )}
+
+            <Button onClick={save} disabled={saving} className="w-full mt-4">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Publish changes
+            </Button>
           </CardContent>
         </Card>
       </main>
