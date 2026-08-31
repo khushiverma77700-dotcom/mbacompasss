@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     // self-chains until every page has been measured, so the 64 levers keep
     // gaining coverage across the whole site instead of a few pages per day.
     { type: "index_check", everyMin: Math.min(settings.freq_crawl_min, 30), payload: { batch: 40 }, priority: 5 },
-    { type: "live_crawl", everyMin: Math.min(settings.freq_crawl_min, 30), payload: { batch: 24 }, priority: 5 },
+    { type: "live_crawl", everyMin: Math.min(settings.freq_crawl_min, 15), payload: { batch: 12 }, priority: 5 },
     { type: "speed_audit", everyMin: Math.max(settings.freq_crawl_min, 120), payload: { batch: 6, strategy: "mobile" }, priority: 6 },
     { type: "competitor_scan", everyMin: settings.freq_competitor_min, priority: 6 },
     { type: "analyze", everyMin: settings.freq_monitor_min, priority: 7 },
