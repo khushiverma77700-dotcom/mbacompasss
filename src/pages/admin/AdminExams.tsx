@@ -19,6 +19,7 @@ import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
+import BulkSortOrderDialog from "@/components/admin/BulkSortOrderDialog";
 import ExamAIGenerator from "@/components/admin/ExamAIGenerator";
 
 const emptyForm = {
