@@ -26,6 +26,7 @@ export const useInstitutes = (categorySlug?: string) => {
         category_id,
         features,
         specializations,
+        listing_sort_order,
         courses(id, name, fees),
         faculty(id, name),
         categories:category_id(name, slug)
@@ -35,7 +36,9 @@ export const useInstitutes = (categorySlug?: string) => {
         const { data: cat } = await supabase.from("categories").select("id").eq("slug", categorySlug).maybeSingle();
         if (cat) query = query.eq("category_id", cat.id);
       }
-      const { data, error } = await query.order("rating", { ascending: false });
+      const { data, error } = await query
+        .order("listing_sort_order", { ascending: true, nullsFirst: false })
+        .order("rating", { ascending: false });
       if (error) throw error;
       return (data || []).filter((item) => item.name?.trim() && item.slug?.trim());
     },
