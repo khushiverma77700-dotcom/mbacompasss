@@ -1030,6 +1030,7 @@ const App = () => (
             <Route path="/dashboard" element={<PublicLayout><LazyPage><DashboardPage /></LazyPage></PublicLayout>} />
             <Route path="/profile-analyzer" element={<PublicLayout><LazyPage><ProfileAnalyzerPage /></LazyPage></PublicLayout>} />
             <Route path="/report/:id" element={<PublicLayout><LazyPage><SharedReportPage /></LazyPage></PublicLayout>} />
+            <Route path="/edit/:token" element={<LazyPage><MagicEditPage /></LazyPage>} />
             <Route path="/college-finder" element={<PublicLayout><LazyPage><CollegeFinderPage /></LazyPage></PublicLayout>} />
             <Route path="/college-shortlister" element={<PublicLayout><LazyPage><CollegeShortlisterPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
