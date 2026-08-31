@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, Building2, Globe, Sparkles, RefreshCw, FileText }
 import { slugify } from "@/lib/slugify";
 import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
+import BulkSortOrderDialog from "@/components/admin/BulkSortOrderDialog";
 
 type Institute = {
   id: string;
@@ -99,6 +100,7 @@ const AdminCoachingInstitutes = () => {
             label="Download Excel"
             className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
           />
+          <BulkSortOrderDialog table="institutes" entityLabel="coaching institutes" filePrefix="coaching-institutes" onApplied={load} />
           <Link to="/admin/coaching-refresh-hub">
             <Button variant="outline"><RefreshCw className="w-4 h-4 mr-1" /> Content Refresh Hub</Button>
           </Link>

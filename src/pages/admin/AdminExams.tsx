@@ -19,6 +19,7 @@ import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
+import BulkSortOrderDialog from "@/components/admin/BulkSortOrderDialog";
 import ExamAIGenerator from "@/components/admin/ExamAIGenerator";
 
 const emptyForm = {
@@ -278,6 +279,7 @@ const AdminExams = () => {
             columns={EXAM_EXPORT_COLUMNS}
             className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
           />
+          <BulkSortOrderDialog table="exams" entityLabel="exams" filePrefix="exams" onApplied={fetchExams} />
           <Button variant="outline" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam Manually</Button>
         </div>
       </div>
