@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import { magicSchemaFor, type MagicField } from "@/lib/magicEditSchema";
+import MagicImageUpload from "@/components/magic/MagicImageUpload";
+import MagicAiSeoDialog, { type MagicSeoSuggestions } from "@/components/magic/MagicAiSeoDialog";
 import { AlertTriangle, ExternalLink, Loader2, Save, Sparkles, X } from "lucide-react";
 
 interface LoadResponse {
@@ -36,7 +38,7 @@ const MagicEditPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [aiBusy, setAiBusy] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [aiNotes, setAiNotes] = useState<string[]>([]);
 
   const schema = useMemo(() => magicSchemaFor(meta?.entityType), [meta?.entityType]);
@@ -109,31 +111,18 @@ const MagicEditPage = () => {
     }
   };
 
-  const runAiSeo = async (apply: boolean) => {
-    setAiBusy(true);
-    try {
-      const data = await call({ action: "ai_seo", apply });
-      const s = data.suggestions || {};
-      setAiNotes(s.notes || []);
-      if (apply && data.record) {
-        setValues({ ...data.record });
-        toast({ title: "AI SEO applied", description: "Meta tags, H1 and keywords are live. The site admin has been notified." });
-      } else {
-        setValues((prev) => ({
-          ...prev,
-          meta_title: s.meta_title || prev.meta_title,
-          meta_description: s.meta_description || prev.meta_description,
-          h1_tag: s.h1_tag || prev.h1_tag,
-          primary_keyword: s.primary_keyword || prev.primary_keyword,
-          keywords: (s.keywords || []).length ? s.keywords : prev.keywords,
-        }));
-        toast({ title: "AI SEO suggestions ready", description: "Review the fields, then press Publish." });
-      }
-    } catch (e: any) {
-      toast({ title: "AI SEO failed", description: e.message, variant: "destructive" });
-    } finally {
-      setAiBusy(false);
-    }
+  const runAiSeo = async (apply: boolean): Promise<MagicSeoSuggestions> => {
+    const data = await call({ action: "ai_seo", apply });
+    const s = (data.suggestions || {}) as MagicSeoSuggestions;
+    setAiNotes(s.notes || []);
+    if (apply && data.record) setValues({ ...data.record });
+    return s;
+  };
+
+  const uploadImage = async (dataUrl: string, folder: string): Promise<string> => {
+    const res = await call({ action: "upload", file: dataUrl, folder });
+    if (!res?.url) throw new Error("Upload did not return a URL.");
+    return res.url as string;
   };
 
   const renderField = (f: MagicField) => {
@@ -163,6 +152,19 @@ const MagicEditPage = () => {
     );
 
     switch (f.type) {
+      case "image":
+        return (
+          <div key={f.key} className={f.half ? "" : "md:col-span-2"}>
+            {label}
+            <MagicImageUpload
+              value={values[f.key] || ""}
+              folder={f.folder || "magic"}
+              hint={f.hint}
+              upload={uploadImage}
+              onChange={(url) => set(f.key, url)}
+            />
+          </div>
+        );
       case "richtext":
         return (
           <div key={f.key} className="md:col-span-2">
@@ -293,8 +295,12 @@ const MagicEditPage = () => {
             </a>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => runAiSeo(false)} disabled={aiBusy}>
-              {aiBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+            <Button
+              variant="outline"
+              onClick={() => setAiOpen(true)}
+              className="border-primary/30 text-primary hover:bg-primary/10"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
               AI SEO
             </Button>
             <Button onClick={save} disabled={saving}>
@@ -314,8 +320,8 @@ const MagicEditPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-3">
             <CardTitle className="text-lg">Edit {meta.label}</CardTitle>
-            <Button size="sm" variant="outline" onClick={() => runAiSeo(true)} disabled={aiBusy}>
-              {aiBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+            <Button size="sm" variant="outline" onClick={() => setAiOpen(true)} className="border-primary/30 text-primary hover:bg-primary/10">
+              <Sparkles className="w-4 h-4 mr-2" />
               Run AI SEO &amp; publish
             </Button>
           </CardHeader>
@@ -354,6 +360,18 @@ const MagicEditPage = () => {
           </CardContent>
         </Card>
       </main>
+
+      <MagicAiSeoDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        label={meta.label}
+        current={values}
+        run={runAiSeo}
+        onApplied={(s) => {
+          setAiNotes(s.notes || []);
+          toast({ title: "AI SEO applied", description: "Meta tags, H1 and keywords are live. The site admin has been notified." });
+        }}
+      />
     </div>
   );
 };

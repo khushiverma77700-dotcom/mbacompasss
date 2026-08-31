@@ -192,6 +192,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── UPLOAD (images) ───────────────────────────────────────────────────
+    // Magic-link holders are anonymous, so the file is streamed through this
+    // function and written to the public `uploads` bucket with the service key.
+    if (action === "upload") {
+      const dataUrl = String(body?.file || "");
+      const folder = String(body?.folder || "magic").replace(/[^a-zA-Z0-9/_-]/g, "");
+      const m = dataUrl.match(/^data:([\w/+.-]+);base64,(.+)$/);
+      if (!m) return json({ error: "Invalid file payload" }, 400);
+      const contentType = m[1];
+      if (!contentType.startsWith("image/")) return json({ error: "Only image files are allowed." }, 400);
+      const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+      if (bytes.byteLength > 6 * 1024 * 1024) return json({ error: "Image must be under 6 MB." }, 400);
+      const ext = (contentType.split("/")[1] || "jpg").replace("jpeg", "jpg").slice(0, 5);
+      const path = `${folder}/magic-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const { error: upErr } = await sb.storage.from("uploads").upload(path, bytes, {
+        contentType,
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (upErr) return json({ error: upErr.message }, 500);
+      const { data: pub } = sb.storage.from("uploads").getPublicUrl(path);
+      return json({ ok: true, url: pub.publicUrl });
+    }
+
     // ── SAVE ──────────────────────────────────────────────────────────────
     if (action === "save") {
       const before = await loadRecord();
