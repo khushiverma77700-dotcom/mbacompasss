@@ -67,6 +67,7 @@ const CoachingFilterPage = lazyWithPreload(() => import("./pages/CoachingFilterP
 const CoachingCategoryRedirect = lazyWithPreload(() => import("./pages/CoachingCategoryRedirect"));
 const ProfileAnalyzerPage = lazyWithPreload(() => import("./pages/ProfileAnalyzerPage"));
 const SharedReportPage = lazyWithPreload(() => import("./pages/SharedReportPage"));
+const MagicEditPage = lazyWithPreload(() => import("./pages/MagicEditPage"));
 const CollegeFinderPage = lazyWithPreload(() => import("./pages/CollegeFinderPage"));
 const CollegeShortlisterPage = lazyWithPreload(() => import("./pages/CollegeShortlisterPage"));
 const BusinessInquiryPage = lazyWithPreload(() => import("./pages/BusinessInquiryPage"));
