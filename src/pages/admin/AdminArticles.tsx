@@ -429,6 +429,7 @@ const AdminArticles = () => {
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" asChild><a href={`/article/${a.slug}`} target="_blank"><Eye className="w-4 h-4" /></a></Button>
                       <RefreshContentButton entityType="article" entityId={a.id} entityName={a.title} />
+                      <MagicLinkButton compact entityType="article" entityId={a.id} entityTitle={a.title} entitySlug={a.slug} />
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(a)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(a.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </TableCell>
