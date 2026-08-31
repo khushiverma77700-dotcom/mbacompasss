@@ -279,6 +279,7 @@ const AdminExams = () => {
             columns={EXAM_EXPORT_COLUMNS}
             className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
           />
+          <BulkSortOrderDialog table="exams" entityLabel="exams" filePrefix="exams" onApplied={fetchExams} />
           <Button variant="outline" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam Manually</Button>
         </div>
       </div>
