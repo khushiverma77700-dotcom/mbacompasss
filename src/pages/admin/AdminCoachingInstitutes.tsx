@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, Building2, Globe, Sparkles, RefreshCw, FileText }
 import { slugify } from "@/lib/slugify";
 import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
+import BulkSortOrderDialog from "@/components/admin/BulkSortOrderDialog";
 
 type Institute = {
   id: string;
