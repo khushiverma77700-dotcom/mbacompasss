@@ -4321,6 +4321,7 @@ export type Database = {
           last_seo_refresh: string | null
           last_updated_by: string | null
           latitude: number | null
+          listing_sort_order: number | null
           logo_url: string | null
           long_tail_keywords: string[] | null
           longitude: number | null
@@ -4378,6 +4379,7 @@ export type Database = {
           last_seo_refresh?: string | null
           last_updated_by?: string | null
           latitude?: number | null
+          listing_sort_order?: number | null
           logo_url?: string | null
           long_tail_keywords?: string[] | null
           longitude?: number | null
@@ -4435,6 +4437,7 @@ export type Database = {
           last_seo_refresh?: string | null
           last_updated_by?: string | null
           latitude?: number | null
+          listing_sort_order?: number | null
           logo_url?: string | null
           long_tail_keywords?: string[] | null
           longitude?: number | null
