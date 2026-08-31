@@ -5016,6 +5016,56 @@ export type Database = {
           },
         ]
       }
+      magic_link_edits: {
+        Row: {
+          changed_fields: Json
+          created_at: string
+          entity_id: string
+          entity_slug: string | null
+          entity_title: string | null
+          entity_type: string
+          field_count: number
+          id: string
+          link_id: string | null
+          notified: boolean
+          source: string
+        }
+        Insert: {
+          changed_fields?: Json
+          created_at?: string
+          entity_id: string
+          entity_slug?: string | null
+          entity_title?: string | null
+          entity_type: string
+          field_count?: number
+          id?: string
+          link_id?: string | null
+          notified?: boolean
+          source?: string
+        }
+        Update: {
+          changed_fields?: Json
+          created_at?: string
+          entity_id?: string
+          entity_slug?: string | null
+          entity_title?: string | null
+          entity_type?: string
+          field_count?: number
+          id?: string
+          link_id?: string | null
+          notified?: boolean
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "magic_link_edits_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "content_magic_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       master_refresh_items: {
         Row: {
           attempts: number

@@ -3,8 +3,12 @@
 // article / exam record. All reads and writes go through this function, which
 // validates the token server-side with the service-role key. The token holder
 // never gets direct database access.
+//
+// Every save (manual or AI SEO) is logged to public.magic_link_edits and
+// emailed to the master admin so nothing changes silently.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { CONFIG, coercePatch, diffFields, editableKeys, selectKeys, type EntityType } from "./fields.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,43 +22,10 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-type EntityType = "college" | "article" | "exam";
-
-const CONFIG: Record<EntityType, {
-  table: string;
-  titleField: string;
-  bodyField: string;
-  extraFields: string[];
-  publicPath: (slug: string) => string;
-  label: string;
-}> = {
-  college: {
-    table: "colleges",
-    titleField: "name",
-    bodyField: "description",
-    extraFields: ["fees", "admission_process", "placement_avg", "placement_median", "placement_highest", "website"],
-    publicPath: (slug) => `/college/${slug}`,
-    label: "College",
-  },
-  article: {
-    table: "articles",
-    titleField: "title",
-    bodyField: "content",
-    extraFields: ["excerpt", "intro", "category", "author"],
-    publicPath: (slug) => `/article/${slug}`,
-    label: "Article",
-  },
-  exam: {
-    table: "exams",
-    titleField: "name",
-    bodyField: "description",
-    extraFields: ["full_name", "eligibility", "conducting_body", "official_website", "exam_date", "registration_deadline"],
-    publicPath: (slug) => `/exam/${slug}`,
-    label: "Exam",
-  },
-};
-
 const SEO_FIELDS = ["meta_title", "meta_description", "h1_tag", "primary_keyword", "keywords"];
+const ADMIN_EMAIL = Deno.env.get("MASTER_ADMIN_EMAIL") || "admin@mbacompass.in";
+const SENDER_DOMAIN = "notify.mbacompass.in";
+const SENDER_FROM = `MBA Compass <no-reply@${SENDER_DOMAIN}>`;
 
 const admin = () =>
   createClient(
@@ -78,9 +49,96 @@ async function resolveLink(token: string) {
   return { link, sb };
 }
 
-function fieldsFor(type: EntityType) {
-  const cfg = CONFIG[type];
-  return ["id", "slug", cfg.titleField, cfg.bodyField, ...cfg.extraFields, ...SEO_FIELDS];
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const pretty = (k: string) => k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** Log the change and email the master admin. Never throws. */
+async function notifyAdmin(sb: any, opts: {
+  link: any;
+  cfg: typeof CONFIG[EntityType];
+  type: EntityType;
+  diff: Record<string, { old: unknown; new: unknown }>;
+  source: string;
+  slug: string;
+  title: string;
+}) {
+  const { link, cfg, type, diff, source, slug, title } = opts;
+  const keys = Object.keys(diff);
+  if (!keys.length) return;
+  try {
+    const { data: logRow } = await sb
+      .from("magic_link_edits")
+      .insert({
+        link_id: link.id,
+        entity_type: type,
+        entity_id: link.entity_id,
+        entity_title: title || link.entity_title || null,
+        entity_slug: slug || link.entity_slug || null,
+        source,
+        field_count: keys.length,
+        changed_fields: diff,
+      })
+      .select("id")
+      .single();
+
+    const publicUrl = `https://mbacompass.in${cfg.publicPath(slug)}`;
+    const rows = keys.map((k) => {
+      const d = diff[k];
+      return `<tr>
+        <td style="padding:8px;border-bottom:1px solid #e6eef7;font-weight:600;vertical-align:top">${esc(pretty(k))}</td>
+        <td style="padding:8px;border-bottom:1px solid #e6eef7;color:#64748b;vertical-align:top">${esc(String(d.old ?? "—"))}</td>
+        <td style="padding:8px;border-bottom:1px solid #e6eef7;vertical-align:top">${esc(String(d.new ?? "—"))}</td>
+      </tr>`;
+    }).join("");
+
+    const subject = `Magic link edit: ${title || slug} (${keys.length} field${keys.length > 1 ? "s" : ""})`;
+    const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;background:#f5f9ff;padding:24px">
+<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #dbe9f8;border-radius:12px;padding:24px">
+  <h1 style="font-size:22px;margin:0 0 8px">${esc(cfg.label)} updated via magic link</h1>
+  <p style="margin:0 0 4px"><strong>${esc(title || slug)}</strong></p>
+  <p style="margin:0 0 4px;color:#475569">Page: <a href="${publicUrl}">${publicUrl}</a></p>
+  <p style="margin:0 0 4px;color:#475569">Shared with: ${esc(link.note || "not noted")}</p>
+  <p style="margin:0 0 16px;color:#475569">Change type: ${esc(source === "ai_seo" ? "AI SEO applied" : "Manual save")} · ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <thead><tr style="background:#eff6ff;text-align:left">
+      <th style="padding:8px">Field</th><th style="padding:8px">Before</th><th style="padding:8px">After</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <p style="margin:16px 0 0;color:#64748b;font-size:13px">Review or revert in Admin → ${esc(cfg.label)}s.</p>
+</div></body></html>`;
+
+    const text = `${cfg.label} updated via magic link: ${title || slug}\n${publicUrl}\n\n` +
+      keys.map((k) => `${pretty(k)}\n  before: ${diff[k].old ?? "—"}\n  after: ${diff[k].new ?? "—"}`).join("\n\n");
+
+    const messageId = `magic_edit_${logRow?.id ?? crypto.randomUUID()}`;
+    const { error: mailErr } = await sb.rpc("enqueue_email", {
+      queue_name: "transactional_emails",
+      payload: {
+        to: ADMIN_EMAIL,
+        from: SENDER_FROM,
+        sender_domain: SENDER_DOMAIN,
+        subject,
+        html,
+        text,
+        purpose: "transactional",
+        label: "magic_link_edit_notification",
+        idempotency_key: messageId,
+        message_id: messageId,
+        queued_at: new Date().toISOString(),
+      },
+    });
+    if (mailErr) {
+      console.error("[magic-edit] notify enqueue failed", mailErr);
+      return;
+    }
+    try { await sb.rpc("email_queue_wake"); } catch { /* best effort */ }
+    if (logRow?.id) await sb.from("magic_link_edits").update({ notified: true }).eq("id", logRow.id);
+  } catch (e) {
+    console.error("[magic-edit] notifyAdmin failed", e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -102,11 +160,21 @@ Deno.serve(async (req) => {
     const loadRecord = async () => {
       const { data, error } = await sb
         .from(cfg.table)
-        .select(fieldsFor(type).join(", "))
+        .select(selectKeys(cfg).join(", "))
         .eq("id", link.entity_id)
         .maybeSingle();
       if (error) throw error;
       return data as Record<string, any> | null;
+    };
+
+    const meta = {
+      entityType: type,
+      label: cfg.label,
+      titleField: cfg.titleField,
+      bodyField: cfg.bodyField,
+      editableFields: editableKeys(cfg),
+      seoFields: SEO_FIELDS,
+      note: link.note ?? null,
     };
 
     // ── LOAD ──────────────────────────────────────────────────────────────
@@ -118,12 +186,7 @@ Deno.serve(async (req) => {
         .update({ opened_count: (link.opened_count || 0) + 1, last_opened_at: new Date().toISOString() })
         .eq("id", link.id);
       return json({
-        entityType: type,
-        label: cfg.label,
-        titleField: cfg.titleField,
-        bodyField: cfg.bodyField,
-        extraFields: cfg.extraFields,
-        seoFields: SEO_FIELDS,
+        ...meta,
         publicUrl: `https://mbacompass.in${cfg.publicPath(record.slug)}`,
         record,
       });
@@ -131,19 +194,10 @@ Deno.serve(async (req) => {
 
     // ── SAVE ──────────────────────────────────────────────────────────────
     if (action === "save") {
-      const patch = (body?.values || {}) as Record<string, any>;
-      const allowed = new Set([cfg.titleField, cfg.bodyField, ...cfg.extraFields, ...SEO_FIELDS]);
-      const update: Record<string, any> = {};
-      for (const [k, v] of Object.entries(patch)) {
-        if (!allowed.has(k)) continue;
-        if (k === "keywords") {
-          update[k] = Array.isArray(v)
-            ? v.map((x) => String(x).trim()).filter(Boolean)
-            : String(v || "").split(",").map((x) => x.trim()).filter(Boolean);
-        } else {
-          update[k] = typeof v === "string" ? v : v ?? null;
-        }
-      }
+      const before = await loadRecord();
+      if (!before) return json({ error: "The linked page no longer exists." }, 404);
+
+      const update = coercePatch(cfg, (body?.values || {}) as Record<string, any>);
       if (!Object.keys(update).length) return json({ error: "Nothing to save" }, 400);
       update.updated_at = new Date().toISOString();
 
@@ -156,7 +210,14 @@ Deno.serve(async (req) => {
         .eq("id", link.id);
 
       const record = await loadRecord();
-      return json({ ok: true, record });
+      const diff = diffFields(before, record || {}, editableKeys(cfg));
+      await notifyAdmin(sb, {
+        link, cfg, type, diff, source: "manual_save",
+        slug: String(record?.slug || ""),
+        title: String(record?.[cfg.titleField] || ""),
+      });
+
+      return json({ ok: true, record, changedFields: Object.keys(diff) });
     }
 
     // ── AI SEO ────────────────────────────────────────────────────────────
@@ -233,6 +294,12 @@ Return STRICT JSON only, no markdown:
         const { error } = await sb.from(cfg.table).update(update).eq("id", link.entity_id);
         if (error) throw error;
         const fresh = await loadRecord();
+        const diff = diffFields(record, fresh || {}, editableKeys(cfg));
+        await notifyAdmin(sb, {
+          link, cfg, type, diff, source: "ai_seo",
+          slug: String(fresh?.slug || ""),
+          title: String(fresh?.[cfg.titleField] || ""),
+        });
         return json({ suggestions, applied: true, record: fresh });
       }
 
