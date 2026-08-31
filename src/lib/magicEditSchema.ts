@@ -14,7 +14,8 @@ export type MagicFieldType =
   | "tags"
   | "switch"
   | "statecity"
-  | "url";
+  | "url"
+  | "image";
 
 export interface MagicField {
   key: string;
