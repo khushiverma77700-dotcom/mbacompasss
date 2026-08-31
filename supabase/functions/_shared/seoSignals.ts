@@ -482,14 +482,14 @@ export async function loadPagesSlice(
   offset: number,
   size: number,
   sources = SILO_SOURCES,
-): Promise<LoadedPage[]> {
+): Promise<Array<LoadedPage & { raw?: Record<string, any> }>> {
   const src = sources[sourceIndex];
   if (!src) return [];
   let q = sb.from(src.table).select(src.columns);
   if (src.filter) q = src.filter(q);
   const { data, error } = await q.range(offset, offset + size - 1);
   if (error || !data) return [];
-  const pages: LoadedPage[] = [];
+  const pages: Array<LoadedPage & { raw?: Record<string, any> }> = [];
   for (const row of data) {
     const path = src.pathFor(row, {});
     if (!path) continue;
@@ -508,6 +508,8 @@ export async function loadPagesSlice(
       html,
       text,
       words: wordCount(text),
+      // Raw source row so callers can read real meta/H1 columns when present.
+      raw: row as Record<string, any>,
     });
   }
   return pages;

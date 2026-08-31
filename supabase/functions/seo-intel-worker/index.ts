@@ -272,6 +272,15 @@ async function runCrawlPages(ctx: Ctx) {
   const rows = slice.map((p) => {
     const html = p.html ?? "";
     const text = p.text ?? "";
+    const raw: Record<string, any> = (p as any).raw ?? {};
+    // Real stored metadata wins; the body-text clip is only a last resort so the
+    // "description length" lever measures the actual meta tag, not a 300-char slice.
+    const metaTitle: string | null = (raw.meta_title ?? "").toString().trim() || null;
+    const metaDesc: string | null = (raw.meta_description ?? "").toString().trim() || null;
+    const h1FromCol: string | null = (raw.h1_tag ?? "").toString().trim() || null;
+    const h1FromHtml = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? null;
+    const h1 = h1FromCol || (h1FromHtml ? stripHtml(h1FromHtml).trim() || null : null);
+    const headingCount = (html.match(/<h[1-6][\s>]/gi) ?? []).length;
     const words = p.words ?? wordCount(stripHtml(text));
     const hasSchema = /application\/ld\+json|itemtype=/i.test(html);
     const faqCount = (html.match(/<h3|faq/gi) ?? []).length;
@@ -299,8 +308,10 @@ async function runCrawlPages(ctx: Ctx) {
       path: p.path,
       page_type: p.page_type,
       entity_name: p.name,
-      title: p.name,
-      meta_description: stripHtml(text).slice(0, 300) || null,
+      title: metaTitle || p.name,
+      meta_description: metaDesc || stripHtml(text).slice(0, 160).trim() || null,
+      h1: h1,
+      heading_count: headingCount,
       word_count: words,
       has_schema: hasSchema,
       internal_links_out: internalOut,
@@ -366,6 +377,22 @@ async function runCrawlPages(ctx: Ctx) {
 
 
 
+
+/**
+ * Bounded-concurrency map. Provider calls are latency-bound, so running a small
+ * pool converts a 4-page-per-run sweep into a 24-40 page one without raising
+ * per-request cost or exceeding provider rate limits.
+ */
+async function runPool<T>(items: T[], concurrency: number, fn: (item: T) => Promise<void>) {
+  let i = 0;
+  const workers = Array.from({ length: Math.max(1, Math.min(concurrency, items.length)) }, async () => {
+    while (i < items.length) {
+      const item = items[i++];
+      try { await fn(item); } catch { /* per-item errors are handled by fn */ }
+    }
+  });
+  await Promise.all(workers);
+}
 
 /** Semrush volume / difficulty / CPC / 12-month trend for tracked keywords. */
 async function runKeywordMetrics(ctx: Ctx) {
@@ -504,26 +531,33 @@ async function runIndexCheck(ctx: Ctx) {
   const { sb, siteUrl, job } = ctx;
   if (!siteUrl) return { skipped: "Search Console is not connected — indexing state unavailable.", records: 0 };
   const cursor = Number(job.payload?.cursor ?? 0);
-  const batch = 8;
+  const batch = Math.max(1, Math.min(60, Number(job.payload?.batch ?? 40)));
   const deadline = Date.now() + 90_000; // stay well inside the function timeout
   const { data: pages } = await sb.from("seo_intel_pages")
     .select("path")
     .order("indexed_checked_at", { ascending: true, nullsFirst: true })
     .range(0, batch - 1);
   let done = 0;
-  for (const p of pages ?? []) {
-    if (Date.now() > deadline) break;
+  const inspect = async (p: { path: string }) => {
+    if (Date.now() > deadline) return;
     let state: string | null = null;
     try {
       state = await gscIndexState(siteUrl, `${SITE_URL}${p.path}`);
     } catch (_e) {
       state = null; // a single URL failing must not fail the whole stage
     }
+    // Canonical status so the "Indexed by Google" lever can actually pass:
+    // Search Console returns verbose phrases like "Submitted and indexed".
+    const canonical = !state
+      ? "unknown"
+      : /indexed(,| and )?|^Submitted and indexed$/i.test(state) && !/not indexed/i.test(state)
+        ? "indexed"
+        : "not_indexed";
     await sb.from("seo_intel_pages").update({
-      indexed_status: state ?? "unknown",
+      indexed_status: canonical,
       indexed_checked_at: nowIso(),
     }).eq("path", p.path);
-    if (state && !/^Submitted and indexed|Indexed/i.test(state)) {
+    if (state && canonical !== "indexed") {
       await sb.from("seo_intel_console_tasks").upsert({
         url: `${SITE_URL}${p.path}`,
         action: "request_indexing",
@@ -534,9 +568,24 @@ async function runIndexCheck(ctx: Ctx) {
       }, { onConflict: "url,action" }).select("id").maybeSingle();
     }
     done++;
-  }
+  };
+  await runPool(pages ?? [], 6, inspect);
+
   await markSource(sb, "gsc_url_inspection", { configured: true, status: "connected", last_sync_at: nowIso() });
-  return { records: done, detail: `inspected ${done} URL(s) from cursor ${cursor}` };
+
+  // Keep sweeping until every page has a verified index status (bounded depth).
+  const { count: unchecked } = await sb.from("seo_intel_pages")
+    .select("path", { count: "exact", head: true }).is("indexed_checked_at", null);
+  const depth = Number(job.payload?.depth ?? 0);
+  if ((unchecked ?? 0) > 0 && done > 0 && depth < 12) {
+    await enqueue(sb, {
+      job_type: "index_check", priority: 5,
+      payload: { batch, depth: depth + 1 },
+      dedupe_key: `index_check:sweep:${depth + 1}:${new Date().toISOString().slice(0, 13)}`,
+      triggered_by: "worker",
+    }).catch(() => {});
+  }
+  return { records: done, detail: `inspected ${done} URL(s) from cursor ${cursor} · ${unchecked ?? 0} never checked` };
 }
 
 /* ─────────── Firecrawl: what a crawler actually receives (live HTML) ─────────── */
@@ -548,7 +597,17 @@ async function runLiveCrawl(ctx: Ctx) {
     return { skipped: "Firecrawl is not connected.", records: 0 };
   }
 
-  const batch = Math.max(1, Math.min(6, Number(job.payload?.batch ?? 4)));
+  // Firecrawl's plan allows ~10 requests/minute, so the sweep is paced instead of
+  // bursty: a small pool plus a shared 6.5s slot keeps us just under the limit,
+  // and the job re-queues itself so the sweep never stops.
+  const batch = Math.max(1, Math.min(16, Number(job.payload?.batch ?? 12)));
+  const MIN_GAP_MS = 6_500;
+  let nextSlot = Date.now();
+  const takeSlot = async () => {
+    const wait = nextSlot - Date.now();
+    nextSlot = Math.max(Date.now(), nextSlot) + MIN_GAP_MS;
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  };
   const deadline = Date.now() + 110_000;
 
   // Highest-value pages first, then anything never checked / checked longest ago.
@@ -561,8 +620,11 @@ async function runLiveCrawl(ctx: Ctx) {
 
   let done = 0;
   let gaps = 0;
-  for (const p of pages) {
-    if (Date.now() > deadline) break;
+  let halted: string | null = null;
+  const crawlOne = async (p: any) => {
+    if (Date.now() > deadline || halted) return;
+    await takeSlot();
+    if (Date.now() > deadline || halted) return;
     const url = `${SITE_URL}${p.path}`;
     try {
       const res = await firecrawlScrapeStrict(url, { formats: ["markdown", "rawHtml"], onlyMainContent: false, timeoutMs: 45_000 });
@@ -607,18 +669,48 @@ async function runLiveCrawl(ctx: Ctx) {
       const msg = e instanceof Error ? e.message : String(e);
       const status = e instanceof FirecrawlError ? e.status : 0;
       // Credits / policy / rate limits are engine-wide problems, not page problems.
-      if (status === 402 || status === 403 || status === 429 || status === 401) {
+      if (status === 429) {
+        // Pacing problem, not an outage: stop this run and let the next hop retry.
+        halted = msg;
+        nextSlot = Date.now() + 30_000;
+        return;
+      }
+      if (status === 402 || status === 403 || status === 401) {
+        halted = msg;
         await markSource(sb, "firecrawl", { configured: true, status: "error", last_error: msg, last_tested_at: nowIso() });
-        return { skipped: `Firecrawl unavailable — live crawling paused (${msg.slice(0, 140)})`, records: done };
+        return;
       }
       await sb.from("seo_intel_pages").update({
         live_crawl_at: nowIso(), live_crawl_error: msg.slice(0, 300), updated_at: nowIso(),
       }).eq("path", p.path);
     }
+  };
+  await runPool(pages, 2, crawlOne);
+
+  const rateLimited = !!halted && /429|rate limit/i.test(String(halted));
+  if (!halted) {
+    await markSource(sb, "firecrawl", { configured: true, status: "connected", last_error: null, last_sync_at: nowIso() });
   }
 
-  await markSource(sb, "firecrawl", { configured: true, status: "connected", last_error: null, last_sync_at: nowIso() });
-  return { records: done, detail: `live-crawled ${done} page(s), ${gaps} with a crawler-visibility gap` };
+  // Rotational sweep: keep going while pages have never been crawler-checked.
+  const { count: never } = await sb.from("seo_intel_pages")
+    .select("path", { count: "exact", head: true }).is("live_crawl_at", null);
+  const depth = Number(job.payload?.depth ?? 0);
+  if ((never ?? 0) > 0 && (done > 0 || rateLimited) && depth < 24) {
+    await enqueue(sb, {
+      job_type: "live_crawl", priority: 5,
+      payload: { batch, depth: depth + 1 },
+      dedupe_key: `live_crawl:sweep:${depth + 1}:${new Date().toISOString().slice(0, 13)}`,
+      triggered_by: "worker",
+    }).catch(() => {});
+  }
+  if (halted && !rateLimited) {
+    return { skipped: `Firecrawl unavailable — live crawling paused (${String(halted).slice(0, 140)})`, records: done };
+  }
+  return {
+    records: done,
+    detail: `live-crawled ${done} page(s), ${gaps} with a crawler-visibility gap · ${never ?? 0} never checked${rateLimited ? " · paced by Firecrawl rate limit" : ""}`,
+  };
 }
 
 /* ─────────── PageSpeed Insights: real Core Web Vitals per page ─────────── */
@@ -626,7 +718,7 @@ async function runLiveCrawl(ctx: Ctx) {
 async function runSpeedAudit(ctx: Ctx) {
   const { sb, job } = ctx;
   const strategy: "mobile" | "desktop" = job.payload?.strategy === "desktop" ? "desktop" : "mobile";
-  const batch = Math.max(1, Math.min(3, Number(job.payload?.batch ?? 2))); // PSI is slow (~20-40s/URL)
+  const batch = Math.max(1, Math.min(8, Number(job.payload?.batch ?? 6))); // PSI is slow (~20-40s/URL)
   const deadline = Date.now() + 110_000;
 
   const { data: pages } = await sb.from("seo_intel_pages")
@@ -637,8 +729,9 @@ async function runSpeedAudit(ctx: Ctx) {
   if (!pages?.length) return { skipped: "No pages to audit yet.", records: 0 };
 
   let done = 0;
-  for (const p of pages) {
-    if (Date.now() > deadline) break;
+  let psiHalt: { status: number; msg: string } | null = null;
+  const auditOne = async (p: any) => {
+    if (Date.now() > deadline || psiHalt) return;
     const url = `${SITE_URL}${p.path}`;
     try {
       const m = await psiAudit(url, strategy, 60_000);
@@ -667,18 +760,25 @@ async function runSpeedAudit(ctx: Ctx) {
       const status = e instanceof PsiError ? e.status : 0;
       // Quota (429) and key/referrer restrictions (403) block every URL equally.
       if (status === 429 || status === 403 || status === 400 || status === 401) {
+        psiHalt = { status, msg };
         await markSource(sb, "pagespeed", {
           configured: psiConfigured(), status: "error", last_error: msg, last_tested_at: nowIso(),
         });
-        return {
-          skipped: status === 429
-            ? `PageSpeed daily quota exhausted — speed audits resume after the quota resets (${msg.slice(0, 120)})`
-            : `PageSpeed API rejected the request — ${msg.slice(0, 160)}`,
-          records: done,
-        };
+        return;
       }
       await ctx.note(`PageSpeed failed for ${p.path}: ${msg.slice(0, 160)}`);
     }
+  };
+  await runPool(pages, 3, auditOne);
+
+  if (psiHalt) {
+    const h = psiHalt as { status: number; msg: string };
+    return {
+      skipped: h.status === 429
+        ? `PageSpeed daily quota exhausted — speed audits resume after the quota resets (${h.msg.slice(0, 120)})`
+        : `PageSpeed API rejected the request — ${h.msg.slice(0, 160)}`,
+      records: done,
+    };
   }
 
   await markSource(sb, "pagespeed", {

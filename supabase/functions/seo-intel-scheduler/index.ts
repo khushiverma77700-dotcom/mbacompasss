@@ -63,9 +63,12 @@ Deno.serve(async (req) => {
     { type: "crawl_pages", everyMin: settings.freq_crawl_min, priority: 3 },
     { type: "keyword_metrics", everyMin: settings.freq_rank_min, priority: 4 },
     { type: "rank_track", everyMin: settings.freq_rank_min, priority: 4 },
-    { type: "index_check", everyMin: settings.freq_crawl_min, priority: 5 },
-    { type: "live_crawl", everyMin: Math.max(settings.freq_crawl_min, 180), payload: { batch: 4 }, priority: 5 },
-    { type: "speed_audit", everyMin: Math.max(settings.freq_crawl_min, 360), payload: { batch: 2, strategy: "mobile" }, priority: 6 },
+    // Signal collectors run on a tight cadence with parallel batches; each one
+    // self-chains until every page has been measured, so the 64 levers keep
+    // gaining coverage across the whole site instead of a few pages per day.
+    { type: "index_check", everyMin: Math.min(settings.freq_crawl_min, 30), payload: { batch: 40 }, priority: 5 },
+    { type: "live_crawl", everyMin: Math.min(settings.freq_crawl_min, 30), payload: { batch: 24 }, priority: 5 },
+    { type: "speed_audit", everyMin: Math.max(settings.freq_crawl_min, 120), payload: { batch: 6, strategy: "mobile" }, priority: 6 },
     { type: "competitor_scan", everyMin: settings.freq_competitor_min, priority: 6 },
     { type: "analyze", everyMin: settings.freq_monitor_min, priority: 7 },
     { type: "verify", everyMin: 1440, priority: 8 },
