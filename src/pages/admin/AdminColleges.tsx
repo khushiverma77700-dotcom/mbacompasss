@@ -543,6 +543,7 @@ const AdminColleges = () => {
             sheetName="Colleges"
             className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
           />
+          <BulkSortOrderDialog table="colleges" entityLabel="colleges" filePrefix="colleges" onApplied={fetchColleges} />
           <Button
             onClick={() => setReseoOpen(true)}
             className="bg-primary/90 hover:bg-primary"
