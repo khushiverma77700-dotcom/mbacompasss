@@ -162,14 +162,25 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
     setStep("loading");
     setAiResult(null);
     setError("");
+    setNeedsLogin(false);
 
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        setNeedsLogin(true);
+        setError("Sign in to see your personalised coaching matches");
+        setStep("result");
+        return;
+      }
+
       const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coaching-finder`;
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           preferences: {
@@ -187,6 +198,10 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
 
       if (!resp.ok) {
         const errorData = await resp.json().catch(() => ({}));
+        if (resp.status === 401) {
+          setNeedsLogin(true);
+          throw new Error("Sign in to see your personalised coaching matches");
+        }
         throw new Error(errorData.error || "Failed to get recommendations");
       }
 
@@ -199,6 +214,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
       setStep("result");
     }
   };
+
 
   const allSteps: Step[] = mode === "Online"
     ? ["mode", "budget", "exam", "experience", "prep_stage", "batch_pref"]
