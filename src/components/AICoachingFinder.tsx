@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 type Step = "mode" | "budget" | "location_type" | "state" | "city" | "exam" | "experience" | "prep_stage" | "batch_pref" | "loading" | "result";
 
@@ -103,6 +104,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
   const [batchPref, setBatchPref] = useState("");
   const [aiResult, setAiResult] = useState<AIResult | null>(null);
   const [error, setError] = useState("");
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
 
   const reset = () => {
