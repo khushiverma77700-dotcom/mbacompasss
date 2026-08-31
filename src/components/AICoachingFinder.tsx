@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 type Step = "mode" | "budget" | "location_type" | "state" | "city" | "exam" | "experience" | "prep_stage" | "batch_pref" | "loading" | "result";
 
@@ -103,7 +104,9 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
   const [batchPref, setBatchPref] = useState("");
   const [aiResult, setAiResult] = useState<AIResult | null>(null);
   const [error, setError] = useState("");
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
+  const locationPath = useLocation().pathname;
 
   const reset = () => {
     setStep("mode");
@@ -118,6 +121,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
     setBatchPref("");
     setAiResult(null);
     setError("");
+    setNeedsLogin(false);
     setLoadingStage(0);
   };
 
@@ -162,14 +166,25 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
     setStep("loading");
     setAiResult(null);
     setError("");
+    setNeedsLogin(false);
 
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        setNeedsLogin(true);
+        setError("Sign in to see your personalised coaching matches");
+        setStep("result");
+        return;
+      }
+
       const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coaching-finder`;
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           preferences: {
@@ -187,6 +202,10 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
 
       if (!resp.ok) {
         const errorData = await resp.json().catch(() => ({}));
+        if (resp.status === 401) {
+          setNeedsLogin(true);
+          throw new Error("Sign in to see your personalised coaching matches");
+        }
         throw new Error(errorData.error || "Failed to get recommendations");
       }
 
@@ -199,6 +218,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
       setStep("result");
     }
   };
+
 
   const allSteps: Step[] = mode === "Online"
     ? ["mode", "budget", "exam", "experience", "prep_stage", "batch_pref"]
@@ -625,7 +645,14 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                           <AlertCircle className="w-6 h-6 text-destructive" />
                         </div>
                         <p className="text-sm text-destructive font-medium mb-2">{error}</p>
-                        <div className="flex gap-2 justify-center">
+                        <div className="flex gap-2 justify-center flex-wrap">
+                          {needsLogin && (
+                            <Button asChild size="sm" className="gap-1.5 text-xs">
+                              <Link to={`/auth?redirect=${encodeURIComponent(locationPath)}`}>
+                                <Sparkles className="w-3.5 h-3.5" /> Sign in to continue
+                              </Link>
+                            </Button>
+                          )}
                           <Button onClick={reset} variant="outline" size="sm" className="gap-1.5 text-xs">
                             <Sparkles className="w-3.5 h-3.5" /> Try Again
                           </Button>
