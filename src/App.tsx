@@ -67,6 +67,7 @@ const CoachingFilterPage = lazyWithPreload(() => import("./pages/CoachingFilterP
 const CoachingCategoryRedirect = lazyWithPreload(() => import("./pages/CoachingCategoryRedirect"));
 const ProfileAnalyzerPage = lazyWithPreload(() => import("./pages/ProfileAnalyzerPage"));
 const SharedReportPage = lazyWithPreload(() => import("./pages/SharedReportPage"));
+const MagicEditPage = lazyWithPreload(() => import("./pages/MagicEditPage"));
 const CollegeFinderPage = lazyWithPreload(() => import("./pages/CollegeFinderPage"));
 const CollegeShortlisterPage = lazyWithPreload(() => import("./pages/CollegeShortlisterPage"));
 const BusinessInquiryPage = lazyWithPreload(() => import("./pages/BusinessInquiryPage"));
@@ -1030,6 +1031,7 @@ const App = () => (
             <Route path="/dashboard" element={<PublicLayout><LazyPage><DashboardPage /></LazyPage></PublicLayout>} />
             <Route path="/profile-analyzer" element={<PublicLayout><LazyPage><ProfileAnalyzerPage /></LazyPage></PublicLayout>} />
             <Route path="/report/:id" element={<PublicLayout><LazyPage><SharedReportPage /></LazyPage></PublicLayout>} />
+            <Route path="/edit/:token" element={<LazyPage><MagicEditPage /></LazyPage>} />
             <Route path="/college-finder" element={<PublicLayout><LazyPage><CollegeFinderPage /></LazyPage></PublicLayout>} />
             <Route path="/college-shortlister" element={<PublicLayout><LazyPage><CollegeShortlisterPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />

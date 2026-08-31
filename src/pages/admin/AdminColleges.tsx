@@ -32,6 +32,7 @@ import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
+import MagicLinkButton from "@/components/admin/MagicLinkButton";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
 import BulkSortOrderDialog from "@/components/admin/BulkSortOrderDialog";
 import FullPageReauditButton from "@/components/admin/FullPageReauditButton";
@@ -689,6 +690,7 @@ const AdminColleges = () => {
                       <CollegeReSeoRowButton college={{ id: c.id, name: c.name, slug: c.slug }} />
                       <FullPageReauditButton kind="college" entityId={c.id} entityName={c.name} />
                       <RefreshContentButton entityType="college" entityId={c.id} entityName={c.name} />
+                      <MagicLinkButton compact entityType="college" entityId={c.id} entityTitle={c.name} entitySlug={c.slug} />
                       <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </div>

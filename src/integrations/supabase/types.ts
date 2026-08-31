@@ -1725,6 +1725,63 @@ export type Database = {
         }
         Relationships: []
       }
+      content_magic_links: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_slug: string | null
+          entity_title: string | null
+          entity_type: string
+          expires_at: string | null
+          id: string
+          last_opened_at: string | null
+          last_saved_at: string | null
+          note: string | null
+          opened_count: number
+          saved_count: number
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_slug?: string | null
+          entity_title?: string | null
+          entity_type: string
+          expires_at?: string | null
+          id?: string
+          last_opened_at?: string | null
+          last_saved_at?: string | null
+          note?: string | null
+          opened_count?: number
+          saved_count?: number
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_slug?: string | null
+          entity_title?: string | null
+          entity_type?: string
+          expires_at?: string | null
+          id?: string
+          last_opened_at?: string | null
+          last_saved_at?: string | null
+          note?: string | null
+          opened_count?: number
+          saved_count?: number
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       content_refreshes: {
         Row: {
           ai_model: string | null

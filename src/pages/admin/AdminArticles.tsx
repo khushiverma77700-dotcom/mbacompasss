@@ -26,6 +26,7 @@ import RefreshContentButton from "@/components/admin/RefreshContentButton";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
+import MagicLinkButton from "@/components/admin/MagicLinkButton";
 
 const categories = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
 const statusOptions = [
@@ -429,6 +430,7 @@ const AdminArticles = () => {
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" asChild><a href={`/article/${a.slug}`} target="_blank"><Eye className="w-4 h-4" /></a></Button>
                       <RefreshContentButton entityType="article" entityId={a.id} entityName={a.title} />
+                      <MagicLinkButton compact entityType="article" entityId={a.id} entityTitle={a.title} entitySlug={a.slug} />
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(a)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(a.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </TableCell>
