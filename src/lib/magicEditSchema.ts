@@ -30,6 +30,8 @@ export interface MagicField {
   mono?: boolean;
   /** Half-width on desktop. */
   half?: boolean;
+  /** Storage sub-folder for `image` fields. */
+  folder?: string;
 }
 
 export interface MagicTab {
