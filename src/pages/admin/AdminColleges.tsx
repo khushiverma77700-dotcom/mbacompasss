@@ -33,6 +33,7 @@ import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
+import BulkSortOrderDialog from "@/components/admin/BulkSortOrderDialog";
 import FullPageReauditButton from "@/components/admin/FullPageReauditButton";
 import CollegeReSeoPanel, { CollegeReSeoRowButton } from "@/components/admin/CollegeReSeoPanel";
 
