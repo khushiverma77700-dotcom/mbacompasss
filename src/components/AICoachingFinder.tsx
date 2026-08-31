@@ -106,6 +106,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
   const [error, setError] = useState("");
   const [needsLogin, setNeedsLogin] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
+  const locationPath = useLocation().pathname;
 
   const reset = () => {
     setStep("mode");
@@ -120,6 +121,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
     setBatchPref("");
     setAiResult(null);
     setError("");
+    setNeedsLogin(false);
     setLoadingStage(0);
   };
 
@@ -643,7 +645,14 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                           <AlertCircle className="w-6 h-6 text-destructive" />
                         </div>
                         <p className="text-sm text-destructive font-medium mb-2">{error}</p>
-                        <div className="flex gap-2 justify-center">
+                        <div className="flex gap-2 justify-center flex-wrap">
+                          {needsLogin && (
+                            <Button asChild size="sm" className="gap-1.5 text-xs">
+                              <Link to={`/auth?redirect=${encodeURIComponent(locationPath)}`}>
+                                <Sparkles className="w-3.5 h-3.5" /> Sign in to continue
+                              </Link>
+                            </Button>
+                          )}
                           <Button onClick={reset} variant="outline" size="sm" className="gap-1.5 text-xs">
                             <Sparkles className="w-3.5 h-3.5" /> Try Again
                           </Button>
