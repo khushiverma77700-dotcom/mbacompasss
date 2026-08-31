@@ -3,6 +3,7 @@ Allow: /
 Allow: /coaching
 Allow: /coaching/*
 Disallow: /admin
+Disallow: /edit/
 Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
@@ -14,6 +15,7 @@ Allow: /
 Allow: /coaching
 Allow: /coaching/*
 Disallow: /admin
+Disallow: /edit/
 Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
@@ -29,6 +31,7 @@ Allow: /
 Allow: /coaching
 Allow: /coaching/*
 Disallow: /admin
+Disallow: /edit/
 Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
@@ -50,6 +53,7 @@ Disallow: /*?*ref=
 User-agent: GPTBot
 Allow: /
 Disallow: /admin
+Disallow: /edit/
 Disallow: /auth
 Disallow: /dashboard
 
