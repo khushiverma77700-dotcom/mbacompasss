@@ -139,7 +139,7 @@ const MagicEditPage = () => {
   const renderField = (f: MagicField) => {
     if (f.type === "statecity") {
       return (
-        <div key={f.key} className="md:col-span-2 grid grid-cols-2 gap-3">
+        <div key={f.key} className="md:col-span-2">
           <StateCitySelect
             state={values.state || ""}
             city={values.city || ""}
