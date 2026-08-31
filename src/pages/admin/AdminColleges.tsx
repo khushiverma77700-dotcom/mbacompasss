@@ -32,6 +32,7 @@ import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
+import MagicLinkButton from "@/components/admin/MagicLinkButton";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
 import BulkSortOrderDialog from "@/components/admin/BulkSortOrderDialog";
 import FullPageReauditButton from "@/components/admin/FullPageReauditButton";
