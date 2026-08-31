@@ -100,6 +100,7 @@ const AdminCoachingInstitutes = () => {
             label="Download Excel"
             className="border-teal-500/40 text-teal-700 hover:bg-teal-50"
           />
+          <BulkSortOrderDialog table="institutes" entityLabel="coaching institutes" filePrefix="coaching-institutes" onApplied={load} />
           <Link to="/admin/coaching-refresh-hub">
             <Button variant="outline"><RefreshCw className="w-4 h-4 mr-1" /> Content Refresh Hub</Button>
           </Link>
