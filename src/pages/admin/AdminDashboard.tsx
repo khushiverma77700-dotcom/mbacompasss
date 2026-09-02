@@ -17,22 +17,20 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
+    // One RPC round-trip using planner row estimates instead of six
+    // exact COUNT(*) scans (colleges alone is 4k+ rows / 30 MB).
     const fetchStats = async () => {
-      const [inst, crs, art, inq, col, sub] = await Promise.all([
-        supabase.from("institutes").select("id", { count: "exact", head: true }),
-        supabase.from("courses").select("id", { count: "exact", head: true }),
-        supabase.from("articles").select("id", { count: "exact", head: true }),
-        supabase.from("inquiries").select("id", { count: "exact", head: true }),
-        supabase.from("colleges").select("id", { count: "exact", head: true }),
-        supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }),
-      ]);
+      const { data } = await supabase.rpc("admin_table_row_estimates");
+      const map = new Map<string, number>(
+        (data ?? []).map((r: any) => [r.table_name as string, Number(r.row_estimate) || 0])
+      );
       setStats({
-        institutes: inst.count ?? 0,
-        courses: crs.count ?? 0,
-        articles: art.count ?? 0,
-        inquiries: inq.count ?? 0,
-        colleges: col.count ?? 0,
-        subscribers: sub.count ?? 0,
+        institutes: map.get("institutes") ?? 0,
+        courses: map.get("courses") ?? 0,
+        articles: map.get("articles") ?? 0,
+        inquiries: map.get("inquiries") ?? 0,
+        colleges: map.get("colleges") ?? 0,
+        subscribers: map.get("newsletter_subscribers") ?? 0,
       });
     };
     fetchStats();
