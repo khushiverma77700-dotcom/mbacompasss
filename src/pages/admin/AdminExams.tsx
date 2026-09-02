@@ -95,8 +95,16 @@ const AdminExams = () => {
     });
   }, [sortedExams, filters.search]);
 
+  // Narrow column list — the long-form modular content columns are several
+  // hundred KB per row and are never needed by the list, the edit form,
+  // or the Excel export. Pulling "*" made this page load ~1 MB of JSON.
+  const LIST_COLUMNS =
+    "id, name, slug, full_name, description, conducting_body, eligibility, exam_date, " +
+    "registration_deadline, frequency, syllabus, keywords, meta_title, meta_description, " +
+    "h1_tag, primary_keyword, funnel_stage, cluster_id, listing_sort_order, created_at, updated_at";
+
   const fetchExams = async () => {
-    const { data } = await supabase.from("exams").select("*").order("name");
+    const { data } = await supabase.from("exams").select(LIST_COLUMNS).order("name");
     if (data) setExams(data);
   };
 
