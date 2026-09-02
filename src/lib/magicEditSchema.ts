@@ -82,7 +82,7 @@ export const MAGIC_SCHEMA: Record<string, MagicEntitySchema> = {
           { key: "specializations", label: "Specializations", type: "tags" },
           { key: "logo_url", label: "College Logo", type: "image", folder: "colleges/logos", hint: "200×200 px square PNG • Max 100 KB", half: true },
           { key: "banner_url", label: "Banner Image (Desktop)", type: "image", folder: "colleges/banners", hint: "1200×400 px (3:1) • Max 250 KB", half: true },
-          { key: "mobile_banner_url", label: "Banner Image (Mobile)", type: "image", folder: "colleges/banners", hint: "600×300 px (2:1) • Max 120 KB", half: true },
+          
           { key: "website", label: "Website URL", type: "url" },
         ],
       },
