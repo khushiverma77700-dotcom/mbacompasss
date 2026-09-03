@@ -243,7 +243,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
   const getRankStyle = (rank: number) => {
     if (rank === 1) return { badge: "🥇 #1 Best Match", border: "border-primary/50 shadow-lg shadow-primary/10", header: "bg-gradient-to-r from-primary/15 via-primary/8 to-amber-50/30" };
     if (rank === 2) return { badge: "🥈 #2 Great Fit", border: "border-border shadow-md", header: "bg-gradient-to-r from-muted/60 to-muted/20" };
-    if (rank === 3) return { badge: "🥉 #3 Good Option", border: "border-border shadow-sm", header: "bg-gradient-to-r from-muted/40 to-muted/10" };
+    if (rank === 3) return { badge: "🥉 #3 Good Option", border: "border-border shadow-xs", header: "bg-gradient-to-r from-muted/40 to-muted/10" };
     return { badge: `#${rank} Option`, border: "border-border", header: "bg-muted/20" };
   };
 
@@ -270,7 +270,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
       whileHover={{ scale: 1.04, y: -1 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className={`p-3 rounded-xl border ${dashed ? "border-dashed border-muted-foreground/30" : active ? "border-primary bg-primary/10 shadow-sm" : "border-border"} hover:border-primary/50 hover:shadow-sm bg-card text-center transition-all`}
+      className={`p-3 rounded-xl border ${dashed ? "border-dashed border-muted-foreground/30" : active ? "border-primary bg-primary/10 shadow-xs" : "border-border"} hover:border-primary/50 hover:shadow-xs bg-card text-center transition-all`}
     >
       {Icon && <Icon className={`w-4 h-4 mx-auto mb-1 ${active ? "text-primary" : "text-primary/70"}`} />}
       <div className={`font-semibold text-xs ${active ? "text-primary" : "text-foreground"}`}>{label}</div>
@@ -403,7 +403,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
       >
         <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
           <div className="relative shrink-0">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex items-center justify-center shadow-sm overflow-hidden">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex items-center justify-center shadow-xs overflow-hidden">
               <img src={mbahubLogo} alt="MBA Compass AI" className="w-8 h-8 sm:w-9 sm:h-9 object-contain" loading="eager" />
             </div>
             <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
@@ -427,7 +427,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
               Try Now <Zap className="w-3.5 h-3.5" />
             </span>
           )}
-          <div className="w-8 h-8 rounded-full border border-border/70 bg-background flex items-center justify-center shadow-sm">
+          <div className="w-8 h-8 rounded-full border border-border/70 bg-background flex items-center justify-center shadow-xs">
             <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
           </div>
         </div>
@@ -522,7 +522,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                           onClick={() => toggleExam(e)}
                           className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1.5 ${
                             selectedExams.includes(e)
-                              ? "border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20"
+                              ? "border-primary bg-primary/10 shadow-xs ring-2 ring-primary/20"
                               : "border-border bg-card hover:border-primary/50"
                           }`}
                         >

@@ -445,7 +445,7 @@ const CATScoreCalculatorPage: React.FC = () => {
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     placeholder="https://cdn.digialm.com/...  (Paste your CAT response sheet link here)"
-                    className="w-full pl-10 pr-4 py-4 bg-muted/20 border border-border text-foreground placeholder:text-muted-foreground rounded-xl text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full pl-10 pr-4 py-4 bg-muted/20 border border-border text-foreground placeholder:text-muted-foreground rounded-xl text-sm focus:border-primary/50 focus:outline-hidden focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
                 <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
@@ -534,7 +534,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
             {/* Candidate Info */}
             <section className="max-w-5xl mx-auto px-4 pt-8">
-              <div className="bg-card border border-border rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+              <div className="bg-card border border-border rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-center justify-between shadow-xs">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <GraduationCap className="w-6 h-6 text-primary" />
@@ -561,7 +561,7 @@ const CATScoreCalculatorPage: React.FC = () => {
                   { label: "Attempted", value: result.overall.attempted, sub: `of ${result.overall.totalQuestions} Qs`, bg: "bg-amber-50", border: "border-amber-200", textColor: "text-amber-600", labelColor: "text-amber-600", icon: BookOpen },
                 ].map((card, i) => (
                   <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
-                    className={`${card.bg} border ${card.border} rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-shadow`}>
+                    className={`${card.bg} border ${card.border} rounded-2xl p-5 text-center shadow-xs hover:shadow-md transition-shadow`}>
                     <card.icon className={`w-5 h-5 ${card.labelColor} mx-auto mb-2`} />
                     <p className={`text-xs ${card.labelColor} uppercase tracking-wider font-semibold mb-1`}>{card.label}</p>
                     <p className={`text-3xl md:text-4xl font-black ${card.textColor}`}>{card.value}</p>
@@ -581,7 +581,7 @@ const CATScoreCalculatorPage: React.FC = () => {
                   const colors = SECTION_COLORS[section.section] || SECTION_COLORS.VARC;
                   return (
                     <motion.div key={section.section} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.1 }}
-                      className={`${colors.bg} border ${colors.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
+                      className={`${colors.bg} border ${colors.border} rounded-2xl p-5 shadow-xs hover:shadow-md transition-all`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-lg font-bold ${colors.text}`}>{section.section}</h3>
                         <span className={`text-3xl font-black ${colors.text}`}>{section.score}</span>
@@ -617,7 +617,7 @@ const CATScoreCalculatorPage: React.FC = () => {
 
             {/* AI Insights Section */}
             <SectionInView className="max-w-5xl mx-auto px-4 mb-10">
-              <div className="bg-gradient-to-br from-primary/5 via-secondary/10 to-primary/5 border border-primary/15 rounded-2xl p-6 md:p-8 shadow-sm">
+              <div className="bg-gradient-to-br from-primary/5 via-secondary/10 to-primary/5 border border-primary/15 rounded-2xl p-6 md:p-8 shadow-xs">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Sparkles className="w-5 h-5 text-primary" />
@@ -641,9 +641,9 @@ const CATScoreCalculatorPage: React.FC = () => {
                     ];
                     return insights.map((insight, i) => (
                       <motion.div key={insight.title} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.1 }}
-                        className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-sm">
+                        className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xs">
                         <div className="flex items-start gap-3">
-                          <insight.icon className={`w-5 h-5 ${insight.color} mt-0.5 flex-shrink-0`} />
+                          <insight.icon className={`w-5 h-5 ${insight.color} mt-0.5 shrink-0`} />
                           <div>
                             <p className="text-sm font-bold text-foreground mb-1">{insight.title}</p>
                             <p className="text-xs text-muted-foreground leading-relaxed">{insight.text}</p>
@@ -715,7 +715,7 @@ const CATScoreCalculatorPage: React.FC = () => {
 
             {/* Complete Score Summary Table */}
             <SectionInView className="max-w-5xl mx-auto px-4 mb-10">
-              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
                 <div className="bg-primary/5 px-5 py-3 border-b border-border">
                   <h3 className="text-foreground font-bold">Complete Score Summary</h3>
                 </div>
@@ -764,7 +764,7 @@ const CATScoreCalculatorPage: React.FC = () => {
 
             {/* Question-wise Detail */}
             <SectionInView className="max-w-5xl mx-auto px-4 mb-10">
-              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
                 <button onClick={() => setShowQuestions(!showQuestions)} className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-primary" />
@@ -815,13 +815,13 @@ const CATScoreCalculatorPage: React.FC = () => {
             {/* CTA Section */}
             <SectionInView className="max-w-5xl mx-auto px-4 mb-10">
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-primary/5 border border-primary/15 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-primary/5 border border-primary/15 rounded-2xl p-6 shadow-xs hover:shadow-md transition-shadow">
                   <Award className="w-8 h-8 text-primary mb-3" />
                   <h3 className="text-foreground font-bold text-lg mb-2">Want to Improve Your Score?</h3>
                   <p className="text-muted-foreground text-sm mb-4">Get AI-powered profile analysis with college predictions and strategy</p>
                   <Link to="/profile-analyzer"><Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Analyse My Profile <ArrowRight className="w-4 h-4 ml-1" /></Button></Link>
                 </div>
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 shadow-xs hover:shadow-md transition-shadow">
                   <TrendingUp className="w-8 h-8 text-emerald-600 mb-3" />
                   <h3 className="text-foreground font-bold text-lg mb-2">Find Best Coaching</h3>
                   <p className="text-muted-foreground text-sm mb-4">Compare top CAT coaching centres with verified reviews and results</p>
@@ -849,7 +849,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t, i) => (
               <SectionInView key={t.name} delay={i * 0.08}>
-                <div className="bg-card border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                <div className="bg-card border border-border rounded-2xl p-5 shadow-xs hover:shadow-md transition-all h-full flex flex-col">
                   <div className="flex items-center gap-1 mb-3">
                     {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
                   </div>
@@ -918,7 +918,7 @@ const CATScoreCalculatorPage: React.FC = () => {
                 { icon: Sparkles, title: "AI-Powered Insights", desc: "Identifies your strengths, weaknesses, mistake patterns, and provides personalized improvement tips." },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <item.icon className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -949,7 +949,7 @@ const CATScoreCalculatorPage: React.FC = () => {
                 { label: "Incorrect Answer (MCQ)", marks: "-1", color: "bg-red-50 border-red-200 text-destructive", icon: XCircle },
                 { label: "Incorrect / Unanswered (TITA)", marks: "0", color: "bg-muted border-border text-muted-foreground", icon: MinusCircle },
               ].map((item) => (
-                <motion.div key={item.label} whileHover={{ y: -4 }} className={`${item.color} border rounded-2xl p-6 text-center shadow-sm`}>
+                <motion.div key={item.label} whileHover={{ y: -4 }} className={`${item.color} border rounded-2xl p-6 text-center shadow-xs`}>
                   <item.icon className="w-8 h-8 mx-auto mb-3" />
                   <p className="text-4xl font-black mb-2">{item.marks}</p>
                   <p className="text-sm font-medium">{item.label}</p>
@@ -959,7 +959,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           </SectionInView>
 
           <SectionInView delay={0.2}>
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
               <h3 className="font-bold text-foreground mb-4">CAT 2025 Exam Pattern</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -1010,7 +1010,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">CAT Score to Percentile Mapping 2025</h2>
           <p className="text-muted-foreground">Based on analysis of previous year data and current trends</p>
         </div>
-        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -1069,10 +1069,10 @@ const CATScoreCalculatorPage: React.FC = () => {
               { q: "Can I use this calculator for XAT, SNAP, or other MBA exams?", a: "Currently, this tool is specifically designed for CAT response sheets. We plan to add support for XAT, SNAP, NMAT, and other MBA entrance exams soon." },
             ].map((faq, i) => (
               <SectionInView key={i} delay={i * 0.03}>
-                <details className="bg-card border border-border rounded-xl shadow-sm group">
+                <details className="bg-card border border-border rounded-xl shadow-xs group">
                   <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-xl">
                     <span className="text-foreground font-semibold text-sm pr-4">{faq.q}</span>
-                    <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 group-open:rotate-180 transition-transform" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 group-open:rotate-180 transition-transform" />
                   </summary>
                   <div className="px-5 pb-4">
                     <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
@@ -1097,7 +1097,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Long Tail Keywords */}
             <SectionInView delay={0.1}>
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm h-full">
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-xs h-full">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Search className="w-4 h-4 text-primary" />
@@ -1114,7 +1114,7 @@ const CATScoreCalculatorPage: React.FC = () => {
 
             {/* Short Tail Keywords */}
             <SectionInView delay={0.2}>
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm h-full">
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-xs h-full">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
                     <Tag className="w-4 h-4 text-emerald-600" />
@@ -1132,7 +1132,7 @@ const CATScoreCalculatorPage: React.FC = () => {
 
           {/* Student Queries */}
           <SectionInView delay={0.3} className="mt-6">
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
                   <FileQuestion className="w-4 h-4 text-amber-600" />
@@ -1142,7 +1142,7 @@ const CATScoreCalculatorPage: React.FC = () => {
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {STUDENT_QUERIES.map((q) => (
                   <div key={q} className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg px-3 py-2.5 hover:bg-muted/50 transition-colors">
-                    <HelpCircle className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <HelpCircle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
                     <span>{q}</span>
                   </div>
                 ))}
@@ -1152,7 +1152,7 @@ const CATScoreCalculatorPage: React.FC = () => {
 
           {/* Trending Searches */}
           <SectionInView delay={0.4} className="mt-6">
-            <div className="bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/10 rounded-2xl p-6 shadow-sm">
+            <div className="bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/10 rounded-2xl p-6 shadow-xs">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-primary" />

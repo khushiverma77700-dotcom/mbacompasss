@@ -340,10 +340,10 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
               transition={{ delay: i * 0.1 }}
               className="flex items-center gap-3 relative"
             >
-              <div className={`w-9 h-9 rounded-full ${a.chip} flex items-center justify-center text-xs font-bold shrink-0 ring-4 ring-background z-10 shadow-sm`}>
+              <div className={`w-9 h-9 rounded-full ${a.chip} flex items-center justify-center text-xs font-bold shrink-0 ring-4 ring-background z-10 shadow-xs`}>
                 {m.year}
               </div>
-              <div className="flex-1 min-w-0 bg-card border border-border rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex-1 min-w-0 bg-card border border-border rounded-lg px-3 py-2 shadow-xs hover:shadow-md transition-shadow">
                 <p className="text-xs font-semibold text-foreground truncate">{m.role}</p>
                 <p className={`text-xs ${a.text} font-bold`}>₹{m.salary} LPA</p>
               </div>

@@ -226,7 +226,7 @@ export default function ExamCutoffsTable() {
         {/* Table */}
         <div className="max-w-6xl mx-auto rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-15px_rgba(14,165,233,0.2)] overflow-hidden">
           <div
-            className="max-h-[560px] overflow-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-b-2xl"
+            className="max-h-[560px] overflow-auto focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-b-2xl"
             tabIndex={0}
             role="region"
             aria-label="Exam cut-offs table, scrollable"

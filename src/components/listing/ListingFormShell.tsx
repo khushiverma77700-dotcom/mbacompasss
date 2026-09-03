@@ -356,7 +356,7 @@ const ListingFormShell = ({ listing, type }: Props) => {
         </Card>
 
         {!readOnly && (
-          <div className="flex items-center justify-between gap-3 flex-wrap sticky bottom-4 bg-background/95 backdrop-blur p-3 border border-border rounded-xl shadow-sm">
+          <div className="flex items-center justify-between gap-3 flex-wrap sticky bottom-4 bg-background/95 backdrop-blur p-3 border border-border rounded-xl shadow-xs">
             <div className="text-xs text-muted-foreground">
               {lastSavedAt ? (
                 <>Auto-saved {lastSavedAt.toLocaleTimeString()}</>

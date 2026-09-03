@@ -346,7 +346,7 @@ const ComparePage = () => {
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
-                    className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-lg transition-all"
+                    className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-xs rounded-lg transition-all"
                   >
                     <tab.icon className="w-4 h-4" /> <span className="hidden sm:inline">{tab.label}</span>
                   </TabsTrigger>
@@ -372,7 +372,7 @@ const ComparePage = () => {
                       <motion.div
                         key={i}
                         whileHover={{ scale: 1.03, y: -2 }}
-                        className="rounded-xl border border-border bg-card p-3.5 shadow-sm"
+                        className="rounded-xl border border-border bg-card p-3.5 shadow-xs"
                       >
                         <div className="flex items-center gap-2.5">
                           <div
@@ -407,7 +407,7 @@ const ComparePage = () => {
                                 <th key={s.id} className="text-left py-3.5 px-4 min-w-[170px]">
                                   <div className="flex items-center gap-2">
                                     <div
-                                      className="w-2 h-8 rounded-full flex-shrink-0"
+                                      className="w-2 h-8 rounded-full shrink-0"
                                       style={{ background: `rgba(${cardColors[idx]}, 0.8)` }}
                                     />
                                     <div>
@@ -446,7 +446,7 @@ const ComparePage = () => {
                               { label: "Features", icon: CheckCircle, render: (s: DBCourse) => (
                                 <div className="space-y-1">
                                   {(s.institutes?.features || []).slice(0, 3).map((f, j) => (
-                                    <div key={j} className="text-xs flex items-start gap-1.5"><CheckCircle className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" /><span className="line-clamp-1">{f}</span></div>
+                                    <div key={j} className="text-xs flex items-start gap-1.5"><CheckCircle className="w-3 h-3 text-primary mt-0.5 shrink-0" /><span className="line-clamp-1">{f}</span></div>
                                   ))}
                                 </div>
                               )},
@@ -490,7 +490,7 @@ const ComparePage = () => {
                                   className="h-full rounded-xl flex items-center justify-end pr-3"
                                   style={{ background: `linear-gradient(90deg, rgba(${cardColors[i]}, 0.7), rgba(${cardColors[i]}, 0.9))` }}
                                 >
-                                  <span className="text-xs font-bold text-white drop-shadow-sm">₹{Number(s.fees || 0).toLocaleString()}</span>
+                                  <span className="text-xs font-bold text-white drop-shadow-xs">₹{Number(s.fees || 0).toLocaleString()}</span>
                                 </motion.div>
                               </div>
                             </div>
@@ -547,7 +547,7 @@ const ComparePage = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: idx * 0.03 }}
                               >
-                                <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: `rgba(${cardColors[i]}, 0.7)` }} />
+                                <CheckCircle className="w-3 h-3 mt-0.5 shrink-0" style={{ color: `rgba(${cardColors[i]}, 0.7)` }} />
                                 <span className="text-muted-foreground">{item}</span>
                               </motion.div>
                             ))}
@@ -674,7 +674,7 @@ const ComparePage = () => {
                               whileHover={{ scale: 1.01 }}
                             >
                               <div
-                                className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg flex-shrink-0 text-white"
+                                className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 text-white"
                                 style={{ background: i === 0 ? `linear-gradient(135deg, rgba(${cardColors[0]}, 0.9), rgba(${cardColors[1]}, 0.9))` : `rgba(${cardColors[i] || cardColors[2]}, 0.15)`, color: i === 0 ? 'white' : `rgba(${cardColors[i] || cardColors[2]}, 0.9)` }}
                               >
                                 <span className="text-xl">{rankEmoji || `#${i + 1}`}</span>
@@ -691,7 +691,7 @@ const ComparePage = () => {
                                   <span className="font-bold text-foreground">{s.fees ? `₹${Number(s.fees).toLocaleString()}` : "N/A"}</span>
                                 </div>
                               </div>
-                              <div className="text-right flex-shrink-0">
+                              <div className="text-right shrink-0">
                                 <div className="text-xs text-muted-foreground mb-0.5">Score</div>
                                 <motion.div
                                   className={`font-heading font-bold text-2xl ${i === 0 ? "text-primary" : "text-foreground"}`}
@@ -747,7 +747,7 @@ const ComparePage = () => {
               {compareFaqs.map((faq, i) => (
                 <motion.div
                   key={i}
-                  className="bg-card rounded-xl border border-border overflow-hidden transition-all hover:shadow-sm"
+                  className="bg-card rounded-xl border border-border overflow-hidden transition-all hover:shadow-xs"
                   initial={false}
                 >
                   <button onClick={() => setExpandedFaq(expandedFaq === i ? null : i)} className="w-full flex items-center justify-between p-4 text-left group" aria-expanded={expandedFaq === i}>
@@ -756,7 +756,7 @@ const ComparePage = () => {
                       animate={{ rotate: expandedFaq === i ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
                     </motion.div>
                   </button>
                   <AnimatePresence>

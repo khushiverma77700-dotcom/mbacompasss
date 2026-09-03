@@ -44,7 +44,7 @@ const CoachingMapView = ({ institutes, onCityClick }: Props) => {
               <button
                 key={cl.city}
                 onClick={() => onCityClick(cl.city)}
-                className="group relative rounded-2xl border border-sky-100 bg-white p-4 text-left shadow-sm hover:shadow-lg hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden"
+                className="group relative rounded-2xl border border-sky-100 bg-white p-4 text-left shadow-xs hover:shadow-lg hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden"
               >
                 <div
                   className="pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl"

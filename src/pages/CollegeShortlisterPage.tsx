@@ -632,7 +632,7 @@ const CollegeShortlisterPage = () => {
                   <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${b.color}`} />
                   <CardContent className="pt-6 pb-5 pl-6">
                     <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0`}>
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0`}>
                         <b.icon className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
@@ -715,8 +715,8 @@ const CollegeShortlisterPage = () => {
                         <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-background/60">
                           <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center"><Building2 className="w-4 h-4 text-muted-foreground" /></div>
                           <div className="flex-1">
-                            <div className="h-3 bg-muted rounded w-3/4 mb-1.5" />
-                            <div className="h-2 bg-muted rounded w-1/2" />
+                            <div className="h-3 bg-muted rounded-[0.25rem] w-3/4 mb-1.5" />
+                            <div className="h-2 bg-muted rounded-[0.25rem] w-1/2" />
                           </div>
                           <Badge className={cfg.badge + " text-xs"}>{bucket === "dream" ? "32%" : bucket === "target" ? "58%" : "82%"}</Badge>
                         </div>
@@ -738,7 +738,7 @@ const CollegeShortlisterPage = () => {
             ].map((f, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.08 }}>
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <f.icon className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -1302,10 +1302,10 @@ const CollegeShortlisterPage = () => {
             {stages.map((stage, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 1.2 }}
                 className="flex items-center gap-3 text-left p-3 rounded-xl bg-muted/50">
-                <stage.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                <stage.icon className="w-5 h-5 text-primary shrink-0" />
                 <span className="text-sm text-foreground">{stage.text}</span>
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 1.2 + 1 }}>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto flex-shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto shrink-0" />
                 </motion.div>
               </motion.div>
             ))}
@@ -1334,7 +1334,7 @@ const CollegeShortlisterPage = () => {
         <div className="relative h-2 bg-muted rounded-full overflow-hidden">
           <div className={`absolute top-0 left-0 h-full rounded-full transition-all ${isAbove ? "bg-emerald-500" : "bg-red-400"}`}
             style={{ width: `${Math.min(yoursPercent, 100)}%` }} />
-          <div className="absolute top-0 h-full w-0.5 bg-foreground/40 rounded" style={{ left: `${Math.min(requiredPercent, 100)}%` }} />
+          <div className="absolute top-0 h-full w-0.5 bg-foreground/40 rounded-[0.25rem]" style={{ left: `${Math.min(requiredPercent, 100)}%` }} />
         </div>
       </div>
     );
@@ -1352,8 +1352,8 @@ const CollegeShortlisterPage = () => {
             <div className="p-4">
               {/* Header */}
               <div className="flex items-start gap-3 mb-3">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-md flex-shrink-0`}>
-                  {college.logo_url ? <img src={college.logo_url} alt="" className="w-7 h-7 rounded object-contain"  loading="lazy" decoding="async" /> : <Building2 className="w-5 h-5 text-white" />}
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-md shrink-0`}>
+                  {college.logo_url ? <img src={college.logo_url} alt="" className="w-7 h-7 rounded-[0.25rem] object-contain"  loading="lazy" decoding="async" /> : <Building2 className="w-5 h-5 text-white" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <Link to={`/college/${college.slug}`} className="font-heading font-semibold text-foreground text-sm hover:text-primary transition-colors line-clamp-1 block">{college.name}</Link>
@@ -1362,7 +1362,7 @@ const CollegeShortlisterPage = () => {
                     {college.tier && <Badge variant="outline" className="text-xs px-1.5 py-0">{college.tier}</Badge>}
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="text-right shrink-0">
                   <div className={`text-lg font-bold ${cfg.color}`}>{college.chancePercent}%</div>
                   <Badge className={`${cfg.badge} text-xs`}>{college.bucket}</Badge>
                 </div>
@@ -1422,7 +1422,7 @@ const CollegeShortlisterPage = () => {
               {/* Why fit */}
               <div className={`mt-3 p-3 rounded-xl ${cfg.bg} border ${cfg.border}`}>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className={`w-4 h-4 ${cfg.color} flex-shrink-0 mt-0.5`} />
+                  <CheckCircle2 className={`w-4 h-4 ${cfg.color} shrink-0 mt-0.5`} />
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Why You Fit</span>
                     <p className="text-xs text-foreground mt-0.5 leading-relaxed">{college.whyFit}</p>
@@ -1443,7 +1443,7 @@ const CollegeShortlisterPage = () => {
                       {bd && bd.improvements.length > 0 && (
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0">
                               <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
                             </div>
                             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Areas to Improve</span>
@@ -1451,7 +1451,7 @@ const CollegeShortlisterPage = () => {
                           <div className="space-y-1.5 ml-8">
                             {bd.improvements.map((imp, idx) => (
                               <div key={idx} className="flex items-start gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${bd.overallYours >= bd.overallRequired ? "bg-emerald-500" : "bg-amber-500"}`} />
+                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${bd.overallYours >= bd.overallRequired ? "bg-emerald-500" : "bg-amber-500"}`} />
                                 <p className="text-xs text-foreground leading-relaxed">{imp}</p>
                               </div>
                             ))}
@@ -1460,7 +1460,7 @@ const CollegeShortlisterPage = () => {
                       )}
 
                       <div className="flex items-start gap-2.5 pt-2 border-t border-border/30">
-                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                           <Rocket className="w-3.5 h-3.5 text-primary" />
                         </div>
                         <div>
@@ -1540,7 +1540,7 @@ const CollegeShortlisterPage = () => {
               { value: "table" as const, icon: Table2, label: "Table View" },
             ]).map(v => (
               <button key={v.value} onClick={() => setViewMode(v.value)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${viewMode === v.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${viewMode === v.value ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}>
                 <v.icon className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{v.label}</span>
               </button>
             ))}

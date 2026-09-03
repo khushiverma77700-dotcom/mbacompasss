@@ -109,7 +109,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     },
     editorProps: {
       attributes: {
-        class: "outline-none min-h-[180px] px-4 py-3",
+        class: "outline-hidden min-h-[180px] px-4 py-3",
       },
     },
   });
@@ -181,9 +181,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
               onClick();
             }}
             className={cn(
-              "inline-flex items-center justify-center h-7 w-7 rounded transition-colors shrink-0",
+              "inline-flex items-center justify-center h-7 w-7 rounded-[0.25rem] transition-colors shrink-0",
               active
-                ? "bg-primary text-primary-foreground shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-xs"
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
           >
@@ -346,7 +346,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
       <div className="overflow-y-auto flex-1" style={{ maxHeight: "380px" }}>
         <EditorContent
           editor={editor}
-          className="prose prose-sm max-w-none focus-within:outline-none [&_.tiptap]:outline-none [&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_table]:border-collapse [&_.tiptap_table]:w-full [&_.tiptap_td]:border [&_.tiptap_td]:border-border [&_.tiptap_td]:p-2 [&_.tiptap_th]:border [&_.tiptap_th]:border-border [&_.tiptap_th]:p-2 [&_.tiptap_th]:bg-muted/50 [&_.tiptap_th]:font-semibold [&_.tiptap_ul]:list-disc [&_.tiptap_ul]:pl-6 [&_.tiptap_ol]:list-decimal [&_.tiptap_ol]:pl-6 [&_.tiptap_li]:my-1 [&_.tiptap_blockquote]:border-l-4 [&_.tiptap_blockquote]:border-border [&_.tiptap_blockquote]:pl-4 [&_.tiptap_blockquote]:italic [&_.tiptap_h1]:text-2xl [&_.tiptap_h1]:font-bold [&_.tiptap_h1]:my-3 [&_.tiptap_h2]:text-xl [&_.tiptap_h2]:font-bold [&_.tiptap_h2]:my-2 [&_.tiptap_h3]:text-lg [&_.tiptap_h3]:font-semibold [&_.tiptap_h3]:my-2 [&_.tiptap_h4]:text-base [&_.tiptap_h4]:font-semibold [&_.tiptap_h4]:my-1.5 [&_.tiptap_p]:my-1 [&_.tiptap_hr]:my-4 [&_.tiptap_hr]:border-border"
+          className="prose prose-sm max-w-none focus-within:outline-hidden [&_.tiptap]:outline-hidden [&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_table]:border-collapse [&_.tiptap_table]:w-full [&_.tiptap_td]:border [&_.tiptap_td]:border-border [&_.tiptap_td]:p-2 [&_.tiptap_th]:border [&_.tiptap_th]:border-border [&_.tiptap_th]:p-2 [&_.tiptap_th]:bg-muted/50 [&_.tiptap_th]:font-semibold [&_.tiptap_ul]:list-disc [&_.tiptap_ul]:pl-6 [&_.tiptap_ol]:list-decimal [&_.tiptap_ol]:pl-6 [&_.tiptap_li]:my-1 [&_.tiptap_blockquote]:border-l-4 [&_.tiptap_blockquote]:border-border [&_.tiptap_blockquote]:pl-4 [&_.tiptap_blockquote]:italic [&_.tiptap_h1]:text-2xl [&_.tiptap_h1]:font-bold [&_.tiptap_h1]:my-3 [&_.tiptap_h2]:text-xl [&_.tiptap_h2]:font-bold [&_.tiptap_h2]:my-2 [&_.tiptap_h3]:text-lg [&_.tiptap_h3]:font-semibold [&_.tiptap_h3]:my-2 [&_.tiptap_h4]:text-base [&_.tiptap_h4]:font-semibold [&_.tiptap_h4]:my-1.5 [&_.tiptap_p]:my-1 [&_.tiptap_hr]:my-4 [&_.tiptap_hr]:border-border"
         />
       </div>
     </div>

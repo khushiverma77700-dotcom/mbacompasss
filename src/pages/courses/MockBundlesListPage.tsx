@@ -323,7 +323,7 @@ export default function MockBundlesListPage() {
       </section>
 
       {/* FILTERS BAR */}
-      <section className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-sky-100 shadow-sm">
+      <section className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-sky-100 shadow-xs">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col md:flex-row gap-3">
@@ -377,20 +377,20 @@ export default function MockBundlesListPage() {
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
               <TabsList className="bg-sky-50 border border-sky-100 h-auto flex-wrap p-1">
-                <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:shadow text-xs md:text-sm">
+                <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                   <Layers className="h-3.5 w-3.5 mr-1.5" /> All courses
                 </TabsTrigger>
-                <TabsTrigger value="best_value" className="data-[state=active]:bg-white data-[state=active]:shadow text-xs md:text-sm">
+                <TabsTrigger value="best_value" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                   <Flame className="h-3.5 w-3.5 mr-1.5 text-rose-500" /> Best value
                 </TabsTrigger>
-                <TabsTrigger value="starter" className="data-[state=active]:bg-white data-[state=active]:shadow text-xs md:text-sm">
+                <TabsTrigger value="starter" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                   <Rocket className="h-3.5 w-3.5 mr-1.5 text-emerald-600" /> Starter
                 </TabsTrigger>
-                <TabsTrigger value="premium" className="data-[state=active]:bg-white data-[state=active]:shadow text-xs md:text-sm">
+                <TabsTrigger value="premium" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                   <Crown className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Premium
                 </TabsTrigger>
                 {exams.map((e) => (
-                  <TabsTrigger key={e} value={e} className="data-[state=active]:bg-white data-[state=active]:shadow text-xs md:text-sm">
+                  <TabsTrigger key={e} value={e} className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                     {e}
                   </TabsTrigger>
                 ))}
@@ -407,9 +407,9 @@ export default function MockBundlesListPage() {
                     <Card key={i} className="overflow-hidden">
                       <div className="h-44 bg-sky-50 animate-pulse" />
                       <div className="p-5 space-y-3">
-                        <div className="h-4 bg-sky-50 rounded animate-pulse w-3/4" />
-                        <div className="h-3 bg-sky-50 rounded animate-pulse w-full" />
-                        <div className="h-3 bg-sky-50 rounded animate-pulse w-1/2" />
+                        <div className="h-4 bg-sky-50 rounded-[0.25rem] animate-pulse w-3/4" />
+                        <div className="h-3 bg-sky-50 rounded-[0.25rem] animate-pulse w-full" />
+                        <div className="h-3 bg-sky-50 rounded-[0.25rem] animate-pulse w-1/2" />
                       </div>
                     </Card>
                   ))}

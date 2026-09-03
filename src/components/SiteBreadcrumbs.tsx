@@ -52,7 +52,7 @@ const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
                 {idx === 0 && withHome ? (
                   <Link
                     to={it.url}
-                    className="inline-flex items-center justify-center h-8 w-8 -m-1 rounded hover:text-primary hover:bg-muted/50"
+                    className="inline-flex items-center justify-center h-8 w-8 -m-1 rounded-[0.25rem] hover:text-primary hover:bg-muted/50"
                   >
                     <Home className="h-4 w-4" aria-hidden="true" />
                     <span className="sr-only">{it.name}</span>

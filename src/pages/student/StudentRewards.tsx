@@ -99,7 +99,7 @@ export default function StudentRewards() {
             const earned = badges.find(x => x.badge_key === b.key);
             const Icon = b.icon;
             return (
-              <div key={b.key} className={`p-4 rounded-xl border text-center transition-all ${earned ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 shadow-sm" : "bg-gray-50/60 border-gray-200 opacity-60"}`}>
+              <div key={b.key} className={`p-4 rounded-xl border text-center transition-all ${earned ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 shadow-xs" : "bg-gray-50/60 border-gray-200 opacity-60"}`}>
                 <Icon className={`h-8 w-8 mx-auto mb-2 ${earned ? "text-amber-600" : "text-gray-400"}`} />
                 <div className="text-sm font-semibold text-gray-900">{b.name}</div>
                 <div className="text-xs text-muted-foreground mt-1">{b.desc}</div>

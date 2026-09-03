@@ -1,8 +1,188 @@
-/* Fonts loaded via index.html link tags to avoid render-blocking @import */
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* v3 darkMode: ["class"] — dark: variants match a .dark ancestor only.
+   (.admin-dark only swaps CSS variables; it never triggered dark: utilities.) */
+@custom-variant dark (&:is(.dark *));
+
+/* ── Theme port from tailwind.config.ts (Tailwind v3 → v4) ─────────────────
+   Colors/radii reference the same hsl(var(--x)) raw-triple variables defined
+   in the @layer base :root/.dark blocks below, so utilities emit byte-identical
+   declarations to the v3 build. */
+@theme inline {
+  --font-heading: 'Plus Jakarta Sans', 'Plus Jakarta Fallback', system-ui, sans-serif;
+  --font-body: 'DM Sans', 'DM Sans Fallback', system-ui, sans-serif;
+  --font-editorial: "Instrument Serif", ui-serif, Georgia, serif;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --color-cat-mba: hsl(var(--cat-mba));
+  --color-cat-medical: hsl(var(--cat-medical));
+  --color-cat-engineering: hsl(var(--cat-engineering));
+  --color-cat-government: hsl(var(--cat-government));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@theme {
+  /* v3 ring compatibility: bare `ring` was 3px wide and blue-500-tinted when
+     no explicit ring color utility was present. */
+  --default-ring-width: 3px;
+  --default-ring-color: rgb(59 130 246 / 0.5);
+
+  /* ── UNIFIED TYPE SCALE — every size utility resolves to one of FOUR steps.
+     Do NOT reintroduce arbitrary sizes such as text-[13px]. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.65;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.65;
+  --text-xl: clamp(1.25rem, 1.6vw, 1.375rem);
+  --text-xl--line-height: 1.35;
+  --text-2xl: clamp(1.25rem, 1.6vw, 1.375rem);
+  --text-2xl--line-height: 1.3;
+  --text-3xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-3xl--line-height: 1.2;
+  --text-4xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-4xl--line-height: 1.2;
+  --text-5xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-5xl--line-height: 1.15;
+  --text-6xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-6xl--line-height: 1.1;
+  --text-7xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-7xl--line-height: 1.1;
+  --text-8xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-8xl--line-height: 1.05;
+  --text-9xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-9xl--line-height: 1.05;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-slide-in: slide-in 0.5s ease-out forwards;
+  --animate-fade-in: fade-in 0.3s ease-out forwards;
+  --animate-count-up: count-up 0.6s ease-out forwards;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 45s linear infinite;
+  --animate-blob: blob 14s ease-in-out infinite;
+  --animate-float-y: float-y 6s ease-in-out infinite;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes count-up {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes marquee-reverse {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes blob {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(30px,-20px) scale(1.1); }
+    66% { transform: translate(-20px,20px) scale(0.95); }
+  }
+  @keyframes float-y {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+}
+
+/* v3 container config: center + 2rem padding + 2xl capped at 1400px.
+   v4 dropped container configuration, so the utility is redefined here. */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (min-width: 640px) { max-width: 640px; }
+  @media (min-width: 768px) { max-width: 768px; }
+  @media (min-width: 1024px) { max-width: 1024px; }
+  @media (min-width: 1280px) { max-width: 1280px; }
+  @media (min-width: 1536px) { max-width: 1400px; }
+}
+
+/* ── v3 preflight compatibility ── */
+@layer base {
+  /* v4 switched buttons to cursor: default; v3 (and this design) used pointer. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* v4 placeholder default is currentColor/50%; v3 used gray-400. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+    opacity: 1;
+  }
+}
+
+/* ── Critical font CSS ported from index.html (self-hosted fonts +
+   metric-matched fallbacks; font-display swap keeps first paint unblocked). */
+@font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:700;font-display:swap;src:url("/fonts/plus-jakarta-sans-700.woff2") format("woff2")}
+@font-face{font-family:"DM Sans";font-style:normal;font-weight:400;font-display:swap;src:url("/fonts/dm-sans-400.woff2") format("woff2")}
+@font-face{font-family:"Plus Jakarta Fallback";src:local("Arial");size-adjust:104%;ascent-override:94%;descent-override:24%;line-gap-override:0%}
+@font-face{font-family:"DM Sans Fallback";src:local("Arial");size-adjust:100%;ascent-override:96%;descent-override:24%;line-gap-override:0%}
+.fonts-loaded body{font-family:'DM Sans',system-ui,-apple-system,sans-serif}
+.fonts-loaded h1,.fonts-loaded h2,.fonts-loaded h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+#root{min-height:100vh}
+/* Reserve hero space so the gradient block paints at the right height (ported from index.html). */
+main>section:first-of-type{min-height:520px}
+@media (min-width:768px){main>section:first-of-type{min-height:600px}}
+
+/* ═══ Everything below is the pre-migration src/index.css, preserved verbatim ═══ */
 
 @layer base {
   :root {
@@ -329,7 +509,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   html, body {
@@ -339,7 +519,8 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: var(--font-body);
   }
 
@@ -452,45 +633,44 @@
   }
 }
 
-@layer utilities {
-  .hero-gradient {
-    background: var(--hero-gradient);
-  }
+/* v3 @layer utilities → v4 @utility (variant-composable custom utilities) */
+@utility hero-gradient {
+  background: var(--hero-gradient);
+}
 
-  .stat-gradient {
-    background: var(--stat-gradient);
-  }
+@utility stat-gradient {
+  background: var(--stat-gradient);
+}
 
-  .card-shadow {
-    box-shadow: var(--card-shadow);
-  }
+@utility card-shadow {
+  box-shadow: var(--card-shadow);
+}
 
-  .card-shadow-hover {
-    box-shadow: var(--card-shadow-hover);
-  }
+@utility card-shadow-hover {
+  box-shadow: var(--card-shadow-hover);
+}
 
-  .text-gradient {
-    background: var(--hero-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+@utility text-gradient {
+  background: var(--hero-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-  .cat-mba {
-    background-color: hsl(var(--cat-mba));
-  }
+@utility cat-mba {
+  background-color: hsl(var(--cat-mba));
+}
 
-  .cat-medical {
-    background-color: hsl(var(--cat-medical));
-  }
+@utility cat-medical {
+  background-color: hsl(var(--cat-medical));
+}
 
-  .cat-engineering {
-    background-color: hsl(var(--cat-engineering));
-  }
+@utility cat-engineering {
+  background-color: hsl(var(--cat-engineering));
+}
 
-  .cat-government {
-    background-color: hsl(var(--cat-government));
-  }
+@utility cat-government {
+  background-color: hsl(var(--cat-government));
 }
 
 /* ── AI Gist Gemini-style animated gradient border ── */

@@ -159,7 +159,7 @@ function CompareInner() {
                     <th key={c.id} className="px-2 align-top">
                       <Card className="p-3 border-sky-100 text-left">
                         <div className="flex items-start justify-between gap-2">
-                          <div className="aspect-video w-full bg-sky-50 rounded overflow-hidden">
+                          <div className="aspect-video w-full bg-sky-50 rounded-[0.25rem] overflow-hidden">
                             {c.thumbnail_url
                               ? <img src={c.thumbnail_url} alt={c.title} className="w-full h-full object-cover"  loading="lazy" decoding="async" />
                               : <div className="w-full h-full grid place-items-center"><GraduationCap className="h-8 w-8 text-sky-400" /></div>}
@@ -195,7 +195,7 @@ function CompareInner() {
                       <tr key={r.key as string}>
                         <td className="text-xs text-gray-700 py-2 px-3 sticky left-0 bg-white">{r.label}</td>
                         {courses.map((c) => (
-                          <td key={c.id} className="text-center text-sm py-2 px-3 bg-sky-50/30 rounded">
+                          <td key={c.id} className="text-center text-sm py-2 px-3 bg-sky-50/30 rounded-[0.25rem]">
                             {renderCell(c, r.key as string, r.type)}
                           </td>
                         ))}

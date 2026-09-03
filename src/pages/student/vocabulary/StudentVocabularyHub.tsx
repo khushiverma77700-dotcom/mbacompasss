@@ -118,11 +118,11 @@ export default function StudentVocabularyHub() {
       </section>
 
       {/* Today's progress bar */}
-      <Card className="border-sky-100 bg-white shadow-sm">
+      <Card className="border-sky-100 bg-white shadow-xs">
         <CardContent className="p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-xs">
                 <Target className="h-4 w-4" />
               </div>
               <div>
@@ -145,7 +145,7 @@ export default function StudentVocabularyHub() {
       {/* Word of the Day */}
       {wotd && (
         <section className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="relative overflow-hidden border-sky-100 bg-white shadow-sm">
+          <Card className="relative overflow-hidden border-sky-100 bg-white shadow-xs">
             <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
             <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-sky-100/70 blur-3xl" />
             <CardContent className="relative p-5 sm:p-7">
@@ -216,7 +216,7 @@ export default function StudentVocabularyHub() {
 
 function HeroStat({ icon: Icon, tint, label, value, hint }: any) {
   return (
-    <div className="rounded-2xl border border-white/70 bg-white/80 p-3.5 shadow-sm backdrop-blur">
+    <div className="rounded-2xl border border-white/70 bg-white/80 p-3.5 shadow-xs backdrop-blur">
       <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
         <Icon className={`h-3.5 w-3.5 ${tint}`} /> {label}
       </div>

@@ -126,7 +126,7 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                 {specs.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {specs.slice(0, 4).map((s) => (
-                      <span key={s} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{s}</span>
+                      <span key={s} className="text-xs px-1.5 py-0.5 rounded-[0.25rem] bg-primary/10 text-primary font-medium">{s}</span>
                     ))}
                   </div>
                 )}
@@ -196,7 +196,7 @@ const ProgrammePortfolioTable = ({ programmes, fallbackCourses }: Props) => {
                       <div className="flex flex-wrap gap-1">
                         {specs.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
                         {specs.slice(0, 3).map((s) => (
-                          <span key={s} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{s}</span>
+                          <span key={s} className="text-xs px-1.5 py-0.5 rounded-[0.25rem] bg-primary/10 text-primary font-medium">{s}</span>
                         ))}
                         {specs.length > 3 && <span className="text-xs text-muted-foreground self-center">+{specs.length - 3}</span>}
                       </div>

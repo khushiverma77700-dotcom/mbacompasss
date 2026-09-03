@@ -434,16 +434,16 @@ export default function StudentVocabularyFeed() {
                 {/* Pronunciation - bigger, tap-to-play */}
                 <button
                   onClick={() => speak(wotd.word)}
-                  className="group mt-4 inline-flex max-w-full items-center gap-3 rounded-2xl border-2 border-amber-300 bg-white/80 px-3 py-2.5 shadow-sm transition-all hover:scale-[1.02] hover:border-amber-400 hover:shadow-md active:scale-95 sm:px-4 sm:py-3"
+                  className="group mt-4 inline-flex max-w-full items-center gap-3 rounded-2xl border-2 border-amber-300 bg-white/80 px-3 py-2.5 shadow-xs transition-all hover:scale-[1.02] hover:border-amber-400 hover:shadow-md active:scale-95 sm:px-4 sm:py-3"
                   aria-label={`Play pronunciation of ${wotd.word}`}
                 >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow sm:h-10 sm:w-10">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm sm:h-10 sm:w-10">
                     <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" />
                   </span>
                   <span className="flex min-w-0 flex-col text-left">
                     <span className="flex flex-wrap gap-1">
                       {(wotd.pronunciation_syllables || wotd.word).split(/[-·•\s]+/).filter(Boolean).map((p: string, i: number) => (
-                        <span key={i} className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-mono text-xs font-semibold text-amber-900 sm:px-2 sm:text-sm">
+                        <span key={i} className="rounded-[0.25rem] border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-mono text-xs font-semibold text-amber-900 sm:px-2 sm:text-sm">
                           {p}
                         </span>
                       ))}
@@ -546,7 +546,7 @@ export default function StudentVocabularyFeed() {
             >
               <Search className="h-4 w-4 text-sky-600" />
               <span className="flex-1">Search a word… we'll show it in the same card format</span>
-              <kbd className="hidden rounded border border-slate-200 bg-white px-1.5 py-0.5 text-xs font-mono text-slate-500 sm:inline">↵</kbd>
+              <kbd className="hidden rounded-[0.25rem] border border-slate-200 bg-white px-1.5 py-0.5 text-xs font-mono text-slate-500 sm:inline">↵</kbd>
             </button>
           ) : (
             <div className="space-y-2 rounded-xl border-2 border-sky-300 bg-sky-50/40 p-2 dark:bg-sky-500/5">
@@ -669,13 +669,13 @@ export default function StudentVocabularyFeed() {
                     className="group/p relative z-10 mt-3 inline-flex items-start gap-2 self-start rounded-xl border border-sky-200 bg-sky-50/50 px-3 py-2 transition-all hover:scale-[1.02] hover:border-sky-400 hover:bg-sky-50 active:scale-95"
                     aria-label={`Play pronunciation of ${w.word}`}
                   >
-                    <span className="mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm">
+                    <span className="mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-xs">
                       <Volume2 className="h-3.5 w-3.5" />
                     </span>
                     <span className="flex flex-col text-left">
                       <span className="flex flex-wrap gap-0.5">
                         {syllables.map((p: string, i: number) => (
-                          <span key={i} className="rounded border border-sky-200 bg-white px-1.5 py-px font-mono text-xs font-semibold text-sky-800">
+                          <span key={i} className="rounded-[0.25rem] border border-sky-200 bg-white px-1.5 py-px font-mono text-xs font-semibold text-sky-800">
                             {p}
                           </span>
                         ))}
@@ -745,7 +745,7 @@ export default function StudentVocabularyFeed() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); openWord(w.slug); }}
-                    className="absolute right-3 top-3 hidden h-7 w-7 place-items-center rounded-full bg-white text-sky-600 opacity-0 shadow ring-1 ring-sky-100 transition-opacity group-hover:opacity-100 sm:grid"
+                    className="absolute right-3 top-3 hidden h-7 w-7 place-items-center rounded-full bg-white text-sky-600 opacity-0 shadow-sm ring-1 ring-sky-100 transition-opacity group-hover:opacity-100 sm:grid"
                     aria-label="Open"
                   >
                     <ArrowUpRight className="h-3.5 w-3.5" />
@@ -769,7 +769,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       className={cn(
         "rounded-full border px-3 py-1 text-xs font-medium transition-all",
         active
-          ? "border-transparent bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+          ? "border-transparent bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-xs"
           : "border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:text-sky-700",
       )}
     >

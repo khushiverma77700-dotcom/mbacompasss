@@ -70,7 +70,7 @@ const ListYourBusinessPage = () => {
                   className={`group relative overflow-hidden p-8 cursor-pointer border-2 hover:border-primary/40 hover:shadow-xl transition-all duration-300 bg-gradient-to-br ${opt.accent}`}
                 >
                   <div className="relative z-10">
-                    <div className="w-14 h-14 rounded-2xl bg-background shadow-sm flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 rounded-2xl bg-background shadow-xs flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
                       <Icon className="w-7 h-7 text-primary" />
                     </div>
                     <h3 className="text-xl font-bold mb-2 text-foreground">{opt.title}</h3>

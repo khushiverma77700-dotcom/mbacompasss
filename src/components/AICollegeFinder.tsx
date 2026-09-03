@@ -187,7 +187,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
   // --- Step UI Components ---
   const StepCard = ({ icon: Icon, title, subtitle, onClick, accent }: { icon: any; title: string; subtitle: string; onClick: () => void; accent?: string }) => (
     <motion.button whileHover={{ scale: 1.015, y: -2 }} whileTap={{ scale: 0.98 }} onClick={onClick}
-      className="w-full p-4 rounded-2xl border border-border hover:border-primary/40 bg-card hover:bg-secondary/30 text-left transition-all group flex items-center gap-4 shadow-sm hover:shadow-md">
+      className="w-full p-4 rounded-2xl border border-border hover:border-primary/40 bg-card hover:bg-secondary/30 text-left transition-all group flex items-center gap-4 shadow-xs hover:shadow-md">
       <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${accent || "from-primary/20 to-primary/5"} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
         <Icon className="w-6 h-6 text-primary" />
       </div>
@@ -486,7 +486,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
             {/* Summary */}
             {aiResult.summary && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                className="bg-card rounded-2xl p-4 border border-border mb-5 shadow-sm">
+                className="bg-card rounded-2xl p-4 border border-border mb-5 shadow-xs">
                 <p className="text-sm text-foreground/85 leading-relaxed">
                   <Brain className="w-4 h-4 text-primary inline mr-2" />
                   {aiResult.summary}

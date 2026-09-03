@@ -66,7 +66,7 @@ const FreeToolsShowcase = () => (
             <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-60 pointer-events-none`} />
             <div className="relative">
               <div className="flex items-start justify-between gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white ring-1 ring-primary/15 flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-white ring-1 ring-primary/15 flex items-center justify-center shadow-xs">
                   <Icon className="w-6 h-6 text-primary" strokeWidth={2.2} />
                 </div>
                 <span className="text-xs font-bold uppercase tracking-wide text-emerald-700 bg-emerald-500/10 ring-1 ring-emerald-500/20 px-2 py-0.5 rounded-full">

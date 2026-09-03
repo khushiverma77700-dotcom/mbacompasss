@@ -39,7 +39,7 @@ const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) =
       title="Add MBA Compass as preferred source on Google"
       className={`group relative inline-flex items-center gap-2 rounded-full overflow-hidden
         bg-card border border-primary/25 
-        shadow-sm hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-lg
+        shadow-xs hover:border-primary/60 hover:-translate-y-0.5 hover:shadow-lg
         transition-all duration-300 animate-fade-in
         ${isFull ? "px-3 py-2 w-full justify-center" : "px-2.5 py-1.5"}
         ${className}`}

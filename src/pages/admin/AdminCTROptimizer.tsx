@@ -393,7 +393,7 @@ export default function AdminCTROptimizer() {
             </div>
             <div className="flex gap-2 items-center text-xs">
               <Label className="text-xs">Sort:</Label>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="border rounded px-2 py-1 text-xs">
+              <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="border rounded-[0.25rem] px-2 py-1 text-xs">
                 <option value="quickWin">Quick-Win score</option>
                 <option value="impressions">Impressions</option>
                 <option value="ctr">Lowest CTR</option>
@@ -469,7 +469,7 @@ export default function AdminCTROptimizer() {
                                 </div>
                               </div>
                               {bug.fixLog && (
-                                <div className="border-l-4 border-emerald-400 bg-emerald-50 p-3 rounded">
+                                <div className="border-l-4 border-emerald-400 bg-emerald-50 p-3 rounded-[0.25rem]">
                                   <p className="text-xs font-semibold mb-2 text-emerald-700">AI APPLIED FIXES</p>
                                   {bug.fixLog.meta?.new_title && (
                                     <div className="text-sm space-y-1">
@@ -484,7 +484,7 @@ export default function AdminCTROptimizer() {
                                 </div>
                               )}
                               {bug.error && (
-                                <div className="border-l-4 border-red-400 bg-red-50 p-3 rounded text-sm text-red-700">
+                                <div className="border-l-4 border-red-400 bg-red-50 p-3 rounded-[0.25rem] text-sm text-red-700">
                                   Error: {bug.error}
                                 </div>
                               )}

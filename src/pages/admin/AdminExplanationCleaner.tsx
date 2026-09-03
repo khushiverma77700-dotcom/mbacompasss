@@ -310,7 +310,7 @@ export default function AdminExplanationCleaner() {
           {(scope === "test" || scope === "section" || scope === "topic") && (
             <div>
               <Label>Mock test{scope === "topic" ? " (optional)" : ""}</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={testId} onChange={(e) => { setTestId(e.target.value); setSectionId(""); setTopic(""); }} disabled={rs.running || rs.paused}>
+              <select className="w-full mt-1 border rounded-[0.25rem] px-3 py-2 text-sm bg-background" value={testId} onChange={(e) => { setTestId(e.target.value); setSectionId(""); setTopic(""); }} disabled={rs.running || rs.paused}>
                 <option value="">{scope === "topic" ? "Any mock" : "— Pick a mock —"}</option>
                 {tests.map((t) => <option key={t.id} value={t.id}>{t.exam_code} — {t.name}</option>)}
               </select>
@@ -320,7 +320,7 @@ export default function AdminExplanationCleaner() {
           {scope === "section" && testId && (
             <div>
               <Label>Section</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={rs.running || rs.paused}>
+              <select className="w-full mt-1 border rounded-[0.25rem] px-3 py-2 text-sm bg-background" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={rs.running || rs.paused}>
                 <option value="">— Pick a section —</option>
                 {sections.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
               </select>
@@ -330,7 +330,7 @@ export default function AdminExplanationCleaner() {
           {scope === "topic" && (
             <div>
               <Label>Topic</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={topic} onChange={(e) => setTopic(e.target.value)} disabled={rs.running || rs.paused}>
+              <select className="w-full mt-1 border rounded-[0.25rem] px-3 py-2 text-sm bg-background" value={topic} onChange={(e) => setTopic(e.target.value)} disabled={rs.running || rs.paused}>
                 <option value="">— Pick a topic —</option>
                 {topics.map((t) => <option key={t.topic} value={t.topic}>{t.topic} ({t.n})</option>)}
               </select>
@@ -420,7 +420,7 @@ export default function AdminExplanationCleaner() {
               />
               {rs.running && (
                 <div
-                  className="absolute inset-y-0 w-1/4 bg-white/30 blur-sm -skew-x-12 animate-[shimmer_1.6s_linear_infinite]"
+                  className="absolute inset-y-0 w-1/4 bg-white/30 blur-xs -skew-x-12 animate-[shimmer_1.6s_linear_infinite]"
                   style={{ left: `${Math.max(0, pct - 10)}%` }}
                 />
               )}
@@ -475,7 +475,7 @@ export default function AdminExplanationCleaner() {
           </div>
 
           {rs.log.length > 0 && (
-            <div className="mt-2 max-h-48 overflow-auto rounded border bg-slate-50 p-3 text-xs font-mono space-y-1">
+            <div className="mt-2 max-h-48 overflow-auto rounded-[0.25rem] border bg-slate-50 p-3 text-xs font-mono space-y-1">
               {rs.log.slice(0, 30).map((l, i) => <div key={i}>{l}</div>)}
             </div>
           )}
@@ -521,7 +521,7 @@ export default function AdminExplanationCleaner() {
           {browseStatus === "failed" && rs.errors.length > 0 && (
             <div className="space-y-2">
               {rs.errors.map((e, i) => (
-                <div key={i} className="rounded border bg-rose-50 border-rose-200 px-3 py-2 text-xs">
+                <div key={i} className="rounded-[0.25rem] border bg-rose-50 border-rose-200 px-3 py-2 text-xs">
                   <div className="font-mono text-rose-700">{e.id}</div>
                   <div className="text-rose-900">{e.message}</div>
                 </div>

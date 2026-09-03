@@ -69,11 +69,11 @@ function Diff({ label, before, after }: { label: string; before?: string; after?
     <div className="space-y-1">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
       <div className="grid gap-2 md:grid-cols-2">
-        <div className="rounded border border-red-200 bg-red-50/50 p-2 text-xs">
+        <div className="rounded-[0.25rem] border border-red-200 bg-red-50/50 p-2 text-xs">
           <p className="text-xs uppercase text-red-700 font-semibold mb-1">Before</p>
           <p className="text-slate-700 break-words whitespace-pre-wrap">{before || <span className="italic text-slate-400">(empty)</span>}</p>
         </div>
-        <div className="rounded border border-green-200 bg-green-50/50 p-2 text-xs">
+        <div className="rounded-[0.25rem] border border-green-200 bg-green-50/50 p-2 text-xs">
           <p className="text-xs uppercase text-green-700 font-semibold mb-1">After</p>
           <p className="text-slate-800 break-words whitespace-pre-wrap">{after || <span className="italic text-slate-400">(empty)</span>}</p>
         </div>
@@ -94,7 +94,7 @@ function DensityBar({ kw, pct, target }: { kw: string; pct: number; target?: boo
         <span className="font-medium truncate max-w-[60%]" title={kw}>{kw}{target && <span className="ml-1 text-xs text-slate-500">(primary • target 2.5–3.5%)</span>}</span>
         <span className={target ? (inRange ? "text-green-700 font-semibold" : "text-red-600 font-semibold") : "text-slate-600"}>{pct.toFixed(1)}%</span>
       </div>
-      <div className="h-1.5 w-full rounded bg-slate-100 overflow-hidden">
+      <div className="h-1.5 w-full rounded-[0.25rem] bg-slate-100 overflow-hidden">
         <div className={`h-full ${tone}`} style={{ width: `${width}%` }} />
       </div>
     </div>
@@ -223,7 +223,7 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                     <button
                       key={it.id}
                       onClick={() => setActiveIdx(i)}
-                      className={`px-2 py-1 rounded border ${i === activeIdx ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
+                      className={`px-2 py-1 rounded-[0.25rem] border ${i === activeIdx ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
                     >
                       {new Date(it.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} · {it.status}
                     </button>
@@ -256,12 +256,12 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                 </Card>
               )}
               {active.applied && active.applied_at && (
-                <div className="rounded border border-green-200 bg-green-50/60 px-3 py-2 text-xs text-green-800 flex items-center gap-2">
+                <div className="rounded-[0.25rem] border border-green-200 bg-green-50/60 px-3 py-2 text-xs text-green-800 flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Applied {new Date(active.applied_at).toLocaleString("en-IN")}
                 </div>
               )}
               {wasDiscarded && (
-                <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 flex items-center gap-2">
+                <div className="rounded-[0.25rem] border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 flex items-center gap-2">
                   <Trash2 className="h-3.5 w-3.5" /> Preview discarded {active.discarded_at ? new Date(active.discarded_at).toLocaleString("en-IN") : ""}
                 </div>
               )}
@@ -349,11 +349,11 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
 
                     <TabsContent value="body" className="space-y-3 mt-3">
                       <div className="grid gap-2 md:grid-cols-2">
-                        <div className="rounded border border-red-200 bg-red-50/50 p-3 text-xs">
+                        <div className="rounded-[0.25rem] border border-red-200 bg-red-50/50 p-3 text-xs">
                           <p className="text-xs uppercase text-red-700 font-semibold mb-1">Before ({active.content_word_count_before ?? 0} words)</p>
                           <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap text-slate-700" dangerouslySetInnerHTML={{ __html: (active.full_content_before || before.body_html || "<span class='italic text-slate-400'>(empty)</span>") }} />
                         </div>
-                        <div className="rounded border border-green-200 bg-green-50/50 p-3 text-xs">
+                        <div className="rounded-[0.25rem] border border-green-200 bg-green-50/50 p-3 text-xs">
                           <p className="text-xs uppercase text-green-700 font-semibold mb-1">After ({active.content_word_count_after ?? 0} words • AEO/SEO/GEO optimized, original content kept)</p>
                           <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap text-slate-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: (active.full_content_after || after.body_html || "<span class='italic text-slate-400'>(empty)</span>") }} />
                         </div>
@@ -376,7 +376,7 @@ export default function ReSeoReportDialog({ open, onOpenChange, slug, pageName }
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 mt-3">FAQ Q&A</p>
                           <div className="space-y-2">
                             {after.faq.map((f: any, i: number) => (
-                              <div key={i} className="rounded border p-2 bg-slate-50/40">
+                              <div key={i} className="rounded-[0.25rem] border p-2 bg-slate-50/40">
                                 <p className="text-xs font-medium text-slate-800">Q: {f.question}</p>
                                 <p className="text-xs text-slate-600 mt-1">A: {f.answer}</p>
                               </div>

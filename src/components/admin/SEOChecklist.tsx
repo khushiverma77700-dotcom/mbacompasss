@@ -249,7 +249,7 @@ const SEOChecklist = ({ data, contentType, recordId, showPublishWarning, onPubli
       {showPublishWarning && isBlocked && (
         <div className="px-4 py-3 bg-red-50 dark:bg-red-950/30 border-y border-red-200 dark:border-red-800">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-semibold text-red-700 dark:text-red-400">Critical SEO items missing</p>
               <p className="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">
@@ -281,9 +281,9 @@ const SEOChecklist = ({ data, contentType, recordId, showPublishWarning, onPubli
                 <div className="space-y-1.5">
                   {catChecks.map((check) => (
                     <div key={check.label} className="flex items-start gap-2 text-xs py-1">
-                      {check.status === "pass" && <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0 mt-0.5" />}
-                      {check.status === "warn" && <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />}
-                      {check.status === "fail" && <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />}
+                      {check.status === "pass" && <CheckCircle className="w-3.5 h-3.5 text-green-600 shrink-0 mt-0.5" />}
+                      {check.status === "warn" && <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />}
+                      {check.status === "fail" && <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />}
                       <div className="flex-1 min-w-0">
                         <span className="font-medium text-foreground">{check.label}</span>
                         <p className="text-muted-foreground mt-0.5 break-words">{check.tip}</p>

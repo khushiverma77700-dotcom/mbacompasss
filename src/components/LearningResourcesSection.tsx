@@ -49,7 +49,7 @@ const LearningResourcesSection = () => {
                   className="group block bg-background rounded-2xl border border-border p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full"
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${res.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                    <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${res.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
                       <Icon className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">

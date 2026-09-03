@@ -68,7 +68,7 @@ const CollegeSectionNav = ({ items, topOffset = 96, className }: CollegeSectionN
       aria-label="College sections"
       className={cn("w-full min-w-0", className)}
     >
-      <div className="w-full min-w-0 rounded-xl border border-border/60 bg-card shadow-sm p-3">
+      <div className="w-full min-w-0 rounded-xl border border-border/60 bg-card shadow-xs p-3">
         <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-2 pb-2 mb-2 border-b border-border/40">
           On this page
         </div>
@@ -89,7 +89,7 @@ const CollegeSectionNav = ({ items, topOffset = 96, className }: CollegeSectionN
                   )}
                 >
                   {item.icon && (
-                    <span className={cn("flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground/70")}>
+                    <span className={cn("shrink-0", isActive ? "text-primary" : "text-muted-foreground/70")}>
                       {item.icon}
                     </span>
                   )}
@@ -97,7 +97,7 @@ const CollegeSectionNav = ({ items, topOffset = 96, className }: CollegeSectionN
                   {item.hasAI && (
                     <span
                       title="Extended AI insights available"
-                      className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded"
+                      className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded-[0.25rem]"
                     >
                       AI+
                     </span>

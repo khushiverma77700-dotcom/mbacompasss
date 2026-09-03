@@ -594,12 +594,12 @@ const AdminCollegeSections = () => {
             )}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pt-1">
               {bulkProgress.results.map((r, idx) => (
-                <div key={idx} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-background/60 border border-border/50">
-                  {r.status === "ok" && <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />}
-                  {r.status === "fail" && <XCircle className="w-3 h-3 text-destructive flex-shrink-0" />}
+                <div key={idx} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-[0.25rem] bg-background/60 border border-border/50">
+                  {r.status === "ok" && <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />}
+                  {r.status === "fail" && <XCircle className="w-3 h-3 text-destructive shrink-0" />}
                   {r.status === "pending" && (bulkProgress.current === r.label && aiBusy === "bulk"
-                    ? <Loader2 className="w-3 h-3 animate-spin text-primary flex-shrink-0" />
-                    : <div className="w-3 h-3 rounded-full border border-muted-foreground/30 flex-shrink-0" />)}
+                    ? <Loader2 className="w-3 h-3 animate-spin text-primary shrink-0" />
+                    : <div className="w-3 h-3 rounded-full border border-muted-foreground/30 shrink-0" />)}
                   <span className={`truncate ${r.status === "fail" ? "text-destructive" : "text-foreground"}`} title={r.error || r.label}>{r.label}</span>
                 </div>
               ))}

@@ -232,7 +232,7 @@ const AdminCourses = () => {
                   <div className="space-y-1.5">
                     {form.highlights.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                        <Star className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <Star className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span className="text-sm text-foreground flex-1">{item}</span>
                         <button onClick={() => setForm({ ...form, highlights: form.highlights.filter((_, i) => i !== idx) })} className="text-destructive hover:text-destructive/80"><X className="w-3.5 h-3.5" /></button>
                       </div>

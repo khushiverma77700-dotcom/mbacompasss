@@ -54,10 +54,10 @@ export const CollegeFitHeatmap = ({ rows }: Props) => {
         </div>
         <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
           <span>Scale:</span>
-          <span className="px-2 py-0.5 rounded bg-rose-300/80 text-rose-900">Low</span>
-          <span className="px-2 py-0.5 rounded bg-amber-300/80 text-amber-900">Medium</span>
-          <span className="px-2 py-0.5 rounded bg-emerald-400/70 text-emerald-900">Good</span>
-          <span className="px-2 py-0.5 rounded bg-emerald-500/90 text-white">Excellent</span>
+          <span className="px-2 py-0.5 rounded-[0.25rem] bg-rose-300/80 text-rose-900">Low</span>
+          <span className="px-2 py-0.5 rounded-[0.25rem] bg-amber-300/80 text-amber-900">Medium</span>
+          <span className="px-2 py-0.5 rounded-[0.25rem] bg-emerald-400/70 text-emerald-900">Good</span>
+          <span className="px-2 py-0.5 rounded-[0.25rem] bg-emerald-500/90 text-white">Excellent</span>
         </div>
       </CardContent>
     </Card>

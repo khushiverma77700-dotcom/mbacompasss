@@ -131,7 +131,7 @@ export function AutoTOC({ contentRef, title = "Table of Contents", className, de
               {item.level === 2 && (
                 <span
                   className={cn(
-                    "mt-[2px] flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold border",
+                    "mt-[2px] shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-[0.25rem] text-xs font-bold border",
                     active
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-background text-muted-foreground border-border group-hover:border-primary/40 group-hover:text-primary"
@@ -154,7 +154,7 @@ export function AutoTOC({ contentRef, title = "Table of Contents", className, de
     <nav
       aria-label="Table of contents"
       className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden",
+        "rounded-2xl border border-border bg-card shadow-xs overflow-hidden",
         className
       )}
     >

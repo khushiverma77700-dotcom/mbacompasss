@@ -29,7 +29,7 @@ export default function FeatureGate({ feature, children, hideWhenLocked, classNa
 
   return (
     <div className={`relative ${className ?? ""}`}>
-      <div className="pointer-events-none select-none blur-sm opacity-60" aria-hidden>
+      <div className="pointer-events-none select-none blur-xs opacity-60" aria-hidden>
         {children}
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg bg-white/70 backdrop-blur-sm border border-sky-100 p-4 text-center">

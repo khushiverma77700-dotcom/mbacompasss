@@ -92,7 +92,7 @@ export default function DayPlannerShowcase({ block }: { block?: DayPlannerBlock 
                     key={i}
                     className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                       t.active
-                        ? "border-sky-300 bg-sky-50/60 shadow-sm ring-2 ring-sky-200/50"
+                        ? "border-sky-300 bg-sky-50/60 shadow-xs ring-2 ring-sky-200/50"
                         : t.done
                         ? "border-emerald-100 bg-emerald-50/40"
                         : "border-slate-100 bg-white"

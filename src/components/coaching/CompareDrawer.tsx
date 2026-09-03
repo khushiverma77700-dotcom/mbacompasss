@@ -30,9 +30,9 @@ const CompareDrawer = () => {
                 {s ? (
                   <>
                     {s.logo_url ? (
-                      <img src={s.logo_url} alt={s.name} className="w-7 h-7 rounded object-contain bg-white border border-slate-200 shrink-0"  loading="lazy" decoding="async" />
+                      <img src={s.logo_url} alt={s.name} className="w-7 h-7 rounded-[0.25rem] object-contain bg-white border border-slate-200 shrink-0"  loading="lazy" decoding="async" />
                     ) : (
-                      <div className="w-7 h-7 rounded bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-[0.25rem] bg-white border border-slate-200 flex items-center justify-center shrink-0">
                         <Building2 className="w-3.5 h-3.5 text-slate-400" />
                       </div>
                     )}
@@ -40,7 +40,7 @@ const CompareDrawer = () => {
                       <div className="text-xs font-bold text-slate-900 truncate leading-tight">{s.name}</div>
                       {s.city && <div className="text-xs text-slate-500 truncate">{s.city}</div>}
                     </div>
-                    <button onClick={() => remove(s.id)} className="p-1 rounded hover:bg-white shrink-0" aria-label="Remove">
+                    <button onClick={() => remove(s.id)} className="p-1 rounded-[0.25rem] hover:bg-white shrink-0" aria-label="Remove">
                       <X className="w-3.5 h-3.5 text-slate-500" />
                     </button>
                   </>

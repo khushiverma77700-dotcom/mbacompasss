@@ -33,7 +33,7 @@ const AnswerBlock = ({ question, answer, facts, updatedAt, className = "" }: Ans
     <section
       id="answer-summary"
       aria-label="Summary"
-      className={`rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm ${className}`}
+      className={`rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs ${className}`}
     >
       <div className="flex items-center gap-2 mb-3">
         <CheckCircle2 className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />

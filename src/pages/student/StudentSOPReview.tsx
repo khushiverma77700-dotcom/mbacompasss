@@ -593,7 +593,7 @@ function ScanningOverlay({ sopName }: { sopName: string | null }) {
           <div className="relative mx-auto h-44 w-32 rounded-lg border-2 border-sky-300 bg-white shadow-md overflow-hidden">
             <div className="p-3 space-y-1.5">
               {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="h-1.5 bg-slate-200 rounded" style={{ width: `${60 + (i * 7) % 40}%` }} />
+                <div key={i} className="h-1.5 bg-slate-200 rounded-[0.25rem]" style={{ width: `${60 + (i * 7) % 40}%` }} />
               ))}
             </div>
             <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-sky-500 to-transparent shadow-[0_0_20px_rgba(14,165,233,0.8)] animate-scan" />
@@ -848,7 +848,7 @@ function Report({ evaluation, onReset, onDownload }: { evaluation: any; onReset:
                 <ul className="space-y-1 mt-2">
                   {s.bullets?.map((b: string, j: number) => (
                     <li key={j} className="text-sm flex gap-2">
-                      <ChevronRight className="h-3.5 w-3.5 text-sky-600 flex-shrink-0 mt-1" />
+                      <ChevronRight className="h-3.5 w-3.5 text-sky-600 shrink-0 mt-1" />
                       <span className="text-slate-700">{b}</span>
                     </li>
                   ))}
@@ -927,11 +927,11 @@ function Report({ evaluation, onReset, onDownload }: { evaluation: any; onReset:
             {evaluation.rewrite_suggestions.map((r: any, i: number) => (
               <div key={i} className="space-y-2 rounded-lg border border-slate-200 p-3">
                 <div className="text-xs font-bold uppercase tracking-wider text-sky-700">{r.section}</div>
-                <div className="bg-red-50 border border-red-200 rounded p-2 text-sm">
+                <div className="bg-red-50 border border-red-200 rounded-[0.25rem] p-2 text-sm">
                   <div className="text-xs font-bold text-red-700 uppercase mb-0.5">Original</div>
                   <div className="text-slate-700">{r.original_excerpt}</div>
                 </div>
-                <div className="bg-emerald-50 border border-emerald-200 rounded p-2 text-sm">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-[0.25rem] p-2 text-sm">
                   <div className="text-xs font-bold text-emerald-700 uppercase mb-0.5">Rewritten</div>
                   <div className="text-slate-700">{r.rewritten}</div>
                 </div>

@@ -693,8 +693,8 @@ export default function AdminBulkGenerateSections() {
                               else if (s.status === "failed") { cls = "text-destructive"; SIcon = XCircle; }
                               else if (s.status === "processing") { cls = "text-primary"; SIcon = Loader2; }
                               return (
-                                <div key={si} className={`flex items-start gap-1.5 text-xs px-2 py-1 rounded bg-background border border-border/50 ${cls}`}>
-                                  <SIcon className={`w-3 h-3 mt-0.5 flex-shrink-0 ${s.status === "processing" ? "animate-spin" : ""}`} />
+                                <div key={si} className={`flex items-start gap-1.5 text-xs px-2 py-1 rounded-[0.25rem] bg-background border border-border/50 ${cls}`}>
+                                  <SIcon className={`w-3 h-3 mt-0.5 shrink-0 ${s.status === "processing" ? "animate-spin" : ""}`} />
                                   <div className="flex-1 min-w-0">
                                     <div className="truncate font-medium">{s.label}</div>
                                     {s.error && <div className="text-xs truncate" title={s.error}>{s.error}</div>}

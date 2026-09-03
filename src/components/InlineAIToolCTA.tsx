@@ -92,7 +92,7 @@ const InlineAIToolCTA = ({ variant }: InlineAIToolCTAProps) => {
               <div className="flex min-w-0 flex-col md:flex-row items-start md:items-center gap-5 md:gap-6">
                 {/* Icon */}
                 <motion.div
-                  className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center flex-shrink-0 shadow-lg`}
+                  className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shrink-0 shadow-lg`}
                   style={{ boxShadow: `0 8px 30px rgba(${tool.glowColor}, 0.3)` }}
                   whileHover={{ scale: 1.05, rotate: 2 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -115,7 +115,7 @@ const InlineAIToolCTA = ({ variant }: InlineAIToolCTAProps) => {
                 </div>
 
                 {/* CTA */}
-                <Link to={tool.path} className="flex-shrink-0 w-full md:w-auto">
+                <Link to={tool.path} className="shrink-0 w-full md:w-auto">
                   <motion.div
                     className={`inline-flex max-w-full items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r ${tool.gradient} text-white font-semibold text-sm shadow-lg w-full md:w-auto cursor-pointer whitespace-normal break-words`}
                     style={{ boxShadow: `0 4px 20px rgba(${tool.glowColor}, 0.35)` }}

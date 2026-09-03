@@ -591,13 +591,13 @@ const AdminMockBuilder = () => {
           <div className="space-y-3 text-sm">
             <p className="text-muted-foreground">
               Paste either a <strong>JSON array</strong> of question objects, or a <strong>CSV</strong>.
-              Inline math: <code className="bg-muted px-1 rounded">$x^2$</code>, block math: <code className="bg-muted px-1 rounded">$$\\frac{"{a}"}{"{b}"}$$</code>.
+              Inline math: <code className="bg-muted px-1 rounded-[0.25rem]">$x^2$</code>, block math: <code className="bg-muted px-1 rounded-[0.25rem]">$$\\frac{"{a}"}{"{b}"}$$</code>.
             </p>
-            <details className="bg-muted/40 rounded p-2">
+            <details className="bg-muted/40 rounded-[0.25rem] p-2">
               <summary className="cursor-pointer font-medium text-xs">CSV header format</summary>
               <pre className="text-xs mt-2 whitespace-pre-wrap">question_html,option_a,option_b,option_c,option_d,correct_label,topic,difficulty,positive_marks,negative_marks</pre>
             </details>
-            <details className="bg-muted/40 rounded p-2">
+            <details className="bg-muted/40 rounded-[0.25rem] p-2">
               <summary className="cursor-pointer font-medium text-xs">JSON example</summary>
               <pre className="text-xs mt-2 whitespace-pre-wrap">{`[
   {

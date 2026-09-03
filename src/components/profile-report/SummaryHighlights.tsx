@@ -230,7 +230,7 @@ export const SummaryHighlights = ({ text, name }: Props) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.35 }}
-                  className={`relative overflow-hidden rounded-2xl border-2 ${styles.border} ${styles.card} p-4 text-left shadow-sm hover:shadow-md transition-shadow`}
+                  className={`relative overflow-hidden rounded-2xl border-2 ${styles.border} ${styles.card} p-4 text-left shadow-xs hover:shadow-md transition-shadow`}
                 >
                   <div className={`absolute top-0 left-0 right-0 h-1 ${styles.bar}`} />
                   <div className="flex items-start justify-between mb-2">

@@ -109,7 +109,7 @@ export default function StudentLeaderboard() {
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 truncate flex items-center gap-2">
                         {r.display_handle}
-                        {r.is_self && <span className="text-xs bg-sky-600 text-white px-1.5 py-0.5 rounded">You</span>}
+                        {r.is_self && <span className="text-xs bg-sky-600 text-white px-1.5 py-0.5 rounded-[0.25rem]">You</span>}
                       </div>
                       <div className="text-xs text-muted-foreground">Level {r.level} • {r.total_mocks_completed} mocks</div>
                     </div>

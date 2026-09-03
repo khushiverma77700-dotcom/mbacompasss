@@ -260,7 +260,7 @@ export const LiveOperationsPanel = ({
             {status.queued.length === 0 ? <Empty>Queue is empty.</Empty> : (
               <div className="space-y-1.5">
                 {status.queued.map((j) => (
-                  <div key={j.id} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+                  <div key={j.id} className="flex items-center justify-between rounded-[0.25rem] border px-3 py-2 text-sm">
                     <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-muted-foreground" /> {j.label}</span>
                     <span className="text-xs text-muted-foreground">{ahead(j.scheduled_for)}{j.status === "parked" ? " · parked" : ""}</span>
                   </div>
@@ -308,7 +308,7 @@ export const LiveOperationsPanel = ({
           </CardHeader>
           <CardContent className="space-y-1.5">
             {freshnessRows.map(([label, v]) => (
-              <div key={label} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+              <div key={label} className="flex items-center justify-between rounded-[0.25rem] border px-3 py-2 text-sm">
                 <span>{label}</span>
                 <span className="text-xs text-muted-foreground">{v ? `${ago(v)} · ${when(v)}` : "Never collected"}</span>
               </div>
@@ -323,7 +323,7 @@ export const LiveOperationsPanel = ({
           </CardHeader>
           <CardContent className="space-y-1.5">
             {status.sources.length === 0 ? <Empty>No sources registered.</Empty> : status.sources.map((s) => (
-              <div key={s.source_key} className="rounded border px-3 py-2 text-sm">
+              <div key={s.source_key} className="rounded-[0.25rem] border px-3 py-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{s.label}</span>
                   <Badge variant="outline" className={tone[s.status] ?? tone.not_connected}>{String(s.status ?? "unknown").replace("_", " ")}</Badge>
@@ -499,7 +499,7 @@ export const ImpactReportPanel = ({ onRunStage }: { onRunStage: (types: string[]
                 ) : (
                   <div className="space-y-1.5">
                     {rows.slice(0, 8).map((x: any) => (
-                      <div key={x.id} className="rounded border px-3 py-2 text-sm">
+                      <div key={x.id} className="rounded-[0.25rem] border px-3 py-2 text-sm">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-medium">{x.path}</span>
                           <span className="text-xs text-muted-foreground">changed {x.changed_on}</span>
@@ -713,7 +713,7 @@ export const ApprovalPanel = ({ onChanged }: { onChanged?: () => void }) => {
               <ScrollArea className="h-[260px]">
                 <div className="space-y-1.5">
                   {data.tasks.map((t: any) => (
-                    <div key={t.id} className="rounded border px-3 py-2 text-sm">
+                    <div key={t.id} className="rounded-[0.25rem] border px-3 py-2 text-sm">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate font-medium">{t.path ?? t.keyword}</span>
                         <Badge variant="outline">{t.status}</Badge>
@@ -737,7 +737,7 @@ export const ApprovalPanel = ({ onChanged }: { onChanged?: () => void }) => {
               <ScrollArea className="h-[260px]">
                 <div className="space-y-1.5">
                   {data.console_tasks.map((t: any) => (
-                    <div key={t.id} className="rounded border px-3 py-2 text-sm">
+                    <div key={t.id} className="rounded-[0.25rem] border px-3 py-2 text-sm">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate font-medium">{t.title ?? t.action ?? t.url}</span>
                         <Badge variant="outline">{t.status}</Badge>
@@ -764,11 +764,11 @@ export const ApprovalPanel = ({ onChanged }: { onChanged?: () => void }) => {
               <div><span className="font-semibold">Problem:</span> {preview.problem ?? "—"}</div>
               <div><span className="font-semibold">Recommendation:</span> {preview.recommended_change}</div>
               <div className="grid gap-2 sm:grid-cols-2">
-                <div className="rounded border p-2">
+                <div className="rounded-[0.25rem] border p-2">
                   <div className="mb-1 text-xs font-semibold text-muted-foreground">Before</div>
                   <div className="whitespace-pre-wrap break-words text-xs">{asText(preview.before_value, "— (nothing recorded)")}</div>
                 </div>
-                <div className="rounded border p-2">
+                <div className="rounded-[0.25rem] border p-2">
                   <div className="mb-1 text-xs font-semibold text-muted-foreground">After</div>
                   <div className="whitespace-pre-wrap break-words text-xs">{asText(preview.after_value, "— (needs a human edit)")}</div>
                 </div>

@@ -31,7 +31,7 @@ export function DualFeedbackMarquees({
           <div className="pointer-events-none absolute inset-y-0 right-0 w-16 z-10 bg-gradient-to-l from-white to-transparent" />
           <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused] w-max">
             {textLoop.map((t, i) => (
-              <Card key={i} className="p-5 w-[340px] shrink-0 border-sky-100 bg-white shadow-sm relative">
+              <Card key={i} className="p-5 w-[340px] shrink-0 border-sky-100 bg-white shadow-xs relative">
                 <Quote className="absolute top-3 right-3 h-7 w-7 text-sky-100" />
                 <div className="flex gap-0.5 mb-2">
                   {[...Array(5)].map((_, j) => <Star key={j} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
@@ -63,7 +63,7 @@ export function DualFeedbackMarquees({
           <div className="pointer-events-none absolute inset-y-0 right-0 w-16 z-10 bg-gradient-to-l from-white to-transparent" />
           <div className="flex gap-4 animate-marquee-reverse hover:[animation-play-state:paused] w-max">
             {imgLoop.map((img, i) => (
-              <Card key={i} className="w-[260px] shrink-0 overflow-hidden border-sky-100 bg-white shadow-sm">
+              <Card key={i} className="w-[260px] shrink-0 overflow-hidden border-sky-100 bg-white shadow-xs">
                 <div className="aspect-[4/5] bg-sky-50 flex items-center justify-center">
                   {img.image_url ? (
                     <img src={img.image_url} alt={img.caption || "feedback"} className="w-full h-full object-cover" loading="lazy" />

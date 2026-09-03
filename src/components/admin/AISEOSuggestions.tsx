@@ -527,7 +527,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                     <Eye className="h-4 w-4" /> Before vs After AI Fix
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div className="space-y-1.5 p-2 rounded bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30">
+                    <div className="space-y-1.5 p-2 rounded-[0.25rem] bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30">
                       <p className="font-semibold text-red-700 dark:text-red-400 text-xs uppercase tracking-wide">Before (Original)</p>
                       <p className={suggestions.currentState.hasMetaTitle ? "text-green-600" : "text-red-600"}>
                         Meta Title: {suggestions.currentState.hasMetaTitle ? `${suggestions.currentState.metaTitleLength} chars` : "Missing"}
@@ -544,7 +544,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                       <p className="text-muted-foreground">Schema: 0 schemas</p>
                       <p className="text-muted-foreground">Social Meta: None</p>
                     </div>
-                    <div className="space-y-1.5 p-2 rounded bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30">
+                    <div className="space-y-1.5 p-2 rounded-[0.25rem] bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30">
                       <p className="font-semibold text-green-700 dark:text-green-400 text-xs uppercase tracking-wide">After (AI Optimized)</p>
                       <p className="text-green-600">Meta Title: {(suggestions.meta_title || "").length} chars</p>
                       <p className="text-green-600">Meta Desc: {(suggestions.meta_description || "").length} chars</p>
@@ -594,7 +594,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                 {/* META TAB */}
                 <TabsContent value="meta" className="space-y-4 mt-4">
                   {autoApplied && (
-                    <p className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950/20 p-2 rounded border border-green-200 dark:border-green-800">
+                    <p className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950/20 p-2 rounded-[0.25rem] border border-green-200 dark:border-green-800">
                       <CheckCircle className="h-3 w-3 text-green-500 inline mr-1" />
                       These values have been written to the database. Click the pencil icon to override.
                     </p>
@@ -725,7 +725,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                 {/* SOCIAL META TAB */}
                 <TabsContent value="social" className="space-y-4 mt-4">
                   {autoApplied && (
-                    <p className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950/20 p-2 rounded border border-green-200 dark:border-green-800 flex items-center gap-1">
+                    <p className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950/20 p-2 rounded-[0.25rem] border border-green-200 dark:border-green-800 flex items-center gap-1">
                       <CheckCircle className="h-3 w-3 text-green-500" /> Social meta saved to SEO snapshot for automatic rendering.
                     </p>
                   )}
@@ -780,7 +780,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                 <TabsContent value="links" className="mt-4 space-y-3">
                   <h4 className="font-semibold flex items-center gap-2"><Link className="h-4 w-4" /> Internal Linking Strategy</h4>
                   {suggestions.internalLinks.suggested.map((link, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded bg-muted/50 text-sm">
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-[0.25rem] bg-muted/50 text-sm">
                       <Link className="h-3 w-3 text-primary shrink-0" />
                       <code className="text-xs flex-1">{link}</code>
                       {suggestions.internalLinks.anchorTexts[i] && (
@@ -880,7 +880,7 @@ function EditableSuggestionField({ label, value, current, charLimit, fieldKey, e
         </div>
       </div>
       {current && hasChanged && (
-        <div className="text-xs bg-red-50 dark:bg-red-950/20 p-2 rounded text-muted-foreground line-through">
+        <div className="text-xs bg-red-50 dark:bg-red-950/20 p-2 rounded-[0.25rem] text-muted-foreground line-through">
           {current}
         </div>
       )}
@@ -910,7 +910,7 @@ function EditableSuggestionField({ label, value, current, charLimit, fieldKey, e
           </div>
         </div>
       ) : (
-        <p className="text-sm bg-green-50/50 dark:bg-green-950/10 p-2 rounded border border-green-100 dark:border-green-900/30">{value}</p>
+        <p className="text-sm bg-green-50/50 dark:bg-green-950/10 p-2 rounded-[0.25rem] border border-green-100 dark:border-green-900/30">{value}</p>
       )}
     </div>
   );
@@ -964,7 +964,7 @@ function MetaPreview({ label, title, description, onCopy }: {
           <Copy className="h-3 w-3 mr-1" /> Copy
         </Button>
       </div>
-      <div className="bg-muted/50 rounded p-3 space-y-1">
+      <div className="bg-muted/50 rounded-[0.25rem] p-3 space-y-1">
         <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{title}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>

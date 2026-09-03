@@ -85,8 +85,8 @@ const ProfileAnalyzerPopup = () => {
           {/* Left Panel — Info */}
           <div className="relative md:w-[45%] p-4 md:p-8 overflow-hidden" style={{ background: "var(--hero-gradient)" }}>
             {/* Decorative circles */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-sm" />
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/10 blur-sm" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-xs" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/10 blur-xs" />
 
             <div className="relative z-10">
               {/* Header */}
@@ -108,7 +108,7 @@ const ProfileAnalyzerPopup = () => {
               <div className="space-y-3 mb-6">
                 {features.map((f) => (
                   <div key={f.label} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0 mt-0.5">
                       <f.icon className="w-4 h-4 text-white" />
                     </div>
                     <div>
@@ -123,7 +123,7 @@ const ProfileAnalyzerPopup = () => {
               <div className="space-y-1.5">
                 {highlights.map((h) => (
                   <div key={h} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground/80 flex-shrink-0" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground/80 shrink-0" />
                     <span className="text-white/80 text-xs">{h}</span>
                   </div>
                 ))}
@@ -157,7 +157,7 @@ const ProfileAnalyzerPopup = () => {
                 { icon: Sparkles, title: "AI Roadmap", sub: "60-day personalized plan" },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/50 border border-border/50">
-                  <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <item.icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-foreground leading-tight">{item.title}</div>
                     <div className="text-xs text-muted-foreground leading-snug">{item.sub}</div>

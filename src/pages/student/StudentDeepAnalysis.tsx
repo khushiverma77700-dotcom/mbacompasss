@@ -71,7 +71,7 @@ export default function StudentDeepAnalysis() {
             <div key={i} className="p-3 rounded-lg bg-rose-50/50 border border-rose-100">
               <div className="flex justify-between items-start gap-2">
                 <div className="text-sm font-medium text-gray-900">{w.reason}</div>
-                <span className={`text-xs px-1.5 py-0.5 rounded ${w.impact === "high" ? "bg-rose-200 text-rose-800" : w.impact === "medium" ? "bg-amber-200 text-amber-800" : "bg-gray-200 text-gray-700"}`}>{w.impact}</span>
+                <span className={`text-xs px-1.5 py-0.5 rounded-[0.25rem] ${w.impact === "high" ? "bg-rose-200 text-rose-800" : w.impact === "medium" ? "bg-amber-200 text-amber-800" : "bg-gray-200 text-gray-700"}`}>{w.impact}</span>
               </div>
               {w.marks_lost != null && <div className="text-xs text-muted-foreground mt-1">~{w.marks_lost} marks lost</div>}
             </div>
@@ -101,7 +101,7 @@ export default function StudentDeepAnalysis() {
             <div key={i} className="p-3 rounded-lg bg-purple-50/50 border border-purple-100">
               <div className="flex items-center justify-between">
                 <div className="font-medium text-gray-900 text-sm">{t.topic}</div>
-                <span className="text-xs bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded">{t.section}</span>
+                <span className="text-xs bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded-[0.25rem]">{t.section}</span>
               </div>
               <div className="text-xs text-muted-foreground mt-1">{t.action}</div>
             </div>

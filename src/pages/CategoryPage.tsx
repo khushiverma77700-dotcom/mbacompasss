@@ -381,13 +381,13 @@ const CategoryPage = () => {
         )}
 
         {cityPage?.detailed_content && (
-          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cityPage.detailed_content) }} />
+          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-xs prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cityPage.detailed_content) }} />
         )}
         {cityPage?.faq_content && (
-          <div className="mt-8 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cityPage.faq_content) }} />
+          <div className="mt-8 bg-card rounded-2xl border border-border p-8 shadow-xs prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cityPage.faq_content) }} />
         )}
         {hasLocationFilter && !cityPage?.detailed_content && !cityPage?.faq_content && (
-          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-sm">
+          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-xs">
             <h2 className="font-heading font-bold text-foreground text-xl mb-3">About {category?.name || "MBA"} Coaching in {displayName}</h2>
             <p className="text-muted-foreground leading-relaxed">
               {metaDesc} Our comprehensive listing covers fees, batch information, success rates, and student reviews.
@@ -397,7 +397,7 @@ const CategoryPage = () => {
         )}
 
         {hasLocationFilter && otherPages.length > 0 && (
-          <div className="mt-10 bg-card rounded-2xl border border-border p-8 shadow-sm">
+          <div className="mt-10 bg-card rounded-2xl border border-border p-8 shadow-xs">
             <h3 className="font-heading font-bold text-foreground text-lg mb-2">Explore Other Regions</h3>
             <p className="text-sm text-muted-foreground mb-5">Find MBA coaching institutes in other cities and states across India</p>
             <div className="flex flex-wrap gap-2">

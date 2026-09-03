@@ -478,7 +478,7 @@ export default function AdminMBACompassCourses() {
                     <div className="grid sm:grid-cols-3 gap-3">
                       {(edit.gallery_images ?? []).map((img: string, i: number) => (
                         <div key={i} className="relative">
-                          <img src={img} alt="" className="w-full aspect-video object-cover rounded border"  loading="lazy" decoding="async" />
+                          <img src={img} alt="" className="w-full aspect-video object-cover rounded-[0.25rem] border"  loading="lazy" decoding="async" />
                           <button
                             type="button"
                             onClick={() => setEdit({ ...edit, gallery_images: (edit.gallery_images ?? []).filter((_: any, j: number) => j !== i) })}
@@ -515,7 +515,7 @@ export default function AdminMBACompassCourses() {
                       <div className="text-xs font-semibold text-sky-700 mb-2 uppercase tracking-wide">{group}</div>
                       <div className="grid sm:grid-cols-2 gap-2 border rounded-lg p-3 bg-sky-50/30 dark:bg-muted/30">
                         {items.map((t) => (
-                          <label key={t.key as string} className="flex items-center justify-between text-sm py-1.5 px-2 rounded hover:bg-white dark:hover:bg-muted text-foreground">
+                          <label key={t.key as string} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-[0.25rem] hover:bg-white dark:hover:bg-muted text-foreground">
                             <span>{t.label}</span>
                             <Switch
                               checked={!!(edit as any)[t.key]}

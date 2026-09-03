@@ -293,7 +293,7 @@ const FreebiesPage = () => {
         </div>
 
         <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8 sm:pt-20 sm:pb-14 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 sm:px-3.5 sm:py-1.5 text-xs sm:text-xs font-semibold text-sky-700 shadow-sm max-w-full">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 sm:px-3.5 sm:py-1.5 text-xs sm:text-xs font-semibold text-sky-700 shadow-xs max-w-full">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
@@ -323,7 +323,7 @@ const FreebiesPage = () => {
           {/* Search */}
           <div className="mt-6 sm:mt-8 max-w-xl mx-auto">
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-xl blur opacity-20 group-focus-within:opacity-40 transition" />
+              <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-xl blur-sm opacity-20 group-focus-within:opacity-40 transition" />
               <div className="relative">
                 <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                 <Input
@@ -401,7 +401,7 @@ const FreebiesPage = () => {
                               <FileText className="h-14 w-14" />
                             </div>
                           )}
-                          <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 text-amber-700 px-2 py-1 text-xs font-bold shadow">
+                          <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 text-amber-700 px-2 py-1 text-xs font-bold shadow-sm">
                             <Star className="h-3 w-3 fill-amber-500" /> Featured #{idx + 1}
                           </div>
                           {f.category && (
@@ -577,7 +577,7 @@ const FreebiesPage = () => {
                   className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all ${
                     isActive
                       ? "bg-slate-900 text-white border-slate-900 shadow-md"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:text-sky-700 hover:shadow-sm"
+                      : "bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:text-sky-700 hover:shadow-xs"
                   }`}
                 >
                   {c !== "All" && CATEGORY_ICONS[c] && (
@@ -602,8 +602,8 @@ const FreebiesPage = () => {
               <div key={i} className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
                 <div className="aspect-[16/9] bg-gradient-to-br from-slate-100 to-slate-50 animate-pulse" />
                 <div className="p-5 space-y-3">
-                  <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4" />
-                  <div className="h-3 bg-slate-100 rounded animate-pulse w-full" />
+                  <div className="h-4 bg-slate-100 rounded-[0.25rem] animate-pulse w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded-[0.25rem] animate-pulse w-full" />
                   <div className="h-9 bg-slate-100 rounded-lg animate-pulse mt-4" />
                 </div>
               </div>
@@ -666,7 +666,7 @@ const FreebiesPage = () => {
 
                     {/* Category badge */}
                     {f.category && (
-                      <div className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-xs font-bold text-slate-800 shadow-sm">
+                      <div className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-xs font-bold text-slate-800 shadow-xs">
                         {CATEGORY_ICONS[f.category] && <span>{CATEGORY_ICONS[f.category]}</span>}
                         {f.category}
                       </div>
@@ -748,7 +748,7 @@ const FreebiesPage = () => {
       <section className="border-t border-slate-100 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-6xl mx-auto px-4 py-14 sm:py-20">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 shadow-xs">
               <Quote className="h-3.5 w-3.5" /> Loved by aspirants
             </div>
             <h2 className="mt-3 text-xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
@@ -772,7 +772,7 @@ const FreebiesPage = () => {
                 </div>
                 <blockquote className="mt-3 text-sm text-slate-700 leading-relaxed">"{t.q}"</blockquote>
                 <figcaption className="mt-4 flex items-center gap-3 pt-4 border-t border-slate-100">
-                  <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${t.g} text-white grid place-items-center font-bold shadow`}>
+                  <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${t.g} text-white grid place-items-center font-bold shadow-sm`}>
                     {t.n.split(" ").map((p) => p[0]).join("")}
                   </div>
                   <div>
@@ -792,7 +792,7 @@ const FreebiesPage = () => {
               { icon: <Layers className="h-4 w-4" />, v: "180+", l: "Curated PDFs" },
               { icon: <Target className="h-4 w-4" />, v: "99+%ile", l: "Author benchmark" },
             ].map((b) => (
-              <div key={b.l} className="rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-3 flex items-center gap-3">
+              <div key={b.l} className="rounded-xl bg-white border border-slate-200 shadow-xs px-4 py-3 flex items-center gap-3">
                 <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
                   {b.icon}
                 </div>
@@ -931,7 +931,7 @@ const FreebiesPage = () => {
 
 function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number | string; label: string }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 shadow-sm px-2 py-2.5 sm:px-3 sm:py-3 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center sm:text-left">
+    <div className="rounded-xl bg-white border border-slate-200 shadow-xs px-2 py-2.5 sm:px-3 sm:py-3 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center sm:text-left">
       <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
         {icon}
       </div>
@@ -946,7 +946,7 @@ function StatPill({ icon, value, label }: { icon: React.ReactNode; value: number
 
 function SeoCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 hover:border-sky-200 hover:shadow-sm transition-all">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 hover:border-sky-200 hover:shadow-xs transition-all">
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shrink-0">
           {icon}
@@ -987,7 +987,7 @@ function MarqueeCard({
           }}
         />
         <div className="absolute inset-0 flex items-center gap-3 px-4 text-white">
-          <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur border border-white/30 grid place-items-center shadow">
+          <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur border border-white/30 grid place-items-center shadow-sm">
             <FileText className="h-5 w-5" />
           </div>
           <div className="text-xs uppercase tracking-[0.18em] font-bold text-white/90">
@@ -995,7 +995,7 @@ function MarqueeCard({
           </div>
         </div>
         {f.category && (
-          <div className="absolute top-2 right-2 rounded-full bg-white/95 text-slate-800 px-2 py-0.5 text-xs font-bold shadow-sm">
+          <div className="absolute top-2 right-2 rounded-full bg-white/95 text-slate-800 px-2 py-0.5 text-xs font-bold shadow-xs">
             {f.category}
           </div>
         )}

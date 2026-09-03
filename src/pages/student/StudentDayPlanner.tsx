@@ -316,7 +316,7 @@ export default function StudentDayPlanner() {
   return (
     <div className="space-y-6">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-blue-50 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-blue-50 shadow-xs">
         <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-sky-200/40 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(14,165,233,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(14,165,233,0.06)_1px,transparent_1px)] bg-[size:32px_32px]" />
@@ -645,8 +645,8 @@ function TaskCard({ task, onStatus, onEdit, onDelete, onSkip, extraActions, comp
     <Card
       className={`p-3 sm:p-4 transition-shadow ${
         done ? "bg-emerald-50/40 border-emerald-200 dark:bg-emerald-500/5 dark:border-emerald-500/20"
-             : isPending ? "hover:shadow-sm border-l-4 border-l-sky-500"
-             : "hover:shadow-sm"
+             : isPending ? "hover:shadow-xs border-l-4 border-l-sky-500"
+             : "hover:shadow-xs"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -739,7 +739,7 @@ function TaskCard({ task, onStatus, onEdit, onDelete, onSkip, extraActions, comp
 
 function GuideStep({ n, icon, title, desc }: { n: number; icon: React.ReactNode; title: string; desc: string }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:border-sky-200 hover:shadow-sm transition">
+    <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:border-sky-200 hover:shadow-xs transition">
       <div className="relative shrink-0">
         <div className="h-10 w-10 rounded-xl bg-sky-50 ring-1 ring-sky-100 flex items-center justify-center">
           {icon}

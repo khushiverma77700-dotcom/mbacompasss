@@ -44,7 +44,7 @@ export default function MocksBannerSection() {
       <div className="container mx-auto px-4 relative z-10 min-w-0 max-w-full">
         {/* Eyebrow */}
         <div className="flex justify-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-sky-200 shadow-xs">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -119,10 +119,10 @@ export default function MocksBannerSection() {
 
             {/* Floating chips */}
             <div aria-hidden className="pointer-events-none hidden md:block">
-              <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-white border border-sky-200 shadow text-xs font-semibold text-sky-700 flex items-center gap-1 animate-[fade-in_0.6s_ease-out]">
+              <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-white border border-sky-200 shadow-sm text-xs font-semibold text-sky-700 flex items-center gap-1 animate-[fade-in_0.6s_ease-out]">
                 <TrendingUp className="h-3 w-3" /> Rank up 2,140
               </div>
-              <div className="absolute bottom-6 right-6 px-3 py-1.5 rounded-full bg-white border border-emerald-200 shadow text-xs font-semibold text-emerald-700 flex items-center gap-1 animate-[fade-in_1s_ease-out]">
+              <div className="absolute bottom-6 right-6 px-3 py-1.5 rounded-full bg-white border border-emerald-200 shadow-sm text-xs font-semibold text-emerald-700 flex items-center gap-1 animate-[fade-in_1s_ease-out]">
                 <Zap className="h-3 w-3" /> Streak 14 days
               </div>
             </div>
@@ -136,11 +136,11 @@ export default function MocksBannerSection() {
                 className="group relative rounded-xl bg-white border border-sky-100 p-4 hover:border-sky-300 hover:shadow-lg hover:shadow-sky-100/60 transition-all hover:-translate-y-0.5"
                 style={{ animation: `fade-in 0.5s ease-out ${i * 0.06}s backwards` }}
               >
-                <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${d.tone} text-white grid place-items-center mb-2.5 shadow-sm`}>
+                <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${d.tone} text-white grid place-items-center mb-2.5 shadow-xs`}>
                   <d.icon className="h-4.5 w-4.5" />
                 </div>
                 <div className="text-sm font-semibold text-foreground leading-tight">{d.label}</div>
-                <div className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                <div className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-[0.25rem]">
                   <CheckCircle2 className="h-2.5 w-2.5" /> {d.tag}
                 </div>
               </div>

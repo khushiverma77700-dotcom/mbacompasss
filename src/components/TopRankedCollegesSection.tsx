@@ -73,7 +73,7 @@ const TopRankedCollegesSection = () => {
                 <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-primary/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                 <div className="flex items-start justify-between gap-3 mb-5">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-sky-50 border border-primary/15 flex items-center justify-center">
+                  <div className="shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-sky-50 border border-primary/15 flex items-center justify-center">
                     <span className="font-heading font-bold text-base text-primary tracking-tight">{initials}</span>
                   </div>
                   <span className="inline-flex items-center text-xs font-bold uppercase tracking-wider bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/10 whitespace-nowrap">
@@ -87,7 +87,7 @@ const TopRankedCollegesSection = () => {
                   </h3>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">{college.city}{college.state ? `, ${college.state}` : ""}</span>
                 </div>
 
@@ -95,14 +95,14 @@ const TopRankedCollegesSection = () => {
                   <div className="min-w-0">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Total Fees</p>
                     <div className="flex items-center gap-1">
-                      <IndianRupee className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
+                      <IndianRupee className="w-3.5 h-3.5 text-primary/70 shrink-0" />
                       <p className="text-sm font-bold text-foreground truncate">{college.fees || "N/A"}</p>
                     </div>
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Avg Package</p>
                     <div className="flex items-center gap-1">
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600/70 flex-shrink-0" />
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600/70 shrink-0" />
                       <p className="text-sm font-bold text-emerald-600 truncate">{college.placement_avg || "N/A"}</p>
                     </div>
                   </div>

@@ -691,9 +691,9 @@ const BulkLiveControlPanel = ({
             </div>
             <div className="text-2xl font-bold font-mono leading-tight text-primary">{tickRate.toFixed(1)}</div>
             <div className="grid grid-cols-3 gap-1 mt-2 text-xs">
-              <div className="rounded bg-emerald-500/10 text-emerald-700 px-1 py-0.5 text-center font-mono">✓ {succeeded}</div>
-              <div className="rounded bg-destructive/10 text-destructive px-1 py-0.5 text-center font-mono">✗ {failed}</div>
-              <div className="rounded bg-muted px-1 py-0.5 text-center font-mono">⋯ {pending}</div>
+              <div className="rounded-[0.25rem] bg-emerald-500/10 text-emerald-700 px-1 py-0.5 text-center font-mono">✓ {succeeded}</div>
+              <div className="rounded-[0.25rem] bg-destructive/10 text-destructive px-1 py-0.5 text-center font-mono">✗ {failed}</div>
+              <div className="rounded-[0.25rem] bg-muted px-1 py-0.5 text-center font-mono">⋯ {pending}</div>
             </div>
           </div>
 
@@ -712,7 +712,7 @@ const BulkLiveControlPanel = ({
                 return (
                   <div
                     key={i}
-                    className={`h-6 rounded border ${
+                    className={`h-6 rounded-[0.25rem] border ${
                       paused
                         ? "bg-amber-500/10 border-amber-500/30"
                         : isBusy
@@ -841,7 +841,7 @@ const BulkLiveControlPanel = ({
                 type="number"
                 value={usdInr}
                 onChange={(e) => setUsdInr(Math.max(1, Number(e.target.value) || 83.5))}
-                className="w-16 h-6 text-xs font-mono px-1.5 rounded border bg-background"
+                className="w-16 h-6 text-xs font-mono px-1.5 rounded-[0.25rem] border bg-background"
                 title="USD → INR rate (editable)"
                 step={0.1}
               />
@@ -920,7 +920,7 @@ const BulkLiveControlPanel = ({
 
           <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
             <ShieldCheck className="w-3 h-3 text-primary" />
-            <span>Cost is computed from <code className="font-mono bg-muted px-1 rounded">ai_usage_logs</code> using per-model pricing. INR rate is editable above.</span>
+            <span>Cost is computed from <code className="font-mono bg-muted px-1 rounded-[0.25rem]">ai_usage_logs</code> using per-model pricing. INR rate is editable above.</span>
           </div>
         </div>
 
@@ -1126,19 +1126,19 @@ const BulkLiveControlPanel = ({
             </div>
             <ActivityHeatmap data={opsHistory} />
             <div className="grid grid-cols-4 gap-2 mt-3 text-xs">
-              <div className="rounded border bg-card px-2 py-1.5">
+              <div className="rounded-[0.25rem] border bg-card px-2 py-1.5">
                 <div className="text-muted-foreground">peak/s</div>
                 <div className="font-mono font-semibold text-sm">{Math.max(0, ...opsHistory)}</div>
               </div>
-              <div className="rounded border bg-card px-2 py-1.5">
+              <div className="rounded-[0.25rem] border bg-card px-2 py-1.5">
                 <div className="text-muted-foreground">avg/s</div>
                 <div className="font-mono font-semibold text-sm">{opsHistory.length > 0 ? (opsHistory.reduce((a, b) => a + b, 0) / opsHistory.length).toFixed(1) : "0"}</div>
               </div>
-              <div className="rounded border bg-card px-2 py-1.5">
+              <div className="rounded-[0.25rem] border bg-card px-2 py-1.5">
                 <div className="text-muted-foreground">window</div>
                 <div className="font-mono font-semibold text-sm">{opsHistory.reduce((a, b) => a + b, 0)} ops</div>
               </div>
-              <div className="rounded border bg-card px-2 py-1.5">
+              <div className="rounded-[0.25rem] border bg-card px-2 py-1.5">
                 <div className="text-muted-foreground">silent</div>
                 <div className="font-mono font-semibold text-sm">{opsHistory.filter((v) => v === 0).length}/60</div>
               </div>
@@ -1251,7 +1251,7 @@ const BulkLiveControlPanel = ({
               ) : events.map((e, i) => (
                 <div
                   key={`${e.ts}-${i}`}
-                  className={`flex items-center gap-2 text-xs font-mono px-2 py-1 rounded border-l-2 ${
+                  className={`flex items-center gap-2 text-xs font-mono px-2 py-1 rounded-[0.25rem] border-l-2 ${
                     e.kind === "ok" ? "border-emerald-500 bg-emerald-500/5"
                     : e.kind === "fail" ? "border-destructive bg-destructive/5"
                     : "border-primary bg-primary/5"

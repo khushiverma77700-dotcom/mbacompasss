@@ -1375,9 +1375,9 @@ const AdminSEODashboard = () => {
                   <span className="font-medium">{pct(stats.withSchema)}%</span>
                 </div>
                 <div className="grid grid-cols-3 gap-1 mt-2">
-                  <div className="text-center p-1.5 rounded bg-green-50"><p className="text-xs font-bold text-green-700">{stats.good}</p><p className="text-xs text-green-600">Good</p></div>
-                  <div className="text-center p-1.5 rounded bg-amber-50"><p className="text-xs font-bold text-amber-700">{stats.warning}</p><p className="text-xs text-amber-600">Warn</p></div>
-                  <div className="text-center p-1.5 rounded bg-red-50"><p className="text-xs font-bold text-red-700">{stats.poor}</p><p className="text-xs text-red-600">Poor</p></div>
+                  <div className="text-center p-1.5 rounded-[0.25rem] bg-green-50"><p className="text-xs font-bold text-green-700">{stats.good}</p><p className="text-xs text-green-600">Good</p></div>
+                  <div className="text-center p-1.5 rounded-[0.25rem] bg-amber-50"><p className="text-xs font-bold text-amber-700">{stats.warning}</p><p className="text-xs text-amber-600">Warn</p></div>
+                  <div className="text-center p-1.5 rounded-[0.25rem] bg-red-50"><p className="text-xs font-bold text-red-700">{stats.poor}</p><p className="text-xs text-red-600">Poor</p></div>
                 </div>
               </div>
             </CardContent>
@@ -1783,7 +1783,7 @@ const AdminSEODashboard = () => {
                                 rs.status === "running" || rs.status === "queued" ? "bg-blue-100 text-blue-700 border-blue-200" :
                                 "bg-slate-100 text-slate-700 border-slate-200";
                               return (
-                                <button onClick={() => openReport(row)} className={`inline-flex flex-col items-start rounded px-1.5 py-0.5 border text-left hover:opacity-80 ${tone}`}>
+                                <button onClick={() => openReport(row)} className={`inline-flex flex-col items-start rounded-[0.25rem] px-1.5 py-0.5 border text-left hover:opacity-80 ${tone}`}>
                                   <span className="text-xs font-semibold capitalize">{rs.status === "done" ? "Completed" : rs.status}</span>
                                   {rs.new_primary_keyword && <span className="text-xs text-slate-600 max-w-[140px] truncate">KW: {rs.new_primary_keyword}</span>}
                                   {rs.status === "done" && rs.score_after != null && (
@@ -1946,7 +1946,7 @@ const AdminSEODashboard = () => {
                             </TableCell>
                             <TableCell><Badge variant={row.isStatic ? "secondary" : "outline"} className="text-xs">{row.isStatic ? "Static" : contentTypeConfig[row.contentType].label}</Badge></TableCell>
                             <TableCell>
-                              <button onClick={() => openReport(row)} className={`inline-flex items-center rounded px-1.5 py-0.5 border text-xs font-semibold capitalize hover:opacity-80 ${tone}`}>{statusLabel}</button>
+                              <button onClick={() => openReport(row)} className={`inline-flex items-center rounded-[0.25rem] px-1.5 py-0.5 border text-xs font-semibold capitalize hover:opacity-80 ${tone}`}>{statusLabel}</button>
                             </TableCell>
                             <TableCell className="text-xs max-w-[200px] truncate">{rs?.new_primary_keyword || <span className="text-muted-foreground">—</span>}</TableCell>
                             <TableCell className="text-xs whitespace-nowrap">
@@ -3303,9 +3303,9 @@ const AdminSEODashboard = () => {
                                 <span className="font-medium truncate max-w-[200px] text-primary">{link.targetName}</span>
                               </div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{link.sourcePath}</code>
+                                <code className="bg-muted px-1.5 py-0.5 rounded-[0.25rem] text-xs">{link.sourcePath}</code>
                                 <ArrowRight className="h-2.5 w-2.5 shrink-0" />
-                                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{link.targetPath}</code>
+                                <code className="bg-muted px-1.5 py-0.5 rounded-[0.25rem] text-xs">{link.targetPath}</code>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">Anchor:</span>
@@ -3486,7 +3486,7 @@ function TechCheck({ label, status, detail, icon }: { label: string; status: "pa
 function RecommendationRow({ icon, text, severity }: { icon: React.ReactNode; text: string; severity: "high" | "medium" | "low" }) {
   const colors = severity === "high" ? "border-l-red-500 bg-red-50/50" : severity === "medium" ? "border-l-amber-500 bg-amber-50/50" : "border-l-blue-500 bg-blue-50/50";
   return (
-    <div className={`flex items-center gap-3 p-2.5 rounded border-l-4 ${colors}`}>
+    <div className={`flex items-center gap-3 p-2.5 rounded-[0.25rem] border-l-4 ${colors}`}>
       <span className="text-muted-foreground shrink-0">{icon}</span>
       <p className="text-sm flex-1">{text}</p>
       <Badge className={`text-xs ${severity === "high" ? "bg-red-100 text-red-700" : severity === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{severity}</Badge>
@@ -3712,7 +3712,7 @@ function ContentFreshnessPanel({ rows, onRefresh }: { rows: DashboardRow[]; onRe
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground mb-3">{staleRows.length} stale pages</p>
             {staleRows.slice(0, 50).map(({ row, ageDays }) => (
-              <div key={row.key} className="flex items-center gap-3 p-2.5 border rounded">
+              <div key={row.key} className="flex items-center gap-3 p-2.5 border rounded-[0.25rem]">
                 <Badge variant="outline" className="text-xs">{row.contentType}</Badge>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{row.name}</p>
@@ -3812,7 +3812,7 @@ function ImageAuditPanel() {
         {results.length > 0 && (
           <div className="space-y-2">
             {results.slice(0, 100).map((r) => (
-              <div key={`${r.contentType}-${r.id}`} className="flex items-center gap-3 p-2.5 border rounded">
+              <div key={`${r.contentType}-${r.id}`} className="flex items-center gap-3 p-2.5 border rounded-[0.25rem]">
                 <Badge variant="outline" className="text-xs">{r.contentType}</Badge>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{r.name}</p>

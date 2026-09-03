@@ -150,7 +150,7 @@ const OfferBanners = () => {
                     <Link to={offer.link} className="mt-auto">
                       <Button
                         size="sm"
-                        className="w-full text-xs md:text-sm font-medium rounded-lg h-8 md:h-9 text-white transition-all duration-200 hover:opacity-90 shadow-sm"
+                        className="w-full text-xs md:text-sm font-medium rounded-lg h-8 md:h-9 text-white transition-all duration-200 hover:opacity-90 shadow-xs"
                         style={{
                           backgroundColor: offer.accent,
                         }}

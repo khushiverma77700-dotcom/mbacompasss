@@ -182,13 +182,13 @@ export default function StudentDailyTest() {
       </div>
       <Card className="p-6 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 text-white border-0 shadow-xl relative overflow-hidden">
         <div className="space-y-3">
-          <div className="h-3 w-40 bg-white/20 rounded animate-pulse" />
-          <div className="h-6 w-3/5 bg-white/30 rounded animate-pulse" />
-          <div className="h-3 w-1/2 bg-white/20 rounded animate-pulse" />
+          <div className="h-3 w-40 bg-white/20 rounded-[0.25rem] animate-pulse" />
+          <div className="h-6 w-3/5 bg-white/30 rounded-[0.25rem] animate-pulse" />
+          <div className="h-3 w-1/2 bg-white/20 rounded-[0.25rem] animate-pulse" />
           <div className="grid grid-cols-3 gap-2 pt-4">
-            <div className="h-14 bg-white/10 rounded animate-pulse" />
-            <div className="h-14 bg-white/10 rounded animate-pulse" />
-            <div className="h-14 bg-white/10 rounded animate-pulse" />
+            <div className="h-14 bg-white/10 rounded-[0.25rem] animate-pulse" />
+            <div className="h-14 bg-white/10 rounded-[0.25rem] animate-pulse" />
+            <div className="h-14 bg-white/10 rounded-[0.25rem] animate-pulse" />
           </div>
         </div>
       </Card>

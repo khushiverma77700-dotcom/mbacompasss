@@ -868,7 +868,7 @@ const AdminMockTests = () => {
   return (
     <div>
       {/* Highlighted repair tool banner — surfaces passage scan/repair actions */}
-      <div className="mb-5 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-500/10 dark:via-orange-500/10 dark:to-amber-500/10 p-4 shadow-sm">
+      <div className="mb-5 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-500/10 dark:via-orange-500/10 dark:to-amber-500/10 p-4 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 shrink-0 rounded-lg bg-amber-500 text-white grid place-items-center">
@@ -1351,7 +1351,7 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
         <PopoverTrigger asChild>
           <button
             type="button"
-            className={`group inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs transition ${
+            className={`group inline-flex items-center gap-1 rounded-[0.25rem] border px-1.5 py-0.5 text-xs transition ${
               test.scheduled_start_at
                 ? "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
                 : "border-dashed border-slate-300 text-muted-foreground hover:bg-slate-50"

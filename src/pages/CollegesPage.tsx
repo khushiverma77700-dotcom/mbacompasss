@@ -474,9 +474,9 @@ const CollegesPage = () => {
                   to={`/colleges?${r.state ? `state=${encodeURIComponent(r.state)}&` : ""}city=${encodeURIComponent(r.name)}`}
                   className="flex items-center gap-2 px-4 py-3.5 rounded-xl bg-muted/50 hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium text-foreground group border border-transparent hover:border-primary/20"
                 >
-                  <MapPin className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary shrink-0" />
                   <span className="truncate">{r.name}</span>
-                  <ChevronRight className="w-3 h-3 ml-auto text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                  <ChevronRight className="w-3 h-3 ml-auto text-muted-foreground group-hover:text-primary shrink-0" />
                 </Link>
               ))}
             </div>

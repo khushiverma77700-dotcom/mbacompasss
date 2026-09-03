@@ -313,7 +313,7 @@ const SampleReportPreview = () => {
         {/* Header bar */}
         <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={bschoolLogo} alt="MBA Compass" className="w-6 h-6 rounded"  loading="lazy" decoding="async" />
+            <img src={bschoolLogo} alt="MBA Compass" className="w-6 h-6 rounded-[0.25rem]"  loading="lazy" decoding="async" />
             <span className="text-primary-foreground font-bold">Sample AI Report — Detailed Preview</span>
           </div>
           <Badge className="bg-primary-foreground/20 text-primary-foreground border-0">Live Preview</Badge>
@@ -370,7 +370,7 @@ const SampleReportPreview = () => {
               {sampleStrengths.map((s, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.5 + i * 0.1 }}
                   className="text-xs flex items-center gap-2">
-                  <span className="px-1.5 py-0.5 rounded bg-green-200 text-green-800 text-xs font-bold">{s.impact}</span>
+                  <span className="px-1.5 py-0.5 rounded-[0.25rem] bg-green-200 text-green-800 text-xs font-bold">{s.impact}</span>
                   {s.title}
                 </motion.div>
               ))}
@@ -380,7 +380,7 @@ const SampleReportPreview = () => {
               {sampleWeaknesses.map((w, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.6 + i * 0.1 }}
                   className="text-xs">
-                  <span className="px-1.5 py-0.5 rounded bg-amber-200 text-amber-800 text-xs font-bold mr-1">{w.severity}</span>
+                  <span className="px-1.5 py-0.5 rounded-[0.25rem] bg-amber-200 text-amber-800 text-xs font-bold mr-1">{w.severity}</span>
                   {w.title}
                   <p className="text-primary mt-0.5 text-xs">Fix: {w.fix}</p>
                 </motion.div>
@@ -449,7 +449,7 @@ const SampleReportPreview = () => {
 
           {/* Blurred unlock CTA */}
           <div className="relative">
-            <div className="blur-sm pointer-events-none opacity-50 space-y-3">
+            <div className="blur-xs pointer-events-none opacity-50 space-y-3">
               <div className="h-16 bg-muted rounded-xl" />
               <div className="h-12 bg-muted rounded-xl" />
             </div>
@@ -505,7 +505,7 @@ const HowItWorksAnimated = () => {
               transition={{ delay: i * 0.2, type: "spring", stiffness: 100 }}
               className="relative z-10"
             >
-              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-3 group h-full text-center">
+              <div className="bg-card rounded-2xl border border-border p-6 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-3 group h-full text-center">
                 <div className="relative mx-auto mb-5">
                   <motion.div
                     whileHover={{ scale: 1.15, rotate: 5 }}
@@ -585,7 +585,7 @@ const PeerComparisonScale = ({ peerData, userScore }: { peerData: AnalysisResult
                   <span className={`text-xs ${bucket.is_yours ? "text-primary font-bold" : "text-muted-foreground"}`}>{bucket.range}</span>
                   {bucket.is_yours && (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1">
-                      <span className="text-xs bg-primary text-primary-foreground px-1 rounded">YOU</span>
+                      <span className="text-xs bg-primary text-primary-foreground px-1 rounded-[0.25rem]">YOU</span>
                     </motion.div>
                   )}
                 </div>
@@ -1299,7 +1299,7 @@ const ProfileAnalyzerPage = () => {
                 </motion.div>
 
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-                  <Badge variant="secondary" className="text-sm px-5 py-2 mb-4 shadow-sm">
+                  <Badge variant="secondary" className="text-sm px-5 py-2 mb-4 shadow-xs">
                     <Sparkles className="w-3.5 h-3.5 mr-1.5" /> AI-Powered Tool by MBA Compass
                   </Badge>
                 </motion.div>
@@ -1345,7 +1345,7 @@ const ProfileAnalyzerPage = () => {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.6 + i * 0.08 }}
-                      className="flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-full px-4 py-2 text-sm text-muted-foreground shadow-sm hover:shadow-md transition-shadow"
+                      className="flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-full px-4 py-2 text-sm text-muted-foreground shadow-xs hover:shadow-md transition-shadow"
                     >
                       <t.icon className="w-4 h-4 text-primary" /> {t.label}
                     </motion.div>
@@ -1427,7 +1427,7 @@ const ProfileAnalyzerPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1 + i * 0.1 }}
                       whileHover={{ y: -4, scale: 1.02 }}
-                      className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-lg transition-all"
+                      className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50 shadow-xs hover:shadow-lg transition-all"
                     >
                       <item.icon className="w-8 h-8 text-primary" />
                       <span className="text-2xl font-bold">{item.value}</span>
@@ -1824,7 +1824,7 @@ const ProfileAnalyzerPage = () => {
                       <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Preferred States for MBA</Label>
                       <div className="max-h-48 overflow-y-auto border border-border rounded-lg p-3 grid grid-cols-2 gap-2">
                         {INDIAN_STATES.map(state => (
-                          <label key={state} className={`flex items-center gap-2 text-sm cursor-pointer rounded p-1.5 ${form.target_states.includes(state) ? "bg-primary/5" : "hover:bg-muted/50"}`}>
+                          <label key={state} className={`flex items-center gap-2 text-sm cursor-pointer rounded-[0.25rem] p-1.5 ${form.target_states.includes(state) ? "bg-primary/5" : "hover:bg-muted/50"}`}>
                             <Checkbox checked={form.target_states.includes(state)} onCheckedChange={() => toggleArrayItem("target_states", state)} />
                             {state}
                           </label>
@@ -1836,7 +1836,7 @@ const ProfileAnalyzerPage = () => {
                       <Label className="flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5" /> Target Colleges (optional)</Label>
                       <div className="max-h-48 overflow-y-auto border border-border rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {COLLEGE_OPTIONS.map(c => (
-                          <label key={c} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded p-1">
+                          <label key={c} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded-[0.25rem] p-1">
                             <Checkbox checked={form.target_colleges.includes(c)} onCheckedChange={() => toggleArrayItem("target_colleges", c)} />
                             {c}
                           </label>
@@ -2268,7 +2268,7 @@ const ProfileAnalyzerPage = () => {
                   <Lock className="w-4 h-4 mr-2" /> Unlock Full Report
                 </Button>
               </div>
-              <div className="blur-sm pointer-events-none space-y-6">
+              <div className="blur-xs pointer-events-none space-y-6">
                 <Card><CardHeader><CardTitle>College Comparison Table</CardTitle></CardHeader><CardContent><div className="h-64 bg-muted rounded-lg" /></CardContent></Card>
                 <Card><CardHeader><CardTitle>Peer Comparison</CardTitle></CardHeader><CardContent><div className="h-32 bg-muted rounded-lg" /></CardContent></Card>
                 <Card><CardHeader><CardTitle>Exam Strategy</CardTitle></CardHeader><CardContent><div className="space-y-2">{[1,2,3].map(i=><div key={i} className="h-16 bg-muted rounded-lg" />)}</div></CardContent></Card>
@@ -2840,8 +2840,8 @@ const ProfileAnalyzerPage = () => {
                           </div>
                         ))}
                         <div className="flex items-center gap-4 mt-2 text-xs">
-                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded bg-primary" /> With MBA</span>
-                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded bg-muted-foreground/30" /> Without MBA</span>
+                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded-[0.25rem] bg-primary" /> With MBA</span>
+                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded-[0.25rem] bg-muted-foreground/30" /> Without MBA</span>
                         </div>
                       </div>
                     </div>

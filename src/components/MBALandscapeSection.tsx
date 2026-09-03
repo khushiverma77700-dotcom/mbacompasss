@@ -122,7 +122,7 @@ const MBALandscapeSection = () => {
         {/* Table */}
         <div className="max-w-5xl mx-auto rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-15px_rgba(14,165,233,0.2)] overflow-hidden">
           <div
-            className="max-h-[540px] overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-b-2xl"
+            className="max-h-[540px] overflow-y-auto focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-b-2xl"
             tabIndex={0}
             role="region"
             aria-label="B-Schools table, scrollable"
@@ -154,7 +154,7 @@ const MBALandscapeSection = () => {
                     {row.name}
                   </div>
                   {row.highlight && (
-                    <span className="text-xs md:text-xs font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                    <span className="text-xs md:text-xs font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-[0.25rem]">
                       <Trophy className="inline w-2.5 h-2.5 mr-0.5 -mt-0.5" />{row.highlight}
                     </span>
                   )}

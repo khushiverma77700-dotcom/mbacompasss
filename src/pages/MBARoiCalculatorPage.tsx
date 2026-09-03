@@ -587,7 +587,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
               <Card className={`h-full bg-gradient-to-br ${s.color} border-blue-100/40 hover:shadow-xl transition-shadow`}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center shadow-xs">
                       <s.icon className="w-6 h-6 text-primary" />
                     </div>
                     <span className="text-3xl font-bold text-primary/15">{s.num}</span>
@@ -929,7 +929,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="sticky top-16 z-30 bg-card/90 backdrop-blur-md border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative shadow-sm">
+          <div className="sticky top-16 z-30 bg-card/90 backdrop-blur-md border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative shadow-xs">
             {[
               { v: "overview", l: "Overview", icon: Activity },
               { v: "financial", l: "Financial", icon: Wallet },
@@ -1110,15 +1110,15 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
                             <Trophy className="w-5 h-5 text-amber-500" />
                           </div>
                           <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-                            <div className="p-2 rounded bg-card">
+                            <div className="p-2 rounded-[0.25rem] bg-card">
                               <p className="text-xs uppercase tracking-wider text-muted-foreground">Fees</p>
                               <p className="text-sm font-bold text-foreground">₹{p.investment - 10}L</p>
                             </div>
-                            <div className="p-2 rounded bg-card">
+                            <div className="p-2 rounded-[0.25rem] bg-card">
                               <p className="text-xs uppercase tracking-wider text-muted-foreground">Avg CTC</p>
                               <p className="text-sm font-bold text-emerald-700">₹{p.salary}L</p>
                             </div>
-                            <div className="p-2 rounded bg-card">
+                            <div className="p-2 rounded-[0.25rem] bg-card">
                               <p className="text-xs uppercase tracking-wider text-muted-foreground">ROI</p>
                               <p className="text-sm font-bold text-primary">{p.roi}</p>
                             </div>
@@ -1184,7 +1184,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
                         { f: "Low placement guarantee", s: "High", m: "Wait, retake CAT for Tier 2" },
                         { f: "Limited brand value", s: "Medium", m: "Consider PGDM at established Tier 2" },
                       ]).map((r, i) => (
-                        <div key={i} className="flex items-start gap-3 p-3 rounded bg-card border border-border">
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-[0.25rem] bg-card border border-border">
                           <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${
                             r.s === "High" ? "text-rose-600" : r.s === "Medium" ? "text-amber-600" : "text-emerald-600"
                           }`} />
@@ -1688,8 +1688,8 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
       {/* TABBED DETAILED REPORT */}
       <Tabs defaultValue="overview" className="w-full">
-        <div className="sticky top-16 z-40 -mx-4 md:-mx-6 px-4 md:px-6 py-3 bg-white/85 backdrop-blur-md border-b border-border/60 shadow-sm">
-          <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/5 via-blue-50/40 to-primary/5 p-2 shadow-sm">
+        <div className="sticky top-16 z-40 -mx-4 md:-mx-6 px-4 md:px-6 py-3 bg-white/85 backdrop-blur-md border-b border-border/60 shadow-xs">
+          <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/5 via-blue-50/40 to-primary/5 p-2 shadow-xs">
             <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-1 bg-transparent gap-1">
               {[
                 { v: "overview", l: "Overview", icon: FileText },
@@ -2543,7 +2543,7 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
                           whileHover={{ y: -2, scale: 1.01 }}
                           className="flex gap-3 p-3 rounded-xl bg-card border border-border hover:border-primary/40 hover:shadow-md transition-all"
                         >
-                          <span className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-blue-500 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">{i + 1}</span>
+                          <span className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-blue-500 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">{i + 1}</span>
                           <p className="text-sm text-foreground/85 leading-relaxed">{s}</p>
                         </motion.div>
                       ))}

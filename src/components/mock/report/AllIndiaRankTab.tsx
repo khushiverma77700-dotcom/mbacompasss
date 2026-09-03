@@ -86,7 +86,7 @@ function Podium({ top }: { top: LeaderRow[] }) {
     if (!r) return <div />;
     return (
       <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
-        <div className={cn("w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center shadow-sm", ring)}>
+        <div className={cn("w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center shadow-xs", ring)}>
           <Icon className={cn("h-5 w-5", accent)} />
         </div>
         <div className="text-xs font-semibold truncate max-w-full text-center">{r.name}</div>
@@ -232,7 +232,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
               style={{ width: `${Math.min(100, Math.max(2, ((data.pool_size - data.projected_air) / data.pool_size) * 100))}%` }}
             />
             <div
-              className="absolute -top-1 h-4 w-1 bg-sky-900 rounded"
+              className="absolute -top-1 h-4 w-1 bg-sky-900 rounded-[0.25rem]"
               style={{ left: `calc(${Math.min(100, Math.max(0, ((data.projected_air - 1) / Math.max(1, data.pool_size - 1)) * 100))}% - 2px)` }}
               title={`Rank #${data.projected_air}`}
             />
@@ -279,7 +279,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Sectional Projected AIR</div>
               <div className="grid sm:grid-cols-2 gap-2">
                 {sectional.map(([k, v]: any) => (
-                  <div key={k} className="rounded border border-sky-100 bg-sky-50/40 p-2">
+                  <div key={k} className="rounded-[0.25rem] border border-sky-100 bg-sky-50/40 p-2">
                     <div className="text-xs font-semibold text-sky-800">{v.section ?? k}</div>
                     <div className="text-xs text-muted-foreground">
                       AIR #{Number(v.projected_air ?? 0).toLocaleString()} · {v.projected_percentile?.toFixed(2)}%ile · {v.difficulty}

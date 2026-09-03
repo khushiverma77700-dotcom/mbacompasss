@@ -189,7 +189,7 @@ const AdminLeads = () => {
                         {lead.target_exams && lead.target_exams.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {lead.target_exams.map((e) => (
-                              <span key={e} className="px-1.5 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                              <span key={e} className="px-1.5 py-0.5 rounded-[0.25rem] text-xs font-medium bg-primary/10 text-primary">
                                 {e}
                               </span>
                             ))}

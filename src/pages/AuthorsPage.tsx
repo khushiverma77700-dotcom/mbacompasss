@@ -69,7 +69,7 @@ const AuthorsPage = () => {
             {AUTHORS.map((a) => (
               <li
                 key={a.slug}
-                className="rounded-xl border border-slate-200 bg-white p-6 hover:shadow-sm transition-shadow"
+                className="rounded-xl border border-slate-200 bg-white p-6 hover:shadow-xs transition-shadow"
               >
                 <Link to={`/authors/${a.slug}`} className="block">
                   <div className="flex items-start gap-4">

@@ -581,19 +581,19 @@ const AdminWriteCourses = () => {
                 </div>
                 <div className="px-4 py-3 space-y-3">
                   <div className="grid sm:grid-cols-3 gap-3 text-xs">
-                    <div className="rounded border border-border bg-background p-2">
+                    <div className="rounded-[0.25rem] border border-border bg-background p-2">
                       <div className="text-muted-foreground">Fees</div>
                       <div className="font-semibold text-sm mt-0.5">
                         {g.fees_text || (g.fees_inr ? `INR ${g.fees_inr.toLocaleString("en-IN")}` : "—")}
                       </div>
                       {g.discount_text && <div className="text-emerald-600 mt-0.5">{g.discount_text}</div>}
                     </div>
-                    <div className="rounded border border-border bg-background p-2">
+                    <div className="rounded-[0.25rem] border border-border bg-background p-2">
                       <div className="text-muted-foreground">Batch</div>
                       <div className="text-sm mt-0.5">{g.batch_info || "—"}</div>
                       <div className="text-muted-foreground mt-0.5">{g.start_date}</div>
                     </div>
-                    <div className="rounded border border-border bg-background p-2">
+                    <div className="rounded-[0.25rem] border border-border bg-background p-2">
                       <div className="text-muted-foreground">Eligibility</div>
                       <div className="text-sm mt-0.5">{g.eligibility || "—"}</div>
                     </div>
@@ -626,7 +626,7 @@ const AdminWriteCourses = () => {
                   <details className="text-sm">
                     <summary className="cursor-pointer text-primary font-medium">View full description</summary>
                     <div
-                      className="prose prose-sm max-w-none mt-2 p-3 rounded border border-border bg-muted/20"
+                      className="prose prose-sm max-w-none mt-2 p-3 rounded-[0.25rem] border border-border bg-muted/20"
                       dangerouslySetInnerHTML={{ __html: g.description_html }}
                     />
                   </details>

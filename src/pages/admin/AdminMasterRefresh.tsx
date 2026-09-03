@@ -348,7 +348,7 @@ const AdminMasterRefresh = () => {
                   const dur = item.started_at ? (item.finished_at ? new Date(item.finished_at).getTime() : Date.now()) - new Date(item.started_at).getTime() : 0;
                   return (
                     <div key={item.id} className="flex items-center gap-3 px-3 py-2 text-sm">
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${TYPE_CFG[item.entity_type]?.color || ""}`} />
+                      <Icon className={`w-4 h-4 shrink-0 ${TYPE_CFG[item.entity_type]?.color || ""}`} />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{item.entity_name}</div>
                         {item.status === "failed" && item.error && <div className="text-xs text-red-600 truncate">{item.error}</div>}

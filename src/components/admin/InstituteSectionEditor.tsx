@@ -400,7 +400,7 @@ const ListCTA = ({ value, onChange }: any) => (
         <div className="grid md:grid-cols-3 gap-2">
           <Input placeholder="Label (e.g. Enroll Now)" value={row.label || ""} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, label: e.target.value } : r))} />
           <Input placeholder="URL or #form" value={row.url || ""} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, url: e.target.value } : r))} />
-          <select className="border rounded px-2 py-1 text-sm" value={row.style || "primary"} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, style: e.target.value } : r))}>
+          <select className="border rounded-[0.25rem] px-2 py-1 text-sm" value={row.style || "primary"} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, style: e.target.value } : r))}>
             <option value="primary">Primary</option>
             <option value="outline">Outline</option>
             <option value="ghost">Ghost</option>

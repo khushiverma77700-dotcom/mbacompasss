@@ -151,7 +151,7 @@ export default function AdminApiKeys() {
 
       <Card className="border-amber-300 bg-amber-50/50">
         <CardContent className="p-4 flex gap-3 text-sm text-amber-900">
-          <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <strong>Security:</strong> Values are stored encrypted at rest. Only admins can view or edit them. All changes are audit-logged. If a value is left empty, the system automatically falls back to the original Supabase Secret.
           </div>

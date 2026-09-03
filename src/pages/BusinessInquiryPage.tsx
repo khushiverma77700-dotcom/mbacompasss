@@ -187,7 +187,7 @@ const BusinessInquiryPage = () => {
           </div>
 
           {/* Tabbed Form */}
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-xs">
             <Tabs defaultValue="coaching" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="coaching" className="gap-2">

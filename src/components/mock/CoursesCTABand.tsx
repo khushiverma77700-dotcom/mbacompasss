@@ -84,7 +84,7 @@ export default function CoursesCTABand({
         {block?.highlights && block.highlights.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
             {block.highlights.map((h, i) => (
-              <div key={i} className="flex items-start gap-2 p-4 rounded-xl bg-white border border-sky-100 shadow-sm">
+              <div key={i} className="flex items-start gap-2 p-4 rounded-xl bg-white border border-sky-100 shadow-xs">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div className="text-sm font-medium">{h}</div>
               </div>

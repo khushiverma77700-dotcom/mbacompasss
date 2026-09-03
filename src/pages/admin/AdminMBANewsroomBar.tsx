@@ -217,7 +217,7 @@ const AdminMBANewsroomBar = () => {
                     : "bg-muted text-muted-foreground border-border";
                   return (
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded border ${tone}`}>
+                      <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-[0.25rem] border ${tone}`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-current" /> {s.label}
                       </span>
                       {(it.start_at || it.end_at) && (
@@ -277,7 +277,7 @@ const AdminMBANewsroomBar = () => {
               )}
               {items.filter((it) => it.text && it.href).map((n, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
-                  <span className="text-xs font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0">{n.tag || "TAG"}</span>
+                  <span className="text-xs font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded-[0.25rem] shrink-0">{n.tag || "TAG"}</span>
                   <span className="truncate">{n.text}</span>
                   <span className="text-xs text-muted-foreground truncate ml-auto">{n.href}</span>
                 </div>

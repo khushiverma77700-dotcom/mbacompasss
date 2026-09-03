@@ -11,8 +11,8 @@ export default function StudentContentSkeleton() {
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-6xl mx-auto animate-in fade-in duration-200">
       <div className="space-y-2">
-        <div className="h-7 w-56 bg-muted/40 rounded animate-pulse" />
-        <div className="h-4 w-80 bg-muted/30 rounded animate-pulse" />
+        <div className="h-7 w-56 bg-muted/40 rounded-[0.25rem] animate-pulse" />
+        <div className="h-4 w-80 bg-muted/30 rounded-[0.25rem] animate-pulse" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
         {Array.from({ length: 4 }).map((_, i) => (

@@ -96,7 +96,7 @@ export const CollegePlaybooks = ({ playbooks, coverage }: Props) => {
   const [tab, setTab] = useState<string>(grouped["Tier 1"].length ? "Tier 1" : grouped["Tier 2"].length ? "Tier 2" : "Tier 3");
 
   return (
-    <Card className="border-2 border-primary/10 shadow-sm">
+    <Card className="border-2 border-primary/10 shadow-xs">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-xl">
           <Trophy className="w-5 h-5 text-primary" /> College Strategy Playbooks

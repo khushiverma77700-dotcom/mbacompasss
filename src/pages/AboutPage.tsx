@@ -85,7 +85,7 @@ const AboutPage = () => (
           ].map((item, i) => (
             <Card key={i}>
               <CardContent className="pt-6 flex gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <item.icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
@@ -111,7 +111,7 @@ const AboutPage = () => (
               "We cover 50+ cities and all major MBA entrance exams",
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <p className="text-muted-foreground">{item}</p>
               </div>
             ))}

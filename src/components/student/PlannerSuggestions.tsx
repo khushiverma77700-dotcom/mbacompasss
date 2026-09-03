@@ -173,7 +173,7 @@ export default function PlannerSuggestions({ existingTitles, onAdded }: Props) {
           return (
             <div
               key={s.key}
-              className="group relative rounded-lg border border-border bg-card p-3 hover:shadow-sm transition-shadow"
+              className="group relative rounded-lg border border-border bg-card p-3 hover:shadow-xs transition-shadow"
             >
               <div className="flex items-start gap-2">
                 <div className="h-8 w-8 rounded-md bg-sky-500/10 grid place-items-center shrink-0">

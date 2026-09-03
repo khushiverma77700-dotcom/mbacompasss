@@ -90,7 +90,7 @@ export const SEOValidationButton = ({ contentType, data, recordId, url, variant 
                   </h4>
                   <ul className="space-y-2">
                     {result.errors.map((e, i) => (
-                      <li key={i} className="text-sm border-l-2 border-destructive bg-destructive/5 px-3 py-2 rounded">
+                      <li key={i} className="text-sm border-l-2 border-destructive bg-destructive/5 px-3 py-2 rounded-[0.25rem]">
                         <div className="font-mono text-xs text-muted-foreground">{e.field}</div>
                         <div>{e.message}</div>
                       </li>
@@ -106,7 +106,7 @@ export const SEOValidationButton = ({ contentType, data, recordId, url, variant 
                   </h4>
                   <ul className="space-y-2">
                     {result.warnings.map((w, i) => (
-                      <li key={i} className="text-sm border-l-2 border-amber-400 bg-amber-50 px-3 py-2 rounded">
+                      <li key={i} className="text-sm border-l-2 border-amber-400 bg-amber-50 px-3 py-2 rounded-[0.25rem]">
                         <div className="font-mono text-xs text-muted-foreground">{w.field}</div>
                         <div>{w.message}</div>
                       </li>
@@ -123,7 +123,7 @@ export const SEOValidationButton = ({ contentType, data, recordId, url, variant 
                   <ul className="space-y-1.5">
                     {result.passed.map((p, i) => (
                       <li key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
-                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-green-600 flex-shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-green-600 shrink-0" />
                         {p}
                       </li>
                     ))}

@@ -42,7 +42,7 @@ const NotFound = () => {
           <h1 className="mb-4 text-6xl font-bold text-foreground">404</h1>
           <p className="mb-2 text-xl text-foreground">Page not found</p>
           <p className="mb-6 text-sm text-muted-foreground">
-            The page <code className="bg-background px-1 rounded">{location.pathname}</code> doesn't exist or has been moved.
+            The page <code className="bg-background px-1 rounded-[0.25rem]">{location.pathname}</code> doesn't exist or has been moved.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <a href="/" className="text-primary underline hover:text-primary/90">Home</a>

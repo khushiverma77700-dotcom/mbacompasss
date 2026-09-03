@@ -431,7 +431,7 @@ const SnapshotButton = ({ title, children, onOpen }: { title: string; children: 
     type="button"
     onClick={onOpen}
     aria-label={`Open ${title} preview`}
-    className="group relative block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-xl"
+    className="group relative block w-full text-left focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 rounded-xl"
   >
     {children}
     <span className="pointer-events-none absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1">
@@ -1292,7 +1292,7 @@ const CatMock1Page = () => {
                 <div className="scale-100 md:scale-110 origin-center">
                   <lightbox.Preview />
                 </div>
-                <p className="text-center text-xs text-white/90 mt-4 drop-shadow">{lightbox.title}</p>
+                <p className="text-center text-xs text-white/90 mt-4 drop-shadow-sm">{lightbox.title}</p>
               </div>
             )}
           </DialogContent>

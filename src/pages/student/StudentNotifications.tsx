@@ -264,7 +264,7 @@ export default function StudentNotifications() {
                   onClick={() => setFilter(k)}
                   className={cn(
                     "px-3 py-1.5 text-xs font-semibold rounded-md transition capitalize",
-                    filter === k ? "bg-sky-500 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    filter === k ? "bg-sky-500 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {k} {k === "unread" && kpi.unread > 0 && `(${kpi.unread})`}
@@ -293,7 +293,7 @@ export default function StudentNotifications() {
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-[0.25rem] hover:bg-muted"
               aria-label="Clear search"
             >
               <X className="h-3.5 w-3.5 text-muted-foreground" />
@@ -314,7 +314,7 @@ export default function StudentNotifications() {
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shrink-0",
                   active
-                    ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm"
+                    ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-xs"
                     : "bg-card border-sky-100 dark:border-sky-500/20 text-foreground/80 hover:border-sky-300 hover:text-foreground"
                 )}
               >
@@ -482,7 +482,7 @@ function TimelineCard({
       <Card className={cn(
         "relative overflow-hidden ring-1 transition-all hover:shadow-xl border-l-4",
         tone.ring, tone.border,
-        isLatest ? "shadow-md" : "shadow-sm",
+        isLatest ? "shadow-md" : "shadow-xs",
         pinned && "ring-amber-200/80 dark:ring-amber-500/30"
       )}>
         {isLatest && (
@@ -535,13 +535,13 @@ function TimelineCard({
           <div className="mt-4 flex items-center gap-2 flex-wrap">
             {n.link_url && (
               n.link_url.startsWith("/") ? (
-                <Button asChild size="sm" className="bg-gradient-to-r from-sky-500 to-blue-600 hover:opacity-90 text-white shadow-sm">
+                <Button asChild size="sm" className="bg-gradient-to-r from-sky-500 to-blue-600 hover:opacity-90 text-white shadow-xs">
                   <Link to={n.link_url}>
                     {n.link_label || "View details"} <ExternalLink className="h-3.5 w-3.5 ml-1" />
                   </Link>
                 </Button>
               ) : (
-                <Button asChild size="sm" className="bg-gradient-to-r from-sky-500 to-blue-600 hover:opacity-90 text-white shadow-sm">
+                <Button asChild size="sm" className="bg-gradient-to-r from-sky-500 to-blue-600 hover:opacity-90 text-white shadow-xs">
                   <a href={n.link_url} target="_blank" rel="noreferrer">
                     {n.link_label || "Open link"} <ExternalLink className="h-3.5 w-3.5 ml-1" />
                   </a>

@@ -220,7 +220,7 @@ export default function StudentNewsroom() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-sky-200/60 bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-5 md:p-6 mb-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-sky-200/60 bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-5 md:p-6 mb-5 shadow-xs">
         <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-gradient-to-br from-sky-300/30 to-indigo-300/30 blur-2xl pointer-events-none" />
         <div className="relative flex items-start gap-4 flex-wrap">
           <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 grid place-items-center text-white shadow-lg">
@@ -249,7 +249,7 @@ export default function StudentNewsroom() {
               onClick={() => setLang(o.k)}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
                 lang === o.k
-                  ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white border-transparent shadow"
+                  ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white border-transparent shadow-sm"
                   : "bg-card text-foreground border-border hover:bg-accent"
               }`}
             >
@@ -271,7 +271,7 @@ export default function StudentNewsroom() {
               onClick={() => setCategory(c)}
               className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all ${
                 active
-                  ? `bg-gradient-to-r ${meta.color} text-white border-transparent shadow`
+                  ? `bg-gradient-to-r ${meta.color} text-white border-transparent shadow-sm`
                   : "bg-card text-foreground border-border hover:bg-accent"
               }`}
             >
@@ -318,7 +318,7 @@ export default function StudentNewsroom() {
                 return (
                   <Card
                     key={a.id}
-                    className="group relative overflow-hidden border border-slate-200/80 rounded-2xl flex flex-col bg-gradient-to-b from-white to-slate-50/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 hover:border-sky-300 transition-all duration-300"
+                    className="group relative overflow-hidden border border-slate-200/80 rounded-2xl flex flex-col bg-gradient-to-b from-white to-slate-50/40 shadow-xs hover:shadow-xl hover:-translate-y-0.5 hover:border-sky-300 transition-all duration-300"
                   >
                     {/* Top accent + freshness shimmer */}
                     <div className={`h-1.5 w-full bg-gradient-to-r ${meta.color}`} />
@@ -326,7 +326,7 @@ export default function StudentNewsroom() {
                       {/* Category + Importance */}
                       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className={`h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br ${meta.color} grid place-items-center text-white shadow-sm`}>
+                          <span className={`h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br ${meta.color} grid place-items-center text-white shadow-xs`}>
                             <Icon className="h-4 w-4" />
                           </span>
                           <span className="text-xs font-bold text-slate-700 truncate">{a.category}</span>
@@ -414,7 +414,7 @@ export default function StudentNewsroom() {
                       {/* Big CTA */}
                       <Button
                         onClick={() => openWithSection(a, null)}
-                        className="mt-4 w-full h-10 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-sm font-semibold gap-1.5 shadow-sm"
+                        className="mt-4 w-full h-10 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-sm font-semibold gap-1.5 shadow-xs"
                       >
                         <Sparkles className="h-4 w-4" />
                         View Full Brief
@@ -522,7 +522,7 @@ export default function StudentNewsroom() {
                           key={o.k}
                           disabled={!o.available}
                           onClick={() => setLang(o.k)}
-                          className={`text-xs font-bold px-2 py-0.5 rounded border transition ${
+                          className={`text-xs font-bold px-2 py-0.5 rounded-[0.25rem] border transition ${
                             lang === o.k
                               ? "bg-primary text-primary-foreground border-primary"
                               : o.available

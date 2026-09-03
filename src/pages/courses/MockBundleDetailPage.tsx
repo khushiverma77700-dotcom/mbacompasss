@@ -301,7 +301,7 @@ export default function MockBundleDetailPage() {
               {heroOfferings.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {heroOfferings.map((o, i) => (
-                    <div key={i} className="flex items-start gap-3 px-3 py-3 rounded-xl bg-white border border-sky-100 shadow-sm">
+                    <div key={i} className="flex items-start gap-3 px-3 py-3 rounded-xl bg-white border border-sky-100 shadow-xs">
                       <o.icon className="h-5 w-5 text-sky-600 shrink-0 mt-0.5" />
                       <div>
                         <div className="text-sm font-semibold leading-tight">{o.title}</div>

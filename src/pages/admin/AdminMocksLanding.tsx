@@ -571,7 +571,7 @@ function ImageField({ label, v, onChange, folder }: { label: string; v: string; 
         <img
           src={v}
           alt=""
-          className="h-20 w-auto rounded border border-border object-cover"
+          className="h-20 w-auto rounded-[0.25rem] border border-border object-cover"
           loading="lazy"
         />
       )}

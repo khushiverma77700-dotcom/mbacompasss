@@ -106,7 +106,7 @@ const ProfileAnalyzerCTA = () => {
             <div className="relative bg-card border-2 border-border/60 rounded-2xl shadow-2xl overflow-hidden">
               {/* Report header */}
               <div className="bg-gradient-to-r from-primary to-primary/80 px-5 py-3 flex items-center gap-2">
-                <img src={bschoolLogo} alt="B School Buzz" className="w-5 h-5 rounded"  loading="lazy" decoding="async" />
+                <img src={bschoolLogo} alt="B School Buzz" className="w-5 h-5 rounded-[0.25rem]"  loading="lazy" decoding="async" />
                 <span className="text-primary-foreground font-bold text-sm">Sample AI Report</span>
                 <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 ml-auto text-xs">Live</Badge>
               </div>
@@ -187,7 +187,7 @@ const ProfileAnalyzerCTA = () => {
 
                 {/* Blurred locked section */}
                 <div className="relative">
-                  <div className="blur-sm pointer-events-none opacity-40 space-y-2">
+                  <div className="blur-xs pointer-events-none opacity-40 space-y-2">
                     <div className="h-10 bg-muted rounded-lg" />
                     <div className="h-8 bg-muted rounded-lg" />
                   </div>

@@ -482,7 +482,7 @@ function QueueDashboard() {
                         </td>
                         <td className="p-2 text-right whitespace-nowrap">
                           <div className="text-xs">{it.total_generated}/{it.total_requested}</div>
-                          <div className="w-24 h-1.5 bg-sky-100 rounded mt-1 overflow-hidden">
+                          <div className="w-24 h-1.5 bg-sky-100 rounded-[0.25rem] mt-1 overflow-hidden">
                             <div className="h-full bg-sky-500" style={{ width: `${pct}%` }} />
                           </div>
                         </td>

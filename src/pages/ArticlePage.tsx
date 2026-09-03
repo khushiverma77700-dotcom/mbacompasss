@@ -380,7 +380,7 @@ const ArticlePage = () => {
             )}
 
 
-            <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-sm text-sm sm:text-base leading-relaxed">
+            <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-xs text-sm sm:text-base leading-relaxed">
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
@@ -435,9 +435,9 @@ const ArticlePage = () => {
                   <Link key={r.id} to={`/article/${r.slug}`} className="group block p-3 rounded-xl hover:bg-muted/60 transition-colors border border-transparent hover:border-border">
                     <div className="flex gap-3">
                       {(r.image_url || r.banner_url) ? (
-                        <img src={(r.image_url || r.banner_url)!} alt="" width={64} height={48} className="w-16 h-12 rounded-lg object-cover flex-shrink-0" loading="lazy" decoding="async" />
+                        <img src={(r.image_url || r.banner_url)!} alt="" width={64} height={48} className="w-16 h-12 rounded-lg object-cover shrink-0" loading="lazy" decoding="async" />
                       ) : (
-                        <div className="w-16 h-12 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center">
+                        <div className="w-16 h-12 rounded-lg bg-muted shrink-0 flex items-center justify-center">
                           <BookOpen className="w-4 h-4 text-muted-foreground/30" />
                         </div>
                       )}

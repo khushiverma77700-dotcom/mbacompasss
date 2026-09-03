@@ -51,7 +51,7 @@ export default function MultiSelectTags({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
           <div className="max-h-64 overflow-y-auto py-1">
             {options.length === 0 ? (
               <div className="px-3 py-6 text-center text-sm text-muted-foreground">{emptyText}</div>
@@ -69,7 +69,7 @@ export default function MultiSelectTags({
                     )}
                   >
                     <div className={cn(
-                      "w-4 h-4 rounded border flex items-center justify-center",
+                      "w-4 h-4 rounded-[0.25rem] border flex items-center justify-center",
                       isChecked ? "bg-primary border-primary" : "border-muted-foreground/30"
                     )}>
                       {isChecked && <Check className="w-3 h-3 text-primary-foreground" />}

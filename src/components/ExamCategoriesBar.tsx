@@ -46,7 +46,7 @@ const ExamCategoriesBar = () => {
     <section className="py-5 bg-card/80 backdrop-blur-sm border-b border-border/50 sticky top-[64px] z-30">
       <div className="container mx-auto px-4">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="font-heading font-semibold text-foreground text-sm hidden sm:inline">Exams</span>
           </div>
@@ -62,7 +62,7 @@ const ExamCategoriesBar = () => {
                 <Link
                   key={exam.slug}
                   to={`/exam/${exam.slug}`}
-                  className={`group flex items-center gap-1.5 px-4 py-2 rounded-full bg-secondary/40 border border-border/60 hover:text-white transition-all whitespace-nowrap flex-shrink-0 text-sm font-medium text-foreground ${pillColors[i % pillColors.length]}`}
+                  className={`group flex items-center gap-1.5 px-4 py-2 rounded-full bg-secondary/40 border border-border/60 hover:text-white transition-all whitespace-nowrap shrink-0 text-sm font-medium text-foreground ${pillColors[i % pillColors.length]}`}
                 >
                   {exam.name}
                   <ArrowRight className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all" />

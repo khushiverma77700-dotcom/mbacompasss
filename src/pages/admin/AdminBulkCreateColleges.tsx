@@ -420,7 +420,7 @@ const AdminBulkCreateColleges = () => {
             </div>
           </div>
 
-          <div className="bg-muted/50 rounded p-3 text-xs">
+          <div className="bg-muted/50 rounded-[0.25rem] p-3 text-xs">
             <div className="flex items-center justify-between mb-2">
               <span className="font-semibold">Sample CSV</span>
               <div className="flex gap-2">
@@ -469,7 +469,7 @@ const AdminBulkCreateColleges = () => {
             </div>
 
             {parseErrors.length > 0 && (
-              <div className="bg-destructive/10 border border-destructive/30 rounded p-3 text-xs space-y-1">
+              <div className="bg-destructive/10 border border-destructive/30 rounded-[0.25rem] p-3 text-xs space-y-1">
                 <div className="flex items-center gap-1.5 text-destructive font-semibold">
                   <AlertCircle className="h-3.5 w-3.5" /> {parseErrors.length} issue(s) in CSV
                 </div>
@@ -484,7 +484,7 @@ const AdminBulkCreateColleges = () => {
 
             {parsed.length > 0 && (
               <>
-                <div className="border rounded overflow-hidden">
+                <div className="border rounded-[0.25rem] overflow-hidden">
                   <div className="max-h-60 overflow-y-auto">
                     <table className="w-full text-xs">
                       <thead className="bg-muted sticky top-0">
@@ -621,7 +621,7 @@ const AdminBulkCreateColleges = () => {
             )}
 
             {!isActive && job.status === "completed" && (
-              <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
+              <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-[0.25rem] p-2">
                 ✓ All done. {liveMetrics.succeeded} colleges created, {liveMetrics.failed} failed, {liveMetrics.duplicates} duplicates skipped.
               </div>
             )}
@@ -631,7 +631,7 @@ const AdminBulkCreateColleges = () => {
             </div>
 
             {/* Per-row breakdown */}
-            <div className="border rounded overflow-hidden bg-background">
+            <div className="border rounded-[0.25rem] overflow-hidden bg-background">
               <div className="max-h-96 overflow-y-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-muted sticky top-0 z-10">
@@ -694,7 +694,7 @@ const AdminBulkCreateColleges = () => {
               {recentJobs.map(j => {
                 const canRetry = j.failed > 0 && j.status !== "running" && j.status !== "pending";
                 return (
-                  <div key={j.id} className="w-full flex items-center justify-between gap-3 p-2 rounded hover:bg-muted/50 text-xs">
+                  <div key={j.id} className="w-full flex items-center justify-between gap-3 p-2 rounded-[0.25rem] hover:bg-muted/50 text-xs">
                     <button onClick={() => setJob(j)} className="flex-1 text-left flex items-center gap-2">
                       <Badge variant="outline" className={statusBadge(j.status as any)}>{j.status}</Badge>
                       <span className="text-muted-foreground">

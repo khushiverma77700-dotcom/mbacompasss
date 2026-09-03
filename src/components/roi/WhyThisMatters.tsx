@@ -27,7 +27,7 @@ const WhyThisMatters: React.FC<Props> = ({ icon: Icon, title, purpose, bullets, 
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className={`relative overflow-hidden rounded-2xl border ${t.border} bg-gradient-to-br ${t.grad} p-4 md:p-5 shadow-sm`}
+      className={`relative overflow-hidden rounded-2xl border ${t.border} bg-gradient-to-br ${t.grad} p-4 md:p-5 shadow-xs`}
     >
       <div className="flex items-start gap-3 md:gap-4">
         <div className={`shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-xl ${t.icon} text-white flex items-center justify-center shadow-md`}>

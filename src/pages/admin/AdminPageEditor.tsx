@@ -533,13 +533,13 @@ const PageEditorWorkspace = () => {
                           </div>
                         )}
                         {selected.kind === "college" && (
-                          <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">
+                          <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded-[0.25rem]">
                             Section content (courses, cutoffs, FAQs…) is edited in <a href="/admin/college-sections" className="text-primary hover:underline">College Sections</a>.
                             The SEO audit reads ALL sections automatically.
                           </p>
                         )}
                         {selected.kind === "institute" && (
-                          <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">
+                          <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded-[0.25rem]">
                             Courses & faculty are edited in <a href="/admin/courses" className="text-primary hover:underline">Courses</a>. Audit reads them automatically.
                           </p>
                         )}

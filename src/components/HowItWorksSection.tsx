@@ -54,7 +54,7 @@ const HowItWorksSection = () => {
                 transition={{ delay: i * 0.12 }}
                 className="relative text-center"
               >
-                <div className="bg-card rounded-2xl border border-border p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group h-full">
+                <div className="bg-card rounded-2xl border border-border p-6 md:p-8 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group h-full">
                   <div className="relative mx-auto mb-5">
                     <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${colors.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform relative z-10`}>
                       <Icon className="w-8 h-8 text-white" />

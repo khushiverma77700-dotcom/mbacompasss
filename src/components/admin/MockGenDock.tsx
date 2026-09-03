@@ -134,7 +134,7 @@ export default function MockGenDock() {
               <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-sky-300/30 blur-3xl pointer-events-none" />
               <div className="relative flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow shadow-sky-500/30">
+                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-sm shadow-sky-500/30">
                     {activeCount > 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   </div>
                   <div className="min-w-0">
@@ -330,13 +330,13 @@ function JobRow({
         onClick={onToggle}
         className="relative w-full text-left pl-4 pr-3 py-2.5 flex items-start gap-2.5"
       >
-        <div className={`mt-0.5 ${meta.color} flex-shrink-0`}>
+        <div className={`mt-0.5 ${meta.color} shrink-0`}>
           <Icon className={`h-4 w-4 ${meta.spin ? "animate-spin" : ""}`} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-slate-900 truncate">{job.label}</div>
-            <Badge variant="outline" className={`text-xs font-semibold ${meta.color} bg-white/70 border-current/40 shadow-sm shrink-0`}>
+            <Badge variant="outline" className={`text-xs font-semibold ${meta.color} bg-white/70 border-current/40 shadow-xs shrink-0`}>
               <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
               {meta.label}
             </Badge>

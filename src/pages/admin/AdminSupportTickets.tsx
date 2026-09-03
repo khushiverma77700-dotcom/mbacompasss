@@ -426,7 +426,7 @@ export default function AdminSupportTickets() {
               <div className="font-medium mb-3">Top recurring issues</div>
               <div className="space-y-2">
                 {byCategory.sort((a, b) => b.value - a.value).slice(0, 5).map((c) => (
-                  <div key={c.name} className="flex items-center justify-between p-2 bg-sky-50/50 rounded">
+                  <div key={c.name} className="flex items-center justify-between p-2 bg-sky-50/50 rounded-[0.25rem]">
                     <div className="text-sm font-medium">{c.name}</div>
                     <Badge className="bg-sky-100 text-sky-700">{c.value} tickets</Badge>
                   </div>
@@ -538,7 +538,7 @@ function TicketDetail({
           <div>
             <div className="text-xs font-medium text-muted-foreground mb-1">Attachment</div>
             <a href={ticket.attachment_url} target="_blank" rel="noreferrer">
-              <img src={ticket.attachment_url} alt="" className="rounded border max-h-40"  loading="lazy" decoding="async" />
+              <img src={ticket.attachment_url} alt="" className="rounded-[0.25rem] border max-h-40"  loading="lazy" decoding="async" />
             </a>
           </div>
         )}
@@ -609,7 +609,7 @@ function FaqAdmin() {
         <div className="font-medium mb-3">Published FAQs ({items.length})</div>
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
           {items.map((f) => (
-            <div key={f.id} className="border rounded p-2">
+            <div key={f.id} className="border rounded-[0.25rem] p-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="text-sm font-medium">{f.question}</div>
                 <Button size="sm" variant="ghost" onClick={() => remove(f.id)}><Trash2 className="h-3 w-3 text-rose-500" /></Button>
@@ -679,7 +679,7 @@ function ImportStudents() {
       {rows.length > 0 && (
         <div>
           <div className="text-sm font-medium mb-2">Preview ({rows.length} rows)</div>
-          <div className="max-h-60 overflow-y-auto border rounded">
+          <div className="max-h-60 overflow-y-auto border rounded-[0.25rem]">
             <table className="w-full text-xs">
               <thead className="bg-sky-50/60"><tr><th className="text-left p-2">Name</th><th className="text-left p-2">Email</th><th className="text-left p-2">Mobile</th><th className="text-left p-2">Course</th></tr></thead>
               <tbody>
