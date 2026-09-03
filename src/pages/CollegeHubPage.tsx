@@ -11,7 +11,7 @@
  * Google sees concentrated, topical authority instead of one giant listing.
  */
 import { useMemo } from "react";
-import { Link, useParams, Navigate } from "react-router-dom";
+import { Link, useParams, Navigate } from "@/lib/router-compat";
 import { Building2, MapPin, GraduationCap, ChevronRight, Award } from "lucide-react";
 import { useColleges } from "@/hooks/useInstitutes";
 import SEOHead from "@/components/SEOHead";

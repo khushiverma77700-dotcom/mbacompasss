@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { X, Star, CheckCircle, BarChart3, TrendingUp, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee, HelpCircle, ChevronDown, ChevronUp, MapPin, ExternalLink, Building2, Target, Trophy, Calendar, Ruler, Percent, Shield, Layers, Globe2, Landmark, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { X, Scale, ArrowRight, Building2 } from "lucide-react";
 import { useCoachingCompare } from "@/contexts/CoachingCompareContext";

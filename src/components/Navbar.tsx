@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "@/lib/router-compat";
 import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

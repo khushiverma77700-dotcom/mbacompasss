@@ -1,5 +1,5 @@
 import { motion, LazyMotion, domAnimation, m } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useEffect, useState, memo, ReactNode } from "react";
 import {
   Rocket, Target, BookOpen, CalendarDays, Type, Calculator,

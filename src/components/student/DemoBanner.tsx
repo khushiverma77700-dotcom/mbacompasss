@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Eye, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 

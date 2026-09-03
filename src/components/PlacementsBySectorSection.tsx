@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Briefcase, TrendingUp, Building2, LineChart, ShoppingBag, Cpu, Banknote, Factory } from "lucide-react";
 
 const ICONS: Record<string, any> = { Briefcase, TrendingUp, Building2, LineChart, ShoppingBag, Cpu, Banknote, Factory };

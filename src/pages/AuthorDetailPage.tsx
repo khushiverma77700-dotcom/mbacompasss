@@ -1,4 +1,4 @@
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate } from "@/lib/router-compat";
 import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { AUTHORS } from "./AuthorsPage";
 import { Mail, Linkedin } from "lucide-react";

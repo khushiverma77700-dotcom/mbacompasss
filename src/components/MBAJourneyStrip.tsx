@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award, ChevronRight } from "lucide-react";
 
 const ICONS: Record<string, any> = { Compass, BookOpenCheck, FileEdit, PenTool, LineChart, Award };

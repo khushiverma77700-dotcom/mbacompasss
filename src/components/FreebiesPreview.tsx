@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Download, FileText, Gift, ArrowRight } from "lucide-react";
 import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 

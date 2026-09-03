@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Wand2, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 
 interface Props {
   entityType: "article" | "college" | "institute" | "course";

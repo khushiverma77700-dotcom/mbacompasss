@@ -5,7 +5,7 @@ import { Sparkles, Plus, ArrowRight, FileText, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { toast } from "sonner";
 import { todayStr } from "@/lib/plannerRecurrence";
 

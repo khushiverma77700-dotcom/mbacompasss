@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import {
   GraduationCap, Target, Shield, Star, TrendingUp, IndianRupee, MapPin,
   ChevronRight, Sparkles, BookOpen, Briefcase, User, Lock, ArrowRight,

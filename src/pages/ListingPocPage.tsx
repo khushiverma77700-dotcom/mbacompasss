@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { z } from "zod";
 import { Loader2, ArrowRight, Building2, GraduationCap, FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";

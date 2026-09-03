@@ -1,7 +1,7 @@
 import { GraduationCap, Users, Award, Target, CheckCircle, Heart, Globe, BookOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import PageKeywords from "@/components/PageKeywords";
 
 const AboutPage = () => (

@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, Link, useSearchParams, useNavigate } from "@/lib/router-compat";
 import { useMemo } from "react";
 import DOMPurify from "isomorphic-dompurify";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";

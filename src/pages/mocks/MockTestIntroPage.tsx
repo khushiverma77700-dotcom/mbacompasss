@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SectionSkeleton from "@/components/student/SectionSkeleton";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";

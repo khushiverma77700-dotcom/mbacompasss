@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "@/lib/router-compat";
 import PageKeywords from "@/components/PageKeywords";
 import { useEffect, useRef } from "react";
 import { Calendar, Clock, User, Tag, Share2, BookOpen, ArrowRight } from "lucide-react";

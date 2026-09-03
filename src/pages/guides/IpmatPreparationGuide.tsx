@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { CheckCircle2, Target, BookOpen, Calendar, GraduationCap, TrendingUp, School, Clock } from "lucide-react";
 
 /**

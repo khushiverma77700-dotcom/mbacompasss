@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Building2, Landmark, Cpu, BookOpen, Building, Church, Warehouse, BrickWall } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCityPages } from "@/hooks/useCityPages";

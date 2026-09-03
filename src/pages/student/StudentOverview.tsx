@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } from "@/lib/studentModeNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";

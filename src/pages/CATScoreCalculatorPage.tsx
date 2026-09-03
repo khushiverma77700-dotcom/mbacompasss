@@ -28,7 +28,7 @@ import {
   Lightbulb, Activity, Shield, Search, Tag, Hash, TrendingDown,
   Sparkles, Quote, ThumbsUp, Clock, Brain, Compass, FileQuestion,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 

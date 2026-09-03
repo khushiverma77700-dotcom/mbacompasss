@@ -7,7 +7,7 @@ import {
   Database, FileCode2, Globe, ShieldCheck, AlertTriangle, ExternalLink,
   CheckCircle2, Circle, Server, Lock, Code2, Image as ImageIcon, RefreshCw,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 interface AuditCheck {
   id: string;

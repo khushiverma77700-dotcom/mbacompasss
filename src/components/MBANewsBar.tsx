@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Newspaper, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 type NewsItem = { tag: string; text: string; href: string; start_at?: string | null; end_at?: string | null };
 

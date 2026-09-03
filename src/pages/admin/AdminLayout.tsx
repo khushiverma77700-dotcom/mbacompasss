@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
+import { Navigate, Outlet, Link, useLocation } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { X, Menu, Lock, ChevronDown, Bell } from "lucide-react";
 import { Suspense, lazy, useState, useEffect } from "react";

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Rocket, Briefcase, RefreshCw, Globe, ArrowRight } from "lucide-react";
 
 const PATHS = [

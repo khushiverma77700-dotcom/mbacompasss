@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { TrendingUp, IndianRupee, Briefcase, GraduationCap } from "lucide-react";
 
 type Band = { label: string; schools: string; avg: number; top: number };

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 type Step = "tier" | "exam" | "score" | "budget" | "location" | "specialization" | "experience" | "career" | "loading" | "result";
 

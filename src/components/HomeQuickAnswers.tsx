@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { HelpCircle, ChevronDown } from "lucide-react";
 
 const ANSWERS = [

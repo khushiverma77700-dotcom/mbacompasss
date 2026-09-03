@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { UserSearch, Calculator, Sigma, LineChart, ArrowUpRight, Sparkles } from "lucide-react";
 
 const TOOLS = [
