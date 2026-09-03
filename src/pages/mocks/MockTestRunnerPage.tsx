@@ -222,6 +222,7 @@ export default function MockTestRunnerPage() {
   useEffect(() => {
     if (loading) return;
     if (questions.length === 0) return;
+    if (!attemptId) return;
     const onVis = () => {
       if (document.hidden) {
         setViolations((v) => {
@@ -342,7 +343,7 @@ export default function MockTestRunnerPage() {
   }, [responses]);
 
   const rowFor = (qid: string, r: ResponseRow) => ({
-    attempt_id: attemptId,
+    attempt_id: attemptId as string,
     question_id: qid,
     section_id: r.section_id,
     selected_option_id: r.selected_option_id,
