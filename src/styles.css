@@ -1,0 +1,1541 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+
+/* v3 darkMode: ["class"] — dark: variants match a .dark ancestor only.
+   (.admin-dark only swaps CSS variables; it never triggered dark: utilities.) */
+@custom-variant dark (&:is(.dark *));
+
+/* ── Theme port from tailwind.config.ts (Tailwind v3 → v4) ─────────────────
+   Colors/radii reference the same hsl(var(--x)) raw-triple variables defined
+   in the @layer base :root/.dark blocks below, so utilities emit byte-identical
+   declarations to the v3 build. */
+@theme inline {
+  --font-heading: 'Plus Jakarta Sans', 'Plus Jakarta Fallback', system-ui, sans-serif;
+  --font-body: 'DM Sans', 'DM Sans Fallback', system-ui, sans-serif;
+  --font-editorial: "Instrument Serif", ui-serif, Georgia, serif;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --color-cat-mba: hsl(var(--cat-mba));
+  --color-cat-medical: hsl(var(--cat-medical));
+  --color-cat-engineering: hsl(var(--cat-engineering));
+  --color-cat-government: hsl(var(--cat-government));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@theme {
+  /* ── UNIFIED TYPE SCALE — every size utility resolves to one of FOUR steps.
+     Do NOT reintroduce arbitrary sizes such as text-[13px]. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.65;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.65;
+  --text-xl: clamp(1.25rem, 1.6vw, 1.375rem);
+  --text-xl--line-height: 1.35;
+  --text-2xl: clamp(1.25rem, 1.6vw, 1.375rem);
+  --text-2xl--line-height: 1.3;
+  --text-3xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-3xl--line-height: 1.2;
+  --text-4xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-4xl--line-height: 1.2;
+  --text-5xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-5xl--line-height: 1.15;
+  --text-6xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-6xl--line-height: 1.1;
+  --text-7xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-7xl--line-height: 1.1;
+  --text-8xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-8xl--line-height: 1.05;
+  --text-9xl: clamp(1.75rem, 3.2vw, 2.25rem);
+  --text-9xl--line-height: 1.05;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-slide-in: slide-in 0.5s ease-out forwards;
+  --animate-fade-in: fade-in 0.3s ease-out forwards;
+  --animate-count-up: count-up 0.6s ease-out forwards;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 45s linear infinite;
+  --animate-blob: blob 14s ease-in-out infinite;
+  --animate-float-y: float-y 6s ease-in-out infinite;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes count-up {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes marquee-reverse {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes blob {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(30px,-20px) scale(1.1); }
+    66% { transform: translate(-20px,20px) scale(0.95); }
+  }
+  @keyframes float-y {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+}
+
+/* v3 container config: center + 2rem padding + 2xl capped at 1400px.
+   v4 dropped container configuration, so the utility is redefined here. */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (min-width: 640px) { max-width: 640px; }
+  @media (min-width: 768px) { max-width: 768px; }
+  @media (min-width: 1024px) { max-width: 1024px; }
+  @media (min-width: 1280px) { max-width: 1280px; }
+  @media (min-width: 1536px) { max-width: 1400px; }
+}
+
+/* ── v3 preflight compatibility ── */
+@layer base {
+  /* v4 switched buttons to cursor: default; v3 (and this design) used pointer. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* v4 placeholder default is currentColor/50%; v3 used gray-400. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+    opacity: 1;
+  }
+}
+
+/* ── Critical font CSS ported from index.html (self-hosted fonts +
+   metric-matched fallbacks; font-display swap keeps first paint unblocked). */
+@font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:700;font-display:swap;src:url("/fonts/plus-jakarta-sans-700.woff2") format("woff2")}
+@font-face{font-family:"DM Sans";font-style:normal;font-weight:400;font-display:swap;src:url("/fonts/dm-sans-400.woff2") format("woff2")}
+@font-face{font-family:"Plus Jakarta Fallback";src:local("Arial");size-adjust:104%;ascent-override:94%;descent-override:24%;line-gap-override:0%}
+@font-face{font-family:"DM Sans Fallback";src:local("Arial");size-adjust:100%;ascent-override:96%;descent-override:24%;line-gap-override:0%}
+.fonts-loaded body{font-family:'DM Sans',system-ui,-apple-system,sans-serif}
+.fonts-loaded h1,.fonts-loaded h2,.fonts-loaded h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+#root{min-height:100vh}
+/* Reserve hero space so the gradient block paints at the right height (ported from index.html). */
+main>section:first-of-type{min-height:520px}
+@media (min-width:768px){main>section:first-of-type{min-height:600px}}
+
+/* ═══ Everything below is the pre-migration src/index.css, preserved verbatim ═══ */
+
+@layer base {
+  :root {
+  /* ── UNIFIED TYPE SCALE (only four sizes sitewide) ─────────────────────
+     Mirrors tailwind.config.ts fontSize. Never hardcode new font sizes. */
+  --fs-detail: 0.875rem;                        /* labels, meta, table cells */
+  --fs-body: 1rem;                              /* all reading text */
+  --fs-subhead: clamp(1.25rem, 1.6vw, 1.375rem);/* card + section titles */
+  --fs-heading: clamp(1.75rem, 3.2vw, 2.25rem); /* page + hero titles */
+
+    --background: 210 50% 99%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    --primary: 207 90% 54%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 207 73% 94%;
+    --secondary-foreground: 207 90% 34%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 22% 38%; /* WCAG AA: ~7:1 on white background */
+
+    --accent: 207 73% 94%;
+    --accent-foreground: 207 90% 34%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 30% 92%;
+    --input: 210 30% 92%;
+    --ring: 207 90% 54%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --hero-gradient: radial-gradient(120% 80% at 20% 0%, hsl(199 95% 60%) 0%, transparent 60%), radial-gradient(100% 80% at 90% 20%, hsl(187 90% 50%) 0%, transparent 55%), linear-gradient(135deg, hsl(212 92% 42%) 0%, hsl(205 90% 48%) 45%, hsl(192 88% 44%) 100%);
+    --card-shadow: 0 1px 3px 0 hsl(215 25% 15% / 0.06), 0 1px 2px -1px hsl(215 25% 15% / 0.06);
+    --card-shadow-hover: 0 14px 32px -10px hsl(207 90% 54% / 0.18), 0 8px 12px -6px hsl(207 90% 54% / 0.10);
+    --stat-gradient: linear-gradient(135deg, hsl(207 90% 54%) 0%, hsl(199 89% 48%) 100%);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Category colors */
+    --cat-mba: 25 95% 53%;
+    --cat-medical: 142 71% 45%;
+    --cat-engineering: 207 90% 54%;
+    --cat-government: 262 83% 58%;
+
+    /* Fonts */
+    --font-heading: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  /* Dark theme — applied via class strategy. Used by Student LMS and Admin.
+     Public marketing pages do not toggle this class so they stay light by default. */
+  .dark,
+  .admin-dark {
+    --background: 222 28% 8%;
+    --foreground: 210 30% 96%;
+
+    --card: 222 25% 11%;
+    --card-foreground: 210 30% 96%;
+
+    --popover: 222 25% 11%;
+    --popover-foreground: 210 30% 96%;
+
+    --primary: 207 90% 60%;
+    --primary-foreground: 222 28% 8%;
+
+    --secondary: 217 25% 18%;
+    --secondary-foreground: 210 30% 96%;
+
+    --muted: 217 22% 16%;
+    --muted-foreground: 215 18% 65%;
+
+    --accent: 217 30% 20%;
+    --accent-foreground: 210 30% 96%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 217 22% 20%;
+    --input: 217 22% 20%;
+    --ring: 207 90% 60%;
+
+    --card-shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
+    --card-shadow-hover: 0 10px 25px -5px hsl(207 90% 54% / 0.3), 0 8px 10px -6px hsl(207 90% 54% / 0.2);
+
+    --sidebar-background: 222 28% 9%;
+    --sidebar-foreground: 210 25% 85%;
+    --sidebar-primary: 207 90% 60%;
+    --sidebar-primary-foreground: 222 28% 8%;
+    --sidebar-accent: 217 25% 16%;
+    --sidebar-accent-foreground: 210 30% 96%;
+  --sidebar-border: 217 22% 18%;
+    --sidebar-ring: 207 90% 60%;
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     Dark-mode rescue layer
+     Many student/admin components use hardcoded light Tailwind
+     utilities (bg-sky-50, text-gray-900, bg-emerald-100…) without
+     a dark: variant. Re-map them inside .dark so every page is
+     readable without touching individual files.
+     ────────────────────────────────────────────────────────────── */
+  .dark .bg-white { background-color: hsl(var(--card)) !important; }
+  .dark .bg-gray-50,
+  .dark .bg-slate-50,
+  .dark .bg-zinc-50,
+  .dark .bg-neutral-50 { background-color: hsl(var(--muted)) !important; }
+  .dark .bg-gray-100,
+  .dark .bg-slate-100 { background-color: hsl(var(--accent)) !important; }
+
+  /* Soft tinted backgrounds → translucent accents.
+     Restrict to actual bg- utilities so gradient stops (from-/to-/via-)
+     are handled separately below. */
+  .dark .bg-sky-50,
+  .dark .bg-blue-50,
+  .dark .bg-indigo-50 { background-color: hsl(207 90% 60% / 0.10) !important; }
+  .dark .bg-emerald-50,
+  .dark .bg-teal-50,
+  .dark .bg-green-50 { background-color: hsl(152 65% 50% / 0.10) !important; }
+  .dark .bg-amber-50,
+  .dark .bg-yellow-50,
+  .dark .bg-orange-50 { background-color: hsl(38 90% 55% / 0.10) !important; }
+  .dark .bg-rose-50,
+  .dark .bg-red-50,
+  .dark .bg-pink-50 { background-color: hsl(350 80% 60% / 0.10) !important; }
+  .dark .bg-violet-50,
+  .dark .bg-purple-50,
+  .dark .bg-fuchsia-50 { background-color: hsl(270 80% 65% / 0.10) !important; }
+
+  /* Tailwind gradient stops (from-/via-/to-) — neutralise pale 50-tints in dark
+     by overriding the CSS custom properties Tailwind emits. Without this, cards
+     like `bg-gradient-to-br from-orange-50 to-amber-50/40` render almost-white
+     in dark mode and bury all foreground text. */
+  .dark .from-sky-50,
+  .dark .from-blue-50,
+  .dark .from-indigo-50,
+  .dark .from-cyan-50    { --tw-gradient-from: hsl(207 90% 60% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(207 90% 60% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .via-sky-50,
+  .dark .via-blue-50,
+  .dark .via-indigo-50   { --tw-gradient-via: hsl(207 90% 60% / 0.14) var(--tw-gradient-via-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important; }
+  .dark .to-sky-50,
+  .dark .to-blue-50,
+  .dark .to-indigo-50,
+  .dark .to-cyan-50,
+  .dark [class*="to-sky-50/"],
+  .dark [class*="to-blue-50/"],
+  .dark [class*="to-indigo-50/"] { --tw-gradient-to: hsl(207 90% 60% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-emerald-50,
+  .dark .from-green-50,
+  .dark .from-teal-50    { --tw-gradient-from: hsl(152 65% 50% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(152 65% 50% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-emerald-50,
+  .dark .to-green-50,
+  .dark .to-teal-50,
+  .dark [class*="to-emerald-50/"],
+  .dark [class*="to-teal-50/"],
+  .dark [class*="to-green-50/"] { --tw-gradient-to: hsl(152 65% 50% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-amber-50,
+  .dark .from-orange-50,
+  .dark .from-yellow-50  { --tw-gradient-from: hsl(38 95% 55% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(38 95% 55% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-amber-50,
+  .dark .to-orange-50,
+  .dark .to-yellow-50,
+  .dark [class*="to-amber-50/"],
+  .dark [class*="to-orange-50/"],
+  .dark [class*="to-yellow-50/"] { --tw-gradient-to: hsl(38 95% 55% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-rose-50,
+  .dark .from-red-50,
+  .dark .from-pink-50    { --tw-gradient-from: hsl(350 85% 60% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(350 85% 60% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-rose-50,
+  .dark .to-red-50,
+  .dark .to-pink-50,
+  .dark [class*="to-rose-50/"],
+  .dark [class*="to-red-50/"],
+  .dark [class*="to-pink-50/"] { --tw-gradient-to: hsl(350 85% 60% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-violet-50,
+  .dark .from-purple-50,
+  .dark .from-fuchsia-50 { --tw-gradient-from: hsl(270 80% 65% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(270 80% 65% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-violet-50,
+  .dark .to-purple-50,
+  .dark .to-fuchsia-50,
+  .dark [class*="to-violet-50/"],
+  .dark [class*="to-purple-50/"],
+  .dark [class*="to-fuchsia-50/"] { --tw-gradient-to: hsl(270 80% 65% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  /* Brand-tinted text-600 (mid-weight) — boost for dark backgrounds */
+  .dark .text-sky-600,
+  .dark .text-blue-600,
+  .dark .text-indigo-600,
+  .dark .text-cyan-600 { color: hsl(207 95% 72%) !important; }
+  .dark .text-emerald-600,
+  .dark .text-green-600,
+  .dark .text-teal-600 { color: hsl(152 70% 65%) !important; }
+  .dark .text-amber-600,
+  .dark .text-orange-600,
+  .dark .text-yellow-600 { color: hsl(38 95% 65%) !important; }
+  .dark .text-rose-600,
+  .dark .text-red-600,
+  .dark .text-pink-600 { color: hsl(350 90% 72%) !important; }
+  .dark .text-violet-600,
+  .dark .text-purple-600,
+  .dark .text-fuchsia-600 { color: hsl(270 90% 75%) !important; }
+
+  /* Text-400 (light icons on white) — keep visible on dark */
+  .dark .text-sky-400,
+  .dark .text-blue-400 { color: hsl(207 95% 78%) !important; }
+
+  /* Light tint chips (100) → slightly stronger translucent fills */
+  .dark .bg-sky-100,
+  .dark .bg-blue-100 { background-color: hsl(207 90% 60% / 0.18) !important; }
+  .dark .bg-emerald-100,
+  .dark .bg-green-100 { background-color: hsl(152 65% 50% / 0.18) !important; }
+  .dark .bg-amber-100,
+  .dark .bg-yellow-100,
+  .dark .bg-orange-100 { background-color: hsl(38 90% 55% / 0.18) !important; }
+  .dark .bg-rose-100,
+  .dark .bg-red-100 { background-color: hsl(350 80% 60% / 0.18) !important; }
+
+  /* Dark text colors → bright equivalents for readability */
+  .dark .text-gray-900,
+  .dark .text-slate-900,
+  .dark .text-zinc-900,
+  .dark .text-neutral-900,
+  .dark .text-black { color: hsl(var(--foreground)) !important; }
+  .dark .text-gray-800,
+  .dark .text-slate-800 { color: hsl(210 25% 92%) !important; }
+  .dark .text-gray-700,
+  .dark .text-slate-700 { color: hsl(210 20% 85%) !important; }
+  .dark .text-gray-600,
+  .dark .text-slate-600 { color: hsl(210 15% 75%) !important; }
+  .dark .text-gray-500,
+  .dark .text-slate-500 { color: hsl(var(--muted-foreground)) !important; }
+
+  /* Brand-tinted dark text → lighter shade so it pops on dark bg */
+  .dark .text-sky-700,
+  .dark .text-sky-800,
+  .dark .text-sky-900,
+  .dark .text-blue-700,
+  .dark .text-blue-800,
+  .dark .text-blue-900,
+  .dark .text-indigo-700,
+  .dark .text-indigo-800,
+  .dark .text-indigo-900 { color: hsl(207 95% 75%) !important; }
+  .dark .text-emerald-700,
+  .dark .text-emerald-800,
+  .dark .text-emerald-900,
+  .dark .text-green-700,
+  .dark .text-green-800,
+  .dark .text-teal-700 { color: hsl(152 70% 70%) !important; }
+  .dark .text-amber-700,
+  .dark .text-amber-800,
+  .dark .text-amber-900,
+  .dark .text-orange-700,
+  .dark .text-orange-800,
+  .dark .text-yellow-700 { color: hsl(38 95% 70%) !important; }
+  .dark .text-rose-700,
+  .dark .text-rose-800,
+  .dark .text-red-700,
+  .dark .text-red-800 { color: hsl(350 90% 75%) !important; }
+
+  /* Tinted borders → subdued matching tones */
+  .dark .border-sky-100,
+  .dark .border-sky-200,
+  .dark .border-blue-100,
+  .dark .border-blue-200 { border-color: hsl(207 60% 35% / 0.5) !important; }
+  .dark .border-emerald-100,
+  .dark .border-emerald-200,
+  .dark .border-green-100,
+  .dark .border-green-200 { border-color: hsl(152 50% 35% / 0.5) !important; }
+  .dark .border-amber-100,
+  .dark .border-amber-200,
+  .dark .border-orange-100,
+  .dark .border-orange-200 { border-color: hsl(38 60% 40% / 0.5) !important; }
+  .dark .border-rose-100,
+  .dark .border-rose-200,
+  .dark .border-red-100,
+  .dark .border-red-200 { border-color: hsl(350 60% 40% / 0.5) !important; }
+  .dark .border-gray-100,
+  .dark .border-gray-200,
+  .dark .border-slate-100,
+  .dark .border-slate-200 { border-color: hsl(var(--border)) !important; }
+
+  /* Divide-y borders */
+  .dark .divide-y > * + * { border-color: hsl(var(--border)) !important; }
+
+  /* bg-white with opacity (glass surfaces) → dark card with translucency */
+  .dark [class*="bg-white/"] { background-color: hsl(var(--card) / 0.7) !important; }
+
+  /* Gradient stops using `white` */
+  .dark .from-white { --tw-gradient-from: hsl(var(--card)) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(var(--card) / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .via-white { --tw-gradient-via: hsl(var(--card)) var(--tw-gradient-via-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important; }
+  .dark .to-white { --tw-gradient-to: hsl(var(--card)) var(--tw-gradient-to-position) !important; }
+
+  /* Amber/violet/emerald-100 chips */
+  .dark .bg-violet-100,
+  .dark .bg-purple-100 { background-color: hsl(270 80% 65% / 0.18) !important; }
+
+  /* Borders for amber/violet 300-400 */
+  .dark .border-amber-300,
+  .dark .border-amber-400 { border-color: hsl(38 90% 55% / 0.55) !important; }
+  .dark .border-violet-100,
+  .dark .border-violet-200 { border-color: hsl(270 60% 50% / 0.5) !important; }
+}
+
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+  }
+
+  /* Keyboard navigation: clear, consistent focus ring on every interactive element */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  summary:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+
+  /* Anchor targets used by the "Jump to" menu shouldn't hide under the sticky header */
+  [id]:target {
+    scroll-margin-top: 6rem;
+  }
+
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  /* Prevent long words/URLs from overflowing on mobile */
+  p, li, span, a, h1, h2, h3, h4, h5, h6 {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  /* Global responsive images – ensure they scale properly */
+  img:not([class*="object-"]) {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Long content blocks (article/prose) should never push horizontal scroll.
+     Tables inside .ai-content already have their own scroll wrapper. */
+  .ai-content,
+  .prose {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+  /* Constrain block-level descendants to parent width, but EXCLUDE table
+     internals — tables need their natural intrinsic width so columns size
+     to content and the table block scrolls horizontally on its own. */
+  .ai-content :where(*):not(table):not(thead):not(tbody):not(tfoot):not(tr):not(td):not(th):not(td *):not(th *),
+  .prose :where(*):not(table):not(thead):not(tbody):not(tfoot):not(tr):not(td):not(th):not(td *):not(th *) {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .ai-content :where(p, blockquote, h1, h2, h3, h4, h5, h6, li, span, strong, em, a):not(td *):not(th *),
+  .prose :where(p, blockquote, h1, h2, h3, h4, h5, h6, li, span, strong, em, a):not(td *):not(th *) {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .ai-content img,
+  .prose img,
+  .ai-content video,
+  .prose video,
+  .ai-content iframe,
+  .prose iframe {
+    max-width: 100%;
+    height: auto;
+  }
+  .ai-content pre,
+  .prose pre {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  /* Tables inside article content: the wrapper is the scroll container.
+     Keep wide table internals clipped to that wrapper so they never paint
+     over normal paragraphs/headings on mobile. */
+  .ai-content .ai-table-wrap,
+  .prose .ai-table-wrap {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    contain: inline-size paint;
+  }
+  .ai-content table,
+  .prose table {
+    display: table;
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+  }
+  .ai-content td,
+  .ai-content th,
+  .prose td,
+  .prose th {
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: normal;
+    min-width: 8rem;
+  }
+}
+
+/* v3 @layer utilities → v4 @utility (variant-composable custom utilities) */
+@utility hero-gradient {
+  background: var(--hero-gradient);
+}
+
+@utility stat-gradient {
+  background: var(--stat-gradient);
+}
+
+@utility card-shadow {
+  box-shadow: var(--card-shadow);
+}
+
+@utility card-shadow-hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+@utility text-gradient {
+  background: var(--hero-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@utility cat-mba {
+  background-color: hsl(var(--cat-mba));
+}
+
+@utility cat-medical {
+  background-color: hsl(var(--cat-medical));
+}
+
+@utility cat-engineering {
+  background-color: hsl(var(--cat-engineering));
+}
+
+@utility cat-government {
+  background-color: hsl(var(--cat-government));
+}
+
+/* ── AI Gist Gemini-style animated gradient border ── */
+@keyframes ai-border-spin {
+  0% { --ai-angle: 0deg; }
+  100% { --ai-angle: 360deg; }
+}
+
+@property --ai-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.ai-gist-border {
+  background: conic-gradient(
+    from var(--ai-angle, 0deg),
+    #3b82f6 0%,
+    #8b5cf6 25%,
+    #ec4899 50%,
+    #8b5cf6 75%,
+    #3b82f6 100%
+  );
+  animation: ai-border-spin 4s linear infinite;
+}
+
+.ai-gist-border-inner {
+  background: conic-gradient(
+    from var(--ai-angle, 0deg),
+    #3b82f620 0%,
+    #8b5cf620 25%,
+    #ec489920 50%,
+    #8b5cf620 75%,
+    #3b82f620 100%
+  );
+  animation: ai-border-spin 4s linear infinite;
+}
+
+.ai-gist-input-border {
+  background: conic-gradient(
+    from var(--ai-angle, 0deg),
+    #3b82f630 0%,
+    #8b5cf630 25%,
+    #ec489930 50%,
+    #8b5cf630 75%,
+    #3b82f630 100%
+  );
+  animation: ai-border-spin 4s linear infinite;
+}
+
+/* Firefox fallback — @property not supported, so animated conic-gradient won't work */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .ai-gist-border,
+  .ai-gist-border-inner,
+  .ai-gist-input-border {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899, #8b5cf6, #3b82f6);
+    background-size: 300% 300%;
+    animation: ai-gradient-shift 4s ease infinite;
+  }
+}
+
+@-moz-document url-prefix() {
+  .ai-gist-border,
+  .ai-gist-border-inner,
+  .ai-gist-input-border {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899, #8b5cf6, #3b82f6);
+    background-size: 300% 300%;
+    animation: ai-gradient-shift 4s ease infinite;
+  }
+}
+
+@keyframes ai-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Unified AI-generated content typography ──
+   Use on any container that renders AI / TipTap HTML so font sizes stay
+   consistent across blogs, college pages, etc. Body = 1rem everywhere;
+   only headings step up. `!important` locks typography against any inline
+   style="" or class="" the model might emit. */
+.ai-content,
+.prose {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+.ai-content :where(p, blockquote, h1, h2, h3, h4, h5, h6, li, span, strong, em, a):not(td *):not(th *),
+.prose :where(p, blockquote, h1, h2, h3, h4, h5, h6, li, span, strong, em, a):not(td *):not(th *) {
+  max-width: 100%;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.ai-content,
+.ai-content p,
+.ai-content li,
+.ai-content td,
+.ai-content th,
+.ai-content blockquote,
+.ai-content a,
+.ai-content strong,
+.ai-content em,
+.ai-content span,
+.ai-content div {
+  font-size: 1rem !important;
+  line-height: 1.7 !important;
+  font-family: var(--font-body) !important;
+}
+.ai-content h1 { font-size: var(--fs-heading) !important; line-height: 1.3 !important; font-weight: 700 !important; margin: 1.25rem 0 0.75rem !important; font-family: var(--font-heading) !important; }
+.ai-content h2 { font-size: var(--fs-subhead) !important; line-height: 1.35 !important; font-weight: 700 !important; margin: 1.25rem 0 0.625rem !important; font-family: var(--font-heading) !important; }
+.ai-content h3 { font-size: var(--fs-body) !important; line-height: 1.4 !important; font-weight: 600 !important; margin: 1rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
+.ai-content h4 { font-size: var(--fs-body) !important; line-height: 1.45 !important; font-weight: 600 !important; margin: 0.875rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
+@media (min-width: 640px) {
+}
+.ai-content p,
+.ai-content ul,
+.ai-content ol,
+.ai-content table { margin: 0.75rem 0; }
+.ai-content ul { list-style: disc; padding-left: 1.5rem; }
+.ai-content ol { list-style: decimal; padding-left: 1.5rem; }
+.ai-content li { margin: 0.25rem 0; }
+.ai-content table { width: 100%; border-collapse: collapse; }
+.ai-content th,
+.ai-content td { border: 1px solid hsl(var(--border)); padding: 0.5rem 0.75rem; text-align: left; }
+.ai-content th { background: hsl(var(--muted) / 0.5); font-weight: 600; }
+.ai-content a { color: hsl(var(--primary)); text-decoration: underline; }
+.ai-content blockquote {
+  border-left: 4px solid hsl(var(--border));
+  padding-left: 1rem;
+  font-style: italic;
+  margin: 1rem 0;
+}
+/* Strip any inline font-size / font-family the model may have injected via attributes. */
+.ai-content [style*="font-size"],
+.ai-content [style*="font-family"],
+.ai-content font {
+  font-size: 1rem !important;
+  font-family: var(--font-body) !important;
+}
+
+/* Inline citation pills produced by aiContentEnhancer.ts */
+.ai-content .ai-citation {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: var(--fs-detail) !important;
+  line-height: 1 !important;
+  font-weight: 500 !important;
+  padding: 0.15rem 0.4rem;
+  margin: 0 0.15rem;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary) / 0.06);
+  color: hsl(var(--primary)) !important;
+  text-decoration: none !important;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.ai-content .ai-citation:hover {
+  background: hsl(var(--primary) / 0.14);
+  text-decoration: underline !important;
+}
+
+/* Horizontally-scrollable wrapper around AI tables for mobile safety. */
+.ai-content .ai-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  contain: inline-size paint;
+  margin: 0.75rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+.ai-content .ai-table-wrap > table {
+  display: table;
+  margin: 0 !important;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+}
+
+/* ── Auto-detected scrollable tables (useScrollableTables) ─────────────────
+   The shell is a positioned box around the scroller so we can paint a fade
+   and a "Swipe" hint that stay put while the table scrolls underneath. */
+.ai-table-shell {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 1rem 0;
+}
+.ai-table-shell > .ai-table-wrap {
+  margin: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  scrollbar-width: thin;
+}
+.ai-table-shell > .ai-table-wrap > table {
+  display: table;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+}
+.ai-table-shell > .ai-table-wrap::-webkit-scrollbar { height: 6px; }
+.ai-table-shell > .ai-table-wrap::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.35);
+  border-radius: 9999px;
+}
+/* Right-edge fade only while there is more table to reveal. */
+.ai-table-shell[data-scroll]::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 2.25rem;
+  pointer-events: none;
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: linear-gradient(to left, hsl(var(--card)), hsl(var(--card) / 0));
+  transition: opacity 0.2s ease;
+}
+.ai-table-shell[data-scroll][data-at-end]::after { opacity: 0; }
+/* Swipe hint pill. */
+.ai-table-shell[data-scroll]::before {
+  content: "Swipe →";
+  position: absolute;
+  top: -0.7rem;
+  right: 0.5rem;
+  z-index: 2;
+  font-size: var(--fs-detail);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  color: hsl(var(--primary));
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--primary) / 0.25);
+  transition: opacity 0.2s ease;
+}
+.ai-table-shell[data-scroll][data-at-end]::before { opacity: 0; }
+/* Readable cells inside auto-wrapped tables. */
+.ai-table-shell table { border-collapse: collapse; width: max-content; min-width: 100%; }
+.ai-table-shell th,
+.ai-table-shell td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem 0.75rem;
+  font-size: var(--fs-detail);
+  line-height: 1.45;
+  text-align: left;
+  vertical-align: top;
+  min-width: 7rem;
+}
+.ai-table-shell thead th {
+  background: hsl(var(--muted) / 0.6);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ai-table-shell tbody tr:nth-child(even) { background: hsl(var(--muted) / 0.25); }
+@media (max-width: 640px) {
+  .ai-table-shell th,
+  .ai-table-shell td { font-size: var(--fs-detail); padding: 0.4rem 0.55rem; min-width: 6.5rem; }
+}
+
+
+/* Article pages: wide HTML from TipTap/AI must stay inside the article card on
+   phones and tablets. Narrow tables wrap to fit; wide tables scroll horizontally
+   inside their wrapper while keeping header cells readable (no squishing). */
+@media (max-width: 1023px) {
+  .article-content-shell,
+  .article-content-shell .ai-content,
+  .article-content-shell .prose,
+  .article-content-shell .ai-content > *,
+  .article-content-shell .prose > * {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Scrollable shell — never wider than the article card. */
+  .article-content-shell .ai-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    contain: none !important;
+  }
+
+  /* Table itself: always take its intrinsic content width on phones and let the
+     wrapper scroll. Forcing width:auto made 4+ column tables squeeze into
+     1–2 character wide strips. */
+  .article-content-shell .ai-content table,
+  .article-content-shell .prose table,
+  .article-content-shell .ai-content .ai-table-wrap > table,
+  .article-content-shell .prose .ai-table-wrap > table {
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+  }
+
+  /* Header cells stay on one line so column labels remain readable. */
+  .article-content-shell .ai-content thead th,
+  .article-content-shell .ai-content thead th *,
+  .article-content-shell .prose thead th,
+  .article-content-shell .prose thead th * {
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    font-size: var(--fs-detail) !important;
+    line-height: 1.3 !important;
+    padding: 0.5rem 0.7rem !important;
+    background: hsl(var(--muted) / 0.6) !important;
+  }
+
+  /* Body cells: readable minimum column width, wrap only between words. */
+  .article-content-shell .ai-content tbody th,
+  .article-content-shell .ai-content tbody td,
+  .article-content-shell .prose tbody th,
+  .article-content-shell .prose tbody td {
+    min-width: 7.5rem !important;
+    max-width: 18rem !important;
+    padding: 0.5rem 0.7rem !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-break: keep-all !important;
+    hyphens: none !important;
+    font-size: var(--fs-detail) !important;
+    line-height: 1.45 !important;
+  }
+  .article-content-shell .ai-content tbody td *,
+  .article-content-shell .ai-content tbody th *,
+  .article-content-shell .prose tbody td *,
+  .article-content-shell .prose tbody th * {
+    overflow-wrap: break-word !important;
+    word-break: keep-all !important;
+  }
+  /* Numeric-ish first-column labels (e.g. "IIM Ahmedabad") should not break. */
+  .article-content-shell .ai-content tbody tr > *:first-child,
+  .article-content-shell .prose tbody tr > *:first-child {
+    min-width: 9.5rem !important;
+    font-weight: 600 !important;
+  }
+
+
+  .article-content-shell .ai-content img,
+  .article-content-shell .ai-content video,
+  .article-content-shell .ai-content iframe,
+  .article-content-shell .ai-content pre,
+  .article-content-shell .prose img,
+  .article-content-shell .prose video,
+  .article-content-shell .prose iframe,
+  .article-content-shell .prose pre {
+    max-width: 100% !important;
+  }
+
+  .article-content-shell .ai-content pre,
+  .article-content-shell .prose pre {
+    overflow-x: auto !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+  }
+}
+
+/* Public-site mobile safety net: any table placed inside an `overflow-x-auto`
+   wrapper (the standard responsive pattern) must NOT have its columns squeezed
+   into 1-character-wide vertical strips. Force the table to its intrinsic
+   content width on small screens so the wrapper scrolls horizontally instead. */
+@media (max-width: 639px) {
+  .overflow-x-auto > table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+  }
+  .overflow-x-auto > table th,
+  .overflow-x-auto > table td {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: keep-all;
+    min-width: 7.5rem;
+  }
+  .overflow-x-auto > table thead th {
+    white-space: nowrap;
+  }
+  .ai-table-shell th,
+  .ai-table-shell td {
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+    min-width: 7.5rem !important;
+  }
+  .ai-table-shell tbody tr > *:first-child { min-width: 9.5rem !important; }
+
+}
+
+
+
+/* Top progress bar shown during route chunk loading (see App.tsx TopProgressBar) */
+@keyframes lov-route-progress {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Freebies page — infinite marquee auto-scroller */
+@keyframes freebies-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes freebies-marquee-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+.freebies-marquee { animation: freebies-marquee 40s linear infinite; }
+.freebies-marquee-reverse { animation: freebies-marquee-reverse 50s linear infinite; }
+.freebies-marquee-track:hover .freebies-marquee,
+.freebies-marquee-track:hover .freebies-marquee-reverse { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .freebies-marquee, .freebies-marquee-reverse { animation: none; }
+}
+
+/* Contact page — free tools slider (faster loop) */
+.freebies-marquee-track .freebies-marquee.tools-speed { animation-duration: 22s; }
+
+
+/* Admin mobile safety: prevent wide tables/cards from breaking layout */
+@media (max-width: 1023px) {
+  .admin-scope table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .admin-scope .overflow-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .admin-scope img { max-width: 100%; height: auto; }
+}
+
+/* ───────────────────────── Student Dashboard — Responsive & PWA polish ─────────────────────────
+ * Scoped to /student/* so it never affects the public site.
+ * Goals:
+ *   • Make every page comfortable on mobile, tablet and laptop without per-page edits.
+ *   • Behave like a native app when installed (standalone display-mode).
+ *   • Smooth scrolling, comfortable tap targets, no horizontal overflow.
+ */
+.student-scope {
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+.student-scope * { min-width: 0; }
+.student-scope img,
+.student-scope video,
+.student-scope canvas { max-width: 100%; height: auto; }
+
+/* Wide tables stay scrollable instead of breaking the page */
+@media (max-width: 1023px) {
+  .student-scope table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .student-scope .overflow-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .student-scope pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Comfortable tap targets on phones */
+@media (max-width: 640px) {
+  .student-scope button,
+  .student-scope [role="button"],
+  .student-scope a.btn,
+  .student-scope .tap-target { min-height: 40px; }
+}
+
+/* When installed as a standalone web app, drop the address-bar margin tricks */
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }
+  body { background: hsl(var(--background)); }
+}
+
+/* === Math (KaTeX) rendering safeguards ===
+   Mock questions can contain AI-generated formulas in questions, options and
+   explanations. Keep KaTeX isolated from Tailwind Typography (`prose`) without
+   resetting KaTeX's own positioning metrics. */
+.math-content :where(.katex) {
+  font: normal 1.05em KaTeX_Main, "Times New Roman", serif !important;
+  line-height: 1.2 !important;
+  text-align: left !important;
+  text-indent: 0 !important;
+  text-rendering: auto !important;
+  letter-spacing: normal !important;
+  white-space: nowrap !important;
+  vertical-align: -0.05em !important;
+  max-width: 100%;
+}
+.math-content :where(.katex *) {
+  letter-spacing: normal !important;
+  text-indent: 0 !important;
+  box-sizing: content-box;
+}
+.math-content :where(.katex .katex-html) {
+  position: relative !important;
+  white-space: nowrap !important;
+}
+.math-content :where(.katex .base) {
+  position: relative !important;
+  white-space: nowrap !important;
+  width: auto !important;
+}
+.math-content :where(.katex .katex-mathml) {
+  position: absolute !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+  clip-path: inset(50%) !important;
+  height: 1px !important;
+  width: 1px !important;
+  overflow: hidden !important;
+}
+.math-content :where(.katex-display) {
+  display: block !important;
+  margin: 0.75em 0 !important;
+  text-align: left !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25em 0 0.45em;
+  max-width: 100%;
+}
+.math-content :where(.katex-display > .katex) {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  text-align: initial !important;
+}
+.math-content h4 {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin: 0.9rem 0 0.35rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.math-content p { margin: 0.35rem 0; }
+.math-content ul, .math-content ol { margin: 0.4rem 0 0.4rem 1.2rem; }
+.math-content li { margin: 0.15rem 0; }
+.math-content code {
+  background: hsl(var(--muted));
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 1em;
+}
+
+
+/* ============================================================
+   MOBILE: Recharts global responsiveness
+   Makes all charts inside the student dashboard fit small screens
+   without overflowing horizontally and shrinks dense axis labels.
+   ============================================================ */
+@media (max-width: 640px) {
+  .recharts-responsive-container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .recharts-wrapper,
+  .recharts-surface {
+    max-width: 100% !important;
+  }
+  .recharts-cartesian-axis-tick text,
+  .recharts-polar-angle-axis-tick text,
+  .recharts-polar-radius-axis-tick text {
+    font-size: 10px !important;
+  }
+  .recharts-legend-wrapper {
+    font-size: 11px !important;
+    padding-top: 4px !important;
+  }
+  .recharts-legend-item {
+    margin-right: 6px !important;
+  }
+  .recharts-tooltip-wrapper {
+    font-size: 12px !important;
+  }
+}
+
+/* Prevent any chart card from causing horizontal page scroll on phones */
+@media (max-width: 640px) {
+  .recharts-responsive-container,
+  .recharts-wrapper {
+    overflow: hidden;
+  }
+}
+
+/* MOBILE: Tabs / filter strips that overflow should scroll horizontally
+   instead of stacking into multiple visually-clashing rows. Applied to
+   any element opting in via the .filter-scroll utility. */
+.filter-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.5rem;
+}
+.filter-scroll::-webkit-scrollbar { display: none; }
+.filter-scroll > * { flex-shrink: 0; white-space: nowrap; }
+
+/* ============================================================
+   GLOBAL MOBILE SAFEGUARDS (≤640px)
+   Prevent horizontal page overflow and tighten dense layouts so
+   the LMS dashboard renders cleanly on small phones.
+   ============================================================ */
+html, body, #root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 1023px) {
+  /* Prevent any element from forcing a horizontal scroll */
+  body, #root {
+    overflow-x: hidden;
+  }
+
+  /* Cap any oversized media / SVG / iframe to viewport width */
+  img, svg, video, iframe, canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* CRITICAL: grid/flex/block children default to min-width:auto which lets
+     a single wide descendant (table, pre, long string, absolute hero img)
+     inflate the whole page past the viewport. Force every layout-level
+     wrapper to be allowed to shrink to its parent. */
+  main, article, aside, section, header, footer, nav,
+  .container, .container > *,
+  [class*="grid-cols"], [class*="grid-cols"] > *,
+  [class*="flex"] > *,
+  .ai-content, .ai-content > *,
+  .prose, .prose > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Tables: keep their natural intrinsic width and let the BLOCK scroll
+     horizontally. Do NOT force width:100% — that compresses columns and
+     causes per-character vertical wrapping in narrow cells. */
+  table {
+    display: table;
+    width: max-content;
+    min-width: 100%;
+    max-width: 100%;
+  }
+  .ai-table-wrap,
+  .overflow-table {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    contain: inline-size paint;
+  }
+  pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+
+  /* Tighten container padding on phones */
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Cards inside dashboard shouldn't carry oversized internal padding on phones */
+  [data-mbc-card] {
+    padding: 0.75rem !important;
+  }
+
+  /* Long unbreakable strings (URLs, IDs) wrap instead of expanding parent.
+     Excludes anything inside table cells — character-wrapping inside narrow
+     table cells creates ugly vertical one-letter-per-line columns. */
+  p, span, div, h1, h2, h3, h4, h5, h6, a, li {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  td, th, td *, th * {
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+
+  /* shadcn Dialog / Sheet content: never exceed viewport width */
+  [role="dialog"] {
+    max-width: 100vw !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Headings shrink a notch on tight viewports */
+  h1 { font-size: var(--fs-heading); line-height: 1.2; }
+  h2 { font-size: var(--fs-subhead); line-height: 1.25; }
+  h3 { font-size: var(--fs-body); line-height: 1.35; }
+}
+
+/* ===========================================================================
+ * Mobile optimizations (≤ 768px) — universal across every page.
+ *   - Tap targets ≥ 44×44 px so all buttons/links pass WCAG 2.5.5.
+ *   - Hover-only visual effects (translate, scale, color shifts) are disabled
+ *     on touch devices where `:hover` fires sticky after a tap.
+ *   - Horizontal-overflow guard for screens narrower than 375 px.
+ * =========================================================================== */
+
+@media (max-width: 768px) {
+  /* WCAG 2.5.5 — interactive controls must be at least 44×44 CSS px on touch.
+     Excludes inline links inside flowing paragraphs and tiny utility chips
+     that intentionally render smaller (e.g. badges, table-row toggles). */
+  button:not([data-no-min-tap]),
+  a[href]:not([data-no-min-tap]):not(.inline-link),
+  [role="button"]:not([data-no-min-tap]),
+  [role="tab"]:not([data-no-min-tap]),
+  [role="menuitem"]:not([data-no-min-tap]),
+  input[type="checkbox"]:not([data-no-min-tap]),
+  input[type="radio"]:not([data-no-min-tap]),
+  input[type="button"]:not([data-no-min-tap]),
+  input[type="submit"]:not([data-no-min-tap]) {
+    min-height: 44px;
+  }
+
+  /* Don't blow up icon-only buttons inside table rows / dense toolbars where
+     the parent explicitly opts out. The selector above respects that. */
+}
+
+/* Touch devices: kill hover-only motion/scale that gets "stuck" after tap. */
+@media (hover: none) and (pointer: coarse) {
+  /* Tailwind hover-scale & hover-translate utilities become no-ops on touch */
+  .hover-scale,
+  [class*="hover:scale-"],
+  [class*="hover:-translate-"],
+  [class*="hover:translate-"],
+  [class*="group-hover:scale-"],
+  [class*="group-hover:-translate-"],
+  [class*="group-hover:translate-"] {
+    transform: none !important;
+  }
+
+  /* Hover shadow lifts that look broken when stuck on after tap */
+  [class*="hover:shadow-"]:hover,
+  [class*="group-hover:shadow-"]:hover {
+    box-shadow: revert !important;
+  }
+
+  /* The shimmer underline (.story-link) is a hover effect — disable on touch */
+  .story-link::after {
+    display: none !important;
+  }
+}
+
+/* Narrow phones (< 375 px) — Pixel-class / iPhone SE 1st-gen / small Androids.
+   Prevent the page from ever scrolling horizontally regardless of internal
+   content (long unbroken titles, oversized hero numbers, etc.). */
+@media (max-width: 374px) {
+  html, body {
+    overflow-x: hidden !important;
+  }
+  /* Generic horizontal-overflow guard for layout wrappers */
+  #root, main {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  /* Headings that use big clamp() values can still overflow on 320 px screens */
+  h1, h2, h3 {
+    word-break: break-word;
+    hyphens: auto;
+  }
+  /* Tighten side gutter further */
+  .container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  /* Tables: allow horizontal scroll within their wrapper rather than pushing
+     the whole page wide. Most tables already live in an overflow wrapper;
+     this catches stragglers. */
+  table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}
+
+/* ===========================================================================
+ * Visual weight reduction (site-wide)
+ *   - Lighter, single-tier box shadows on cards (smaller blur, less spread).
+ *   - One canonical border-radius (`--radius`, 0.75 rem) — every shadcn
+ *     component already inherits this. The overrides below normalize ad-hoc
+ *     `rounded-xl` / `rounded-2xl` / `rounded-3xl` on common surface elements
+ *     so the page reads as one consistent radius family.
+ *   - The 3-color-per-section guideline is enforced by sticking to semantic
+ *     tokens (--background, --foreground, --primary, --muted) — already the
+ *     project convention; no per-component override needed.
+ * =========================================================================== */
+
+:root {
+  /* Lighter card shadow: drop the secondary blur layer, tighter radius. */
+  --card-shadow: 0 1px 2px 0 hsl(215 25% 15% / 0.04);
+  --card-shadow-hover: 0 4px 10px -4px hsl(207 90% 54% / 0.10);
+}
+.dark {
+  --card-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.25);
+  --card-shadow-hover: 0 4px 10px -4px hsl(207 90% 54% / 0.20);
+}
+
+/* Trim oversized Tailwind shadow utilities to the lighter card-shadow scale.
+   Keeps the visual hierarchy but removes the heavy "lifted" look. */
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+  box-shadow: 0 2px 6px -2px hsl(215 25% 15% / 0.08) !important;
+}
+.shadow-md {
+  box-shadow: 0 1px 3px 0 hsl(215 25% 15% / 0.05) !important;
+}
+
+/* Normalize ad-hoc large radii on common surface containers to the single
+   --radius value so the page reads as one consistent shape language. */
+.rounded-2xl,
+.rounded-3xl {
+  border-radius: var(--radius) !important;
+}
+
+/* Live "scanning" sweep used by the AI SEO Intelligence Center widgets. */
+@keyframes seo-scan {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(320%); }
+}
+
+/* Homepage salary-band bars: CSS-only grow-in (no chart library needed). */
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.animate-grow-x {
+  transform-origin: left center;
+  animation: grow-x 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-grow-x { animation: none; }
+}
+
+/* ── Type-scale guard for Tailwind Typography ──────────────────────────────
+   prose-sm / prose-base / prose-lg would reintroduce off-scale root sizes,
+   so every rich-text block reads at the shared body size. */
+.prose,
+.prose-sm,
+.prose-base,
+.prose-lg {
+  font-size: var(--fs-body);
+}
+.prose h1 { font-size: var(--fs-heading); }
+.prose h2 { font-size: var(--fs-subhead); }
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 { font-size: var(--fs-body); }
+.prose small,
+.prose figcaption,
+.prose th,
+.prose td { font-size: var(--fs-detail); }
