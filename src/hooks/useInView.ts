@@ -33,7 +33,7 @@ export const useInView = <T extends HTMLElement = HTMLDivElement>(rootMargin = "
 /**
  * Wrapper component: renders `children` only when its placeholder enters near the viewport.
  */
-import { ReactNode, createElement, Suspense, useState } from "react";
+import { ReactNode, createElement, Suspense } from "react";
 import { useHydrated } from "@tanstack/react-router";
 
 interface LazyMountProps {
