@@ -178,8 +178,15 @@ const SectionPlaceholder = ({ height = 320 }: { height?: number }) => {
   );
 };
 
-const Deferred = ({ height, rootMargin = "0px", id, children }: { height: number; rootMargin?: string; id?: string; children: React.ReactNode }) => (
-  <LazyMount id={id} rootMargin={rootMargin} minHeight={height} fallback={<SectionPlaceholder height={height} />}>
+/**
+ * `ssr` defaults to true here: the homepage is the site's most crawled URL, so
+ * its sections must appear as real content in the server-rendered HTML instead
+ * of shimmer placeholders. Client behaviour is unchanged — the markup is
+ * already in the document, hydration matches it, and sections mounted after a
+ * client-side navigation still use mount-on-scroll.
+ */
+const Deferred = ({ height, rootMargin = "0px", id, ssr = true, children }: { height: number; rootMargin?: string; id?: string; ssr?: boolean; children: React.ReactNode }) => (
+  <LazyMount id={id} rootMargin={rootMargin} minHeight={height} fallback={<SectionPlaceholder height={height} />} ssr={ssr}>
     <Suspense fallback={<SectionPlaceholder height={height} />}>{children}</Suspense>
   </LazyMount>
 );
