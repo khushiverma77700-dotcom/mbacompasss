@@ -8,7 +8,7 @@ import {
   Crown, Medal, Award, Target, Users, Activity,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { ensureStudentMode, mockResultPath } from "@/lib/studentModeNav";
 import {
   ResponsiveContainer, LineChart, Line, AreaChart, Area,

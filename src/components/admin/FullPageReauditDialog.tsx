@@ -1,3 +1,4 @@
+import React from "react";
 /**
  * Re-audit the FULL page (parent record + all sub-sections / courses / faculty)
  * after content has been authored. Produces ONE unified meta title, meta
@@ -137,7 +138,7 @@ async function gatherFullPageData(kind: EntityKind, entityId: string) {
   };
 }
 
-const STATUS_ICON: Record<AuditCheck["status"], JSX.Element> = {
+const STATUS_ICON: Record<AuditCheck["status"], React.JSX.Element> = {
   pass: <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
   warn: <AlertTriangle className="w-4 h-4 text-amber-600" />,
   fail: <XCircle className="w-4 h-4 text-rose-600" />,

@@ -10,7 +10,7 @@ import {
   GraduationCap, AlertCircle, Info, Clock, Search, Filter, Pin, PinOff,
   Trash2, Copy, Check, ArrowDown, Layers, Activity, X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 

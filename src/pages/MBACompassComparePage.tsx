@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SectionSkeleton from "@/components/student/SectionSkeleton";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

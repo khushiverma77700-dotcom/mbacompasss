@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import {
   Star, Gift, CheckCircle, BookOpen,
   Users, MapPin, ExternalLink, Flame, Tag, X, PartyPopper,

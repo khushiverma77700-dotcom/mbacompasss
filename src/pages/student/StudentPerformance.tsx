@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { ensureStudentMode, mockResultPath } from "@/lib/studentModeNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

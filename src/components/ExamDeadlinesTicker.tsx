@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, AlertTriangle, ChevronRight, Bell, ChevronLeft, ArrowRight, GraduationCap, Flame } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 

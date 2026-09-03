@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { motion, useReducedMotion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import {

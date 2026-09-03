@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { motion } from "framer-motion";
 import {
   MapPin, Star, Award, Building, Monitor, Wifi, Users, GraduationCap,

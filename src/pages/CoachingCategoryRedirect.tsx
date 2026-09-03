@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "@/lib/router-compat";
 import SEOHead, { generateBreadcrumbSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 import { getExamHubSeo, getModeHubSeo } from "@/lib/coachingSeoTemplates";

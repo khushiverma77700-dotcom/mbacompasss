@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import ReactMarkdown from "react-markdown";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 interface AIGistSectionProps {
   content: string;

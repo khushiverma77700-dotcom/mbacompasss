@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema } from "@/components/SEOHead";
 import { ChevronRight } from "lucide-react";
 

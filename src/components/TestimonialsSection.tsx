@@ -8,7 +8,7 @@ import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 const TestimonialsSection = () => {
   const [activeIdx, setActiveIdx] = useState(0);
   const [filter, setFilter] = useState<"all" | "text" | "image" | "video">("all");
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const { data: testimonials = [] } = useQuery({
     queryKey: ["testimonials"],

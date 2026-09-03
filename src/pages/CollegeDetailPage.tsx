@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "@/lib/router-compat";
 import PageKeywords from "@/components/PageKeywords";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { MapPin, Star, Users, TrendingUp, Award, BookOpen, Globe, GraduationCap, CheckCircle, Building, Calendar, ChevronDown, ChevronUp, Download, ThumbsUp, ThumbsDown, HelpCircle, Home, Image, Medal, Banknote, MessageSquare } from "lucide-react";
@@ -67,7 +67,7 @@ const CollegeDetailPage = () => {
   const [galleryIdx, setGalleryIdx] = useState(0);
   const [qaOpen, setQaOpen] = useState<number | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const galleryRef = useRef<ReturnType<typeof setInterval>>();
+  const galleryRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Fetch verified MBA programme portfolio for this college

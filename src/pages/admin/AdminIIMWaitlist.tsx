@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sparkles, RefreshCw, TrendingUp, TrendingDown, Minus, Users, FileSpreadsheet, GraduationCap, ClipboardList, ExternalLink, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 type Section = "all" | "results" | "movement" | "rti" | "applications";
 

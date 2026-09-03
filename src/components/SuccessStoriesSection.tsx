@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 import { motion } from "framer-motion";
 import { Star, Quote, Award, ChevronRight, User, ChevronLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 

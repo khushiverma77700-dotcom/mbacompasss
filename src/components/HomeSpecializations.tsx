@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import {
   LineChart, Megaphone, Users, Truck, Cpu, PieChart, Globe2, Sparkles, ChevronRight,
 } from "lucide-react";

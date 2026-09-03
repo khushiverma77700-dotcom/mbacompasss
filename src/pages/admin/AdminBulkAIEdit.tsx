@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Wand2, Loader2, Sparkles, Search, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 type EntityType = "article" | "college" | "institute" | "course";
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -92,7 +92,7 @@ function buildMenuStructure(items: MenuItem[]) {
 const NavMegaMenu = ({ label, menuType, onNavigate }: MegaMenuProps) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>(null);
-  const timeout = useRef<ReturnType<typeof setTimeout>>();
+  const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const ref = useRef<HTMLDivElement>(null);
 
   const { data: items } = useMegaMenuData(menuType, open);

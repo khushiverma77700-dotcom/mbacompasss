@@ -55,7 +55,7 @@ export const useAllSiteSettings = () => {
 
 export const useSiteSettings = (key: string, options?: { enabled?: boolean }) => {
   const queryClient = useQueryClient();
-  return useQuery({
+  return useQuery<Record<string, any> | null>({
     queryKey: ["site_settings", key],
     queryFn: async () => {
       const batch = await queryClient.fetchQuery({

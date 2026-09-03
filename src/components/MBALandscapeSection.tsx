@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Trophy, TrendingUp, MapPin, IndianRupee, ArrowRight, Sparkles } from "lucide-react";
 
 type Row = {

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 import type { User, Session } from "@supabase/supabase-js";
 import { clearStudentMode } from "@/lib/studentModeNav";
 

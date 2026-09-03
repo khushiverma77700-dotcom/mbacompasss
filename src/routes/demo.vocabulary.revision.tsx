@@ -1,0 +1,8 @@
+import { createFileRoute } from "@tanstack/react-router";
+import StudentVocabularyRevision from "@/pages/student/vocabulary/StudentVocabularyRevision";
+import StudentContentSkeleton from "@/components/student/StudentContentSkeleton";
+
+export const Route = createFileRoute("/demo/vocabulary/revision")({
+  component: () => <StudentVocabularyRevision />,
+  pendingComponent: StudentContentSkeleton,
+});

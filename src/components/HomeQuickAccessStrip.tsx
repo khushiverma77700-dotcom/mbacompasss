@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import {
   Building2, Scale, GraduationCap, Compass, ClipboardList, Gift,
   UserSearch, ListChecks, Calculator, Sigma, BookOpenCheck, Newspaper,

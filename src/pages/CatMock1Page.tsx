@@ -1,5 +1,6 @@
+import React from "react";
 import { motion, LazyMotion, domAnimation, m } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useEffect, useState, memo, ReactNode } from "react";
 import {
   Rocket, Target, BookOpen, CalendarDays, Type, Calculator,
@@ -312,7 +313,7 @@ interface Feature {
   tagline: string;
   bullets: string[];
   accent: string;
-  Preview: () => JSX.Element;
+  Preview: () => React.JSX.Element;
 }
 
 const features: Feature[] = [
@@ -571,7 +572,7 @@ type SeoOverride = {
 };
 
 const CatMock1Page = () => {
-  const [lightbox, setLightbox] = useState<{ title: string; Preview: () => JSX.Element } | null>(null);
+  const [lightbox, setLightbox] = useState<{ title: string; Preview: () => React.JSX.Element } | null>(null);
   const [override, setOverride] = useState<SeoOverride | null>(null);
 
   useEffect(() => {
@@ -697,7 +698,7 @@ const CatMock1Page = () => {
 
 
 
-  const openLightbox = (title: string, Preview: () => JSX.Element) => setLightbox({ title, Preview });
+  const openLightbox = (title: string, Preview: () => React.JSX.Element) => setLightbox({ title, Preview });
 
   return (
     <LazyMotion features={domAnimation}>

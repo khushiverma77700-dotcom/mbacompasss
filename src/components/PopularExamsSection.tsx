@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Calendar, Clock, ArrowRight, BookOpen, Award, FileText } from "lucide-react";
 import { differenceInDays, parse, isValid } from "date-fns";
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Target, Sparkles, ArrowRight, Info } from "lucide-react";
 
 type CutoffRow = {
