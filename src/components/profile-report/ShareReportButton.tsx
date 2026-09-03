@@ -30,7 +30,7 @@ export const ShareReportButton = ({ profileId }: Props) => {
 
   return (
     <Button onClick={handleShare} variant="outline" className="rounded-xl">
-      {copied ? <Check className="w-4 h-4 mr-2 text-emerald-600" /> : navigator.share ? <Share2 className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+      {copied ? <Check className="w-4 h-4 mr-2 text-emerald-600" /> : typeof navigator.share === "function" ? <Share2 className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
       {copied ? "Link copied" : "Share Report"}
     </Button>
   );

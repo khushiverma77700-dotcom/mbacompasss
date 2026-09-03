@@ -13,7 +13,7 @@ import { useEffect } from "react";
  * Idempotent — safe to run on every content change.
  */
 export function useScrollableTables(
-  ref: React.RefObject<HTMLElement>,
+  ref: React.RefObject<HTMLElement | null>,
   deps: unknown[] = [],
 ) {
   useEffect(() => {

@@ -10,7 +10,7 @@ interface TocItem {
 
 interface AutoTOCProps {
   /** Ref to the rendered content container (the wrapper around dangerouslySetInnerHTML / prose). */
-  contentRef: RefObject<HTMLElement>;
+  contentRef: RefObject<HTMLElement | null>;
   /** Title above the TOC. */
   title?: string;
   /** Tailwind classes for outer wrapper. */

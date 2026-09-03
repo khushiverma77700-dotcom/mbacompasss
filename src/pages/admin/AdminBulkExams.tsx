@@ -1,3 +1,4 @@
+import React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ XAT,MBA Entrance,2026,https://xatonline.in,2
 NMAT,MBA Entrance,2026,https://www.nmat.org.in,3
 `;
 
-const STATUS_META: Record<string, { icon: JSX.Element; className: string; label: string }> = {
+const STATUS_META: Record<string, { icon: React.JSX.Element; className: string; label: string }> = {
   queued: { icon: <Clock className="w-3.5 h-3.5" />, className: "bg-muted text-muted-foreground", label: "Waiting" },
   running: { icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />, className: "bg-primary/10 text-primary", label: "Generating" },
   completed: { icon: <CheckCircle2 className="w-3.5 h-3.5" />, className: "bg-emerald-500/10 text-emerald-600", label: "Generated" },

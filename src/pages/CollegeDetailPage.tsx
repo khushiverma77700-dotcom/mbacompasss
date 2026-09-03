@@ -67,7 +67,7 @@ const CollegeDetailPage = () => {
   const [galleryIdx, setGalleryIdx] = useState(0);
   const [qaOpen, setQaOpen] = useState<number | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const galleryRef = useRef<ReturnType<typeof setInterval>>();
+  const galleryRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Fetch verified MBA programme portfolio for this college

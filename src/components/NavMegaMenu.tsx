@@ -92,7 +92,7 @@ function buildMenuStructure(items: MenuItem[]) {
 const NavMegaMenu = ({ label, menuType, onNavigate }: MegaMenuProps) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>(null);
-  const timeout = useRef<ReturnType<typeof setTimeout>>();
+  const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const ref = useRef<HTMLDivElement>(null);
 
   const { data: items } = useMegaMenuData(menuType, open);

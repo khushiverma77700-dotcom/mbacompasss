@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface Props { targetRef: React.RefObject<HTMLElement>; fileName?: string; label?: string }
+interface Props { targetRef: React.RefObject<HTMLElement | null>; fileName?: string; label?: string }
 
 export const PdfDownloadButton = ({ targetRef, fileName = "profile-report.pdf", label = "Download PDF" }: Props) => {
   const [loading, setLoading] = useState(false);
