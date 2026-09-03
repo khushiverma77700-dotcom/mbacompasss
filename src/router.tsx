@@ -28,6 +28,15 @@ export const getRouter = () => {
     // Replaces the old hand-rolled hover/tap chunk prefetcher (ROUTE_PREFETCHERS
     // + GlobalNavigationPrefetch in the pre-migration App.tsx).
     defaultPreload: "intent",
+    // Serialize the server-side React Query cache into the SSR payload and
+    // rehydrate it on the client, so routes whose loaders prefetch a query
+    // render real content in view-source instead of their loading skeleton.
+    dehydrate: (): { queryClientState: DehydratedState } => ({
+      queryClientState: dehydrate(queryClient),
+    }),
+    hydrate: (dehydrated: { queryClientState: DehydratedState }) => {
+      hydrate(queryClient, dehydrated.queryClientState);
+    },
   });
 
   return router;
