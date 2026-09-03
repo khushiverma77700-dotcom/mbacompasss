@@ -159,7 +159,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 hero-gradient pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15 pointer-events-none" />
 
-      {/* Soft light orbs for depth (no animation, no blur-sm on mobile) */}
+      {/* Soft light orbs for depth (no animation, no blur on mobile) */}
       <div className="hidden md:block absolute -top-24 -right-24 w-[28rem] h-[28rem] rounded-full bg-white/10 blur-3xl pointer-events-none" />
       <div className="hidden md:block absolute -bottom-32 -left-24 w-[24rem] h-[24rem] rounded-full bg-cyan-200/15 blur-3xl pointer-events-none" />
 

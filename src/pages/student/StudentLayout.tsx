@@ -504,7 +504,7 @@ function SidebarContent() {
         <span className="absolute inset-1 rounded-[10px] bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 -translate-x-full group-hover:translate-x-full pointer-events-none" />
         {/* soft top highlight line for 3D depth */}
         <span className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-60" />
-        {/* bottom inner shadow-sm for depth */}
+        {/* bottom inner shadow for depth */}
         <span className="absolute inset-x-0 bottom-1 h-2 rounded-b-xl bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
         <span className={cn("relative h-8 w-8 rounded-xl grid place-items-center text-white shadow-lg ring-2 ring-white/50", opts.iconBg)}>
           <Icon className="h-4 w-4" />
