@@ -34,6 +34,7 @@ export const useInView = <T extends HTMLElement = HTMLDivElement>(rootMargin = "
  * Wrapper component: renders `children` only when its placeholder enters near the viewport.
  */
 import { ReactNode, createElement, Suspense } from "react";
+import { useHydrated } from "@tanstack/react-router";
 
 interface LazyMountProps {
   children: ReactNode;
@@ -41,10 +42,23 @@ interface LazyMountProps {
   minHeight?: number;
   fallback?: ReactNode;
   id?: string;
+  /**
+   * When true, `children` are rendered during SSR (and therefore also on the
+   * very first client render, so hydration matches byte-for-byte) instead of
+   * the skeleton fallback. Crawlers and view-source then see real content
+   * rather than `aria-busy` placeholders. Sections mounted *after* hydration
+   * (client-side navigations) keep the normal mount-on-scroll behaviour.
+   */
+  ssr?: boolean;
 }
 
-export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fallback = null, id }: LazyMountProps) => {
+export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fallback = null, id, ssr = false }: LazyMountProps) => {
   const { ref, inView } = useInView<HTMLDivElement>(rootMargin);
+  const hydrated = useHydrated();
+  // `useHydrated()` is false during SSR *and* during the hydration render, and
+  // true from the first render of any later client navigation — so this sticks
+  // to `true` only for markup that was server-rendered.
+  const [ssrMounted] = useState(() => ssr && !hydrated);
   // CRITICAL CLS fix: keep `min-height` reserved even AFTER `inView` flips true.
   // Otherwise the wrapper collapses to 0 while the lazy chunk downloads, then
   // snaps back to its real height — yanking the footer and everything below
@@ -63,7 +77,7 @@ export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fal
         scrollMarginTop: "6rem",
       },
     },
-    inView ? createElement(Suspense, { fallback }, children) : fallback
+    inView || ssrMounted ? createElement(Suspense, { fallback }, children) : fallback
   );
 };
 
