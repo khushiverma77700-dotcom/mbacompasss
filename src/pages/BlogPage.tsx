@@ -13,7 +13,7 @@ import TopicClusterLinks, { DEFAULT_MBA_CLUSTER } from "@/components/TopicCluste
 
 const BlogPage = () => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [email, setEmail] = useState("");
 

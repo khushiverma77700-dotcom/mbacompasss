@@ -43,7 +43,7 @@ const AdminCacheDiagnostics = () => {
     setError(null);
     try {
       const { data: res, error: err } = await supabase.functions.invoke("cache-diagnostics", {
-        body: null,
+        body: undefined,
         method: "GET" as any,
       });
       // functions.invoke doesn't accept query params directly — fall back to fetch

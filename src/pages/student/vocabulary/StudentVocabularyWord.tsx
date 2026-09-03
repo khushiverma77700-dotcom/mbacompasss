@@ -21,7 +21,7 @@ export default function StudentVocabularyWord() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from("vocab_words").select("*").eq("slug", slug).maybeSingle();
+    const { data } = await supabase.from("vocab_words").select("*").eq("slug", slug as string).maybeSingle();
     if (data) {
       setWord(data);
       document.title = `${data.word} — MBA Vocabulary`;

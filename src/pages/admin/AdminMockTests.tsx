@@ -353,7 +353,7 @@ const AdminMockTests = () => {
           const { data: newReq, error: reqErr } = await supabase
             .from("bulk_mock_requests")
             .insert({
-              created_by: userRes?.user?.id,
+              created_by: userRes?.user?.id as string,
               label,
               total_items: deficits.length,
               status: "processing",

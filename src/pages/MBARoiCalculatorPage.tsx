@@ -1404,7 +1404,7 @@ const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSen
                   {TOP_COLLEGES.map(c => (
                     <button key={c} type="button"
                       onClick={() => {
-                        if (form.target_colleges.includes(c)) setForm({ ...form, target_colleges: form.target_colleges.filter(x => x !== c) });
+                        if (form.target_colleges.includes(c)) setForm({ ...form, target_colleges: form.target_colleges.filter((x: string) => x !== c) });
                         else if (form.target_colleges.length < 5) setForm({ ...form, target_colleges: [...form.target_colleges, c] });
                       }}
                       className={`px-2.5 py-1 rounded-full text-xs border transition ${form.target_colleges.includes(c) ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>

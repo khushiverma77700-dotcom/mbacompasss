@@ -83,7 +83,7 @@ const AdminCoachingInstituteDetail = () => {
         meta_description: inst.meta_description || null,
         sections,
       })
-      .eq("id", id);
+      .eq("id", id as string);
     setSaving(false);
     if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
     toast({ title: "Saved" });

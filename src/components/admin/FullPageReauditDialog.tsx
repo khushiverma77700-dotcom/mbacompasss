@@ -62,7 +62,7 @@ interface Props {
   onApplied?: () => void;
 }
 
-const stripHtml = (s?: string) => (s || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+const stripHtml = (s?: string | null) => (s || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
 /** Pull the parent + all child rows and flatten into a single content blob. */
 async function gatherFullPageData(kind: EntityKind, entityId: string) {
