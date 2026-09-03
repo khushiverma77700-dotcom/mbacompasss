@@ -539,7 +539,7 @@ const AdminMockTests = () => {
   const bulkUpdate = async (patch: Record<string, any>, label: string) => {
     if (selectedIds.length === 0) return;
     setBulkBusy(true);
-    const { error } = await supabase.from("mock_tests").update(patch).in("id", selectedIds);
+    const { error } = await supabase.from("mock_tests").update(patch as any).in("id", selectedIds);
     setBulkBusy(false);
     if (error) { toast({ title: "Bulk update failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: `${selectedIds.length} mock(s) ${label}` });
@@ -1311,7 +1311,7 @@ function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patc
 
   const apply = async (patch: { is_published: boolean; is_live: boolean; scheduled_start_at?: string | null }) => {
     setSaving(true);
-    const { error } = await supabase.from("mock_tests").update(patch).eq("id", test.id);
+    const { error } = await supabase.from("mock_tests").update(patch as any).eq("id", test.id);
     setSaving(false);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
     onChanged(patch);

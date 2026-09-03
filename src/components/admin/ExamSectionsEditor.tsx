@@ -149,7 +149,7 @@ const ExamSectionsEditor = ({
 
       let examId = existingExamId ?? null;
       if (examId) {
-        const { error } = await supabase.from("exams").update(payload).eq("id", examId);
+        const { error } = await supabase.from("exams").update(payload as any).eq("id", examId);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from("exams").insert(payload as any).select("id").single();

@@ -192,7 +192,7 @@ const AdminReverseSiloing = () => {
   };
 
   const saveSettings = async (patch: Record<string, unknown>) => {
-    const { error } = await supabase.from("silo_settings").update(patch).eq("id", true);
+    const { error } = await supabase.from("silo_settings").update(patch as any).eq("id", true);
     if (error) return toast.error(error.message);
     setSettings((s: any) => ({ ...s, ...patch }));
     toast.success("Automation settings saved");
