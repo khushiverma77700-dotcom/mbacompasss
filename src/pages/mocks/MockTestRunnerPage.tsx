@@ -438,7 +438,7 @@ export default function MockTestRunnerPage() {
     setCurrentSectionId(sid);
     const firstQ = questions.find((q) => q.section_id === sid);
     if (firstQ) setCurrentQuestionId(firstQ.id);
-    supabase.from("mock_attempts").update({ current_section_id: sid }).eq("id", attemptId).then(() => {});
+    supabase.from("mock_attempts").update({ current_section_id: sid }).eq("id", attemptId as string).then(() => {});
   };
 
   const goToQuestion = (qid: string) => {
