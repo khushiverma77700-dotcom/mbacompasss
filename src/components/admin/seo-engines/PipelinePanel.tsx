@@ -89,7 +89,7 @@ const PipelinePanel = () => {
   };
 
   const saveSetting = async (patch: Record<string, unknown>) => {
-    const { error } = await supabase.from("seo_engine_settings").update(patch).eq("id", true);
+    const { error } = await supabase.from("seo_engine_settings").update(patch as any).eq("id", true);
     if (error) toast.error(error.message);
     else {
       setSettings({ ...settings, ...patch });

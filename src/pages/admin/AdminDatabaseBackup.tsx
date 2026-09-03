@@ -68,7 +68,7 @@ const AdminDatabaseBackup = () => {
         for (const item of data || []) {
           const fullPath = folder ? `${folder}/${item.name}` : item.name;
           if (item.id) {
-            allFiles.push({ ...item, name: fullPath });
+            allFiles.push({ ...item, name: fullPath } as any);
           } else {
             await listRecursive(fullPath);
           }

@@ -233,7 +233,7 @@ export default function AdminSEOHealthCheck() {
                       <AlertTriangle className="w-3.5 h-3.5" /> Top issues this run
                     </div>
                     <div className="flex gap-1.5 flex-wrap">
-                      {currentRun.summary.top_issues.map((it: any) => (
+                      {currentRun?.summary.top_issues.map((it: any) => (
                         <Badge key={it.issue} variant="outline" className="text-xs">
                           {it.issue} <span className="ml-1 text-slate-500">×{it.count}</span>
                         </Badge>

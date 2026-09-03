@@ -12,7 +12,7 @@ const CoachingMapView = ({ institutes, onCityClick }: Props) => {
     institutes.forEach(i => {
       const city = (i.city || "").trim();
       if (!city) return;
-      const cur = map.get(city) || { city, state: i.state, count: 0, topRated: 0, insts: [] };
+      const cur = map.get(city) || { city, state: i.state, count: 0, topRated: 0, insts: [] as any[] };
       cur.count += 1;
       if ((i.rating || 0) >= 4.5) cur.topRated += 1;
       cur.insts.push(i);

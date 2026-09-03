@@ -243,7 +243,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
 
         const { error: updateError } = await supabase
           .from(table)
-          .update(updatePayload)
+          .update(updatePayload as any)
           .eq("id", recordId!);
 
         if (updateError) {
@@ -309,7 +309,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
       if (contentTypeConfig[contentType].supportsSeoColumns) {
         const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
         const update: Record<string, any> = { [field]: editValues[field] };
-        const { error } = await supabase.from(table).update(update).eq("id", recordId);
+        const { error } = await supabase.from(table).update(update as any).eq("id", recordId);
         if (error) throw error;
       }
 
@@ -365,7 +365,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
           }
           const { error: updateError } = await supabase
             .from(table)
-            .update(updatePayload)
+            .update(updatePayload as any)
             .eq("id", recordId);
           if (updateError) console.error("Failed to update record:", updateError);
         }

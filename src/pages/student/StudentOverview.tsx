@@ -294,7 +294,7 @@ export default function StudentOverview() {
       : 0;
 
     const days = new Set(
-      submitted.filter((x) => x.submitted_at).map((x) => new Date(x.submitted_at).toDateString())
+      submitted.filter((x) => x.submitted_at).map((x) => new Date(x.submitted_at!).toDateString())
     );
     return {
       enrolledCount: enrollments.length,
@@ -1012,7 +1012,7 @@ export default function StudentOverview() {
                   <div className="min-w-0">
                     <div className="font-medium text-sm truncate">{a.test?.name ?? "Mock"}</div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(a.started_at).toLocaleDateString()} · <StatusLabel status={a.status} />
+                      {new Date(a.started_at ?? 0).toLocaleDateString()} · <StatusLabel status={a.status} />
                       {a.test?.exam_code && <> · {a.test.exam_code}</>}
                     </div>
                   </div>
