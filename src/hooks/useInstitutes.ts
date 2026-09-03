@@ -78,25 +78,10 @@ export const useCategories = () => {
 // `.range()` until the full catalogue is loaded (otherwise newer colleges vanish).
 const PAGE_SIZE = 1000;
 
+// Query definition lives in @/lib/queries/listingQueries so the /colleges route
+// loader can prefetch it server-side under the identical query key.
 export const useColleges = () => {
-  return useQuery({
-    queryKey: ["colleges"],
-    queryFn: async () => {
-      const all: any[] = [];
-      for (let from = 0; ; from += PAGE_SIZE) {
-        const { data, error } = await supabase
-          .rpc("colleges_listing")
-          .range(from, from + PAGE_SIZE - 1);
-        if (error) throw error;
-        const page = data || [];
-        all.push(...page);
-        if (page.length < PAGE_SIZE) break;
-      }
-      return all;
-    },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+  return useQuery(collegesListingQuery);
 };
 
 // Light variant — for homepage city counts, spotlight cards, related-college sidebars.
