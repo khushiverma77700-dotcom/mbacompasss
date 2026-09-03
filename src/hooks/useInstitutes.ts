@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { institutesQuery } from "@/lib/queries/listingQueries";
+import { collegesListingQuery, institutesQuery } from "@/lib/queries/listingQueries";
 
 // Query definition lives in @/lib/queries/listingQueries so the /coaching route
 // loader can prefetch it server-side under the identical query key.
