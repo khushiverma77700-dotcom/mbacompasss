@@ -1,0 +1,91 @@
+import { queryOptions } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Shared query definitions for the big public listings.
+ *
+ * These live outside the hooks so route loaders can prefetch them on the
+ * server with the EXACT same query key the component hook subscribes to.
+ * If a key ever drifts, SSR dehydration silently stops matching and the
+ * client re-fetches from scratch (skeleton on first paint again), so the
+ * hooks below MUST be the only consumers of these keys.
+ */
+
+const COLLEGES_PAGE_SIZE = 1000;
+
+export const collegesListingQuery = queryOptions({
+  queryKey: ["colleges"],
+  queryFn: async () => {
+    const all: any[] = [];
+    for (let from = 0; ; from += COLLEGES_PAGE_SIZE) {
+      const { data, error } = await supabase
+        .rpc("colleges_listing")
+        .range(from, from + COLLEGES_PAGE_SIZE - 1);
+      if (error) throw error;
+      const page = data || [];
+      all.push(...page);
+      if (page.length < COLLEGES_PAGE_SIZE) break;
+    }
+    return all;
+  },
+  staleTime: 10 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+});
+
+export const institutesQuery = (categorySlug?: string) =>
+  queryOptions({
+    queryKey: ["institutes", categorySlug],
+    queryFn: async () => {
+      let query = supabase.from("institutes").select(`
+        id,
+        name,
+        slug,
+        city,
+        state,
+        description,
+        logo_url,
+        banner_url,
+        featured,
+        rating,
+        total_reviews,
+        students_count,
+        success_rate,
+        mode,
+        discount,
+        offer,
+        fees_lakhs,
+        category_id,
+        features,
+        specializations,
+        listing_sort_order,
+        courses(id, name, fees),
+        faculty(id, name),
+        categories:category_id(name, slug)
+      `);
+      if (categorySlug) {
+        const { data: cat } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("slug", categorySlug)
+          .maybeSingle();
+        if (cat) query = query.eq("category_id", cat.id);
+      }
+      const { data, error } = await query
+        .order("listing_sort_order", { ascending: true, nullsFirst: false })
+        .order("rating", { ascending: false });
+      if (error) throw error;
+      return (data || []).filter((item) => item.name?.trim() && item.slug?.trim());
+    },
+  });
+
+export const mocksLandingSettingsQuery = queryOptions({
+  queryKey: ["mocks-landing-settings"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("mocks_landing_settings")
+      .select("*")
+      .maybeSingle();
+    if (error) throw error;
+    return data ?? null;
+  },
+});
