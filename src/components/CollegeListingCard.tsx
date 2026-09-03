@@ -23,11 +23,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
   const exams = uniq(college.exams_accepted);
   const specs = uniq(college.specializations);
   const recruiters = uniq(college.top_recruiters);
-  // The listing feed caps `top_recruiters` at the 5 names this card can show and
-  // sends the true distinct total separately, so the "+N" badge stays accurate.
-  const recruiterTotal = Number(college.top_recruiters_total) > 0
-    ? Number(college.top_recruiters_total)
-    : recruiters.length;
+
 
   const accreditations = uniq(college.accreditations);
   const displayRank = Number(college.ranking) > 0 ? Number(college.ranking) : rank;
