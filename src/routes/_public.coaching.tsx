@@ -6,7 +6,7 @@ import { institutesQuery } from "@/lib/queries/listingQueries";
 export const Route = createFileRoute("/_public/coaching")({
   // CoachingPage calls useInstitutes() with no argument, so the key is
   // ["institutes", undefined] — prefetched here with the identical key.
-  loader: ({ context }) => context.queryClient.ensureQueryData(institutesQuery()),
+  loader: async ({ context }) => { await context.queryClient.prefetchQuery(institutesQuery()); },
   component: () => <CoachingPage />,
   pendingComponent: PublicPageSkeleton,
   errorComponent: () => <CoachingPage />,
