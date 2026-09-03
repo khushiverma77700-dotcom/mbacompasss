@@ -12,25 +12,46 @@ import { supabase } from "@/integrations/supabase/client";
  */
 
 const COLLEGES_PAGE_SIZE = 1000;
+// PostgREST caps a single response at 1000 rows, and every `range()` call
+// re-runs colleges_listing() in full — so fetching the ~4.2k catalogue
+// sequentially cost 5 x ~2.4s. Pages are independent, so request them in
+// parallel batches instead (same rows, same order, ~4x faster TTFB).
+const COLLEGES_BATCH = 6;
+
+const fetchCollegesPage = async (from: number) => {
+  const { data, error } = await supabase
+    .rpc("colleges_listing")
+    .range(from, from + COLLEGES_PAGE_SIZE - 1);
+  if (error) throw error;
+  return data || [];
+};
 
 export const collegesListingQuery = queryOptions({
   queryKey: ["colleges"],
   queryFn: async () => {
     const all: any[] = [];
-    for (let from = 0; ; from += COLLEGES_PAGE_SIZE) {
-      const { data, error } = await supabase
-        .rpc("colleges_listing")
-        .range(from, from + COLLEGES_PAGE_SIZE - 1);
-      if (error) throw error;
-      const page = data || [];
-      all.push(...page);
-      if (page.length < COLLEGES_PAGE_SIZE) break;
+    for (let batch = 0; ; batch++) {
+      const offsets = Array.from(
+        { length: COLLEGES_BATCH },
+        (_, i) => (batch * COLLEGES_BATCH + i) * COLLEGES_PAGE_SIZE,
+      );
+      const pages = await Promise.all(offsets.map(fetchCollegesPage));
+      let done = false;
+      for (const page of pages) {
+        all.push(...page);
+        if (page.length < COLLEGES_PAGE_SIZE) {
+          done = true;
+          break;
+        }
+      }
+      if (done) break;
     }
     return all;
   },
   staleTime: 10 * 60 * 1000,
   gcTime: 30 * 60 * 1000,
 });
+
 
 export const institutesQuery = (categorySlug?: string) =>
   queryOptions({
