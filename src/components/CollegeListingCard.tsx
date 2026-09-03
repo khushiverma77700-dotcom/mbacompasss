@@ -207,7 +207,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
                 <Briefcase className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
                 <div className="text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">Top Recruiters: </span>
-                  <span className="line-clamp-1">{recruiters.slice(0, 5).join(" · ")}{recruiters.length > 5 ? ` +${recruiters.length - 5}` : ""}</span>
+                  <span className="line-clamp-1">{recruiters.slice(0, 5).join(" · ")}{recruiterTotal > 5 ? ` +${recruiterTotal - 5}` : ""}</span>
                 </div>
               </div>
             )}
