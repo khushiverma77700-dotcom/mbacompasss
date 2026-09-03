@@ -89,3 +89,32 @@ export const mocksLandingSettingsQuery = queryOptions({
     return data ?? null;
   },
 });
+
+export const blogArticlesQuery = queryOptions({
+  queryKey: ["blog-articles"],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from("articles")
+      .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,featured,content_chars,author")
+      .eq("published", true)
+      .order("created_at", { ascending: false });
+    return data || [];
+  },
+  staleTime: 5 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+  refetchOnWindowFocus: false,
+});
+
+export const mbaCompassCoursesQuery = queryOptions({
+  queryKey: ["mba-compass-courses"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("mba_compass_courses")
+      .select("*")
+      .eq("is_active", true)
+      .order("is_featured", { ascending: false })
+      .order("sort_order");
+    if (error) throw error;
+    return data ?? [];
+  },
+});

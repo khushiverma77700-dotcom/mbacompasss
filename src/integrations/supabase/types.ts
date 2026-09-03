@@ -14488,6 +14488,7 @@ export type Database = {
           state: string
           tier: string
           top_recruiters: string[]
+          top_recruiters_total: number
           total_students: number
           type: string
         }[]
@@ -14498,10 +14499,15 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      distinct_text_count: { Args: { arr: string[] }; Returns: number }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      first_distinct_texts: {
+        Args: { arr: string[]; n: number }
+        Returns: string[]
       }
       generate_ticket_code: { Args: never; Returns: string }
       get_global_leaderboard: {

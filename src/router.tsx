@@ -1,7 +1,9 @@
 import { QueryClient, dehydrate, hydrate } from "@tanstack/react-query";
 import type { DehydratedState } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
+import { packRows, unpackRows } from "./lib/queries/rowTransport";
 import { routeTree } from "./routeTree.gen";
+
 
 export const getRouter = () => {
   // Ported from the pre-migration App.tsx QueryClient — public content
@@ -33,15 +35,24 @@ export const getRouter = () => {
     // render real content in view-source instead of their loading skeleton.
     // Passed as a JSON string: the router validates payload serializability
     // structurally, and DehydratedState's mutation keys are typed `unknown[]`.
-    dehydrate: (): { queryClientState: string } => ({
-      queryClientState: JSON.stringify(
-        dehydrate(queryClient, { shouldDehydrateMutation: () => false }),
-      ),
-    }),
+    // Row arrays travel column-oriented (see rowTransport) so 4k+ repeated
+    // field names don't dominate the payload.
+    dehydrate: (): { queryClientState: string } => {
+      const state = dehydrate(queryClient, { shouldDehydrateMutation: () => false });
+      for (const query of state.queries) {
+        query.state.data = packRows(query.state.data);
+      }
+      return { queryClientState: JSON.stringify(state) };
+    },
     hydrate: (dehydrated: { queryClientState: string }) => {
-      hydrate(queryClient, JSON.parse(dehydrated.queryClientState) as DehydratedState);
+      const state = JSON.parse(dehydrated.queryClientState) as DehydratedState;
+      for (const query of state.queries) {
+        query.state.data = unpackRows(query.state.data);
+      }
+      hydrate(queryClient, state);
     },
   });
+
 
   return router;
 };
