@@ -1,7 +1,9 @@
 import { QueryClient, dehydrate, hydrate } from "@tanstack/react-query";
 import type { DehydratedState } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
+import { packRows, unpackRows } from "./lib/queries/rowTransport";
 import { routeTree } from "./routeTree.gen";
+
 
 export const getRouter = () => {
   // Ported from the pre-migration App.tsx QueryClient — public content
