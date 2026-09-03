@@ -94,8 +94,11 @@ export default function MBACompassCoursesPage() {
 }
 
 function CoursesInner() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Query definition lives in @/lib/queries/listingQueries so the /courses route
+  // loader can prefetch it server-side under the identical query key — the SSR
+  // HTML then carries real course cards instead of the skeleton grid.
+  const { data, isLoading: loading } = useQuery(mbaCompassCoursesQuery);
+  const courses = (data ?? []) as Course[];
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<string>("all");
@@ -103,18 +106,6 @@ function CoursesInner() {
   const [priceMax, setPriceMax] = useState<number>(0);
   const [sort, setSort] = useState<string>("featured");
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("mba_compass_courses")
-        .select("*")
-        .eq("is_active", true)
-        .order("is_featured", { ascending: false })
-        .order("sort_order");
-      setCourses((data ?? []) as Course[]);
-      setLoading(false);
-    })();
-  }, []);
 
   const filtered = useMemo(() => {
     let out = courses;
