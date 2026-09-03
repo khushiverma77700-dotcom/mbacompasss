@@ -17,20 +17,10 @@ const BlogPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [email, setEmail] = useState("");
 
-  const { data: articles, isLoading } = useQuery({
-    queryKey: ["blog-articles"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("articles")
-        .select("id,slug,title,excerpt,category,image_url,banner_url,created_at,featured,content_chars,author")
-        .eq("published", true)
-        .order("created_at", { ascending: false });
-      return data || [];
-    },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  // Query definition lives in @/lib/queries/listingQueries so the /blog route
+  // loader can prefetch it server-side under the identical query key.
+  const { data: articles, isLoading } = useQuery(blogArticlesQuery);
+
 
   const blogCategories = ["all", ...new Set((articles || []).map(n => n.category).filter(Boolean))];
 
