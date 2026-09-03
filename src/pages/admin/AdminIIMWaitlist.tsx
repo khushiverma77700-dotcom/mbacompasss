@@ -180,12 +180,12 @@ export default function AdminIIMWaitlist() {
                     </div>
                     <div className="grid grid-cols-6 gap-1 text-center text-xs">
                       {[2021, 2022, 2023, 2024, 2025].map(y => (
-                        <div key={y} className="p-1.5 rounded bg-muted/50">
+                        <div key={y} className="p-1.5 rounded-[0.25rem] bg-muted/50">
                           <div className="font-bold text-foreground">{m[`wl_${y}`] ?? "—"}</div>
                           <div className="text-xs text-muted-foreground">'{String(y).slice(2)}</div>
                         </div>
                       ))}
-                      <div className="p-1.5 rounded bg-primary/10 border border-primary/20">
+                      <div className="p-1.5 rounded-[0.25rem] bg-primary/10 border border-primary/20">
                         <div className="font-bold text-primary">{m.wl_2026_est ?? "—"}</div>
                         <div className="text-xs text-primary/70">'26E</div>
                       </div>
@@ -277,7 +277,7 @@ export default function AdminIIMWaitlist() {
       {/* PUBLIC PAGE NOTE */}
       <Card className="p-4 bg-muted/30 border-dashed">
         <p className="text-sm text-muted-foreground">
-          ℹ️ This is an internal admin tool. Lead submissions arrive via the public form embed at <code className="px-1.5 py-0.5 rounded bg-background border text-foreground text-xs">/iim-waitlist-leads</code>. Wire it into any landing page using the <code className="px-1.5 py-0.5 rounded bg-background border text-foreground text-xs">iim_waitlist_leads</code> table directly.
+          ℹ️ This is an internal admin tool. Lead submissions arrive via the public form embed at <code className="px-1.5 py-0.5 rounded-[0.25rem] bg-background border text-foreground text-xs">/iim-waitlist-leads</code>. Wire it into any landing page using the <code className="px-1.5 py-0.5 rounded-[0.25rem] bg-background border text-foreground text-xs">iim_waitlist_leads</code> table directly.
         </p>
       </Card>
     </div>

@@ -85,7 +85,7 @@ const AdminUserSubmissions = () => {
           {STATUS_TABS.map((t) => (
             <TabsTrigger key={t.id} value={t.id} className="gap-2">
               {t.label}
-              <span className="text-xs px-1.5 py-0.5 rounded bg-muted">{counts[t.id] || 0}</span>
+              <span className="text-xs px-1.5 py-0.5 rounded-[0.25rem] bg-muted">{counts[t.id] || 0}</span>
             </TabsTrigger>
           ))}
         </TabsList>
@@ -119,7 +119,7 @@ const AdminUserSubmissions = () => {
                               Updated {new Date(l.updated_at).toLocaleString()}
                             </div>
                             {l.admin_notes && (
-                              <div className="text-xs mt-2 p-2 rounded bg-muted/50">
+                              <div className="text-xs mt-2 p-2 rounded-[0.25rem] bg-muted/50">
                                 <span className="font-medium">Note:</span> {l.admin_notes}
                               </div>
                             )}
@@ -228,7 +228,7 @@ const renderValue = (v: any) => {
       return (
         <div className="flex flex-wrap gap-1.5">
           {v.map((x, i) => (
-            <span key={i} className="px-2 py-0.5 rounded bg-muted text-xs">{String(x)}</span>
+            <span key={i} className="px-2 py-0.5 rounded-[0.25rem] bg-muted text-xs">{String(x)}</span>
           ))}
         </div>
       );
@@ -236,7 +236,7 @@ const renderValue = (v: any) => {
     return (
       <div className="space-y-2">
         {v.map((row, i) => (
-          <div key={i} className="rounded border border-border p-2 bg-muted/30">
+          <div key={i} className="rounded-[0.25rem] border border-border p-2 bg-muted/30">
             <FieldGrid data={row} />
           </div>
         ))}

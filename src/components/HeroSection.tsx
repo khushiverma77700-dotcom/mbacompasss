@@ -159,7 +159,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 hero-gradient pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15 pointer-events-none" />
 
-      {/* Soft light orbs for depth (no animation, no blur on mobile) */}
+      {/* Soft light orbs for depth (no animation, no blur-sm on mobile) */}
       <div className="hidden md:block absolute -top-24 -right-24 w-[28rem] h-[28rem] rounded-full bg-white/10 blur-3xl pointer-events-none" />
       <div className="hidden md:block absolute -bottom-32 -left-24 w-[24rem] h-[24rem] rounded-full bg-cyan-200/15 blur-3xl pointer-events-none" />
 
@@ -248,14 +248,14 @@ const HeroSection = () => {
                         onClick={() => handleSelect(s)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b border-border/30 last:border-b-0 ${selectedIdx === i ? "bg-primary/10" : "hover:bg-muted/60"}`}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                           <Icon className="w-4 h-4 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold text-foreground truncate">{s.label}</div>
                           <div className="text-xs text-muted-foreground truncate">{s.sub}</div>
                         </div>
-                        <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full capitalize flex-shrink-0">{s.type}</span>
+                        <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full capitalize shrink-0">{s.type}</span>
                       </button>
                     );
                   })}

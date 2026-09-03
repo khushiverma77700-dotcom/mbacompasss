@@ -88,12 +88,12 @@ const MBANewsBar = ({ items: itemsProp, enabled: enabledProp, fetchRemote = true
                 const content = (
                   <>
                     {n.tag && (
-                      <span className="text-xs md:text-xs font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded shrink-0">
+                      <span className="text-xs md:text-xs font-bold uppercase tracking-wide bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 rounded-[0.25rem] shrink-0">
                         {n.tag}
                       </span>
                     )}
                     <span className="font-medium whitespace-nowrap">{n.text}</span>
-                    <ArrowRight className="w-3 h-3 opacity-60 flex-shrink-0" />
+                    <ArrowRight className="w-3 h-3 opacity-60 shrink-0" />
                   </>
                 );
                 const cls = "inline-flex items-center gap-2 shrink-0 whitespace-nowrap text-xs md:text-sm text-foreground/80 hover:text-primary transition-colors";

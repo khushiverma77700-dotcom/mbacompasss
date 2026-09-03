@@ -169,7 +169,7 @@ const CoachingOfWeekSection = () => {
                         <div className="flex flex-wrap gap-1.5 mb-4">
                           {(inst.features as string[]).slice(0, 4).map((f: string, i: number) => (
                             <span key={i} className="inline-flex items-center gap-1 text-xs bg-muted rounded-full px-2.5 py-1 text-foreground font-medium border border-border/50">
-                              <CheckCircle className="w-2.5 h-2.5 text-primary flex-shrink-0" />{f}
+                              <CheckCircle className="w-2.5 h-2.5 text-primary shrink-0" />{f}
                             </span>
                           ))}
                         </div>
@@ -181,7 +181,7 @@ const CoachingOfWeekSection = () => {
                           {user ? (
                             <>
                               <div className="flex items-center gap-2 min-w-0">
-                                <Tag className="w-4 h-4 text-primary flex-shrink-0" />
+                                <Tag className="w-4 h-4 text-primary shrink-0" />
                                 <div>
                                   <span className="text-xs text-muted-foreground">Use code: </span>
                                   <code className="font-mono font-bold text-foreground text-sm tracking-wider">{couponCode}</code>
@@ -241,7 +241,7 @@ const CoachingOfWeekSection = () => {
               <X className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
                 <PartyPopper className="w-5 h-5 text-green-600" />
               </div>
               <div>

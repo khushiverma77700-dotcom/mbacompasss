@@ -72,7 +72,7 @@ const CategoryCards = () => {
               >
                 <Link
                   to={`/category/${cat.slug}`}
-                  className="group block bg-card rounded-2xl p-5 md:p-6 text-center border border-border shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden"
+                  className="group block bg-card rounded-2xl p-5 md:p-6 text-center border border-border shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden"
                 >
                   {/* Hover gradient overlay */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none`} />

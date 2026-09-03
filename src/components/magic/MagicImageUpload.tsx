@@ -59,7 +59,7 @@ const MagicImageUpload = ({ value, folder, upload, onChange, hint }: Props) => {
       <Input placeholder="Or paste an image URL" value={value || ""} onChange={(e) => onChange(e.target.value)} className="text-sm" />
       {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
       {value && (
-        <img src={value} alt="Preview" className="h-24 w-auto rounded border border-border object-contain bg-muted" loading="lazy" decoding="async" />
+        <img src={value} alt="Preview" className="h-24 w-auto rounded-[0.25rem] border border-border object-contain bg-muted" loading="lazy" decoding="async" />
       )}
     </div>
   );

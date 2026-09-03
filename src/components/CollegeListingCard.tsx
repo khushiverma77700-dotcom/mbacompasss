@@ -47,9 +47,9 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
 
         <div className="flex flex-col md:flex-row">
           {/* ===== LEFT: Identity ===== */}
-          <div className="md:w-72 flex-shrink-0 p-5 md:border-r border-border bg-gradient-to-br from-muted/30 to-transparent">
+          <div className="md:w-72 shrink-0 p-5 md:border-r border-border bg-gradient-to-br from-muted/30 to-transparent">
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-14 h-14 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="w-14 h-14 rounded-xl bg-card border border-border shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
                 {college.logo_url ? (
                   <img src={college.logo_url} alt={college.name} width={48} height={48} loading="lazy" decoding="async" className="w-12 h-12 object-contain" />
                 ) : (
@@ -67,7 +67,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
                   {college.name}
                 </h3>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                  <MapPin className="w-3 h-3 shrink-0" />
                   <span className="line-clamp-1">{college.city}{college.state ? `, ${college.state}` : ""}</span>
                 </div>
               </div>
@@ -100,7 +100,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {accreditations.slice(0, 4).map((a: string) => (
-                    <span key={a} className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40">
+                    <span key={a} className="text-xs font-bold px-1.5 py-0.5 rounded-[0.25rem] bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40">
                       {a}
                     </span>
                   ))}
@@ -204,7 +204,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             {/* Top Recruiters */}
             {recruiters.length > 0 && (
               <div className="flex items-start gap-2">
-                <Briefcase className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <Briefcase className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
                 <div className="text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">Top Recruiters: </span>
                   <span className="line-clamp-1">{recruiters.slice(0, 5).join(" · ")}{recruiters.length > 5 ? ` +${recruiters.length - 5}` : ""}</span>
@@ -214,7 +214,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
           </div>
 
           {/* ===== RIGHT: CTA ===== */}
-          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-48 flex-shrink-0 md:border-l border-t md:border-t-0 border-border bg-gradient-to-br from-primary/5 via-muted/20 to-transparent">
+          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-48 shrink-0 md:border-l border-t md:border-t-0 border-border bg-gradient-to-br from-primary/5 via-muted/20 to-transparent">
             <div className="text-center">
               {college.fees_lakhs ? (
                 <>

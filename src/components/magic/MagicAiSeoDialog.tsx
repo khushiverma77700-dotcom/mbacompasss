@@ -220,7 +220,7 @@ const MagicAiSeoDialog = ({ open, onOpenChange, label, run, onApplied, current }
                         <span className="text-muted-foreground">{b.key}</span>
                         <span className="font-medium">{b.val}</span>
                       </div>
-                      <div className="h-1.5 rounded bg-muted overflow-hidden">
+                      <div className="h-1.5 rounded-[0.25rem] bg-muted overflow-hidden">
                         <div className={`h-full ${barColor(b.val)} transition-all duration-1000`} style={{ width: `${b.val}%` }} />
                       </div>
                     </div>

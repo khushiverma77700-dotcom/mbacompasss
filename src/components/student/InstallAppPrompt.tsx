@@ -113,7 +113,7 @@ export default function InstallAppPrompt() {
         {showNative ? (
           <button
             onClick={install}
-            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-3 py-2 shadow"
+            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-3 py-2 shadow-sm"
           >
             <Download className="h-3.5 w-3.5" /> Install
           </button>

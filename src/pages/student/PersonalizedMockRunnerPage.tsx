@@ -130,7 +130,7 @@ export default function PersonalizedMockRunnerPage() {
                     className={`w-full text-left p-3 rounded-lg border transition-all ${picked ? "border-sky-500 bg-sky-50" : "border-gray-200 hover:border-sky-300 hover:bg-sky-50/40"}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`h-6 w-6 rounded-full border flex-shrink-0 grid place-items-center text-xs font-semibold ${picked ? "bg-sky-600 border-sky-600 text-white" : "border-gray-300"}`}>
+                      <div className={`h-6 w-6 rounded-full border shrink-0 grid place-items-center text-xs font-semibold ${picked ? "bg-sky-600 border-sky-600 text-white" : "border-gray-300"}`}>
                         {String.fromCharCode(65 + i)}
                       </div>
                       <MathContent html={opt} className="prose prose-sm max-w-none text-sm leading-relaxed" />
@@ -174,7 +174,7 @@ export default function PersonalizedMockRunnerPage() {
                   const cls = i === idx ? "ring-2 ring-sky-500 " : "";
                   const bg = mk ? "bg-amber-100 text-amber-800" : ans ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700";
                   return (
-                    <button key={q.id} onClick={() => setIdx(i)} className={`${cls}${bg} h-8 rounded text-xs font-medium hover:opacity-80`}>{i + 1}</button>
+                    <button key={q.id} onClick={() => setIdx(i)} className={`${cls}${bg} h-8 rounded-[0.25rem] text-xs font-medium hover:opacity-80`}>{i + 1}</button>
                   );
                 })}
               </div>

@@ -57,7 +57,7 @@ export default function DashboardShowcase() {
       </div>
 
       <div
-        className="mt-6 max-w-5xl mx-auto rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-blue-50 shadow-sm overflow-hidden"
+        className="mt-6 max-w-5xl mx-auto rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-blue-50 shadow-xs overflow-hidden"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={() => setPaused(true)}
@@ -80,7 +80,7 @@ export default function DashboardShowcase() {
                   className={`relative shrink-0 rounded-xl overflow-hidden bg-white border transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                     isCenter
                       ? "w-full sm:w-[64%] border-sky-200 shadow-2xl z-10 scale-100 opacity-100"
-                      : "hidden sm:block w-[19%] border-sky-100 shadow-sm opacity-45 blur-[1px] hover:opacity-80 hover:blur-0 scale-90"
+                      : "hidden sm:block w-[19%] border-sky-100 shadow-xs opacity-45 blur-[1px] hover:opacity-80 hover:blur-0 scale-90"
                   } ${offset === -1 ? "-translate-x-2" : offset === 1 ? "translate-x-2" : ""}`}
                 >
                   <img
@@ -101,7 +101,7 @@ export default function DashboardShowcase() {
             type="button"
             onClick={() => go(-1)}
             aria-label="Previous screenshot"
-            className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-white/95 border border-sky-100 shadow grid place-items-center text-sky-700 hover:bg-white"
+            className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-white/95 border border-sky-100 shadow-sm grid place-items-center text-sky-700 hover:bg-white"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -109,7 +109,7 @@ export default function DashboardShowcase() {
             type="button"
             onClick={() => go(1)}
             aria-label="Next screenshot"
-            className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-white/95 border border-sky-100 shadow grid place-items-center text-sky-700 hover:bg-white"
+            className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-white/95 border border-sky-100 shadow-sm grid place-items-center text-sky-700 hover:bg-white"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

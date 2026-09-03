@@ -309,7 +309,7 @@ const AdminWriteBlog = () => {
         </div>
       </div>
 
-      <Card className="shadow-sm">
+      <Card className="shadow-xs">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="h-4 w-4" /> Article Brief
@@ -439,7 +439,7 @@ const AdminWriteBlog = () => {
       </Card>
 
       {/* Internal Linking Pool */}
-      <Card className="shadow-sm border-primary/20">
+      <Card className="shadow-xs border-primary/20">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -547,7 +547,7 @@ const AdminWriteBlog = () => {
                         {item.autoFixed && <Badge variant="outline">auto-corrected</Badge>}
                       </div>
                       <p className="mt-1 text-muted-foreground">{item.message || "Validation warning"}</p>
-                      <p className="mt-1 rounded border bg-background px-2 py-1 font-mono text-xs text-foreground break-words">
+                      <p className="mt-1 rounded-[0.25rem] border bg-background px-2 py-1 font-mono text-xs text-foreground break-words">
                         {item.matchedText || "Matched text was changed during sanitization."}
                       </p>
                     </div>

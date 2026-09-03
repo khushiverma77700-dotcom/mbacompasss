@@ -153,7 +153,7 @@ const IpmatPreparationGuide = () => {
             </ol>
             <div className="not-prose bg-sky-50 border border-sky-100 rounded-xl p-4 my-6">
               <p className="text-sm text-slate-700 flex gap-3">
-                <TrendingUp className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />
+                <TrendingUp className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
                 <span><strong>Cut-off benchmark:</strong> For IIM Indore, general-category candidates typically need <strong>65–70+</strong> in Quant and <strong>70–75+</strong> in Verbal (out of the sectional maxima) to clear the shortlist for the AT-PI round.</span>
               </p>
             </div>

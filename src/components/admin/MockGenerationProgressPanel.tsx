@@ -330,8 +330,8 @@ function SectionHealthRow({ job: j }: { job: SectionJob }) {
   return (
     <div
       className={`relative rounded-lg border p-3 transition-all ${
-        isStalled ? "border-amber-300 bg-amber-50/80 shadow-sm ring-1 ring-amber-200" :
-        isActive ? "border-sky-300 bg-sky-50/80 shadow-sm ring-1 ring-sky-200" :
+        isStalled ? "border-amber-300 bg-amber-50/80 shadow-xs ring-1 ring-amber-200" :
+        isActive ? "border-sky-300 bg-sky-50/80 shadow-xs ring-1 ring-sky-200" :
         isDone ? "border-emerald-200 bg-emerald-50/60" :
         isFailed ? "border-rose-200 bg-rose-50/60" :
         "border-slate-200 bg-white"
@@ -544,7 +544,7 @@ function MiniChip({ icon, label, tone }: { icon: React.ReactNode; label: string;
     tone === "info" ? "bg-sky-50 text-sky-700 border-sky-200" :
     "bg-slate-50 text-slate-600 border-slate-200";
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${cls}`}>
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[0.25rem] border ${cls}`}>
       {icon}{label}
     </span>
   );

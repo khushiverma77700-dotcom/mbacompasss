@@ -212,7 +212,7 @@ export default function StudentFormulaBook() {
   return (
     <div className="space-y-5 pb-24 md:space-y-6">
       {/* HERO — premium gradient with mesh */}
-      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-4 shadow-sm md:rounded-3xl md:p-7">
+      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-4 shadow-xs md:rounded-3xl md:p-7">
         {/* decorative mesh */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full bg-sky-200/50 blur-3xl" />
@@ -223,7 +223,7 @@ export default function StudentFormulaBook() {
         <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-8">
           <div className="space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 shadow-xs backdrop-blur">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-500" />
@@ -268,7 +268,7 @@ export default function StudentFormulaBook() {
           </div>
 
           {/* Daily target ring */}
-          <div className="relative mx-auto flex w-full max-w-[260px] flex-row items-center gap-4 rounded-2xl border border-sky-100 bg-white/80 p-3 backdrop-blur-md shadow-sm lg:flex-col lg:gap-2 lg:p-5 lg:min-w-[220px]">
+          <div className="relative mx-auto flex w-full max-w-[260px] flex-row items-center gap-4 rounded-2xl border border-sky-100 bg-white/80 p-3 backdrop-blur-md shadow-xs lg:flex-col lg:gap-2 lg:p-5 lg:min-w-[220px]">
             <div className="relative h-24 w-24 shrink-0 lg:h-32 lg:w-32">
               <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
                 <circle cx="50" cy="50" r={ringR} fill="none" stroke="#e0f2fe" strokeWidth="9" />
@@ -333,7 +333,7 @@ export default function StudentFormulaBook() {
       )}
 
       {/* SMART SEARCH */}
-      <Card className="border-slate-200 bg-white shadow-sm">
+      <Card className="border-slate-200 bg-white shadow-xs">
         <CardContent className="p-3 md:p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -374,7 +374,7 @@ export default function StudentFormulaBook() {
           <div className="mt-3 rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50/60 via-white to-blue-50/40 p-3 md:mt-4 md:p-4">
             <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
               <div className="inline-flex items-center gap-2">
-                <div className="rounded-lg bg-gradient-to-br from-sky-600 to-blue-600 p-1.5 text-white shadow-sm">
+                <div className="rounded-lg bg-gradient-to-br from-sky-600 to-blue-600 p-1.5 text-white shadow-xs">
                   <Filter className="h-3 w-3" />
                 </div>
                 <div className="font-heading text-xs font-bold uppercase tracking-wider text-slate-700 md:text-sm">Refine</div>
@@ -508,7 +508,7 @@ export default function StudentFormulaBook() {
                 aria-disabled={demoLocked || undefined}
                 onClick={() => !demoLocked && openFormula(f.slug)}
                 onKeyDown={(e) => { if (!demoLocked && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openFormula(f.slug); } }}
-                className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2", isDone && "opacity-90", demoLocked && "blur-[6px] select-none cursor-default")}
+                className={cn("group relative flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2", isDone && "opacity-90", demoLocked && "blur-[6px] select-none cursor-default")}
               >
                 <div aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1", isDone ? "bg-emerald-400" : isRevise ? "bg-amber-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500")} />
 
@@ -540,7 +540,7 @@ export default function StudentFormulaBook() {
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setPlainMode((m) => ({ ...m, [f.id]: !m[f.id] })); }}
                         onKeyDown={(e) => e.stopPropagation()}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-xs font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-700/60 px-2.5 py-1 text-xs font-medium text-sky-200 transition-colors hover:bg-slate-600 hover:text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
                         aria-label={plainMode[f.id] ? "Switch to rendered math" : "Switch to plain text"}
                         title={plainMode[f.id] ? "Show rendered math" : "Show plain text"}
                       >
@@ -628,7 +628,7 @@ export default function StudentFormulaBook() {
                       onClick={(e) => { e.stopPropagation(); openFormula(f.slug); }}
                       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); e.preventDefault(); openFormula(f.slug); } }}
                       aria-label={`View full details for ${f.name}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:opacity-95 active:scale-[0.98] focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2"
                     >
                       <BookOpen className="h-4 w-4" aria-hidden /> View Full Details <ArrowRight className="h-4 w-4" aria-hidden />
                     </button>
@@ -653,7 +653,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <button onClick={onClick} className={cn(
       "rounded-full border px-3 py-1 text-xs font-medium transition-all",
-      active ? "border-transparent bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+      active ? "border-transparent bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-xs"
              : "border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:text-sky-700",
     )}>{children}</button>
   );

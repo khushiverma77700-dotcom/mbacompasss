@@ -225,7 +225,7 @@ export default function StudentLayout() {
           </aside>
           <main className="flex-1 p-6">
             <div className="space-y-4 max-w-5xl">
-              <div className="h-8 w-64 bg-muted/40 rounded animate-pulse" />
+              <div className="h-8 w-64 bg-muted/40 rounded-[0.25rem] animate-pulse" />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="h-28 bg-muted/30 rounded-xl animate-pulse" />
@@ -285,7 +285,7 @@ export default function StudentLayout() {
                 <Link
                   to={resolveTo("/student/install")}
 
-                  className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow-sm hover:from-sky-600 hover:to-blue-700"
                   aria-label="Install app"
                   title="Install MBA Compass - CAT Prep as an app"
                 >
@@ -420,7 +420,7 @@ function SidebarContent() {
         >
           <Icon className="h-4 w-4 opacity-70" />
           <span className="flex-1 truncate">{item.label}</span>
-          <span className="text-xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-semibold">
+          <span className="text-xs uppercase tracking-wider px-1.5 py-0.5 rounded-[0.25rem] bg-amber-500/15 text-amber-600 dark:text-amber-300 font-semibold">
             Locked
           </span>
         </Link>
@@ -442,7 +442,7 @@ function SidebarContent() {
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
             opts.indent && "ml-3 py-1.5 text-sm",
             isActive
-              ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm dark:from-sky-500/20 dark:to-blue-500/10 dark:text-sky-200"
+              ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-xs dark:from-sky-500/20 dark:to-blue-500/10 dark:text-sky-200"
               : "text-foreground/80 hover:bg-accent hover:text-foreground"
           )
         }
@@ -504,7 +504,7 @@ function SidebarContent() {
         <span className="absolute inset-1 rounded-[10px] bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 -translate-x-full group-hover:translate-x-full pointer-events-none" />
         {/* soft top highlight line for 3D depth */}
         <span className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-60" />
-        {/* bottom inner shadow for depth */}
+        {/* bottom inner shadow-sm for depth */}
         <span className="absolute inset-x-0 bottom-1 h-2 rounded-b-xl bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
         <span className={cn("relative h-8 w-8 rounded-xl grid place-items-center text-white shadow-lg ring-2 ring-white/50", opts.iconBg)}>
           <Icon className="h-4 w-4" />
@@ -512,7 +512,7 @@ function SidebarContent() {
         <span className="relative flex-1 text-left truncate">
           {item.label}
           {opts.badge && (
-            <span className={cn("ml-1.5 text-xs uppercase tracking-wider px-1.5 py-0.5 rounded text-white font-black", opts.badge)}>
+            <span className={cn("ml-1.5 text-xs uppercase tracking-wider px-1.5 py-0.5 rounded-[0.25rem] text-white font-black", opts.badge)}>
               Hot
             </span>
           )}
@@ -542,7 +542,7 @@ function SidebarContent() {
           aria-expanded={mocksOpen}
           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent/40 transition-colors"
         >
-          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-sm">
+          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-xs">
             <FlaskConical className="h-3.5 w-3.5" />
           </span>
           <span className="flex-1 text-left">My Mocks</span>
@@ -589,7 +589,7 @@ function SidebarContent() {
           aria-expanded={insightsOpen}
           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent/40 transition-colors"
         >
-          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500 to-sky-600 grid place-items-center text-white shadow-sm">
+          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500 to-sky-600 grid place-items-center text-white shadow-xs">
             <BarChart3 className="h-3.5 w-3.5" />
           </span>
           <span className="flex-1 text-left">My Insights</span>
@@ -637,16 +637,16 @@ function SidebarContent() {
         </span>
         <span className="relative flex-1 text-left flex items-center gap-1.5">
           PerformX
-          <span className="text-xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black">
+          <span className="text-xs uppercase tracking-wider px-1.5 py-0.5 rounded-[0.25rem] bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black">
             New
           </span>
         </span>
       </NavLink>
 
       {/* Knowledge Duo — B-School Vocabulary + Quant Formula Book side by side / stacked premium cards */}
-      <div className="my-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/90 via-white to-sky-50/80 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-sky-900/10 dark:border-slate-700/40 shadow-sm backdrop-blur p-2 space-y-1.5">
+      <div className="my-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/90 via-white to-sky-50/80 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-sky-900/10 dark:border-slate-700/40 shadow-xs backdrop-blur p-2 space-y-1.5">
         <div className="flex items-center gap-2 px-1 pb-1">
-          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs shadow-sm">
+          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs shadow-xs">
             <Sparkles className="h-3 w-3" />
           </span>
           <span className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">

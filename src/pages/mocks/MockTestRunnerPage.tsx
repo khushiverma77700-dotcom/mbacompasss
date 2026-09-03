@@ -585,7 +585,7 @@ export default function MockTestRunnerPage() {
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="lg:hidden inline-flex items-center gap-1 rounded bg-white/10 hover:bg-white/20 px-2 py-1 text-xs font-medium"
+            className="lg:hidden inline-flex items-center gap-1 rounded-[0.25rem] bg-white/10 hover:bg-white/20 px-2 py-1 text-xs font-medium"
             aria-label="Open question palette"
           >
             <LayoutGrid className="h-4 w-4" />
@@ -608,7 +608,7 @@ export default function MockTestRunnerPage() {
               disabled={expired}
               onClick={() => switchSection(s.id)}
               className={cn(
-                "shrink-0 px-2.5 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium border transition",
+                "shrink-0 px-2.5 sm:px-3 py-1.5 rounded-[0.25rem] text-xs sm:text-sm font-medium border transition",
                 isCurrent ? "bg-primary text-primary-foreground border-primary" : "bg-white",
                 expired && "opacity-50 cursor-not-allowed line-through",
               )}
@@ -678,7 +678,7 @@ export default function MockTestRunnerPage() {
                 <button
                   type="button"
                   onClick={() => setPaletteOpen(false)}
-                  className="p-1.5 rounded hover:bg-slate-100"
+                  className="p-1.5 rounded-[0.25rem] hover:bg-slate-100"
                   aria-label="Close palette"
                 >
                   <X className="h-4 w-4" />
@@ -782,7 +782,7 @@ function SummaryStat({ label, value, tone }: { label: string; value: number; ton
 function Legend({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={cn("inline-block h-4 w-4 rounded border-slate-300", color)} />
+      <span className={cn("inline-block h-4 w-4 rounded-[0.25rem] border-slate-300", color)} />
       <span>{label}</span>
     </div>
   );

@@ -253,7 +253,7 @@ export default function MockReviewPage() {
                         key={q.id}
                         onClick={() => setActiveQuestion(q.id)}
                         className={cn(
-                          "h-8 w-8 rounded text-xs font-semibold border",
+                          "h-8 w-8 rounded-[0.25rem] text-xs font-semibold border",
                           correct && "bg-green-600 text-white border-green-700",
                           wrong && "bg-red-500 text-white border-red-600",
                           !picked && "bg-white",
@@ -266,9 +266,9 @@ export default function MockReviewPage() {
                   })}
                 </div>
                 <div className="text-xs mt-3 space-y-1">
-                  <div className="flex items-center gap-2"><span className="h-3 w-3 bg-green-600 rounded inline-block" />Correct</div>
-                  <div className="flex items-center gap-2"><span className="h-3 w-3 bg-red-500 rounded inline-block" />Wrong</div>
-                  <div className="flex items-center gap-2"><span className="h-3 w-3 bg-white border rounded inline-block" />Skipped</div>
+                  <div className="flex items-center gap-2"><span className="h-3 w-3 bg-green-600 rounded-[0.25rem] inline-block" />Correct</div>
+                  <div className="flex items-center gap-2"><span className="h-3 w-3 bg-red-500 rounded-[0.25rem] inline-block" />Wrong</div>
+                  <div className="flex items-center gap-2"><span className="h-3 w-3 bg-white border rounded-[0.25rem] inline-block" />Skipped</div>
                 </div>
               </Card>
             </div>

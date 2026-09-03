@@ -70,7 +70,7 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
                     to={link.path}
                     className="group flex items-center gap-3 p-3.5 rounded-xl border border-border/50 bg-card hover:border-primary/40 hover:bg-primary/5 hover:shadow-md transition-all duration-300"
                   >
-                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center group-hover:from-primary/25 group-hover:to-primary/10 transition-all">
+                    <div className="shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center group-hover:from-primary/25 group-hover:to-primary/10 transition-all">
                       <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-0.5 transition-transform" />
                     </div>
                     <div className="min-w-0 flex-1">

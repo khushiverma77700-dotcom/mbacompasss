@@ -498,7 +498,7 @@ export default function AdminVocabulary() {
                   bulkJob.status === "failed" ? "text-destructive" :
                   "text-primary";
                 return (
-                  <div className="rounded-xl border border-border bg-card p-5 space-y-5 shadow-sm">
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-5 shadow-xs">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <span className={`inline-flex items-center gap-1.5 text-sm font-semibold capitalize ${statusColor}`}>

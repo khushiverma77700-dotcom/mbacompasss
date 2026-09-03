@@ -89,7 +89,7 @@ export function generateLocationBanner(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   
-  // Text shadow
+  // Text shadow-sm
   ctx.shadowColor = "rgba(0,0,0,0.3)";
   ctx.shadowBlur = 20;
   ctx.shadowOffsetY = 4;

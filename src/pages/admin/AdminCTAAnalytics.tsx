@@ -355,7 +355,7 @@ const AdminCTAAnalytics = () => {
                               {d.executed} ran · {d.prompted} login · <span className="font-semibold text-foreground">{d.total} total</span>
                             </span>
                           </div>
-                          <div className="h-2 rounded bg-muted overflow-hidden flex">
+                          <div className="h-2 rounded-[0.25rem] bg-muted overflow-hidden flex">
                             <div className="bg-emerald-500" style={{ width: `${(d.executed / max) * 100}%` }} />
                             <div className="bg-amber-500" style={{ width: `${(d.prompted / max) * 100}%` }} />
                           </div>
@@ -482,7 +482,7 @@ const BreakdownCard = ({
                       </div>
                     </div>
                   </div>
-                  <div className="h-2 rounded bg-muted overflow-hidden flex">
+                  <div className="h-2 rounded-[0.25rem] bg-muted overflow-hidden flex">
                     <div className="bg-emerald-500" style={{ width: `${(r.executed / max) * 100}%` }} />
                     <div className="bg-amber-500" style={{ width: `${(r.prompted / max) * 100}%` }} />
                   </div>

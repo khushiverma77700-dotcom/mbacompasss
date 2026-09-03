@@ -147,7 +147,7 @@ export default function AdminStudentNotifications() {
               {imageUrl ? (
                 <div className="relative inline-block">
                   <img src={imageUrl} alt="preview" className="max-h-40 rounded-md border" style={{ maxWidth: "100%", height: "auto" }}  loading="lazy" decoding="async" />
-                  <button onClick={() => setImageUrl("")} className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-rose-500 text-white grid place-items-center shadow"><X className="h-3 w-3" /></button>
+                  <button onClick={() => setImageUrl("")} className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-rose-500 text-white grid place-items-center shadow-sm"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">

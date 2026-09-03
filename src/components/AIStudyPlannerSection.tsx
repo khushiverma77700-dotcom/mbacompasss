@@ -35,7 +35,7 @@ export default function AIStudyPlannerSection() {
 
       <div className="container mx-auto px-4 relative min-w-0 max-w-full">
         <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow-sm border border-sky-100 text-xs text-sky-700 font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow-xs border border-sky-100 text-xs text-sky-700 font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" /> AI-Powered • Built into MBA Compass paid courses
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
@@ -49,7 +49,7 @@ export default function AIStudyPlannerSection() {
 
         <div className="grid lg:grid-cols-12 gap-6 min-w-0">
           {/* Left — percentile trajectory chart */}
-          <Card className="lg:col-span-7 p-5 bg-white/90 backdrop-blur border-sky-100 shadow-sm">
+          <Card className="lg:col-span-7 p-5 bg-white/90 backdrop-blur border-sky-100 shadow-xs">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="text-xs text-muted-foreground">Predicted percentile growth</div>
@@ -73,7 +73,7 @@ export default function AIStudyPlannerSection() {
 
           {/* Right — radial subject + today's plan */}
           <div className="lg:col-span-5 space-y-4">
-            <Card className="p-5 bg-white/90 backdrop-blur border-sky-100 shadow-sm">
+            <Card className="p-5 bg-white/90 backdrop-blur border-sky-100 shadow-xs">
               <div className="flex items-center gap-2 mb-2">
                 <Target className="h-4 w-4 text-sky-600" />
                 <h3 className="font-semibold text-sm text-gray-900">Sectional readiness</h3>
@@ -83,7 +83,7 @@ export default function AIStudyPlannerSection() {
               </Suspense>
             </Card>
 
-            <Card className="p-5 bg-white/90 backdrop-blur border-sky-100 shadow-sm">
+            <Card className="p-5 bg-white/90 backdrop-blur border-sky-100 shadow-xs">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-sky-600" />

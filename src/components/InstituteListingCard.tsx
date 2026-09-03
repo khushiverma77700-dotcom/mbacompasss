@@ -77,9 +77,9 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
 
         <div className="flex flex-col md:flex-row">
           {/* LEFT */}
-          <div className="md:w-72 flex-shrink-0 p-5 md:border-r border-border bg-gradient-to-br from-muted/30 to-transparent">
+          <div className="md:w-72 shrink-0 p-5 md:border-r border-border bg-gradient-to-br from-muted/30 to-transparent">
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-14 h-14 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="w-14 h-14 rounded-xl bg-card border border-border shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
                 {inst.logo_url ? (
                   <img src={inst.logo_url} alt={inst.name} loading="lazy" className="w-12 h-12 object-contain" />
                 ) : (
@@ -96,7 +96,7 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
                   {inst.name}
                 </h3>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                  <MapPin className="w-3 h-3 shrink-0" />
                   <span className="line-clamp-1">{inst.city}{inst.state ? `, ${inst.state}` : ""}</span>
                 </div>
               </div>
@@ -174,7 +174,7 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
 
             {courses.length > 0 && (
               <div className="flex items-start gap-2">
-                <GraduationCap className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <GraduationCap className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
                 <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                   {courses.slice(0, 4).map((c: any) => (
                     <span key={c.id} className="text-xs font-semibold px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15">
@@ -192,7 +192,7 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
           </div>
 
           {/* RIGHT */}
-          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-52 flex-shrink-0 md:border-l border-t md:border-t-0 border-border bg-muted/20">
+          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-52 shrink-0 md:border-l border-t md:border-t-0 border-border bg-muted/20">
             <div className="text-center">
               {feeDisplay ? (
                 <>
@@ -211,7 +211,7 @@ const InstituteListingCard = ({ inst, index = 0, rank }: Props) => {
             </div>
 
             <div className="flex flex-col items-stretch gap-2 w-full max-w-[180px]">
-              <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-xs group-hover:bg-primary/90 transition-all shadow-sm">
+              <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-xs group-hover:bg-primary/90 transition-all shadow-xs">
                 View Details <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>
               <span className="text-xs text-muted-foreground flex items-center justify-center gap-1">

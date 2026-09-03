@@ -106,7 +106,7 @@ const BlogPage = () => {
 
       {/* Utility row */}
       <div className="container mx-auto px-6 pt-6 flex items-center justify-end">
-        <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-slate-600 hover:text-sky-600 text-sm font-medium transition-colors bg-white border border-sky-100 px-3 py-1.5 rounded-full shadow-sm">
+        <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-slate-600 hover:text-sky-600 text-sm font-medium transition-colors bg-white border border-sky-100 px-3 py-1.5 rounded-full shadow-xs">
           <Share2 className="w-3.5 h-3.5" /> Share
         </button>
       </div>
@@ -140,7 +140,7 @@ const BlogPage = () => {
             <div className="lg:col-span-7">
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 backdrop-blur text-sky-700 rounded-full text-xs font-bold uppercase tracking-widest border border-sky-100 shadow-sm"
+                className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 backdrop-blur text-sky-700 rounded-full text-xs font-bold uppercase tracking-widest border border-sky-100 shadow-xs"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                 The MBA Journal · Issue {String(totalArticles || 88).padStart(2, "0")}
@@ -186,7 +186,7 @@ const BlogPage = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search CAT strategy, ISB essays, IIM cutoffs…"
                   aria-label="Search articles"
-                  className="w-full pl-12 pr-32 py-4 bg-white border border-slate-200 rounded-full text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300 transition-all placeholder:text-slate-500"
+                  className="w-full pl-12 pr-32 py-4 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:outline-hidden focus:ring-2 focus:ring-sky-300 focus:border-sky-300 transition-all placeholder:text-slate-500"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
                   ⌘ K
@@ -249,7 +249,7 @@ const BlogPage = () => {
                         </div>
                       )}
                       <div className="absolute top-4 left-4 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur text-sky-700 rounded-full text-xs font-bold uppercase tracking-widest shadow">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur text-sky-700 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm">
                           <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" /> Cover Story
                         </span>
                         {featuredArticle.category && (
@@ -476,7 +476,7 @@ const BlogPage = () => {
                       to={`/article/${article.slug}`}
                       className="flex gap-6 group"
                     >
-                      <span className="font-editorial italic text-4xl text-sky-100 group-hover:text-sky-200 transition-colors leading-none flex-shrink-0">
+                      <span className="font-editorial italic text-4xl text-sky-100 group-hover:text-sky-200 transition-colors leading-none shrink-0">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <div>
@@ -505,7 +505,7 @@ const BlogPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your email"
-                      className="w-full px-5 py-4 bg-white border border-sky-100 rounded-xl text-sm focus:ring-2 focus:ring-sky-300 outline-none placeholder:text-slate-500"
+                      className="w-full px-5 py-4 bg-white border border-sky-100 rounded-xl text-sm focus:ring-2 focus:ring-sky-300 outline-hidden placeholder:text-slate-500"
                     />
                     <Link
                       to={email ? `/profile-analyzer?email=${encodeURIComponent(email)}` : "/profile-analyzer"}

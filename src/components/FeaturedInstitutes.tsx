@@ -105,7 +105,7 @@ const FeaturedInstitutes = () => {
                   )}
 
                   {/* Rating pill on image */}
-                  <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 bg-card/90 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow">
+                  <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 bg-card/90 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm">
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     <span className="text-xs font-bold text-foreground">{inst.rating}</span>
                     <span className="text-xs text-muted-foreground">({inst.total_reviews})</span>
@@ -119,21 +119,21 @@ const FeaturedInstitutes = () => {
                   </h3>
 
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mb-4">
-                    <MapPin className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                    <MapPin className="w-3.5 h-3.5 text-primary/60 shrink-0" />
                     <span className="line-clamp-1">{inst.city}{inst.state ? `, ${inst.state}` : ""}</span>
                   </div>
 
                   {/* Stats row */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                      <Users className="w-4 h-4 text-primary/70 flex-shrink-0" />
+                      <Users className="w-4 h-4 text-primary/70 shrink-0" />
                       <div>
                         <div className="text-xs font-bold text-foreground">{inst.students_count || 0}+</div>
                         <div className="text-xs text-muted-foreground leading-none">Students</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                      <TrendingUp className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <TrendingUp className="w-4 h-4 text-green-600 shrink-0" />
                       <div>
                         <div className="text-xs font-bold text-foreground">{inst.success_rate}%</div>
                         <div className="text-xs text-muted-foreground leading-none">Success</div>

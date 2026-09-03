@@ -510,15 +510,15 @@ export default function AdminMerittoLogs() {
                 <Field label="Last attempt" value={selected.last_attempt_at ? new Date(selected.last_attempt_at).toLocaleString() : "-"} />
               </div>
               {selected.error && (
-                <div className="p-2 rounded bg-red-50 border border-red-200 text-red-800 text-xs">{selected.error}</div>
+                <div className="p-2 rounded-[0.25rem] bg-red-50 border border-red-200 text-red-800 text-xs">{selected.error}</div>
               )}
               <div>
                 <div className="text-xs font-semibold mb-1">Payload sent</div>
-                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto max-h-40">{JSON.stringify(selected.payload, null, 2)}</pre>
+                <pre className="bg-muted p-2 rounded-[0.25rem] text-xs overflow-x-auto max-h-40">{JSON.stringify(selected.payload, null, 2)}</pre>
               </div>
               <div>
                 <div className="text-xs font-semibold mb-1">Meritto response</div>
-                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto max-h-40">{JSON.stringify(selected.response, null, 2)}</pre>
+                <pre className="bg-muted p-2 rounded-[0.25rem] text-xs overflow-x-auto max-h-40">{JSON.stringify(selected.response, null, 2)}</pre>
               </div>
             </div>
           )}
@@ -641,7 +641,7 @@ export default function AdminMerittoLogs() {
                     ? `${invalid} of ${mapped.length} rows have validation errors (missing name / contact, invalid email, or short mobile). You can still push — invalid rows will be skipped and shown in results.`
                     : `All ${mapped.length} rows passed validation.`}
                 </div>
-                <div className="overflow-x-auto max-h-64 border rounded">
+                <div className="overflow-x-auto max-h-64 border rounded-[0.25rem]">
                   <table className="w-full text-xs">
                     <thead className="bg-muted/40 sticky top-0">
                       <tr>
@@ -671,7 +671,7 @@ export default function AdminMerittoLogs() {
               {bulkBusy && (
                 <div className="rounded-md border p-3 text-xs space-y-1">
                   <div>Pushing… {bulkProgress.done}/{bulkProgress.total}</div>
-                  <div className="h-1.5 bg-muted rounded overflow-hidden">
+                  <div className="h-1.5 bg-muted rounded-[0.25rem] overflow-hidden">
                     <div className="h-full bg-primary transition-all" style={{ width: `${bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }} />
                   </div>
                 </div>
@@ -683,7 +683,7 @@ export default function AdminMerittoLogs() {
                 <ResultChip label="Invalid" value={bulkResults.filter((r) => r.status === "invalid").length} tone="amber" />
                 <ResultChip label="Failed" value={bulkResults.filter((r) => r.status === "failed").length} tone="red" />
               </div>
-              <div className="overflow-x-auto max-h-80 border rounded">
+              <div className="overflow-x-auto max-h-80 border rounded-[0.25rem]">
                 <table className="w-full text-xs">
                   <thead className="bg-muted/40 sticky top-0">
                     <tr>
@@ -703,7 +703,7 @@ export default function AdminMerittoLogs() {
                         <td className="px-2 py-1">{r.mapped.email || "-"}</td>
                         <td className="px-2 py-1">{r.mapped.mobile || "-"}</td>
                         <td className="px-2 py-1">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs border ${
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-[0.25rem] text-xs border ${
                             r.status === "success" ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                             : r.status === "duplicate" ? "bg-sky-100 text-sky-800 border-sky-200"
                             : r.status === "failed" ? "bg-red-100 text-red-800 border-red-200"

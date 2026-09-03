@@ -239,9 +239,9 @@ const SeoLiveAnalytics = ({
                           {p.step ?? "working"}{p.records ? ` · ${nf(p.records)} records` : ""}
                         </Badge>
                       </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded bg-sky-100">
+                      <div className="mt-2 h-2 overflow-hidden rounded-[0.25rem] bg-sky-100">
                         <motion.div
-                          className="h-full rounded bg-sky-500"
+                          className="h-full rounded-[0.25rem] bg-sky-500"
                           initial={{ width: 0 }}
                           animate={p.pct == null
                             ? { width: ["10%", "80%", "35%"] }
@@ -375,9 +375,9 @@ const SeoLiveAnalytics = ({
                             {l.measured ? pctOf(l.coverage) : "—"}
                           </span>
                         </div>
-                        <div className="mt-2 h-1.5 overflow-hidden rounded bg-muted">
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-[0.25rem] bg-muted">
                           <motion.div
-                            className={`h-full rounded ${coverageTone(l.measured ? l.coverage : null)}`}
+                            className={`h-full rounded-[0.25rem] ${coverageTone(l.measured ? l.coverage : null)}`}
                             initial={{ width: 0 }}
                             animate={{ width: `${(l.coverage ?? 0) * 100}%` }}
                             transition={{ duration: 0.9, ease: "easeOut" }}

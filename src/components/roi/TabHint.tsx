@@ -77,7 +77,7 @@ const TabHint: React.FC<Props> = ({
         <motion.div
           animate={{ scale: [1, 1.15, 1], rotate: [0, -8, 0] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-          className={`w-7 h-7 rounded-full ${tones.dot} text-white flex items-center justify-center shadow-sm`}
+          className={`w-7 h-7 rounded-full ${tones.dot} text-white flex items-center justify-center shadow-xs`}
         >
           <MousePointerClick className="w-3.5 h-3.5" />
         </motion.div>

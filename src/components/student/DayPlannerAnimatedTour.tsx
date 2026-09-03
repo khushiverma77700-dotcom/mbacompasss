@@ -130,7 +130,7 @@ const SuggestionsIllustration = () => (
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: i * 0.18, duration: 0.55, ease: "easeOut" }}
-          className="flex items-center gap-3 rounded-xl bg-white border border-gray-100 px-3 py-2 shadow-sm"
+          className="flex items-center gap-3 rounded-xl bg-white border border-gray-100 px-3 py-2 shadow-xs"
         >
           <div className={cn("h-8 w-8 rounded-lg grid place-items-center", {
             "bg-violet-100 text-violet-600": s.tone === "violet",
@@ -267,7 +267,7 @@ const TabsFlowIllustration = () => {
           <motion.div
             layout
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="absolute top-1 bottom-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 shadow"
+            className="absolute top-1 bottom-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 shadow-sm"
             style={{ width: "calc(33.333% - 0.25rem)", left: `calc(${active * 33.333}% + 0.125rem)` }}
           />
         </div>
@@ -443,7 +443,7 @@ export default function DayPlannerAnimatedTour({ open, onClose }: Props) {
 
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-30 p-1.5 rounded-full bg-white/90 hover:bg-white text-gray-500 hover:text-gray-800 shadow ring-1 ring-gray-200"
+            className="absolute top-3 right-3 z-30 p-1.5 rounded-full bg-white/90 hover:bg-white text-gray-500 hover:text-gray-800 shadow-sm ring-1 ring-gray-200"
             aria-label="Close tour"
           >
             <X className="h-4 w-4" />

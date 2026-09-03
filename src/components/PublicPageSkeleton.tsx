@@ -12,8 +12,8 @@ export default function PublicPageSkeleton() {
       aria-live="polite"
     >
       <div className="space-y-3">
-        <div className="h-8 w-2/3 max-w-md rounded bg-muted/40 animate-pulse" />
-        <div className="h-4 w-1/2 max-w-sm rounded bg-muted/30 animate-pulse" />
+        <div className="h-8 w-2/3 max-w-md rounded-[0.25rem] bg-muted/40 animate-pulse" />
+        <div className="h-4 w-1/2 max-w-sm rounded-[0.25rem] bg-muted/30 animate-pulse" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
@@ -24,12 +24,12 @@ export default function PublicPageSkeleton() {
           >
             <div className="h-40 bg-muted/30 animate-pulse" />
             <div className="p-4 space-y-3">
-              <div className="h-5 w-3/4 rounded bg-muted/40 animate-pulse" />
-              <div className="h-4 w-1/2 rounded bg-muted/30 animate-pulse" />
-              <div className="h-4 w-2/3 rounded bg-muted/30 animate-pulse" />
+              <div className="h-5 w-3/4 rounded-[0.25rem] bg-muted/40 animate-pulse" />
+              <div className="h-4 w-1/2 rounded-[0.25rem] bg-muted/30 animate-pulse" />
+              <div className="h-4 w-2/3 rounded-[0.25rem] bg-muted/30 animate-pulse" />
               <div className="flex gap-2 pt-2">
-                <div className="h-8 w-20 rounded bg-muted/30 animate-pulse" />
-                <div className="h-8 w-20 rounded bg-muted/30 animate-pulse" />
+                <div className="h-8 w-20 rounded-[0.25rem] bg-muted/30 animate-pulse" />
+                <div className="h-8 w-20 rounded-[0.25rem] bg-muted/30 animate-pulse" />
               </div>
             </div>
           </div>

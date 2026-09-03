@@ -223,7 +223,7 @@ export default function AdminReseoAuditLog() {
                   <div><span className="text-muted-foreground">Page type:</span> {selected.page_type || "—"}</div>
                 </div>
 
-                {selected.notes && <p className="p-2 rounded bg-muted text-xs">{selected.notes}</p>}
+                {selected.notes && <p className="p-2 rounded-[0.25rem] bg-muted text-xs">{selected.notes}</p>}
 
                 {Object.keys(selected.changes || {}).length > 0 && (
                   <div>

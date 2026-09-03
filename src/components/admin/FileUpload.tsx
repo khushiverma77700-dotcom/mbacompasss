@@ -77,7 +77,7 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
           {uploading ? "Uploading..." : "Upload"}
         </Button>
         {value && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-[0.25rem]">
             <FileText className="w-3 h-3" />
             <span className="max-w-[200px] truncate">{value.split("/").pop()}</span>
             <button onClick={() => onChange("")} className="hover:text-destructive">
@@ -95,7 +95,7 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
         />
       )}
       {value && accept?.includes("image") && (
-        <img src={value} alt="Preview" className="h-20 w-auto rounded border border-border object-cover"  loading="lazy" decoding="async" />
+        <img src={value} alt="Preview" className="h-20 w-auto rounded-[0.25rem] border border-border object-cover"  loading="lazy" decoding="async" />
       )}
     </div>
   );

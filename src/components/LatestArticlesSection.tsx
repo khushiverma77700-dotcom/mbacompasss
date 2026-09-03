@@ -89,8 +89,8 @@ const LatestArticlesSection = () => {
           <div className="space-y-4">
             {rest.map((article, i) => (
               <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
-                <Link to={`/article/${article.slug}`} className="group flex gap-4 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/20">
-                  <div className="w-32 aspect-[16/9] rounded-xl overflow-hidden flex-shrink-0 bg-muted">
+                <Link to={`/article/${article.slug}`} className="group flex gap-4 bg-card rounded-2xl p-4 border border-border shadow-xs hover:shadow-md transition-all duration-300 hover:border-primary/20">
+                  <div className="w-32 aspect-[16/9] rounded-xl overflow-hidden shrink-0 bg-muted">
                     {getImage(article) ? (
                       <img src={cdnImage(getImage(article), { width: 280, quality: 70 })} srcSet={cdnImageSrcSet(getImage(article), { width: 280, quality: 70 })} sizes="128px" alt={article.title} width={128} height={72} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (

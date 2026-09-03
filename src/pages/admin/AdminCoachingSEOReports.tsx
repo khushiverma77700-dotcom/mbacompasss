@@ -479,7 +479,7 @@ const PageReportCard = ({
 
       {report?.status === "error" && (
         <CardContent className="pt-0">
-          <div className="text-xs rounded border border-red-200 bg-red-50/60 text-red-800 p-2 flex items-start gap-2">
+          <div className="text-xs rounded-[0.25rem] border border-red-200 bg-red-50/60 text-red-800 p-2 flex items-start gap-2">
             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             <div><strong>Failed:</strong> {report.error}</div>
           </div>
@@ -492,7 +492,7 @@ const PageReportCard = ({
           {s.seoScore?.breakdown && (
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-center">
               {Object.entries<any>(s.seoScore.breakdown).map(([k, v]) => (
-                <div key={k} className="rounded border bg-muted/30 p-2">
+                <div key={k} className="rounded-[0.25rem] border bg-muted/30 p-2">
                   <div className="text-xs text-muted-foreground capitalize">{k.replace(/([A-Z])/g, " $1")}</div>
                   <div className={`text-lg font-bold ${scoreColor(v)}`}>{v}</div>
                 </div>
@@ -501,7 +501,7 @@ const PageReportCard = ({
           )}
 
           {/* Meta */}
-          <div className="rounded border p-3 bg-muted/20 space-y-2 text-sm">
+          <div className="rounded-[0.25rem] border p-3 bg-muted/20 space-y-2 text-sm">
             <div><span className="text-xs text-muted-foreground">Meta title ({s.meta_title?.length || 0}/60): </span><span className="font-medium">{s.meta_title}</span></div>
             <div><span className="text-xs text-muted-foreground">Meta description ({s.meta_description?.length || 0}/160): </span><span>{s.meta_description}</span></div>
             <div><span className="text-xs text-muted-foreground">H1: </span><span className="font-medium">{s.h1_tag}</span></div>
@@ -638,7 +638,7 @@ const PageReportCard = ({
 
               {s.schemaMarkup?.length > 0 && (
                 <Section title="Schema markup (JSON-LD)">
-                  <pre className="text-xs bg-slate-900 text-slate-100 p-2 rounded overflow-auto max-h-64">
+                  <pre className="text-xs bg-slate-900 text-slate-100 p-2 rounded-[0.25rem] overflow-auto max-h-64">
 {JSON.stringify(s.schemaMarkup, null, 2)}
                   </pre>
                 </Section>
@@ -666,7 +666,7 @@ const Section = ({ title, children, tone }: { title: string; children: React.Rea
     : tone === "emerald" ? "border-emerald-200 bg-emerald-50/40"
     : "border-muted";
   return (
-    <div className={`rounded border ${toneClass} p-3`}>
+    <div className={`rounded-[0.25rem] border ${toneClass} p-3`}>
       <div className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
         {tone === "red" && <AlertCircle className="w-3.5 h-3.5 text-red-600" />}
         {tone === "emerald" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}

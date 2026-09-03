@@ -34,7 +34,7 @@ export const SectionRadarChart: React.FC<{ result: CATResult }> = ({ result }) =
   }));
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-4 text-sm">Section Comparison (Radar)</h3>
       <ResponsiveContainer width="100%" height={280}>
         <RadarChart data={data}>
@@ -58,7 +58,7 @@ export const AttemptBreakdownPie: React.FC<{ result: CATResult }> = ({ result })
   ];
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-4 text-sm">Attempt Breakdown</h3>
       <ResponsiveContainer width="100%" height={280}>
         <PieChart>
@@ -89,7 +89,7 @@ export const SectionScoreBar: React.FC<{ result: CATResult }> = ({ result }) => 
   });
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-4 text-sm">Section-wise Score Breakdown</h3>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={dataWithNeg}>
@@ -114,7 +114,7 @@ export const AccuracyBySection: React.FC<{ result: CATResult }> = ({ result }) =
   }));
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-4 text-sm">Accuracy by Section (%)</h3>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} layout="vertical">
@@ -148,7 +148,7 @@ export const QuestionTypeAnalysis: React.FC<{ result: CATResult }> = ({ result }
   ];
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-4 text-sm">MCQ vs TITA Performance</h3>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data}>
@@ -176,7 +176,7 @@ export const NegativeMarksCard: React.FC<{ result: CATResult }> = ({ result }) =
   const totalNegative = sectionNeg.reduce((sum, s) => sum + s.negMarks, 0);
 
   return (
-    <div className="bg-red-50 border border-red-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-red-50 border border-red-200 rounded-2xl p-5 shadow-xs">
       <h3 className="text-destructive font-bold mb-1 text-sm">Negative Marks Summary</h3>
       <p className="text-3xl font-black text-destructive mb-3">-{totalNegative}</p>
       <div className="space-y-2">
@@ -203,7 +203,7 @@ export const StrengthWeaknessChart: React.FC<{ result: CATResult }> = ({ result 
   });
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-4 text-sm">Strength vs Weakness</h3>
       <div className="space-y-4">
         {data.map((d) => (
@@ -248,7 +248,7 @@ export const ScoreVsPercentileCurve: React.FC<{ currentScore: number }> = ({ cur
   ];
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-4 text-sm">Score vs Percentile Curve</h3>
       <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={curveData}>
@@ -280,7 +280,7 @@ export const ScoreDistributionHistogram: React.FC = () => {
     { range: "160+", students: 85 },
   ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">CAT 2025 Score Distribution</h3>
       <p className="text-xs text-muted-foreground mb-4">Based on 17,555 responses analyzed</p>
       <ResponsiveContainer width="100%" height={280}>
@@ -305,7 +305,7 @@ export const DailySubmissionTrend: React.FC = () => {
     { day: "Dec 28", submissions: 620 }, { day: "Dec 29", submissions: 450 },
   ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Daily Score Check Trend</h3>
       <p className="text-xs text-muted-foreground mb-4">Student submissions over time</p>
       <ResponsiveContainer width="100%" height={280}>
@@ -336,7 +336,7 @@ export const SectionAvgComparison: React.FC<{ result: CATResult }> = ({ result }
     "Top 1% Score": s.section === "VARC" ? 58 : s.section === "DILR" ? 50 : 55,
   }));
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Your Score vs Peers</h3>
       <p className="text-xs text-muted-foreground mb-4">Compare with average and top 1%</p>
       <ResponsiveContainer width="100%" height={280}>
@@ -364,7 +364,7 @@ export const AccuracyDistributionPie: React.FC = () => {
     { name: "<30%", value: 10, color: "#dc2626" },
   ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Accuracy Distribution (All Students)</h3>
       <p className="text-xs text-muted-foreground mb-4">Percentage of students by accuracy range</p>
       <ResponsiveContainer width="100%" height={280}>
@@ -391,7 +391,7 @@ export const DifficultyPerformanceChart: React.FC<{ result: CATResult }> = ({ re
     { difficulty: "Hard", total: hard, correct: Math.round(hard * 0.28), accuracy: 28 },
   ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Difficulty-wise Performance</h3>
       <p className="text-xs text-muted-foreground mb-4">Estimated based on question analysis</p>
       <ResponsiveContainer width="100%" height={280}>
@@ -416,7 +416,7 @@ export const ScoreVsAttemptsScatter: React.FC = () => {
     accuracy: Math.round(20 + Math.random() * 70),
   }));
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Score vs Attempts (All Students)</h3>
       <p className="text-xs text-muted-foreground mb-4">Correlation analysis from 17K+ submissions</p>
       <ResponsiveContainer width="100%" height={280}>
@@ -447,7 +447,7 @@ export const SectionDifficultyHeatmap: React.FC = () => {
     return "bg-red-100 text-destructive";
   };
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Section Difficulty Heatmap</h3>
       <p className="text-xs text-muted-foreground mb-4">Accuracy % by section and difficulty level</p>
       <div className="overflow-x-auto">
@@ -489,7 +489,7 @@ export const PercentilePredictorPanel: React.FC = () => {
     { score: "<40", percentile: "<70", calls: "Tier 2-3 colleges" },
   ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Score → Percentile → College Predictor</h3>
       <p className="text-xs text-muted-foreground mb-4">Estimated based on CAT 2025 trends</p>
       <div className="overflow-x-auto">
@@ -530,7 +530,7 @@ export const MistakeAnalysisChart: React.FC<{ result: CATResult }> = ({ result }
     { type: "Time-based Guesses", count: timeWaste, color: "#6366f1" },
   ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">Mistake Analysis</h3>
       <p className="text-xs text-muted-foreground mb-4">Categorized incorrect answers (estimated)</p>
       <ResponsiveContainer width="100%" height={280}>
@@ -552,7 +552,7 @@ export const TopperComparisonBar: React.FC<{ result: CATResult }> = ({ result })
     { metric: "Attempts", you: result.overall.attempted, topper: 58, average: 48 },
   ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-xs">
       <h3 className="text-foreground font-bold mb-1 text-sm">You vs Topper vs Average</h3>
       <p className="text-xs text-muted-foreground mb-4">How you compare with the best</p>
       <ResponsiveContainer width="100%" height={280}>

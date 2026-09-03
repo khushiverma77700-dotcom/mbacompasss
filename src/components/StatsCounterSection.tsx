@@ -20,7 +20,7 @@ const StatsCounterSection = () => (
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <div className="bg-card rounded-xl p-3 md:p-4 text-center border border-border shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                <div className={`w-9 h-9 md:w-10 md:h-10 mx-auto rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform`}>
+                <div className={`w-9 h-9 md:w-10 md:h-10 mx-auto rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform`}>
                   <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
                 <p className="text-lg md:text-2xl font-extrabold text-foreground mb-0.5 tracking-tight font-heading leading-tight">

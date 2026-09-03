@@ -89,7 +89,7 @@ export default function StudentVocabularyWord() {
       </Link>
 
       {/* Hero card */}
-      <Card className="relative overflow-hidden border-sky-100 bg-white shadow-sm">
+      <Card className="relative overflow-hidden border-sky-100 bg-white shadow-xs">
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-sky-100/70 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-blue-100/50 blur-3xl" />
@@ -136,7 +136,7 @@ export default function StudentVocabularyWord() {
                   <GraduationCap className="h-4 w-4 text-sky-600" />
                   <span className="text-xs font-medium text-slate-600">Appeared in</span>
                   {word.exam_appearances.map((e: string) => (
-                    <Badge key={e} className="border-0 bg-white text-xs text-sky-700 shadow-sm hover:bg-white">{e}</Badge>
+                    <Badge key={e} className="border-0 bg-white text-xs text-sky-700 shadow-xs hover:bg-white">{e}</Badge>
                   ))}
                 </div>
               )}

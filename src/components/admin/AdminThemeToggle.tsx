@@ -41,7 +41,7 @@ const AdminThemeToggle = () => {
       aria-checked={isDark}
       aria-label="Toggle theme"
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="group relative inline-flex h-9 w-[68px] items-center rounded-full border border-border bg-gradient-to-r from-secondary to-muted px-1 shadow-inner transition-all hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="group relative inline-flex h-9 w-[68px] items-center rounded-full border border-border bg-gradient-to-r from-secondary to-muted px-1 shadow-inner transition-all hover:border-primary/40 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2">
         <Sun className={`h-3.5 w-3.5 transition-all ${isDark ? "text-muted-foreground/50" : "text-amber-500"}`} />

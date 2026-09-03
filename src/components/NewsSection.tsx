@@ -138,7 +138,7 @@ const NewsSection = () => {
                   to={`/article/${item.slug}`}
                   className="group flex gap-4 bg-card rounded-xl p-4 card-shadow hover:card-shadow-hover transition-all duration-300 border border-border hover:-translate-y-0.5"
                 >
-                  <div className="w-28 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-28 h-24 rounded-lg overflow-hidden shrink-0">
                     {getImage(item) ? (
                       <img src={cdnImage(getImage(item), { width: 220, quality: 70 })} srcSet={cdnImageSrcSet(getImage(item), { width: 220, quality: 70 })} sizes="112px" alt={item.title} width={112} height={96} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (

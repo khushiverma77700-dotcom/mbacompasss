@@ -111,7 +111,7 @@ const PopularExamsSection = () => {
                     {/* Header row */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-2.5">
-                        <div className={`w-10 h-10 rounded-lg ${accent.iconBg} ${accent.text} flex items-center justify-center flex-shrink-0`}>
+                        <div className={`w-10 h-10 rounded-lg ${accent.iconBg} ${accent.text} flex items-center justify-center shrink-0`}>
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
@@ -120,7 +120,7 @@ const PopularExamsSection = () => {
                           </h3>
                           {exam.conducting_body && (
                             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
-                              <Award className="w-3 h-3 flex-shrink-0" />
+                              <Award className="w-3 h-3 shrink-0" />
                               <span className="truncate">{exam.conducting_body}</span>
                             </p>
                           )}
@@ -128,7 +128,7 @@ const PopularExamsSection = () => {
                       </div>
 
                       {daysLeft !== null && daysLeft >= 0 && (
-                        <div className="text-center flex-shrink-0">
+                        <div className="text-center shrink-0">
                           <div className={`text-xl md:text-2xl font-extrabold ${isUrgent ? "text-destructive" : accent.text} leading-none`}>
                             {daysLeft}
                           </div>
@@ -148,13 +148,13 @@ const PopularExamsSection = () => {
                     <div className="space-y-1.5 mb-3">
                       {exam.exam_date && (
                         <div className="flex items-center gap-2 text-xs">
-                          <Calendar className={`w-3.5 h-3.5 ${accent.text} flex-shrink-0`} />
+                          <Calendar className={`w-3.5 h-3.5 ${accent.text} shrink-0`} />
                           <span className="text-foreground font-medium">{exam.exam_date}</span>
                         </div>
                       )}
                       {exam.registration_deadline && (
                         <div className="flex items-center gap-2 text-xs">
-                          <Clock className={`w-3.5 h-3.5 ${isUrgent ? "text-destructive" : accent.text} flex-shrink-0`} />
+                          <Clock className={`w-3.5 h-3.5 ${isUrgent ? "text-destructive" : accent.text} shrink-0`} />
                           <span className="text-foreground font-medium">Reg. by {exam.registration_deadline}</span>
                         </div>
                       )}

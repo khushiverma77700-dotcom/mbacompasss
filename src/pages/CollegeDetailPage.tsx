@@ -402,7 +402,7 @@ const CollegeDetailPage = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             {/* Identity Row */}
             <div className="flex flex-col md:flex-row items-start md:items-center gap-5 mb-7">
-              <div className="relative flex-shrink-0">
+              <div className="relative shrink-0">
                 <div className="absolute -inset-1.5 bg-gradient-to-br from-amber-300 via-white/60 to-amber-200 rounded-3xl blur-md opacity-70" />
                 {college.logo_url ? (
                   <img src={college.logo_url} alt={college.name} width={96} height={96} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50" loading="eager" decoding="async" />
@@ -471,7 +471,7 @@ const CollegeDetailPage = () => {
                   <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-3 py-2.5 sm:px-3.5 sm:py-3 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all min-w-0">
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                     <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
-                      <Icon className="w-3.5 h-3.5 text-primary-foreground/70 flex-shrink-0" />
+                      <Icon className="w-3.5 h-3.5 text-primary-foreground/70 shrink-0" />
                       <span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70 truncate">{s.label}</span>
                     </div>
                     <div className="font-heading font-extrabold text-primary-foreground text-sm sm:text-base md:text-lg leading-tight truncate" title={s.value}>{s.value}</div>
@@ -528,7 +528,7 @@ const CollegeDetailPage = () => {
               {rankAccreditations.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {rankAccreditations.slice(0, 6).map((a: string) => (
-                    <span key={a} className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-400/95 text-emerald-950 shadow-sm">
+                    <span key={a} className="text-xs font-bold px-2 py-0.5 rounded-[0.25rem] bg-emerald-400/95 text-emerald-950 shadow-xs">
                       ✓ {a}
                     </span>
                   ))}
@@ -547,7 +547,7 @@ const CollegeDetailPage = () => {
       </div>
 
       {/* Sticky Tab Nav — Premium pill style */}
-      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm">
+      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-xl border-b border-border shadow-xs">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
           <div className="flex overflow-x-auto gap-1.5 py-2.5 scrollbar-hide">
@@ -612,7 +612,7 @@ const CollegeDetailPage = () => {
                       <div className="grid sm:grid-cols-2 gap-2.5">
                         {(Array.isArray(highlights) ? highlights : Object.entries(highlights).map(([k, v]) => `${k}: ${v}`)).map((h: string, i: number) => (
                           <div key={i} className="flex items-start gap-2.5 text-sm text-foreground p-2.5 rounded-lg bg-gradient-to-br from-primary/5 to-transparent border border-border/40">
-                            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                             <span>{h}</span>
                           </div>
                         ))}
@@ -635,7 +635,7 @@ const CollegeDetailPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
-                    <div className="text-center flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 self-center sm:self-auto min-w-[120px]">
+                    <div className="text-center shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 self-center sm:self-auto min-w-[120px]">
                       <div className="text-4xl font-heading font-extrabold bg-gradient-to-br from-amber-600 to-amber-500 bg-clip-text text-transparent">{overallRating}</div>
                       <div className="flex items-center gap-0.5 justify-center mt-1">
                         {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />)}
@@ -647,7 +647,7 @@ const CollegeDetailPage = () => {
                         <div key={a.label}>
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-semibold text-foreground truncate pr-2">{a.label}</span>
-                            <span className="text-xs font-extrabold text-foreground flex-shrink-0">{a.score}/5</span>
+                            <span className="text-xs font-extrabold text-foreground shrink-0">{a.score}/5</span>
                           </div>
                           <Progress value={Number(a.score) * 20} className="h-2" />
                         </div>
@@ -715,7 +715,7 @@ const CollegeDetailPage = () => {
                     <h3 className="font-heading font-semibold text-foreground">Admission Steps</h3>
                     {admissionSteps.map((s: any, i: number) => (
                       <div key={i} className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm flex-shrink-0">{i + 1}</div>
+                        <div className="w-10 h-10 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">{i + 1}</div>
                         <div><h4 className="font-semibold text-foreground">{s.title}</h4><p className="text-sm text-muted-foreground">{s.description}</p></div>
                       </div>
                     ))}
@@ -766,7 +766,7 @@ const CollegeDetailPage = () => {
                       <div key={s.sector}>
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-sm text-foreground font-medium truncate pr-2">{s.sector}</span>
-                          <span className="text-sm font-bold text-primary flex-shrink-0">{s.pct}%</span>
+                          <span className="text-sm font-bold text-primary shrink-0">{s.pct}%</span>
                         </div>
                         <Progress value={s.pct} className="h-2.5" />
                       </div>
@@ -863,7 +863,7 @@ const CollegeDetailPage = () => {
                   <div className="grid sm:grid-cols-2 gap-3 mb-6">
                     {rankingsList.map((r: any, i: number) => (
                       <div key={i} className="relative bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10 rounded-xl p-4 flex items-center gap-4 border border-amber-200/40 dark:border-amber-900/30 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-extrabold text-base flex-shrink-0 shadow-lg shadow-amber-500/30">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-extrabold text-base shrink-0 shadow-lg shadow-amber-500/30">
                           {r.rank}
                         </div>
                         <div className="min-w-0">
@@ -899,7 +899,7 @@ const CollegeDetailPage = () => {
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" /> Student Reviews</CardTitle></CardHeader>
                 <CardContent>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6 p-4 bg-secondary/30 rounded-lg">
-                    <div className="text-center self-center sm:self-auto flex-shrink-0">
+                    <div className="text-center self-center sm:self-auto shrink-0">
                       <div className="text-4xl font-heading font-bold text-primary">{overallRating}</div>
                       <div className="flex items-center gap-0.5 justify-center mt-1">
                         {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />)}
@@ -910,7 +910,7 @@ const CollegeDetailPage = () => {
                         <div key={a.label}>
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs text-muted-foreground truncate pr-2">{a.label}</span>
-                            <span className="text-xs font-semibold flex-shrink-0">{a.score}/5</span>
+                            <span className="text-xs font-semibold shrink-0">{a.score}/5</span>
                           </div>
                           <Progress value={Number(a.score) * 20} className="h-2" />
                         </div>
@@ -977,7 +977,7 @@ const CollegeDetailPage = () => {
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                           <h4 className="font-heading font-semibold text-foreground text-base leading-snug break-words">{s.name}</h4>
                           {s.amount && (
-                            <span className="inline-flex max-w-full bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 rounded-md break-words whitespace-normal text-left sm:text-right sm:flex-shrink-0 sm:max-w-[55%] leading-snug">
+                            <span className="inline-flex max-w-full bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 rounded-md break-words whitespace-normal text-left sm:text-right sm:shrink-0 sm:max-w-[55%] leading-snug">
                               {s.amount}
                             </span>
                           )}
@@ -1001,9 +1001,9 @@ const CollegeDetailPage = () => {
                     {facultyList.map((f: any, i: number) => (
                       <div key={i} className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border">
                         {f.photo_url ? (
-                          <img src={f.photo_url} alt={f.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover flex-shrink-0" loading="lazy" decoding="async" />
+                          <img src={f.photo_url} alt={f.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover shrink-0" loading="lazy" decoding="async" />
                         ) : (
-                          <div className="w-12 h-12 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm flex-shrink-0">
+                          <div className="w-12 h-12 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
                             {f.name.split(" ").slice(-1).map((n: string) => n[0]).join("")}
                           </div>
                         )}
@@ -1033,7 +1033,7 @@ const CollegeDetailPage = () => {
                       { label: "Library", value: hostelData.library || "24/7 Access", icon: BookOpen },
                     ].map((item, i) => (
                       <div key={i} className="bg-secondary/50 rounded-lg p-4 flex items-center gap-3">
-                        <item.icon className="w-6 h-6 text-primary flex-shrink-0" />
+                        <item.icon className="w-6 h-6 text-primary shrink-0" />
                         <div><div className="text-xs text-muted-foreground">{item.label}</div><div className="font-semibold text-foreground text-sm">{item.value}</div></div>
                       </div>
                     ))}
@@ -1041,7 +1041,7 @@ const CollegeDetailPage = () => {
                   <h4 className="font-heading font-semibold text-foreground mb-3">Campus Facilities</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {hostelFacilities.map((f: string, i: number) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-foreground"><CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />{f}</div>
+                      <div key={i} className="flex items-center gap-2 text-sm text-foreground"><CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />{f}</div>
                     ))}
                   </div>
                   {getSectionContent("hostel") && (
@@ -1062,7 +1062,7 @@ const CollegeDetailPage = () => {
                       <div key={i} className="border border-border rounded-lg overflow-hidden">
                         <button onClick={() => setQaOpen(qaOpen === i ? null : i)} className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors">
                           <span className="font-medium text-foreground text-sm pr-4">{item.q}</span>
-                          {qaOpen === i ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+                          {qaOpen === i ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
                         </button>
                         <AnimatePresence>
                           {qaOpen === i && (
@@ -1108,7 +1108,7 @@ const CollegeDetailPage = () => {
           <aside className="hidden lg:block min-w-0 w-full self-start">
             <div className="sticky top-32 max-h-[calc(100vh-9rem)] flex flex-col gap-4 z-10">
               {/* Premium Fees + Brochure Card — pinned at top of sticky sidebar */}
-              <Card className="flex-shrink-0 overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
+              <Card className="shrink-0 overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
                 <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
@@ -1185,13 +1185,13 @@ const CollegeDetailPage = () => {
                           <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-xl hover:bg-primary/5 border border-border hover:border-primary/30 transition-all group/sc">
                             <div className="flex items-start gap-2">
                               {sc.ranking && (
-                                <span className="text-xs font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">#{sc.ranking}</span>
+                                <span className="text-xs font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-[0.25rem] shrink-0">#{sc.ranking}</span>
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
                                 <div className="text-xs text-muted-foreground line-clamp-1">{sc.city} · {numericStat(sc.fees)}</div>
                               </div>
-                              <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
+                              <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all shrink-0" />
                             </div>
                           </Link>
                         ))}
@@ -1204,7 +1204,7 @@ const CollegeDetailPage = () => {
                 <Card className="overflow-hidden border-border/60 hover:border-primary/30 transition-colors group">
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <TrendingUp className="w-5 h-5 text-primary" />
                       </div>
                       <div>
@@ -1240,7 +1240,7 @@ const CollegeDetailPage = () => {
                         { icon: Calendar, label: "Established", value: college.established ? String(college.established) : "N/A" },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors">
-                          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
+                          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center shrink-0">
                             <item.icon className="w-4 h-4 text-primary" />
                           </div>
                           <div className="min-w-0">

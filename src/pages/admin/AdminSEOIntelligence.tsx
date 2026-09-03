@@ -141,7 +141,7 @@ const SOURCE_LABEL: Record<string, { text: string; cls: string }> = {
 
 const SourceTag = ({ kind }: { kind: keyof typeof SOURCE_LABEL }) => {
   const l = SOURCE_LABEL[kind] ?? SOURCE_LABEL.unavailable;
-  return <span className={`inline-block rounded border px-1.5 py-0.5 text-xs font-semibold tracking-wide ${l.cls}`}>{l.text}</span>;
+  return <span className={`inline-block rounded-[0.25rem] border px-1.5 py-0.5 text-xs font-semibold tracking-wide ${l.cls}`}>{l.text}</span>;
 };
 
 const num = (v: any) => (v === null || v === undefined ? "—" : Number(v).toLocaleString("en-IN"));
@@ -955,7 +955,7 @@ const AdminSEOIntelligence = () => {
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p>{r.summary}</p>
-                <pre className="overflow-x-auto rounded bg-muted/50 p-3 text-xs">{JSON.stringify(r.payload, null, 2)}</pre>
+                <pre className="overflow-x-auto rounded-[0.25rem] bg-muted/50 p-3 text-xs">{JSON.stringify(r.payload, null, 2)}</pre>
               </CardContent>
             </Card>
           ))}
@@ -977,9 +977,9 @@ const AdminSEOIntelligence = () => {
                     <div>Last sync: {when(s.last_sync_at)}</div>
                     <div>Last tested: {when(s.last_tested_at)}</div>
                   </div>
-                  {s.last_error && <div className="rounded bg-red-50 px-2 py-1 text-xs text-red-700">{s.last_error}</div>}
+                  {s.last_error && <div className="rounded-[0.25rem] bg-red-50 px-2 py-1 text-xs text-red-700">{s.last_error}</div>}
                   {testResults?.[s.source_key] && (
-                    <div className={`rounded px-2 py-1 text-xs ${testResults[s.source_key].ok ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
+                    <div className={`rounded-[0.25rem] px-2 py-1 text-xs ${testResults[s.source_key].ok ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
                       {testResults[s.source_key].detail}
                     </div>
                   )}

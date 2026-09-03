@@ -294,13 +294,13 @@ export default function AdminPageSEOReview() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     <div>
                       <div className="text-muted-foreground mb-1">Current live</div>
-                      <div className="rounded bg-slate-50 p-2 min-h-12 whitespace-pre-wrap break-words">
+                      <div className="rounded-[0.25rem] bg-slate-50 p-2 min-h-12 whitespace-pre-wrap break-words">
                         {formatVal(current) || <span className="text-muted-foreground">(none — hardcoded page default)</span>}
                       </div>
                     </div>
                     <div>
                       <div className="text-muted-foreground mb-1 flex items-center gap-1">Proposed <ArrowRight className="h-3 w-3" /></div>
-                      <div className="rounded bg-sky-50 p-2 min-h-12 whitespace-pre-wrap break-words">
+                      <div className="rounded-[0.25rem] bg-sky-50 p-2 min-h-12 whitespace-pre-wrap break-words">
                         {formatVal(proposed)}
                       </div>
                     </div>

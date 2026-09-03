@@ -416,7 +416,7 @@ export default function CollegeReSeoPanel({ open, onOpenChange, selectedIds = []
               <div><span className="text-muted-foreground">AI calls:</span> <strong>{credits.calls}</strong></div>
             </CardContent></Card>
 
-            <ScrollArea className="h-[320px] rounded border">
+            <ScrollArea className="h-[320px] rounded-[0.25rem] border">
               <div className="divide-y">
                 {items.length === 0 && <div className="p-6 text-sm text-muted-foreground text-center">Loading queue…</div>}
                 {items.map((it) => (

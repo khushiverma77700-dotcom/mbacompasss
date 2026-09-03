@@ -359,7 +359,7 @@ export default function StudentGoals() {
                     <div className="font-medium text-sm mb-2">Weekly template</div>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-2">
                       {aiPlan.daily_template.map((d: any, i: number) => (
-                        <div key={i} className="p-2 rounded border border-sky-100 bg-sky-50/50">
+                        <div key={i} className="p-2 rounded-[0.25rem] border border-sky-100 bg-sky-50/50">
                           <div className="text-xs font-bold mb-1">{d.day}</div>
                           <div className="space-y-1">
                             {(d.tasks || []).map((t: any, j: number) => (

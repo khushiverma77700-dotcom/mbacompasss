@@ -698,14 +698,14 @@ export default function AdminMockBundles() {
                               const next = [...editingItems];
                               [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
                               setEditingItems(next);
-                            }} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
+                            }} className="p-1 rounded-[0.25rem] hover:bg-muted disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
                             <button type="button" disabled={idx === editingItems.length - 1} onClick={() => {
                               const next = [...editingItems];
                               [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
                               setEditingItems(next);
-                            }} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
+                            }} className="p-1 rounded-[0.25rem] hover:bg-muted disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
                             <button type="button" onClick={() => setEditingItems(editingItems.filter((x) => x !== tid))}
-                              className="p-1 rounded hover:bg-rose-50 text-rose-500"><X className="h-3.5 w-3.5" /></button>
+                              className="p-1 rounded-[0.25rem] hover:bg-rose-50 text-rose-500"><X className="h-3.5 w-3.5" /></button>
                           </div>
                         );
                       })}

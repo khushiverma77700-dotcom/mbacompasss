@@ -126,7 +126,7 @@ export default function PersonalizedMockGeneratingOverlay({
               transition={{ duration: 0.6, ease: "easeOut" }}
             />
             <motion.div
-              className="absolute inset-y-0 w-1/3 bg-white/40 blur-sm"
+              className="absolute inset-y-0 w-1/3 bg-white/40 blur-xs"
               animate={{ x: ["-100%", "300%"] }}
               transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
             />
@@ -155,18 +155,18 @@ export default function PersonalizedMockGeneratingOverlay({
                 transition={{ duration: 0.4, delay: i * 0.04 }}
                 className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${
                   isActive
-                    ? "border-sky-300 bg-sky-50/70 shadow-sm"
+                    ? "border-sky-300 bg-sky-50/70 shadow-xs"
                     : isDone
                       ? "border-emerald-200 bg-emerald-50/40"
                       : "border-slate-100 bg-white"
                 }`}
               >
                 <div
-                  className={`h-9 w-9 rounded-lg grid place-items-center flex-shrink-0 ${
+                  className={`h-9 w-9 rounded-lg grid place-items-center shrink-0 ${
                     isDone
                       ? "bg-emerald-500 text-white"
                       : isActive
-                        ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow shadow-sky-500/30"
+                        ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm shadow-sky-500/30"
                         : "bg-slate-100 text-slate-500"
                   }`}
                 >
@@ -195,7 +195,7 @@ export default function PersonalizedMockGeneratingOverlay({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="flex-shrink-0 self-center"
+                      className="shrink-0 self-center"
                     >
                       <Loader2 className="h-4 w-4 animate-spin text-sky-600" />
                     </motion.div>

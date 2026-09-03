@@ -612,7 +612,7 @@ export default function StudentPerformX() {
         <Card className="lg:col-span-2 overflow-hidden border-sky-100">
           <div className="p-5 border-b bg-gradient-to-r from-sky-50/60 to-blue-50/40 dark:from-sky-500/10 dark:to-blue-500/5 flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 grid place-items-center text-white shadow">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 grid place-items-center text-white shadow-sm">
                 <Trophy className="h-4 w-4" />
               </div>
               <div>
@@ -629,7 +629,7 @@ export default function StudentPerformX() {
                 <button key={t.key} onClick={() => setActiveView(t.key)}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
-                    activeView === t.key ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow" : "text-muted-foreground hover:text-foreground"
+                    activeView === t.key ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}>
                   <t.icon className="h-3.5 w-3.5" /> {t.label}
                 </button>
@@ -728,7 +728,7 @@ export default function StudentPerformX() {
             ))}
           </div>
           <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground justify-end">
-            Less <span className="h-2.5 w-2.5 rounded bg-muted/60" /> <span className="h-2.5 w-2.5 rounded bg-sky-200 dark:bg-sky-500/40" /> <span className="h-2.5 w-2.5 rounded bg-sky-400" /> <span className="h-2.5 w-2.5 rounded bg-sky-500" /> <span className="h-2.5 w-2.5 rounded bg-blue-700" /> More
+            Less <span className="h-2.5 w-2.5 rounded-[0.25rem] bg-muted/60" /> <span className="h-2.5 w-2.5 rounded-[0.25rem] bg-sky-200 dark:bg-sky-500/40" /> <span className="h-2.5 w-2.5 rounded-[0.25rem] bg-sky-400" /> <span className="h-2.5 w-2.5 rounded-[0.25rem] bg-sky-500" /> <span className="h-2.5 w-2.5 rounded-[0.25rem] bg-blue-700" /> More
           </div>
         </Card>
 
@@ -845,7 +845,7 @@ export default function StudentPerformX() {
           {challenges.length ? (
             <div className="space-y-2.5">
               {challenges.map((c, i) => (
-                <div key={i} className="p-3 rounded-xl bg-white/70 dark:bg-background/40 border border-violet-200/50 dark:border-violet-500/20 hover:shadow-sm transition-all">
+                <div key={i} className="p-3 rounded-xl bg-white/70 dark:bg-background/40 border border-violet-200/50 dark:border-violet-500/20 hover:shadow-xs transition-all">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 grid place-items-center text-white shrink-0">
                       <c.icon className="h-4 w-4" />
@@ -910,7 +910,7 @@ export default function StudentPerformX() {
                   earned ? "border-transparent shadow-md" : "border-dashed border-border/60 bg-muted/40 opacity-60"
                 )}>
                 {earned && <div className={cn("absolute inset-0 rounded-2xl bg-gradient-to-br opacity-15", b.color)} />}
-                <div className={cn("relative h-11 w-11 mx-auto rounded-xl grid place-items-center mb-2 bg-gradient-to-br text-white shadow", earned ? b.color : "from-slate-300 to-slate-400")}>
+                <div className={cn("relative h-11 w-11 mx-auto rounded-xl grid place-items-center mb-2 bg-gradient-to-br text-white shadow-sm", earned ? b.color : "from-slate-300 to-slate-400")}>
                   {earned ? <Icon className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
                 </div>
                 <div className="relative text-xs font-bold leading-tight">{b.name}</div>
@@ -1064,7 +1064,7 @@ function KpiCard({ icon: Icon, label, value, suffix, tone, hint }: { icon: any; 
     <Card className={cn("p-4 border relative overflow-hidden", tones.border, tones.bg)}>
       <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-gradient-to-br opacity-10 blur-2xl" style={{ background: undefined }} />
       <div className="flex items-center justify-between mb-2">
-        <div className={cn("h-9 w-9 rounded-xl bg-gradient-to-br grid place-items-center text-white shadow", tones.grad)}>
+        <div className={cn("h-9 w-9 rounded-xl bg-gradient-to-br grid place-items-center text-white shadow-sm", tones.grad)}>
           <Icon className="h-4 w-4" />
         </div>
         {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
@@ -1089,7 +1089,7 @@ function LbRowItem({ row }: { row: LbRow }) {
     )}>
       <div className={cn(
         "h-9 w-9 rounded-xl grid place-items-center font-black text-sm shrink-0 bg-gradient-to-br",
-        medal, isTop3 ? "text-white shadow" : "text-sky-700 dark:text-sky-200"
+        medal, isTop3 ? "text-white shadow-sm" : "text-sky-700 dark:text-sky-200"
       )}>
         {isTop3 ? <Crown className="h-4 w-4" /> : row.rank}
       </div>

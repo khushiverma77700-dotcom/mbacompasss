@@ -89,14 +89,14 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
                       {t.photo_url ? (
-                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-white shadow"  loading="lazy" decoding="async" />
+                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-white shadow-sm"  loading="lazy" decoding="async" />
                       ) : (
-                        <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${accent} text-white grid place-items-center font-extrabold text-lg shadow`}>
+                        <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${accent} text-white grid place-items-center font-extrabold text-lg shadow-sm`}>
                           {initial}
                         </div>
                       )}
                       {t.score && (
-                        <span className="absolute -bottom-1 -right-1 text-xs font-extrabold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm whitespace-nowrap">
+                        <span className="absolute -bottom-1 -right-1 text-xs font-extrabold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-xs whitespace-nowrap">
                           {t.score}
                         </span>
                       )}
@@ -175,7 +175,7 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {toppers.map((t: any, i: number) => (
-                  <div key={i} className="group relative rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/60 via-white to-white p-4 shadow-sm hover:shadow-lg hover:border-amber-200 hover:-translate-y-0.5 transition-all overflow-hidden">
+                  <div key={i} className="group relative rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/60 via-white to-white p-4 shadow-xs hover:shadow-lg hover:border-amber-200 hover:-translate-y-0.5 transition-all overflow-hidden">
                     <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-100/40 blur-2xl" />
                     <div className="relative flex items-start gap-3">
                       {t.photo_url ? (

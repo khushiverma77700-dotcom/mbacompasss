@@ -175,7 +175,7 @@ const AdminFilterBar = ({
               <button
                 type="button"
                 onClick={c.onClear}
-                className="ml-0.5 rounded hover:bg-muted-foreground/15 p-0.5"
+                className="ml-0.5 rounded-[0.25rem] hover:bg-muted-foreground/15 p-0.5"
                 aria-label={`Remove ${c.label}`}
               >
                 <X className="w-3 h-3" />

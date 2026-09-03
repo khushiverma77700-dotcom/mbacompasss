@@ -415,7 +415,7 @@ function DetailInner() {
                 <div className="mt-5 flex flex-wrap gap-2">
                   <span className="text-xs font-semibold text-gray-600 self-center mr-1">Exams Covered:</span>
                   {Object.entries(mockAgg.byExam).map(([exam, n]) => ({ exam, d: examDisplay(exam, n) })).sort((a,b)=>b.d.value-a.d.value).map(({ exam, d }) => (
-                    <span key={exam} className="inline-flex items-center gap-1 text-xs bg-white border border-sky-200 text-sky-700 rounded-full px-3 py-1 shadow-sm">
+                    <span key={exam} className="inline-flex items-center gap-1 text-xs bg-white border border-sky-200 text-sky-700 rounded-full px-3 py-1 shadow-xs">
                       <Flame className="h-3 w-3 text-sky-500" /> {exam} <span className="font-bold">{d.label}</span>
                     </span>
                   ))}
@@ -635,7 +635,7 @@ function DetailInner() {
               {included.length > 0 && (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {included.map(([label]) => (
-                    <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-emerald-50/60 border-emerald-200 text-gray-900 shadow-sm">
+                    <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-emerald-50/60 border-emerald-200 text-gray-900 shadow-xs">
                       <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-emerald-500 text-white">
                         <CheckCircle2 className="h-4 w-4" />
                       </span>
@@ -768,7 +768,7 @@ function DetailInner() {
           ].map((s, i) => (
             <Card key={i} className="p-5 border-sky-100 relative overflow-hidden">
               <div className="absolute top-2 right-3 text-4xl font-black text-sky-50 select-none">{i + 1}</div>
-              <span className="h-10 w-10 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shadow-sm">
+              <span className="h-10 w-10 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shadow-xs">
                 <s.icon className="h-5 w-5" />
               </span>
               <div className="font-bold text-gray-900 mt-3">{s.title}</div>
@@ -919,7 +919,7 @@ function HeroChip({ icon: Icon, label, value, tint }: { icon: any; label: string
     amber: "from-amber-50 to-orange-50 border-amber-200 text-amber-700",
   };
   return (
-    <div className={`rounded-xl border bg-gradient-to-br ${map[tint]} p-3 shadow-sm`}>
+    <div className={`rounded-xl border bg-gradient-to-br ${map[tint]} p-3 shadow-xs`}>
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4" />
         <span className="text-xs uppercase tracking-wide font-semibold">{label}</span>
@@ -931,7 +931,7 @@ function HeroChip({ icon: Icon, label, value, tint }: { icon: any; label: string
 
 function StatCard({ icon: Icon, value, label }: { icon: any; value: any; label: string }) {
   return (
-    <div className="rounded-2xl bg-white border border-sky-100 shadow-sm p-4 hover:shadow-md transition">
+    <div className="rounded-2xl bg-white border border-sky-100 shadow-xs p-4 hover:shadow-md transition">
       <div className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center mb-2">
         <Icon className="h-5 w-5" />
       </div>

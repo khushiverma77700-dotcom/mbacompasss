@@ -124,7 +124,7 @@ export default function ReSeoProgressDialog({ open, onOpenChange, runId, onCompl
           </div>
           <Progress value={totals.pct} />
 
-          <ScrollArea className="h-[420px] rounded border">
+          <ScrollArea className="h-[420px] rounded-[0.25rem] border">
             <div className="divide-y">
               {items.length === 0 && (
                 <div className="p-6 text-sm text-muted-foreground text-center">Loading queue…</div>

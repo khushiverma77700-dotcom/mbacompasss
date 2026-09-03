@@ -176,7 +176,7 @@ function WordDialog({ slug, onClose }: { slug: string | null; onClose: () => voi
                   <GraduationCap className="h-3.5 w-3.5 text-sky-600" />
                   <span className="text-xs font-medium text-slate-600">Appeared in</span>
                   {word.exam_appearances.map((e: string) => (
-                    <Badge key={e} className="border-0 bg-white text-xs text-sky-700 shadow-sm hover:bg-white">{e}</Badge>
+                    <Badge key={e} className="border-0 bg-white text-xs text-sky-700 shadow-xs hover:bg-white">{e}</Badge>
                   ))}
                 </div>
               )}

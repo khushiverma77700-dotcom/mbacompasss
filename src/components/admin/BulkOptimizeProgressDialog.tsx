@@ -343,10 +343,10 @@ export const BulkOptimizeProgressDialog = ({
           <DialogTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-primary" />
             Bulk SEO Optimization — Live Control Panel
-            <span className={`ml-2 inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded ${perf.online ? "bg-emerald-500/10 text-emerald-700" : "bg-destructive/10 text-destructive"}`}>
+            <span className={`ml-2 inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-[0.25rem] ${perf.online ? "bg-emerald-500/10 text-emerald-700" : "bg-destructive/10 text-destructive"}`}>
               <Wifi className="w-3 h-3" /> {perf.online ? "ONLINE" : "OFFLINE"}
             </span>
-            <span className="ml-1 inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-700">
+            <span className="ml-1 inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-[0.25rem] bg-blue-500/10 text-blue-700">
               <Activity className="w-3 h-3 animate-pulse" /> LIVE 1Hz
             </span>
           </DialogTitle>

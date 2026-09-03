@@ -20,14 +20,14 @@ export default function ThemeToggle() {
       className={cn(
         "relative inline-flex items-center h-8 w-[60px] rounded-full p-1",
         "border border-border bg-muted/60 hover:bg-muted transition-colors",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60",
+        "focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500/60",
       )}
     >
       {/* Sliding indicator */}
       <span
         aria-hidden
         className={cn(
-          "absolute top-1 left-1 h-6 w-6 rounded-full bg-card shadow-sm border border-border",
+          "absolute top-1 left-1 h-6 w-6 rounded-full bg-card shadow-xs border border-border",
           "transition-transform duration-300 ease-out",
           isDark ? "translate-x-[28px]" : "translate-x-0",
         )}

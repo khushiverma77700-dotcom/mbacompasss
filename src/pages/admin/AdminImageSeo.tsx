@@ -171,7 +171,7 @@ const AdminImageSeo = () => {
                         <img
                           src={a.variants?.webp || a.source_url}
                           alt=""
-                          className="w-12 h-12 object-cover rounded border"
+                          className="w-12 h-12 object-cover rounded-[0.25rem] border"
                           loading="lazy"
                           decoding="async"
                         />

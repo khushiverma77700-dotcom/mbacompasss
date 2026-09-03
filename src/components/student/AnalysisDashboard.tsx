@@ -75,7 +75,7 @@ export default function AnalysisDashboard({ mode }: { mode: Mode }) {
         <div className="relative p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className={`p-3 rounded-xl border bg-white shadow-sm ${meta.border}`}>{meta.icon}</div>
+              <div className={`p-3 rounded-xl border bg-white shadow-xs ${meta.border}`}>{meta.icon}</div>
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wider text-sky-700">{meta.chip}</div>
                 <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 leading-tight">{meta.title}</h1>
@@ -157,7 +157,7 @@ function SectionNav({ active }: { active: Mode }) {
         return (
           <Link key={it.key} to={it.to}
             className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
-              isActive ? palette[it.tone] + " shadow-sm ring-1 ring-offset-1 ring-current/20" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+              isActive ? palette[it.tone] + " shadow-xs ring-1 ring-offset-1 ring-current/20" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
             }`}
           >
             {it.icon} {it.label}
@@ -191,7 +191,7 @@ function HighlightSection({
         <CollapsibleTrigger className="w-full text-left">
           <div className="flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50/60 transition-colors">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`p-2.5 rounded-lg border bg-white shadow-sm ${p.text}`}>{icon}</div>
+              <div className={`p-2.5 rounded-lg border bg-white shadow-xs ${p.text}`}>{icon}</div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-semibold text-slate-900 text-base sm:text-lg truncate">{title}</h2>
@@ -221,7 +221,7 @@ function Kpi({ label, value, icon, accent }: { label: string; value: React.React
     violet: "text-violet-700 bg-violet-50 border-violet-100",
   };
   return (
-    <div className="rounded-xl border bg-white p-3 shadow-sm">
+    <div className="rounded-xl border bg-white p-3 shadow-xs">
       <div className="flex items-center justify-between">
         <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
         <div className={`p-1.5 rounded-md border ${map[accent]}`}>{icon}</div>

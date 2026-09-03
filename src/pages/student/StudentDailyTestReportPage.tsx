@@ -306,7 +306,7 @@ export default function StudentDailyTestReportPage() {
                             const isPick = r?.selected_option_id === o.id;
                             const cls = o.is_correct ? "bg-emerald-50 border-emerald-300" : isPick ? "bg-rose-50 border-rose-300" : "border-gray-100";
                             return (
-                              <div key={o.id} className={`p-2 rounded border text-sm ${cls}`}>
+                              <div key={o.id} className={`p-2 rounded-[0.25rem] border text-sm ${cls}`}>
                                 <span className="font-semibold mr-2">{o.option_label}.</span>
                                 <MathContent html={o.option_html} className="inline text-sm" />
                                 {o.is_correct && <Badge variant="outline" className="ml-2 text-emerald-700 border-emerald-300">Correct</Badge>}
@@ -325,7 +325,7 @@ export default function StudentDailyTestReportPage() {
                       )}
 
                       {q.explanation_html && (
-                        <div className="ml-6 mt-2 p-3 rounded bg-sky-50/60 border border-sky-100 text-sm">
+                        <div className="ml-6 mt-2 p-3 rounded-[0.25rem] bg-sky-50/60 border border-sky-100 text-sm">
                           <div className="font-semibold text-sky-800 mb-1">Solution</div>
                           <MathContent html={q.explanation_html} className="prose prose-sm max-w-none" />
                         </div>
@@ -385,7 +385,7 @@ function Stat({ label, value, tone }: { label: string; value: any; tone?: "ok" |
 function Mini({ label, value, tone }: { label: string; value: any; tone?: "ok" | "bad" | "sky" }) {
   const color = tone === "ok" ? "text-emerald-600" : tone === "bad" ? "text-rose-600" : tone === "sky" ? "text-sky-700" : "text-gray-700";
   return (
-    <div className="bg-gray-50 rounded p-2 text-center">
+    <div className="bg-gray-50 rounded-[0.25rem] p-2 text-center">
       <div className="text-xs text-muted-foreground uppercase tracking-wider">{label}</div>
       <div className={`text-sm font-bold ${color}`}>{value}</div>
     </div>

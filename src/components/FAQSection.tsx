@@ -57,7 +57,7 @@ const FAQSection = () => {
             <p className="text-muted-foreground mb-6 leading-relaxed">{subheading}</p>
             <div className="bg-card rounded-xl border border-border p-5 card-shadow">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <MessageCircle className="w-5 h-5 text-primary" />
                 </div>
                 <div>
@@ -90,7 +90,7 @@ const FAQSection = () => {
                 >
                   <AccordionTrigger className="text-left font-semibold text-foreground hover:text-primary transition-colors text-sm md:text-base py-4">
                     <span className="flex items-center gap-3">
-                      <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                      <span className="shrink-0 w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       {faq.q}

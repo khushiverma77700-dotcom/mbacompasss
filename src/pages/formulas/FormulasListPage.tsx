@@ -50,7 +50,7 @@ export default function FormulasListPage() {
         <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #0ea5e9 1px, transparent 0)", backgroundSize: "24px 24px" }} />
 
         <div className="relative">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 shadow-xs backdrop-blur">
             <Sparkles className="h-3 w-3" /> The Only Formula Book You Need
           </div>
 
@@ -68,7 +68,7 @@ export default function FormulasListPage() {
               { icon: Repeat, label: "Revise", desc: "Quick-recall cards before D-day" },
             ].map((p) => (
               <div key={p.label} className="flex items-center gap-3 rounded-xl border border-sky-100 bg-white/70 px-3 py-2 backdrop-blur">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-xs">
                   <p.icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
@@ -85,7 +85,7 @@ export default function FormulasListPage() {
               placeholder="Search any formula, concept or topic…"
               value={q}
               onChange={(e) => { const p = new URLSearchParams(params); e.target.value ? p.set("q", e.target.value) : p.delete("q"); setParams(p); }}
-              className="h-12 rounded-xl border-sky-200 bg-white/90 pl-10 pr-4 text-sm shadow-sm backdrop-blur focus-visible:ring-sky-400"
+              className="h-12 rounded-xl border-sky-200 bg-white/90 pl-10 pr-4 text-sm shadow-xs backdrop-blur focus-visible:ring-sky-400"
             />
             <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-500 md:inline-flex">
               <Zap className="h-3 w-3" /> {formulas.length}+ formulas
@@ -93,9 +93,9 @@ export default function FormulasListPage() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-1.5">
-            <button onClick={() => { const p = new URLSearchParams(params); p.delete("topic"); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium transition ${topic === "all" ? "bg-sky-600 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-600 hover:border-sky-300"}`}>All topics</button>
+            <button onClick={() => { const p = new URLSearchParams(params); p.delete("topic"); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium transition ${topic === "all" ? "bg-sky-600 text-white shadow-xs" : "border border-slate-200 bg-white text-slate-600 hover:border-sky-300"}`}>All topics</button>
             {topics.filter((t) => !t.parent_slug).map((t) => (
-              <button key={t.slug} onClick={() => { const p = new URLSearchParams(params); p.set("topic", t.slug); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium transition ${topic === t.slug ? "bg-sky-600 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-600 hover:border-sky-300"}`}>{t.name}</button>
+              <button key={t.slug} onClick={() => { const p = new URLSearchParams(params); p.set("topic", t.slug); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium transition ${topic === t.slug ? "bg-sky-600 text-white shadow-xs" : "border border-slate-200 bg-white text-slate-600 hover:border-sky-300"}`}>{t.name}</button>
             ))}
           </div>
         </div>

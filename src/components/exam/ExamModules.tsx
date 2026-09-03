@@ -148,7 +148,7 @@ export const HighlightCards = ({ items }: { items: NonNullable<ExamSections["hig
         return (
           <div
             key={i}
-            className="group flex h-full flex-col gap-2.5 rounded-2xl border border-border bg-card p-4 md:p-5 shadow-sm transition-colors hover:border-primary/40"
+            className="group flex h-full flex-col gap-2.5 rounded-2xl border border-border bg-card p-4 md:p-5 shadow-xs transition-colors hover:border-primary/40"
           >
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

@@ -171,7 +171,7 @@ const AIToolsSection = () => {
               <Link
                 to={tool.path}
                 aria-label={`Open ${tool.title}`}
-                className="group relative block h-full min-w-0 max-w-full rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="group relative block h-full min-w-0 max-w-full rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 style={{
                   boxShadow:
                     "0 1px 0 rgba(255,255,255,0.6) inset, 0 1px 2px rgba(15,23,42,0.04)",
@@ -196,7 +196,7 @@ const AIToolsSection = () => {
                 {/* Tag */}
                 <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                   <span
-                    className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-white shadow-sm"
+                    className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-white shadow-xs"
                     style={{
                       background: `linear-gradient(135deg, rgba(${tool.accent},1), rgba(${tool.accent},0.75))`,
                     }}

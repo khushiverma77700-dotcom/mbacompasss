@@ -138,7 +138,7 @@ const ExamDeadlinesTicker = () => {
                 >
                   <Link
                     to={`/exam/${exam.slug}`}
-                    className={`relative block overflow-hidden rounded-2xl border ${urgency.ring} bg-background shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 group h-full`}
+                    className={`relative block overflow-hidden rounded-2xl border ${urgency.ring} bg-background shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 group h-full`}
                   >
                     {/* top glow */}
                     <div className={`pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b ${urgency.glow} to-transparent`} />
@@ -171,7 +171,7 @@ const ExamDeadlinesTicker = () => {
 
                       {/* date block */}
                       <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/40 p-3 mb-3">
-                        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-background border border-border shadow-sm">
+                        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-background border border-border shadow-xs">
                           <span className="text-xl font-extrabold leading-none text-foreground">{reg.day ?? "–"}</span>
                           <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground mt-0.5">
                             {reg.day ? reg.label : reg.label}

@@ -35,7 +35,7 @@ export default function StudentVocabularyLeaderboard() {
           <CardContent className="pt-4 pb-4">
             <div className="divide-y divide-border">
               {rows.map((r) => (
-                <div key={r.user_id} className={`flex items-center justify-between py-3 ${r.is_self ? "bg-primary/5 -mx-3 px-3 rounded" : ""}`}>
+                <div key={r.user_id} className={`flex items-center justify-between py-3 ${r.is_self ? "bg-primary/5 -mx-3 px-3 rounded-[0.25rem]" : ""}`}>
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-bold text-muted-foreground w-8 text-sm">#{r.rank}</span>
                     <div className="min-w-0">

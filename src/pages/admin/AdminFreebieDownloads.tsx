@@ -250,7 +250,7 @@ const AdminFreebieDownloads = () => {
                       <span className="truncate mr-3">{t.title}</span>
                       <span className="text-muted-foreground shrink-0">{t.count} · {pct.toFixed(0)}%</span>
                     </div>
-                    <div className="h-2 rounded bg-slate-100 overflow-hidden">
+                    <div className="h-2 rounded-[0.25rem] bg-slate-100 overflow-hidden">
                       <div className="h-full bg-sky-500" style={{ width: `${pct}%` }} />
                     </div>
                   </div>

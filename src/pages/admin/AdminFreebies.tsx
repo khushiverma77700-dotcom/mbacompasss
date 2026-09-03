@@ -384,7 +384,7 @@ const AdminFreebies = () => {
                 {uploadingCover && <Loader2 className="h-4 w-4 animate-spin" />}
               </div>
               {form.cover_image_url && (
-                <img src={form.cover_image_url} alt="cover" className="mt-2 h-24 rounded border" />
+                <img src={form.cover_image_url} alt="cover" className="mt-2 h-24 rounded-[0.25rem] border" />
               )}
             </div>
 
@@ -444,13 +444,13 @@ const AdminFreebies = () => {
                     onDragEnd={() => setDragId(null)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => { e.stopPropagation(); onDropOnFeatured(e, idx); }}
-                    className={`relative rounded-lg border bg-white p-3 shadow-sm cursor-move transition ${dragId === f.id ? "opacity-40" : "hover:shadow-md"}`}
+                    className={`relative rounded-lg border bg-white p-3 shadow-xs cursor-move transition ${dragId === f.id ? "opacity-40" : "hover:shadow-md"}`}
                   >
                     <div className="flex items-start gap-2">
                       <GripVertical className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5">#{idx + 1}</span>
+                          <span className="rounded-[0.25rem] bg-amber-100 px-1.5 py-0.5">#{idx + 1}</span>
                           {f.category && <span className="text-slate-500">{f.category}</span>}
                         </div>
                         <div className="mt-1 text-sm font-medium truncate">{f.title}</div>

@@ -77,7 +77,7 @@ const ROIComparisonTable = () => {
 
         <div className="rounded-2xl border border-primary/10 bg-white shadow-[0_10px_40px_-20px_rgba(14,165,233,0.35)] overflow-hidden">
           <div
-            className="max-h-[520px] overflow-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-b-2xl"
+            className="max-h-[520px] overflow-auto focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-b-2xl"
             tabIndex={0}
             role="region"
             aria-label="Fees vs Average CTC comparison table, scrollable"

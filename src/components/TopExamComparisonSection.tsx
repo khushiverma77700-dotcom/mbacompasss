@@ -72,14 +72,14 @@ const TopExamComparisonSection = () => {
         <div className="relative lg:px-12 max-w-6xl mx-auto">
           <button
             onClick={() => scroll("left")}
-            className="absolute left-2 lg:-left-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-sm text-foreground hover:bg-muted transition-colors"
+            className="absolute left-2 lg:-left-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-xs text-foreground hover:bg-muted transition-colors"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="absolute right-2 lg:-right-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-sm text-foreground hover:bg-muted transition-colors"
+            className="absolute right-2 lg:-right-3 top-1/2 -translate-y-1/2 z-10 hidden lg:flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-xs text-foreground hover:bg-muted transition-colors"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-4 h-4" />

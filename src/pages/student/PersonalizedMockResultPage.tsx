@@ -248,7 +248,7 @@ export default function PersonalizedMockResultPage() {
             return (
               <div key={q.id} className="border rounded-lg p-4 bg-white">
                 <div className="flex items-start gap-2 mb-2">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {!isAnswered ? <Circle className="h-5 w-5 text-gray-400" />
                       : isCorrect ? <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                       : <XCircle className="h-5 w-5 text-rose-600" />}
@@ -266,7 +266,7 @@ export default function PersonalizedMockResultPage() {
                       : isPick ? "bg-rose-50 border-rose-300 text-rose-900"
                       : "border-gray-100 text-gray-700";
                     return (
-                      <div key={j} className={`p-2 rounded border text-sm ${cls}`}>
+                      <div key={j} className={`p-2 rounded-[0.25rem] border text-sm ${cls}`}>
                         <div className="flex items-start gap-2">
                           <span className="font-semibold">{String.fromCharCode(65 + j)}.</span>
                           <MathContent html={opt} className="prose prose-sm max-w-none flex-1" />
@@ -278,7 +278,7 @@ export default function PersonalizedMockResultPage() {
                   })}
                 </div>
                 {q.explanation && (
-                  <div className="ml-7 mt-2 p-3 rounded bg-sky-50/60 border border-sky-100 text-sm">
+                  <div className="ml-7 mt-2 p-3 rounded-[0.25rem] bg-sky-50/60 border border-sky-100 text-sm">
                     <span className="font-semibold text-sky-800">Explanation: </span>
                     <MathContent html={q.explanation} className="prose prose-sm max-w-none inline" />
                   </div>

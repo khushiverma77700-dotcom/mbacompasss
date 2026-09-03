@@ -190,7 +190,7 @@ function PlatformCard({
     <div
       className={`rounded-2xl border p-5 ${
         active
-          ? "border-sky-300 bg-sky-50/60 dark:bg-sky-500/10 dark:border-sky-500/30 shadow-sm"
+          ? "border-sky-300 bg-sky-50/60 dark:bg-sky-500/10 dark:border-sky-500/30 shadow-xs"
           : "border-border bg-card"
       }`}
     >

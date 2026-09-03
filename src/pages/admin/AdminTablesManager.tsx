@@ -343,7 +343,7 @@ const AdminTablesManager = () => {
       </header>
 
       {/* Table dropdown */}
-      <div className="bg-card border border-border rounded-xl p-4 md:p-5 shadow-sm">
+      <div className="bg-card border border-border rounded-xl p-4 md:p-5 shadow-xs">
         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
           Select a table to manage
         </label>
@@ -491,7 +491,7 @@ const AdminTablesManager = () => {
       )}
 
       {/* Rows editor */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>
         ) : rows.length === 0 ? (

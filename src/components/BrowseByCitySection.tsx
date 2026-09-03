@@ -220,7 +220,7 @@ const BrowseByCitySection = () => {
                     userInteractedRef.current = true;
                     setTimeout(() => { userInteractedRef.current = false; }, 5000);
                   }}
-                  className={`relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all duration-300 ${
+                  className={`relative shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all duration-300 ${
                     i === activeIndex
                       ? "ring-2 ring-primary scale-110 shadow-lg"
                       : "opacity-60 hover:opacity-90"
@@ -297,7 +297,7 @@ const BrowseByCitySection = () => {
               animate={{ opacity: 1, scale: 1, rotateY: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.45, ease: "easeOut" }}
-              className="relative w-full lg:w-[420px] xl:w-[480px] h-[300px] md:h-[400px] rounded-3xl overflow-hidden flex-shrink-0 group shadow-2xl"
+              className="relative w-full lg:w-[420px] xl:w-[480px] h-[300px] md:h-[400px] rounded-3xl overflow-hidden shrink-0 group shadow-2xl"
               style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
             >
               <img
@@ -394,7 +394,7 @@ const BrowseByCitySection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
-                  className="flex-shrink-0 snap-start"
+                  className="shrink-0 snap-start"
                   onMouseEnter={() => setActiveIndex(i)}
                 >
                   <Link
@@ -449,7 +449,7 @@ const BrowseByCitySection = () => {
           <Link to="/colleges">
             <Button
               variant="outline"
-              className="rounded-full gap-2 font-semibold border-primary/30 text-primary hover:bg-primary/5 hover:scale-105 transition-all px-8 py-3 text-sm shadow-sm hover:shadow-md"
+              className="rounded-full gap-2 font-semibold border-primary/30 text-primary hover:bg-primary/5 hover:scale-105 transition-all px-8 py-3 text-sm shadow-xs hover:shadow-md"
             >
               View All Cities
               <ArrowRight className="w-4 h-4" />

@@ -74,7 +74,7 @@ const ExamPickIllustration = () => {
             }}
             transition={{ delay: i * 0.08, duration: 0.35 }}
             className={cn(
-              "px-3.5 py-2 rounded-xl text-sm font-bold border transition-colors shadow-sm",
+              "px-3.5 py-2 rounded-xl text-sm font-bold border transition-colors shadow-xs",
               active === i
                 ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow-lg shadow-sky-500/40"
                 : "bg-white text-sky-700 border-sky-100"
@@ -170,7 +170,7 @@ const DifficultyIllustration = () => {
               className={cn(
                 "text-xs font-bold py-2 rounded-lg border transition-all",
                 active === i
-                  ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow"
+                  ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow-sm"
                   : "bg-white text-gray-600 border-gray-200"
               )}
             >
@@ -489,7 +489,7 @@ export default function PersonalizedHubGuide({
 
           <button
             onClick={handleClose}
-            className="absolute top-3 right-3 z-30 p-1.5 rounded-full bg-white/90 hover:bg-white text-gray-500 hover:text-gray-800 shadow ring-1 ring-gray-200"
+            className="absolute top-3 right-3 z-30 p-1.5 rounded-full bg-white/90 hover:bg-white text-gray-500 hover:text-gray-800 shadow-sm ring-1 ring-gray-200"
             aria-label="Close tour"
           >
             <X className="h-4 w-4" />

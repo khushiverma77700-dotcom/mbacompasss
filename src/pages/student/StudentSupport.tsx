@@ -347,7 +347,7 @@ export default function StudentSupport() {
       </div>
 
       {/* Advanced stats dashboard */}
-      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/40 to-blue-50/60 p-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/40 to-blue-50/60 p-5 shadow-xs">
         <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-sky-200/30 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-blue-200/30 blur-3xl" />
 
@@ -654,7 +654,7 @@ function TicketThread({
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
               <div
                 className={cn(
-                  "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+                  "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-xs",
                   mine
                     ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white rounded-br-sm"
                     : "bg-sky-50 text-gray-800 border border-sky-100 rounded-bl-sm"

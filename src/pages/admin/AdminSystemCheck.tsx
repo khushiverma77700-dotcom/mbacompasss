@@ -289,7 +289,7 @@ export default function AdminSystemCheck() {
               every day at 7:00 AM IST.
             </p>
           </div>
-          <div className="flex flex-shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Button variant="outline" onClick={() => { loadRuns(); if (activeRunId) loadResults(activeRunId); loadHistory(); }}>
               <RefreshCw className="mr-2 h-4 w-4" /> Refresh
             </Button>
@@ -622,7 +622,7 @@ export default function AdminSystemCheck() {
                               <td key={d} className="px-1 py-2 text-center">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className={`inline-block h-4 w-4 rounded ${cls}`} aria-label={`${fmtDay(d)}: ${st || "no run"}`} />
+                                    <span className={`inline-block h-4 w-4 rounded-[0.25rem] ${cls}`} aria-label={`${fmtDay(d)}: ${st || "no run"}`} />
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     {fmtDay(d)} — {st ? STATUS_META[st].label : "no run"}
@@ -637,10 +637,10 @@ export default function AdminSystemCheck() {
                   </table>
                 )}
                 <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-emerald-500" /> Working</span>
-                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-amber-400" /> Needs attention</span>
-                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-red-500" /> Broken</span>
-                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-muted" /> No run that day</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-[0.25rem] bg-emerald-500" /> Working</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-[0.25rem] bg-amber-400" /> Needs attention</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-[0.25rem] bg-red-500" /> Broken</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-[0.25rem] bg-muted" /> No run that day</span>
                 </div>
               </CardContent>
             </Card>

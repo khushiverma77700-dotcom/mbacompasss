@@ -153,7 +153,7 @@ const CollegeFinderPage = () => {
                     { value: "15+", label: "Parameters", icon: BarChart3 },
                     { value: "5", label: "Comparison Tabs", icon: Layers },
                   ].map((s, i) => (
-                    <div key={i} className="bg-card rounded-xl p-3 border border-border text-center shadow-sm">
+                    <div key={i} className="bg-card rounded-xl p-3 border border-border text-center shadow-xs">
                       <s.icon className="w-4 h-4 text-primary mx-auto mb-1" />
                       <div className="font-black text-foreground text-lg">{s.value}</div>
                       <div className="text-xs text-muted-foreground font-medium">{s.label}</div>
@@ -163,7 +163,7 @@ const CollegeFinderPage = () => {
               </div>
 
               {/* Right: Feature highlights */}
-              <div className="flex-shrink-0 w-full md:w-80 space-y-2.5">
+              <div className="shrink-0 w-full md:w-80 space-y-2.5">
                 {[
                   { icon: Sparkles, title: "AI-Powered Matching", desc: "8-step wizard analyzes your profile for best-fit colleges", color: "from-primary/20 to-violet-500/10" },
                   { icon: Scale, title: "Side-by-Side Compare", desc: "Compare up to 3 colleges across all key metrics", color: "from-emerald-500/20 to-teal-500/10" },
@@ -171,7 +171,7 @@ const CollegeFinderPage = () => {
                   { icon: Shield, title: "Verified Database", desc: "80+ colleges with NIRF rankings & accreditations", color: "from-blue-500/20 to-indigo-500/10" },
                 ].map((f, i) => (
                   <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 * i }}
-                    className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border shadow-sm hover:shadow-md transition-shadow">
+                    className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border shadow-xs hover:shadow-md transition-shadow">
                     <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shrink-0`}>
                       <f.icon className="w-5 h-5 text-primary" />
                     </div>
@@ -495,7 +495,7 @@ const CollegeFinderPage = () => {
                             <div className="space-y-1 max-h-36 overflow-y-auto">
                               {(c.courses || []).map((course, idx) => (
                                 <div key={idx} className="flex items-start gap-1.5 text-xs">
-                                  <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                  <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
                                   <span className="text-muted-foreground">{course}</span>
                                 </div>
                               ))}
@@ -613,7 +613,7 @@ const CollegeFinderPage = () => {
                   <div key={i} className="rounded-xl border border-border overflow-hidden">
                     <button onClick={() => setExpandedFaq(expandedFaq === i ? null : i)} className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/20 transition-colors" aria-expanded={expandedFaq === i}>
                       <h3 className="font-semibold text-foreground text-sm pr-3">{faq.q}</h3>
-                      {expandedFaq === i ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+                      {expandedFaq === i ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
                     </button>
                     {expandedFaq === i && <div className="px-3.5 pb-3.5 -mt-1"><p className="text-xs text-muted-foreground leading-relaxed">{faq.a}</p></div>}
                   </div>

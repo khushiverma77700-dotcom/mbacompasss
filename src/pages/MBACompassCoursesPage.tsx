@@ -273,7 +273,7 @@ function CoursesInner() {
 
 function Pill({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-sky-100 text-xs text-gray-700 shadow-sm">
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-sky-100 text-xs text-gray-700 shadow-xs">
       {icon}{label}
     </div>
   );
@@ -373,7 +373,7 @@ function CourseCard({ course }: { course: Course }) {
         {quickFeatures.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {quickFeatures.map((f, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">
+              <span key={i} className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-[0.25rem]">
                 <f.icon className="h-3 w-3" /> {f.label}
               </span>
             ))}

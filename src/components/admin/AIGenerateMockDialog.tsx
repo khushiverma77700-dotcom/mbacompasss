@@ -774,7 +774,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   </Button>
                 </div>
 
-                <div className="overflow-x-auto rounded border bg-background">
+                <div className="overflow-x-auto rounded-[0.25rem] border bg-background">
                   <table className="w-full text-xs">
                     <thead className="bg-muted/40">
                       <tr className="text-left">
@@ -976,7 +976,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
               {batch.length > 0 && (
                 <div className="space-y-1.5 max-h-44 overflow-y-auto">
                   {batch.map((b, i) => (
-                    <div key={b.uid} className="flex items-center justify-between gap-2 text-xs bg-background border rounded px-2 py-1.5">
+                    <div key={b.uid} className="flex items-center justify-between gap-2 text-xs bg-background border rounded-[0.25rem] px-2 py-1.5">
                       <span className="text-muted-foreground w-5 text-right">{i + 1}.</span>
                       <span className="flex-1 truncate font-medium">{b.label}</span>
                       <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0"
@@ -1005,7 +1005,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 )}
               </div>
               {category === "full_length" && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-[0.25rem] px-2 py-1">
                   Note: batch runs use the standard exam pattern for Full-Length mocks. For a custom section plan, use Generate (single).
                 </p>
               )}

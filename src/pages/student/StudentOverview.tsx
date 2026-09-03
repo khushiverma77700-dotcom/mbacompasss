@@ -39,7 +39,7 @@ const OverviewMainCharts = lazy(() => import("./overview/OverviewMainCharts"));
 // frozen — the user always sees a loading shape, never a blank gap.
 function ChartSkeleton({ height = 260, title = true }: { height?: number; title?: boolean }) {
   return (
-    <div className="rounded-xl border border-sky-100/70 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-sky-100/70 bg-white p-5 shadow-xs">
       {title && (
         <div className="mb-3 space-y-1.5">
           <Skeleton className="h-4 w-40" />
@@ -1110,10 +1110,10 @@ const SectionalPerformanceList = memo(function SectionalPerformanceList({ data }
       {rows.map((s) => (
         <div
           key={s.name}
-          className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center rounded-xl border border-sky-100/80 bg-gradient-to-r from-white to-sky-50/40 dark:border-slate-700/60 dark:from-slate-800/70 dark:to-slate-800/50 px-3 py-3 hover:shadow-sm transition"
+          className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center rounded-xl border border-sky-100/80 bg-gradient-to-r from-white to-sky-50/40 dark:border-slate-700/60 dark:from-slate-800/70 dark:to-slate-800/50 px-3 py-3 hover:shadow-xs transition"
         >
           <div className="md:col-span-4 flex items-center gap-2 min-w-0">
-            <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${toneFor(s.pctOfMax)} text-white grid place-items-center text-xs font-bold shadow-sm`}>
+            <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${toneFor(s.pctOfMax)} text-white grid place-items-center text-xs font-bold shadow-xs`}>
               {String(s.name).split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
             </div>
             <div className="min-w-0">
@@ -1300,7 +1300,7 @@ const StatusLabel = memo(function StatusLabel({ status }: { status: string }) {
 });
 const ToolCard = memo(function ToolCard({ title, desc, href }: any) {
   return (
-    <Link to={href} className="block p-4 rounded-xl border border-sky-100 hover:border-sky-300 hover:shadow-sm transition-all bg-gradient-to-br from-white to-sky-50/30">
+    <Link to={href} className="block p-4 rounded-xl border border-sky-100 hover:border-sky-300 hover:shadow-xs transition-all bg-gradient-to-br from-white to-sky-50/30">
       <div className="font-semibold text-sm">{title}</div>
       <div className="text-xs text-muted-foreground mt-1">{desc}</div>
       <div className="text-xs text-sky-700 mt-2 font-medium">Open tool →</div>

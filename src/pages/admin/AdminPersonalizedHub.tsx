@@ -246,7 +246,7 @@ function AccessManager() {
           </div>
           <div className="space-y-2">
             {students.map((s) => (
-              <div key={s.user_id} className="flex items-center justify-between p-2 border rounded">
+              <div key={s.user_id} className="flex items-center justify-between p-2 border rounded-[0.25rem]">
                 <div className="text-sm">
                   <div className="font-medium">{s.display_name}</div>
                   <div className="text-xs text-muted-foreground">{s.email} · {s.phone}</div>

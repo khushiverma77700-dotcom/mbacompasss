@@ -244,7 +244,7 @@ export default function PersonalizedBulkQueue() {
               {jobPct}% complete · Background worker runs every minute and auto-retries stuck items after 1–2 min, even if you close this tab.
             </div>
 
-            <div className="border rounded max-h-72 overflow-y-auto bg-white">
+            <div className="border rounded-[0.25rem] max-h-72 overflow-y-auto bg-white">
               <table className="w-full text-xs">
                 <thead className="bg-sky-50 sticky top-0">
                   <tr>
@@ -308,7 +308,7 @@ export default function PersonalizedBulkQueue() {
             <Pill label="Est. Time" value={totalEtaMin > 0 ? `~${totalEtaMin} min` : "—"} icon={<Clock className="h-3 w-3" />} />
           </div>
 
-          <div className="border rounded max-h-[600px] overflow-y-auto">
+          <div className="border rounded-[0.25rem] max-h-[600px] overflow-y-auto">
             {loading ? (
               <div className="p-6 text-center text-muted-foreground text-sm">Loading…</div>
             ) : (

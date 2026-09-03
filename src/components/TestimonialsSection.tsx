@@ -98,7 +98,7 @@ const TestimonialsSection = () => {
             {current && (
                 <div
                   key={current.id}
-                  className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-fade-in"
+                  className="bg-card rounded-2xl border border-border shadow-xs overflow-hidden animate-fade-in"
                 >
                   {current.type === "text" && (
                     <div className="p-8 md:p-10">

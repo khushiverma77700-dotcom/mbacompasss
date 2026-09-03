@@ -415,7 +415,7 @@ const InstitutePage = () => {
           {/* Trust strip */}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-2.5">
             {trustItems.map((t, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-xl bg-white/80 backdrop-blur border border-sky-100 px-3.5 py-2.5 shadow-sm">
+              <div key={i} className="flex items-center gap-2 rounded-xl bg-white/80 backdrop-blur border border-sky-100 px-3.5 py-2.5 shadow-xs">
                 <t.icon className="w-4 h-4 text-sky-600 shrink-0" />
                 <span className="text-sm font-semibold text-slate-700">{t.label}</span>
               </div>
@@ -439,7 +439,7 @@ const InstitutePage = () => {
           {/* ToC — always visible on desktop when there's any content */}
           {(activeSections.length > 0 || linkedCourses.length > 0) && (
             <aside className="hidden lg:block">
-              <div id="toc-scroll" className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-1 bg-white border rounded-xl p-3 shadow-sm scroll-smooth">
+              <div id="toc-scroll" className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-1 bg-white border rounded-xl p-3 shadow-xs scroll-smooth">
                 <div className="text-xs font-semibold uppercase text-muted-foreground mb-2 px-2">On this page</div>
                 {activeSections.map((s) => (
                   <a key={s.id} id={`toc-link-${s.id}`} href={`#sec-${s.id}`}
@@ -515,7 +515,7 @@ const InstitutePage = () => {
                         key={m}
                         type="button"
                         onClick={() => setCourseMode(m)}
-                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition ${courseMode === m ? "bg-sky-600 text-white border-sky-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-700"}`}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition ${courseMode === m ? "bg-sky-600 text-white border-sky-600 shadow-xs" : "bg-white text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-700"}`}
                       >
                         {m}
                       </button>
@@ -564,7 +564,7 @@ const InstitutePage = () => {
                       <Link
                         key={c.id}
                         to={`/institute/${institute.slug}/course/${slugify(c.name || "")}`}
-                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden block"
+                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-xs hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden block"
                       >
                         <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
                         <div className="flex items-start gap-3">
@@ -663,7 +663,7 @@ const InstitutePage = () => {
 
             {/* Enquiry */}
             <section id="enquiry" className="scroll-mt-24">
-              <Card className="overflow-hidden border-sky-100 shadow-sm">
+              <Card className="overflow-hidden border-sky-100 shadow-xs">
                 <div className="grid md:grid-cols-[1fr_280px]">
                   <CardContent className="p-6 md:p-8">
                     <div className="text-xs uppercase tracking-wider text-sky-700 font-semibold">Enquire</div>
@@ -726,7 +726,7 @@ const SectionShell = ({
       {subtitle && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>}
       <div className="mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600" />
     </div>
-    <div className="rounded-2xl border bg-white p-5 md:p-6 shadow-sm overflow-x-auto">{children}</div>
+    <div className="rounded-2xl border bg-white p-5 md:p-6 shadow-xs overflow-x-auto">{children}</div>
   </section>
 );
 

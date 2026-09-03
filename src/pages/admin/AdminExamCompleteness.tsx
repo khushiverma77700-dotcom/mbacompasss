@@ -376,7 +376,7 @@ export default function AdminExamCompleteness() {
                       <ul className="space-y-1 text-xs">
                         {exam.gaps.map((g, idx) => (
                           <li key={idx} className="flex gap-2">
-                            <code className="rounded bg-muted px-1.5 py-0.5 font-mono">{g.key}</code>
+                            <code className="rounded-[0.25rem] bg-muted px-1.5 py-0.5 font-mono">{g.key}</code>
                             <span className="text-muted-foreground">{g.detail}</span>
                           </li>
                         ))}

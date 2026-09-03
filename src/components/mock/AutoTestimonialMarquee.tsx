@@ -21,7 +21,7 @@ export function AutoTestimonialMarquee({ items }: { items: T[] }) {
 
         <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused] w-max">
           {loop.map((t, i) => (
-            <Card key={i} className="p-5 w-[320px] shrink-0 border-sky-100 bg-white shadow-sm">
+            <Card key={i} className="p-5 w-[320px] shrink-0 border-sky-100 bg-white shadow-xs">
               <div className="flex gap-0.5 mb-2">
                 {[...Array(5)].map((_, j) => <Star key={j} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
               </div>
