@@ -1,6 +1,6 @@
 @import "tailwindcss" source(none);
 @source "../src";
-@plugin "tailwindcss-animate";
+@import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
 /* v3 darkMode: ["class"] — dark: variants match a .dark ancestor only.
