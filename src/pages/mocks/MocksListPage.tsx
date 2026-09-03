@@ -129,18 +129,14 @@ function useCountdown(endsAt: string | null) {
 
 export default function MocksListPage() {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<Settings | null>(null);
   const pricingRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Single lightweight fetch — no longer pulls the full mock_tests catalog,
-    // since every Buy CTA now routes to /courses.
-    supabase
-      .from("mocks_landing_settings")
-      .select("*")
-      .maybeSingle()
-      .then(({ data }) => { if (data) setSettings(data as any); });
-  }, []);
+  // Single lightweight fetch — no longer pulls the full mock_tests catalog,
+  // since every Buy CTA now routes to /courses. Moved to React Query so the
+  // /mocks route loader can prefetch it server-side (same query key), which
+  // puts the real hero copy into the SSR HTML instead of the skeleton.
+  const { data } = useQuery(mocksLandingSettingsQuery);
+  const settings = (data as Settings | null) ?? null;
 
   useEffect(() => {
     if (settings?.meta_pixel_id) {
