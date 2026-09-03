@@ -1,48 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { institutesQuery } from "@/lib/queries/listingQueries";
 
+// Query definition lives in @/lib/queries/listingQueries so the /coaching route
+// loader can prefetch it server-side under the identical query key.
 export const useInstitutes = (categorySlug?: string) => {
-  return useQuery({
-    queryKey: ["institutes", categorySlug],
-    queryFn: async () => {
-      let query = supabase.from("institutes").select(`
-        id,
-        name,
-        slug,
-        city,
-        state,
-        description,
-        logo_url,
-        banner_url,
-        featured,
-        rating,
-        total_reviews,
-        students_count,
-        success_rate,
-        mode,
-        discount,
-        offer,
-        fees_lakhs,
-        category_id,
-        features,
-        specializations,
-        listing_sort_order,
-        courses(id, name, fees),
-        faculty(id, name),
-        categories:category_id(name, slug)
-      `);
-      if (categorySlug) {
-        // First get category id
-        const { data: cat } = await supabase.from("categories").select("id").eq("slug", categorySlug).maybeSingle();
-        if (cat) query = query.eq("category_id", cat.id);
-      }
-      const { data, error } = await query
-        .order("listing_sort_order", { ascending: true, nullsFirst: false })
-        .order("rating", { ascending: false });
-      if (error) throw error;
-      return (data || []).filter((item) => item.name?.trim() && item.slug?.trim());
-    },
-  });
+  return useQuery(institutesQuery(categorySlug));
 };
 
 export const useInstituteBySlug = (slug?: string) => {
