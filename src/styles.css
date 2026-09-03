@@ -54,6 +54,11 @@
 }
 
 @theme {
+  /* v3 ring compatibility: bare `ring` was 3px wide and blue-500-tinted when
+     no explicit ring color utility was present. */
+  --default-ring-width: 3px;
+  --default-ring-color: rgb(59 130 246 / 0.5);
+
   /* ── UNIFIED TYPE SCALE — every size utility resolves to one of FOUR steps.
      Do NOT reintroduce arbitrary sizes such as text-[13px]. */
   --text-xs: 0.875rem;
