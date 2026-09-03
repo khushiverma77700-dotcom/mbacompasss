@@ -1,5 +1,7 @@
 import { lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@/lib/router-compat";
+import { useQuery } from "@tanstack/react-query";
+import { mocksLandingSettingsQuery } from "@/lib/queries/listingQueries";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
