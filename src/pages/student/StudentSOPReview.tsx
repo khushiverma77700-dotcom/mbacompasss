@@ -140,7 +140,6 @@ export default function StudentSOPReview() {
       }
       if (name.endsWith(".pdf") || file.type === "application/pdf") {
         const pdfjs: any = await import("pdfjs-dist");
-        // @ts-ignore
         const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
         pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
         const buf = await file.arrayBuffer();
