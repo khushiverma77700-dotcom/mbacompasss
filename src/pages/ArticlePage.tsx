@@ -315,11 +315,8 @@ const ArticlePage = () => {
               />
             )}
 
-            {article.excerpt && !answerText && (
-              <div className="bg-gradient-to-r from-primary/[0.06] to-transparent border-l-[3px] border-primary rounded-r-xl p-5 mb-8">
-                <p className="text-foreground/80 font-medium italic text-sm leading-relaxed">{article.excerpt}</p>
-              </div>
-            )}
+            {/* Excerpt already shown in the page header — not repeated here. */}
+
 
 
             <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-xs text-sm sm:text-base leading-relaxed">
