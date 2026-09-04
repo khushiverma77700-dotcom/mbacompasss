@@ -17,13 +17,44 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    // One RPC round-trip using planner row estimates instead of six
-    // exact COUNT(*) scans (colleges alone is 4k+ rows / 30 MB).
-    const fetchStats = async () => {
-      const { data } = await supabase.rpc("admin_table_row_estimates");
-      const map = new Map<string, number>(
-        (data ?? []).map((r: any) => [r.table_name as string, Number(r.row_estimate) || 0])
+    const TABLES = [
+      "institutes",
+      "courses",
+      "articles",
+      "inquiries",
+      "colleges",
+      "newsletter_subscribers",
+    ] as const;
+
+    const exactCounts = async () => {
+      const results = await Promise.all(
+        TABLES.map(async (t) => {
+          const { count } = await supabase.from(t).select("id", { count: "exact", head: true });
+          return [t, count ?? 0] as const;
+        }),
       );
+      return new Map<string, number>(results);
+    };
+
+    // Fast path: planner row estimates in one round-trip. They can be stale or
+    // zero for never-analyzed tables, so fall back to exact counts whenever the
+    // RPC errors or returns anything non-positive.
+    const fetchStats = async () => {
+      let map = new Map<string, number>();
+      const { data, error } = await supabase.rpc("admin_table_row_estimates");
+      if (!error && data) {
+        map = new Map<string, number>(
+          (data ?? []).map((r: any) => [r.table_name as string, Number(r.row_estimate) || 0]),
+        );
+      }
+      const needsExact = TABLES.some((t) => !((map.get(t) ?? 0) > 0));
+      if (needsExact) {
+        try {
+          map = await exactCounts();
+        } catch {
+          /* keep estimates */
+        }
+      }
       setStats({
         institutes: map.get("institutes") ?? 0,
         courses: map.get("courses") ?? 0,
@@ -35,6 +66,7 @@ const AdminDashboard = () => {
     };
     fetchStats();
   }, []);
+
 
   const cards = [
     { label: "Institutes", value: stats.institutes, icon: Building2 },

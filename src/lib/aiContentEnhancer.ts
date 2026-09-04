@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { normalizeContentStructure } from "@/lib/contentStructure";
 // Post-processor for AI-generated HTML.
 //
@@ -271,6 +271,6 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
   out = normalizeContentStructure(out);
 
   // 5. Sanitize to prevent stored XSS — strip <script>, on* handlers, javascript: URLs, etc.
-  return DOMPurify.sanitize(out, { ADD_ATTR: ["target", "rel", "scope", "data-answer", "loading", "decoding"] });
+  return sanitizeHtml(out, { ADD_ATTR: ["target", "rel", "scope", "data-answer", "loading", "decoding"] });
 }
 

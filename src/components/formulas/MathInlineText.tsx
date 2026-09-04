@@ -7,7 +7,7 @@
 import { useMemo } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // One math "atom" — a LaTeX command / unicode operator with brace groups and
 // scripts, OR a sub/superscript on a letter. This keeps larger runs such as
@@ -155,7 +155,7 @@ export function MathInlineText({
 }) {
   const html = useMemo(() => {
     const rendered = renderMathInline(text || "");
-    return DOMPurify.sanitize(rendered, {
+    return sanitizeHtml(rendered, {
       ADD_TAGS: [
         "math", "mrow", "mi", "mo", "mn", "msup", "msub", "msubsup",
         "mfrac", "msqrt", "mroot", "mtext", "annotation", "semantics",

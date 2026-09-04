@@ -10,7 +10,7 @@ import { ArrowLeft, BookmarkCheck, CheckCircle2, RotateCcw, Sparkles, Wand2, Sta
 import { useToast } from "@/hooks/use-toast";
 import { MathExpression } from "@/components/formulas/MathExpression";
 import { MathInlineText } from "@/components/formulas/MathInlineText";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { canonicalUrl } from "@/lib/canonical";
 
 export default function FormulaDetailPage() {
@@ -118,7 +118,7 @@ export default function FormulaDetailPage() {
     }
   };
 
-  const sanitizedAi = useMemo(() => DOMPurify.sanitize(aiText.replace(/\n/g, "<br/>")), [aiText]);
+  const sanitizedAi = useMemo(() => sanitizeHtml(aiText.replace(/\n/g, "<br/>")), [aiText]);
 
   if (loading) return <div className="mx-auto max-w-5xl p-6"><div className="h-64 animate-pulse rounded-2xl bg-slate-100" /></div>;
   if (!formula) return (
