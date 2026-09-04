@@ -338,6 +338,134 @@ export type Database = {
         }
         Relationships: []
       }
+      application_activity: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          metadata: Json
+          student_email: string | null
+          student_name: string | null
+          tracker_id: string | null
+          tracker_name: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          student_email?: string | null
+          student_name?: string | null
+          tracker_id?: string | null
+          tracker_name?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          student_email?: string | null
+          student_name?: string | null
+          tracker_id?: string | null
+          tracker_name?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_activity_tracker_id_fkey"
+            columns: ["tracker_id"]
+            isOneToOne: false
+            referencedRelation: "application_trackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      application_trackers: {
+        Row: {
+          accepted_exams: string[]
+          application_deadline: string | null
+          application_fee: number | null
+          application_open_date: string | null
+          apply_click_count: number
+          apply_url: string | null
+          category: string
+          created_at: string
+          display_order: number
+          id: string
+          inside_info_notes: string | null
+          inside_info_url: string | null
+          is_active: boolean
+          is_archived: boolean
+          location: string | null
+          logo_url: string | null
+          name: string
+          program: string | null
+          program_fee: number | null
+          short_description: string | null
+          slug: string
+          status: string
+          tier: string | null
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          accepted_exams?: string[]
+          application_deadline?: string | null
+          application_fee?: number | null
+          application_open_date?: string | null
+          apply_click_count?: number
+          apply_url?: string | null
+          category?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          inside_info_notes?: string | null
+          inside_info_url?: string | null
+          is_active?: boolean
+          is_archived?: boolean
+          location?: string | null
+          logo_url?: string | null
+          name: string
+          program?: string | null
+          program_fee?: number | null
+          short_description?: string | null
+          slug: string
+          status?: string
+          tier?: string | null
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          accepted_exams?: string[]
+          application_deadline?: string | null
+          application_fee?: number | null
+          application_open_date?: string | null
+          apply_click_count?: number
+          apply_url?: string | null
+          category?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          inside_info_notes?: string | null
+          inside_info_url?: string | null
+          is_active?: boolean
+          is_archived?: boolean
+          location?: string | null
+          logo_url?: string | null
+          name?: string
+          program?: string | null
+          program_fee?: number | null
+          short_description?: string | null
+          slug?: string
+          status?: string
+          tier?: string | null
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author: string | null
@@ -12683,6 +12811,59 @@ export type Database = {
         }
         Relationships: []
       }
+      student_applications: {
+        Row: {
+          created_at: string
+          fee_amount: number | null
+          fee_paid: boolean
+          id: string
+          last_activity_at: string
+          notes: string | null
+          started_at: string | null
+          status: string
+          submitted_at: string | null
+          tracker_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fee_amount?: number | null
+          fee_paid?: boolean
+          id?: string
+          last_activity_at?: string
+          notes?: string | null
+          started_at?: string | null
+          status?: string
+          submitted_at?: string | null
+          tracker_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fee_amount?: number | null
+          fee_paid?: boolean
+          id?: string
+          last_activity_at?: string
+          notes?: string | null
+          started_at?: string | null
+          status?: string
+          submitted_at?: string | null
+          tracker_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_applications_tracker_id_fkey"
+            columns: ["tracker_id"]
+            isOneToOne: false
+            referencedRelation: "application_trackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_badges: {
         Row: {
           badge_description: string | null
@@ -14188,6 +14369,20 @@ export type Database = {
           table_name: string
         }[]
       }
+      application_student_summary: {
+        Args: never
+        Returns: {
+          apply_clicks: number
+          completed: number
+          in_progress: number
+          last_activity: string
+          started: number
+          student_email: string
+          student_name: string
+          user_id: string
+          views: number
+        }[]
+      }
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
       award_quant_xp: {
         Args: { _activity_today?: boolean; _xp: number }
@@ -14583,6 +14778,10 @@ export type Database = {
         Returns: boolean
       }
       increment_meritto_retry: { Args: { p_id: string }; Returns: undefined }
+      increment_tracker_counter: {
+        Args: { _field: string; _tracker_id: string }
+        Returns: undefined
+      }
       is_admin_email: { Args: { _email: string }; Returns: boolean }
       mask_secret: { Args: { _v: string }; Returns: string }
       materialize_recurring_tasks: {

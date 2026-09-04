@@ -46,6 +46,7 @@ import { Route as PublicListYourBusinessRouteImport } from './routes/_public.lis
 import { Route as PublicMbaCompassRouteImport } from './routes/_public.mba-compass'
 import { Route as PublicMocksRouteImport } from './routes/_public.mocks'
 import { Route as PublicMyListingsRouteImport } from './routes/_public.my-listings'
+import { Route as PublicMyMba2027RouteImport } from './routes/_public.my-mba-2027'
 import { Route as PublicPrivacyPolicyRouteImport } from './routes/_public.privacy-policy'
 import { Route as PublicProfileAnalyzerRouteImport } from './routes/_public.profile-analyzer'
 import { Route as PublicResetPasswordRouteImport } from './routes/_public.reset-password'
@@ -74,6 +75,7 @@ import { Route as AdminCoachingOfWeekRouteImport } from './routes/admin.coaching
 import { Route as AdminCoachingRefreshHubRouteImport } from './routes/admin.coaching-refresh-hub'
 import { Route as AdminCoachingResultsRouteImport } from './routes/admin.coaching-results'
 import { Route as AdminCoachingSeoReportsRouteImport } from './routes/admin.coaching-seo-reports'
+import { Route as AdminCollegeApplicationsRouteImport } from './routes/admin.college-applications'
 import { Route as AdminCollegeSectionsRouteImport } from './routes/admin.college-sections'
 import { Route as AdminCollegeTablesRouteImport } from './routes/admin.college-tables'
 import { Route as AdminCollegesRouteImport } from './routes/admin.colleges'
@@ -180,6 +182,7 @@ import { Route as EditTokenRouteImport } from './routes/edit.$token'
 import { Route as ExamsSlugRouteImport } from './routes/exams.$slug'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as StudentAllIndiaRankRouteImport } from './routes/student.all-india-rank'
+import { Route as StudentApplicationsRouteImport } from './routes/student.applications'
 import { Route as StudentAttemptsRouteImport } from './routes/student.attempts'
 import { Route as StudentBuyMocksRouteImport } from './routes/student.buy-mocks'
 import { Route as StudentDailyTestRouteImport } from './routes/student.daily-test'
@@ -487,6 +490,11 @@ const PublicMyListingsRoute = PublicMyListingsRouteImport.update({
   path: '/my-listings',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicMyMba2027Route = PublicMyMba2027RouteImport.update({
+  id: '/my-mba-2027',
+  path: '/my-mba-2027',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicPrivacyPolicyRoute = PublicPrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
@@ -627,6 +635,12 @@ const AdminCoachingSeoReportsRoute = AdminCoachingSeoReportsRouteImport.update({
   path: '/coaching-seo-reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCollegeApplicationsRoute =
+  AdminCollegeApplicationsRouteImport.update({
+    id: '/college-applications',
+    path: '/college-applications',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminCollegeSectionsRoute = AdminCollegeSectionsRouteImport.update({
   id: '/college-sections',
   path: '/college-sections',
@@ -1159,6 +1173,11 @@ const StudentIndexRoute = StudentIndexRouteImport.update({
 const StudentAllIndiaRankRoute = StudentAllIndiaRankRouteImport.update({
   id: '/all-india-rank',
   path: '/all-india-rank',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentApplicationsRoute = StudentApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
   getParentRoute: () => StudentRoute,
 } as any)
 const StudentAttemptsRoute = StudentAttemptsRouteImport.update({
@@ -1833,6 +1852,7 @@ export interface FileRoutesByFullPath {
   '/mba-compass': typeof PublicMbaCompassRouteWithChildren
   '/mocks': typeof PublicMocksRouteWithChildren
   '/my-listings': typeof PublicMyListingsRoute
+  '/my-mba-2027': typeof PublicMyMba2027Route
   '/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/profile-analyzer': typeof PublicProfileAnalyzerRoute
   '/reset-password': typeof PublicResetPasswordRoute
@@ -1860,6 +1880,7 @@ export interface FileRoutesByFullPath {
   '/admin/coaching-refresh-hub': typeof AdminCoachingRefreshHubRoute
   '/admin/coaching-results': typeof AdminCoachingResultsRoute
   '/admin/coaching-seo-reports': typeof AdminCoachingSeoReportsRoute
+  '/admin/college-applications': typeof AdminCollegeApplicationsRoute
   '/admin/college-sections': typeof AdminCollegeSectionsRouteWithChildren
   '/admin/college-tables': typeof AdminCollegeTablesRoute
   '/admin/colleges': typeof AdminCollegesRouteWithChildren
@@ -1964,6 +1985,7 @@ export interface FileRoutesByFullPath {
   '/edit/$token': typeof EditTokenRoute
   '/exams/$slug': typeof ExamsSlugRoute
   '/student/all-india-rank': typeof StudentAllIndiaRankRoute
+  '/student/applications': typeof StudentApplicationsRoute
   '/student/attempts': typeof StudentAttemptsRoute
   '/student/buy-mocks': typeof StudentBuyMocksRoute
   '/student/daily-test': typeof StudentDailyTestRouteWithChildren
@@ -2120,6 +2142,7 @@ export interface FileRoutesByTo {
   '/mba-compass': typeof PublicMbaCompassRouteWithChildren
   '/mocks': typeof PublicMocksRouteWithChildren
   '/my-listings': typeof PublicMyListingsRoute
+  '/my-mba-2027': typeof PublicMyMba2027Route
   '/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/profile-analyzer': typeof PublicProfileAnalyzerRoute
   '/reset-password': typeof PublicResetPasswordRoute
@@ -2147,6 +2170,7 @@ export interface FileRoutesByTo {
   '/admin/coaching-refresh-hub': typeof AdminCoachingRefreshHubRoute
   '/admin/coaching-results': typeof AdminCoachingResultsRoute
   '/admin/coaching-seo-reports': typeof AdminCoachingSeoReportsRoute
+  '/admin/college-applications': typeof AdminCollegeApplicationsRoute
   '/admin/college-sections': typeof AdminCollegeSectionsRouteWithChildren
   '/admin/college-tables': typeof AdminCollegeTablesRoute
   '/admin/colleges': typeof AdminCollegesRouteWithChildren
@@ -2251,6 +2275,7 @@ export interface FileRoutesByTo {
   '/edit/$token': typeof EditTokenRoute
   '/exams/$slug': typeof ExamsSlugRoute
   '/student/all-india-rank': typeof StudentAllIndiaRankRoute
+  '/student/applications': typeof StudentApplicationsRoute
   '/student/attempts': typeof StudentAttemptsRoute
   '/student/buy-mocks': typeof StudentBuyMocksRoute
   '/student/daily-test': typeof StudentDailyTestRouteWithChildren
@@ -2413,6 +2438,7 @@ export interface FileRoutesById {
   '/_public/mba-compass': typeof PublicMbaCompassRouteWithChildren
   '/_public/mocks': typeof PublicMocksRouteWithChildren
   '/_public/my-listings': typeof PublicMyListingsRoute
+  '/_public/my-mba-2027': typeof PublicMyMba2027Route
   '/_public/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/_public/profile-analyzer': typeof PublicProfileAnalyzerRoute
   '/_public/reset-password': typeof PublicResetPasswordRoute
@@ -2440,6 +2466,7 @@ export interface FileRoutesById {
   '/admin/coaching-refresh-hub': typeof AdminCoachingRefreshHubRoute
   '/admin/coaching-results': typeof AdminCoachingResultsRoute
   '/admin/coaching-seo-reports': typeof AdminCoachingSeoReportsRoute
+  '/admin/college-applications': typeof AdminCollegeApplicationsRoute
   '/admin/college-sections': typeof AdminCollegeSectionsRouteWithChildren
   '/admin/college-tables': typeof AdminCollegeTablesRoute
   '/admin/colleges': typeof AdminCollegesRouteWithChildren
@@ -2544,6 +2571,7 @@ export interface FileRoutesById {
   '/edit/$token': typeof EditTokenRoute
   '/exams/$slug': typeof ExamsSlugRoute
   '/student/all-india-rank': typeof StudentAllIndiaRankRoute
+  '/student/applications': typeof StudentApplicationsRoute
   '/student/attempts': typeof StudentAttemptsRoute
   '/student/buy-mocks': typeof StudentBuyMocksRoute
   '/student/daily-test': typeof StudentDailyTestRouteWithChildren
@@ -2707,6 +2735,7 @@ export interface FileRouteTypes {
     | '/mba-compass'
     | '/mocks'
     | '/my-listings'
+    | '/my-mba-2027'
     | '/privacy-policy'
     | '/profile-analyzer'
     | '/reset-password'
@@ -2734,6 +2763,7 @@ export interface FileRouteTypes {
     | '/admin/coaching-refresh-hub'
     | '/admin/coaching-results'
     | '/admin/coaching-seo-reports'
+    | '/admin/college-applications'
     | '/admin/college-sections'
     | '/admin/college-tables'
     | '/admin/colleges'
@@ -2838,6 +2868,7 @@ export interface FileRouteTypes {
     | '/edit/$token'
     | '/exams/$slug'
     | '/student/all-india-rank'
+    | '/student/applications'
     | '/student/attempts'
     | '/student/buy-mocks'
     | '/student/daily-test'
@@ -2994,6 +3025,7 @@ export interface FileRouteTypes {
     | '/mba-compass'
     | '/mocks'
     | '/my-listings'
+    | '/my-mba-2027'
     | '/privacy-policy'
     | '/profile-analyzer'
     | '/reset-password'
@@ -3021,6 +3053,7 @@ export interface FileRouteTypes {
     | '/admin/coaching-refresh-hub'
     | '/admin/coaching-results'
     | '/admin/coaching-seo-reports'
+    | '/admin/college-applications'
     | '/admin/college-sections'
     | '/admin/college-tables'
     | '/admin/colleges'
@@ -3125,6 +3158,7 @@ export interface FileRouteTypes {
     | '/edit/$token'
     | '/exams/$slug'
     | '/student/all-india-rank'
+    | '/student/applications'
     | '/student/attempts'
     | '/student/buy-mocks'
     | '/student/daily-test'
@@ -3286,6 +3320,7 @@ export interface FileRouteTypes {
     | '/_public/mba-compass'
     | '/_public/mocks'
     | '/_public/my-listings'
+    | '/_public/my-mba-2027'
     | '/_public/privacy-policy'
     | '/_public/profile-analyzer'
     | '/_public/reset-password'
@@ -3313,6 +3348,7 @@ export interface FileRouteTypes {
     | '/admin/coaching-refresh-hub'
     | '/admin/coaching-results'
     | '/admin/coaching-seo-reports'
+    | '/admin/college-applications'
     | '/admin/college-sections'
     | '/admin/college-tables'
     | '/admin/colleges'
@@ -3417,6 +3453,7 @@ export interface FileRouteTypes {
     | '/edit/$token'
     | '/exams/$slug'
     | '/student/all-india-rank'
+    | '/student/applications'
     | '/student/attempts'
     | '/student/buy-mocks'
     | '/student/daily-test'
@@ -3820,6 +3857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicMyListingsRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/my-mba-2027': {
+      id: '/_public/my-mba-2027'
+      path: '/my-mba-2027'
+      fullPath: '/my-mba-2027'
+      preLoaderRoute: typeof PublicMyMba2027RouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/privacy-policy': {
       id: '/_public/privacy-policy'
       path: '/privacy-policy'
@@ -4014,6 +4058,13 @@ declare module '@tanstack/react-router' {
       path: '/coaching-seo-reports'
       fullPath: '/admin/coaching-seo-reports'
       preLoaderRoute: typeof AdminCoachingSeoReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/college-applications': {
+      id: '/admin/college-applications'
+      path: '/college-applications'
+      fullPath: '/admin/college-applications'
+      preLoaderRoute: typeof AdminCollegeApplicationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/college-sections': {
@@ -4756,6 +4807,13 @@ declare module '@tanstack/react-router' {
       path: '/all-india-rank'
       fullPath: '/student/all-india-rank'
       preLoaderRoute: typeof StudentAllIndiaRankRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/applications': {
+      id: '/student/applications'
+      path: '/applications'
+      fullPath: '/student/applications'
+      preLoaderRoute: typeof StudentApplicationsRouteImport
       parentRoute: typeof StudentRoute
     }
     '/student/attempts': {
@@ -5778,6 +5836,7 @@ interface PublicRouteChildren {
   PublicMbaCompassRoute: typeof PublicMbaCompassRouteWithChildren
   PublicMocksRoute: typeof PublicMocksRouteWithChildren
   PublicMyListingsRoute: typeof PublicMyListingsRoute
+  PublicMyMba2027Route: typeof PublicMyMba2027Route
   PublicPrivacyPolicyRoute: typeof PublicPrivacyPolicyRoute
   PublicProfileAnalyzerRoute: typeof PublicProfileAnalyzerRoute
   PublicResetPasswordRoute: typeof PublicResetPasswordRoute
@@ -5823,6 +5882,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicMbaCompassRoute: PublicMbaCompassRouteWithChildren,
   PublicMocksRoute: PublicMocksRouteWithChildren,
   PublicMyListingsRoute: PublicMyListingsRoute,
+  PublicMyMba2027Route: PublicMyMba2027Route,
   PublicPrivacyPolicyRoute: PublicPrivacyPolicyRoute,
   PublicProfileAnalyzerRoute: PublicProfileAnalyzerRoute,
   PublicResetPasswordRoute: PublicResetPasswordRoute,
@@ -5972,6 +6032,7 @@ interface AdminRouteChildren {
   AdminCoachingRefreshHubRoute: typeof AdminCoachingRefreshHubRoute
   AdminCoachingResultsRoute: typeof AdminCoachingResultsRoute
   AdminCoachingSeoReportsRoute: typeof AdminCoachingSeoReportsRoute
+  AdminCollegeApplicationsRoute: typeof AdminCollegeApplicationsRoute
   AdminCollegeSectionsRoute: typeof AdminCollegeSectionsRouteWithChildren
   AdminCollegeTablesRoute: typeof AdminCollegeTablesRoute
   AdminCollegesRoute: typeof AdminCollegesRouteWithChildren
@@ -6074,6 +6135,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCoachingRefreshHubRoute: AdminCoachingRefreshHubRoute,
   AdminCoachingResultsRoute: AdminCoachingResultsRoute,
   AdminCoachingSeoReportsRoute: AdminCoachingSeoReportsRoute,
+  AdminCollegeApplicationsRoute: AdminCollegeApplicationsRoute,
   AdminCollegeSectionsRoute: AdminCollegeSectionsRouteWithChildren,
   AdminCollegeTablesRoute: AdminCollegeTablesRoute,
   AdminCollegesRoute: AdminCollegesRouteWithChildren,
@@ -6438,6 +6500,7 @@ const StudentVocabularyRouteWithChildren =
 
 interface StudentRouteChildren {
   StudentAllIndiaRankRoute: typeof StudentAllIndiaRankRoute
+  StudentApplicationsRoute: typeof StudentApplicationsRoute
   StudentAttemptsRoute: typeof StudentAttemptsRoute
   StudentBuyMocksRoute: typeof StudentBuyMocksRoute
   StudentDailyTestRoute: typeof StudentDailyTestRouteWithChildren
@@ -6469,6 +6532,7 @@ interface StudentRouteChildren {
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentAllIndiaRankRoute: StudentAllIndiaRankRoute,
+  StudentApplicationsRoute: StudentApplicationsRoute,
   StudentAttemptsRoute: StudentAttemptsRoute,
   StudentBuyMocksRoute: StudentBuyMocksRoute,
   StudentDailyTestRoute: StudentDailyTestRouteWithChildren,
