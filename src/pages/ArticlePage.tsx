@@ -208,145 +208,87 @@ const ArticlePage = () => {
       <SEOHead {...resolvedSeo} ogType="article" />
       <ReadingProgress />
 
-      {/* Mobile hero — stacked, no text-over-banner */}
-      <div className="md:hidden bg-card border-b border-border">
-        <div className="px-4 pt-5 pb-4">
-          <span className="inline-flex items-center gap-1.5 mb-3 bg-primary/10 text-primary text-xs font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-            {article.category}
-          </span>
-          <h1 className="font-heading text-2xl font-extrabold text-foreground leading-[1.15] tracking-[-0.02em]">
-            {(article as any).h1_tag || article.title}
-          </h1>
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
-            {article.author && (
-              <span className="flex items-center gap-1.5 font-semibold text-foreground/80">
-                <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-3 h-3 text-primary" />
-                </span>
-                {article.author}
-              </span>
+      {/* Editorial header — one container for mobile and desktop so the
+          banner, title, meta and article body all share the same left edge. */}
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 pt-6 pb-8 md:pt-10 md:pb-12">
+          <SiteBreadcrumbs
+            items={[
+              { name: "Blog", url: "/blog" },
+              { name: article.title, url: `/article/${article.slug}` },
+            ]}
+            className="mb-5 md:mb-6"
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="max-w-4xl"
+          >
+            <span className="inline-flex items-center gap-1.5 mb-4 bg-primary/10 text-primary text-xs font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              {article.category}
+            </span>
+
+            <h1 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground leading-[1.12] tracking-[-0.02em]">
+              {(() => {
+                const text = (article as any).h1_tag || article.title || "";
+                const parts = text.trim().split(/\s+/);
+                if (parts.length < 3) return text;
+                const tail = parts.slice(-2).join(" ");
+                const head = parts.slice(0, -2).join(" ");
+                return <>{head} <span className="font-editorial italic font-normal text-primary">{tail}</span></>;
+              })()}
+            </h1>
+
+            {article.excerpt && (
+              <p className="mt-4 text-muted-foreground leading-relaxed max-w-3xl">
+                {article.excerpt}
+              </p>
             )}
-            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(article.created_at)}</span>
-            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {readTime} read</span>
-          </div>
-        </div>
-        {mobileHeroImage && (
-          <div className="px-4 pb-5">
-            <div className="relative overflow-hidden rounded-2xl bg-muted aspect-[16/9] border border-border">
-              <img
-                src={mobileHeroImage}
-                alt={article.title}
-                className="absolute inset-0 h-full w-full object-cover"
-                loading="eager"
-                {...({ fetchpriority: "high" } as any)}
-              />
+
+            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+              {article.author && (
+                <span className="flex min-w-0 items-center gap-2 font-semibold text-foreground/80">
+                  <span className="w-7 h-7 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-primary" />
+                  </span>
+                  <span className="truncate">{article.author}</span>
+                </span>
+              )}
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatDate(article.created_at)}</span>
+              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {readTime} read</span>
+              <button
+                onClick={handleShare}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-semibold text-foreground/70 transition-colors hover:bg-muted"
+              >
+                <Share2 className="w-3.5 h-3.5" /> Share
+              </button>
             </div>
-          </div>
-        )}
-      </div>
+          </motion.div>
 
-      {/* Cinematic Hero (desktop) */}
-      <div className="relative hidden overflow-hidden aspect-[16/9] max-h-[620px] min-h-[340px] md:min-h-[420px] md:flex items-end bg-[hsl(210,45%,12%)]">
-
-        {/* Background */}
-        <div className="absolute inset-0">
-          {heroImage ? (
-            <>
-              {/* Blurred fill so no letterbox bars, while the real image stays fully visible */}
-              <img
-                src={heroImage}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full object-cover scale-110 blur-2xl opacity-60 pointer-events-none"
-                loading="eager"
-              />
+          {heroImage && (
+            <div className="mt-6 md:mt-8 max-w-4xl overflow-hidden rounded-2xl border border-border bg-muted">
               <picture>
-                {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+                {mobileHeroImage && mobileHeroImage !== heroImage && (
+                  <source media="(max-width: 767px)" srcSet={mobileHeroImage} />
+                )}
                 <img
                   src={heroImage}
                   alt={article.title}
-                  className="absolute inset-0 h-full w-full object-contain"
+                  className="block w-full h-auto"
                   loading="eager"
-                  {...({fetchpriority:"high"} as any)}
+                  {...({ fetchpriority: "high" } as any)}
                 />
               </picture>
-            </>
-          ) : (
-
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
-          )}
-          {!heroImage && (
-            <>
-              <div className="absolute inset-0 pointer-events-none" style={{
-                background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
-              }} />
-              <div className="absolute top-12 right-[12%] hidden w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none sm:block" />
-              <div className="absolute bottom-16 right-[30%] hidden w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none sm:block" />
-              <div className="absolute top-[30%] left-[8%] hidden w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none sm:block" />
-              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-            </>
+            </div>
           )}
         </div>
-
-        {/* Overlay gradient — only under the text band so the banner stays visible */}
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none" />
-
-
-        {/* Content */}
-        <div className="relative z-10 w-full pt-24 pb-10 md:pt-32 md:pb-14">
-          <div className="container mx-auto px-4">
-
-
-            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-              {/* Category pill */}
-              <span className="inline-flex items-center gap-1.5 mb-4 bg-white/[0.12] backdrop-blur-sm text-white text-xs font-bold uppercase tracking-[0.14em] px-3.5 py-1.5 rounded-full border border-white/[0.1]">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                {article.category}
-              </span>
-
-              {/* Title */}
-              <h1 className="font-heading text-2xl md:text-4xl lg:text-4xl font-extrabold text-white mb-6 max-w-4xl leading-[1.08] tracking-[-0.025em]" style={{ textShadow: '0 2px 18px rgba(0,0,0,0.35)' }}>
-                {(() => {
-                  const text = (article as any).h1_tag || article.title || "";
-                  const parts = text.trim().split(/\s+/);
-                  if (parts.length < 3) return text;
-                  const tail = parts.slice(-2).join(" ");
-                  const head = parts.slice(0, -2).join(" ");
-                  return <>{head} <span className="font-editorial italic font-normal text-amber-100/95">{tail}</span></>;
-                })()}
-              </h1>
-
-              {/* Meta bar - frosted glass */}
-              <div className="inline-flex flex-wrap items-center gap-3 md:gap-4 bg-white/[0.07] backdrop-blur-md rounded-full px-4 py-2.5 border border-white/[0.08]">
-                {article.author && (
-                  <span className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
-                      <User className="w-3 h-3 text-white/80" />
-                    </div>
-                    <span className="font-semibold text-white/90 text-sm">{article.author}</span>
-                  </span>
-                )}
-                {article.author && <span className="w-px h-3.5 bg-white/15 hidden sm:block" />}
-                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Calendar className="w-3 h-3" /> {formatDate(article.created_at)}</span>
-                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Clock className="w-3 h-3" /> {readTime} read</span>
-                <button onClick={handleShare} className="flex items-center gap-1.5 text-white/55 hover:text-white transition-colors text-xs font-medium hover:bg-white/10 px-2 py-1 rounded-full">
-                  <Share2 className="w-3 h-3" /> Share
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
+      </header>
 
       <div className="container mx-auto px-4 py-10">
-        <SiteBreadcrumbs
-          items={[
-            { name: "Blog", url: "/blog" },
-            { name: article.title, url: `/article/${article.slug}` },
-          ]}
-          className="mb-6"
-        />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 min-w-0">
           {/* Main Article */}
           <article className="min-w-0 lg:col-span-2">
@@ -373,11 +315,8 @@ const ArticlePage = () => {
               />
             )}
 
-            {article.excerpt && !answerText && (
-              <div className="bg-gradient-to-r from-primary/[0.06] to-transparent border-l-[3px] border-primary rounded-r-xl p-5 mb-8">
-                <p className="text-foreground/80 font-medium italic text-sm leading-relaxed">{article.excerpt}</p>
-              </div>
-            )}
+            {/* Excerpt already shown in the page header — not repeated here. */}
+
 
 
             <div id="article-content" className="article-content-shell w-full min-w-0 overflow-hidden bg-card rounded-2xl border border-border p-4 sm:p-6 md:p-10 shadow-xs text-sm sm:text-base leading-relaxed">
