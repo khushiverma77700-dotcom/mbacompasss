@@ -85,6 +85,7 @@ const navItems: NavItem[] = [
   // "My Insights" group (Strength / Weak / Performance / Leaderboard) is also rendered separately.
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
   // { to: "/student/goals", label: "CAT Score Engine", icon: Target, feature: "study_planner" }, // hidden
+  { to: "/student/applications", label: "My Applications", icon: FileText },
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles, feature: "ai_tools" },
   { to: "/student/vocabulary", label: "B-School Vocabulary", icon: BookOpen, feature: "vocabulary_hub" },
