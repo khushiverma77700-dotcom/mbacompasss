@@ -269,7 +269,7 @@ const ArticlePage = () => {
           </motion.div>
 
           {heroImage && (
-            <div className="mt-6 md:mt-8 overflow-hidden rounded-2xl border border-border bg-muted">
+            <div className="mt-6 md:mt-8 max-w-4xl overflow-hidden rounded-2xl border border-border bg-muted">
               <picture>
                 {mobileHeroImage && mobileHeroImage !== heroImage && (
                   <source media="(max-width: 767px)" srcSet={mobileHeroImage} />
