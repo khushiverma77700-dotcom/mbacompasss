@@ -113,7 +113,7 @@ export default function StudentApplications() {
     };
     if (status === "fee_paid") patch["fee_paid"] = true;
     if (["submitted", "completed"].includes(status)) patch["submitted_at"] = new Date().toISOString();
-    const { error } = await supabase.from("student_applications").update(patch).eq("id", row.id);
+    const { error } = await supabase.from("student_applications").update(patch as never).eq("id", row.id);
     setSavingId(null);
     if (error) {
       toast({ title: "Could not update status", description: error.message, variant: "destructive" });
