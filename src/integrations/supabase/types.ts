@@ -382,6 +382,33 @@ export type Database = {
           },
         ]
       }
+      application_filter_prefs: {
+        Row: {
+          category: string | null
+          created_at: string
+          deadline_filter: string | null
+          exam: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          deadline_filter?: string | null
+          exam?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          deadline_filter?: string | null
+          exam?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       application_trackers: {
         Row: {
           accepted_exams: string[]
@@ -390,20 +417,39 @@ export type Database = {
           application_open_date: string | null
           apply_click_count: number
           apply_url: string | null
+          average_package: number | null
           category: string
+          college_website: string | null
           created_at: string
+          cutoff_note: string | null
           display_order: number
+          eligibility: string | null
+          highest_package: number | null
           id: string
           inside_info_notes: string | null
           inside_info_url: string | null
           is_active: boolean
           is_archived: boolean
+          is_recommended: boolean
           location: string | null
           logo_url: string | null
+          median_package: number | null
           name: string
           program: string | null
           program_fee: number | null
+          recommendation_label: string | null
+          recommendation_note: string | null
+          recommendation_priority: number
+          selection_process: string | null
+          seo_description: string | null
+          seo_faqs: Json
+          seo_h1: string | null
+          seo_image_alt: string | null
+          seo_intro: string | null
+          seo_keywords: string[]
+          seo_title: string | null
           short_description: string | null
+          short_name: string | null
           slug: string
           status: string
           tier: string | null
@@ -417,20 +463,39 @@ export type Database = {
           application_open_date?: string | null
           apply_click_count?: number
           apply_url?: string | null
+          average_package?: number | null
           category?: string
+          college_website?: string | null
           created_at?: string
+          cutoff_note?: string | null
           display_order?: number
+          eligibility?: string | null
+          highest_package?: number | null
           id?: string
           inside_info_notes?: string | null
           inside_info_url?: string | null
           is_active?: boolean
           is_archived?: boolean
+          is_recommended?: boolean
           location?: string | null
           logo_url?: string | null
+          median_package?: number | null
           name: string
           program?: string | null
           program_fee?: number | null
+          recommendation_label?: string | null
+          recommendation_note?: string | null
+          recommendation_priority?: number
+          selection_process?: string | null
+          seo_description?: string | null
+          seo_faqs?: Json
+          seo_h1?: string | null
+          seo_image_alt?: string | null
+          seo_intro?: string | null
+          seo_keywords?: string[]
+          seo_title?: string | null
           short_description?: string | null
+          short_name?: string | null
           slug: string
           status?: string
           tier?: string | null
@@ -444,20 +509,39 @@ export type Database = {
           application_open_date?: string | null
           apply_click_count?: number
           apply_url?: string | null
+          average_package?: number | null
           category?: string
+          college_website?: string | null
           created_at?: string
+          cutoff_note?: string | null
           display_order?: number
+          eligibility?: string | null
+          highest_package?: number | null
           id?: string
           inside_info_notes?: string | null
           inside_info_url?: string | null
           is_active?: boolean
           is_archived?: boolean
+          is_recommended?: boolean
           location?: string | null
           logo_url?: string | null
+          median_package?: number | null
           name?: string
           program?: string | null
           program_fee?: number | null
+          recommendation_label?: string | null
+          recommendation_note?: string | null
+          recommendation_priority?: number
+          selection_process?: string | null
+          seo_description?: string | null
+          seo_faqs?: Json
+          seo_h1?: string | null
+          seo_image_alt?: string | null
+          seo_intro?: string | null
+          seo_keywords?: string[]
+          seo_title?: string | null
           short_description?: string | null
+          short_name?: string | null
           slug?: string
           status?: string
           tier?: string | null

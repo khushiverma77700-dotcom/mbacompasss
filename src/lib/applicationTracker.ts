@@ -11,9 +11,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type TrackerCategory = "exam" | "iim" | "tier1" | "tier2";
 
+/** Frontend tab key — categories plus the curated Recommended tab. */
+export type CategoryKey = "all" | TrackerCategory | "recommended";
+
+export type TrackerFaq = { question: string; answer: string };
+
 export type TrackerRow = {
   id: string;
   name: string;
+  short_name: string | null;
   slug: string;
   logo_url: string | null;
   category: string;
@@ -26,9 +32,27 @@ export type TrackerRow = {
   program_fee: number | null;
   accepted_exams: string[];
   apply_url: string | null;
+  college_website: string | null;
   inside_info_url: string | null;
   inside_info_notes: string | null;
   short_description: string | null;
+  eligibility: string | null;
+  selection_process: string | null;
+  cutoff_note: string | null;
+  average_package: number | null;
+  highest_package: number | null;
+  median_package: number | null;
+  is_recommended: boolean;
+  recommendation_label: string | null;
+  recommendation_note: string | null;
+  recommendation_priority: number;
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_h1: string | null;
+  seo_intro: string | null;
+  seo_keywords: string[];
+  seo_faqs: TrackerFaq[];
+  seo_image_alt: string | null;
   status: string;
   is_active: boolean;
   is_archived: boolean;
@@ -38,6 +62,7 @@ export type TrackerRow = {
   created_at?: string;
   updated_at?: string;
 };
+
 
 export type StudentApplicationRow = {
   id: string;
