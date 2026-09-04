@@ -170,6 +170,8 @@ const AdminExams = () => {
     });
     setEditRecord(exam);
     setEditId(exam.id); setShowForm(true);
+    void loadExamSections(exam.id);
+
   };
 
   const handleDelete = async (id: string) => {
