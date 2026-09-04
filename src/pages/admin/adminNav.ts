@@ -85,6 +85,12 @@ export const adminNavGroups: AdminNavGroup[] = [
     ],
   },
   {
+    label: "College Applications",
+    items: [
+      { label: "Applications Dashboard", path: "/admin/college-applications", icon: ClipboardList },
+    ],
+  },
+  {
     label: "MBA Newsroom",
     items: [
       { label: "Newsroom Ticker Bar", path: "/admin/mba-newsroom-bar", icon: Newspaper },
