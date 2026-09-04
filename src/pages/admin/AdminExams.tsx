@@ -108,6 +108,14 @@ const AdminExams = () => {
     if (data) setExams(data);
   };
 
+  // The list query omits the heavy `sections` column, but the SEO checklist and
+  // AI SEO writer need it — pull it on demand when an exam is opened for edit.
+  const loadExamSections = async (id: string) => {
+    const { data } = await supabase.from("exams").select("sections").eq("id", id).maybeSingle();
+    if (data) setEditRecord((prev: any) => (prev ? { ...prev, sections: (data as any).sections } : prev));
+  };
+
+
   useEffect(() => { fetchExams(); }, []);
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-") + "-exam";

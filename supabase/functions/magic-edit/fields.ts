@@ -27,7 +27,7 @@ export const CONFIG: Record<EntityType, EntityConfig> = {
     text: [
       "name", "slug", "description", "city", "state", "type", "tier", "college_category",
       "fees", "website", "placement_avg", "placement_highest", "placement_median",
-      "campus_size", "admission_process", "logo_url", "banner_url",
+      "campus_size", "admission_process", "logo_url", "banner_url", "mobile_banner_url",
       "meta_title", "meta_description", "h1_tag", "primary_keyword", "funnel_stage",
     ],
     numeric: ["fees_lakhs"],
