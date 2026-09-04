@@ -1,6 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import { Link } from "@/lib/router-compat";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export const RichHtml = ({ html, className = "" }: { html?: string; className?: 
     <div
       ref={ref}
       className={`prose prose-sm md:prose-base max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary ${className}`}
-      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html || "") }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html || "") }}
     />
   );
 };

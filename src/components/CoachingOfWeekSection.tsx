@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const CoachingOfWeekSection = () => {
   const { user } = useAuth();
@@ -138,7 +138,7 @@ const CoachingOfWeekSection = () => {
                       {/* Description */}
                       {cotw.description && (
                         <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-4"
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cotw.description || "") }} />
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(cotw.description || "") }} />
                       )}
 
                       {/* Stats grid */}

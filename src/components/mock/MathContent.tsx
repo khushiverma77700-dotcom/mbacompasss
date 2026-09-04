@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 interface MathContentProps {
   html: string;
@@ -351,7 +351,7 @@ const renderMath = (input: string): string => {
 const MathContent = ({ html, className }: MathContentProps) => {
   const safeHtml = useMemo(() => {
     const withMath = renderMath(html ?? "");
-    return DOMPurify.sanitize(withMath, {
+    return sanitizeHtml(withMath, {
       ADD_TAGS: [
         // KaTeX MathML
         "math", "mrow", "mi", "mo", "mn", "msup", "msub", "msubsup", "mfrac", "msqrt", "mroot",

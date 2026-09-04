@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -1054,7 +1054,7 @@ export default function IIMWaitlistPage() {
                                 return (
                                   <li key={i} className="flex gap-2">
                                     <ChevronRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                                    <span className="text-foreground/90" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(text) }} />
+                                    <span className="text-foreground/90" dangerouslySetInnerHTML={{ __html: sanitizeHtml(text) }} />
                                   </li>
                                 );
                               })}
