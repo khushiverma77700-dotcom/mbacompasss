@@ -356,7 +356,7 @@ export const formatDate = (value: string | null | undefined): string => {
 /* ------------------------------------------------------------- queries */
 
 export const TRACKER_SELECT =
-  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, view_count, apply_click_count, created_at, updated_at, tier, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt";
+  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt";
 
 /** Public catalogue (RLS already limits this to active, non-archived rows). */
 export const publicTrackersQuery = queryOptions({
@@ -370,10 +370,40 @@ export const publicTrackersQuery = queryOptions({
       .order("display_order", { ascending: true })
       .order("application_deadline", { ascending: true, nullsFirst: false });
     if (error) throw error;
-    return ((data ?? []) as unknown as TrackerRow[]).filter((r) => !!r.name?.trim() && !!r.slug?.trim());
+    return ((data ?? []) as unknown as TrackerRow[])
+      .filter((r) => !!r.name?.trim() && !!r.slug?.trim())
+      .map(normalizeTracker);
   },
   staleTime: 5 * 60 * 1000,
 });
+
+/** Fills in the nullable/JSON columns so components never guard for undefined. */
+export const normalizeTracker = (row: TrackerRow): TrackerRow => ({
+  ...row,
+  accepted_exams: Array.isArray(row.accepted_exams) ? row.accepted_exams : [],
+  seo_keywords: Array.isArray(row.seo_keywords) ? row.seo_keywords : [],
+  seo_faqs: Array.isArray(row.seo_faqs) ? row.seo_faqs : [],
+  is_recommended: !!row.is_recommended,
+  recommendation_priority: row.recommendation_priority ?? 0,
+});
+
+/** Single application, used by the indexable college/exam landing pages. */
+export const trackerBySlugQuery = (slug: string) =>
+  queryOptions({
+    queryKey: ["application-trackers", "slug", slug],
+    queryFn: async (): Promise<TrackerRow | null> => {
+      const { data, error } = await supabase
+        .from("application_trackers")
+        .select(TRACKER_SELECT)
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .eq("is_archived", false)
+        .maybeSingle();
+      if (error) throw error;
+      return data ? normalizeTracker(data as unknown as TrackerRow) : null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
 /* ------------------------------------------------------------ tracking */
 
