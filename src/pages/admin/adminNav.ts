@@ -82,6 +82,8 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Daily Tests", path: "/admin/daily-tests", icon: ClipboardList },
       { label: "Exam Countdowns", path: "/admin/exam-countdowns", icon: CalendarClock },
       { label: "Push Notifications", path: "/admin/student-notifications", icon: Bell },
+      { label: "Browser Notifications", path: "/admin/push-notifications", icon: BellRing },
+
     ],
   },
   {
