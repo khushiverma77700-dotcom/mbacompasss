@@ -297,8 +297,18 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
         </div>
       </header>
 
+      {/* Today's recommended colleges — auto-scrolling rail */}
+      {!isLoading && <RecommendedRail rows={todaysPicks} onApply={(row) => void handleApply(row)} />}
+
+      {/* Browser alerts opt-in (wording and on/off controlled from the admin panel) */}
+      <NotificationOptIn />
+
       {/* Filters */}
-      <section aria-label="Filter MBA applications" className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+      <section
+        aria-label="Filter MBA applications"
+        className="sticky top-16 z-20 space-y-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80"
+      >
+
         <div>
           <p className="pb-2 text-sm font-medium text-slate-500">Application deadline</p>
           <div className="flex flex-wrap gap-2">
