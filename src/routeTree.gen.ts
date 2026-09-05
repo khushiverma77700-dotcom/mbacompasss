@@ -231,8 +231,8 @@ import { Route as PublicReportIdRouteImport } from './routes/_public.report.$id'
 import { Route as AdminCoachingInstitutesIdRouteImport } from './routes/admin.coaching-institutes.$id'
 import { Route as AdminCoachingInstitutesBulkCreateRouteImport } from './routes/admin.coaching-institutes.bulk-create'
 import { Route as AdminCollegeSectionsBulkGenerateRouteImport } from './routes/admin.college-sections.bulk-generate'
-import { Route as AdminCollegesBulkCreateRouteImport } from './routes/admin.colleges.bulk-create'
 import { Route as AdminCollegesGenerateAiRouteImport } from './routes/admin.colleges.generate-ai'
+import { Route as AdminCollegesBulkCreateRouteImport } from './routes/admin.colleges_.bulk-create'
 import { Route as AdminCoursesBulkGenerateRouteImport } from './routes/admin.courses.bulk-generate'
 import { Route as AdminCoursesGenerateAiRouteImport } from './routes/admin.courses.generate-ai'
 import { Route as AdminExamsBulkCreateRouteImport } from './routes/admin.exams.bulk-create'
@@ -1430,15 +1430,15 @@ const AdminCollegeSectionsBulkGenerateRoute =
     path: '/bulk-generate',
     getParentRoute: () => AdminCollegeSectionsRoute,
   } as any)
-const AdminCollegesBulkCreateRoute = AdminCollegesBulkCreateRouteImport.update({
-  id: '/bulk-create',
-  path: '/bulk-create',
-  getParentRoute: () => AdminCollegesRoute,
-} as any)
 const AdminCollegesGenerateAiRoute = AdminCollegesGenerateAiRouteImport.update({
   id: '/generate-ai',
   path: '/generate-ai',
   getParentRoute: () => AdminCollegesRoute,
+} as any)
+const AdminCollegesBulkCreateRoute = AdminCollegesBulkCreateRouteImport.update({
+  id: '/colleges_/bulk-create',
+  path: '/colleges/bulk-create',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminCoursesBulkGenerateRoute =
   AdminCoursesBulkGenerateRouteImport.update({
@@ -2057,8 +2057,8 @@ export interface FileRoutesByFullPath {
   '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
-  '/admin/colleges/bulk-create': typeof AdminCollegesBulkCreateRoute
   '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
+  '/admin/colleges/bulk-create': typeof AdminCollegesBulkCreateRoute
   '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
   '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
@@ -2351,8 +2351,8 @@ export interface FileRoutesByTo {
   '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
-  '/admin/colleges/bulk-create': typeof AdminCollegesBulkCreateRoute
   '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
+  '/admin/colleges/bulk-create': typeof AdminCollegesBulkCreateRoute
   '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
   '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
@@ -2650,8 +2650,8 @@ export interface FileRoutesById {
   '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
-  '/admin/colleges/bulk-create': typeof AdminCollegesBulkCreateRoute
   '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
+  '/admin/colleges_/bulk-create': typeof AdminCollegesBulkCreateRoute
   '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
   '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
@@ -2949,8 +2949,8 @@ export interface FileRouteTypes {
     | '/admin/coaching-institutes/$id'
     | '/admin/coaching-institutes/bulk-create'
     | '/admin/college-sections/bulk-generate'
-    | '/admin/colleges/bulk-create'
     | '/admin/colleges/generate-ai'
+    | '/admin/colleges/bulk-create'
     | '/admin/courses/bulk-generate'
     | '/admin/courses/generate-ai'
     | '/admin/exams/bulk-create'
@@ -3243,8 +3243,8 @@ export interface FileRouteTypes {
     | '/admin/coaching-institutes/$id'
     | '/admin/coaching-institutes/bulk-create'
     | '/admin/college-sections/bulk-generate'
-    | '/admin/colleges/bulk-create'
     | '/admin/colleges/generate-ai'
+    | '/admin/colleges/bulk-create'
     | '/admin/courses/bulk-generate'
     | '/admin/courses/generate-ai'
     | '/admin/exams/bulk-create'
@@ -3541,8 +3541,8 @@ export interface FileRouteTypes {
     | '/admin/coaching-institutes/$id'
     | '/admin/coaching-institutes/bulk-create'
     | '/admin/college-sections/bulk-generate'
-    | '/admin/colleges/bulk-create'
     | '/admin/colleges/generate-ai'
+    | '/admin/colleges_/bulk-create'
     | '/admin/courses/bulk-generate'
     | '/admin/courses/generate-ai'
     | '/admin/exams/bulk-create'
@@ -5191,19 +5191,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollegeSectionsBulkGenerateRouteImport
       parentRoute: typeof AdminCollegeSectionsRoute
     }
-    '/admin/colleges/bulk-create': {
-      id: '/admin/colleges/bulk-create'
-      path: '/bulk-create'
-      fullPath: '/admin/colleges/bulk-create'
-      preLoaderRoute: typeof AdminCollegesBulkCreateRouteImport
-      parentRoute: typeof AdminCollegesRoute
-    }
     '/admin/colleges/generate-ai': {
       id: '/admin/colleges/generate-ai'
       path: '/generate-ai'
       fullPath: '/admin/colleges/generate-ai'
       preLoaderRoute: typeof AdminCollegesGenerateAiRouteImport
       parentRoute: typeof AdminCollegesRoute
+    }
+    '/admin/colleges_/bulk-create': {
+      id: '/admin/colleges_/bulk-create'
+      path: '/colleges/bulk-create'
+      fullPath: '/admin/colleges/bulk-create'
+      preLoaderRoute: typeof AdminCollegesBulkCreateRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/courses/bulk-generate': {
       id: '/admin/courses/bulk-generate'
@@ -5997,12 +5997,10 @@ const AdminCollegeSectionsRouteWithChildren =
   AdminCollegeSectionsRoute._addFileChildren(AdminCollegeSectionsRouteChildren)
 
 interface AdminCollegesRouteChildren {
-  AdminCollegesBulkCreateRoute: typeof AdminCollegesBulkCreateRoute
   AdminCollegesGenerateAiRoute: typeof AdminCollegesGenerateAiRoute
 }
 
 const AdminCollegesRouteChildren: AdminCollegesRouteChildren = {
-  AdminCollegesBulkCreateRoute: AdminCollegesBulkCreateRoute,
   AdminCollegesGenerateAiRoute: AdminCollegesGenerateAiRoute,
 }
 
@@ -6175,6 +6173,7 @@ interface AdminRouteChildren {
   AdminVocabularyRoute: typeof AdminVocabularyRoute
   AdminWebsiteOptimizerRoute: typeof AdminWebsiteOptimizerRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCollegesBulkCreateRoute: typeof AdminCollegesBulkCreateRoute
   AdminPagesSlugRoute: typeof AdminPagesSlugRoute
   AdminSeoWriteBlogRoute: typeof AdminSeoWriteBlogRoute
 }
@@ -6278,6 +6277,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminVocabularyRoute: AdminVocabularyRoute,
   AdminWebsiteOptimizerRoute: AdminWebsiteOptimizerRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminCollegesBulkCreateRoute: AdminCollegesBulkCreateRoute,
   AdminPagesSlugRoute: AdminPagesSlugRoute,
   AdminSeoWriteBlogRoute: AdminSeoWriteBlogRoute,
 }
