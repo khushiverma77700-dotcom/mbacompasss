@@ -187,6 +187,25 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
   }, [scoped]);
 
   const faqs = useMemo(() => listingFaqs(scoped), [scoped]);
+
+  /* Today's picks: advisor-recommended and still open, highest priority first.
+     If nothing is marked recommended, fall back to whatever closes soonest. */
+  const todaysPicks = useMemo(() => {
+    const open = scoped.filter((row) => deadlineInfo(row).isOpen);
+    const picked = open
+      .filter((row) => row.is_recommended)
+      .sort((a, b) => {
+        if (b.recommendation_priority !== a.recommendation_priority) {
+          return b.recommendation_priority - a.recommendation_priority;
+        }
+        return (a.application_deadline ?? "9999").localeCompare(b.application_deadline ?? "9999");
+      });
+    if (picked.length > 0) return picked.slice(0, 12);
+    return [...open]
+      .sort((a, b) => (a.application_deadline ?? "9999").localeCompare(b.application_deadline ?? "9999"))
+      .slice(0, 10);
+  }, [scoped]);
+
   const filtersDirty = deadlineFilter !== DEFAULT_PREFS.deadline_filter || exam !== null || !!search ||
     (!presetCategory && category !== "all");
 
