@@ -87,9 +87,17 @@ export const adminNavGroups: AdminNavGroup[] = [
   {
     label: "College Applications",
     items: [
-      { label: "Applications Dashboard", path: "/admin/college-applications", icon: ClipboardList },
+      { label: "All Applications", path: "/admin/college-applications?tab=applications", icon: ClipboardList },
+      { label: "Add Application", path: "/admin/college-applications?tab=applications&action=add", icon: Plus },
+      { label: "Bulk Upload", path: "/admin/college-applications?tab=applications&action=bulk", icon: Upload },
+      { label: "Inside Information Documents", path: "/admin/college-applications?tab=documents", icon: FileText },
+      { label: "Recommended Applications", path: "/admin/college-applications?tab=recommended", icon: Star },
+      { label: "Student Activity", path: "/admin/college-applications?tab=activity", icon: Activity },
+      { label: "Student Summary", path: "/admin/college-applications?tab=students", icon: Users },
+      { label: "Applications Analytics", path: "/admin/college-applications?tab=dashboard", icon: BarChart3 },
     ],
   },
+
   {
     label: "MBA Newsroom",
     items: [
