@@ -222,6 +222,7 @@ import { Route as PublicGuidesIpmatPreparationRouteImport } from './routes/_publ
 import { Route as PublicInstituteSlugRouteImport } from './routes/_public.institute.$slug'
 import { Route as PublicListYourBusinessPocRouteImport } from './routes/_public.list-your-business.poc'
 import { Route as PublicMbaApplicationIndexRouteImport } from './routes/_public.mba-application.index'
+import { Route as PublicMbaApplicationCategoryRouteImport } from './routes/_public.mba-application.$category'
 import { Route as PublicMbaCompassSlugRouteImport } from './routes/_public.mba-compass.$slug'
 import { Route as PublicMbaCompassCompareRouteImport } from './routes/_public.mba-compass.compare'
 import { Route as PublicMocksSlugRouteImport } from './routes/_public.mocks.$slug'
@@ -1379,6 +1380,12 @@ const PublicMbaApplicationIndexRoute =
     path: '/mba-application/',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicMbaApplicationCategoryRoute =
+  PublicMbaApplicationCategoryRouteImport.update({
+    id: '/mba-application/$category',
+    path: '/mba-application/$category',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicMbaCompassSlugRoute = PublicMbaCompassSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -2034,6 +2041,7 @@ export interface FileRoutesByFullPath {
   '/guides/ipmat-preparation': typeof PublicGuidesIpmatPreparationRoute
   '/institute/$slug': typeof PublicInstituteSlugRouteWithChildren
   '/list-your-business/poc': typeof PublicListYourBusinessPocRoute
+  '/mba-application/$category': typeof PublicMbaApplicationCategoryRoute
   '/mba-compass/$slug': typeof PublicMbaCompassSlugRoute
   '/mba-compass/compare': typeof PublicMbaCompassCompareRoute
   '/mocks/$slug': typeof PublicMocksSlugRoute
@@ -2326,6 +2334,7 @@ export interface FileRoutesByTo {
   '/guides/ipmat-preparation': typeof PublicGuidesIpmatPreparationRoute
   '/institute/$slug': typeof PublicInstituteSlugRouteWithChildren
   '/list-your-business/poc': typeof PublicListYourBusinessPocRoute
+  '/mba-application/$category': typeof PublicMbaApplicationCategoryRoute
   '/mba-compass/$slug': typeof PublicMbaCompassSlugRoute
   '/mba-compass/compare': typeof PublicMbaCompassCompareRoute
   '/mocks/$slug': typeof PublicMocksSlugRoute
@@ -2623,6 +2632,7 @@ export interface FileRoutesById {
   '/_public/guides/ipmat-preparation': typeof PublicGuidesIpmatPreparationRoute
   '/_public/institute/$slug': typeof PublicInstituteSlugRouteWithChildren
   '/_public/list-your-business/poc': typeof PublicListYourBusinessPocRoute
+  '/_public/mba-application/$category': typeof PublicMbaApplicationCategoryRoute
   '/_public/mba-compass/$slug': typeof PublicMbaCompassSlugRoute
   '/_public/mba-compass/compare': typeof PublicMbaCompassCompareRoute
   '/_public/mocks/$slug': typeof PublicMocksSlugRoute
@@ -2920,6 +2930,7 @@ export interface FileRouteTypes {
     | '/guides/ipmat-preparation'
     | '/institute/$slug'
     | '/list-your-business/poc'
+    | '/mba-application/$category'
     | '/mba-compass/$slug'
     | '/mba-compass/compare'
     | '/mocks/$slug'
@@ -3212,6 +3223,7 @@ export interface FileRouteTypes {
     | '/guides/ipmat-preparation'
     | '/institute/$slug'
     | '/list-your-business/poc'
+    | '/mba-application/$category'
     | '/mba-compass/$slug'
     | '/mba-compass/compare'
     | '/mocks/$slug'
@@ -3508,6 +3520,7 @@ export interface FileRouteTypes {
     | '/_public/guides/ipmat-preparation'
     | '/_public/institute/$slug'
     | '/_public/list-your-business/poc'
+    | '/_public/mba-application/$category'
     | '/_public/mba-compass/$slug'
     | '/_public/mba-compass/compare'
     | '/_public/mocks/$slug'
@@ -5102,6 +5115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicMbaApplicationIndexRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/mba-application/$category': {
+      id: '/_public/mba-application/$category'
+      path: '/mba-application/$category'
+      fullPath: '/mba-application/$category'
+      preLoaderRoute: typeof PublicMbaApplicationCategoryRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/mba-compass/$slug': {
       id: '/_public/mba-compass/$slug'
       path: '/$slug'
@@ -5870,6 +5890,7 @@ interface PublicRouteChildren {
   PublicFormulaSlugRoute: typeof PublicFormulaSlugRoute
   PublicGuidesIpmatPreparationRoute: typeof PublicGuidesIpmatPreparationRoute
   PublicInstituteSlugRoute: typeof PublicInstituteSlugRouteWithChildren
+  PublicMbaApplicationCategoryRoute: typeof PublicMbaApplicationCategoryRoute
   PublicReportIdRoute: typeof PublicReportIdRoute
   PublicMbaApplicationIndexRoute: typeof PublicMbaApplicationIndexRoute
 }
@@ -5917,6 +5938,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicFormulaSlugRoute: PublicFormulaSlugRoute,
   PublicGuidesIpmatPreparationRoute: PublicGuidesIpmatPreparationRoute,
   PublicInstituteSlugRoute: PublicInstituteSlugRouteWithChildren,
+  PublicMbaApplicationCategoryRoute: PublicMbaApplicationCategoryRoute,
   PublicReportIdRoute: PublicReportIdRoute,
   PublicMbaApplicationIndexRoute: PublicMbaApplicationIndexRoute,
 }
