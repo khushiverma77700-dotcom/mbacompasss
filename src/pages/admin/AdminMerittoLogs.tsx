@@ -431,14 +431,34 @@ export default function AdminMerittoLogs() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold">Meritto (NoPaperForms) Integration</h1>
-          <p className="text-sm text-muted-foreground">Every lead captured on the site is automatically pushed to Meritto. Track delivery here.</p>
+          <p className="text-sm text-muted-foreground">Leads are pushed to Meritto only while the switch below is on. Track delivery here.</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setManualOpen(true)}><Plus className="h-4 w-4 mr-2" />Push Manually</Button>
-          <Button onClick={() => setBulkOpen(true)} variant="secondary"><Upload className="h-4 w-4 mr-2" />Bulk Upload</Button>
+          <Button onClick={() => setManualOpen(true)} disabled={!integrationEnabled}><Plus className="h-4 w-4 mr-2" />Push Manually</Button>
+          <Button onClick={() => setBulkOpen(true)} variant="secondary" disabled={!integrationEnabled}><Upload className="h-4 w-4 mr-2" />Bulk Upload</Button>
           <Button onClick={load} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
         </div>
       </div>
+
+      <Card className={integrationEnabled ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60"}>
+        <CardContent className="flex items-center justify-between gap-4 py-4 flex-wrap">
+          <div>
+            <div className="font-semibold">Send leads to Meritto</div>
+            <p className="text-sm text-muted-foreground">
+              {integrationEnabled
+                ? "On — website leads, manual pushes and bulk uploads are delivered to Meritto."
+                : "Off — nothing is sent to Meritto. Website leads, manual pushes and bulk uploads are all paused."}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className={integrationEnabled ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-amber-100 text-amber-800 border-amber-200"}>
+              {integrationEnabled ? "ON" : "OFF"}
+            </Badge>
+            <Switch checked={integrationEnabled} disabled={switchBusy} onCheckedChange={(v) => void toggleIntegration(v)} />
+          </div>
+        </CardContent>
+      </Card>
+
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCard icon={<Users className="h-4 w-4" />} label="Total leads" value={stats.total} />
