@@ -95,6 +95,44 @@ export default function AdminMerittoLogs() {
   const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
   const [originDomain, setOriginDomain] = useState<string>("bschoolbuzz.in");
+  const [integrationEnabled, setIntegrationEnabled] = useState<boolean>(false);
+  const [switchBusy, setSwitchBusy] = useState<boolean>(false);
+
+  const loadIntegrationSwitch = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "meritto_integration")
+      .maybeSingle();
+    const val = (data?.value ?? null) as { enabled?: boolean } | null;
+    setIntegrationEnabled(!!val?.enabled);
+  };
+
+  useEffect(() => { void loadIntegrationSwitch(); }, []);
+
+  const toggleIntegration = async (next: boolean) => {
+    setSwitchBusy(true);
+    try {
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert({ key: "meritto_integration", value: { enabled: next } }, { onConflict: "key" });
+      if (error) throw error;
+      setIntegrationEnabled(next);
+      toast.success(next ? "Meritto integration switched ON" : "Meritto integration switched OFF");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not update the switch");
+    } finally {
+      setSwitchBusy(false);
+    }
+  };
+
+  const guardEnabled = (): boolean => {
+    if (!integrationEnabled) {
+      toast.error("Meritto integration is switched off. Turn it on to send leads.");
+      return false;
+    }
+    return true;
+  };
 
   const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
