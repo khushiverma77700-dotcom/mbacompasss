@@ -26,6 +26,13 @@ type Draft = {
 
 type Props = { trackers: TrackerRow[] };
 
+type RecommendationPatch = {
+  is_recommended?: boolean;
+  recommendation_label?: string | null;
+  recommendation_note?: string | null;
+  recommendation_priority?: number;
+};
+
 export default function RecommendedTab({ trackers }: Props) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -62,7 +69,7 @@ export default function RecommendedTab({ trackers }: Props) {
     setDrafts((prev) => ({ ...prev, [row.id]: { ...draftFor(row), ...next } }));
 
   const update = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: RecommendationPatch }) => {
       const { error } = await supabase.from("application_trackers").update(patch).eq("id", id);
       if (error) throw error;
       return id;

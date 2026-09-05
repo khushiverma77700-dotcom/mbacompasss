@@ -445,7 +445,7 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
                           >
                             <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
+                              {ADMIN_CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
                                 <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
                               ))}
                             </SelectContent>
