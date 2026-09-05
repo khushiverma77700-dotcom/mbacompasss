@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 const MERITTO_FIELDS: { key: string; label: string; required?: boolean }[] = [
   { key: "name", label: "Name", required: true },
@@ -232,6 +233,7 @@ export default function AdminMerittoLogs() {
   };
 
   const runBulk = async () => {
+    if (!guardEnabled()) return;
     const prepared = buildMapped();
     const initial: BulkResult[] = prepared.map((p, i) => ({
       row: i + 2,
@@ -264,6 +266,7 @@ export default function AdminMerittoLogs() {
   };
 
   const retryFailed = async () => {
+    if (!guardEnabled()) return;
     const failedIdx = bulkResults.map((r, i) => (r.status === "failed" ? i : -1)).filter((i) => i >= 0);
     if (!failedIdx.length) { toast.info("No failed rows to retry"); return; }
     setBulkBusy(true);
@@ -362,6 +365,7 @@ export default function AdminMerittoLogs() {
   }, [rows]);
 
   const retry = async (id: string) => {
+    if (!guardEnabled()) return;
     setRetrying(id);
     try {
       const { data, error } = await supabase.functions.invoke("push-to-meritto", {
@@ -378,6 +382,7 @@ export default function AdminMerittoLogs() {
   };
 
   const pushManual = async () => {
+    if (!guardEnabled()) return;
     if (!manual.name && !manual.email && !manual.mobile) {
       toast.error("Enter at least name, email or mobile");
       return;
