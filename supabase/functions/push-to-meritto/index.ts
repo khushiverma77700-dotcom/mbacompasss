@@ -197,6 +197,29 @@ Deno.serve(async (req) => {
     const input = (await req.json()) as LeadInput & { retry_log_id?: string; skip_log?: boolean };
     const skipLog = !!input.skip_log;
 
+    // Master switch (Admin → Meritto Integration). When off, nothing is sent or logged.
+    const { data: switchRow } = await admin
+      .from("site_settings")
+      .select("value")
+      .eq("key", "meritto_integration")
+      .maybeSingle();
+    const enabled = !!(switchRow?.value as { enabled?: boolean } | null)?.enabled;
+    if (!enabled) {
+      console.log(`[meritto][${cid}] skipped — integration switched off`);
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          skipped: true,
+          outcome: "skipped",
+          reason: "Meritto integration is switched off in Admin → Meritto Integration",
+          log_id: null,
+          correlation_id: cid,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+
     // Basic validation (skip when retrying an existing log — those were already validated on first insert).
     if (!input.retry_log_id) {
       if (input.email && !EMAIL_RE.test(String(input.email))) {
