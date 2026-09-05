@@ -221,6 +221,7 @@ import { Route as PublicFormulaSlugRouteImport } from './routes/_public.formula.
 import { Route as PublicGuidesIpmatPreparationRouteImport } from './routes/_public.guides.ipmat-preparation'
 import { Route as PublicInstituteSlugRouteImport } from './routes/_public.institute.$slug'
 import { Route as PublicListYourBusinessPocRouteImport } from './routes/_public.list-your-business.poc'
+import { Route as PublicMbaApplicationIndexRouteImport } from './routes/_public.mba-application.index'
 import { Route as PublicMbaCompassSlugRouteImport } from './routes/_public.mba-compass.$slug'
 import { Route as PublicMbaCompassCompareRouteImport } from './routes/_public.mba-compass.compare'
 import { Route as PublicMocksSlugRouteImport } from './routes/_public.mocks.$slug'
@@ -1372,6 +1373,12 @@ const PublicListYourBusinessPocRoute =
     path: '/poc',
     getParentRoute: () => PublicListYourBusinessRoute,
   } as any)
+const PublicMbaApplicationIndexRoute =
+  PublicMbaApplicationIndexRouteImport.update({
+    id: '/mba-application/',
+    path: '/mba-application/',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicMbaCompassSlugRoute = PublicMbaCompassSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -2079,6 +2086,7 @@ export interface FileRoutesByFullPath {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2370,6 +2378,7 @@ export interface FileRoutesByTo {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/mba-application': typeof PublicMbaApplicationIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2666,6 +2675,7 @@ export interface FileRoutesById {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/_public/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/_public/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/_public/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/_public/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2962,6 +2972,7 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/mba-application/'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3253,6 +3264,7 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/mba-application'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3548,6 +3560,7 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/_public/mba-application/'
     | '/_public/coaching/exam/$slug'
     | '/_public/coaching/mode/$slug'
     | '/_public/colleges/by-city/$citySlug'
@@ -5082,6 +5095,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicListYourBusinessPocRouteImport
       parentRoute: typeof PublicListYourBusinessRoute
     }
+    '/_public/mba-application/': {
+      id: '/_public/mba-application/'
+      path: '/mba-application'
+      fullPath: '/mba-application/'
+      preLoaderRoute: typeof PublicMbaApplicationIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/mba-compass/$slug': {
       id: '/_public/mba-compass/$slug'
       path: '/$slug'
@@ -5851,6 +5871,7 @@ interface PublicRouteChildren {
   PublicGuidesIpmatPreparationRoute: typeof PublicGuidesIpmatPreparationRoute
   PublicInstituteSlugRoute: typeof PublicInstituteSlugRouteWithChildren
   PublicReportIdRoute: typeof PublicReportIdRoute
+  PublicMbaApplicationIndexRoute: typeof PublicMbaApplicationIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -5897,6 +5918,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicGuidesIpmatPreparationRoute: PublicGuidesIpmatPreparationRoute,
   PublicInstituteSlugRoute: PublicInstituteSlugRouteWithChildren,
   PublicReportIdRoute: PublicReportIdRoute,
+  PublicMbaApplicationIndexRoute: PublicMbaApplicationIndexRoute,
 }
 
 const PublicRouteWithChildren =
