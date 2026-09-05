@@ -109,13 +109,34 @@ export const DEADLINE_FILTERS: { key: DeadlineFilterKey; label: string }[] = [
   { key: "closed", label: "Closed" },
 ];
 
-export const CATEGORY_FILTERS: { key: "all" | TrackerCategory; label: string }[] = [
+export const CATEGORY_FILTERS: { key: CategoryKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "exam", label: "Exams" },
   { key: "iim", label: "IIMs" },
   { key: "tier1", label: "Tier 1 Non-IIMs" },
   { key: "tier2", label: "Tier 2 Non-IIMs" },
+  { key: "recommended", label: "Recommended Applications" },
 ];
+
+/** Admin-side filter list (no curated tab). */
+export const ADMIN_CATEGORY_FILTERS: { key: "all" | TrackerCategory; label: string }[] =
+  CATEGORY_FILTERS.filter((c) => c.key !== "recommended") as { key: "all" | TrackerCategory; label: string }[];
+
+/** URL slug ↔ category key, used by the indexable category landing pages. */
+export const CATEGORY_SLUG: Record<TrackerCategory | "recommended", string> = {
+  exam: "mba-entrance-exams",
+  iim: "iim-applications",
+  tier1: "tier-1-non-iim-colleges",
+  tier2: "tier-2-non-iim-colleges",
+  recommended: "recommended-applications",
+};
+
+export const categoryFromSlug = (slug: string): CategoryKey | null => {
+  const hit = (Object.keys(CATEGORY_SLUG) as (TrackerCategory | "recommended")[]).find(
+    (k) => CATEGORY_SLUG[k] === slug,
+  );
+  return hit ?? null;
+};
 
 export const CATEGORY_LABEL: Record<string, string> = {
   exam: "Exam",
@@ -217,8 +238,105 @@ export const matchesDeadlineFilter = (row: TrackerRow, filter: DeadlineFilterKey
   }
 };
 
-export const matchesCategory = (row: TrackerRow, category: "all" | TrackerCategory): boolean =>
-  category === "all" || row.category === category;
+export const matchesCategory = (row: TrackerRow, category: CategoryKey): boolean => {
+  if (category === "all") return true;
+  if (category === "recommended") return !!row.is_recommended;
+  return row.category === category;
+};
+
+/** Exams that actually have data behind them, for the dynamic exam chips. */
+export const examOptions = (rows: TrackerRow[]): string[] => {
+  const set = new Set<string>();
+  for (const row of rows) {
+    for (const exam of row.accepted_exams ?? []) {
+      const clean = exam.trim().toUpperCase();
+      if (clean) set.add(clean);
+    }
+    if (row.category === "exam") {
+      const clean = (row.short_name || row.name).trim().toUpperCase();
+      if (clean && clean.length <= 10) set.add(clean);
+    }
+  }
+  return [...set].sort();
+};
+
+export const matchesExam = (row: TrackerRow, exam: string | null): boolean => {
+  if (!exam) return true;
+  const target = exam.toUpperCase();
+  if ((row.accepted_exams ?? []).some((e) => e.trim().toUpperCase() === target)) return true;
+  if (row.category === "exam") {
+    return (row.short_name || row.name).trim().toUpperCase() === target || row.name.toUpperCase().includes(target);
+  }
+  return false;
+};
+
+/* --------------------------------------------------- persistent filters */
+
+export type TrackerPrefs = {
+  deadline_filter: DeadlineFilterKey;
+  category: CategoryKey;
+  exam: string | null;
+};
+
+export const DEFAULT_PREFS: TrackerPrefs = { deadline_filter: "all", category: "all", exam: null };
+
+const PREFS_KEY = "mba-application-filters";
+
+export const readLocalPrefs = (): TrackerPrefs | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(PREFS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<TrackerPrefs>;
+    return {
+      deadline_filter: (parsed.deadline_filter ?? "all") as DeadlineFilterKey,
+      category: (parsed.category ?? "all") as CategoryKey,
+      exam: parsed.exam ?? null,
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const writeLocalPrefs = (prefs: TrackerPrefs): void => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // storage can be unavailable (private mode) — filters simply do not persist
+  }
+};
+
+/** Logged-in students keep their filters on their profile so it follows devices. */
+export const readRemotePrefs = async (userId: string): Promise<TrackerPrefs | null> => {
+  const { data } = await supabase
+    .from("application_filter_prefs")
+    .select("deadline_filter, category, exam")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    deadline_filter: (data.deadline_filter ?? "all") as DeadlineFilterKey,
+    category: (data.category ?? "all") as CategoryKey,
+    exam: data.exam ?? null,
+  };
+};
+
+export const writeRemotePrefs = async (userId: string, prefs: TrackerPrefs): Promise<void> => {
+  try {
+    await supabase.from("application_filter_prefs").upsert(
+      {
+        user_id: userId,
+        deadline_filter: prefs.deadline_filter,
+        category: prefs.category,
+        exam: prefs.exam,
+      } as never,
+      { onConflict: "user_id" },
+    );
+  } catch {
+    // preference saving must never break browsing
+  }
+};
 
 /* ----------------------------------------------------------- formatting */
 
@@ -238,7 +356,7 @@ export const formatDate = (value: string | null | undefined): string => {
 /* ------------------------------------------------------------- queries */
 
 export const TRACKER_SELECT =
-  "id, name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, view_count, apply_click_count, created_at, updated_at";
+  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt";
 
 /** Public catalogue (RLS already limits this to active, non-archived rows). */
 export const publicTrackersQuery = queryOptions({
@@ -252,10 +370,40 @@ export const publicTrackersQuery = queryOptions({
       .order("display_order", { ascending: true })
       .order("application_deadline", { ascending: true, nullsFirst: false });
     if (error) throw error;
-    return ((data ?? []) as unknown as TrackerRow[]).filter((r) => !!r.name?.trim() && !!r.slug?.trim());
+    return ((data ?? []) as unknown as TrackerRow[])
+      .filter((r) => !!r.name?.trim() && !!r.slug?.trim())
+      .map(normalizeTracker);
   },
   staleTime: 5 * 60 * 1000,
 });
+
+/** Fills in the nullable/JSON columns so components never guard for undefined. */
+export const normalizeTracker = (row: TrackerRow): TrackerRow => ({
+  ...row,
+  accepted_exams: Array.isArray(row.accepted_exams) ? row.accepted_exams : [],
+  seo_keywords: Array.isArray(row.seo_keywords) ? row.seo_keywords : [],
+  seo_faqs: Array.isArray(row.seo_faqs) ? row.seo_faqs : [],
+  is_recommended: !!row.is_recommended,
+  recommendation_priority: row.recommendation_priority ?? 0,
+});
+
+/** Single application, used by the indexable college/exam landing pages. */
+export const trackerBySlugQuery = (slug: string) =>
+  queryOptions({
+    queryKey: ["application-trackers", "slug", slug],
+    queryFn: async (): Promise<TrackerRow | null> => {
+      const { data, error } = await supabase
+        .from("application_trackers")
+        .select(TRACKER_SELECT)
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .eq("is_archived", false)
+        .maybeSingle();
+      if (error) throw error;
+      return data ? normalizeTracker(data as unknown as TrackerRow) : null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
 /* ------------------------------------------------------------ tracking */
 

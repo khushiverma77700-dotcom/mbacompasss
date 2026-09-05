@@ -221,6 +221,8 @@ import { Route as PublicFormulaSlugRouteImport } from './routes/_public.formula.
 import { Route as PublicGuidesIpmatPreparationRouteImport } from './routes/_public.guides.ipmat-preparation'
 import { Route as PublicInstituteSlugRouteImport } from './routes/_public.institute.$slug'
 import { Route as PublicListYourBusinessPocRouteImport } from './routes/_public.list-your-business.poc'
+import { Route as PublicMbaApplicationIndexRouteImport } from './routes/_public.mba-application.index'
+import { Route as PublicMbaApplicationCategoryRouteImport } from './routes/_public.mba-application.$category'
 import { Route as PublicMbaCompassSlugRouteImport } from './routes/_public.mba-compass.$slug'
 import { Route as PublicMbaCompassCompareRouteImport } from './routes/_public.mba-compass.compare'
 import { Route as PublicMocksSlugRouteImport } from './routes/_public.mocks.$slug'
@@ -279,6 +281,7 @@ import { Route as PublicCollegesByCityCitySlugRouteImport } from './routes/_publ
 import { Route as PublicCollegesByExamExamSlugRouteImport } from './routes/_public.colleges.by-exam.$examSlug'
 import { Route as PublicCollegesTypeTypeSlugRouteImport } from './routes/_public.colleges.type.$typeSlug'
 import { Route as PublicListYourBusinessTypeIdRouteImport } from './routes/_public.list-your-business.$type.$id'
+import { Route as PublicMbaApplicationCollegeSlugRouteImport } from './routes/_public.mba-application.college.$slug'
 import { Route as PublicMocksLeaderboardSlugRouteImport } from './routes/_public.mocks.leaderboard.$slug'
 import { Route as PublicMocksResultAttemptIdRouteImport } from './routes/_public.mocks.result.$attemptId'
 import { Route as PublicMocksReviewAttemptIdRouteImport } from './routes/_public.mocks.review.$attemptId'
@@ -1372,6 +1375,18 @@ const PublicListYourBusinessPocRoute =
     path: '/poc',
     getParentRoute: () => PublicListYourBusinessRoute,
   } as any)
+const PublicMbaApplicationIndexRoute =
+  PublicMbaApplicationIndexRouteImport.update({
+    id: '/mba-application/',
+    path: '/mba-application/',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicMbaApplicationCategoryRoute =
+  PublicMbaApplicationCategoryRouteImport.update({
+    id: '/mba-application/$category',
+    path: '/mba-application/$category',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicMbaCompassSlugRoute = PublicMbaCompassSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -1678,6 +1693,12 @@ const PublicListYourBusinessTypeIdRoute =
     id: '/$type/$id',
     path: '/$type/$id',
     getParentRoute: () => PublicListYourBusinessRoute,
+  } as any)
+const PublicMbaApplicationCollegeSlugRoute =
+  PublicMbaApplicationCollegeSlugRouteImport.update({
+    id: '/mba-application/college/$slug',
+    path: '/mba-application/college/$slug',
+    getParentRoute: () => PublicRoute,
   } as any)
 const PublicMocksLeaderboardSlugRoute =
   PublicMocksLeaderboardSlugRouteImport.update({
@@ -2027,6 +2048,7 @@ export interface FileRoutesByFullPath {
   '/guides/ipmat-preparation': typeof PublicGuidesIpmatPreparationRoute
   '/institute/$slug': typeof PublicInstituteSlugRouteWithChildren
   '/list-your-business/poc': typeof PublicListYourBusinessPocRoute
+  '/mba-application/$category': typeof PublicMbaApplicationCategoryRoute
   '/mba-compass/$slug': typeof PublicMbaCompassSlugRoute
   '/mba-compass/compare': typeof PublicMbaCompassCompareRoute
   '/mocks/$slug': typeof PublicMocksSlugRoute
@@ -2079,12 +2101,14 @@ export interface FileRoutesByFullPath {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
   '/colleges/by-exam/$examSlug': typeof PublicCollegesByExamExamSlugRoute
   '/colleges/type/$typeSlug': typeof PublicCollegesTypeTypeSlugRoute
   '/list-your-business/$type/$id': typeof PublicListYourBusinessTypeIdRoute
+  '/mba-application/college/$slug': typeof PublicMbaApplicationCollegeSlugRoute
   '/mocks/leaderboard/$slug': typeof PublicMocksLeaderboardSlugRoute
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
@@ -2318,6 +2342,7 @@ export interface FileRoutesByTo {
   '/guides/ipmat-preparation': typeof PublicGuidesIpmatPreparationRoute
   '/institute/$slug': typeof PublicInstituteSlugRouteWithChildren
   '/list-your-business/poc': typeof PublicListYourBusinessPocRoute
+  '/mba-application/$category': typeof PublicMbaApplicationCategoryRoute
   '/mba-compass/$slug': typeof PublicMbaCompassSlugRoute
   '/mba-compass/compare': typeof PublicMbaCompassCompareRoute
   '/mocks/$slug': typeof PublicMocksSlugRoute
@@ -2370,12 +2395,14 @@ export interface FileRoutesByTo {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/mba-application': typeof PublicMbaApplicationIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
   '/colleges/by-exam/$examSlug': typeof PublicCollegesByExamExamSlugRoute
   '/colleges/type/$typeSlug': typeof PublicCollegesTypeTypeSlugRoute
   '/list-your-business/$type/$id': typeof PublicListYourBusinessTypeIdRoute
+  '/mba-application/college/$slug': typeof PublicMbaApplicationCollegeSlugRoute
   '/mocks/leaderboard/$slug': typeof PublicMocksLeaderboardSlugRoute
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
@@ -2614,6 +2641,7 @@ export interface FileRoutesById {
   '/_public/guides/ipmat-preparation': typeof PublicGuidesIpmatPreparationRoute
   '/_public/institute/$slug': typeof PublicInstituteSlugRouteWithChildren
   '/_public/list-your-business/poc': typeof PublicListYourBusinessPocRoute
+  '/_public/mba-application/$category': typeof PublicMbaApplicationCategoryRoute
   '/_public/mba-compass/$slug': typeof PublicMbaCompassSlugRoute
   '/_public/mba-compass/compare': typeof PublicMbaCompassCompareRoute
   '/_public/mocks/$slug': typeof PublicMocksSlugRoute
@@ -2666,12 +2694,14 @@ export interface FileRoutesById {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/_public/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/_public/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/_public/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/_public/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
   '/_public/colleges/by-exam/$examSlug': typeof PublicCollegesByExamExamSlugRoute
   '/_public/colleges/type/$typeSlug': typeof PublicCollegesTypeTypeSlugRoute
   '/_public/list-your-business/$type/$id': typeof PublicListYourBusinessTypeIdRoute
+  '/_public/mba-application/college/$slug': typeof PublicMbaApplicationCollegeSlugRoute
   '/_public/mocks/leaderboard/$slug': typeof PublicMocksLeaderboardSlugRoute
   '/_public/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/_public/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
@@ -2910,6 +2940,7 @@ export interface FileRouteTypes {
     | '/guides/ipmat-preparation'
     | '/institute/$slug'
     | '/list-your-business/poc'
+    | '/mba-application/$category'
     | '/mba-compass/$slug'
     | '/mba-compass/compare'
     | '/mocks/$slug'
@@ -2962,12 +2993,14 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/mba-application/'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
     | '/colleges/by-exam/$examSlug'
     | '/colleges/type/$typeSlug'
     | '/list-your-business/$type/$id'
+    | '/mba-application/college/$slug'
     | '/mocks/leaderboard/$slug'
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
@@ -3201,6 +3234,7 @@ export interface FileRouteTypes {
     | '/guides/ipmat-preparation'
     | '/institute/$slug'
     | '/list-your-business/poc'
+    | '/mba-application/$category'
     | '/mba-compass/$slug'
     | '/mba-compass/compare'
     | '/mocks/$slug'
@@ -3253,12 +3287,14 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/mba-application'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
     | '/colleges/by-exam/$examSlug'
     | '/colleges/type/$typeSlug'
     | '/list-your-business/$type/$id'
+    | '/mba-application/college/$slug'
     | '/mocks/leaderboard/$slug'
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
@@ -3496,6 +3532,7 @@ export interface FileRouteTypes {
     | '/_public/guides/ipmat-preparation'
     | '/_public/institute/$slug'
     | '/_public/list-your-business/poc'
+    | '/_public/mba-application/$category'
     | '/_public/mba-compass/$slug'
     | '/_public/mba-compass/compare'
     | '/_public/mocks/$slug'
@@ -3548,12 +3585,14 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/_public/mba-application/'
     | '/_public/coaching/exam/$slug'
     | '/_public/coaching/mode/$slug'
     | '/_public/colleges/by-city/$citySlug'
     | '/_public/colleges/by-exam/$examSlug'
     | '/_public/colleges/type/$typeSlug'
     | '/_public/list-your-business/$type/$id'
+    | '/_public/mba-application/college/$slug'
     | '/_public/mocks/leaderboard/$slug'
     | '/_public/mocks/result/$attemptId'
     | '/_public/mocks/review/$attemptId'
@@ -5082,6 +5121,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicListYourBusinessPocRouteImport
       parentRoute: typeof PublicListYourBusinessRoute
     }
+    '/_public/mba-application/': {
+      id: '/_public/mba-application/'
+      path: '/mba-application'
+      fullPath: '/mba-application/'
+      preLoaderRoute: typeof PublicMbaApplicationIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/mba-application/$category': {
+      id: '/_public/mba-application/$category'
+      path: '/mba-application/$category'
+      fullPath: '/mba-application/$category'
+      preLoaderRoute: typeof PublicMbaApplicationCategoryRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/mba-compass/$slug': {
       id: '/_public/mba-compass/$slug'
       path: '/$slug'
@@ -5488,6 +5541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicListYourBusinessTypeIdRouteImport
       parentRoute: typeof PublicListYourBusinessRoute
     }
+    '/_public/mba-application/college/$slug': {
+      id: '/_public/mba-application/college/$slug'
+      path: '/mba-application/college/$slug'
+      fullPath: '/mba-application/college/$slug'
+      preLoaderRoute: typeof PublicMbaApplicationCollegeSlugRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/mocks/leaderboard/$slug': {
       id: '/_public/mocks/leaderboard/$slug'
       path: '/leaderboard/$slug'
@@ -5850,7 +5910,10 @@ interface PublicRouteChildren {
   PublicFormulaSlugRoute: typeof PublicFormulaSlugRoute
   PublicGuidesIpmatPreparationRoute: typeof PublicGuidesIpmatPreparationRoute
   PublicInstituteSlugRoute: typeof PublicInstituteSlugRouteWithChildren
+  PublicMbaApplicationCategoryRoute: typeof PublicMbaApplicationCategoryRoute
   PublicReportIdRoute: typeof PublicReportIdRoute
+  PublicMbaApplicationIndexRoute: typeof PublicMbaApplicationIndexRoute
+  PublicMbaApplicationCollegeSlugRoute: typeof PublicMbaApplicationCollegeSlugRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -5896,7 +5959,10 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicFormulaSlugRoute: PublicFormulaSlugRoute,
   PublicGuidesIpmatPreparationRoute: PublicGuidesIpmatPreparationRoute,
   PublicInstituteSlugRoute: PublicInstituteSlugRouteWithChildren,
+  PublicMbaApplicationCategoryRoute: PublicMbaApplicationCategoryRoute,
   PublicReportIdRoute: PublicReportIdRoute,
+  PublicMbaApplicationIndexRoute: PublicMbaApplicationIndexRoute,
+  PublicMbaApplicationCollegeSlugRoute: PublicMbaApplicationCollegeSlugRoute,
 }
 
 const PublicRouteWithChildren =
