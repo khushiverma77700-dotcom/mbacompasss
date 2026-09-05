@@ -228,18 +228,18 @@ import { Route as PublicMbaCompassCompareRouteImport } from './routes/_public.mb
 import { Route as PublicMocksSlugRouteImport } from './routes/_public.mocks.$slug'
 import { Route as PublicMocksThankYouRouteImport } from './routes/_public.mocks.thank-you'
 import { Route as PublicReportIdRouteImport } from './routes/_public.report.$id'
-import { Route as AdminCoachingInstitutesIdRouteImport } from './routes/admin.coaching-institutes.$id'
-import { Route as AdminCoachingInstitutesBulkCreateRouteImport } from './routes/admin.coaching-institutes.bulk-create'
-import { Route as AdminCollegeSectionsBulkGenerateRouteImport } from './routes/admin.college-sections.bulk-generate'
-import { Route as AdminCollegesGenerateAiRouteImport } from './routes/admin.colleges.generate-ai'
+import { Route as AdminCoachingInstitutesIdRouteImport } from './routes/admin.coaching-institutes_.$id'
+import { Route as AdminCoachingInstitutesBulkCreateRouteImport } from './routes/admin.coaching-institutes_.bulk-create'
+import { Route as AdminCollegeSectionsBulkGenerateRouteImport } from './routes/admin.college-sections_.bulk-generate'
 import { Route as AdminCollegesBulkCreateRouteImport } from './routes/admin.colleges_.bulk-create'
-import { Route as AdminCoursesBulkGenerateRouteImport } from './routes/admin.courses.bulk-generate'
-import { Route as AdminCoursesGenerateAiRouteImport } from './routes/admin.courses.generate-ai'
-import { Route as AdminExamsBulkCreateRouteImport } from './routes/admin.exams.bulk-create'
-import { Route as AdminExamsCompletenessRouteImport } from './routes/admin.exams.completeness'
-import { Route as AdminFreebiesDownloadsRouteImport } from './routes/admin.freebies.downloads'
-import { Route as AdminFreebiesUsersRouteImport } from './routes/admin.freebies.users'
-import { Route as AdminInstitutesGenerateAiRouteImport } from './routes/admin.institutes.generate-ai'
+import { Route as AdminCollegesGenerateAiRouteImport } from './routes/admin.colleges_.generate-ai'
+import { Route as AdminCoursesBulkGenerateRouteImport } from './routes/admin.courses_.bulk-generate'
+import { Route as AdminCoursesGenerateAiRouteImport } from './routes/admin.courses_.generate-ai'
+import { Route as AdminExamsBulkCreateRouteImport } from './routes/admin.exams_.bulk-create'
+import { Route as AdminExamsCompletenessRouteImport } from './routes/admin.exams_.completeness'
+import { Route as AdminFreebiesDownloadsRouteImport } from './routes/admin.freebies_.downloads'
+import { Route as AdminFreebiesUsersRouteImport } from './routes/admin.freebies_.users'
+import { Route as AdminInstitutesGenerateAiRouteImport } from './routes/admin.institutes_.generate-ai'
 import { Route as AdminPagesSlugRouteImport } from './routes/admin.pages.$slug'
 import { Route as AdminSeoWriteBlogRouteImport } from './routes/admin.seo.write-blog'
 import { Route as CollegeSlugProgrammeRouteImport } from './routes/college.$slug.programme'
@@ -285,7 +285,7 @@ import { Route as PublicMbaApplicationCollegeSlugRouteImport } from './routes/_p
 import { Route as PublicMocksLeaderboardSlugRouteImport } from './routes/_public.mocks.leaderboard.$slug'
 import { Route as PublicMocksResultAttemptIdRouteImport } from './routes/_public.mocks.result.$attemptId'
 import { Route as PublicMocksReviewAttemptIdRouteImport } from './routes/_public.mocks.review.$attemptId'
-import { Route as AdminMockTestsTestIdBuilderRouteImport } from './routes/admin.mock-tests.$testId.builder'
+import { Route as AdminMockTestsTestIdBuilderRouteImport } from './routes/admin.mock-tests_.$testId.builder'
 import { Route as CollegeSlugProgrammeProgrammeSlugRouteImport } from './routes/college.$slug.programme.$programmeSlug'
 import { Route as DemoDailyTestReportAttemptIdRouteImport } from './routes/demo.daily-test.report.$attemptId'
 import { Route as DemoMocksLeaderboardSlugRouteImport } from './routes/demo.mocks.leaderboard.$slug'
@@ -1414,68 +1414,68 @@ const PublicReportIdRoute = PublicReportIdRouteImport.update({
 } as any)
 const AdminCoachingInstitutesIdRoute =
   AdminCoachingInstitutesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AdminCoachingInstitutesRoute,
+    id: '/coaching-institutes_/$id',
+    path: '/coaching-institutes/$id',
+    getParentRoute: () => AdminRoute,
   } as any)
 const AdminCoachingInstitutesBulkCreateRoute =
   AdminCoachingInstitutesBulkCreateRouteImport.update({
-    id: '/bulk-create',
-    path: '/bulk-create',
-    getParentRoute: () => AdminCoachingInstitutesRoute,
+    id: '/coaching-institutes_/bulk-create',
+    path: '/coaching-institutes/bulk-create',
+    getParentRoute: () => AdminRoute,
   } as any)
 const AdminCollegeSectionsBulkGenerateRoute =
   AdminCollegeSectionsBulkGenerateRouteImport.update({
-    id: '/bulk-generate',
-    path: '/bulk-generate',
-    getParentRoute: () => AdminCollegeSectionsRoute,
+    id: '/college-sections_/bulk-generate',
+    path: '/college-sections/bulk-generate',
+    getParentRoute: () => AdminRoute,
   } as any)
-const AdminCollegesGenerateAiRoute = AdminCollegesGenerateAiRouteImport.update({
-  id: '/generate-ai',
-  path: '/generate-ai',
-  getParentRoute: () => AdminCollegesRoute,
-} as any)
 const AdminCollegesBulkCreateRoute = AdminCollegesBulkCreateRouteImport.update({
   id: '/colleges_/bulk-create',
   path: '/colleges/bulk-create',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCollegesGenerateAiRoute = AdminCollegesGenerateAiRouteImport.update({
+  id: '/colleges_/generate-ai',
+  path: '/colleges/generate-ai',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCoursesBulkGenerateRoute =
   AdminCoursesBulkGenerateRouteImport.update({
-    id: '/bulk-generate',
-    path: '/bulk-generate',
-    getParentRoute: () => AdminCoursesRoute,
+    id: '/courses_/bulk-generate',
+    path: '/courses/bulk-generate',
+    getParentRoute: () => AdminRoute,
   } as any)
 const AdminCoursesGenerateAiRoute = AdminCoursesGenerateAiRouteImport.update({
-  id: '/generate-ai',
-  path: '/generate-ai',
-  getParentRoute: () => AdminCoursesRoute,
+  id: '/courses_/generate-ai',
+  path: '/courses/generate-ai',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminExamsBulkCreateRoute = AdminExamsBulkCreateRouteImport.update({
-  id: '/bulk-create',
-  path: '/bulk-create',
-  getParentRoute: () => AdminExamsRoute,
+  id: '/exams_/bulk-create',
+  path: '/exams/bulk-create',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminExamsCompletenessRoute = AdminExamsCompletenessRouteImport.update({
-  id: '/completeness',
-  path: '/completeness',
-  getParentRoute: () => AdminExamsRoute,
+  id: '/exams_/completeness',
+  path: '/exams/completeness',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminFreebiesDownloadsRoute = AdminFreebiesDownloadsRouteImport.update({
-  id: '/downloads',
-  path: '/downloads',
-  getParentRoute: () => AdminFreebiesRoute,
+  id: '/freebies_/downloads',
+  path: '/freebies/downloads',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminFreebiesUsersRoute = AdminFreebiesUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminFreebiesRoute,
+  id: '/freebies_/users',
+  path: '/freebies/users',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminInstitutesGenerateAiRoute =
   AdminInstitutesGenerateAiRouteImport.update({
-    id: '/generate-ai',
-    path: '/generate-ai',
-    getParentRoute: () => AdminInstitutesRoute,
+    id: '/institutes_/generate-ai',
+    path: '/institutes/generate-ai',
+    getParentRoute: () => AdminRoute,
   } as any)
 const AdminPagesSlugRoute = AdminPagesSlugRouteImport.update({
   id: '/pages/$slug',
@@ -1720,9 +1720,9 @@ const PublicMocksReviewAttemptIdRoute =
   } as any)
 const AdminMockTestsTestIdBuilderRoute =
   AdminMockTestsTestIdBuilderRouteImport.update({
-    id: '/$testId/builder',
-    path: '/$testId/builder',
-    getParentRoute: () => AdminMockTestsRoute,
+    id: '/mock-tests_/$testId/builder',
+    path: '/mock-tests/$testId/builder',
+    getParentRoute: () => AdminRoute,
   } as any)
 const CollegeSlugProgrammeProgrammeSlugRoute =
   CollegeSlugProgrammeProgrammeSlugRouteImport.update({
@@ -1896,22 +1896,22 @@ export interface FileRoutesByFullPath {
   '/admin/cat-scores': typeof AdminCatScoresRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/clear-cache': typeof AdminClearCacheRoute
-  '/admin/coaching-institutes': typeof AdminCoachingInstitutesRouteWithChildren
+  '/admin/coaching-institutes': typeof AdminCoachingInstitutesRoute
   '/admin/coaching-of-week': typeof AdminCoachingOfWeekRoute
   '/admin/coaching-refresh-hub': typeof AdminCoachingRefreshHubRoute
   '/admin/coaching-results': typeof AdminCoachingResultsRoute
   '/admin/coaching-seo-reports': typeof AdminCoachingSeoReportsRoute
   '/admin/college-applications': typeof AdminCollegeApplicationsRoute
-  '/admin/college-sections': typeof AdminCollegeSectionsRouteWithChildren
+  '/admin/college-sections': typeof AdminCollegeSectionsRoute
   '/admin/college-tables': typeof AdminCollegeTablesRoute
-  '/admin/colleges': typeof AdminCollegesRouteWithChildren
+  '/admin/colleges': typeof AdminCollegesRoute
   '/admin/comparisons': typeof AdminComparisonsRoute
   '/admin/content-pruning': typeof AdminContentPruningRoute
   '/admin/content-refreshes': typeof AdminContentRefreshesRoute
   '/admin/content-studio': typeof AdminContentStudioRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/course-categories': typeof AdminCourseCategoriesRoute
-  '/admin/courses': typeof AdminCoursesRouteWithChildren
+  '/admin/courses': typeof AdminCoursesRoute
   '/admin/cta-analytics': typeof AdminCtaAnalyticsRoute
   '/admin/cta-manager': typeof AdminCtaManagerRoute
   '/admin/ctr-optimizer': typeof AdminCtrOptimizerRoute
@@ -1919,10 +1919,10 @@ export interface FileRoutesByFullPath {
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
-  '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/exams': typeof AdminExamsRoute
   '/admin/explanation-cleaner': typeof AdminExplanationCleanerRoute
   '/admin/formulas': typeof AdminFormulasRoute
-  '/admin/freebies': typeof AdminFreebiesRouteWithChildren
+  '/admin/freebies': typeof AdminFreebiesRoute
   '/admin/guidance-requests': typeof AdminGuidanceRequestsRoute
   '/admin/homepage-tables': typeof AdminHomepageTablesRoute
   '/admin/hyperlink-update': typeof AdminHyperlinkUpdateRoute
@@ -1930,7 +1930,7 @@ export interface FileRoutesByFullPath {
   '/admin/image-seo': typeof AdminImageSeoRoute
   '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/institute-results': typeof AdminInstituteResultsRoute
-  '/admin/institutes': typeof AdminInstitutesRouteWithChildren
+  '/admin/institutes': typeof AdminInstitutesRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/listing-change-requests': typeof AdminListingChangeRequestsRoute
   '/admin/manage-admins': typeof AdminManageAdminsRoute
@@ -1942,7 +1942,7 @@ export interface FileRoutesByFullPath {
   '/admin/meta-validator': typeof AdminMetaValidatorRoute
   '/admin/mock-bundles': typeof AdminMockBundlesRoute
   '/admin/mock-orders': typeof AdminMockOrdersRoute
-  '/admin/mock-tests': typeof AdminMockTestsRouteWithChildren
+  '/admin/mock-tests': typeof AdminMockTestsRoute
   '/admin/mocks-landing': typeof AdminMocksLandingRoute
   '/admin/newsroom': typeof AdminNewsroomRoute
   '/admin/page-editor': typeof AdminPageEditorRoute
@@ -2057,8 +2057,8 @@ export interface FileRoutesByFullPath {
   '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
-  '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
   '/admin/colleges/bulk-create': typeof AdminCollegesBulkCreateRoute
+  '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
   '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
   '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
@@ -2189,22 +2189,22 @@ export interface FileRoutesByTo {
   '/admin/cat-scores': typeof AdminCatScoresRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/clear-cache': typeof AdminClearCacheRoute
-  '/admin/coaching-institutes': typeof AdminCoachingInstitutesRouteWithChildren
+  '/admin/coaching-institutes': typeof AdminCoachingInstitutesRoute
   '/admin/coaching-of-week': typeof AdminCoachingOfWeekRoute
   '/admin/coaching-refresh-hub': typeof AdminCoachingRefreshHubRoute
   '/admin/coaching-results': typeof AdminCoachingResultsRoute
   '/admin/coaching-seo-reports': typeof AdminCoachingSeoReportsRoute
   '/admin/college-applications': typeof AdminCollegeApplicationsRoute
-  '/admin/college-sections': typeof AdminCollegeSectionsRouteWithChildren
+  '/admin/college-sections': typeof AdminCollegeSectionsRoute
   '/admin/college-tables': typeof AdminCollegeTablesRoute
-  '/admin/colleges': typeof AdminCollegesRouteWithChildren
+  '/admin/colleges': typeof AdminCollegesRoute
   '/admin/comparisons': typeof AdminComparisonsRoute
   '/admin/content-pruning': typeof AdminContentPruningRoute
   '/admin/content-refreshes': typeof AdminContentRefreshesRoute
   '/admin/content-studio': typeof AdminContentStudioRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/course-categories': typeof AdminCourseCategoriesRoute
-  '/admin/courses': typeof AdminCoursesRouteWithChildren
+  '/admin/courses': typeof AdminCoursesRoute
   '/admin/cta-analytics': typeof AdminCtaAnalyticsRoute
   '/admin/cta-manager': typeof AdminCtaManagerRoute
   '/admin/ctr-optimizer': typeof AdminCtrOptimizerRoute
@@ -2212,10 +2212,10 @@ export interface FileRoutesByTo {
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
-  '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/exams': typeof AdminExamsRoute
   '/admin/explanation-cleaner': typeof AdminExplanationCleanerRoute
   '/admin/formulas': typeof AdminFormulasRoute
-  '/admin/freebies': typeof AdminFreebiesRouteWithChildren
+  '/admin/freebies': typeof AdminFreebiesRoute
   '/admin/guidance-requests': typeof AdminGuidanceRequestsRoute
   '/admin/homepage-tables': typeof AdminHomepageTablesRoute
   '/admin/hyperlink-update': typeof AdminHyperlinkUpdateRoute
@@ -2223,7 +2223,7 @@ export interface FileRoutesByTo {
   '/admin/image-seo': typeof AdminImageSeoRoute
   '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/institute-results': typeof AdminInstituteResultsRoute
-  '/admin/institutes': typeof AdminInstitutesRouteWithChildren
+  '/admin/institutes': typeof AdminInstitutesRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/listing-change-requests': typeof AdminListingChangeRequestsRoute
   '/admin/manage-admins': typeof AdminManageAdminsRoute
@@ -2235,7 +2235,7 @@ export interface FileRoutesByTo {
   '/admin/meta-validator': typeof AdminMetaValidatorRoute
   '/admin/mock-bundles': typeof AdminMockBundlesRoute
   '/admin/mock-orders': typeof AdminMockOrdersRoute
-  '/admin/mock-tests': typeof AdminMockTestsRouteWithChildren
+  '/admin/mock-tests': typeof AdminMockTestsRoute
   '/admin/mocks-landing': typeof AdminMocksLandingRoute
   '/admin/newsroom': typeof AdminNewsroomRoute
   '/admin/page-editor': typeof AdminPageEditorRoute
@@ -2351,8 +2351,8 @@ export interface FileRoutesByTo {
   '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
-  '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
   '/admin/colleges/bulk-create': typeof AdminCollegesBulkCreateRoute
+  '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
   '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
   '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
@@ -2488,22 +2488,22 @@ export interface FileRoutesById {
   '/admin/cat-scores': typeof AdminCatScoresRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/clear-cache': typeof AdminClearCacheRoute
-  '/admin/coaching-institutes': typeof AdminCoachingInstitutesRouteWithChildren
+  '/admin/coaching-institutes': typeof AdminCoachingInstitutesRoute
   '/admin/coaching-of-week': typeof AdminCoachingOfWeekRoute
   '/admin/coaching-refresh-hub': typeof AdminCoachingRefreshHubRoute
   '/admin/coaching-results': typeof AdminCoachingResultsRoute
   '/admin/coaching-seo-reports': typeof AdminCoachingSeoReportsRoute
   '/admin/college-applications': typeof AdminCollegeApplicationsRoute
-  '/admin/college-sections': typeof AdminCollegeSectionsRouteWithChildren
+  '/admin/college-sections': typeof AdminCollegeSectionsRoute
   '/admin/college-tables': typeof AdminCollegeTablesRoute
-  '/admin/colleges': typeof AdminCollegesRouteWithChildren
+  '/admin/colleges': typeof AdminCollegesRoute
   '/admin/comparisons': typeof AdminComparisonsRoute
   '/admin/content-pruning': typeof AdminContentPruningRoute
   '/admin/content-refreshes': typeof AdminContentRefreshesRoute
   '/admin/content-studio': typeof AdminContentStudioRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/course-categories': typeof AdminCourseCategoriesRoute
-  '/admin/courses': typeof AdminCoursesRouteWithChildren
+  '/admin/courses': typeof AdminCoursesRoute
   '/admin/cta-analytics': typeof AdminCtaAnalyticsRoute
   '/admin/cta-manager': typeof AdminCtaManagerRoute
   '/admin/ctr-optimizer': typeof AdminCtrOptimizerRoute
@@ -2511,10 +2511,10 @@ export interface FileRoutesById {
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
-  '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/exams': typeof AdminExamsRoute
   '/admin/explanation-cleaner': typeof AdminExplanationCleanerRoute
   '/admin/formulas': typeof AdminFormulasRoute
-  '/admin/freebies': typeof AdminFreebiesRouteWithChildren
+  '/admin/freebies': typeof AdminFreebiesRoute
   '/admin/guidance-requests': typeof AdminGuidanceRequestsRoute
   '/admin/homepage-tables': typeof AdminHomepageTablesRoute
   '/admin/hyperlink-update': typeof AdminHyperlinkUpdateRoute
@@ -2522,7 +2522,7 @@ export interface FileRoutesById {
   '/admin/image-seo': typeof AdminImageSeoRoute
   '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/institute-results': typeof AdminInstituteResultsRoute
-  '/admin/institutes': typeof AdminInstitutesRouteWithChildren
+  '/admin/institutes': typeof AdminInstitutesRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/listing-change-requests': typeof AdminListingChangeRequestsRoute
   '/admin/manage-admins': typeof AdminManageAdminsRoute
@@ -2534,7 +2534,7 @@ export interface FileRoutesById {
   '/admin/meta-validator': typeof AdminMetaValidatorRoute
   '/admin/mock-bundles': typeof AdminMockBundlesRoute
   '/admin/mock-orders': typeof AdminMockOrdersRoute
-  '/admin/mock-tests': typeof AdminMockTestsRouteWithChildren
+  '/admin/mock-tests': typeof AdminMockTestsRoute
   '/admin/mocks-landing': typeof AdminMocksLandingRoute
   '/admin/newsroom': typeof AdminNewsroomRoute
   '/admin/page-editor': typeof AdminPageEditorRoute
@@ -2647,18 +2647,18 @@ export interface FileRoutesById {
   '/_public/mocks/$slug': typeof PublicMocksSlugRoute
   '/_public/mocks/thank-you': typeof PublicMocksThankYouRoute
   '/_public/report/$id': typeof PublicReportIdRoute
-  '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
-  '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
-  '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
-  '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
+  '/admin/coaching-institutes_/$id': typeof AdminCoachingInstitutesIdRoute
+  '/admin/coaching-institutes_/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
+  '/admin/college-sections_/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
   '/admin/colleges_/bulk-create': typeof AdminCollegesBulkCreateRoute
-  '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
-  '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
-  '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
-  '/admin/exams/completeness': typeof AdminExamsCompletenessRoute
-  '/admin/freebies/downloads': typeof AdminFreebiesDownloadsRoute
-  '/admin/freebies/users': typeof AdminFreebiesUsersRoute
-  '/admin/institutes/generate-ai': typeof AdminInstitutesGenerateAiRoute
+  '/admin/colleges_/generate-ai': typeof AdminCollegesGenerateAiRoute
+  '/admin/courses_/bulk-generate': typeof AdminCoursesBulkGenerateRoute
+  '/admin/courses_/generate-ai': typeof AdminCoursesGenerateAiRoute
+  '/admin/exams_/bulk-create': typeof AdminExamsBulkCreateRoute
+  '/admin/exams_/completeness': typeof AdminExamsCompletenessRoute
+  '/admin/freebies_/downloads': typeof AdminFreebiesDownloadsRoute
+  '/admin/freebies_/users': typeof AdminFreebiesUsersRoute
+  '/admin/institutes_/generate-ai': typeof AdminInstitutesGenerateAiRoute
   '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/seo/write-blog': typeof AdminSeoWriteBlogRoute
   '/college/$slug/programme': typeof CollegeSlugProgrammeRouteWithChildren
@@ -2705,7 +2705,7 @@ export interface FileRoutesById {
   '/_public/mocks/leaderboard/$slug': typeof PublicMocksLeaderboardSlugRoute
   '/_public/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/_public/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
-  '/admin/mock-tests/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
+  '/admin/mock-tests_/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
   '/college/$slug/programme/$programmeSlug': typeof CollegeSlugProgrammeProgrammeSlugRoute
   '/demo/daily-test/report/$attemptId': typeof DemoDailyTestReportAttemptIdRoute
   '/demo/mocks/leaderboard/$slug': typeof DemoMocksLeaderboardSlugRoute
@@ -2949,8 +2949,8 @@ export interface FileRouteTypes {
     | '/admin/coaching-institutes/$id'
     | '/admin/coaching-institutes/bulk-create'
     | '/admin/college-sections/bulk-generate'
-    | '/admin/colleges/generate-ai'
     | '/admin/colleges/bulk-create'
+    | '/admin/colleges/generate-ai'
     | '/admin/courses/bulk-generate'
     | '/admin/courses/generate-ai'
     | '/admin/exams/bulk-create'
@@ -3243,8 +3243,8 @@ export interface FileRouteTypes {
     | '/admin/coaching-institutes/$id'
     | '/admin/coaching-institutes/bulk-create'
     | '/admin/college-sections/bulk-generate'
-    | '/admin/colleges/generate-ai'
     | '/admin/colleges/bulk-create'
+    | '/admin/colleges/generate-ai'
     | '/admin/courses/bulk-generate'
     | '/admin/courses/generate-ai'
     | '/admin/exams/bulk-create'
@@ -3538,18 +3538,18 @@ export interface FileRouteTypes {
     | '/_public/mocks/$slug'
     | '/_public/mocks/thank-you'
     | '/_public/report/$id'
-    | '/admin/coaching-institutes/$id'
-    | '/admin/coaching-institutes/bulk-create'
-    | '/admin/college-sections/bulk-generate'
-    | '/admin/colleges/generate-ai'
+    | '/admin/coaching-institutes_/$id'
+    | '/admin/coaching-institutes_/bulk-create'
+    | '/admin/college-sections_/bulk-generate'
     | '/admin/colleges_/bulk-create'
-    | '/admin/courses/bulk-generate'
-    | '/admin/courses/generate-ai'
-    | '/admin/exams/bulk-create'
-    | '/admin/exams/completeness'
-    | '/admin/freebies/downloads'
-    | '/admin/freebies/users'
-    | '/admin/institutes/generate-ai'
+    | '/admin/colleges_/generate-ai'
+    | '/admin/courses_/bulk-generate'
+    | '/admin/courses_/generate-ai'
+    | '/admin/exams_/bulk-create'
+    | '/admin/exams_/completeness'
+    | '/admin/freebies_/downloads'
+    | '/admin/freebies_/users'
+    | '/admin/institutes_/generate-ai'
     | '/admin/pages/$slug'
     | '/admin/seo/write-blog'
     | '/college/$slug/programme'
@@ -3596,7 +3596,7 @@ export interface FileRouteTypes {
     | '/_public/mocks/leaderboard/$slug'
     | '/_public/mocks/result/$attemptId'
     | '/_public/mocks/review/$attemptId'
-    | '/admin/mock-tests/$testId/builder'
+    | '/admin/mock-tests_/$testId/builder'
     | '/college/$slug/programme/$programmeSlug'
     | '/demo/daily-test/report/$attemptId'
     | '/demo/mocks/leaderboard/$slug'
@@ -5170,33 +5170,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicReportIdRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/admin/coaching-institutes/$id': {
-      id: '/admin/coaching-institutes/$id'
-      path: '/$id'
+    '/admin/coaching-institutes_/$id': {
+      id: '/admin/coaching-institutes_/$id'
+      path: '/coaching-institutes/$id'
       fullPath: '/admin/coaching-institutes/$id'
       preLoaderRoute: typeof AdminCoachingInstitutesIdRouteImport
-      parentRoute: typeof AdminCoachingInstitutesRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/coaching-institutes/bulk-create': {
-      id: '/admin/coaching-institutes/bulk-create'
-      path: '/bulk-create'
+    '/admin/coaching-institutes_/bulk-create': {
+      id: '/admin/coaching-institutes_/bulk-create'
+      path: '/coaching-institutes/bulk-create'
       fullPath: '/admin/coaching-institutes/bulk-create'
       preLoaderRoute: typeof AdminCoachingInstitutesBulkCreateRouteImport
-      parentRoute: typeof AdminCoachingInstitutesRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/college-sections/bulk-generate': {
-      id: '/admin/college-sections/bulk-generate'
-      path: '/bulk-generate'
+    '/admin/college-sections_/bulk-generate': {
+      id: '/admin/college-sections_/bulk-generate'
+      path: '/college-sections/bulk-generate'
       fullPath: '/admin/college-sections/bulk-generate'
       preLoaderRoute: typeof AdminCollegeSectionsBulkGenerateRouteImport
-      parentRoute: typeof AdminCollegeSectionsRoute
-    }
-    '/admin/colleges/generate-ai': {
-      id: '/admin/colleges/generate-ai'
-      path: '/generate-ai'
-      fullPath: '/admin/colleges/generate-ai'
-      preLoaderRoute: typeof AdminCollegesGenerateAiRouteImport
-      parentRoute: typeof AdminCollegesRoute
+      parentRoute: typeof AdminRoute
     }
     '/admin/colleges_/bulk-create': {
       id: '/admin/colleges_/bulk-create'
@@ -5205,54 +5198,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollegesBulkCreateRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/courses/bulk-generate': {
-      id: '/admin/courses/bulk-generate'
-      path: '/bulk-generate'
+    '/admin/colleges_/generate-ai': {
+      id: '/admin/colleges_/generate-ai'
+      path: '/colleges/generate-ai'
+      fullPath: '/admin/colleges/generate-ai'
+      preLoaderRoute: typeof AdminCollegesGenerateAiRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/courses_/bulk-generate': {
+      id: '/admin/courses_/bulk-generate'
+      path: '/courses/bulk-generate'
       fullPath: '/admin/courses/bulk-generate'
       preLoaderRoute: typeof AdminCoursesBulkGenerateRouteImport
-      parentRoute: typeof AdminCoursesRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/courses/generate-ai': {
-      id: '/admin/courses/generate-ai'
-      path: '/generate-ai'
+    '/admin/courses_/generate-ai': {
+      id: '/admin/courses_/generate-ai'
+      path: '/courses/generate-ai'
       fullPath: '/admin/courses/generate-ai'
       preLoaderRoute: typeof AdminCoursesGenerateAiRouteImport
-      parentRoute: typeof AdminCoursesRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/exams/bulk-create': {
-      id: '/admin/exams/bulk-create'
-      path: '/bulk-create'
+    '/admin/exams_/bulk-create': {
+      id: '/admin/exams_/bulk-create'
+      path: '/exams/bulk-create'
       fullPath: '/admin/exams/bulk-create'
       preLoaderRoute: typeof AdminExamsBulkCreateRouteImport
-      parentRoute: typeof AdminExamsRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/exams/completeness': {
-      id: '/admin/exams/completeness'
-      path: '/completeness'
+    '/admin/exams_/completeness': {
+      id: '/admin/exams_/completeness'
+      path: '/exams/completeness'
       fullPath: '/admin/exams/completeness'
       preLoaderRoute: typeof AdminExamsCompletenessRouteImport
-      parentRoute: typeof AdminExamsRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/freebies/downloads': {
-      id: '/admin/freebies/downloads'
-      path: '/downloads'
+    '/admin/freebies_/downloads': {
+      id: '/admin/freebies_/downloads'
+      path: '/freebies/downloads'
       fullPath: '/admin/freebies/downloads'
       preLoaderRoute: typeof AdminFreebiesDownloadsRouteImport
-      parentRoute: typeof AdminFreebiesRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/freebies/users': {
-      id: '/admin/freebies/users'
-      path: '/users'
+    '/admin/freebies_/users': {
+      id: '/admin/freebies_/users'
+      path: '/freebies/users'
       fullPath: '/admin/freebies/users'
       preLoaderRoute: typeof AdminFreebiesUsersRouteImport
-      parentRoute: typeof AdminFreebiesRoute
+      parentRoute: typeof AdminRoute
     }
-    '/admin/institutes/generate-ai': {
-      id: '/admin/institutes/generate-ai'
-      path: '/generate-ai'
+    '/admin/institutes_/generate-ai': {
+      id: '/admin/institutes_/generate-ai'
+      path: '/institutes/generate-ai'
       fullPath: '/admin/institutes/generate-ai'
       preLoaderRoute: typeof AdminInstitutesGenerateAiRouteImport
-      parentRoute: typeof AdminInstitutesRoute
+      parentRoute: typeof AdminRoute
     }
     '/admin/pages/$slug': {
       id: '/admin/pages/$slug'
@@ -5569,12 +5569,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicMocksReviewAttemptIdRouteImport
       parentRoute: typeof PublicMocksRoute
     }
-    '/admin/mock-tests/$testId/builder': {
-      id: '/admin/mock-tests/$testId/builder'
-      path: '/$testId/builder'
+    '/admin/mock-tests_/$testId/builder': {
+      id: '/admin/mock-tests_/$testId/builder'
+      path: '/mock-tests/$testId/builder'
       fullPath: '/admin/mock-tests/$testId/builder'
       preLoaderRoute: typeof AdminMockTestsTestIdBuilderRouteImport
-      parentRoute: typeof AdminMockTestsRoute
+      parentRoute: typeof AdminRoute
     }
     '/college/$slug/programme/$programmeSlug': {
       id: '/college/$slug/programme/$programmeSlug'
@@ -5968,112 +5968,6 @@ const PublicRouteChildren: PublicRouteChildren = {
 const PublicRouteWithChildren =
   PublicRoute._addFileChildren(PublicRouteChildren)
 
-interface AdminCoachingInstitutesRouteChildren {
-  AdminCoachingInstitutesIdRoute: typeof AdminCoachingInstitutesIdRoute
-  AdminCoachingInstitutesBulkCreateRoute: typeof AdminCoachingInstitutesBulkCreateRoute
-}
-
-const AdminCoachingInstitutesRouteChildren: AdminCoachingInstitutesRouteChildren =
-  {
-    AdminCoachingInstitutesIdRoute: AdminCoachingInstitutesIdRoute,
-    AdminCoachingInstitutesBulkCreateRoute:
-      AdminCoachingInstitutesBulkCreateRoute,
-  }
-
-const AdminCoachingInstitutesRouteWithChildren =
-  AdminCoachingInstitutesRoute._addFileChildren(
-    AdminCoachingInstitutesRouteChildren,
-  )
-
-interface AdminCollegeSectionsRouteChildren {
-  AdminCollegeSectionsBulkGenerateRoute: typeof AdminCollegeSectionsBulkGenerateRoute
-}
-
-const AdminCollegeSectionsRouteChildren: AdminCollegeSectionsRouteChildren = {
-  AdminCollegeSectionsBulkGenerateRoute: AdminCollegeSectionsBulkGenerateRoute,
-}
-
-const AdminCollegeSectionsRouteWithChildren =
-  AdminCollegeSectionsRoute._addFileChildren(AdminCollegeSectionsRouteChildren)
-
-interface AdminCollegesRouteChildren {
-  AdminCollegesGenerateAiRoute: typeof AdminCollegesGenerateAiRoute
-}
-
-const AdminCollegesRouteChildren: AdminCollegesRouteChildren = {
-  AdminCollegesGenerateAiRoute: AdminCollegesGenerateAiRoute,
-}
-
-const AdminCollegesRouteWithChildren = AdminCollegesRoute._addFileChildren(
-  AdminCollegesRouteChildren,
-)
-
-interface AdminCoursesRouteChildren {
-  AdminCoursesBulkGenerateRoute: typeof AdminCoursesBulkGenerateRoute
-  AdminCoursesGenerateAiRoute: typeof AdminCoursesGenerateAiRoute
-}
-
-const AdminCoursesRouteChildren: AdminCoursesRouteChildren = {
-  AdminCoursesBulkGenerateRoute: AdminCoursesBulkGenerateRoute,
-  AdminCoursesGenerateAiRoute: AdminCoursesGenerateAiRoute,
-}
-
-const AdminCoursesRouteWithChildren = AdminCoursesRoute._addFileChildren(
-  AdminCoursesRouteChildren,
-)
-
-interface AdminExamsRouteChildren {
-  AdminExamsBulkCreateRoute: typeof AdminExamsBulkCreateRoute
-  AdminExamsCompletenessRoute: typeof AdminExamsCompletenessRoute
-}
-
-const AdminExamsRouteChildren: AdminExamsRouteChildren = {
-  AdminExamsBulkCreateRoute: AdminExamsBulkCreateRoute,
-  AdminExamsCompletenessRoute: AdminExamsCompletenessRoute,
-}
-
-const AdminExamsRouteWithChildren = AdminExamsRoute._addFileChildren(
-  AdminExamsRouteChildren,
-)
-
-interface AdminFreebiesRouteChildren {
-  AdminFreebiesDownloadsRoute: typeof AdminFreebiesDownloadsRoute
-  AdminFreebiesUsersRoute: typeof AdminFreebiesUsersRoute
-}
-
-const AdminFreebiesRouteChildren: AdminFreebiesRouteChildren = {
-  AdminFreebiesDownloadsRoute: AdminFreebiesDownloadsRoute,
-  AdminFreebiesUsersRoute: AdminFreebiesUsersRoute,
-}
-
-const AdminFreebiesRouteWithChildren = AdminFreebiesRoute._addFileChildren(
-  AdminFreebiesRouteChildren,
-)
-
-interface AdminInstitutesRouteChildren {
-  AdminInstitutesGenerateAiRoute: typeof AdminInstitutesGenerateAiRoute
-}
-
-const AdminInstitutesRouteChildren: AdminInstitutesRouteChildren = {
-  AdminInstitutesGenerateAiRoute: AdminInstitutesGenerateAiRoute,
-}
-
-const AdminInstitutesRouteWithChildren = AdminInstitutesRoute._addFileChildren(
-  AdminInstitutesRouteChildren,
-)
-
-interface AdminMockTestsRouteChildren {
-  AdminMockTestsTestIdBuilderRoute: typeof AdminMockTestsTestIdBuilderRoute
-}
-
-const AdminMockTestsRouteChildren: AdminMockTestsRouteChildren = {
-  AdminMockTestsTestIdBuilderRoute: AdminMockTestsTestIdBuilderRoute,
-}
-
-const AdminMockTestsRouteWithChildren = AdminMockTestsRoute._addFileChildren(
-  AdminMockTestsRouteChildren,
-)
-
 interface AdminRouteChildren {
   AdminAiUsageRoute: typeof AdminAiUsageRoute
   AdminAllLeadsUnifiedRoute: typeof AdminAllLeadsUnifiedRoute
@@ -6091,22 +5985,22 @@ interface AdminRouteChildren {
   AdminCatScoresRoute: typeof AdminCatScoresRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminClearCacheRoute: typeof AdminClearCacheRoute
-  AdminCoachingInstitutesRoute: typeof AdminCoachingInstitutesRouteWithChildren
+  AdminCoachingInstitutesRoute: typeof AdminCoachingInstitutesRoute
   AdminCoachingOfWeekRoute: typeof AdminCoachingOfWeekRoute
   AdminCoachingRefreshHubRoute: typeof AdminCoachingRefreshHubRoute
   AdminCoachingResultsRoute: typeof AdminCoachingResultsRoute
   AdminCoachingSeoReportsRoute: typeof AdminCoachingSeoReportsRoute
   AdminCollegeApplicationsRoute: typeof AdminCollegeApplicationsRoute
-  AdminCollegeSectionsRoute: typeof AdminCollegeSectionsRouteWithChildren
+  AdminCollegeSectionsRoute: typeof AdminCollegeSectionsRoute
   AdminCollegeTablesRoute: typeof AdminCollegeTablesRoute
-  AdminCollegesRoute: typeof AdminCollegesRouteWithChildren
+  AdminCollegesRoute: typeof AdminCollegesRoute
   AdminComparisonsRoute: typeof AdminComparisonsRoute
   AdminContentPruningRoute: typeof AdminContentPruningRoute
   AdminContentRefreshesRoute: typeof AdminContentRefreshesRoute
   AdminContentStudioRoute: typeof AdminContentStudioRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
   AdminCourseCategoriesRoute: typeof AdminCourseCategoriesRoute
-  AdminCoursesRoute: typeof AdminCoursesRouteWithChildren
+  AdminCoursesRoute: typeof AdminCoursesRoute
   AdminCtaAnalyticsRoute: typeof AdminCtaAnalyticsRoute
   AdminCtaManagerRoute: typeof AdminCtaManagerRoute
   AdminCtrOptimizerRoute: typeof AdminCtrOptimizerRoute
@@ -6114,10 +6008,10 @@ interface AdminRouteChildren {
   AdminDatabaseBackupRoute: typeof AdminDatabaseBackupRoute
   AdminDemoLeadsRoute: typeof AdminDemoLeadsRoute
   AdminExamCountdownsRoute: typeof AdminExamCountdownsRoute
-  AdminExamsRoute: typeof AdminExamsRouteWithChildren
+  AdminExamsRoute: typeof AdminExamsRoute
   AdminExplanationCleanerRoute: typeof AdminExplanationCleanerRoute
   AdminFormulasRoute: typeof AdminFormulasRoute
-  AdminFreebiesRoute: typeof AdminFreebiesRouteWithChildren
+  AdminFreebiesRoute: typeof AdminFreebiesRoute
   AdminGuidanceRequestsRoute: typeof AdminGuidanceRequestsRoute
   AdminHomepageTablesRoute: typeof AdminHomepageTablesRoute
   AdminHyperlinkUpdateRoute: typeof AdminHyperlinkUpdateRoute
@@ -6125,7 +6019,7 @@ interface AdminRouteChildren {
   AdminImageSeoRoute: typeof AdminImageSeoRoute
   AdminInquiriesRoute: typeof AdminInquiriesRoute
   AdminInstituteResultsRoute: typeof AdminInstituteResultsRoute
-  AdminInstitutesRoute: typeof AdminInstitutesRouteWithChildren
+  AdminInstitutesRoute: typeof AdminInstitutesRoute
   AdminLeadsRoute: typeof AdminLeadsRoute
   AdminListingChangeRequestsRoute: typeof AdminListingChangeRequestsRoute
   AdminManageAdminsRoute: typeof AdminManageAdminsRoute
@@ -6137,7 +6031,7 @@ interface AdminRouteChildren {
   AdminMetaValidatorRoute: typeof AdminMetaValidatorRoute
   AdminMockBundlesRoute: typeof AdminMockBundlesRoute
   AdminMockOrdersRoute: typeof AdminMockOrdersRoute
-  AdminMockTestsRoute: typeof AdminMockTestsRouteWithChildren
+  AdminMockTestsRoute: typeof AdminMockTestsRoute
   AdminMocksLandingRoute: typeof AdminMocksLandingRoute
   AdminNewsroomRoute: typeof AdminNewsroomRoute
   AdminPageEditorRoute: typeof AdminPageEditorRoute
@@ -6173,9 +6067,21 @@ interface AdminRouteChildren {
   AdminVocabularyRoute: typeof AdminVocabularyRoute
   AdminWebsiteOptimizerRoute: typeof AdminWebsiteOptimizerRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCoachingInstitutesIdRoute: typeof AdminCoachingInstitutesIdRoute
+  AdminCoachingInstitutesBulkCreateRoute: typeof AdminCoachingInstitutesBulkCreateRoute
+  AdminCollegeSectionsBulkGenerateRoute: typeof AdminCollegeSectionsBulkGenerateRoute
   AdminCollegesBulkCreateRoute: typeof AdminCollegesBulkCreateRoute
+  AdminCollegesGenerateAiRoute: typeof AdminCollegesGenerateAiRoute
+  AdminCoursesBulkGenerateRoute: typeof AdminCoursesBulkGenerateRoute
+  AdminCoursesGenerateAiRoute: typeof AdminCoursesGenerateAiRoute
+  AdminExamsBulkCreateRoute: typeof AdminExamsBulkCreateRoute
+  AdminExamsCompletenessRoute: typeof AdminExamsCompletenessRoute
+  AdminFreebiesDownloadsRoute: typeof AdminFreebiesDownloadsRoute
+  AdminFreebiesUsersRoute: typeof AdminFreebiesUsersRoute
+  AdminInstitutesGenerateAiRoute: typeof AdminInstitutesGenerateAiRoute
   AdminPagesSlugRoute: typeof AdminPagesSlugRoute
   AdminSeoWriteBlogRoute: typeof AdminSeoWriteBlogRoute
+  AdminMockTestsTestIdBuilderRoute: typeof AdminMockTestsTestIdBuilderRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -6195,22 +6101,22 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCatScoresRoute: AdminCatScoresRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminClearCacheRoute: AdminClearCacheRoute,
-  AdminCoachingInstitutesRoute: AdminCoachingInstitutesRouteWithChildren,
+  AdminCoachingInstitutesRoute: AdminCoachingInstitutesRoute,
   AdminCoachingOfWeekRoute: AdminCoachingOfWeekRoute,
   AdminCoachingRefreshHubRoute: AdminCoachingRefreshHubRoute,
   AdminCoachingResultsRoute: AdminCoachingResultsRoute,
   AdminCoachingSeoReportsRoute: AdminCoachingSeoReportsRoute,
   AdminCollegeApplicationsRoute: AdminCollegeApplicationsRoute,
-  AdminCollegeSectionsRoute: AdminCollegeSectionsRouteWithChildren,
+  AdminCollegeSectionsRoute: AdminCollegeSectionsRoute,
   AdminCollegeTablesRoute: AdminCollegeTablesRoute,
-  AdminCollegesRoute: AdminCollegesRouteWithChildren,
+  AdminCollegesRoute: AdminCollegesRoute,
   AdminComparisonsRoute: AdminComparisonsRoute,
   AdminContentPruningRoute: AdminContentPruningRoute,
   AdminContentRefreshesRoute: AdminContentRefreshesRoute,
   AdminContentStudioRoute: AdminContentStudioRoute,
   AdminCouponsRoute: AdminCouponsRoute,
   AdminCourseCategoriesRoute: AdminCourseCategoriesRoute,
-  AdminCoursesRoute: AdminCoursesRouteWithChildren,
+  AdminCoursesRoute: AdminCoursesRoute,
   AdminCtaAnalyticsRoute: AdminCtaAnalyticsRoute,
   AdminCtaManagerRoute: AdminCtaManagerRoute,
   AdminCtrOptimizerRoute: AdminCtrOptimizerRoute,
@@ -6218,10 +6124,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDatabaseBackupRoute: AdminDatabaseBackupRoute,
   AdminDemoLeadsRoute: AdminDemoLeadsRoute,
   AdminExamCountdownsRoute: AdminExamCountdownsRoute,
-  AdminExamsRoute: AdminExamsRouteWithChildren,
+  AdminExamsRoute: AdminExamsRoute,
   AdminExplanationCleanerRoute: AdminExplanationCleanerRoute,
   AdminFormulasRoute: AdminFormulasRoute,
-  AdminFreebiesRoute: AdminFreebiesRouteWithChildren,
+  AdminFreebiesRoute: AdminFreebiesRoute,
   AdminGuidanceRequestsRoute: AdminGuidanceRequestsRoute,
   AdminHomepageTablesRoute: AdminHomepageTablesRoute,
   AdminHyperlinkUpdateRoute: AdminHyperlinkUpdateRoute,
@@ -6229,7 +6135,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminImageSeoRoute: AdminImageSeoRoute,
   AdminInquiriesRoute: AdminInquiriesRoute,
   AdminInstituteResultsRoute: AdminInstituteResultsRoute,
-  AdminInstitutesRoute: AdminInstitutesRouteWithChildren,
+  AdminInstitutesRoute: AdminInstitutesRoute,
   AdminLeadsRoute: AdminLeadsRoute,
   AdminListingChangeRequestsRoute: AdminListingChangeRequestsRoute,
   AdminManageAdminsRoute: AdminManageAdminsRoute,
@@ -6241,7 +6147,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMetaValidatorRoute: AdminMetaValidatorRoute,
   AdminMockBundlesRoute: AdminMockBundlesRoute,
   AdminMockOrdersRoute: AdminMockOrdersRoute,
-  AdminMockTestsRoute: AdminMockTestsRouteWithChildren,
+  AdminMockTestsRoute: AdminMockTestsRoute,
   AdminMocksLandingRoute: AdminMocksLandingRoute,
   AdminNewsroomRoute: AdminNewsroomRoute,
   AdminPageEditorRoute: AdminPageEditorRoute,
@@ -6277,9 +6183,22 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminVocabularyRoute: AdminVocabularyRoute,
   AdminWebsiteOptimizerRoute: AdminWebsiteOptimizerRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminCoachingInstitutesIdRoute: AdminCoachingInstitutesIdRoute,
+  AdminCoachingInstitutesBulkCreateRoute:
+    AdminCoachingInstitutesBulkCreateRoute,
+  AdminCollegeSectionsBulkGenerateRoute: AdminCollegeSectionsBulkGenerateRoute,
   AdminCollegesBulkCreateRoute: AdminCollegesBulkCreateRoute,
+  AdminCollegesGenerateAiRoute: AdminCollegesGenerateAiRoute,
+  AdminCoursesBulkGenerateRoute: AdminCoursesBulkGenerateRoute,
+  AdminCoursesGenerateAiRoute: AdminCoursesGenerateAiRoute,
+  AdminExamsBulkCreateRoute: AdminExamsBulkCreateRoute,
+  AdminExamsCompletenessRoute: AdminExamsCompletenessRoute,
+  AdminFreebiesDownloadsRoute: AdminFreebiesDownloadsRoute,
+  AdminFreebiesUsersRoute: AdminFreebiesUsersRoute,
+  AdminInstitutesGenerateAiRoute: AdminInstitutesGenerateAiRoute,
   AdminPagesSlugRoute: AdminPagesSlugRoute,
   AdminSeoWriteBlogRoute: AdminSeoWriteBlogRoute,
+  AdminMockTestsTestIdBuilderRoute: AdminMockTestsTestIdBuilderRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
