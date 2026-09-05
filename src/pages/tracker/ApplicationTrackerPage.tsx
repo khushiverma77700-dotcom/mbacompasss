@@ -63,6 +63,9 @@ import {
   listingFaqs,
   mainPageMeta,
 } from "@/lib/applicationSeo";
+import RecommendedRail from "@/components/application/RecommendedRail";
+import NotificationOptIn from "@/components/NotificationOptIn";
+
 
 const TONE_CLASS: Record<DeadlineTone, string> = {
   today: "bg-rose-50 text-rose-700 border-rose-200",
