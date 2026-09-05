@@ -281,6 +281,7 @@ import { Route as PublicCollegesByCityCitySlugRouteImport } from './routes/_publ
 import { Route as PublicCollegesByExamExamSlugRouteImport } from './routes/_public.colleges.by-exam.$examSlug'
 import { Route as PublicCollegesTypeTypeSlugRouteImport } from './routes/_public.colleges.type.$typeSlug'
 import { Route as PublicListYourBusinessTypeIdRouteImport } from './routes/_public.list-your-business.$type.$id'
+import { Route as PublicMbaApplicationCollegeSlugRouteImport } from './routes/_public.mba-application.college.$slug'
 import { Route as PublicMocksLeaderboardSlugRouteImport } from './routes/_public.mocks.leaderboard.$slug'
 import { Route as PublicMocksResultAttemptIdRouteImport } from './routes/_public.mocks.result.$attemptId'
 import { Route as PublicMocksReviewAttemptIdRouteImport } from './routes/_public.mocks.review.$attemptId'
@@ -1693,6 +1694,12 @@ const PublicListYourBusinessTypeIdRoute =
     path: '/$type/$id',
     getParentRoute: () => PublicListYourBusinessRoute,
   } as any)
+const PublicMbaApplicationCollegeSlugRoute =
+  PublicMbaApplicationCollegeSlugRouteImport.update({
+    id: '/mba-application/college/$slug',
+    path: '/mba-application/college/$slug',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicMocksLeaderboardSlugRoute =
   PublicMocksLeaderboardSlugRouteImport.update({
     id: '/leaderboard/$slug',
@@ -2101,6 +2108,7 @@ export interface FileRoutesByFullPath {
   '/colleges/by-exam/$examSlug': typeof PublicCollegesByExamExamSlugRoute
   '/colleges/type/$typeSlug': typeof PublicCollegesTypeTypeSlugRoute
   '/list-your-business/$type/$id': typeof PublicListYourBusinessTypeIdRoute
+  '/mba-application/college/$slug': typeof PublicMbaApplicationCollegeSlugRoute
   '/mocks/leaderboard/$slug': typeof PublicMocksLeaderboardSlugRoute
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
@@ -2394,6 +2402,7 @@ export interface FileRoutesByTo {
   '/colleges/by-exam/$examSlug': typeof PublicCollegesByExamExamSlugRoute
   '/colleges/type/$typeSlug': typeof PublicCollegesTypeTypeSlugRoute
   '/list-your-business/$type/$id': typeof PublicListYourBusinessTypeIdRoute
+  '/mba-application/college/$slug': typeof PublicMbaApplicationCollegeSlugRoute
   '/mocks/leaderboard/$slug': typeof PublicMocksLeaderboardSlugRoute
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
@@ -2692,6 +2701,7 @@ export interface FileRoutesById {
   '/_public/colleges/by-exam/$examSlug': typeof PublicCollegesByExamExamSlugRoute
   '/_public/colleges/type/$typeSlug': typeof PublicCollegesTypeTypeSlugRoute
   '/_public/list-your-business/$type/$id': typeof PublicListYourBusinessTypeIdRoute
+  '/_public/mba-application/college/$slug': typeof PublicMbaApplicationCollegeSlugRoute
   '/_public/mocks/leaderboard/$slug': typeof PublicMocksLeaderboardSlugRoute
   '/_public/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/_public/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
@@ -2990,6 +3000,7 @@ export interface FileRouteTypes {
     | '/colleges/by-exam/$examSlug'
     | '/colleges/type/$typeSlug'
     | '/list-your-business/$type/$id'
+    | '/mba-application/college/$slug'
     | '/mocks/leaderboard/$slug'
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
@@ -3283,6 +3294,7 @@ export interface FileRouteTypes {
     | '/colleges/by-exam/$examSlug'
     | '/colleges/type/$typeSlug'
     | '/list-your-business/$type/$id'
+    | '/mba-application/college/$slug'
     | '/mocks/leaderboard/$slug'
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
@@ -3580,6 +3592,7 @@ export interface FileRouteTypes {
     | '/_public/colleges/by-exam/$examSlug'
     | '/_public/colleges/type/$typeSlug'
     | '/_public/list-your-business/$type/$id'
+    | '/_public/mba-application/college/$slug'
     | '/_public/mocks/leaderboard/$slug'
     | '/_public/mocks/result/$attemptId'
     | '/_public/mocks/review/$attemptId'
@@ -5528,6 +5541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicListYourBusinessTypeIdRouteImport
       parentRoute: typeof PublicListYourBusinessRoute
     }
+    '/_public/mba-application/college/$slug': {
+      id: '/_public/mba-application/college/$slug'
+      path: '/mba-application/college/$slug'
+      fullPath: '/mba-application/college/$slug'
+      preLoaderRoute: typeof PublicMbaApplicationCollegeSlugRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/mocks/leaderboard/$slug': {
       id: '/_public/mocks/leaderboard/$slug'
       path: '/leaderboard/$slug'
@@ -5893,6 +5913,7 @@ interface PublicRouteChildren {
   PublicMbaApplicationCategoryRoute: typeof PublicMbaApplicationCategoryRoute
   PublicReportIdRoute: typeof PublicReportIdRoute
   PublicMbaApplicationIndexRoute: typeof PublicMbaApplicationIndexRoute
+  PublicMbaApplicationCollegeSlugRoute: typeof PublicMbaApplicationCollegeSlugRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -5941,6 +5962,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicMbaApplicationCategoryRoute: PublicMbaApplicationCategoryRoute,
   PublicReportIdRoute: PublicReportIdRoute,
   PublicMbaApplicationIndexRoute: PublicMbaApplicationIndexRoute,
+  PublicMbaApplicationCollegeSlugRoute: PublicMbaApplicationCollegeSlugRoute,
 }
 
 const PublicRouteWithChildren =
