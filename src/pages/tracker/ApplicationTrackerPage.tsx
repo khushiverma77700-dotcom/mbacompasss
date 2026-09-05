@@ -392,6 +392,16 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       </section>
 
       {/* Results */}
+      {!isLoading && !isError && (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <p className="text-sm text-slate-600">
+            Showing <span className="font-medium text-slate-900">{visible.length}</span> of {stats.total}{" "}
+            applications{search ? ` for “${search}”` : ""}
+          </p>
+          <NotificationOptIn compact />
+        </div>
+      )}
+
       {isLoading ? (
         <div className="space-y-3">
           {[0, 1, 2, 3, 4].map((i) => (
