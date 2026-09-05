@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 const MERITTO_FIELDS: { key: string; label: string; required?: boolean }[] = [
   { key: "name", label: "Name", required: true },
@@ -95,6 +96,44 @@ export default function AdminMerittoLogs() {
   const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
   const [originDomain, setOriginDomain] = useState<string>("bschoolbuzz.in");
+  const [integrationEnabled, setIntegrationEnabled] = useState<boolean>(false);
+  const [switchBusy, setSwitchBusy] = useState<boolean>(false);
+
+  const loadIntegrationSwitch = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "meritto_integration")
+      .maybeSingle();
+    const val = (data?.value ?? null) as { enabled?: boolean } | null;
+    setIntegrationEnabled(!!val?.enabled);
+  };
+
+  useEffect(() => { void loadIntegrationSwitch(); }, []);
+
+  const toggleIntegration = async (next: boolean) => {
+    setSwitchBusy(true);
+    try {
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert({ key: "meritto_integration", value: { enabled: next } }, { onConflict: "key" });
+      if (error) throw error;
+      setIntegrationEnabled(next);
+      toast.success(next ? "Meritto integration switched ON" : "Meritto integration switched OFF");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not update the switch");
+    } finally {
+      setSwitchBusy(false);
+    }
+  };
+
+  const guardEnabled = (): boolean => {
+    if (!integrationEnabled) {
+      toast.error("Meritto integration is switched off. Turn it on to send leads.");
+      return false;
+    }
+    return true;
+  };
 
   const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
@@ -194,6 +233,7 @@ export default function AdminMerittoLogs() {
   };
 
   const runBulk = async () => {
+    if (!guardEnabled()) return;
     const prepared = buildMapped();
     const initial: BulkResult[] = prepared.map((p, i) => ({
       row: i + 2,
@@ -226,6 +266,7 @@ export default function AdminMerittoLogs() {
   };
 
   const retryFailed = async () => {
+    if (!guardEnabled()) return;
     const failedIdx = bulkResults.map((r, i) => (r.status === "failed" ? i : -1)).filter((i) => i >= 0);
     if (!failedIdx.length) { toast.info("No failed rows to retry"); return; }
     setBulkBusy(true);
@@ -324,6 +365,7 @@ export default function AdminMerittoLogs() {
   }, [rows]);
 
   const retry = async (id: string) => {
+    if (!guardEnabled()) return;
     setRetrying(id);
     try {
       const { data, error } = await supabase.functions.invoke("push-to-meritto", {
@@ -340,6 +382,7 @@ export default function AdminMerittoLogs() {
   };
 
   const pushManual = async () => {
+    if (!guardEnabled()) return;
     if (!manual.name && !manual.email && !manual.mobile) {
       toast.error("Enter at least name, email or mobile");
       return;
@@ -388,14 +431,34 @@ export default function AdminMerittoLogs() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold">Meritto (NoPaperForms) Integration</h1>
-          <p className="text-sm text-muted-foreground">Every lead captured on the site is automatically pushed to Meritto. Track delivery here.</p>
+          <p className="text-sm text-muted-foreground">Leads are pushed to Meritto only while the switch below is on. Track delivery here.</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setManualOpen(true)}><Plus className="h-4 w-4 mr-2" />Push Manually</Button>
-          <Button onClick={() => setBulkOpen(true)} variant="secondary"><Upload className="h-4 w-4 mr-2" />Bulk Upload</Button>
+          <Button onClick={() => setManualOpen(true)} disabled={!integrationEnabled}><Plus className="h-4 w-4 mr-2" />Push Manually</Button>
+          <Button onClick={() => setBulkOpen(true)} variant="secondary" disabled={!integrationEnabled}><Upload className="h-4 w-4 mr-2" />Bulk Upload</Button>
           <Button onClick={load} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
         </div>
       </div>
+
+      <Card className={integrationEnabled ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60"}>
+        <CardContent className="flex items-center justify-between gap-4 py-4 flex-wrap">
+          <div>
+            <div className="font-semibold">Send leads to Meritto</div>
+            <p className="text-sm text-muted-foreground">
+              {integrationEnabled
+                ? "On — website leads, manual pushes and bulk uploads are delivered to Meritto."
+                : "Off — nothing is sent to Meritto. Website leads, manual pushes and bulk uploads are all paused."}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className={integrationEnabled ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-amber-100 text-amber-800 border-amber-200"}>
+              {integrationEnabled ? "ON" : "OFF"}
+            </Badge>
+            <Switch checked={integrationEnabled} disabled={switchBusy} onCheckedChange={(v) => void toggleIntegration(v)} />
+          </div>
+        </CardContent>
+      </Card>
+
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCard icon={<Users className="h-4 w-4" />} label="Total leads" value={stats.total} />
