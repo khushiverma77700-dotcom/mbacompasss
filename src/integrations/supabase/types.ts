@@ -8687,6 +8687,84 @@ export type Database = {
         }
         Relationships: []
       }
+      push_broadcasts: {
+        Row: {
+          audience: string
+          body: string | null
+          created_at: string
+          created_by: string | null
+          error_text: string | null
+          failed_count: number
+          id: string
+          image_url: string | null
+          link_url: string | null
+          sent_count: number
+          status: string
+          title: string
+        }
+        Insert: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_text?: string | null
+          failed_count?: number
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          sent_count?: number
+          status?: string
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_text?: string | null
+          failed_count?: number
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          sent_count?: number
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      push_subscribers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          last_seen_at: string
+          page_path: string | null
+          token: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          page_path?: string | null
+          token: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          page_path?: string | null
+          token?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       quant_formula_progress: {
         Row: {
           accuracy_pct: number | null

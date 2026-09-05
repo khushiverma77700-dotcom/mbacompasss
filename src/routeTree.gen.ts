@@ -123,6 +123,7 @@ import { Route as AdminPageEditorRouteImport } from './routes/admin.page-editor'
 import { Route as AdminPersonalizedHubRouteImport } from './routes/admin.personalized-hub'
 import { Route as AdminProfileAnalyzerRouteImport } from './routes/admin.profile-analyzer'
 import { Route as AdminProgrammesRouteImport } from './routes/admin.programmes'
+import { Route as AdminPushNotificationsRouteImport } from './routes/admin.push-notifications'
 import { Route as AdminReseoAuditLogRouteImport } from './routes/admin.reseo-audit-log'
 import { Route as AdminReverseSiloingRouteImport } from './routes/admin.reverse-siloing'
 import { Route as AdminRoiAnalysesRouteImport } from './routes/admin.roi-analyses'
@@ -878,6 +879,11 @@ const AdminProfileAnalyzerRoute = AdminProfileAnalyzerRouteImport.update({
 const AdminProgrammesRoute = AdminProgrammesRouteImport.update({
   id: '/programmes',
   path: '/programmes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPushNotificationsRoute = AdminPushNotificationsRouteImport.update({
+  id: '/push-notifications',
+  path: '/push-notifications',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminReseoAuditLogRoute = AdminReseoAuditLogRouteImport.update({
@@ -1949,6 +1955,7 @@ export interface FileRoutesByFullPath {
   '/admin/personalized-hub': typeof AdminPersonalizedHubRoute
   '/admin/profile-analyzer': typeof AdminProfileAnalyzerRoute
   '/admin/programmes': typeof AdminProgrammesRoute
+  '/admin/push-notifications': typeof AdminPushNotificationsRoute
   '/admin/reseo-audit-log': typeof AdminReseoAuditLogRoute
   '/admin/reverse-siloing': typeof AdminReverseSiloingRoute
   '/admin/roi-analyses': typeof AdminRoiAnalysesRoute
@@ -2242,6 +2249,7 @@ export interface FileRoutesByTo {
   '/admin/personalized-hub': typeof AdminPersonalizedHubRoute
   '/admin/profile-analyzer': typeof AdminProfileAnalyzerRoute
   '/admin/programmes': typeof AdminProgrammesRoute
+  '/admin/push-notifications': typeof AdminPushNotificationsRoute
   '/admin/reseo-audit-log': typeof AdminReseoAuditLogRoute
   '/admin/reverse-siloing': typeof AdminReverseSiloingRoute
   '/admin/roi-analyses': typeof AdminRoiAnalysesRoute
@@ -2541,6 +2549,7 @@ export interface FileRoutesById {
   '/admin/personalized-hub': typeof AdminPersonalizedHubRoute
   '/admin/profile-analyzer': typeof AdminProfileAnalyzerRoute
   '/admin/programmes': typeof AdminProgrammesRoute
+  '/admin/push-notifications': typeof AdminPushNotificationsRoute
   '/admin/reseo-audit-log': typeof AdminReseoAuditLogRoute
   '/admin/reverse-siloing': typeof AdminReverseSiloingRoute
   '/admin/roi-analyses': typeof AdminRoiAnalysesRoute
@@ -2841,6 +2850,7 @@ export interface FileRouteTypes {
     | '/admin/personalized-hub'
     | '/admin/profile-analyzer'
     | '/admin/programmes'
+    | '/admin/push-notifications'
     | '/admin/reseo-audit-log'
     | '/admin/reverse-siloing'
     | '/admin/roi-analyses'
@@ -3134,6 +3144,7 @@ export interface FileRouteTypes {
     | '/admin/personalized-hub'
     | '/admin/profile-analyzer'
     | '/admin/programmes'
+    | '/admin/push-notifications'
     | '/admin/reseo-audit-log'
     | '/admin/reverse-siloing'
     | '/admin/roi-analyses'
@@ -3432,6 +3443,7 @@ export interface FileRouteTypes {
     | '/admin/personalized-hub'
     | '/admin/profile-analyzer'
     | '/admin/programmes'
+    | '/admin/push-notifications'
     | '/admin/reseo-audit-log'
     | '/admin/reverse-siloing'
     | '/admin/roi-analyses'
@@ -4433,6 +4445,13 @@ declare module '@tanstack/react-router' {
       path: '/programmes'
       fullPath: '/admin/programmes'
       preLoaderRoute: typeof AdminProgrammesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/push-notifications': {
+      id: '/admin/push-notifications'
+      path: '/push-notifications'
+      fullPath: '/admin/push-notifications'
+      preLoaderRoute: typeof AdminPushNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/reseo-audit-log': {
@@ -6038,6 +6057,7 @@ interface AdminRouteChildren {
   AdminPersonalizedHubRoute: typeof AdminPersonalizedHubRoute
   AdminProfileAnalyzerRoute: typeof AdminProfileAnalyzerRoute
   AdminProgrammesRoute: typeof AdminProgrammesRoute
+  AdminPushNotificationsRoute: typeof AdminPushNotificationsRoute
   AdminReseoAuditLogRoute: typeof AdminReseoAuditLogRoute
   AdminReverseSiloingRoute: typeof AdminReverseSiloingRoute
   AdminRoiAnalysesRoute: typeof AdminRoiAnalysesRoute
@@ -6154,6 +6174,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPersonalizedHubRoute: AdminPersonalizedHubRoute,
   AdminProfileAnalyzerRoute: AdminProfileAnalyzerRoute,
   AdminProgrammesRoute: AdminProgrammesRoute,
+  AdminPushNotificationsRoute: AdminPushNotificationsRoute,
   AdminReseoAuditLogRoute: AdminReseoAuditLogRoute,
   AdminReverseSiloingRoute: AdminReverseSiloingRoute,
   AdminRoiAnalysesRoute: AdminRoiAnalysesRoute,

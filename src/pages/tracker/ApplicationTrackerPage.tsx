@@ -63,6 +63,9 @@ import {
   listingFaqs,
   mainPageMeta,
 } from "@/lib/applicationSeo";
+import RecommendedRail from "@/components/application/RecommendedRail";
+import NotificationOptIn from "@/components/NotificationOptIn";
+
 
 const TONE_CLASS: Record<DeadlineTone, string> = {
   today: "bg-rose-50 text-rose-700 border-rose-200",
@@ -184,6 +187,25 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
   }, [scoped]);
 
   const faqs = useMemo(() => listingFaqs(scoped), [scoped]);
+
+  /* Today's picks: advisor-recommended and still open, highest priority first.
+     If nothing is marked recommended, fall back to whatever closes soonest. */
+  const todaysPicks = useMemo(() => {
+    const open = scoped.filter((row) => deadlineInfo(row).isOpen);
+    const picked = open
+      .filter((row) => row.is_recommended)
+      .sort((a, b) => {
+        if (b.recommendation_priority !== a.recommendation_priority) {
+          return b.recommendation_priority - a.recommendation_priority;
+        }
+        return (a.application_deadline ?? "9999").localeCompare(b.application_deadline ?? "9999");
+      });
+    if (picked.length > 0) return picked.slice(0, 12);
+    return [...open]
+      .sort((a, b) => (a.application_deadline ?? "9999").localeCompare(b.application_deadline ?? "9999"))
+      .slice(0, 10);
+  }, [scoped]);
+
   const filtersDirty = deadlineFilter !== DEFAULT_PREFS.deadline_filter || exam !== null || !!search ||
     (!presetCategory && category !== "all");
 
@@ -275,8 +297,18 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
         </div>
       </header>
 
+      {/* Today's recommended colleges — auto-scrolling rail */}
+      {!isLoading && <RecommendedRail rows={todaysPicks} onApply={(row) => void handleApply(row)} />}
+
+      {/* Browser alerts opt-in (wording and on/off controlled from the admin panel) */}
+      <NotificationOptIn />
+
       {/* Filters */}
-      <section aria-label="Filter MBA applications" className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+      <section
+        aria-label="Filter MBA applications"
+        className="sticky top-16 z-20 space-y-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80"
+      >
+
         <div>
           <p className="pb-2 text-sm font-medium text-slate-500">Application deadline</p>
           <div className="flex flex-wrap gap-2">
@@ -360,6 +392,16 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       </section>
 
       {/* Results */}
+      {!isLoading && !isError && (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <p className="text-sm text-slate-600">
+            Showing <span className="font-medium text-slate-900">{visible.length}</span> of {stats.total}{" "}
+            applications{search ? ` for “${search}”` : ""}
+          </p>
+          <NotificationOptIn compact />
+        </div>
+      )}
+
       {isLoading ? (
         <div className="space-y-3">
           {[0, 1, 2, 3, 4].map((i) => (

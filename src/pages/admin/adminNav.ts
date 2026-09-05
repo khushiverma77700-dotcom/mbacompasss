@@ -7,7 +7,7 @@ import {
   Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare,
   TrendingUp, Sparkles, ShieldCheck, Briefcase, Target, PhoneCall, Database,
   Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart, CalendarClock, FileCode,
-  Gift, Send, Stethoscope, Plus, Upload,
+  Gift, Send, Stethoscope, Plus, Upload, BellRing,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -82,6 +82,8 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Daily Tests", path: "/admin/daily-tests", icon: ClipboardList },
       { label: "Exam Countdowns", path: "/admin/exam-countdowns", icon: CalendarClock },
       { label: "Push Notifications", path: "/admin/student-notifications", icon: Bell },
+      { label: "Browser Notifications", path: "/admin/push-notifications", icon: BellRing },
+
     ],
   },
   {
