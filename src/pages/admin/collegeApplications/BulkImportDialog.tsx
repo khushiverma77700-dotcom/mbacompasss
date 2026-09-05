@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/slugify";
-import { Upload, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Upload, AlertTriangle, CheckCircle2, Download } from "lucide-react";
 import type { TrackerRow } from "@/lib/applicationTracker";
 
 /**
@@ -36,6 +36,7 @@ type Props = {
 
 const TARGET_FIELDS: { key: string; label: string; required?: boolean }[] = [
   { key: "name", label: "College / Exam name", required: true },
+  { key: "short_name", label: "Short name" },
   { key: "category", label: "Category (exam/iim/tier1/tier2)" },
   { key: "tier", label: "Tier" },
   { key: "program", label: "Programme" },
@@ -46,9 +47,85 @@ const TARGET_FIELDS: { key: string; label: string; required?: boolean }[] = [
   { key: "program_fee", label: "Programme fee" },
   { key: "accepted_exams", label: "Accepted exams" },
   { key: "apply_url", label: "Apply URL" },
+  { key: "college_website", label: "Official website" },
   { key: "inside_info_url", label: "Inside info document URL" },
+  { key: "inside_info_notes", label: "Inside info notes" },
   { key: "short_description", label: "Short description" },
+  { key: "eligibility", label: "Eligibility" },
+  { key: "selection_process", label: "Selection process" },
+  { key: "cutoff_note", label: "Cutoff note" },
+  { key: "average_package", label: "Average package" },
+  { key: "median_package", label: "Median package" },
+  { key: "highest_package", label: "Highest package" },
+  { key: "logo_url", label: "Logo URL" },
+  { key: "status", label: "Status (open/closing_soon/closed)" },
+  { key: "display_order", label: "Display order" },
+  { key: "is_recommended", label: "Recommended (yes/no)" },
+  { key: "recommendation_label", label: "Recommendation badge label" },
+  { key: "recommendation_note", label: "Recommendation note" },
+  { key: "recommendation_priority", label: "Recommendation priority" },
+  { key: "seo_title", label: "SEO title" },
+  { key: "seo_description", label: "SEO description" },
+  { key: "seo_h1", label: "SEO H1" },
+  { key: "seo_intro", label: "SEO intro" },
+  { key: "seo_keywords", label: "SEO keywords" },
+  { key: "seo_image_alt", label: "Image alt text" },
 ];
+
+const TEMPLATE_SAMPLE: Record<string, string> = {
+  name: "Indian Institute of Management Ahmedabad",
+  short_name: "IIM Ahmedabad",
+  category: "iim",
+  tier: "Tier 1",
+  program: "PGP (MBA)",
+  location: "Ahmedabad, Gujarat",
+  application_open_date: "2026-08-01",
+  application_deadline: "2026-09-20",
+  application_fee: "2500",
+  program_fee: "2500000",
+  accepted_exams: "CAT; GMAT",
+  apply_url: "https://example.ac.in/apply",
+  college_website: "https://example.ac.in",
+  inside_info_url: "",
+  inside_info_notes: "Round-wise interview tips for this campus",
+  short_description: "Flagship two-year MBA programme",
+  eligibility: "Bachelor's degree with 50% marks",
+  selection_process: "CAT score, WAT, personal interview",
+  cutoff_note: "General category around 99 percentile",
+  average_package: "3400000",
+  median_package: "3200000",
+  highest_package: "7000000",
+  logo_url: "",
+  status: "open",
+  display_order: "1",
+  is_recommended: "yes",
+  recommendation_label: "Closing soon",
+  recommendation_note: "Strong placements and an early deadline",
+  recommendation_priority: "1",
+  seo_title: "",
+  seo_description: "",
+  seo_h1: "",
+  seo_intro: "",
+  seo_keywords: "iim ahmedabad application, iim a admission",
+  seo_image_alt: "",
+};
+
+const csvCell = (value: string) => (/[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
+
+const downloadTemplate = () => {
+  const keys = TARGET_FIELDS.map((f) => f.key);
+  const csv = [
+    keys.join(","),
+    keys.map((k) => csvCell(TEMPLATE_SAMPLE[k] ?? "")).join(","),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "mba-applications-upload-template.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 const parseCsv = (text: string): string[][] => {
   const rows: string[][] = [];
@@ -82,6 +159,13 @@ const normalizeDate = (raw: string): string | null => {
   }
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+};
+
+const numberOrNull = (raw: string): number | null => {
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
 };
 
 type PreparedRow = {
@@ -176,8 +260,33 @@ export default function BulkImportDialog({ open, onOpenChange, existing, onImpor
             : [],
           apply_url: applyUrl || null,
           inside_info_url: get("inside_info_url") || null,
+          inside_info_notes: get("inside_info_notes") || null,
           short_description: get("short_description") || null,
-          status: "open",
+          short_name: get("short_name") || null,
+          college_website: get("college_website") || null,
+          eligibility: get("eligibility") || null,
+          selection_process: get("selection_process") || null,
+          cutoff_note: get("cutoff_note") || null,
+          average_package: numberOrNull(get("average_package")),
+          median_package: numberOrNull(get("median_package")),
+          highest_package: numberOrNull(get("highest_package")),
+          logo_url: get("logo_url") || null,
+          display_order: numberOrNull(get("display_order")) ?? 0,
+          is_recommended: /^(yes|true|1|y)$/i.test(get("is_recommended")),
+          recommendation_label: get("recommendation_label") || null,
+          recommendation_note: get("recommendation_note") || null,
+          recommendation_priority: numberOrNull(get("recommendation_priority")) ?? 0,
+          seo_title: get("seo_title") || null,
+          seo_description: get("seo_description") || null,
+          seo_h1: get("seo_h1") || null,
+          seo_intro: get("seo_intro") || null,
+          seo_keywords: get("seo_keywords")
+            ? get("seo_keywords").split(/[,;|]/).map((s) => s.trim()).filter(Boolean)
+            : [],
+          seo_image_alt: get("seo_image_alt") || null,
+          status: ["open", "closing_soon", "closed"].includes(get("status").toLowerCase())
+            ? get("status").toLowerCase()
+            : "open",
         },
       };
     });
@@ -221,9 +330,14 @@ export default function BulkImportDialog({ open, onOpenChange, existing, onImpor
                 if (fileRef.current) fileRef.current.value = "";
               }}
             />
-            <Button onClick={() => fileRef.current?.click()} className="gap-1.5">
-              <Upload className="h-4 w-4" /> Choose CSV file
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button onClick={() => fileRef.current?.click()} className="gap-1.5">
+                <Upload className="h-4 w-4" /> Choose CSV file
+              </Button>
+              <Button variant="outline" onClick={downloadTemplate} className="gap-1.5">
+                <Download className="h-4 w-4" /> Download template
+              </Button>
+            </div>
             <p className="text-sm text-muted-foreground">
               Include at least a college name and an application deadline column. You’ll map columns in the next step.
             </p>
