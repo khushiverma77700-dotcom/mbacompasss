@@ -17,6 +17,21 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
+// Attaches the signed-in user's bearer token to server-function calls so
+// protected handlers can verify who is calling.
+const attachSupabaseAuth = createMiddleware({ type: "function" }).client(async ({ next }) => {
+  let headers: Record<string, string> = {};
+  try {
+    const { supabase } = await import("./integrations/supabase/client");
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) headers = { Authorization: `Bearer ${token}` };
+  } catch {
+    headers = {};
+  }
+  return next({ headers });
+});
+
 // Start installs this automatically when src/start.ts is absent; defining the
 // file opts out, so re-add it explicitly to keep server functions protected
 // from cross-site requests.
@@ -26,4 +41,5 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [errorMiddleware, csrfMiddleware],
+  functionMiddleware: [attachSupabaseAuth],
 }));

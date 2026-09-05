@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,16 +35,21 @@ import {
   Pencil,
   Plus,
   Save,
+  Sparkles,
   Trash2,
   Upload,
   Users,
+  Wand2,
 } from "lucide-react";
 import ApplicationFormDialog from "./collegeApplications/ApplicationFormDialog";
 import BulkImportDialog from "./collegeApplications/BulkImportDialog";
 import ActivityLogTab from "./collegeApplications/ActivityLogTab";
 import StudentsTab from "./collegeApplications/StudentsTab";
+import DocumentsTab from "./collegeApplications/DocumentsTab";
+import RecommendedTab from "./collegeApplications/RecommendedTab";
+import { SeoAssistDialog, BulkSeoDialog } from "./collegeApplications/SeoAssistDialog";
 import {
-  CATEGORY_FILTERS,
+  ADMIN_CATEGORY_FILTERS,
   CATEGORY_LABEL,
   DEADLINE_FILTERS,
   type DeadlineFilterKey,
@@ -66,8 +71,17 @@ type InlineEdit = Partial<
 
 const toDateInput = (v: string | null | undefined) => (v ? new Date(v).toISOString().slice(0, 10) : "");
 
-export default function AdminCollegeApplications() {
+type Props = { initialTab?: string; initialAction?: string };
+
+const VALID_TABS = ["dashboard", "applications", "documents", "recommended", "activity", "students"];
+
+export default function AdminCollegeApplications({ initialTab, initialAction }: Props = {}) {
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState(
+    initialTab && VALID_TABS.includes(initialTab) ? initialTab : "applications",
+  );
+  const [seoRow, setSeoRow] = useState<TrackerRow | null>(null);
+  const [bulkSeoOpen, setBulkSeoOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"all" | TrackerCategory>("all");
   const [deadlineFilter, setDeadlineFilter] = useState<DeadlineFilterKey>("all");
@@ -78,6 +92,19 @@ export default function AdminCollegeApplications() {
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [toDelete, setToDelete] = useState<TrackerRow | null>(null);
+
+  // Sidebar links deep-link into a tab and can open the add / bulk dialog.
+  useEffect(() => {
+    if (initialTab && VALID_TABS.includes(initialTab)) setTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (initialAction === "add") {
+      setFormRow(null);
+      setFormOpen(true);
+    }
+    if (initialAction === "bulk") setImportOpen(true);
+  }, [initialAction]);
 
   const trackersQuery = useQuery({
     queryKey: ["admin-application-trackers"],
@@ -106,6 +133,11 @@ export default function AdminCollegeApplications() {
     void queryClient.invalidateQueries({ queryKey: ["admin-application-trackers"] });
     void queryClient.invalidateQueries({ queryKey: ["application-trackers", "public"] });
   };
+
+  const missingSeo = useMemo(
+    () => all.filter((r) => !r.is_archived && (!r.seo_title || !r.seo_description)),
+    [all],
+  );
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -259,6 +291,9 @@ export default function AdminCollegeApplications() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="gap-1.5" onClick={() => setBulkSeoOpen(true)}>
+            <Wand2 className="h-4 w-4" /> Bulk AI SEO
+          </Button>
           <Button variant="outline" className="gap-1.5" onClick={() => setImportOpen(true)}>
             <Upload className="h-4 w-4" /> Bulk import
           </Button>
@@ -268,10 +303,12 @@ export default function AdminCollegeApplications() {
         </div>
       </header>
 
-      <Tabs defaultValue="applications">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="applications">Applications</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="recommended">Recommended</TabsTrigger>
           <TabsTrigger value="activity">Activity log</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
         </TabsList>
@@ -338,7 +375,7 @@ export default function AdminCollegeApplications() {
               <Select value={category} onValueChange={(v) => setCategory(v as "all" | TrackerCategory)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CATEGORY_FILTERS.map((c) => (
+                  {ADMIN_CATEGORY_FILTERS.map((c) => (
                     <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -408,7 +445,7 @@ export default function AdminCollegeApplications() {
                           >
                             <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
+                              {ADMIN_CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
                                 <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
                               ))}
                             </SelectContent>
@@ -499,6 +536,9 @@ export default function AdminCollegeApplications() {
                             <Button size="sm" variant="outline" onClick={() => void toggleFlag(row, "is_active")}>
                               {row.is_active ? "Deactivate" : "Activate"}
                             </Button>
+                            <Button size="sm" variant="outline" onClick={() => setSeoRow(row)} aria-label="AI SEO">
+                              <Sparkles className="h-3.5 w-3.5 text-primary" />
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => void toggleFlag(row, "is_archived")} aria-label="Archive">
                               <Archive className="h-3.5 w-3.5" />
                             </Button>
@@ -520,6 +560,14 @@ export default function AdminCollegeApplications() {
           </p>
         </TabsContent>
 
+        <TabsContent value="documents" className="pt-4">
+          <DocumentsTab trackers={all} />
+        </TabsContent>
+
+        <TabsContent value="recommended" className="pt-4">
+          <RecommendedTab trackers={all} />
+        </TabsContent>
+
         <TabsContent value="activity" className="pt-4">
           <ActivityLogTab trackers={all} />
         </TabsContent>
@@ -531,6 +579,13 @@ export default function AdminCollegeApplications() {
 
       <ApplicationFormDialog open={formOpen} onOpenChange={setFormOpen} row={formRow} onSaved={refresh} />
       <BulkImportDialog open={importOpen} onOpenChange={setImportOpen} existing={all} onImported={refresh} />
+      <SeoAssistDialog row={seoRow} onClose={() => setSeoRow(null)} onSaved={refresh} />
+      <BulkSeoDialog
+        open={bulkSeoOpen}
+        rows={missingSeo}
+        onClose={() => setBulkSeoOpen(false)}
+        onDone={refresh}
+      />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
