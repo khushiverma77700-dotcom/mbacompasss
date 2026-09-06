@@ -212,6 +212,11 @@ export default function StudentLayout() {
   // Render an instant lightweight shell while auth resolves so the user never
   // sees a blank screen on first hit. The auth check still runs in the
   // background; once `user` is null we redirect from the effect above.
+  // Sign-in page: render it plain, without the dashboard chrome or gate.
+  if (isLoginRoute) {
+    return <Outlet />;
+  }
+
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background">
