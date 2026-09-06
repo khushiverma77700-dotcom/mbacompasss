@@ -180,6 +180,7 @@ import { Route as DemoToolsRouteImport } from './routes/demo.tools'
 import { Route as DemoVocabularyRouteImport } from './routes/demo.vocabulary'
 import { Route as DemoWeakAreasRouteImport } from './routes/demo.weak-areas'
 import { Route as EditTokenRouteImport } from './routes/edit.$token'
+import { Route as ExamsIndexRouteImport } from './routes/exams.index'
 import { Route as ExamsSlugRouteImport } from './routes/exams.$slug'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as StudentAllIndiaRankRouteImport } from './routes/student.all-india-rank'
@@ -247,14 +248,20 @@ import { Route as AdminPagesSlugRouteImport } from './routes/admin.pages.$slug'
 import { Route as AdminSeoWriteBlogRouteImport } from './routes/admin.seo.write-blog'
 import { Route as CollegeSlugProgrammeRouteImport } from './routes/college.$slug.programme'
 import { Route as DemoAnalysisAttemptIdRouteImport } from './routes/demo.analysis.$attemptId'
+import { Route as DemoDailyTestIndexRouteImport } from './routes/demo.daily-test.index'
+import { Route as DemoDayPlannerIndexRouteImport } from './routes/demo.day-planner.index'
 import { Route as DemoDayPlannerPerformanceRouteImport } from './routes/demo.day-planner.performance'
 import { Route as DemoFormulaSlugRouteImport } from './routes/demo.formula.$slug'
+import { Route as DemoFormulasIndexRouteImport } from './routes/demo.formulas.index'
 import { Route as DemoFormulasListRouteImport } from './routes/demo.formulas.list'
+import { Route as DemoMocksIndexRouteImport } from './routes/demo.mocks.index'
 import { Route as DemoMocksAttemptedRouteImport } from './routes/demo.mocks.attempted'
 import { Route as DemoMocksFullLengthRouteImport } from './routes/demo.mocks.full-length'
 import { Route as DemoMocksPracticeRouteImport } from './routes/demo.mocks.practice'
 import { Route as DemoMocksSectionalRouteImport } from './routes/demo.mocks.sectional'
 import { Route as DemoMocksTopicWiseRouteImport } from './routes/demo.mocks.topic-wise'
+import { Route as DemoPersonalizedHubIndexRouteImport } from './routes/demo.personalized-hub.index'
+import { Route as DemoVocabularyIndexRouteImport } from './routes/demo.vocabulary.index'
 import { Route as DemoVocabularyAnalyticsRouteImport } from './routes/demo.vocabulary.analytics'
 import { Route as DemoVocabularyBookmarksRouteImport } from './routes/demo.vocabulary.bookmarks'
 import { Route as DemoVocabularyFeedRouteImport } from './routes/demo.vocabulary.feed'
@@ -264,14 +271,20 @@ import { Route as DemoVocabularySearchRouteImport } from './routes/demo.vocabula
 import { Route as MocksAttemptAttemptIdRouteImport } from './routes/mocks.attempt.$attemptId'
 import { Route as MocksCheckoutReturnRouteImport } from './routes/mocks.checkout.return'
 import { Route as StudentAnalysisAttemptIdRouteImport } from './routes/student.analysis.$attemptId'
+import { Route as StudentDailyTestIndexRouteImport } from './routes/student.daily-test.index'
+import { Route as StudentDayPlannerIndexRouteImport } from './routes/student.day-planner.index'
 import { Route as StudentDayPlannerPerformanceRouteImport } from './routes/student.day-planner.performance'
 import { Route as StudentFormulaSlugRouteImport } from './routes/student.formula.$slug'
+import { Route as StudentFormulasIndexRouteImport } from './routes/student.formulas.index'
 import { Route as StudentFormulasListRouteImport } from './routes/student.formulas.list'
+import { Route as StudentMocksIndexRouteImport } from './routes/student.mocks.index'
 import { Route as StudentMocksAttemptedRouteImport } from './routes/student.mocks.attempted'
 import { Route as StudentMocksFullLengthRouteImport } from './routes/student.mocks.full-length'
 import { Route as StudentMocksPracticeRouteImport } from './routes/student.mocks.practice'
 import { Route as StudentMocksSectionalRouteImport } from './routes/student.mocks.sectional'
 import { Route as StudentMocksTopicWiseRouteImport } from './routes/student.mocks.topic-wise'
+import { Route as StudentPersonalizedHubIndexRouteImport } from './routes/student.personalized-hub.index'
+import { Route as StudentVocabularyIndexRouteImport } from './routes/student.vocabulary.index'
 import { Route as StudentVocabularyAnalyticsRouteImport } from './routes/student.vocabulary.analytics'
 import { Route as StudentVocabularyBookmarksRouteImport } from './routes/student.vocabulary.bookmarks'
 import { Route as StudentVocabularyFeedRouteImport } from './routes/student.vocabulary.feed'
@@ -1171,6 +1184,11 @@ const EditTokenRoute = EditTokenRouteImport.update({
   path: '/edit/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExamsIndexRoute = ExamsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ExamsRoute,
+} as any)
 const ExamsSlugRoute = ExamsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -1515,6 +1533,16 @@ const DemoAnalysisAttemptIdRoute = DemoAnalysisAttemptIdRouteImport.update({
   path: '/analysis/$attemptId',
   getParentRoute: () => DemoRoute,
 } as any)
+const DemoDailyTestIndexRoute = DemoDailyTestIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoDailyTestRoute,
+} as any)
+const DemoDayPlannerIndexRoute = DemoDayPlannerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoDayPlannerRoute,
+} as any)
 const DemoDayPlannerPerformanceRoute =
   DemoDayPlannerPerformanceRouteImport.update({
     id: '/performance',
@@ -1526,10 +1554,20 @@ const DemoFormulaSlugRoute = DemoFormulaSlugRouteImport.update({
   path: '/formula/$slug',
   getParentRoute: () => DemoRoute,
 } as any)
+const DemoFormulasIndexRoute = DemoFormulasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoFormulasRoute,
+} as any)
 const DemoFormulasListRoute = DemoFormulasListRouteImport.update({
   id: '/list',
   path: '/list',
   getParentRoute: () => DemoFormulasRoute,
+} as any)
+const DemoMocksIndexRoute = DemoMocksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoMocksRoute,
 } as any)
 const DemoMocksAttemptedRoute = DemoMocksAttemptedRouteImport.update({
   id: '/attempted',
@@ -1555,6 +1593,17 @@ const DemoMocksTopicWiseRoute = DemoMocksTopicWiseRouteImport.update({
   id: '/topic-wise',
   path: '/topic-wise',
   getParentRoute: () => DemoMocksRoute,
+} as any)
+const DemoPersonalizedHubIndexRoute =
+  DemoPersonalizedHubIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DemoPersonalizedHubRoute,
+  } as any)
+const DemoVocabularyIndexRoute = DemoVocabularyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoVocabularyRoute,
 } as any)
 const DemoVocabularyAnalyticsRoute = DemoVocabularyAnalyticsRouteImport.update({
   id: '/analytics',
@@ -1603,6 +1652,16 @@ const StudentAnalysisAttemptIdRoute =
     path: '/analysis/$attemptId',
     getParentRoute: () => StudentRoute,
   } as any)
+const StudentDailyTestIndexRoute = StudentDailyTestIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentDailyTestRoute,
+} as any)
+const StudentDayPlannerIndexRoute = StudentDayPlannerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentDayPlannerRoute,
+} as any)
 const StudentDayPlannerPerformanceRoute =
   StudentDayPlannerPerformanceRouteImport.update({
     id: '/performance',
@@ -1614,10 +1673,20 @@ const StudentFormulaSlugRoute = StudentFormulaSlugRouteImport.update({
   path: '/formula/$slug',
   getParentRoute: () => StudentRoute,
 } as any)
+const StudentFormulasIndexRoute = StudentFormulasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentFormulasRoute,
+} as any)
 const StudentFormulasListRoute = StudentFormulasListRouteImport.update({
   id: '/list',
   path: '/list',
   getParentRoute: () => StudentFormulasRoute,
+} as any)
+const StudentMocksIndexRoute = StudentMocksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentMocksRoute,
 } as any)
 const StudentMocksAttemptedRoute = StudentMocksAttemptedRouteImport.update({
   id: '/attempted',
@@ -1643,6 +1712,17 @@ const StudentMocksTopicWiseRoute = StudentMocksTopicWiseRouteImport.update({
   id: '/topic-wise',
   path: '/topic-wise',
   getParentRoute: () => StudentMocksRoute,
+} as any)
+const StudentPersonalizedHubIndexRoute =
+  StudentPersonalizedHubIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => StudentPersonalizedHubRoute,
+  } as any)
+const StudentVocabularyIndexRoute = StudentVocabularyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentVocabularyRoute,
 } as any)
 const StudentVocabularyAnalyticsRoute =
   StudentVocabularyAnalyticsRouteImport.update({
@@ -2052,6 +2132,7 @@ export interface FileRoutesByFullPath {
   '/student/weak-areas': typeof StudentWeakAreasRoute
   '/admin/': typeof AdminIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/exams/': typeof ExamsIndexRoute
   '/student/': typeof StudentIndexRoute
   '/article/$slug': typeof PublicArticleSlugRoute
   '/authors/$slug': typeof PublicAuthorsSlugRoute
@@ -2123,6 +2204,18 @@ export interface FileRoutesByFullPath {
   '/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/mba-compass/': typeof PublicMbaCompassIndexRoute
   '/mocks/': typeof PublicMocksIndexRoute
+  '/demo/daily-test/': typeof DemoDailyTestIndexRoute
+  '/demo/day-planner/': typeof DemoDayPlannerIndexRoute
+  '/demo/formulas/': typeof DemoFormulasIndexRoute
+  '/demo/mocks/': typeof DemoMocksIndexRoute
+  '/demo/personalized-hub/': typeof DemoPersonalizedHubIndexRoute
+  '/demo/vocabulary/': typeof DemoVocabularyIndexRoute
+  '/student/daily-test/': typeof StudentDailyTestIndexRoute
+  '/student/day-planner/': typeof StudentDayPlannerIndexRoute
+  '/student/formulas/': typeof StudentFormulasIndexRoute
+  '/student/mocks/': typeof StudentMocksIndexRoute
+  '/student/personalized-hub/': typeof StudentPersonalizedHubIndexRoute
+  '/student/vocabulary/': typeof StudentVocabularyIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2156,7 +2249,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/business-inquiry': typeof BusinessInquiryRoute
-  '/exams': typeof ExamsRouteWithChildren
   '/mba-programme-compare': typeof MbaProgrammeCompareRoute
   '/mba-roi-calculator': typeof MbaRoiCalculatorRoute
   '/$slug': typeof PublicSlugRoute
@@ -2295,26 +2387,20 @@ export interface FileRoutesByTo {
   '/demo/all-india-rank': typeof DemoAllIndiaRankRoute
   '/demo/attempts': typeof DemoAttemptsRoute
   '/demo/buy-mocks': typeof DemoBuyMocksRoute
-  '/demo/daily-test': typeof DemoDailyTestRouteWithChildren
-  '/demo/day-planner': typeof DemoDayPlannerRouteWithChildren
-  '/demo/formulas': typeof DemoFormulasRouteWithChildren
   '/demo/goals': typeof DemoGoalsRoute
   '/demo/install': typeof DemoInstallRoute
   '/demo/leaderboard': typeof DemoLeaderboardRoute
-  '/demo/mocks': typeof DemoMocksRouteWithChildren
   '/demo/newsroom': typeof DemoNewsroomRoute
   '/demo/notifications': typeof DemoNotificationsRoute
   '/demo/orders': typeof DemoOrdersRoute
   '/demo/performance': typeof DemoPerformanceRoute
   '/demo/performx': typeof DemoPerformxRoute
-  '/demo/personalized-hub': typeof DemoPersonalizedHubRouteWithChildren
   '/demo/profile': typeof DemoProfileRoute
   '/demo/rewards': typeof DemoRewardsRoute
   '/demo/sop-review': typeof DemoSopReviewRoute
   '/demo/strength-areas': typeof DemoStrengthAreasRoute
   '/demo/support': typeof DemoSupportRoute
   '/demo/tools': typeof DemoToolsRoute
-  '/demo/vocabulary': typeof DemoVocabularyRouteWithChildren
   '/demo/weak-areas': typeof DemoWeakAreasRoute
   '/edit/$token': typeof EditTokenRoute
   '/exams/$slug': typeof ExamsSlugRoute
@@ -2322,31 +2408,26 @@ export interface FileRoutesByTo {
   '/student/applications': typeof StudentApplicationsRoute
   '/student/attempts': typeof StudentAttemptsRoute
   '/student/buy-mocks': typeof StudentBuyMocksRoute
-  '/student/daily-test': typeof StudentDailyTestRouteWithChildren
-  '/student/day-planner': typeof StudentDayPlannerRouteWithChildren
-  '/student/formulas': typeof StudentFormulasRouteWithChildren
   '/student/goals': typeof StudentGoalsRoute
   '/student/install': typeof StudentInstallRoute
   '/student/leaderboard': typeof StudentLeaderboardRoute
   '/student/login': typeof StudentLoginRoute
-  '/student/mocks': typeof StudentMocksRouteWithChildren
   '/student/newsroom': typeof StudentNewsroomRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/orders': typeof StudentOrdersRoute
   '/student/performance': typeof StudentPerformanceRoute
   '/student/performx': typeof StudentPerformxRoute
-  '/student/personalized-hub': typeof StudentPersonalizedHubRouteWithChildren
   '/student/profile': typeof StudentProfileRoute
   '/student/rewards': typeof StudentRewardsRoute
   '/student/sop-review': typeof StudentSopReviewRoute
   '/student/strength-areas': typeof StudentStrengthAreasRoute
   '/student/support': typeof StudentSupportRoute
   '/student/tools': typeof StudentToolsRoute
-  '/student/vocabulary': typeof StudentVocabularyRouteWithChildren
   '/student/weak-areas': typeof StudentWeakAreasRoute
   '/': typeof PublicIndexRoute
   '/admin': typeof AdminIndexRoute
   '/demo': typeof DemoIndexRoute
+  '/exams': typeof ExamsIndexRoute
   '/student': typeof StudentIndexRoute
   '/article/$slug': typeof PublicArticleSlugRoute
   '/authors/$slug': typeof PublicAuthorsSlugRoute
@@ -2418,6 +2499,18 @@ export interface FileRoutesByTo {
   '/mba-application': typeof PublicMbaApplicationIndexRoute
   '/mba-compass': typeof PublicMbaCompassIndexRoute
   '/mocks': typeof PublicMocksIndexRoute
+  '/demo/daily-test': typeof DemoDailyTestIndexRoute
+  '/demo/day-planner': typeof DemoDayPlannerIndexRoute
+  '/demo/formulas': typeof DemoFormulasIndexRoute
+  '/demo/mocks': typeof DemoMocksIndexRoute
+  '/demo/personalized-hub': typeof DemoPersonalizedHubIndexRoute
+  '/demo/vocabulary': typeof DemoVocabularyIndexRoute
+  '/student/daily-test': typeof StudentDailyTestIndexRoute
+  '/student/day-planner': typeof StudentDayPlannerIndexRoute
+  '/student/formulas': typeof StudentFormulasIndexRoute
+  '/student/mocks': typeof StudentMocksIndexRoute
+  '/student/personalized-hub': typeof StudentPersonalizedHubIndexRoute
+  '/student/vocabulary': typeof StudentVocabularyIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2649,6 +2742,7 @@ export interface FileRoutesById {
   '/_public/': typeof PublicIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/exams/': typeof ExamsIndexRoute
   '/student/': typeof StudentIndexRoute
   '/_public/article/$slug': typeof PublicArticleSlugRoute
   '/_public/authors/$slug': typeof PublicAuthorsSlugRoute
@@ -2720,6 +2814,18 @@ export interface FileRoutesById {
   '/_public/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/_public/mba-compass/': typeof PublicMbaCompassIndexRoute
   '/_public/mocks/': typeof PublicMocksIndexRoute
+  '/demo/daily-test/': typeof DemoDailyTestIndexRoute
+  '/demo/day-planner/': typeof DemoDayPlannerIndexRoute
+  '/demo/formulas/': typeof DemoFormulasIndexRoute
+  '/demo/mocks/': typeof DemoMocksIndexRoute
+  '/demo/personalized-hub/': typeof DemoPersonalizedHubIndexRoute
+  '/demo/vocabulary/': typeof DemoVocabularyIndexRoute
+  '/student/daily-test/': typeof StudentDailyTestIndexRoute
+  '/student/day-planner/': typeof StudentDayPlannerIndexRoute
+  '/student/formulas/': typeof StudentFormulasIndexRoute
+  '/student/mocks/': typeof StudentMocksIndexRoute
+  '/student/personalized-hub/': typeof StudentPersonalizedHubIndexRoute
+  '/student/vocabulary/': typeof StudentVocabularyIndexRoute
   '/_public/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/_public/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/_public/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2951,6 +3057,7 @@ export interface FileRouteTypes {
     | '/student/weak-areas'
     | '/admin/'
     | '/demo/'
+    | '/exams/'
     | '/student/'
     | '/article/$slug'
     | '/authors/$slug'
@@ -3022,6 +3129,18 @@ export interface FileRouteTypes {
     | '/mba-application/'
     | '/mba-compass/'
     | '/mocks/'
+    | '/demo/daily-test/'
+    | '/demo/day-planner/'
+    | '/demo/formulas/'
+    | '/demo/mocks/'
+    | '/demo/personalized-hub/'
+    | '/demo/vocabulary/'
+    | '/student/daily-test/'
+    | '/student/day-planner/'
+    | '/student/formulas/'
+    | '/student/mocks/'
+    | '/student/personalized-hub/'
+    | '/student/vocabulary/'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3055,7 +3174,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/business-inquiry'
-    | '/exams'
     | '/mba-programme-compare'
     | '/mba-roi-calculator'
     | '/$slug'
@@ -3194,26 +3312,20 @@ export interface FileRouteTypes {
     | '/demo/all-india-rank'
     | '/demo/attempts'
     | '/demo/buy-mocks'
-    | '/demo/daily-test'
-    | '/demo/day-planner'
-    | '/demo/formulas'
     | '/demo/goals'
     | '/demo/install'
     | '/demo/leaderboard'
-    | '/demo/mocks'
     | '/demo/newsroom'
     | '/demo/notifications'
     | '/demo/orders'
     | '/demo/performance'
     | '/demo/performx'
-    | '/demo/personalized-hub'
     | '/demo/profile'
     | '/demo/rewards'
     | '/demo/sop-review'
     | '/demo/strength-areas'
     | '/demo/support'
     | '/demo/tools'
-    | '/demo/vocabulary'
     | '/demo/weak-areas'
     | '/edit/$token'
     | '/exams/$slug'
@@ -3221,31 +3333,26 @@ export interface FileRouteTypes {
     | '/student/applications'
     | '/student/attempts'
     | '/student/buy-mocks'
-    | '/student/daily-test'
-    | '/student/day-planner'
-    | '/student/formulas'
     | '/student/goals'
     | '/student/install'
     | '/student/leaderboard'
     | '/student/login'
-    | '/student/mocks'
     | '/student/newsroom'
     | '/student/notifications'
     | '/student/orders'
     | '/student/performance'
     | '/student/performx'
-    | '/student/personalized-hub'
     | '/student/profile'
     | '/student/rewards'
     | '/student/sop-review'
     | '/student/strength-areas'
     | '/student/support'
     | '/student/tools'
-    | '/student/vocabulary'
     | '/student/weak-areas'
     | '/'
     | '/admin'
     | '/demo'
+    | '/exams'
     | '/student'
     | '/article/$slug'
     | '/authors/$slug'
@@ -3317,6 +3424,18 @@ export interface FileRouteTypes {
     | '/mba-application'
     | '/mba-compass'
     | '/mocks'
+    | '/demo/daily-test'
+    | '/demo/day-planner'
+    | '/demo/formulas'
+    | '/demo/mocks'
+    | '/demo/personalized-hub'
+    | '/demo/vocabulary'
+    | '/student/daily-test'
+    | '/student/day-planner'
+    | '/student/formulas'
+    | '/student/mocks'
+    | '/student/personalized-hub'
+    | '/student/vocabulary'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3547,6 +3666,7 @@ export interface FileRouteTypes {
     | '/_public/'
     | '/admin/'
     | '/demo/'
+    | '/exams/'
     | '/student/'
     | '/_public/article/$slug'
     | '/_public/authors/$slug'
@@ -3618,6 +3738,18 @@ export interface FileRouteTypes {
     | '/_public/mba-application/'
     | '/_public/mba-compass/'
     | '/_public/mocks/'
+    | '/demo/daily-test/'
+    | '/demo/day-planner/'
+    | '/demo/formulas/'
+    | '/demo/mocks/'
+    | '/demo/personalized-hub/'
+    | '/demo/vocabulary/'
+    | '/student/daily-test/'
+    | '/student/day-planner/'
+    | '/student/formulas/'
+    | '/student/mocks/'
+    | '/student/personalized-hub/'
+    | '/student/vocabulary/'
     | '/_public/coaching/exam/$slug'
     | '/_public/coaching/mode/$slug'
     | '/_public/colleges/by-city/$citySlug'
@@ -4866,6 +4998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exams/': {
+      id: '/exams/'
+      path: '/'
+      fullPath: '/exams/'
+      preLoaderRoute: typeof ExamsIndexRouteImport
+      parentRoute: typeof ExamsRoute
+    }
     '/exams/$slug': {
       id: '/exams/$slug'
       path: '/$slug'
@@ -5335,6 +5474,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoAnalysisAttemptIdRouteImport
       parentRoute: typeof DemoRoute
     }
+    '/demo/daily-test/': {
+      id: '/demo/daily-test/'
+      path: '/'
+      fullPath: '/demo/daily-test/'
+      preLoaderRoute: typeof DemoDailyTestIndexRouteImport
+      parentRoute: typeof DemoDailyTestRoute
+    }
+    '/demo/day-planner/': {
+      id: '/demo/day-planner/'
+      path: '/'
+      fullPath: '/demo/day-planner/'
+      preLoaderRoute: typeof DemoDayPlannerIndexRouteImport
+      parentRoute: typeof DemoDayPlannerRoute
+    }
     '/demo/day-planner/performance': {
       id: '/demo/day-planner/performance'
       path: '/performance'
@@ -5349,12 +5502,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoFormulaSlugRouteImport
       parentRoute: typeof DemoRoute
     }
+    '/demo/formulas/': {
+      id: '/demo/formulas/'
+      path: '/'
+      fullPath: '/demo/formulas/'
+      preLoaderRoute: typeof DemoFormulasIndexRouteImport
+      parentRoute: typeof DemoFormulasRoute
+    }
     '/demo/formulas/list': {
       id: '/demo/formulas/list'
       path: '/list'
       fullPath: '/demo/formulas/list'
       preLoaderRoute: typeof DemoFormulasListRouteImport
       parentRoute: typeof DemoFormulasRoute
+    }
+    '/demo/mocks/': {
+      id: '/demo/mocks/'
+      path: '/'
+      fullPath: '/demo/mocks/'
+      preLoaderRoute: typeof DemoMocksIndexRouteImport
+      parentRoute: typeof DemoMocksRoute
     }
     '/demo/mocks/attempted': {
       id: '/demo/mocks/attempted'
@@ -5390,6 +5557,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/mocks/topic-wise'
       preLoaderRoute: typeof DemoMocksTopicWiseRouteImport
       parentRoute: typeof DemoMocksRoute
+    }
+    '/demo/personalized-hub/': {
+      id: '/demo/personalized-hub/'
+      path: '/'
+      fullPath: '/demo/personalized-hub/'
+      preLoaderRoute: typeof DemoPersonalizedHubIndexRouteImport
+      parentRoute: typeof DemoPersonalizedHubRoute
+    }
+    '/demo/vocabulary/': {
+      id: '/demo/vocabulary/'
+      path: '/'
+      fullPath: '/demo/vocabulary/'
+      preLoaderRoute: typeof DemoVocabularyIndexRouteImport
+      parentRoute: typeof DemoVocabularyRoute
     }
     '/demo/vocabulary/analytics': {
       id: '/demo/vocabulary/analytics'
@@ -5454,6 +5635,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentAnalysisAttemptIdRouteImport
       parentRoute: typeof StudentRoute
     }
+    '/student/daily-test/': {
+      id: '/student/daily-test/'
+      path: '/'
+      fullPath: '/student/daily-test/'
+      preLoaderRoute: typeof StudentDailyTestIndexRouteImport
+      parentRoute: typeof StudentDailyTestRoute
+    }
+    '/student/day-planner/': {
+      id: '/student/day-planner/'
+      path: '/'
+      fullPath: '/student/day-planner/'
+      preLoaderRoute: typeof StudentDayPlannerIndexRouteImport
+      parentRoute: typeof StudentDayPlannerRoute
+    }
     '/student/day-planner/performance': {
       id: '/student/day-planner/performance'
       path: '/performance'
@@ -5468,12 +5663,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentFormulaSlugRouteImport
       parentRoute: typeof StudentRoute
     }
+    '/student/formulas/': {
+      id: '/student/formulas/'
+      path: '/'
+      fullPath: '/student/formulas/'
+      preLoaderRoute: typeof StudentFormulasIndexRouteImport
+      parentRoute: typeof StudentFormulasRoute
+    }
     '/student/formulas/list': {
       id: '/student/formulas/list'
       path: '/list'
       fullPath: '/student/formulas/list'
       preLoaderRoute: typeof StudentFormulasListRouteImport
       parentRoute: typeof StudentFormulasRoute
+    }
+    '/student/mocks/': {
+      id: '/student/mocks/'
+      path: '/'
+      fullPath: '/student/mocks/'
+      preLoaderRoute: typeof StudentMocksIndexRouteImport
+      parentRoute: typeof StudentMocksRoute
     }
     '/student/mocks/attempted': {
       id: '/student/mocks/attempted'
@@ -5509,6 +5718,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/student/mocks/topic-wise'
       preLoaderRoute: typeof StudentMocksTopicWiseRouteImport
       parentRoute: typeof StudentMocksRoute
+    }
+    '/student/personalized-hub/': {
+      id: '/student/personalized-hub/'
+      path: '/'
+      fullPath: '/student/personalized-hub/'
+      preLoaderRoute: typeof StudentPersonalizedHubIndexRouteImport
+      parentRoute: typeof StudentPersonalizedHubRoute
+    }
+    '/student/vocabulary/': {
+      id: '/student/vocabulary/'
+      path: '/'
+      fullPath: '/student/vocabulary/'
+      preLoaderRoute: typeof StudentVocabularyIndexRouteImport
+      parentRoute: typeof StudentVocabularyRoute
     }
     '/student/vocabulary/analytics': {
       id: '/student/vocabulary/analytics'
@@ -6263,10 +6486,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface DemoDailyTestRouteChildren {
+  DemoDailyTestIndexRoute: typeof DemoDailyTestIndexRoute
   DemoDailyTestReportAttemptIdRoute: typeof DemoDailyTestReportAttemptIdRoute
 }
 
 const DemoDailyTestRouteChildren: DemoDailyTestRouteChildren = {
+  DemoDailyTestIndexRoute: DemoDailyTestIndexRoute,
   DemoDailyTestReportAttemptIdRoute: DemoDailyTestReportAttemptIdRoute,
 }
 
@@ -6276,10 +6501,12 @@ const DemoDailyTestRouteWithChildren = DemoDailyTestRoute._addFileChildren(
 
 interface DemoDayPlannerRouteChildren {
   DemoDayPlannerPerformanceRoute: typeof DemoDayPlannerPerformanceRoute
+  DemoDayPlannerIndexRoute: typeof DemoDayPlannerIndexRoute
 }
 
 const DemoDayPlannerRouteChildren: DemoDayPlannerRouteChildren = {
   DemoDayPlannerPerformanceRoute: DemoDayPlannerPerformanceRoute,
+  DemoDayPlannerIndexRoute: DemoDayPlannerIndexRoute,
 }
 
 const DemoDayPlannerRouteWithChildren = DemoDayPlannerRoute._addFileChildren(
@@ -6288,10 +6515,12 @@ const DemoDayPlannerRouteWithChildren = DemoDayPlannerRoute._addFileChildren(
 
 interface DemoFormulasRouteChildren {
   DemoFormulasListRoute: typeof DemoFormulasListRoute
+  DemoFormulasIndexRoute: typeof DemoFormulasIndexRoute
 }
 
 const DemoFormulasRouteChildren: DemoFormulasRouteChildren = {
   DemoFormulasListRoute: DemoFormulasListRoute,
+  DemoFormulasIndexRoute: DemoFormulasIndexRoute,
 }
 
 const DemoFormulasRouteWithChildren = DemoFormulasRoute._addFileChildren(
@@ -6304,6 +6533,7 @@ interface DemoMocksRouteChildren {
   DemoMocksPracticeRoute: typeof DemoMocksPracticeRoute
   DemoMocksSectionalRoute: typeof DemoMocksSectionalRoute
   DemoMocksTopicWiseRoute: typeof DemoMocksTopicWiseRoute
+  DemoMocksIndexRoute: typeof DemoMocksIndexRoute
   DemoMocksLeaderboardSlugRoute: typeof DemoMocksLeaderboardSlugRoute
   DemoMocksResultAttemptIdRoute: typeof DemoMocksResultAttemptIdRoute
   DemoMocksReviewAttemptIdRoute: typeof DemoMocksReviewAttemptIdRoute
@@ -6316,6 +6546,7 @@ const DemoMocksRouteChildren: DemoMocksRouteChildren = {
   DemoMocksPracticeRoute: DemoMocksPracticeRoute,
   DemoMocksSectionalRoute: DemoMocksSectionalRoute,
   DemoMocksTopicWiseRoute: DemoMocksTopicWiseRoute,
+  DemoMocksIndexRoute: DemoMocksIndexRoute,
   DemoMocksLeaderboardSlugRoute: DemoMocksLeaderboardSlugRoute,
   DemoMocksResultAttemptIdRoute: DemoMocksResultAttemptIdRoute,
   DemoMocksReviewAttemptIdRoute: DemoMocksReviewAttemptIdRoute,
@@ -6327,11 +6558,13 @@ const DemoMocksRouteWithChildren = DemoMocksRoute._addFileChildren(
 )
 
 interface DemoPersonalizedHubRouteChildren {
+  DemoPersonalizedHubIndexRoute: typeof DemoPersonalizedHubIndexRoute
   DemoPersonalizedHubAttemptAttemptIdRoute: typeof DemoPersonalizedHubAttemptAttemptIdRoute
   DemoPersonalizedHubResultAttemptIdRoute: typeof DemoPersonalizedHubResultAttemptIdRoute
 }
 
 const DemoPersonalizedHubRouteChildren: DemoPersonalizedHubRouteChildren = {
+  DemoPersonalizedHubIndexRoute: DemoPersonalizedHubIndexRoute,
   DemoPersonalizedHubAttemptAttemptIdRoute:
     DemoPersonalizedHubAttemptAttemptIdRoute,
   DemoPersonalizedHubResultAttemptIdRoute:
@@ -6348,6 +6581,7 @@ interface DemoVocabularyRouteChildren {
   DemoVocabularyLeaderboardRoute: typeof DemoVocabularyLeaderboardRoute
   DemoVocabularyRevisionRoute: typeof DemoVocabularyRevisionRoute
   DemoVocabularySearchRoute: typeof DemoVocabularySearchRoute
+  DemoVocabularyIndexRoute: typeof DemoVocabularyIndexRoute
   DemoVocabularyWordSlugRoute: typeof DemoVocabularyWordSlugRoute
 }
 
@@ -6358,6 +6592,7 @@ const DemoVocabularyRouteChildren: DemoVocabularyRouteChildren = {
   DemoVocabularyLeaderboardRoute: DemoVocabularyLeaderboardRoute,
   DemoVocabularyRevisionRoute: DemoVocabularyRevisionRoute,
   DemoVocabularySearchRoute: DemoVocabularySearchRoute,
+  DemoVocabularyIndexRoute: DemoVocabularyIndexRoute,
   DemoVocabularyWordSlugRoute: DemoVocabularyWordSlugRoute,
 }
 
@@ -6429,19 +6664,23 @@ const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
 
 interface ExamsRouteChildren {
   ExamsSlugRoute: typeof ExamsSlugRoute
+  ExamsIndexRoute: typeof ExamsIndexRoute
 }
 
 const ExamsRouteChildren: ExamsRouteChildren = {
   ExamsSlugRoute: ExamsSlugRoute,
+  ExamsIndexRoute: ExamsIndexRoute,
 }
 
 const ExamsRouteWithChildren = ExamsRoute._addFileChildren(ExamsRouteChildren)
 
 interface StudentDailyTestRouteChildren {
+  StudentDailyTestIndexRoute: typeof StudentDailyTestIndexRoute
   StudentDailyTestReportAttemptIdRoute: typeof StudentDailyTestReportAttemptIdRoute
 }
 
 const StudentDailyTestRouteChildren: StudentDailyTestRouteChildren = {
+  StudentDailyTestIndexRoute: StudentDailyTestIndexRoute,
   StudentDailyTestReportAttemptIdRoute: StudentDailyTestReportAttemptIdRoute,
 }
 
@@ -6450,10 +6689,12 @@ const StudentDailyTestRouteWithChildren =
 
 interface StudentDayPlannerRouteChildren {
   StudentDayPlannerPerformanceRoute: typeof StudentDayPlannerPerformanceRoute
+  StudentDayPlannerIndexRoute: typeof StudentDayPlannerIndexRoute
 }
 
 const StudentDayPlannerRouteChildren: StudentDayPlannerRouteChildren = {
   StudentDayPlannerPerformanceRoute: StudentDayPlannerPerformanceRoute,
+  StudentDayPlannerIndexRoute: StudentDayPlannerIndexRoute,
 }
 
 const StudentDayPlannerRouteWithChildren =
@@ -6461,10 +6702,12 @@ const StudentDayPlannerRouteWithChildren =
 
 interface StudentFormulasRouteChildren {
   StudentFormulasListRoute: typeof StudentFormulasListRoute
+  StudentFormulasIndexRoute: typeof StudentFormulasIndexRoute
 }
 
 const StudentFormulasRouteChildren: StudentFormulasRouteChildren = {
   StudentFormulasListRoute: StudentFormulasListRoute,
+  StudentFormulasIndexRoute: StudentFormulasIndexRoute,
 }
 
 const StudentFormulasRouteWithChildren = StudentFormulasRoute._addFileChildren(
@@ -6477,6 +6720,7 @@ interface StudentMocksRouteChildren {
   StudentMocksPracticeRoute: typeof StudentMocksPracticeRoute
   StudentMocksSectionalRoute: typeof StudentMocksSectionalRoute
   StudentMocksTopicWiseRoute: typeof StudentMocksTopicWiseRoute
+  StudentMocksIndexRoute: typeof StudentMocksIndexRoute
   StudentMocksAttemptAttemptIdRoute: typeof StudentMocksAttemptAttemptIdRoute
   StudentMocksLeaderboardSlugRoute: typeof StudentMocksLeaderboardSlugRoute
   StudentMocksResultAttemptIdRoute: typeof StudentMocksResultAttemptIdRoute
@@ -6490,6 +6734,7 @@ const StudentMocksRouteChildren: StudentMocksRouteChildren = {
   StudentMocksPracticeRoute: StudentMocksPracticeRoute,
   StudentMocksSectionalRoute: StudentMocksSectionalRoute,
   StudentMocksTopicWiseRoute: StudentMocksTopicWiseRoute,
+  StudentMocksIndexRoute: StudentMocksIndexRoute,
   StudentMocksAttemptAttemptIdRoute: StudentMocksAttemptAttemptIdRoute,
   StudentMocksLeaderboardSlugRoute: StudentMocksLeaderboardSlugRoute,
   StudentMocksResultAttemptIdRoute: StudentMocksResultAttemptIdRoute,
@@ -6502,12 +6747,14 @@ const StudentMocksRouteWithChildren = StudentMocksRoute._addFileChildren(
 )
 
 interface StudentPersonalizedHubRouteChildren {
+  StudentPersonalizedHubIndexRoute: typeof StudentPersonalizedHubIndexRoute
   StudentPersonalizedHubAttemptAttemptIdRoute: typeof StudentPersonalizedHubAttemptAttemptIdRoute
   StudentPersonalizedHubResultAttemptIdRoute: typeof StudentPersonalizedHubResultAttemptIdRoute
 }
 
 const StudentPersonalizedHubRouteChildren: StudentPersonalizedHubRouteChildren =
   {
+    StudentPersonalizedHubIndexRoute: StudentPersonalizedHubIndexRoute,
     StudentPersonalizedHubAttemptAttemptIdRoute:
       StudentPersonalizedHubAttemptAttemptIdRoute,
     StudentPersonalizedHubResultAttemptIdRoute:
@@ -6526,6 +6773,7 @@ interface StudentVocabularyRouteChildren {
   StudentVocabularyLeaderboardRoute: typeof StudentVocabularyLeaderboardRoute
   StudentVocabularyRevisionRoute: typeof StudentVocabularyRevisionRoute
   StudentVocabularySearchRoute: typeof StudentVocabularySearchRoute
+  StudentVocabularyIndexRoute: typeof StudentVocabularyIndexRoute
   StudentVocabularyWordSlugRoute: typeof StudentVocabularyWordSlugRoute
 }
 
@@ -6536,6 +6784,7 @@ const StudentVocabularyRouteChildren: StudentVocabularyRouteChildren = {
   StudentVocabularyLeaderboardRoute: StudentVocabularyLeaderboardRoute,
   StudentVocabularyRevisionRoute: StudentVocabularyRevisionRoute,
   StudentVocabularySearchRoute: StudentVocabularySearchRoute,
+  StudentVocabularyIndexRoute: StudentVocabularyIndexRoute,
   StudentVocabularyWordSlugRoute: StudentVocabularyWordSlugRoute,
 }
 

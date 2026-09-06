@@ -1,8 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import StudentDayPlanner from "@/pages/student/StudentDayPlanner";
-import StudentContentSkeleton from "@/components/student/StudentContentSkeleton";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/student/day-planner")({
-  component: () => <StudentDayPlanner />,
-  pendingComponent: StudentContentSkeleton,
+  component: () => <Outlet />,
 });
