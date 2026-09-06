@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
+import { lazyWithRetry as lazy } from "@/lib/lazyWithRetry";
 import HeroSection from "@/components/HeroSection";
 import SEOHead, {
   generateWebsiteSchema,
