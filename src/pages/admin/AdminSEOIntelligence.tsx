@@ -730,7 +730,11 @@ const AdminSEOIntelligence = () => {
         </TabsContent>
 
         {/* ── Keywords ── */}
+        <TabsContent value="kwresearch" className="pt-4">
+          <ErrorBoundary><SeoKeywordResearch /></ErrorBoundary>
+        </TabsContent>
         <TabsContent value="keywords" className="space-y-3 pt-4">
+
           <Input placeholder="Search keywords…" value={kwSearch} onChange={(e) => setKwSearch(e.target.value)} className="max-w-md" />
           <Card>
             <CardContent className="overflow-x-auto p-0">
