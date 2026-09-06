@@ -14,6 +14,8 @@ import { requireAdmin } from "../_shared/requireAdmin.ts";
 import { gscConfigured, resolveGscSite, GSC_GATEWAY, gscHeaders, SITE_URL, gscDailyMetrics } from "../_shared/seoSignals.ts";
 import { semrushConfigured, getKeywordMetrics } from "../_shared/keywordMetrics.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { applyRecommendation, canAutoApply, classifyChange } from "../_shared/seoApply.ts";
+
 
 const firecrawlConfigured = () => !!Deno.env.get("FIRECRAWL_API_KEY");
 const openAiConfigured = () => !!(Deno.env.get("OPENAI_API_KEY") || Deno.env.get("OPENAI_API_KEY_2"));
@@ -1031,26 +1033,239 @@ Deno.serve(async (req) => {
 
       /* ─────────── approval queue: review → preview → approve → apply → verify ─────────── */
       case "approval_queue": {
-        const [recs, tasks, consoleTasks] = await Promise.all([
-          sb.from("seo_intel_recommendations")
-            .select("*")
-            .in("status", ["new", "review", "approved", "applied"])
-            .order("priority").order("opportunity_score", { ascending: false, nullsFirst: false }).limit(120),
+        // Paged: the queue must handle 100 or 10,000 recommendations, so the UI
+        // asks for a window instead of a hard-capped list.
+        const limit = Math.max(20, Math.min(1000, Number(body.limit ?? 300)));
+        const offset = Math.max(0, Number(body.offset ?? 0));
+        const wantStates: string[] = Array.isArray(body.states) && body.states.length
+          ? body.states.map(String)
+          : ["new", "review", "approved"];
+
+        let q = sb.from("seo_intel_recommendations")
+          .select("*", { count: "exact" })
+          .in("status", wantStates);
+        if (body.category) q = q.eq("category", String(body.category));
+        if (body.priority) q = q.eq("priority", String(body.priority));
+        if (body.path_like) q = q.ilike("path", `%${String(body.path_like)}%`);
+
+        const [recs, tasks, consoleTasks, counts] = await Promise.all([
+          q.order("priority").order("opportunity_score", { ascending: false, nullsFirst: false })
+            .range(offset, offset + limit - 1),
           sb.from("seo_intel_tasks").select("*").not("status", "in", '("completed","rejected")').order("priority").limit(80),
           sb.from("seo_intel_console_tasks").select("*").neq("status", "completed").order("created_at", { ascending: false }).limit(60),
+          Promise.all(["new", "review", "approved", "applied", "rejected"].map(async (s) => {
+            const { count } = await sb.from("seo_intel_recommendations")
+              .select("id", { count: "exact", head: true }).eq("status", s);
+            return [s, count ?? 0] as const;
+          })),
         ]);
         const list = recs.data ?? [];
-        const canAutoApply = (r: any) =>
-          !!r.after_value && !!r.path && /title|meta|description/i.test(String(r.change_type ?? ""));
+        const withFlag = (r: any) => ({ ...r, can_auto_apply: canAutoApply(r), apply_kind: classifyChange(r) });
         return json({
-          pending: list.filter((r: any) => ["new", "review"].includes(r.status)).map((r: any) => ({ ...r, can_auto_apply: canAutoApply(r) })),
-          approved: list.filter((r: any) => r.status === "approved").map((r: any) => ({ ...r, can_auto_apply: canAutoApply(r) })),
-          applied: list.filter((r: any) => r.status === "applied"),
+          pending: list.filter((r: any) => ["new", "review"].includes(r.status)).map(withFlag),
+          approved: list.filter((r: any) => r.status === "approved").map(withFlag),
+          applied: list.filter((r: any) => r.status === "applied").map(withFlag),
+          total_matching: recs.count ?? list.length,
+          offset, limit,
+          status_counts: Object.fromEntries(counts),
           tasks: tasks.data ?? [],
           console_tasks: consoleTasks.data ?? [],
           auto_apply_safe: settings.auto_apply_safe,
         });
       }
+
+      /* ─────────── bulk approve / apply / reject ─────────── */
+      case "bulk_rec_action": {
+        const act = String(body.act ?? "approve");
+        if (!["approve", "reject", "apply"].includes(act)) return json({ error: `Unsupported bulk action: ${act}` }, 400);
+
+        const ids: string[] = Array.isArray(body.ids) ? body.ids.map(String).filter(Boolean) : [];
+        const max = Math.max(1, Math.min(2000, Number(body.max ?? 500)));
+
+        let rows: any[] = [];
+        if (ids.length) {
+          const { data } = await sb.from("seo_intel_recommendations").select("*").in("id", ids.slice(0, max));
+          rows = data ?? [];
+        } else {
+          // "Approve all" / "Apply all" for the current filter, in priority order.
+          let q = sb.from("seo_intel_recommendations").select("*")
+            .in("status", Array.isArray(body.states) && body.states.length ? body.states.map(String) : ["new", "review"]);
+          if (body.category) q = q.eq("category", String(body.category));
+          if (body.priority) q = q.eq("priority", String(body.priority));
+          if (body.path_like) q = q.ilike("path", `%${String(body.path_like)}%`);
+          if (body.only_auto) q = q.not("path", "is", null);
+          const { data } = await q.order("priority").order("opportunity_score", { ascending: false, nullsFirst: false }).limit(max);
+          rows = data ?? [];
+        }
+
+        if (act === "reject" || act === "approve") {
+          const targetIds = rows.map((r) => r.id);
+          if (!targetIds.length) return json({ ok: true, processed: 0, note: "Nothing matched." });
+          await sb.from("seo_intel_recommendations")
+            .update({ status: act === "approve" ? "approved" : "rejected", reviewed_by: actor, reviewed_at: nowIso() })
+            .in("id", targetIds);
+          if (act === "approve") {
+            const tasks = rows.map((rec: any) => ({
+              path: rec.path, keyword: rec.keyword, issue: rec.problem,
+              recommendation: rec.recommended_change, recommendation_id: rec.id,
+              priority: rec.priority, status: "approved",
+              requires_human: !canAutoApply(rec),
+              data_source: rec.data_source,
+              before_value: rec.before_value, after_value: rec.after_value,
+              due_date: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10),
+            }));
+            for (let i = 0; i < tasks.length; i += 200) {
+              await sb.from("seo_intel_tasks").insert(tasks.slice(i, i + 200));
+            }
+            // Auto-appliable approvals are handed to the engine so approval
+            // actually results in a change on the site.
+            if (body.then_apply !== false) {
+              await sb.from("seo_intel_jobs").insert({
+                job_type: "auto_apply", priority: 2, triggered_by: "admin",
+                payload: { limit: Math.min(50, targetIds.length), ids: rows.filter(canAutoApply).map((r) => r.id).slice(0, 200) },
+                scheduled_for: nowIso(),
+              });
+              await invokeFn("seo-intel-worker", { cron_token: settings.cron_token, force: true });
+            }
+          }
+          await logActivity(sb, {
+            event: act === "approve" ? "Bulk approval" : "Bulk rejection",
+            detail: `${targetIds.length} recommendation(s)`, level: "info", records: targetIds.length,
+          });
+          return json({ ok: true, processed: targetIds.length, act });
+        }
+
+        // Bulk apply: real writes, done inside the request for a small window and
+        // handed to the worker for the rest so nothing times out.
+        const eligible = rows.filter(canAutoApply);
+        const inline = eligible.slice(0, Math.max(1, Math.min(12, Number(body.inline ?? 8))));
+        const deferred = eligible.slice(inline.length);
+        let ok = 0; const failures: string[] = [];
+        for (const rec of inline) {
+          const outcome = await applyRecommendation(sb, rec, { actor, actorLabel: "admin (bulk)" });
+          if (outcome.ok) ok++;
+          else if (failures.length < 5) failures.push(`${rec.path}: ${outcome.reason}`);
+        }
+        if (deferred.length) {
+          await sb.from("seo_intel_jobs").insert({
+            job_type: "auto_apply", priority: 2, triggered_by: "admin",
+            payload: { limit: deferred.length, ids: deferred.map((r) => r.id) },
+            scheduled_for: nowIso(),
+          });
+          await invokeFn("seo-intel-worker", { cron_token: settings.cron_token, force: true });
+        }
+        return json({
+          ok: true, act: "apply", applied_now: ok, queued: deferred.length,
+          skipped: rows.length - eligible.length, failures,
+        });
+      }
+
+      /* ─────────── website SEO health meter ─────────── */
+      case "health_meter": {
+        const { data: pages } = await sb.from("seo_intel_pages")
+          .select("path, page_type, health_score, aeo_score, health_issues");
+        const rows = pages ?? [];
+        const scored = rows.filter((p: any) => p.health_score !== null && p.health_score !== undefined);
+        const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+        const avgHealth = avg(scored.map((p: any) => Number(p.health_score)));
+        const aeoRows = rows.filter((p: any) => p.aeo_score !== null && p.aeo_score !== undefined);
+        const avgAeo = avg(aeoRows.map((p: any) => Number(p.aeo_score)));
+        const issuesOpen = rows.reduce((n: number, p: any) => n + (Array.isArray(p.health_issues) ? p.health_issues.length : 0), 0);
+
+        const countOf = async (status: string) => {
+          const { count } = await sb.from("seo_intel_recommendations")
+            .select("id", { count: "exact", head: true }).eq("status", status);
+          return count ?? 0;
+        };
+        const [appliedTotal, pendingNew, pendingReview, approved, rejected] = await Promise.all([
+          countOf("applied"), countOf("new"), countOf("review"), countOf("approved"), countOf("rejected"),
+        ]);
+        const { count: applied24h } = await sb.from("seo_intel_recommendations")
+          .select("id", { count: "exact", head: true }).eq("status", "applied")
+          .gte("applied_at", new Date(Date.now() - 864e5).toISOString());
+
+        // Per-page-type breakdown so a score change is always explainable.
+        const byType: Record<string, { pages: number; avg_health: number | null; avg_aeo: number | null }> = {};
+        for (const p of rows) {
+          const k = String(p.page_type ?? "other");
+          byType[k] ??= { pages: 0, avg_health: null, avg_aeo: null };
+          byType[k].pages++;
+        }
+        for (const k of Object.keys(byType)) {
+          const set = rows.filter((p: any) => String(p.page_type ?? "other") === k);
+          byType[k].avg_health = avg(set.filter((p: any) => p.health_score != null).map((p: any) => Number(p.health_score)));
+          byType[k].avg_aeo = avg(set.filter((p: any) => p.aeo_score != null).map((p: any) => Number(p.aeo_score)));
+        }
+
+        const { data: history } = await sb.from("seo_intel_health_history")
+          .select("*").order("captured_at", { ascending: false }).limit(60);
+        const prev = (history ?? [])[0];
+        const delta = avgHealth != null && prev?.avg_health != null ? Number(avgHealth) - Number(prev.avg_health) : null;
+
+        // Measured per-page impact of applied fixes.
+        const { data: measured } = await sb.from("seo_intel_page_scores")
+          .select("health_before, health_after, aeo_before, aeo_after, issues_before, issues_after, status")
+          .eq("status", "measured").limit(1000);
+        const gains = (measured ?? []).filter((m: any) => m.health_after != null && m.health_before != null);
+        const avgGain = avg(gains.map((m: any) => Number(m.health_after) - Number(m.health_before)));
+
+        const snapshot = {
+          avg_health: avgHealth == null ? null : Number(avgHealth.toFixed(1)),
+          avg_aeo: avgAeo == null ? null : Number(avgAeo.toFixed(1)),
+          pages_scored: scored.length,
+          pages_total: rows.length,
+          pages_below_70: scored.filter((p: any) => Number(p.health_score) < 70).length,
+          issues_open: issuesOpen,
+          applied_total: appliedTotal,
+          pending_total: pendingNew + pendingReview + approved,
+          pending_new: pendingNew, pending_review: pendingReview, pending_approved: approved,
+          rejected_total: rejected,
+          applied_24h: applied24h ?? 0,
+          delta_health: delta == null ? null : Number(delta.toFixed(2)),
+          measured_fixes: gains.length,
+          avg_score_gain_per_fix: avgGain == null ? null : Number(avgGain.toFixed(2)),
+          by_page_type: byType,
+        };
+
+        if (body.capture) {
+          await sb.from("seo_intel_health_history").insert({
+            avg_health: snapshot.avg_health, avg_aeo: snapshot.avg_aeo,
+            pages_scored: snapshot.pages_scored, pages_below_70: snapshot.pages_below_70,
+            issues_open: snapshot.issues_open, applied_total: snapshot.applied_total,
+            pending_total: snapshot.pending_total, applied_24h: snapshot.applied_24h,
+            delta_health: snapshot.delta_health,
+            reason: `${snapshot.applied_24h} fix(es) applied in the last 24h across ${snapshot.pages_scored} scored pages`,
+            breakdown: byType,
+          });
+        }
+
+        return json({ ok: true, snapshot, history: (history ?? []).reverse() });
+      }
+
+      /* ─────────── keyword research feed ─────────── */
+      case "keyword_research": {
+        if (body.run) {
+          await sb.from("seo_intel_jobs").insert({
+            job_type: "keyword_research", priority: 3, triggered_by: "admin",
+            payload: { batch: Math.max(1, Math.min(40, Number(body.batch ?? 8))), path: body.path ?? null },
+            scheduled_for: nowIso(),
+          });
+          await invokeFn("seo-intel-worker", { cron_token: settings.cron_token, force: true });
+          await logActivity(sb, { event: "Keyword research requested", detail: body.path ? String(body.path) : "next pages in rotation" });
+          return json({ ok: true, queued: true });
+        }
+        const limit = Math.max(20, Math.min(1000, Number(body.limit ?? 300)));
+        let kq = sb.from("seo_intel_keywords").select("*", { count: "exact" }).not("researched_at", "is", null);
+        if (body.path) kq = kq.eq("research_source_path", String(body.path));
+        if (body.kind) kq = kq.eq("keyword_kind", String(body.kind));
+        const { data: kws, count } = await kq.order("researched_at", { ascending: false }).limit(limit);
+        const { data: pages } = await sb.from("seo_intel_pages")
+          .select("path, entity_name, page_type, primary_keyword, target_keywords")
+          .not("primary_keyword", "is", null).limit(300);
+        return json({ ok: true, keywords: kws ?? [], total: count ?? 0, pages: pages ?? [] });
+      }
+
+
 
 
 
@@ -1166,54 +1381,16 @@ Deno.serve(async (req) => {
         }
 
         if (act === "apply") {
-          if (!rec.path) return json({ error: "This recommendation has no page to apply to." }, 400);
-          const changeType = String(rec.change_type ?? "").toLowerCase();
-          const isMeta = /title|meta|description/.test(changeType);
-          if (!isMeta || !rec.after_value) {
-            return json({
-              error: "This change needs a human edit — approve it to create a task instead. Only title and meta description changes can be applied automatically.",
-            }, 400);
+          const outcome = await applyRecommendation(sb, rec, { actor, actorLabel: "admin" });
+          if (!outcome.ok) {
+            if (outcome.needs_human) {
+              return json({ error: `${outcome.reason} Approve it to create a task for a human.` }, 400);
+            }
+            return json({ error: outcome.reason }, 400);
           }
-          const slug = rec.path.split("/").filter(Boolean).pop();
-          const { data: existing } = await sb.from("page_seo_overrides").select("*").eq("slug", slug).maybeSingle();
-          const patch: Record<string, unknown> = { slug, updated_at: nowIso() };
-          if (/title/.test(changeType)) patch.title = rec.after_value;
-          else patch.description = rec.after_value;
-
-          const { error: upErr } = await sb.from("page_seo_overrides").upsert(patch, { onConflict: "slug" });
-          if (upErr) return json({ error: upErr.message }, 400);
-
-          // Baseline for impact measurement.
-          const { data: page } = await sb.from("seo_intel_pages")
-            .select("avg_position, clicks, impressions").eq("path", rec.path).maybeSingle();
-          await sb.from("seo_intel_experiments").insert({
-            path: rec.path, keyword: rec.keyword, recommendation_id: id,
-            change_type: rec.change_type, change_summary: rec.recommended_change,
-            before_value: rec.before_value ?? (/title/.test(changeType) ? existing?.title : existing?.description) ?? null,
-            after_value: rec.after_value,
-            baseline_position: page?.avg_position ?? null,
-            baseline_clicks: page?.clicks ?? null,
-            baseline_impressions: page?.impressions ?? null,
-            baseline_captured_on: today(),
-            changed_on: today(),
-            measure_after: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
-            data_source: "gsc",
-            outcome: "pending",
-          });
-          await sb.from("seo_intel_recommendations").update({
-            status: "applied", applied_at: nowIso(), applied_by: actor,
-            reviewed_by: actor, reviewed_at: nowIso(),
-          }).eq("id", id);
-          await logAudit(sb, {
-            actor, actor_label: "admin", action: "recommendation_applied",
-            entity: "recommendation", entity_id: id, path: rec.path,
-            before_value: { value: existing?.title ?? existing?.description ?? null },
-            after_value: { value: rec.after_value },
-            data_source: rec.data_source, recommendation_id: id,
-          });
-          await logActivity(sb, { event: "Change applied", detail: `${rec.path} — ${rec.change_type}`, level: "success" });
-          return json({ ok: true, status: "applied" });
+          return json({ ok: true, status: "applied", fields: outcome.fields, detail: outcome.detail });
         }
+
 
         if (act === "verify") {
           // Verification is a measurement, not a claim: it only reads Search Console

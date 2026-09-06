@@ -94,10 +94,14 @@ Deno.serve(async (req) => {
     // ── autonomous research & execution: find keywords, tear competitors down,
     //    and (only in autonomous mode) apply the safe wins by itself ──────────
     { type: "keyword_discovery", everyMin: Math.max(settings.freq_rank_min, 360), priority: 9 },
+    // Continuous AI keyword research per page — every page eventually gets its
+    // own researched keyword set with the reason each keyword was chosen.
+    { type: "keyword_research", everyMin: Math.max(60, Math.min(settings.freq_rank_min, 180)), payload: { batch: 10 }, priority: 9 },
     { type: "competitor_deep", everyMin: Math.max(settings.freq_competitor_min, 720), payload: { batch: 3 }, priority: 11 },
     ...(settings.autonomous_mode
-      ? [{ type: "auto_apply", everyMin: 180, payload: { limit: 5 }, priority: 8 }]
+      ? [{ type: "auto_apply", everyMin: 30, payload: { limit: 20 }, priority: 8 }]
       : []),
+
 
 
   ];

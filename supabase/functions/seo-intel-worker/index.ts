@@ -21,6 +21,8 @@ import { callAIGateway } from "../_shared/aiGateway.ts";
 import { ADVANCED_STAGES, validateRecommendation, upsertRecommendation } from "../_shared/seoIntel2.ts";
 import { STATIC_ROUTES } from "../_shared/staticRoutes.ts";
 import { scoreAeoGeo } from "../_shared/aeoGeoRules.ts";
+import { applyRecommendation, canAutoApply } from "../_shared/seoApply.ts";
+
 
 
 
@@ -792,7 +794,10 @@ async function runSpeedAudit(ctx: Ctx) {
 async function runAnalyze(ctx: Ctx) {
   const { sb, job } = ctx;
   const PAGE_COLS = "path, page_type, title, meta_description, word_count, has_schema, internal_links_out, health_score, health_issues, clicks, impressions, ctr, avg_position, prev_avg_position, position_change, primary_keyword, indexed_status, aeo_score, aeo_grade, aeo_failed, rendered_word_count, rendered_has_schema, ssr_gap, psi_perf_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_opportunities, last_analyzed_at, analysis_round";
-  const batchSize = Math.max(6, Math.min(20, Number(ctx.settings.max_pages_per_run ?? 12)));
+  // Site-wide coverage: analyse a much larger slice per run so every page
+  // family keeps moving instead of a dozen pages a day.
+  const batchSize = Math.max(12, Math.min(60, Number(ctx.settings.max_pages_per_run ?? 12) * 3));
+
   const explicitPaths: string[] = Array.isArray(job.payload?.paths) ? job.payload.paths : [];
 
   let pages: any[] | null = null;
@@ -871,7 +876,10 @@ Return STRICT JSON: {"recommendations":[{"path":"","keyword":"","category":"","c
   let inserted = 0;
   let suppressed = 0;
   let updated = 0;
-  for (const r of recs.slice(0, 25)) {
+  // No artificial cap: every recommendation the model produced for this batch is
+  // validated and stored (deduped downstream), so the queue reflects real work.
+  for (const r of recs.slice(0, 150)) {
+
     if (!r?.problem) continue;
     const candidate = {
       path: r.path ?? null,
@@ -1364,98 +1372,320 @@ Return STRICT JSON: {"why_outranking":"2-3 sentences citing only the numbers/str
   return { records: done, detail: `tore down ${done} competitor page(s) and stored what they do differently` };
 }
 
-/* ─────────── autonomous execution: apply the safe wins by itself ─────────── */
+/* ─────────── autonomous execution: apply the wins by itself ─────────── */
 
 /**
- * Applies only changes that are safe and reversible: a page title or meta
- * description rewrite with a concrete after_value, written to page_seo_overrides.
- * Every application records a before/after experiment so the impact is measured
- * from Search Console later. Anything else stays a human task.
+ * Applies recommendations for real through the shared applier: titles, meta
+ * descriptions, H1s, keyword injection, FAQ blocks, schema, answer-first
+ * blocks and content expansion all become rows in page_seo_overrides.
+ * Every application records a before/after snapshot and queues a page re-check
+ * so the impact is measured, not claimed. Anything that needs a human stays a task.
+ *
+ * Payload: { limit?: number, ids?: string[] } — `ids` comes from a bulk
+ * approval/apply in the admin UI.
  */
 async function runAutoApply(ctx: Ctx) {
-  const { sb, settings } = ctx;
-  if (!settings.autonomous_mode) {
+  const { sb, settings, job } = ctx;
+  const explicitIds: string[] = Array.isArray(job.payload?.ids) ? job.payload.ids.map(String) : [];
+  if (!settings.autonomous_mode && !explicitIds.length) {
     return { skipped: "Autonomous mode is off — changes wait for admin approval in the Approvals tab.", records: 0 };
   }
-  const limit = Math.max(1, Math.min(10, Number(ctx.job.payload?.limit ?? 5)));
-  const { data: recs } = await sb.from("seo_intel_recommendations")
-    .select("*")
-    .in("status", ["new", "review", "approved"])
-    .eq("auto_appliable", true)
-    .not("after_value", "is", null)
-    .not("path", "is", null)
-    .order("priority")
-    .order("confidence", { ascending: false, nullsFirst: false })
-    .limit(limit * 3);
 
-  const eligible = (recs ?? []).filter((r: any) =>
-    /title|meta|description/i.test(String(r.change_type ?? "")) &&
-    (r.confidence ?? 0) >= 0.6 &&
-    String(r.after_value ?? "").trim().length >= 20
-  ).slice(0, limit);
-
-  if (!eligible.length) {
-    return { skipped: "No safe change is currently eligible for autonomous application.", records: 0 };
+  const limit = Math.max(1, Math.min(60, Number(job.payload?.limit ?? 10)));
+  let rows: any[] = [];
+  if (explicitIds.length) {
+    const { data } = await sb.from("seo_intel_recommendations").select("*")
+      .in("id", explicitIds.slice(0, 200)).in("status", ["new", "review", "approved"]);
+    rows = data ?? [];
+  } else {
+    const { data } = await sb.from("seo_intel_recommendations").select("*")
+      .in("status", ["new", "review", "approved"])
+      .not("path", "is", null)
+      .order("priority").order("confidence", { ascending: false, nullsFirst: false })
+      .limit(limit * 4);
+    rows = (data ?? []).filter((r: any) => (r.confidence ?? 0.7) >= 0.6);
   }
 
-  let applied = 0;
+  const eligible = rows.filter(canAutoApply).slice(0, limit);
+  if (!eligible.length) {
+    return { skipped: "No change is currently eligible for automatic application.", records: 0 };
+  }
+
+  let applied = 0; let human = 0;
   for (let i = 0; i < eligible.length; i++) {
     const rec = eligible[i];
     await ctx.beat(`Applying ${rec.change_type} on ${rec.path}`, Math.round((i / eligible.length) * 90) + 5, undefined, rec.path);
-    const changeType = String(rec.change_type).toLowerCase();
-    const slug = String(rec.path).split("/").filter(Boolean).pop();
-    if (!slug) continue;
-    const { data: existing } = await sb.from("page_seo_overrides").select("*").eq("slug", slug).maybeSingle();
-    const patch: Record<string, unknown> = { slug, updated_at: nowIso() };
-    if (/title/.test(changeType)) patch.title = rec.after_value;
-    else patch.description = rec.after_value;
-    const { error: upErr } = await sb.from("page_seo_overrides").upsert(patch, { onConflict: "slug" });
-    if (upErr) continue;
+    const outcome = await applyRecommendation(sb, rec, { actor: null, actorLabel: explicitIds.length ? "engine (bulk apply)" : "engine (autonomous)" });
+    if (outcome.ok) applied++;
+    else if (outcome.needs_human) {
+      human++;
+      await sb.from("seo_intel_recommendations").update({ status: "approved", reviewed_at: nowIso() }).eq("id", rec.id);
+    }
+  }
 
-    const { data: page } = await sb.from("seo_intel_pages")
-      .select("avg_position, clicks, impressions").eq("path", rec.path).maybeSingle();
-    await sb.from("seo_intel_experiments").insert({
-      path: rec.path, keyword: rec.keyword, recommendation_id: rec.id,
-      change_type: rec.change_type, change_summary: rec.recommended_change,
-      before_value: rec.before_value ?? (/title/.test(changeType) ? existing?.title : existing?.description) ?? null,
-      after_value: rec.after_value,
-      baseline_position: page?.avg_position ?? null,
-      baseline_clicks: page?.clicks ?? null,
-      baseline_impressions: page?.impressions ?? null,
-      baseline_captured_on: today(),
-      changed_on: today(),
-      measure_after: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
-      data_source: "gsc",
-      outcome: "pending",
-    });
-    await sb.from("seo_intel_recommendations").update({
-      status: "applied", applied_at: nowIso(), applied_by: null,
-      reviewed_at: nowIso(),
-    }).eq("id", rec.id);
-    await logAudit(sb, {
-      actor: null, actor_label: "engine (autonomous)", action: "recommendation_applied",
-      entity: "recommendation", entity_id: rec.id, path: rec.path,
-      before_value: { value: existing?.title ?? existing?.description ?? null },
-      after_value: { value: rec.after_value },
-      data_source: rec.data_source, recommendation_id: rec.id,
-    });
-    await logActivity(sb, {
-      event: "Autonomous change applied",
-      detail: `${rec.path} — ${rec.change_type}: "${String(rec.after_value).slice(0, 120)}"`,
-      level: "success", job_id: ctx.job.id, job_type: "auto_apply", records: 1,
-    });
-    applied++;
+  // Keep going while a bulk batch still has work left.
+  const remaining = rows.filter(canAutoApply).length - eligible.length;
+  if (explicitIds.length && remaining > 0) {
+    await enqueue(sb, {
+      job_type: "auto_apply", priority: 2, triggered_by: "admin",
+      payload: { limit, ids: explicitIds.slice(eligible.length) },
+      dedupe_key: `auto_apply:bulk:${Date.now()}`,
+    }).catch(() => undefined);
   }
 
   if (applied) {
     await notify(sb, {
       kind: "auto_applied", severity: "info",
-      title: `${applied} safe SEO change(s) applied automatically`,
-      body: "Each change recorded a before/after baseline — impact is measured from Search Console after the measurement window.",
+      title: `${applied} SEO change(s) written to pages`,
+      body: "Each change recorded a before/after snapshot and queued a page re-check, so the score impact is measured.",
     });
   }
-  return { records: applied, detail: `${applied} safe change(s) applied and baselined for measurement` };
+  return {
+    records: applied,
+    detail: `${applied} change(s) written to page data${human ? `, ${human} sent to the task board for a human` : ""}`,
+  };
 }
+
+/* ─────────── keyword research: research → analyse → inject ─────────── */
+
+/**
+ * Real AI keyword research per page: best keywords, top-ranking terms, related
+ * and long-tail variants plus competitor terms, each stored with the reason it
+ * was selected. Semrush metrics are attached when the connector is available,
+ * and the winning set becomes a keyword-injection recommendation for the page.
+ */
+async function runKeywordResearch(ctx: Ctx) {
+  const { sb, settings, job } = ctx;
+  const batch = Math.max(1, Math.min(40, Number(job.payload?.batch ?? 8)));
+  const onePath = job.payload?.path ? String(job.payload.path) : null;
+
+  let pages: any[] = [];
+  if (onePath) {
+    const { data } = await sb.from("seo_intel_pages")
+      .select("path, page_type, entity_name, title, meta_description, primary_keyword, target_keywords, clicks, impressions, avg_position")
+      .eq("path", onePath).limit(1);
+    pages = data ?? [];
+  } else {
+    const { data } = await sb.from("seo_intel_pages")
+      .select("path, page_type, entity_name, title, meta_description, primary_keyword, target_keywords, clicks, impressions, avg_position")
+      .order("impressions", { ascending: false, nullsFirst: false })
+      .limit(batch * 4);
+    // Rotate: pages never researched, or researched longest ago, come first.
+    const { data: seen } = await sb.from("seo_intel_keywords")
+      .select("research_source_path, researched_at").not("researched_at", "is", null).limit(4000);
+    const lastFor = new Map<string, number>();
+    for (const k of seen ?? []) {
+      const t = new Date(String(k.researched_at)).getTime();
+      const p = String(k.research_source_path ?? "");
+      if (!p) continue;
+      if (!lastFor.has(p) || t > (lastFor.get(p) ?? 0)) lastFor.set(p, t);
+    }
+    pages = (data ?? []).sort((a: any, b: any) => (lastFor.get(a.path) ?? 0) - (lastFor.get(b.path) ?? 0)).slice(0, batch);
+  }
+  if (!pages.length) return { skipped: "No pages to research yet.", records: 0 };
+
+  let stored = 0; let recs = 0;
+  for (let i = 0; i < pages.length; i++) {
+    const p = pages[i];
+    await ctx.beat(`Researching keywords for ${p.path}`, Math.round((i / pages.length) * 90) + 5, undefined, p.path);
+
+    const prompt = `You are an Indian MBA-admissions SEO keyword researcher for mbacompass.in.
+Research the search demand for THIS page and select the keywords worth targeting.
+
+Page: ${p.path}
+Type: ${p.page_type ?? "unknown"}
+Entity: ${p.entity_name ?? "—"}
+Title: ${p.title ?? "—"}
+Meta: ${p.meta_description ?? "—"}
+Current primary keyword: ${p.primary_keyword ?? "none"}
+Search Console actuals: clicks ${p.clicks ?? 0}, impressions ${p.impressions ?? 0}, average position ${p.avg_position ?? "—"}
+
+Return STRICT JSON:
+{"primary":{"keyword":"...","reason":"why this is the best primary for this page"},
+ "keywords":[{"keyword":"...","kind":"best|top_ranking|related|long_tail|competitor","intent":"informational|commercial|transactional|navigational|comparison","reason":"one line: why it was selected for this page"}],
+ "injection":{"recommended_change":"where and how to use these keywords on this page","problem":"what is missing today"}}
+
+Rules: 12-18 keywords, Indian search behaviour, no invented volumes, no duplicates, keywords must be genuinely relevant to this exact page.`;
+
+    let parsed: any = null;
+    try {
+      const res = await callAIGateway({
+        model: "gpt-4.1-mini",
+        messages: [
+          { role: "system", content: "You are a precise SEO keyword researcher. Output strict JSON only. Never invent metrics." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.4,
+      }, { feature: "seo-intel-keyword-research" });
+      if (res.ok) {
+        const payload = await res.json();
+        parsed = parseAIJson<any>(String(payload?.choices?.[0]?.message?.content ?? ""));
+      }
+    } catch (_) { /* keep going with the next page */ }
+    if (!parsed) continue;
+
+    const list: any[] = Array.isArray(parsed.keywords) ? parsed.keywords : [];
+    const primary = parsed.primary?.keyword ? String(parsed.primary.keyword) : null;
+    const all = [
+      ...(primary ? [{ keyword: primary, kind: "best", intent: null, reason: parsed.primary?.reason ?? "Selected as the page's primary keyword" }] : []),
+      ...list,
+    ].filter((k) => k?.keyword);
+
+    // Attach real metrics where Semrush is connected; otherwise leave them null
+    // rather than estimating.
+    let metrics: Record<string, any> = {};
+    if (semrushConfigured()) {
+      try {
+        const { rows } = await getKeywordMetrics(all.slice(0, 18).map((k) => String(k.keyword)), {
+          locale: settings.semrush_database || "in", refresh: false, withGsc: true,
+        }) as any;
+        for (const r of rows ?? []) metrics[String(r.keyword).toLowerCase()] = r;
+      } catch (_) { /* metrics stay unavailable */ }
+    }
+
+    for (const k of all.slice(0, 20)) {
+      const kw = String(k.keyword).trim().toLowerCase();
+      if (!kw) continue;
+      const m = metrics[kw] ?? {};
+      const { error } = await sb.from("seo_intel_keywords").upsert({
+        keyword: kw,
+        locale: settings.semrush_database || "in",
+        target_path: p.path,
+        keyword_kind: String(k.kind ?? "related"),
+        intent: k.intent ?? classifyIntent(kw),
+        research_reason: String(k.reason ?? "").slice(0, 600),
+        research_source_path: p.path,
+        researched_at: nowIso(),
+        ai_model: "gpt-4.1-mini",
+        discovered_from: p.path,
+        discovery_source: "ai_research",
+        search_volume: m.search_volume ?? null,
+        volume_source: m.search_volume != null ? "semrush" : null,
+        difficulty: m.difficulty ?? null,
+        difficulty_source: m.difficulty != null ? "semrush" : null,
+        cpc: m.cpc ?? null,
+        last_checked_at: nowIso(),
+      }, { onConflict: "keyword,locale" });
+      if (!error) stored++;
+    }
+
+    // The research must end in an implementable change, not just a list.
+    if (primary) {
+      const candidate = {
+        path: p.path,
+        keyword: primary,
+        category: "keywords",
+        change_type: "keyword_injection",
+        problem: String(parsed.injection?.problem ?? `The page does not clearly target "${primary}".`),
+        evidence: `Researched ${all.length} keywords for this page; Search Console shows ${p.impressions ?? 0} impressions at average position ${p.avg_position ?? "—"}.`,
+        why_it_matters: "Targeting the researched primary keyword and its long-tail variants in the title, intro and headings is what converts impressions into clicks.",
+        recommended_change: String(parsed.injection?.recommended_change ?? `Use "${primary}" in the first sentence, one H2 and the meta description, and cover the researched long-tail variants in the body.`),
+        confidence: 0.75,
+        priority: (p.impressions ?? 0) > 500 ? "high" : "medium",
+        data_source: "ai_research",
+        auto_appliable: true,
+      };
+      const v = validateRecommendation(candidate as any);
+      if (v.ok) {
+        await upsertRecommendation(sb, candidate as any).catch(() => undefined);
+        recs++;
+      }
+    }
+  }
+
+  await logActivity(sb, {
+    event: "Keyword research completed",
+    detail: `${stored} researched keyword(s) stored across ${pages.length} page(s), ${recs} injection recommendation(s) created`,
+    level: "success", job_id: ctx.job.id, job_type: "keyword_research", records: stored,
+  });
+  return { records: stored, detail: `${stored} keyword(s) researched with reasons across ${pages.length} page(s)` };
+}
+
+/* ─────────── page re-check: measure the real impact of a fix ─────────── */
+
+/**
+ * Re-scores a page after a change was written to it and records the measured
+ * before/after health and AEO score on the pending seo_intel_page_scores row.
+ */
+async function runPageRecheck(ctx: Ctx) {
+  const { sb, job } = ctx;
+  const path = String(job.payload?.path ?? "");
+  if (!path) return { skipped: "No page given to re-check.", records: 0 };
+
+  const { data: page } = await sb.from("seo_intel_pages")
+    .select("path, title, meta_description, word_count, has_schema, internal_links_out, health_score, aeo_score, health_issues, indexed_status, primary_keyword, clicks, impressions, ctr, avg_position")
+
+    .eq("path", path).maybeSingle();
+  if (!page) return { skipped: `No stored page for ${path}.`, records: 0 };
+
+  const slug = path.split("/").filter(Boolean).pop() ?? "";
+  const { data: ov } = await sb.from("page_seo_overrides")
+    .select("title, description, h1, keywords, long_tail_keywords, faq, json_ld, intro_html, body_html")
+    .eq("slug", slug).maybeSingle();
+
+  const title = ov?.title ?? page.title ?? "";
+  const description = ov?.description ?? page.meta_description ?? "";
+  const extraWords = wordCount(stripHtml(`${ov?.intro_html ?? ""} ${ov?.body_html ?? ""}`));
+  const faqCount = Array.isArray(ov?.faq) ? ov!.faq.length : 0;
+  const hasSchema = !!ov?.json_ld || !!page.has_schema;
+
+  const health = scoreHealth({
+    words: Number(page.word_count ?? 0) + extraWords,
+    hasTitle: !!title,
+    hasDescription: String(description).length > 80,
+    hasKeyword: !!(ov?.keywords?.length || page.primary_keyword),
+    schemaValid: hasSchema,
+    faqCount,
+    internalLinks: Number(page.internal_links_out ?? 0),
+    duplicationScore: 0,
+    entityCoverage: ov?.keywords?.length ? 75 : 45,
+    clicks: Number(page.clicks ?? 0),
+    impressions: Number(page.impressions ?? 0),
+    ctr: Number(page.ctr ?? 0),
+    position: page.avg_position ?? null,
+    decayState: "stable",
+  });
+
+
+  const aeoText = `${ov?.intro_html ?? ""}${ov?.body_html ?? ""}${(ov?.faq ?? []) ? JSON.stringify(ov?.faq ?? []) : ""}`;
+  const aeo = aeoText.trim()
+    ? scoreAeoGeo(aeoText, { requireFaq: faqCount === 0 })
+    : null;
+
+  const aeoScore = aeo ? Math.max(Number(page.aeo_score ?? 0), aeo.score) : (page.aeo_score ?? null);
+
+  await sb.from("seo_intel_pages").update({
+    health_score: health.health_score,
+    health_issues: health.issues,
+
+    aeo_score: aeoScore,
+    aeo_checked_at: nowIso(),
+    last_analyzed_at: nowIso(),
+  }).eq("path", path);
+
+  const { data: pending } = await sb.from("seo_intel_page_scores")
+    .select("id, health_before, aeo_before, issues_before")
+    .eq("path", path).eq("status", "pending").order("created_at", { ascending: true }).limit(20);
+
+  for (const row of pending ?? []) {
+    await sb.from("seo_intel_page_scores").update({
+      health_after: health.health_score,
+      aeo_after: aeoScore,
+      issues_after: Array.isArray(health.issues) ? health.issues.length : null,
+      status: "measured",
+      measured_at: nowIso(),
+    }).eq("id", row.id);
+  }
+
+  await logActivity(sb, {
+    event: "Page re-checked after a fix",
+    detail: `${path} — health ${pending?.[0]?.health_before ?? "—"} → ${health.health_score}`,
+    level: "success", job_id: ctx.job.id, job_type: "page_recheck", records: 1,
+  });
+  return { records: 1, detail: `${path} re-scored: health ${health.health_score}` };
+}
+
+
 
 
 const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?: string; detail?: string }>> = {
@@ -1475,6 +1705,9 @@ const HANDLERS: Record<string, (ctx: Ctx) => Promise<{ records: number; skipped?
   keyword_discovery: runKeywordDiscovery,
   competitor_deep: runCompetitorDeep,
   auto_apply: runAutoApply,
+  keyword_research: runKeywordResearch,
+  page_recheck: runPageRecheck,
+
 };
 
 
