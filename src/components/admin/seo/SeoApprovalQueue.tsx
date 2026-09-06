@@ -76,6 +76,9 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
   const [updated, setUpdated] = useState<string | null>(null);
   // optimistic bumps so Injected / Measured move the instant you act
   const [bump, setBump] = useState({ injected: 0, measured: 0 });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState<string | null>(null);
+
 
   const call = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     const { data: res, error } = await supabase.functions.invoke("seo-intel-control", { body: { action, ...extra } });
@@ -142,6 +145,43 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
     }
   };
 
+  /* ── selection + bulk actions ─────────────────────────────────────────── */
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const allShownSelected = filtered.length > 0 && filtered.every((r: any) => selected.has(String(r.id)));
+  const toggleAllShown = () =>
+    setSelected(allShownSelected ? new Set<string>() : new Set(filtered.map((r: any) => String(r.id))));
+
+  const bulk = async (action: "approve" | "reject" | "apply", scope: "selected" | "all") => {
+    const ids = scope === "selected" ? [...selected] : [];
+    if (scope === "selected" && !ids.length) { toast.error("Select at least one recommendation first."); return; }
+    setBulkBusy(`${action}-${scope}`);
+    try {
+      const res = await call("bulk_rec_action", scope === "selected" ? { act: action, ids } : { act: action, max: 2000 });
+      const done = Number(res?.processed ?? res?.applied_now ?? 0);
+      const queued = Number(res?.queued ?? 0);
+      if (action === "apply") setBump((b) => ({ ...b, injected: b.injected + done }));
+      toast.success(
+        action === "apply"
+          ? `${done} change(s) written now${queued ? `, ${queued} handed to the engine` : ""}`
+          : `${done} recommendation(s) ${action === "approve" ? "approved" : "rejected"}`,
+      );
+      setSelected(new Set());
+      await load();
+      onChanged?.();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+
+
   return (
     <div className="space-y-4">
       <Card>
@@ -186,6 +226,37 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
             className="h-9"
           />
 
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 p-2">
+            <Button size="sm" variant="outline" onClick={toggleAllShown}>
+              {allShownSelected ? "Clear selection" : "Select all shown"}
+            </Button>
+            <Badge variant="secondary">{selected.size} selected</Badge>
+            <div className="h-5 w-px bg-border" />
+            <Button size="sm" variant="outline" disabled={!!bulkBusy} onClick={() => bulk("approve", "selected")}>
+              {bulkBusy === "approve-selected" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
+              Approve selected
+            </Button>
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" disabled={!!bulkBusy} onClick={() => bulk("apply", "selected")}>
+              {bulkBusy === "apply-selected" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Wand2 className="mr-1.5 h-3.5 w-3.5" />}
+              Apply selected
+            </Button>
+            <Button size="sm" variant="ghost" disabled={!!bulkBusy} onClick={() => bulk("reject", "selected")}>
+              {bulkBusy === "reject-selected" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ThumbsDown className="mr-1.5 h-3.5 w-3.5" />}
+              Reject selected
+            </Button>
+            <div className="h-5 w-px bg-border" />
+            <Button size="sm" variant="outline" disabled={!!bulkBusy} onClick={() => bulk("approve", "all")}>
+              {bulkBusy === "approve-all" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
+              Approve all pending
+            </Button>
+            <Button size="sm" variant="outline" disabled={!!bulkBusy} onClick={() => bulk("apply", "all")}>
+              {bulkBusy === "apply-all" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Wand2 className="mr-1.5 h-3.5 w-3.5" />}
+              Apply everything safe
+            </Button>
+          </div>
+
+
+
           <ScrollArea className="h-[560px] rounded-md border">
             <div className="divide-y">
               <AnimatePresence initial={false}>
@@ -202,7 +273,15 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
                       className="p-3"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
+                        <input
+                          type="checkbox"
+                          aria-label="Select this recommendation"
+                          className="mt-1.5 h-4 w-4 shrink-0 accent-emerald-600"
+                          checked={selected.has(String(rec.id))}
+                          onChange={() => toggle(String(rec.id))}
+                        />
                         <button
+
                           className="min-w-0 flex-1 text-left"
                           onClick={() => setOpen(isOpen ? null : String(rec.id))}
                         >

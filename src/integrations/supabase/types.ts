@@ -10481,6 +10481,54 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_intel_health_history: {
+        Row: {
+          applied_24h: number | null
+          applied_total: number | null
+          avg_aeo: number | null
+          avg_health: number | null
+          breakdown: Json
+          captured_at: string
+          delta_health: number | null
+          id: string
+          issues_open: number | null
+          pages_below_70: number | null
+          pages_scored: number | null
+          pending_total: number | null
+          reason: string | null
+        }
+        Insert: {
+          applied_24h?: number | null
+          applied_total?: number | null
+          avg_aeo?: number | null
+          avg_health?: number | null
+          breakdown?: Json
+          captured_at?: string
+          delta_health?: number | null
+          id?: string
+          issues_open?: number | null
+          pages_below_70?: number | null
+          pages_scored?: number | null
+          pending_total?: number | null
+          reason?: string | null
+        }
+        Update: {
+          applied_24h?: number | null
+          applied_total?: number | null
+          avg_aeo?: number | null
+          avg_health?: number | null
+          breakdown?: Json
+          captured_at?: string
+          delta_health?: number | null
+          id?: string
+          issues_open?: number | null
+          pages_below_70?: number | null
+          pages_scored?: number | null
+          pending_total?: number | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       seo_intel_intent: {
         Row: {
           computed_at: string
@@ -10597,6 +10645,7 @@ export type Database = {
       }
       seo_intel_keywords: {
         Row: {
+          ai_model: string | null
           best_position: number | null
           clicks: number | null
           competition: number | null
@@ -10611,9 +10660,11 @@ export type Database = {
           first_seen_on: string | null
           id: string
           impressions: number | null
+          injected_at: string | null
           intent: string | null
           is_tracked: boolean
           keyword: string
+          keyword_kind: string | null
           last_checked_at: string | null
           locale: string
           monthly_trend: Json | null
@@ -10621,6 +10672,10 @@ export type Database = {
           position_change: number | null
           position_source: string | null
           previous_position: number | null
+          research_reason: string | null
+          research_round: number | null
+          research_source_path: string | null
+          researched_at: string | null
           search_volume: number | null
           target_path: string | null
           top_competitor_domain: string | null
@@ -10628,6 +10683,7 @@ export type Database = {
           volume_source: string | null
         }
         Insert: {
+          ai_model?: string | null
           best_position?: number | null
           clicks?: number | null
           competition?: number | null
@@ -10642,9 +10698,11 @@ export type Database = {
           first_seen_on?: string | null
           id?: string
           impressions?: number | null
+          injected_at?: string | null
           intent?: string | null
           is_tracked?: boolean
           keyword: string
+          keyword_kind?: string | null
           last_checked_at?: string | null
           locale?: string
           monthly_trend?: Json | null
@@ -10652,6 +10710,10 @@ export type Database = {
           position_change?: number | null
           position_source?: string | null
           previous_position?: number | null
+          research_reason?: string | null
+          research_round?: number | null
+          research_source_path?: string | null
+          researched_at?: string | null
           search_volume?: number | null
           target_path?: string | null
           top_competitor_domain?: string | null
@@ -10659,6 +10721,7 @@ export type Database = {
           volume_source?: string | null
         }
         Update: {
+          ai_model?: string | null
           best_position?: number | null
           clicks?: number | null
           competition?: number | null
@@ -10673,9 +10736,11 @@ export type Database = {
           first_seen_on?: string | null
           id?: string
           impressions?: number | null
+          injected_at?: string | null
           intent?: string | null
           is_tracked?: boolean
           keyword?: string
+          keyword_kind?: string | null
           last_checked_at?: string | null
           locale?: string
           monthly_trend?: Json | null
@@ -10683,6 +10748,10 @@ export type Database = {
           position_change?: number | null
           position_source?: string | null
           previous_position?: number | null
+          research_reason?: string | null
+          research_round?: number | null
+          research_source_path?: string | null
+          researched_at?: string | null
           search_volume?: number | null
           target_path?: string | null
           top_competitor_domain?: string | null
@@ -10940,6 +11009,60 @@ export type Database = {
           profile?: Json
           summary?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_intel_page_scores: {
+        Row: {
+          aeo_after: number | null
+          aeo_before: number | null
+          change_type: string | null
+          created_at: string
+          detail: string | null
+          fixes_applied: number
+          health_after: number | null
+          health_before: number | null
+          id: string
+          issues_after: number | null
+          issues_before: number | null
+          measured_at: string | null
+          path: string
+          recommendation_id: string | null
+          status: string
+        }
+        Insert: {
+          aeo_after?: number | null
+          aeo_before?: number | null
+          change_type?: string | null
+          created_at?: string
+          detail?: string | null
+          fixes_applied?: number
+          health_after?: number | null
+          health_before?: number | null
+          id?: string
+          issues_after?: number | null
+          issues_before?: number | null
+          measured_at?: string | null
+          path: string
+          recommendation_id?: string | null
+          status?: string
+        }
+        Update: {
+          aeo_after?: number | null
+          aeo_before?: number | null
+          change_type?: string | null
+          created_at?: string
+          detail?: string | null
+          fixes_applied?: number
+          health_after?: number | null
+          health_before?: number | null
+          id?: string
+          issues_after?: number | null
+          issues_before?: number | null
+          measured_at?: string | null
+          path?: string
+          recommendation_id?: string | null
+          status?: string
         }
         Relationships: []
       }

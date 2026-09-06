@@ -69,7 +69,10 @@ export const JOB_TYPES = [
   "keyword_discovery",  // find new + striking-distance keywords worth targeting
   "competitor_deep",    // crawl the pages outranking us and extract what they do
   "auto_apply",         // apply safe, evidence-backed changes without a human step
+  "keyword_research",   // AI keyword research per page, with the reason each was chosen
+  "page_recheck",       // re-score a page after a change so impact is measured
 ] as const;
+
 
 export type JobType = (typeof JOB_TYPES)[number];
 
@@ -106,6 +109,9 @@ export const JOB_LABELS: Record<string, string> = {
   keyword_discovery: "Keyword research & discovery",
   competitor_deep: "Competitor page teardown (Firecrawl + AI)",
   auto_apply: "Autonomous safe-change execution",
+  keyword_research: "AI keyword research & injection",
+  page_recheck: "Post-fix page re-check (impact measurement)",
+
 };
 
 

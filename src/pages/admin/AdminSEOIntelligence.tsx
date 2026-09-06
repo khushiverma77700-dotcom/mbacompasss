@@ -45,6 +45,9 @@ import SeoCommandDeck from "@/components/admin/seo/SeoCommandDeck";
 import SeoApprovalQueue from "@/components/admin/seo/SeoApprovalQueue";
 import SeoWinTimeline from "@/components/admin/seo/SeoWinTimeline";
 import SeoPlayback from "@/components/admin/seo/SeoPlayback";
+import SeoHealthMeter from "@/components/admin/seo/SeoHealthMeter";
+import SeoKeywordResearch from "@/components/admin/seo/SeoKeywordResearch";
+
 import { SeoMotionProvider, SeoMotionControl } from "@/components/admin/seo/SeoMotion";
 import { asText } from "@/components/admin/seo/SeoLiveOps";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -56,7 +59,9 @@ const TAB_SECTIONS: Array<{
 }> = [
   {
     label: "Live work", icon: Activity, items: [
+      { value: "health", label: "Website health", hint: "One accurate SEO health score for the whole site, how much it improved, fixes applied, recommendations pending, and what caused each move." },
       { value: "performance", label: "Performance report", hint: "Live Search Console report: daily average clicks, CTR and ranking, today versus the all-time average, and cumulative growth charts." },
+
       { value: "analytics", label: "Live analytics", hint: "What the engine is doing this second, how much of the site it has covered, and whether the changes it made actually improved rankings." },
       { value: "overview", label: "Summary", hint: "Headline numbers for the last 28 days: clicks, impressions, average position and rank distribution." },
       { value: "research", label: "Research console", hint: "Animated feed of keyword discovery and competitor teardowns as they happen." },
@@ -86,7 +91,9 @@ const TAB_SECTIONS: Array<{
   },
   {
     label: "Keywords & demand", icon: Search, items: [
+      { value: "kwresearch", label: "Keyword research", hint: "What the AI researched for each page — best, top-ranking, related, long-tail and competitor keywords, with the reason each was selected." },
       { value: "keywords", label: "Keywords", hint: "Tracked keywords with volume, difficulty, intent and live rank." },
+
       { value: "demand", label: "Demand & intent", hint: "Multi-source search demand, acceleration and intent shifts." },
       { value: "forecast", label: "Forecast & anomalies", hint: "Ranking forecasts, volatility and statistical anomalies." },
       { value: "strategy", label: "Strategy", hint: "Search Console actuals compared with Semrush estimates to find quick wins." },
@@ -493,7 +500,11 @@ const AdminSEOIntelligence = () => {
           <SeoResearchConsole />
         </TabsContent>
 
+        <TabsContent value="health" className="pt-4">
+          <ErrorBoundary><SeoHealthMeter /></ErrorBoundary>
+        </TabsContent>
         <TabsContent value="live" className="pt-4">
+
           <LiveOperationsPanel status={liveStatus} error={liveError} reload={reloadLive} onRunStage={runStage} />
         </TabsContent>
         <TabsContent value="impact" className="pt-4">
@@ -719,7 +730,11 @@ const AdminSEOIntelligence = () => {
         </TabsContent>
 
         {/* ── Keywords ── */}
+        <TabsContent value="kwresearch" className="pt-4">
+          <ErrorBoundary><SeoKeywordResearch /></ErrorBoundary>
+        </TabsContent>
         <TabsContent value="keywords" className="space-y-3 pt-4">
+
           <Input placeholder="Search keywords…" value={kwSearch} onChange={(e) => setKwSearch(e.target.value)} className="max-w-md" />
           <Card>
             <CardContent className="overflow-x-auto p-0">
