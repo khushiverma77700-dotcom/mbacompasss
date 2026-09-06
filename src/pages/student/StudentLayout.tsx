@@ -104,7 +104,21 @@ const insightsGroup: NavItem[] = [
   { to: "/student/performance",    label: "Performance",       icon: BarChart3,      feature: "performance_tracker" },
 ];
 
+/**
+ * Routes that render a live, timed test as a full-screen overlay.
+ * These must not have the dashboard header/sidebar mounted on top of them.
+ */
+function isFullScreenTestRoute(pathname: string): boolean {
+  const p = pathname.replace(/^\/demo/, "/student");
+  return (
+    p.startsWith("/student/mocks/attempt/") ||
+    p.startsWith("/student/mocks/test/") ||
+    p.startsWith("/student/personalized-hub/attempt/")
+  );
+}
+
 export default function StudentLayout() {
+
   const isDemo = useIsDemo();
   const { user: authUser, loading: authLoading } = useAuth();
   // In demo mode, pretend a dummy student is signed in so the entire
@@ -216,6 +230,20 @@ export default function StudentLayout() {
   if (isLoginRoute) {
     return <Outlet />;
   }
+
+  // Live test screens render as a full-screen fixed overlay. Keeping the
+  // dashboard header/sidebar mounted made them float on top of the test
+  // (covering the passage and the palette), so render the test bare.
+  if (isFullScreenTestRoute(location.pathname)) {
+    return (
+      <StudentThemeProvider>
+        <div className="student-scope">
+          <Outlet />
+        </div>
+      </StudentThemeProvider>
+    );
+  }
+
 
   if (loading || !user) {
     return (
