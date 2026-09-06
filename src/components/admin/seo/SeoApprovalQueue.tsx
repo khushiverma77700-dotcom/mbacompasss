@@ -226,6 +226,37 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
             className="h-9"
           />
 
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 p-2">
+            <Button size="sm" variant="outline" onClick={toggleAllShown}>
+              {allShownSelected ? "Clear selection" : "Select all shown"}
+            </Button>
+            <Badge variant="secondary">{selected.size} selected</Badge>
+            <div className="h-5 w-px bg-border" />
+            <Button size="sm" variant="outline" disabled={!!bulkBusy} onClick={() => bulk("approve", "selected")}>
+              {bulkBusy === "approve-selected" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
+              Approve selected
+            </Button>
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" disabled={!!bulkBusy} onClick={() => bulk("apply", "selected")}>
+              {bulkBusy === "apply-selected" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Wand2 className="mr-1.5 h-3.5 w-3.5" />}
+              Apply selected
+            </Button>
+            <Button size="sm" variant="ghost" disabled={!!bulkBusy} onClick={() => bulk("reject", "selected")}>
+              {bulkBusy === "reject-selected" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ThumbsDown className="mr-1.5 h-3.5 w-3.5" />}
+              Reject selected
+            </Button>
+            <div className="h-5 w-px bg-border" />
+            <Button size="sm" variant="outline" disabled={!!bulkBusy} onClick={() => bulk("approve", "all")}>
+              {bulkBusy === "approve-all" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
+              Approve all pending
+            </Button>
+            <Button size="sm" variant="outline" disabled={!!bulkBusy} onClick={() => bulk("apply", "all")}>
+              {bulkBusy === "apply-all" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Wand2 className="mr-1.5 h-3.5 w-3.5" />}
+              Apply everything safe
+            </Button>
+          </div>
+
+
+
           <ScrollArea className="h-[560px] rounded-md border">
             <div className="divide-y">
               <AnimatePresence initial={false}>
