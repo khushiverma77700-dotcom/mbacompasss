@@ -161,21 +161,36 @@ export const buildDirectAnswerSchema = (opts: { path: string; question: string; 
   });
 };
 
-/** Definition-style key facts, mirrored so engines can lift individual values. */
+/**
+ * Definition-style key facts, mirrored so engines can lift individual values.
+ * Dataset is a Google rich-result type that REQUIRES name + description, so a
+ * description is always emitted (falling back to a summary of the facts).
+ */
 export const buildKeyFactsSchema = (opts: {
   path: string;
   name: string;
   facts: { label: string; value: string }[];
+  description?: string;
 }) => {
   const facts = (opts.facts || []).filter((f) => clean(f.label) && clean(f.value)).slice(0, 12);
   if (!facts.length) return null;
   const url = abs(opts.path);
+  const entity = clean(opts.name) || "This page";
+  const factSummary = facts.map((f) => `${clean(f.label)}: ${clean(f.value)}`).join(". ");
+  const description =
+    clean(opts.description) ||
+    `Verified key facts for ${entity} on MBA Compass. ${factSummary}.`;
   return stripUndefined({
     "@context": "https://schema.org",
     "@type": "Dataset",
     "@id": url ? `${url}#key-facts` : undefined,
-    name: `${clean(opts.name)} — key facts`,
+    url,
+    name: `${entity} — key facts`,
+    description,
+    inLanguage: "en-IN",
+    isAccessibleForFree: true,
     creator: { "@id": ORGANIZATION_ID },
+    publisher: { "@id": ORGANIZATION_ID },
     variableMeasured: facts.map((f) => ({
       "@type": "PropertyValue",
       name: clean(f.label),
@@ -183,6 +198,7 @@ export const buildKeyFactsSchema = (opts: {
     })),
   });
 };
+
 
 /** ItemList for listing/hub pages so engines can enumerate the entities. */
 export const buildItemListSchema = (opts: {
