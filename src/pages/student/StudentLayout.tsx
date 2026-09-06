@@ -157,12 +157,17 @@ export default function StudentLayout() {
     preloadAllStudentRoutes();
   }, []);
 
+  // The sign-in page lives under /student/login, i.e. inside this layout.
+  // It must render on its own (no auth gate, no dashboard chrome) or a
+  // signed-out visitor is stuck on the loading shell forever.
+  const isLoginRoute = location.pathname === "/student/login";
+
   useEffect(() => {
-    if (isDemo) return;
+    if (isDemo || isLoginRoute) return;
     if (!loading && !user) {
       navigate("/student/login?redirect=" + encodeURIComponent(location.pathname), { replace: true });
     }
-  }, [isDemo, loading, user, navigate, location.pathname]);
+  }, [isDemo, isLoginRoute, loading, user, navigate, location.pathname]);
 
   // Note: we no longer block the dashboard or sign the user out when they
   // have no purchased course. Students who land here from the credentials
@@ -207,6 +212,11 @@ export default function StudentLayout() {
   // Render an instant lightweight shell while auth resolves so the user never
   // sees a blank screen on first hit. The auth check still runs in the
   // background; once `user` is null we redirect from the effect above.
+  // Sign-in page: render it plain, without the dashboard chrome or gate.
+  if (isLoginRoute) {
+    return <Outlet />;
+  }
+
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background">
