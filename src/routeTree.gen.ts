@@ -224,8 +224,10 @@ import { Route as PublicInstituteSlugRouteImport } from './routes/_public.instit
 import { Route as PublicListYourBusinessPocRouteImport } from './routes/_public.list-your-business.poc'
 import { Route as PublicMbaApplicationIndexRouteImport } from './routes/_public.mba-application.index'
 import { Route as PublicMbaApplicationCategoryRouteImport } from './routes/_public.mba-application.$category'
+import { Route as PublicMbaCompassIndexRouteImport } from './routes/_public.mba-compass.index'
 import { Route as PublicMbaCompassSlugRouteImport } from './routes/_public.mba-compass.$slug'
 import { Route as PublicMbaCompassCompareRouteImport } from './routes/_public.mba-compass.compare'
+import { Route as PublicMocksIndexRouteImport } from './routes/_public.mocks.index'
 import { Route as PublicMocksSlugRouteImport } from './routes/_public.mocks.$slug'
 import { Route as PublicMocksThankYouRouteImport } from './routes/_public.mocks.thank-you'
 import { Route as PublicReportIdRouteImport } from './routes/_public.report.$id'
@@ -1393,6 +1395,11 @@ const PublicMbaApplicationCategoryRoute =
     path: '/mba-application/$category',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicMbaCompassIndexRoute = PublicMbaCompassIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicMbaCompassRoute,
+} as any)
 const PublicMbaCompassSlugRoute = PublicMbaCompassSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -1402,6 +1409,11 @@ const PublicMbaCompassCompareRoute = PublicMbaCompassCompareRouteImport.update({
   id: '/compare',
   path: '/compare',
   getParentRoute: () => PublicMbaCompassRoute,
+} as any)
+const PublicMocksIndexRoute = PublicMocksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicMocksRoute,
 } as any)
 const PublicMocksSlugRoute = PublicMocksSlugRouteImport.update({
   id: '/$slug',
@@ -2109,6 +2121,8 @@ export interface FileRoutesByFullPath {
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
   '/mba-application/': typeof PublicMbaApplicationIndexRoute
+  '/mba-compass/': typeof PublicMbaCompassIndexRoute
+  '/mocks/': typeof PublicMocksIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2170,8 +2184,6 @@ export interface FileRoutesByTo {
   '/freebies': typeof PublicFreebiesRoute
   '/iim-waitlist-movement': typeof PublicIimWaitlistMovementRoute
   '/list-your-business': typeof PublicListYourBusinessRouteWithChildren
-  '/mba-compass': typeof PublicMbaCompassRouteWithChildren
-  '/mocks': typeof PublicMocksRouteWithChildren
   '/my-listings': typeof PublicMyListingsRoute
   '/my-mba-2027': typeof PublicMyMba2027Route
   '/privacy-policy': typeof PublicPrivacyPolicyRoute
@@ -2404,6 +2416,8 @@ export interface FileRoutesByTo {
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
   '/mba-application': typeof PublicMbaApplicationIndexRoute
+  '/mba-compass': typeof PublicMbaCompassIndexRoute
+  '/mocks': typeof PublicMocksIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2704,6 +2718,8 @@ export interface FileRoutesById {
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
   '/_public/mba-application/': typeof PublicMbaApplicationIndexRoute
+  '/_public/mba-compass/': typeof PublicMbaCompassIndexRoute
+  '/_public/mocks/': typeof PublicMocksIndexRoute
   '/_public/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/_public/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/_public/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -3004,6 +3020,8 @@ export interface FileRouteTypes {
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
     | '/mba-application/'
+    | '/mba-compass/'
+    | '/mocks/'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3065,8 +3083,6 @@ export interface FileRouteTypes {
     | '/freebies'
     | '/iim-waitlist-movement'
     | '/list-your-business'
-    | '/mba-compass'
-    | '/mocks'
     | '/my-listings'
     | '/my-mba-2027'
     | '/privacy-policy'
@@ -3299,6 +3315,8 @@ export interface FileRouteTypes {
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
     | '/mba-application'
+    | '/mba-compass'
+    | '/mocks'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3598,6 +3616,8 @@ export interface FileRouteTypes {
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
     | '/_public/mba-application/'
+    | '/_public/mba-compass/'
+    | '/_public/mocks/'
     | '/_public/coaching/exam/$slug'
     | '/_public/coaching/mode/$slug'
     | '/_public/colleges/by-city/$citySlug'
@@ -5154,6 +5174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicMbaApplicationCategoryRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/mba-compass/': {
+      id: '/_public/mba-compass/'
+      path: '/'
+      fullPath: '/mba-compass/'
+      preLoaderRoute: typeof PublicMbaCompassIndexRouteImport
+      parentRoute: typeof PublicMbaCompassRoute
+    }
     '/_public/mba-compass/$slug': {
       id: '/_public/mba-compass/$slug'
       path: '/$slug'
@@ -5167,6 +5194,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/mba-compass/compare'
       preLoaderRoute: typeof PublicMbaCompassCompareRouteImport
       parentRoute: typeof PublicMbaCompassRoute
+    }
+    '/_public/mocks/': {
+      id: '/_public/mocks/'
+      path: '/'
+      fullPath: '/mocks/'
+      preLoaderRoute: typeof PublicMocksIndexRouteImport
+      parentRoute: typeof PublicMocksRoute
     }
     '/_public/mocks/$slug': {
       id: '/_public/mocks/$slug'
@@ -5844,11 +5878,13 @@ const PublicListYourBusinessRouteWithChildren =
 interface PublicMbaCompassRouteChildren {
   PublicMbaCompassSlugRoute: typeof PublicMbaCompassSlugRoute
   PublicMbaCompassCompareRoute: typeof PublicMbaCompassCompareRoute
+  PublicMbaCompassIndexRoute: typeof PublicMbaCompassIndexRoute
 }
 
 const PublicMbaCompassRouteChildren: PublicMbaCompassRouteChildren = {
   PublicMbaCompassSlugRoute: PublicMbaCompassSlugRoute,
   PublicMbaCompassCompareRoute: PublicMbaCompassCompareRoute,
+  PublicMbaCompassIndexRoute: PublicMbaCompassIndexRoute,
 }
 
 const PublicMbaCompassRouteWithChildren =
@@ -5857,6 +5893,7 @@ const PublicMbaCompassRouteWithChildren =
 interface PublicMocksRouteChildren {
   PublicMocksSlugRoute: typeof PublicMocksSlugRoute
   PublicMocksThankYouRoute: typeof PublicMocksThankYouRoute
+  PublicMocksIndexRoute: typeof PublicMocksIndexRoute
   PublicMocksLeaderboardSlugRoute: typeof PublicMocksLeaderboardSlugRoute
   PublicMocksResultAttemptIdRoute: typeof PublicMocksResultAttemptIdRoute
   PublicMocksReviewAttemptIdRoute: typeof PublicMocksReviewAttemptIdRoute
@@ -5865,6 +5902,7 @@ interface PublicMocksRouteChildren {
 const PublicMocksRouteChildren: PublicMocksRouteChildren = {
   PublicMocksSlugRoute: PublicMocksSlugRoute,
   PublicMocksThankYouRoute: PublicMocksThankYouRoute,
+  PublicMocksIndexRoute: PublicMocksIndexRoute,
   PublicMocksLeaderboardSlugRoute: PublicMocksLeaderboardSlugRoute,
   PublicMocksResultAttemptIdRoute: PublicMocksResultAttemptIdRoute,
   PublicMocksReviewAttemptIdRoute: PublicMocksReviewAttemptIdRoute,
