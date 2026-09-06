@@ -142,6 +142,43 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
     }
   };
 
+  /* ── selection + bulk actions ─────────────────────────────────────────── */
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const allShownSelected = filtered.length > 0 && filtered.every((r: any) => selected.has(String(r.id)));
+  const toggleAllShown = () =>
+    setSelected(allShownSelected ? new Set<string>() : new Set(filtered.map((r: any) => String(r.id))));
+
+  const bulk = async (action: "approve" | "reject" | "apply", scope: "selected" | "all") => {
+    const ids = scope === "selected" ? [...selected] : [];
+    if (scope === "selected" && !ids.length) { toast.error("Select at least one recommendation first."); return; }
+    setBulkBusy(`${action}-${scope}`);
+    try {
+      const res = await call("bulk_rec_action", scope === "selected" ? { act: action, ids } : { act: action, max: 2000 });
+      const done = Number(res?.processed ?? res?.applied_now ?? 0);
+      const queued = Number(res?.queued ?? 0);
+      if (action === "apply") setBump((b) => ({ ...b, injected: b.injected + done }));
+      toast.success(
+        action === "apply"
+          ? `${done} change(s) written now${queued ? `, ${queued} handed to the engine` : ""}`
+          : `${done} recommendation(s) ${action === "approve" ? "approved" : "rejected"}`,
+      );
+      setSelected(new Set());
+      await load();
+      onChanged?.();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+
+
   return (
     <div className="space-y-4">
       <Card>
