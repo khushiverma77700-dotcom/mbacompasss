@@ -1162,9 +1162,19 @@ Deno.serve(async (req) => {
 
       /* ─────────── website SEO health meter ─────────── */
       case "health_meter": {
-        const { data: pages } = await sb.from("seo_intel_pages")
-          .select("path, page_type, health_score, aeo_score, health_issues");
-        const rows = pages ?? [];
+        // Paginated so the average covers every page, not just the first 1000.
+        const rows: any[] = [];
+        for (let from = 0; from < 20000; from += 1000) {
+          const { data: chunk, error: pageErr } = await sb.from("seo_intel_pages")
+            .select("path, page_type, health_score, aeo_score, health_issues")
+            .order("path", { ascending: true })
+            .range(from, from + 999);
+          if (pageErr) throw new Error(`pages read failed: ${pageErr.message}`);
+          if (!chunk?.length) break;
+          rows.push(...chunk);
+          if (chunk.length < 1000) break;
+        }
+
         const scored = rows.filter((p: any) => p.health_score !== null && p.health_score !== undefined);
         const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
         const avgHealth = avg(scored.map((p: any) => Number(p.health_score)));
