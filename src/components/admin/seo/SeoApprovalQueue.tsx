@@ -76,6 +76,9 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
   const [updated, setUpdated] = useState<string | null>(null);
   // optimistic bumps so Injected / Measured move the instant you act
   const [bump, setBump] = useState({ injected: 0, measured: 0 });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState<string | null>(null);
+
 
   const call = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     const { data: res, error } = await supabase.functions.invoke("seo-intel-control", { body: { action, ...extra } });
