@@ -500,7 +500,11 @@ const AdminSEOIntelligence = () => {
           <SeoResearchConsole />
         </TabsContent>
 
+        <TabsContent value="health" className="pt-4">
+          <ErrorBoundary><SeoHealthMeter /></ErrorBoundary>
+        </TabsContent>
         <TabsContent value="live" className="pt-4">
+
           <LiveOperationsPanel status={liveStatus} error={liveError} reload={reloadLive} onRunStage={runStage} />
         </TabsContent>
         <TabsContent value="impact" className="pt-4">
