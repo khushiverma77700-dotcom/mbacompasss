@@ -225,7 +225,7 @@ const InstitutePage = () => {
     answerText
       ? buildDirectAnswerSchema({ path: institutePath, question: `What is ${institute.name}?`, answer: answerText })
       : null,
-    buildKeyFactsSchema({ path: institutePath, name: institute.name, facts: answerFacts }),
+    buildKeyFactsSchema({ path: institutePath, name: institute.name, facts: answerFacts, description: (institute as any).meta_description || answerText }),
     faqSchema,
     reviewSchema,
   );

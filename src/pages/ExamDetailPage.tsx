@@ -189,7 +189,7 @@ const ExamDetailPage = () => {
       answerText
         ? buildDirectAnswerSchema({ path, question: `What is ${titleLabel}?`, answer: answerText })
         : null,
-      buildKeyFactsSchema({ path, name: titleLabel, facts: answerFacts }),
+      buildKeyFactsSchema({ path, name: titleLabel, facts: answerFacts, description: answerText }),
       faqItems.length
         ? {
             "@context": "https://schema.org",

@@ -248,7 +248,7 @@ const CollegeDetailPage = () => {
     answerText
       ? buildDirectAnswerSchema({ path: collegePath, question: `What is ${college.name}?`, answer: answerText })
       : null,
-    buildKeyFactsSchema({ path: collegePath, name: college.name, facts: answerFacts }),
+    buildKeyFactsSchema({ path: collegePath, name: college.name, facts: answerFacts, description: (college as any).meta_description || answerText }),
     generateFAQSchema(qaItems),
   );
 
