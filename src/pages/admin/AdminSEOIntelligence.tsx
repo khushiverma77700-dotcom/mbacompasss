@@ -45,6 +45,9 @@ import SeoCommandDeck from "@/components/admin/seo/SeoCommandDeck";
 import SeoApprovalQueue from "@/components/admin/seo/SeoApprovalQueue";
 import SeoWinTimeline from "@/components/admin/seo/SeoWinTimeline";
 import SeoPlayback from "@/components/admin/seo/SeoPlayback";
+import SeoHealthMeter from "@/components/admin/seo/SeoHealthMeter";
+import SeoKeywordResearch from "@/components/admin/seo/SeoKeywordResearch";
+
 import { SeoMotionProvider, SeoMotionControl } from "@/components/admin/seo/SeoMotion";
 import { asText } from "@/components/admin/seo/SeoLiveOps";
 import ErrorBoundary from "@/components/ErrorBoundary";
