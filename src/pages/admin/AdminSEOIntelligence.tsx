@@ -88,7 +88,9 @@ const TAB_SECTIONS: Array<{
   },
   {
     label: "Keywords & demand", icon: Search, items: [
+      { value: "kwresearch", label: "Keyword research", hint: "What the AI researched for each page — best, top-ranking, related, long-tail and competitor keywords, with the reason each was selected." },
       { value: "keywords", label: "Keywords", hint: "Tracked keywords with volume, difficulty, intent and live rank." },
+
       { value: "demand", label: "Demand & intent", hint: "Multi-source search demand, acceleration and intent shifts." },
       { value: "forecast", label: "Forecast & anomalies", hint: "Ranking forecasts, volatility and statistical anomalies." },
       { value: "strategy", label: "Strategy", hint: "Search Console actuals compared with Semrush estimates to find quick wins." },
