@@ -250,6 +250,7 @@ import { Route as DemoAnalysisAttemptIdRouteImport } from './routes/demo.analysi
 import { Route as DemoDayPlannerPerformanceRouteImport } from './routes/demo.day-planner.performance'
 import { Route as DemoFormulaSlugRouteImport } from './routes/demo.formula.$slug'
 import { Route as DemoFormulasListRouteImport } from './routes/demo.formulas.list'
+import { Route as DemoMocksIndexRouteImport } from './routes/demo.mocks.index'
 import { Route as DemoMocksAttemptedRouteImport } from './routes/demo.mocks.attempted'
 import { Route as DemoMocksFullLengthRouteImport } from './routes/demo.mocks.full-length'
 import { Route as DemoMocksPracticeRouteImport } from './routes/demo.mocks.practice'
@@ -267,6 +268,7 @@ import { Route as StudentAnalysisAttemptIdRouteImport } from './routes/student.a
 import { Route as StudentDayPlannerPerformanceRouteImport } from './routes/student.day-planner.performance'
 import { Route as StudentFormulaSlugRouteImport } from './routes/student.formula.$slug'
 import { Route as StudentFormulasListRouteImport } from './routes/student.formulas.list'
+import { Route as StudentMocksIndexRouteImport } from './routes/student.mocks.index'
 import { Route as StudentMocksAttemptedRouteImport } from './routes/student.mocks.attempted'
 import { Route as StudentMocksFullLengthRouteImport } from './routes/student.mocks.full-length'
 import { Route as StudentMocksPracticeRouteImport } from './routes/student.mocks.practice'
@@ -1531,6 +1533,11 @@ const DemoFormulasListRoute = DemoFormulasListRouteImport.update({
   path: '/list',
   getParentRoute: () => DemoFormulasRoute,
 } as any)
+const DemoMocksIndexRoute = DemoMocksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoMocksRoute,
+} as any)
 const DemoMocksAttemptedRoute = DemoMocksAttemptedRouteImport.update({
   id: '/attempted',
   path: '/attempted',
@@ -1618,6 +1625,11 @@ const StudentFormulasListRoute = StudentFormulasListRouteImport.update({
   id: '/list',
   path: '/list',
   getParentRoute: () => StudentFormulasRoute,
+} as any)
+const StudentMocksIndexRoute = StudentMocksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentMocksRoute,
 } as any)
 const StudentMocksAttemptedRoute = StudentMocksAttemptedRouteImport.update({
   id: '/attempted',
@@ -2123,6 +2135,8 @@ export interface FileRoutesByFullPath {
   '/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/mba-compass/': typeof PublicMbaCompassIndexRoute
   '/mocks/': typeof PublicMocksIndexRoute
+  '/demo/mocks/': typeof DemoMocksIndexRoute
+  '/student/mocks/': typeof StudentMocksIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2301,7 +2315,6 @@ export interface FileRoutesByTo {
   '/demo/goals': typeof DemoGoalsRoute
   '/demo/install': typeof DemoInstallRoute
   '/demo/leaderboard': typeof DemoLeaderboardRoute
-  '/demo/mocks': typeof DemoMocksRouteWithChildren
   '/demo/newsroom': typeof DemoNewsroomRoute
   '/demo/notifications': typeof DemoNotificationsRoute
   '/demo/orders': typeof DemoOrdersRoute
@@ -2329,7 +2342,6 @@ export interface FileRoutesByTo {
   '/student/install': typeof StudentInstallRoute
   '/student/leaderboard': typeof StudentLeaderboardRoute
   '/student/login': typeof StudentLoginRoute
-  '/student/mocks': typeof StudentMocksRouteWithChildren
   '/student/newsroom': typeof StudentNewsroomRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/orders': typeof StudentOrdersRoute
@@ -2418,6 +2430,8 @@ export interface FileRoutesByTo {
   '/mba-application': typeof PublicMbaApplicationIndexRoute
   '/mba-compass': typeof PublicMbaCompassIndexRoute
   '/mocks': typeof PublicMocksIndexRoute
+  '/demo/mocks': typeof DemoMocksIndexRoute
+  '/student/mocks': typeof StudentMocksIndexRoute
   '/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -2720,6 +2734,8 @@ export interface FileRoutesById {
   '/_public/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/_public/mba-compass/': typeof PublicMbaCompassIndexRoute
   '/_public/mocks/': typeof PublicMocksIndexRoute
+  '/demo/mocks/': typeof DemoMocksIndexRoute
+  '/student/mocks/': typeof StudentMocksIndexRoute
   '/_public/coaching/exam/$slug': typeof PublicCoachingExamSlugRoute
   '/_public/coaching/mode/$slug': typeof PublicCoachingModeSlugRoute
   '/_public/colleges/by-city/$citySlug': typeof PublicCollegesByCityCitySlugRoute
@@ -3022,6 +3038,8 @@ export interface FileRouteTypes {
     | '/mba-application/'
     | '/mba-compass/'
     | '/mocks/'
+    | '/demo/mocks/'
+    | '/student/mocks/'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3200,7 +3218,6 @@ export interface FileRouteTypes {
     | '/demo/goals'
     | '/demo/install'
     | '/demo/leaderboard'
-    | '/demo/mocks'
     | '/demo/newsroom'
     | '/demo/notifications'
     | '/demo/orders'
@@ -3228,7 +3245,6 @@ export interface FileRouteTypes {
     | '/student/install'
     | '/student/leaderboard'
     | '/student/login'
-    | '/student/mocks'
     | '/student/newsroom'
     | '/student/notifications'
     | '/student/orders'
@@ -3317,6 +3333,8 @@ export interface FileRouteTypes {
     | '/mba-application'
     | '/mba-compass'
     | '/mocks'
+    | '/demo/mocks'
+    | '/student/mocks'
     | '/coaching/exam/$slug'
     | '/coaching/mode/$slug'
     | '/colleges/by-city/$citySlug'
@@ -3618,6 +3636,8 @@ export interface FileRouteTypes {
     | '/_public/mba-application/'
     | '/_public/mba-compass/'
     | '/_public/mocks/'
+    | '/demo/mocks/'
+    | '/student/mocks/'
     | '/_public/coaching/exam/$slug'
     | '/_public/coaching/mode/$slug'
     | '/_public/colleges/by-city/$citySlug'
@@ -5356,6 +5376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoFormulasListRouteImport
       parentRoute: typeof DemoFormulasRoute
     }
+    '/demo/mocks/': {
+      id: '/demo/mocks/'
+      path: '/'
+      fullPath: '/demo/mocks/'
+      preLoaderRoute: typeof DemoMocksIndexRouteImport
+      parentRoute: typeof DemoMocksRoute
+    }
     '/demo/mocks/attempted': {
       id: '/demo/mocks/attempted'
       path: '/attempted'
@@ -5474,6 +5501,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/student/formulas/list'
       preLoaderRoute: typeof StudentFormulasListRouteImport
       parentRoute: typeof StudentFormulasRoute
+    }
+    '/student/mocks/': {
+      id: '/student/mocks/'
+      path: '/'
+      fullPath: '/student/mocks/'
+      preLoaderRoute: typeof StudentMocksIndexRouteImport
+      parentRoute: typeof StudentMocksRoute
     }
     '/student/mocks/attempted': {
       id: '/student/mocks/attempted'
@@ -6304,6 +6338,7 @@ interface DemoMocksRouteChildren {
   DemoMocksPracticeRoute: typeof DemoMocksPracticeRoute
   DemoMocksSectionalRoute: typeof DemoMocksSectionalRoute
   DemoMocksTopicWiseRoute: typeof DemoMocksTopicWiseRoute
+  DemoMocksIndexRoute: typeof DemoMocksIndexRoute
   DemoMocksLeaderboardSlugRoute: typeof DemoMocksLeaderboardSlugRoute
   DemoMocksResultAttemptIdRoute: typeof DemoMocksResultAttemptIdRoute
   DemoMocksReviewAttemptIdRoute: typeof DemoMocksReviewAttemptIdRoute
@@ -6316,6 +6351,7 @@ const DemoMocksRouteChildren: DemoMocksRouteChildren = {
   DemoMocksPracticeRoute: DemoMocksPracticeRoute,
   DemoMocksSectionalRoute: DemoMocksSectionalRoute,
   DemoMocksTopicWiseRoute: DemoMocksTopicWiseRoute,
+  DemoMocksIndexRoute: DemoMocksIndexRoute,
   DemoMocksLeaderboardSlugRoute: DemoMocksLeaderboardSlugRoute,
   DemoMocksResultAttemptIdRoute: DemoMocksResultAttemptIdRoute,
   DemoMocksReviewAttemptIdRoute: DemoMocksReviewAttemptIdRoute,
@@ -6477,6 +6513,7 @@ interface StudentMocksRouteChildren {
   StudentMocksPracticeRoute: typeof StudentMocksPracticeRoute
   StudentMocksSectionalRoute: typeof StudentMocksSectionalRoute
   StudentMocksTopicWiseRoute: typeof StudentMocksTopicWiseRoute
+  StudentMocksIndexRoute: typeof StudentMocksIndexRoute
   StudentMocksAttemptAttemptIdRoute: typeof StudentMocksAttemptAttemptIdRoute
   StudentMocksLeaderboardSlugRoute: typeof StudentMocksLeaderboardSlugRoute
   StudentMocksResultAttemptIdRoute: typeof StudentMocksResultAttemptIdRoute
@@ -6490,6 +6527,7 @@ const StudentMocksRouteChildren: StudentMocksRouteChildren = {
   StudentMocksPracticeRoute: StudentMocksPracticeRoute,
   StudentMocksSectionalRoute: StudentMocksSectionalRoute,
   StudentMocksTopicWiseRoute: StudentMocksTopicWiseRoute,
+  StudentMocksIndexRoute: StudentMocksIndexRoute,
   StudentMocksAttemptAttemptIdRoute: StudentMocksAttemptAttemptIdRoute,
   StudentMocksLeaderboardSlugRoute: StudentMocksLeaderboardSlugRoute,
   StudentMocksResultAttemptIdRoute: StudentMocksResultAttemptIdRoute,
