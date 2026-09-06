@@ -1,13 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import MocksListPage from "@/pages/mocks/MocksListPage";
-import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import { mocksLandingSettingsQuery } from "@/lib/queries/listingQueries";
 
 export const Route = createFileRoute("/_public/mocks")({
-  // MocksListPage renders a skeleton until landing settings arrive, so prefetch
-  // them server-side under the same key the page's useQuery subscribes to.
+  // Layout route: renders <Outlet/> so child mock pages ($slug, result, review,
+  // leaderboard, thank-you) can mount. The listing itself lives in
+  // _public.mocks.index.tsx.
   loader: async ({ context }) => { await context.queryClient.prefetchQuery(mocksLandingSettingsQuery); },
-  component: () => <MocksListPage />,
-  pendingComponent: PublicPageSkeleton,
+  component: () => <Outlet />,
   errorComponent: () => <MocksListPage />,
 });
