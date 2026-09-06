@@ -217,6 +217,20 @@ export default function StudentLayout() {
     return <Outlet />;
   }
 
+  // Live test screens render as a full-screen fixed overlay. Keeping the
+  // dashboard header/sidebar mounted made them float on top of the test
+  // (covering the passage and the palette), so render the test bare.
+  if (isFullScreenTestRoute(location.pathname)) {
+    return (
+      <StudentThemeProvider>
+        <div className="student-scope">
+          <Outlet />
+        </div>
+      </StudentThemeProvider>
+    );
+  }
+
+
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background">
