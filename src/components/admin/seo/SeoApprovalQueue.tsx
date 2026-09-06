@@ -273,7 +273,15 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
                       className="p-3"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
+                        <input
+                          type="checkbox"
+                          aria-label="Select this recommendation"
+                          className="mt-1.5 h-4 w-4 shrink-0 accent-emerald-600"
+                          checked={selected.has(String(rec.id))}
+                          onChange={() => toggle(String(rec.id))}
+                        />
                         <button
+
                           className="min-w-0 flex-1 text-left"
                           onClick={() => setOpen(isOpen ? null : String(rec.id))}
                         >
