@@ -426,9 +426,15 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
         </Card>
       ) : (
         <>
-          {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white lg:block">
-            <table className="w-full text-sm">
+          {/* Desktop table — scrolls sideways when the columns exceed the width */}
+          <div className="hidden rounded-2xl border border-slate-200 bg-white lg:block">
+            <div
+              className="overflow-x-auto overscroll-x-contain rounded-2xl [scrollbar-width:thin]"
+              tabIndex={0}
+              role="region"
+              aria-label="MBA application table — scroll sideways for more columns"
+            >
+            <table className="w-full min-w-[1180px] text-sm">
               <caption className="sr-only">
                 MBA college and exam application forms with last dates, application fees and programme fees
               </caption>
