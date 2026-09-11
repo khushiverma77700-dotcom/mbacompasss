@@ -273,7 +273,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
             Every MBA application form in one place — college-wise last dates, application fees, programme fees,
             accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT), cutoff notes, average package and official
             apply-online links for IIMs, Tier 1 and Tier 2 B-schools. Start an application and we keep it updated inside{" "}
-            <Link to="/student" className="font-medium text-sky-700 underline-offset-2 hover:underline">
+            <Link to="/mba-application/my-applications" className="font-medium text-sky-700 underline-offset-2 hover:underline">
               My Applications
             </Link>
             .
@@ -516,6 +516,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                 })}
               </tbody>
             </table>
+          </div>
           </div>
 
           {/* Mobile / tablet cards */}
