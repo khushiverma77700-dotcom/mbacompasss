@@ -112,7 +112,7 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
 
   const pending: any[] = useMemo(() => data?.queue?.pending ?? [], [data]);
   const approved: any[] = useMemo(() => data?.queue?.approved ?? [], [data]);
-  const applied: any[] = useMemo(() => data?.queue?.applied ?? [], [data]);
+  const appliedCount = Number(data?.queue?.status_counts?.applied ?? 0);
   const changes: any[] = useMemo(() => data?.feed?.changes ?? [], [data]);
 
   const measured = changes.filter((c) => c.outcome && String(c.outcome) !== "pending").length;
@@ -215,7 +215,7 @@ export default function SeoApprovalQueue({ onChanged }: { onChanged?: () => void
           <div className="grid gap-2 sm:grid-cols-4">
             <StageCard icon={ClipboardCheck} label="Awaiting review" value={pending.length} tone="border-amber-200 bg-amber-50/70 text-amber-900" live={pending.length > 0} />
             <StageCard icon={CheckCircle2} label="Approved, ready" value={approved.length} tone="border-sky-200 bg-sky-50/70 text-sky-900" live={approved.length > 0} />
-            <StageCard icon={Syringe} label="Injected into pages" value={applied.length + bump.injected} tone="border-emerald-200 bg-emerald-50/70 text-emerald-900" live={applied.length > 0} />
+            <StageCard icon={Syringe} label="Injected into pages" value={appliedCount + bump.injected} tone="border-emerald-200 bg-emerald-50/70 text-emerald-900" live={appliedCount > 0} />
             <StageCard icon={Trophy} label="Measured outcomes" value={measured + bump.measured} tone="border-violet-200 bg-violet-50/70 text-violet-900" live={measured > 0} />
           </div>
 

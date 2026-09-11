@@ -12,3 +12,8 @@
 
 ## Preview stability
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
+
+## Project monitoring findings
+- [ ] Keep the SEO approvals injected count stable across refreshes
+- [ ] Prevent category landing pages from overwriting the main application filters
+- [ ] Match public recommended-application order to the admin order
