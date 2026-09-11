@@ -2,7 +2,7 @@
 
 ## Connectors (new workspace)
 - [x] Connect Firecrawl
-- [x] Connect Google Search Console
+- [ ] Connect Google Search Console — connection card declined
 - [ ] Connect Semrush
 
 ## /mba-application fixes
@@ -11,4 +11,4 @@
 - [ ] Expenses breakdown must be far more detailed
 
 ## Preview stability
-- [ ] Resolve all errors reported in `/tmp/observability/build-errors.log`
+- [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
