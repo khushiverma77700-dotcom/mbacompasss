@@ -139,11 +139,12 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
   /* Persist any change so returning students keep their view. */
   useEffect(() => {
-    if (!prefsReady) return;
+    // A category landing page is a scoped view, not a filter choice for the main hub.
+    if (!prefsReady || presetCategory) return;
     const prefs: TrackerPrefs = { deadline_filter: deadlineFilter, category, exam };
     writeLocalPrefs(prefs);
     if (user) void writeRemotePrefs(user.id, prefs);
-  }, [prefsReady, deadlineFilter, category, exam, user]);
+  }, [prefsReady, presetCategory, deadlineFilter, category, exam, user]);
 
   const exams = useMemo(() => examOptions(rows), [rows]);
 
@@ -168,7 +169,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       return haystack.toLowerCase().includes(q);
     });
     if (category === "recommended") {
-      return [...list].sort((a, b) => b.recommendation_priority - a.recommendation_priority);
+      return [...list].sort((a, b) => a.recommendation_priority - b.recommendation_priority);
     }
     return list;
   }, [scoped, deadlineFilter, category, exam, search]);
@@ -188,15 +189,15 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
   const faqs = useMemo(() => listingFaqs(scoped), [scoped]);
 
-  /* Today's picks: advisor-recommended and still open, highest priority first.
+  /* Today's picks: advisor-recommended and still open, position 1 first.
      If nothing is marked recommended, fall back to whatever closes soonest. */
   const todaysPicks = useMemo(() => {
     const open = scoped.filter((row) => deadlineInfo(row).isOpen);
     const picked = open
       .filter((row) => row.is_recommended)
       .sort((a, b) => {
-        if (b.recommendation_priority !== a.recommendation_priority) {
-          return b.recommendation_priority - a.recommendation_priority;
+        if (a.recommendation_priority !== b.recommendation_priority) {
+          return a.recommendation_priority - b.recommendation_priority;
         }
         return (a.application_deadline ?? "9999").localeCompare(b.application_deadline ?? "9999");
       });
