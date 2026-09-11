@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/accordion";
 import { ArrowUpRight, ExternalLink, FileText, Timer } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import ExpenseBreakdownView from "@/components/application/ExpenseBreakdown";
+import { buildExpenseBreakdown } from "@/lib/applicationExpenses";
 import {
   CATEGORY_LABEL,
   type TrackerRow,
@@ -90,6 +92,7 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
   const faqs = collegeFaqs(row);
   const keywords = collegeKeywords(row);
   const isExam = row.category === "exam";
+  const expenseBreakdown = buildExpenseBreakdown(row);
 
   const handleApply = async () => {
     if (!row.apply_url) {
@@ -197,6 +200,21 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
             <Fact label="Accepted exams" value={(row.accepted_exams ?? []).join(", ")} />
           )}
         </dl>
+      </section>
+
+      <section
+        aria-label={`${row.name} detailed application and programme expenses`}
+        className="space-y-3"
+      >
+        <div>
+          <h2 className="text-[1.375rem] font-semibold text-slate-900">
+            {row.name} complete expense breakdown
+          </h2>
+          <p className="pt-1 text-sm text-slate-600">
+            Plan beyond the form fee with application, programme, living and financing costs shown separately.
+          </p>
+        </div>
+        <ExpenseBreakdownView name={row.name} breakdown={expenseBreakdown} />
       </section>
 
       {(row.eligibility || row.selection_process || row.cutoff_note || row.recommendation_note) && (
