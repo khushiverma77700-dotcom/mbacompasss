@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Database as AppDatabase, Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +14,11 @@ import { useToast } from "@/hooks/use-toast";
 import { displayValue, normalizeEntityName, parseEditedValue } from "@/lib/informationPortal";
 import { AlertTriangle, CheckCircle2, Database, ExternalLink, FileSearch, Loader2, RefreshCw, Rocket, Search, ShieldCheck } from "lucide-react";
 
-type Draft = Database["public"]["Tables"]["information_drafts"]["Row"];
-type FieldValue = Database["public"]["Tables"]["information_field_values"]["Row"];
-type Source = Database["public"]["Tables"]["information_sources"]["Row"];
+type Draft = AppDatabase["public"]["Tables"]["information_drafts"]["Row"];
+type FieldValue = AppDatabase["public"]["Tables"]["information_field_values"]["Row"];
+type Source = AppDatabase["public"]["Tables"]["information_sources"]["Row"];
+type CollegeInsert = AppDatabase["public"]["Tables"]["colleges"]["Insert"];
+type ExamInsert = AppDatabase["public"]["Tables"]["exams"]["Insert"];
 
 const statusLabel = (status: string) => status.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const asRecord = (value: Json): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -89,17 +91,19 @@ const AdminInformationPortal = () => {
       });
       let canonicalId = selected.canonical_record_id;
       if (selected.entity_type === "college") {
-        if (canonicalId) { const { error } = await supabase.from("colleges").update(approvedPayload).eq("id", canonicalId); if (error) throw error; }
-        else { const { data, error } = await supabase.from("colleges").insert(approvedPayload).select("id").single(); if (error) throw error; canonicalId = data.id; }
+        const collegePayload = approvedPayload as CollegeInsert;
+        if (canonicalId) { const { error } = await supabase.from("colleges").update(collegePayload).eq("id", canonicalId); if (error) throw error; }
+        else { const { data, error } = await supabase.from("colleges").insert(collegePayload).select("id").single(); if (error) throw error; canonicalId = data.id; }
       } else {
-        if (canonicalId) { const { error } = await supabase.from("exams").update(approvedPayload).eq("id", canonicalId); if (error) throw error; }
-        else { const { data, error } = await supabase.from("exams").insert(approvedPayload).select("id").single(); if (error) throw error; canonicalId = data.id; }
+        const examPayload = approvedPayload as ExamInsert;
+        if (canonicalId) { const { error } = await supabase.from("exams").update(examPayload).eq("id", canonicalId); if (error) throw error; }
+        else { const { data, error } = await supabase.from("exams").insert(examPayload).select("id").single(); if (error) throw error; canonicalId = data.id; }
       }
       const { data: auth } = await supabase.auth.getUser();
       const now = new Date().toISOString();
       const { error } = await supabase.from("information_drafts").update({ approved_payload: approvedPayload as Json, canonical_record_id: canonicalId, status: "published", published_at: now, reviewed_at: now, reviewed_by: auth.user?.id ?? null }).eq("id", selected.id);
       if (error) throw error;
-      await supabase.from("information_audit_events").insert({ draft_id: selected.id, actor_id: auth.user?.id ?? null, event_type: "approved_and_published", details: { canonical_record_id: canonicalId } });
+      await supabase.from("information_audit_events").insert({ draft_id: selected.id, actor_id: auth.user?.id ?? null, entity_type: selected.entity_type, event_type: "approved_and_published", canonical_record_id: canonicalId, details: { canonical_record_id: canonicalId } });
       toast({ title: "Approved and published", description: `${selected.requested_name} is now live.` }); setSelected(null); await loadDrafts();
     } catch (error) { toast({ title: "Publish failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" }); }
     finally { setSaving(false); setConfirmPublish(false); }

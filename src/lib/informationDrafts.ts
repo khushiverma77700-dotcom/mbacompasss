@@ -45,6 +45,6 @@ export async function saveInformationDraft(input: SaveInformationDraftInput): Pr
     const { error } = await supabase.from("information_sources").insert(sourceRows.map((source) => ({ draft_id: created.id, url: source.url, title: source.title ?? null, source_class: "official_domain", is_official: true, link_status: "unchecked" })));
     if (error) throw error;
   }
-  await supabase.from("information_audit_events").insert({ draft_id: created.id, actor_id: auth.user.id, event_type: "draft_created", details: toJson({ entity_type: input.entityType, source_count: sourceRows.length }) });
+  await supabase.from("information_audit_events").insert({ draft_id: created.id, actor_id: auth.user.id, entity_type: input.entityType, event_type: "draft_created", details: toJson({ entity_type: input.entityType, source_count: sourceRows.length }) });
   return created.id;
 }

@@ -148,7 +148,8 @@ const ExamSectionsEditor = ({
         last_seo_refresh: new Date().toISOString(),
       };
 
-      const draftId = await saveInformationDraft({ entityType: "exam", name: examName, slug, payload, existingRecordId: existingExamId, sources: sources.map((source) => ({ url: source.url, title: source.title })), context: { examYear, examCategory, reviewedBy } });
+      const verifiedSources = sources.flatMap((source) => source.url ? [{ url: source.url, title: source.title }] : []);
+      const draftId = await saveInformationDraft({ entityType: "exam", name: examName, slug, payload, existingRecordId: existingExamId, sources: verifiedSources, context: { examYear, examCategory, reviewedBy } });
       toast({ title: "Exam draft saved", description: "Review and approve it in the information portal before publishing." });
       onPublished(draftId, slug);
     } catch (e: any) {
