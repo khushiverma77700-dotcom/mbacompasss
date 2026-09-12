@@ -216,64 +216,7 @@ async function runJobStage(sb: any, job: any): Promise<boolean> {
   const cleanSections = pruneBlankContent(sections);
   for (const k of Object.keys(cleanSections)) sections[k] = cleanSections[k];
 
-  let publishedSlug: string | null = null;
-  // AI output is always review-only. Keep this branch unreachable so older
-  // queued jobs with auto_publish=true cannot silently write live exam rows.
-  if (false) {
-    await sb.from("exam_generation_jobs").update({ step: "Publishing exam page" }).eq("id", job.id);
-    publishedSlug = await publishExam(sb, job, sections, sources);
-    await appendLog(sb, job.id, { level: "success", message: `Published /exam/${publishedSlug}` });
-
-    // Self-completing pipeline: audit what just went live and, if anything is
-    // still missing, queue a backfill item so the backfill worker fills it in.
-    try {
-      const gaps = auditExamSections(sections);
-      if (gaps.length) {
-        const { data: examRow } = await sb.from("exams").select("id,slug").eq("slug", publishedSlug).maybeSingle();
-        if (examRow?.id) {
-          const { data: dupe } = await sb
-            .from("exam_backfill_items")
-            .select("id")
-            .eq("exam_id", examRow.id)
-            .in("status", ["queued", "running"])
-            .maybeSingle();
-          if (!dupe) {
-            await sb.from("exam_backfill_items").insert({
-              exam_id: examRow.id,
-              exam_name: job.exam_name,
-              exam_slug: publishedSlug,
-              exam_year: job.exam_year ?? null,
-              official_website: job.official_website ?? null,
-              status: "queued",
-              step: "Queued by generation worker — auto gap-fill",
-              gaps: gaps.slice(0, 80),
-              gaps_before: gaps.length,
-            });
-            await appendLog(sb, job.id, {
-              level: "warn",
-              message: `Queued auto gap-fill — ${gaps.length} fields still incomplete: ${[...new Set(gaps.map((g) => g.key))].join(", ")}`,
-            });
-            await fetch(`${SUPABASE_URL}/functions/v1/exam-backfill-worker`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${SERVICE_KEY}`,
-                "x-worker-key": SERVICE_KEY,
-              },
-              body: JSON.stringify({ concurrency: 4, source: "exam-generation-worker" }),
-            }).catch(() => {});
-          }
-        }
-      } else {
-        await appendLog(sb, job.id, { level: "success", message: "Completeness audit passed — no gaps." });
-      }
-    } catch (e) {
-      await appendLog(sb, job.id, {
-        level: "warn",
-        message: `Completeness audit skipped: ${e instanceof Error ? e.message : String(e)}`,
-      });
-    }
-  }
+  const publishedSlug: string | null = null;
 
   await sb.from("exam_generation_jobs").update({
     status: "completed",

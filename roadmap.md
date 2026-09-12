@@ -25,8 +25,8 @@
 
 ## AI College & Exam Information Portal
 - [x] Add configurable draft, evidence, source, batch, and audit data model
-- [ ] Add unified Colleges & Exams research and approval workspace
-- [ ] Move college AI generation behind draft review
-- [ ] Disable bulk exam auto-publishing and expose review states
-- [ ] Add field-level review, manual edits, guarded publishing, refresh, and bulk research
-- [ ] Verify admin workflow and preview health
+- [x] Add unified Colleges & Exams research and approval workspace
+- [x] Move college AI generation behind draft review
+- [x] Disable bulk college and exam auto-publishing and expose review states
+- [x] Add field-level review, manual edits, guarded publishing, refresh, and bulk research
+- [x] Verify preview compilation health
