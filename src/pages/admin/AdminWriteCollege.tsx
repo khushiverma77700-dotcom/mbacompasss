@@ -16,6 +16,7 @@ import PrePublishReport from "@/components/admin/PrePublishReport";
 import { checkSeoCompleteness, type CompletenessReport } from "@/lib/seoCompletenessChecker";
 import { validateHtml, type HtmlValidationReport } from "@/lib/htmlValidator";
 import { checkLatestCycle, type CycleReport } from "@/lib/cycleChecker";
+import { saveInformationDraft } from "@/lib/informationDrafts";
 
 const COLLEGE_STEPS: { key: string; label: string }[] = [
   { key: "brief", label: "Validating brief" },
@@ -132,16 +133,13 @@ const AdminWriteCollege = () => {
 
       const c = data.college;
 
-      // Ensure slug uniqueness
-      let finalSlug = c.slug || slug;
+      const finalSlug = c.slug || slug;
       const { data: existing } = await supabase
         .from("colleges")
         .select("id")
         .eq("slug", finalSlug)
         .maybeSingle();
-      if (existing?.id) {
-        finalSlug = `${finalSlug}-${Date.now().toString(36).slice(-4)}`;
-      }
+      if (existing?.id) throw new Error("A college with this slug already exists. Use the information portal to refresh the existing record.");
 
       // Coerce AI-returned values into safe integer/numeric values.
       // The model sometimes returns strings like "15-18 (NIRF Management 2026)"
@@ -198,29 +196,20 @@ const AdminWriteCollege = () => {
         last_seo_refresh: new Date().toISOString(),
       };
 
-      const { data: inserted, error: insertErr } = await supabase
-        .from("colleges")
-        .insert(insertPayload)
-        .select("id")
-        .single();
-
-      if (insertErr) throw insertErr;
-
-      // Auto-seed FAQ schema snapshot from extracted FAQs
       const faqs = Array.isArray(data?.faqs) ? data.faqs : [];
-      if (faqs.length > 0 && inserted?.id) {
-        try {
-          await supabase.functions.invoke("auto-seo-engine", {
-            body: { mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs },
-          });
-        } catch (e) { console.warn("FAQ seed failed", e); }
-      }
+      const draftId = await saveInformationDraft({
+        entityType: "college",
+        name: String(insertPayload.name),
+        slug: finalSlug,
+        payload: { ...insertPayload, faqs },
+        context: { city, state, type, tier, category, contentDateContext },
+      });
 
       const factCheck = data?.factCheck || { confidence: {}, warnings: [], omit_fields: [] };
-      setReviewData({ insertedId: inserted.id, factCheck, faqsCount: faqs.length });
+      setReviewData({ insertedId: draftId, factCheck, faqsCount: faqs.length });
       toast({
-        title: "College generated!",
-        description: `Review the factuality report below before opening the editor.${faqs.length ? ` ${faqs.length} FAQs schema-injected.` : ""}`,
+        title: "Research draft ready",
+        description: `Nothing is live yet. Review the evidence and approve the draft in the information portal.${faqs.length ? ` ${faqs.length} FAQs included.` : ""}`,
       });
     } catch (e: any) {
       console.error("AI college generation failed", e);
@@ -438,8 +427,8 @@ const AdminWriteCollege = () => {
             )}
 
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={() => navigate(`/admin/colleges?edit=${reviewData.insertedId}`)}>
-                Open in Editor
+              <Button size="sm" onClick={() => navigate("/admin/information-portal")}>
+                Open approval portal
               </Button>
               <Button size="sm" variant="outline" onClick={() => setReviewData(null)}>
                 Dismiss
@@ -459,7 +448,7 @@ const AdminWriteCollege = () => {
           {generating ? (
             <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Researching, writing & fact-checking... (60-120s)</>
           ) : (
-            <><Sparkles className="h-4 w-4 mr-2" /> Approve & Generate College</>
+            <><Sparkles className="h-4 w-4 mr-2" /> Research & Create Draft</>
           )}
         </Button>
         <Button variant="outline" size="lg" onClick={() => navigate(-1)} disabled={generating}>

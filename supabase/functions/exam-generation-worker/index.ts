@@ -217,7 +217,9 @@ async function runJobStage(sb: any, job: any): Promise<boolean> {
   for (const k of Object.keys(cleanSections)) sections[k] = cleanSections[k];
 
   let publishedSlug: string | null = null;
-  if (job.auto_publish) {
+  // AI output is always review-only. Keep this branch unreachable so older
+  // queued jobs with auto_publish=true cannot silently write live exam rows.
+  if (false) {
     await sb.from("exam_generation_jobs").update({ step: "Publishing exam page" }).eq("id", job.id);
     publishedSlug = await publishExam(sb, job, sections, sources);
     await appendLog(sb, job.id, { level: "success", message: `Published /exam/${publishedSlug}` });
@@ -274,8 +276,8 @@ async function runJobStage(sb: any, job: any): Promise<boolean> {
   }
 
   await sb.from("exam_generation_jobs").update({
-    status: job.auto_publish ? "published" : "completed",
-    step: job.auto_publish ? `Published /exam/${publishedSlug}` : "Ready for review",
+    status: "completed",
+    step: "Ready for review",
     finished_at: new Date().toISOString(),
     worker_lock_until: null,
     result: { sections, research, done_batches: doneBatches },
@@ -285,7 +287,7 @@ async function runJobStage(sb: any, job: any): Promise<boolean> {
     error: null,
   }).eq("id", job.id);
 
-  if (!job.auto_publish) {
+  {
     await appendLog(sb, job.id, { level: "success", message: "Generation complete — open the review editor to publish." });
   }
   return true;
