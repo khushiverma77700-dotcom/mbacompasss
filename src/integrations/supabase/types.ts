@@ -4443,6 +4443,450 @@ export type Database = {
         }
         Relationships: []
       }
+      information_audit_events: {
+        Row: {
+          actor_id: string | null
+          after_snapshot: Json | null
+          before_snapshot: Json | null
+          canonical_record_id: string | null
+          created_at: string
+          details: Json
+          draft_id: string | null
+          entity_type: string
+          event_type: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          after_snapshot?: Json | null
+          before_snapshot?: Json | null
+          canonical_record_id?: string | null
+          created_at?: string
+          details?: Json
+          draft_id?: string | null
+          entity_type: string
+          event_type: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          after_snapshot?: Json | null
+          before_snapshot?: Json | null
+          canonical_record_id?: string | null
+          created_at?: string
+          details?: Json
+          draft_id?: string | null
+          entity_type?: string
+          event_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "information_audit_events_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "information_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      information_drafts: {
+        Row: {
+          approved_payload: Json
+          batch_id: string | null
+          canonical_record_id: string | null
+          city: string | null
+          conflict_count: number
+          created_at: string
+          created_by: string
+          entity_type: string
+          error_message: string | null
+          existing_snapshot: Json
+          id: string
+          identity_candidates: Json
+          last_verified_at: string | null
+          missing_required_fields: string[]
+          normalized_name: string
+          official_domain: string | null
+          operation: string
+          proposed_name: string | null
+          proposed_payload: Json
+          proposed_slug: string | null
+          published_at: string | null
+          requested_context: Json
+          requested_name: string
+          research_stage: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: string | null
+          status: string
+          total_field_count: number
+          updated_at: string
+          verified_field_count: number
+        }
+        Insert: {
+          approved_payload?: Json
+          batch_id?: string | null
+          canonical_record_id?: string | null
+          city?: string | null
+          conflict_count?: number
+          created_at?: string
+          created_by: string
+          entity_type: string
+          error_message?: string | null
+          existing_snapshot?: Json
+          id?: string
+          identity_candidates?: Json
+          last_verified_at?: string | null
+          missing_required_fields?: string[]
+          normalized_name: string
+          official_domain?: string | null
+          operation?: string
+          proposed_name?: string | null
+          proposed_payload?: Json
+          proposed_slug?: string | null
+          published_at?: string | null
+          requested_context?: Json
+          requested_name: string
+          research_stage?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          total_field_count?: number
+          updated_at?: string
+          verified_field_count?: number
+        }
+        Update: {
+          approved_payload?: Json
+          batch_id?: string | null
+          canonical_record_id?: string | null
+          city?: string | null
+          conflict_count?: number
+          created_at?: string
+          created_by?: string
+          entity_type?: string
+          error_message?: string | null
+          existing_snapshot?: Json
+          id?: string
+          identity_candidates?: Json
+          last_verified_at?: string | null
+          missing_required_fields?: string[]
+          normalized_name?: string
+          official_domain?: string | null
+          operation?: string
+          proposed_name?: string | null
+          proposed_payload?: Json
+          proposed_slug?: string | null
+          published_at?: string | null
+          requested_context?: Json
+          requested_name?: string
+          research_stage?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          total_field_count?: number
+          updated_at?: string
+          verified_field_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "information_drafts_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "information_research_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      information_evidence: {
+        Row: {
+          created_at: string
+          excerpt: string
+          field_value_id: string
+          id: string
+          locator: string | null
+          source_id: string
+          supports_value: boolean
+        }
+        Insert: {
+          created_at?: string
+          excerpt: string
+          field_value_id: string
+          id?: string
+          locator?: string | null
+          source_id: string
+          supports_value?: boolean
+        }
+        Update: {
+          created_at?: string
+          excerpt?: string
+          field_value_id?: string
+          id?: string
+          locator?: string | null
+          source_id?: string
+          supports_value?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "information_evidence_field_value_id_fkey"
+            columns: ["field_value_id"]
+            isOneToOne: false
+            referencedRelation: "information_field_values"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "information_evidence_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "information_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      information_field_definitions: {
+        Row: {
+          allowed_source_classes: string[]
+          canonical_field: string | null
+          created_at: string
+          display_order: number
+          entity_type: string
+          field_key: string
+          id: string
+          is_active: boolean
+          is_repeatable: boolean
+          is_required: boolean
+          is_time_sensitive: boolean
+          label: string
+          minimum_verification: string
+          section_key: string
+          updated_at: string
+          validation_rules: Json
+          value_type: string
+          verification_interval_days: number | null
+        }
+        Insert: {
+          allowed_source_classes?: string[]
+          canonical_field?: string | null
+          created_at?: string
+          display_order?: number
+          entity_type: string
+          field_key: string
+          id?: string
+          is_active?: boolean
+          is_repeatable?: boolean
+          is_required?: boolean
+          is_time_sensitive?: boolean
+          label: string
+          minimum_verification?: string
+          section_key: string
+          updated_at?: string
+          validation_rules?: Json
+          value_type?: string
+          verification_interval_days?: number | null
+        }
+        Update: {
+          allowed_source_classes?: string[]
+          canonical_field?: string | null
+          created_at?: string
+          display_order?: number
+          entity_type?: string
+          field_key?: string
+          id?: string
+          is_active?: boolean
+          is_repeatable?: boolean
+          is_required?: boolean
+          is_time_sensitive?: boolean
+          label?: string
+          minimum_verification?: string
+          section_key?: string
+          updated_at?: string
+          validation_rules?: Json
+          value_type?: string
+          verification_interval_days?: number | null
+        }
+        Relationships: []
+      }
+      information_field_values: {
+        Row: {
+          change_type: string
+          confidence: number | null
+          created_at: string
+          current_value: Json | null
+          draft_id: string
+          edited_value: Json | null
+          field_definition_id: string | null
+          field_key: string
+          id: string
+          is_required: boolean
+          last_verified_at: string | null
+          proposed_value: Json | null
+          review_decision: string
+          section_key: string
+          updated_at: string
+          verification_status: string
+        }
+        Insert: {
+          change_type?: string
+          confidence?: number | null
+          created_at?: string
+          current_value?: Json | null
+          draft_id: string
+          edited_value?: Json | null
+          field_definition_id?: string | null
+          field_key: string
+          id?: string
+          is_required?: boolean
+          last_verified_at?: string | null
+          proposed_value?: Json | null
+          review_decision?: string
+          section_key: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Update: {
+          change_type?: string
+          confidence?: number | null
+          created_at?: string
+          current_value?: Json | null
+          draft_id?: string
+          edited_value?: Json | null
+          field_definition_id?: string | null
+          field_key?: string
+          id?: string
+          is_required?: boolean
+          last_verified_at?: string | null
+          proposed_value?: Json | null
+          review_decision?: string
+          section_key?: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "information_field_values_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "information_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "information_field_values_field_definition_id_fkey"
+            columns: ["field_definition_id"]
+            isOneToOne: false
+            referencedRelation: "information_field_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      information_research_batches: {
+        Row: {
+          completed_items: number
+          created_at: string
+          created_by: string
+          entity_type: string
+          error_message: string | null
+          failed_items: number
+          id: string
+          label: string
+          status: string
+          total_items: number
+          updated_at: string
+        }
+        Insert: {
+          completed_items?: number
+          created_at?: string
+          created_by: string
+          entity_type: string
+          error_message?: string | null
+          failed_items?: number
+          id?: string
+          label: string
+          status?: string
+          total_items?: number
+          updated_at?: string
+        }
+        Update: {
+          completed_items?: number
+          created_at?: string
+          created_by?: string
+          entity_type?: string
+          error_message?: string | null
+          failed_items?: number
+          id?: string
+          label?: string
+          status?: string
+          total_items?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      information_sources: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          document_type: string | null
+          domain: string | null
+          draft_id: string
+          final_url: string | null
+          http_status: number | null
+          id: string
+          is_official: boolean
+          last_verified_at: string | null
+          link_status: string
+          metadata: Json
+          source_class: string
+          source_published_at: string | null
+          title: string | null
+          url: string
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          document_type?: string | null
+          domain?: string | null
+          draft_id: string
+          final_url?: string | null
+          http_status?: number | null
+          id?: string
+          is_official?: boolean
+          last_verified_at?: string | null
+          link_status?: string
+          metadata?: Json
+          source_class: string
+          source_published_at?: string | null
+          title?: string | null
+          url: string
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          document_type?: string | null
+          domain?: string | null
+          draft_id?: string
+          final_url?: string | null
+          http_status?: number | null
+          id?: string
+          is_official?: boolean
+          last_verified_at?: string | null
+          link_status?: string
+          metadata?: Json
+          source_class?: string
+          source_published_at?: string | null
+          title?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "information_sources_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "information_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inquiries: {
         Row: {
           created_at: string
