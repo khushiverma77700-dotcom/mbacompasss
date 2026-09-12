@@ -13,6 +13,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 
 const MERITTO_FIELDS: { key: string; label: string; required?: boolean }[] = [
   { key: "name", label: "Name", required: true },
@@ -45,6 +46,7 @@ type Log = {
   city: string | null;
   campus: string | null;
   course: string | null;
+  medium: string | null;
   campaign: string | null;
   status: string;
   http_status: number | null;
@@ -63,6 +65,41 @@ const statusColor = (s: string) => {
   if (s === "failed") return "bg-red-100 text-red-800 border-red-200";
   return "bg-slate-100 text-slate-700 border-slate-200";
 };
+
+const statusLabel = (status: string) => {
+  if (status === "success") return "Delivered";
+  if (status === "duplicate") return "Duplicate";
+  if (status === "invalid") return "Invalid";
+  if (status === "failed") return "Failed";
+  if (status === "pending") return "Pending";
+  return status;
+};
+
+const EXPORT_COLUMNS: [string, string][] = [
+  ["created_at", "Created At"],
+  ["last_attempt_at", "Last Attempt At"],
+  ["source", "Source"],
+  ["name", "Name"],
+  ["email", "Email"],
+  ["mobile", "Mobile"],
+  ["state", "State"],
+  ["city", "City"],
+  ["campus", "Campus / Program"],
+  ["course", "Course"],
+  ["medium", "Medium"],
+  ["campaign", "Campaign"],
+  ["delivery_status", "Delivery Status"],
+  ["http_status", "HTTP Status"],
+  ["error", "Error / Rejection Reason"],
+  ["retry_count", "Retry Count"],
+];
+
+const toExportRow = (row: Log) => ({
+  ...row,
+  created_at: new Date(row.created_at).toLocaleString("en-IN"),
+  last_attempt_at: row.last_attempt_at ? new Date(row.last_attempt_at).toLocaleString("en-IN") : "",
+  delivery_status: statusLabel(row.status),
+});
 
 export default function AdminMerittoLogs() {
   const [rows, setRows] = useState<Log[]>([]);
@@ -206,7 +243,6 @@ export default function AdminMerittoLogs() {
     try {
       const { data, error } = await supabase.functions.invoke("push-to-meritto", {
         body: {
-          skip_log: true, // ephemeral: never persist bulk lead data on our server
           source: mapped.source || "bulk_upload",
           name: mapped.name || undefined,
           email: mapped.email || undefined,
@@ -323,13 +359,26 @@ export default function AdminMerittoLogs() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("meritto_lead_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (error) toast.error(error.message);
-    setRows((data as Log[]) || []);
+    const pageSize = 1000;
+    const loaded: Log[] = [];
+    let from = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("meritto_lead_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error) {
+        toast.error(error.message);
+        break;
+      }
+      const page = (data as Log[]) || [];
+      loaded.push(...page);
+      hasMore = page.length === pageSize;
+      from += pageSize;
+    }
+    setRows(loaded);
     setLoading(false);
   };
 
@@ -363,6 +412,9 @@ export default function AdminMerittoLogs() {
     const set = new Set(rows.map(r => r.source));
     return Array.from(set);
   }, [rows]);
+
+  const exportRows = useMemo(() => rows.map(toExportRow), [rows]);
+  const filteredExportRows = useMemo(() => filtered.map(toExportRow), [filtered]);
 
   const retry = async (id: string) => {
     if (!guardEnabled()) return;
@@ -502,7 +554,29 @@ export default function AdminMerittoLogs() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Push History</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
+          <div>
+            <CardTitle className="text-base">Push History</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Every recorded push with its latest Meritto delivery status.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <ExportExcelButton
+              rows={filteredExportRows}
+              fileName="meritto-leads-filtered"
+              sheetName="Filtered Leads"
+              columns={EXPORT_COLUMNS}
+              label="Download filtered"
+            />
+            <ExportExcelButton
+              rows={exportRows}
+              fileName="meritto-all-leads"
+              sheetName="All Meritto Leads"
+              columns={EXPORT_COLUMNS}
+              label="Download all leads"
+              variant="default"
+            />
+          </div>
+        </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Loading…</div>
@@ -532,7 +606,7 @@ export default function AdminMerittoLogs() {
                     <td className="px-3 py-2">{r.mobile || "-"}</td>
                     <td className="px-3 py-2">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${statusColor(r.status)}`}>
-                        {r.status}{r.http_status ? ` · ${r.http_status}` : ""}
+                        {statusLabel(r.status)}{r.http_status ? ` · ${r.http_status}` : ""}
                       </span>
                     </td>
                     <td className="px-3 py-2">{r.retry_count}</td>
@@ -644,7 +718,7 @@ export default function AdminMerittoLogs() {
             <div className="space-y-4 text-sm">
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
                 <div className="font-semibold mb-0.5">Zero-storage mode</div>
-                Bulk leads are streamed straight to Meritto — nothing is saved to our database. The results report lives only in this browser tab; export it as CSV before closing. Individual leads from website forms are still logged normally.
+                Every valid bulk lead is saved in Push History with Meritto's delivery status, so it remains available in the complete Excel verification download.
               </div>
               <div className="rounded-md border p-3">
                 <Label className="text-xs font-medium">Origin domain (tagged on every lead)</Label>
