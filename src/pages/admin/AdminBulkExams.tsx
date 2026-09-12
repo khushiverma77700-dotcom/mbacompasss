@@ -210,7 +210,7 @@ const kickWorker = () =>
         sort_order: r.sort_order && !Number.isNaN(Number(r.sort_order)) ? Number(r.sort_order) : i + 1,
         batch_id: newBatch,
         batch_label: fileName || "Bulk upload",
-        auto_publish: true,
+        auto_publish: false,
         created_by: auth?.user?.id ?? null,
         steps_total: EXAM_BATCHES.length,
       }));
