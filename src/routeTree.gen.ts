@@ -102,6 +102,7 @@ import { Route as AdminHomepageTablesRouteImport } from './routes/admin.homepage
 import { Route as AdminHyperlinkUpdateRouteImport } from './routes/admin.hyperlink-update'
 import { Route as AdminIimWaitlistRouteImport } from './routes/admin.iim-waitlist'
 import { Route as AdminImageSeoRouteImport } from './routes/admin.image-seo'
+import { Route as AdminInformationPortalRouteImport } from './routes/admin.information-portal'
 import { Route as AdminInquiriesRouteImport } from './routes/admin.inquiries'
 import { Route as AdminInstituteResultsRouteImport } from './routes/admin.institute-results'
 import { Route as AdminInstitutesRouteImport } from './routes/admin.institutes'
@@ -789,6 +790,11 @@ const AdminIimWaitlistRoute = AdminIimWaitlistRouteImport.update({
 const AdminImageSeoRoute = AdminImageSeoRouteImport.update({
   id: '/image-seo',
   path: '/image-seo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInformationPortalRoute = AdminInformationPortalRouteImport.update({
+  id: '/information-portal',
+  path: '/information-portal',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminInquiriesRoute = AdminInquiriesRouteImport.update({
@@ -2033,6 +2039,7 @@ export interface FileRoutesByFullPath {
   '/admin/hyperlink-update': typeof AdminHyperlinkUpdateRoute
   '/admin/iim-waitlist': typeof AdminIimWaitlistRoute
   '/admin/image-seo': typeof AdminImageSeoRoute
+  '/admin/information-portal': typeof AdminInformationPortalRoute
   '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/institute-results': typeof AdminInstituteResultsRoute
   '/admin/institutes': typeof AdminInstitutesRoute
@@ -2340,6 +2347,7 @@ export interface FileRoutesByTo {
   '/admin/hyperlink-update': typeof AdminHyperlinkUpdateRoute
   '/admin/iim-waitlist': typeof AdminIimWaitlistRoute
   '/admin/image-seo': typeof AdminImageSeoRoute
+  '/admin/information-portal': typeof AdminInformationPortalRoute
   '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/institute-results': typeof AdminInstituteResultsRoute
   '/admin/institutes': typeof AdminInstitutesRoute
@@ -2644,6 +2652,7 @@ export interface FileRoutesById {
   '/admin/hyperlink-update': typeof AdminHyperlinkUpdateRoute
   '/admin/iim-waitlist': typeof AdminIimWaitlistRoute
   '/admin/image-seo': typeof AdminImageSeoRoute
+  '/admin/information-portal': typeof AdminInformationPortalRoute
   '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/institute-results': typeof AdminInstituteResultsRoute
   '/admin/institutes': typeof AdminInstitutesRoute
@@ -2961,6 +2970,7 @@ export interface FileRouteTypes {
     | '/admin/hyperlink-update'
     | '/admin/iim-waitlist'
     | '/admin/image-seo'
+    | '/admin/information-portal'
     | '/admin/inquiries'
     | '/admin/institute-results'
     | '/admin/institutes'
@@ -3268,6 +3278,7 @@ export interface FileRouteTypes {
     | '/admin/hyperlink-update'
     | '/admin/iim-waitlist'
     | '/admin/image-seo'
+    | '/admin/information-portal'
     | '/admin/inquiries'
     | '/admin/institute-results'
     | '/admin/institutes'
@@ -3571,6 +3582,7 @@ export interface FileRouteTypes {
     | '/admin/hyperlink-update'
     | '/admin/iim-waitlist'
     | '/admin/image-seo'
+    | '/admin/information-portal'
     | '/admin/inquiries'
     | '/admin/institute-results'
     | '/admin/institutes'
@@ -4463,6 +4475,13 @@ declare module '@tanstack/react-router' {
       path: '/image-seo'
       fullPath: '/admin/image-seo'
       preLoaderRoute: typeof AdminImageSeoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/information-portal': {
+      id: '/admin/information-portal'
+      path: '/information-portal'
+      fullPath: '/admin/information-portal'
+      preLoaderRoute: typeof AdminInformationPortalRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/inquiries': {
@@ -6320,6 +6339,7 @@ interface AdminRouteChildren {
   AdminHyperlinkUpdateRoute: typeof AdminHyperlinkUpdateRoute
   AdminIimWaitlistRoute: typeof AdminIimWaitlistRoute
   AdminImageSeoRoute: typeof AdminImageSeoRoute
+  AdminInformationPortalRoute: typeof AdminInformationPortalRoute
   AdminInquiriesRoute: typeof AdminInquiriesRoute
   AdminInstituteResultsRoute: typeof AdminInstituteResultsRoute
   AdminInstitutesRoute: typeof AdminInstitutesRoute
@@ -6437,6 +6457,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminHyperlinkUpdateRoute: AdminHyperlinkUpdateRoute,
   AdminIimWaitlistRoute: AdminIimWaitlistRoute,
   AdminImageSeoRoute: AdminImageSeoRoute,
+  AdminInformationPortalRoute: AdminInformationPortalRoute,
   AdminInquiriesRoute: AdminInquiriesRoute,
   AdminInstituteResultsRoute: AdminInstituteResultsRoute,
   AdminInstitutesRoute: AdminInstitutesRoute,
