@@ -17,3 +17,8 @@
 - [x] Keep the SEO approvals injected count stable across refreshes
 - [x] Prevent category landing pages from overwriting the main application filters
 - [x] Match public recommended-application order to the admin order
+
+## Meritto verification export
+- [x] Record future bulk-upload pushes in Meritto Push History
+- [x] Download every recorded lead with its latest delivery status
+- [x] Download the currently filtered lead list
