@@ -470,37 +470,40 @@ async function processOne(
       return;
     }
 
-    tracker.incDbWrite();
-    const { data: inserted, error: insertErr } = await admin
-      .from("colleges").insert(insertPayload).select("id").single();
-    if (insertErr) throw insertErr;
-
-    // Cancelled right after insert — roll back so nothing partial remains
-    if (cancelFlag.v) {
-      if (inserted?.id) {
-        await admin.from("colleges").delete().eq("id", inserted.id);
-      }
-      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
-      return;
-    }
-
-    // Seed FAQs (same as manual) — skip if cancelled
     const faqs = Array.isArray(data?.faqs) ? data.faqs : [];
-    if (faqs.length > 0 && inserted?.id && !cancelFlag.v) {
-      try {
-        const seoBody = JSON.stringify({ mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs });
-        const seoStarted = Date.now();
-        const seoRes = await fetch(`${SUPABASE_URL}/functions/v1/auto-seo-engine`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: authHeader, apikey: ANON_KEY, "x-worker-key": SERVICE_ROLE },
-          body: seoBody,
-        });
-        const seoTxt = await seoRes.text().catch(() => "");
-        tracker.recordHttp("auto-seo-engine", seoRes.status, textBytes(seoBody), textBytes(seoTxt), Date.now() - seoStarted);
-      } catch (_) { /* non-fatal */ }
-    }
+    const proposedPayload = { ...insertPayload, faqs };
+    const { data: jobOwner, error: ownerError } = await admin.from("bulk_college_jobs").select("created_by").eq("id", job_id).single();
+    if (ownerError || !jobOwner?.created_by) throw ownerError ?? new Error("Bulk job owner is missing");
+    tracker.incDbWrite();
+    const { data: draft, error: draftError } = await admin.from("information_drafts").insert({
+      entity_type: "college",
+      requested_name: insertPayload.name,
+      normalized_name: String(insertPayload.name).trim().toLowerCase().replace(/\s+/g, " "),
+      proposed_name: insertPayload.name,
+      proposed_slug: finalSlug,
+      proposed_payload: proposedPayload,
+      requested_context: { source: "bulk_college_create", job_id },
+      operation: "create",
+      status: "pending_review",
+      research_stage: "review_ready",
+      total_field_count: Object.values(proposedPayload).filter((value) => value !== null && value !== undefined && value !== "").length,
+      created_by: jobOwner.created_by,
+      last_verified_at: new Date().toISOString(),
+    }).select("id").single();
+    if (draftError) throw draftError;
 
-    await updateRow({ status: "succeeded", step: "done", collegeId: inserted.id, finalSlug, attemptStartedAt: undefined });
+    const { data: definitions } = await admin.from("information_field_definitions").select("id,field_key,section_key,is_required").eq("entity_type", "college").eq("is_active", true);
+    const definitionMap = new Map((definitions ?? []).map((definition: any) => [definition.field_key, definition]));
+    const fieldRows = Object.entries(proposedPayload).filter(([, value]) => value !== null && value !== undefined && value !== "").map(([fieldKey, value]) => {
+      const definition: any = definitionMap.get(fieldKey);
+      return { draft_id: draft.id, field_definition_id: definition?.id ?? null, field_key: fieldKey, section_key: definition?.section_key ?? "other", is_required: definition?.is_required ?? false, proposed_value: value, verification_status: "manual_review", review_decision: "pending", change_type: "added", last_verified_at: new Date().toISOString() };
+    });
+    if (fieldRows.length) {
+      const { error: fieldsError } = await admin.from("information_field_values").insert(fieldRows);
+      if (fieldsError) throw fieldsError;
+    }
+    await admin.from("information_audit_events").insert({ draft_id: draft.id, actor_id: jobOwner.created_by, entity_type: "college", event_type: "bulk_draft_created", details: { job_id } });
+    await updateRow({ status: "succeeded", step: "ready for approval", collegeId: draft.id, finalSlug, attemptStartedAt: undefined });
   } catch (e: any) {
     await updateRow({ status: "failed", step: "error", error: e?.message || "Unknown error", attemptStartedAt: undefined });
   }

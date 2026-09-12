@@ -12,6 +12,7 @@ import {
   EXAM_BATCHES, EXAM_MODULE_LABELS, EXAM_MODULE_ORDER, hasModuleContent,
   type ExamSections, type ExamSource,
 } from "@/lib/examSections";
+import { saveInformationDraft } from "@/lib/informationDrafts";
 
 interface Props {
   examName: string;
@@ -147,23 +148,10 @@ const ExamSectionsEditor = ({
         last_seo_refresh: new Date().toISOString(),
       };
 
-      let examId = existingExamId ?? null;
-      if (examId) {
-        const { error } = await supabase.from("exams").update(payload as any).eq("id", examId);
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase.from("exams").insert(payload as any).select("id").single();
-        if (error) throw error;
-        examId = data.id;
-      }
-
-      try {
-        const { submitToGoogleIndexing } = await import("@/lib/googleIndexing");
-        submitToGoogleIndexing("exam", slug, examId ?? undefined).catch(() => {});
-      } catch { /* indexing is best-effort */ }
-
-      toast({ title: "Exam page published", description: `/exam/${slug} is live.` });
-      onPublished(examId!, slug);
+      const verifiedSources = sources.flatMap((source) => source.url ? [{ url: source.url, title: source.title }] : []);
+      const draftId = await saveInformationDraft({ entityType: "exam", name: examName, slug, payload, existingRecordId: existingExamId, sources: verifiedSources, context: { examYear, examCategory, reviewedBy } });
+      toast({ title: "Exam draft saved", description: "Review and approve it in the information portal before publishing." });
+      onPublished(draftId, slug);
     } catch (e: any) {
       toast({ title: "Publish failed", description: e?.message || "Try again", variant: "destructive" });
     } finally {
@@ -189,7 +177,7 @@ const ExamSectionsEditor = ({
           <div className="flex items-end">
             <Button onClick={publish} disabled={publishing} className="w-full gap-2">
               {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-              {existingExamId ? "Save & publish" : "Publish exam page"}
+              Save for approval
             </Button>
           </div>
         </CardContent>

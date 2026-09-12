@@ -216,66 +216,11 @@ async function runJobStage(sb: any, job: any): Promise<boolean> {
   const cleanSections = pruneBlankContent(sections);
   for (const k of Object.keys(cleanSections)) sections[k] = cleanSections[k];
 
-  let publishedSlug: string | null = null;
-  if (job.auto_publish) {
-    await sb.from("exam_generation_jobs").update({ step: "Publishing exam page" }).eq("id", job.id);
-    publishedSlug = await publishExam(sb, job, sections, sources);
-    await appendLog(sb, job.id, { level: "success", message: `Published /exam/${publishedSlug}` });
-
-    // Self-completing pipeline: audit what just went live and, if anything is
-    // still missing, queue a backfill item so the backfill worker fills it in.
-    try {
-      const gaps = auditExamSections(sections);
-      if (gaps.length) {
-        const { data: examRow } = await sb.from("exams").select("id,slug").eq("slug", publishedSlug).maybeSingle();
-        if (examRow?.id) {
-          const { data: dupe } = await sb
-            .from("exam_backfill_items")
-            .select("id")
-            .eq("exam_id", examRow.id)
-            .in("status", ["queued", "running"])
-            .maybeSingle();
-          if (!dupe) {
-            await sb.from("exam_backfill_items").insert({
-              exam_id: examRow.id,
-              exam_name: job.exam_name,
-              exam_slug: publishedSlug,
-              exam_year: job.exam_year ?? null,
-              official_website: job.official_website ?? null,
-              status: "queued",
-              step: "Queued by generation worker — auto gap-fill",
-              gaps: gaps.slice(0, 80),
-              gaps_before: gaps.length,
-            });
-            await appendLog(sb, job.id, {
-              level: "warn",
-              message: `Queued auto gap-fill — ${gaps.length} fields still incomplete: ${[...new Set(gaps.map((g) => g.key))].join(", ")}`,
-            });
-            await fetch(`${SUPABASE_URL}/functions/v1/exam-backfill-worker`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${SERVICE_KEY}`,
-                "x-worker-key": SERVICE_KEY,
-              },
-              body: JSON.stringify({ concurrency: 4, source: "exam-generation-worker" }),
-            }).catch(() => {});
-          }
-        }
-      } else {
-        await appendLog(sb, job.id, { level: "success", message: "Completeness audit passed — no gaps." });
-      }
-    } catch (e) {
-      await appendLog(sb, job.id, {
-        level: "warn",
-        message: `Completeness audit skipped: ${e instanceof Error ? e.message : String(e)}`,
-      });
-    }
-  }
+  const publishedSlug: string | null = null;
 
   await sb.from("exam_generation_jobs").update({
-    status: job.auto_publish ? "published" : "completed",
-    step: job.auto_publish ? `Published /exam/${publishedSlug}` : "Ready for review",
+    status: "completed",
+    step: "Ready for review",
     finished_at: new Date().toISOString(),
     worker_lock_until: null,
     result: { sections, research, done_batches: doneBatches },
@@ -285,77 +230,11 @@ async function runJobStage(sb: any, job: any): Promise<boolean> {
     error: null,
   }).eq("id", job.id);
 
-  if (!job.auto_publish) {
+  {
     await appendLog(sb, job.id, { level: "success", message: "Generation complete — open the review editor to publish." });
   }
   return true;
 }
-
-const slugify = (name: string) =>
-  name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-");
-
-/** Server-side publish so bulk CSV batches go live without a browser open. */
-async function publishExam(sb: any, job: any, sections: Record<string, any>, sources: any[]) {
-  const hero = sections.hero || {};
-  const seo = sections.seo || {};
-  const examName: string = job.exam_name;
-  const examYear: number | null = job.exam_year ?? null;
-  const slug = slugify(examName);
-  const dates: any[] = Array.isArray(sections.dates) ? sections.dates : [];
-
-  const payload: Record<string, any> = {
-    name: examName,
-    slug,
-    full_name: hero.full_form || examName,
-    description: sections.overview || null,
-    conducting_body: hero.conducting_body || null,
-    frequency: hero.frequency || null,
-    duration: hero.duration || null,
-    exam_mode: hero.exam_mode || null,
-    exam_level: hero.exam_level || null,
-    exam_category: job.exam_category || hero.exam_category || null,
-    exam_status: hero.exam_status || null,
-    registration_status: hero.registration_status || null,
-    official_website: job.official_website || hero.official_website || null,
-    exam_year: examYear,
-    eligibility: sections.eligibility?.summary || null,
-    exam_date: dates.find((d) => /exam(ination)?\b/i.test(d?.event || ""))?.date || null,
-    registration_deadline:
-      dates.find((d) => /registration end|last date|registration close/i.test(d?.event || ""))?.date || null,
-    important_dates: dates.length ? dates : null,
-    pattern: sections.pattern || null,
-    cutoffs: sections.cutoffs || null,
-    faqs: Array.isArray(sections.faqs) && sections.faqs.length ? sections.faqs : null,
-    syllabus: Array.isArray(sections.syllabus) && sections.syllabus.length
-      ? sections.syllabus.map((s: any) => s?.subject || "").filter(Boolean)
-      : null,
-    meta_title: seo.meta_title || `${examName}${examYear ? ` ${examYear}` : ""}: Dates, Syllabus, Pattern, Eligibility & Cutoff`,
-    meta_description: seo.meta_description || null,
-    h1_tag: seo.h1 || `${examName}${examYear ? ` ${examYear}` : ""}`,
-    primary_keyword: seo.primary_keyword || null,
-    keywords: Array.isArray(seo.keywords) && seo.keywords.length ? seo.keywords : null,
-    reviewed_by: "MBA Compass Editorial Team",
-    ...(job.sort_order === null || job.sort_order === undefined ? {} : { listing_sort_order: job.sort_order }),
-    sources: sources?.length ? sources : null,
-    sections,
-    updated_at: new Date().toISOString(),
-    last_seo_refresh: new Date().toISOString(),
-  };
-
-  const { data: existing } = await sb.from("exams").select("id").eq("slug", slug).maybeSingle();
-  const examId = job.exam_id || existing?.id || null;
-  if (examId) {
-    const { error } = await sb.from("exams").update(payload).eq("id", examId);
-    if (error) throw new Error(`publish failed: ${error.message}`);
-    await sb.from("exam_generation_jobs").update({ exam_id: examId }).eq("id", job.id);
-  } else {
-    const { data, error } = await sb.from("exams").insert(payload).select("id").single();
-    if (error) throw new Error(`publish failed: ${error.message}`);
-    await sb.from("exam_generation_jobs").update({ exam_id: data.id }).eq("id", job.id);
-  }
-  return slug;
-}
-
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
