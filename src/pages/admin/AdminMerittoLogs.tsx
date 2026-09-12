@@ -717,7 +717,7 @@ export default function AdminMerittoLogs() {
           {bulkStep === "upload" && (
             <div className="space-y-4 text-sm">
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
-                <div className="font-semibold mb-0.5">Zero-storage mode</div>
+                <div className="font-semibold mb-0.5">Tracked bulk delivery</div>
                 Every valid bulk lead is saved in Push History with Meritto's delivery status, so it remains available in the complete Excel verification download.
               </div>
               <div className="rounded-md border p-3">
