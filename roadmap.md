@@ -22,3 +22,11 @@
 - [x] Record future bulk-upload pushes in Meritto Push History
 - [x] Download every recorded lead with its latest delivery status
 - [x] Download the currently filtered lead list
+
+## AI College & Exam Information Portal
+- [x] Add configurable draft, evidence, source, batch, and audit data model
+- [ ] Add unified Colleges & Exams research and approval workspace
+- [ ] Move college AI generation behind draft review
+- [ ] Disable bulk exam auto-publishing and expose review states
+- [ ] Add field-level review, manual edits, guarded publishing, refresh, and bulk research
+- [ ] Verify admin workflow and preview health
