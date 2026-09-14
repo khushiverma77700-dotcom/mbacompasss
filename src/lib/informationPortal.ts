@@ -25,17 +25,67 @@ export const displayValue = (value: Json | null): string => {
   return JSON.stringify(value, null, 2);
 };
 
-export const parseEditedValue = (raw: string, valueType: string): Json | null => {
+export type ValueType = "string" | "number" | "boolean" | "string_list" | "object" | "object_list";
+
+const STRUCTURED_TYPES: ValueType[] = ["string_list", "object", "object_list"];
+
+/** Derive the value type from the AI-proposed value when no field definition exists. */
+export const inferValueType = (value: Json | null): ValueType => {
+  if (Array.isArray(value)) {
+    return value.every((item) => typeof item === "string") ? "string_list" : "object_list";
+  }
+  if (value !== null && typeof value === "object") return "object";
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+  return "string";
+};
+
+export const isStructuredType = (valueType: string): boolean => STRUCTURED_TYPES.includes(valueType as ValueType);
+
+export type ParseResult = { ok: true; value: Json | null } | { ok: false; error: string };
+
+/** Strict parse: structured fields must stay valid JSON so publishing never writes a stringified object. */
+export const parseEditedValueStrict = (raw: string, valueType: string): ParseResult => {
   const trimmed = raw.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return { ok: true, value: null };
   if (valueType === "number") {
     const value = Number(trimmed.replace(/,/g, ""));
-    return Number.isFinite(value) ? value : null;
+    return Number.isFinite(value) ? { ok: true, value } : { ok: false, error: "Enter a valid number." };
   }
-  if (["string_list", "object", "object_list"].includes(valueType)) {
-    try { return JSON.parse(trimmed) as Json; } catch { return trimmed; }
+  if (valueType === "boolean") {
+    if (["true", "yes"].includes(trimmed.toLowerCase())) return { ok: true, value: true };
+    if (["false", "no"].includes(trimmed.toLowerCase())) return { ok: true, value: false };
+    return { ok: false, error: "Enter true or false." };
   }
-  return trimmed;
+  if (isStructuredType(valueType)) {
+    let parsed: unknown;
+    try { parsed = JSON.parse(trimmed); } catch { return { ok: false, error: "This field must stay valid JSON (a list or an object)." }; }
+    if (valueType === "object" && (parsed === null || typeof parsed !== "object" || Array.isArray(parsed))) {
+      return { ok: false, error: "This field must be a JSON object, for example { \"key\": \"value\" }." };
+    }
+    if (valueType !== "object" && !Array.isArray(parsed)) {
+      return { ok: false, error: "This field must be a JSON list, for example [\"first\", \"second\"]." };
+    }
+    return { ok: true, value: parsed as Json };
+  }
+  return { ok: true, value: trimmed };
+};
+
+export const parseEditedValue = (raw: string, valueType: string): Json | null => {
+  const result = parseEditedValueStrict(raw, valueType);
+  return result.ok ? result.value : raw.trim();
+};
+
+/**
+ * Guard the final publish payload: a structured field that arrived as a string
+ * is re-parsed, and anything still unusable throws instead of blanking a page.
+ */
+export const coercePublishValue = (fieldKey: string, value: Json | null, reference: Json | null): Json | null => {
+  const valueType = inferValueType(reference);
+  if (!isStructuredType(valueType) || value === null || typeof value !== "string") return value;
+  const result = parseEditedValueStrict(value, valueType);
+  if (!result.ok) throw new Error(`"${fieldKey}" must be valid JSON before publishing: ${result.error}`);
+  return result.value;
 };
 
 export const sourceClassForUrl = (url: string, officialDomain?: string | null) => {
