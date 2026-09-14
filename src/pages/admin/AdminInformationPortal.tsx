@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { displayValue, normalizeEntityName, parseEditedValue } from "@/lib/informationPortal";
+import { coercePublishValue, displayValue, inferValueType, normalizeEntityName, parseEditedValueStrict } from "@/lib/informationPortal";
 import { AlertTriangle, CheckCircle2, Database, ExternalLink, FileSearch, Loader2, RefreshCw, Rocket, Search, ShieldCheck } from "lucide-react";
 
 type Draft = AppDatabase["public"]["Tables"]["information_drafts"]["Row"];
@@ -65,7 +65,10 @@ const AdminInformationPortal = () => {
 
   const updateField = async (field: FieldValue, raw: string) => {
     const definition = field.field_definition_id ? await supabase.from("information_field_definitions").select("value_type").eq("id", field.field_definition_id).maybeSingle() : null;
-    const editedValue = parseEditedValue(raw, definition?.data?.value_type ?? "string");
+    const valueType = definition?.data?.value_type ?? inferValueType(field.edited_value ?? field.proposed_value);
+    const parsed = parseEditedValueStrict(raw, valueType);
+    if (!parsed.ok) { toast({ title: `Check ${statusLabel(field.field_key)}`, description: parsed.error, variant: "destructive" }); return; }
+    const editedValue = parsed.value;
     const { error } = await supabase.from("information_field_values").update({ edited_value: editedValue, review_decision: "accepted" }).eq("id", field.id);
     if (error) { toast({ title: "Edit not saved", description: error.message, variant: "destructive" }); return; }
     setFields((current) => current.map((item) => item.id === field.id ? { ...item, edited_value: editedValue, review_decision: "accepted" } : item));
@@ -86,7 +89,11 @@ const AdminInformationPortal = () => {
     try {
       const approvedPayload = { ...asRecord(selected.proposed_payload) };
       fields.forEach((field) => {
-        if (field.review_decision === "accepted") approvedPayload[field.field_key] = field.edited_value ?? field.proposed_value;
+        if (field.review_decision === "accepted") {
+          const merged = field.edited_value ?? field.proposed_value;
+          const reference = field.proposed_value ?? asRecord(selected.proposed_payload)[field.field_key] as Json ?? merged;
+          approvedPayload[field.field_key] = coercePublishValue(field.field_key, merged, reference);
+        }
         if (field.review_decision === "rejected") delete approvedPayload[field.field_key];
       });
       let canonicalId = selected.canonical_record_id;
