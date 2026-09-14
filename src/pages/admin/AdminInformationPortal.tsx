@@ -65,7 +65,10 @@ const AdminInformationPortal = () => {
 
   const updateField = async (field: FieldValue, raw: string) => {
     const definition = field.field_definition_id ? await supabase.from("information_field_definitions").select("value_type").eq("id", field.field_definition_id).maybeSingle() : null;
-    const editedValue = parseEditedValue(raw, definition?.data?.value_type ?? "string");
+    const valueType = definition?.data?.value_type ?? inferValueType(field.edited_value ?? field.proposed_value);
+    const parsed = parseEditedValueStrict(raw, valueType);
+    if (!parsed.ok) { toast({ title: `Check ${statusLabel(field.field_key)}`, description: parsed.error, variant: "destructive" }); return; }
+    const editedValue = parsed.value;
     const { error } = await supabase.from("information_field_values").update({ edited_value: editedValue, review_decision: "accepted" }).eq("id", field.id);
     if (error) { toast({ title: "Edit not saved", description: error.message, variant: "destructive" }); return; }
     setFields((current) => current.map((item) => item.id === field.id ? { ...item, edited_value: editedValue, review_decision: "accepted" } : item));
