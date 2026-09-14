@@ -17,6 +17,12 @@
 - [x] Keep the SEO approvals injected count stable across refreshes
 - [x] Prevent category landing pages from overwriting the main application filters
 - [x] Match public recommended-application order to the admin order
+- [ ] Preserve structured draft fields during review and guarded publishing
+- [ ] Keep AI exam jobs in review until a canonical exam is published
+- [ ] Make anonymous-to-signed-in shortlister submission updates RLS-safe and visible on failure
+- [ ] Reduce bursty full-table reads that trigger database statement timeouts
+- [ ] Support existing-college refresh drafts and active-draft reuse
+- [ ] Remove college-only extra costs from exam summaries
 
 ## Meritto verification export
 - [x] Record future bulk-upload pushes in Meritto Push History
