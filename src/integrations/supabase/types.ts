@@ -15454,6 +15454,14 @@ export type Database = {
           type: string
         }[]
       }
+      colleges_location_counts: {
+        Args: never
+        Returns: {
+          city: string
+          state: string
+          total: number
+        }[]
+      }
       dedupe_faq_jsonb: { Args: { _faqs: Json }; Returns: Json }
       dedupe_site_settings_faqs: { Args: { _value: Json }; Returns: Json }
       delete_email: {
