@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { useCollegeBySlug, useCollegesLight as useColleges } from "@/hooks/useInstitutes";
+import { useCollegeBySlug, useSuggestedColleges } from "@/hooks/useInstitutes";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCtaGate } from "@/hooks/useCtaGate";
@@ -61,7 +61,7 @@ const fallbackGallery = [
 const CollegeDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: college, isLoading } = useCollegeBySlug(slug);
-  const { data: allColleges } = useColleges();
+  const { data: allColleges } = useSuggestedColleges(slug);
   const { user } = useAuth();
   const { toast } = useToast();
   const [galleryIdx, setGalleryIdx] = useState(0);
