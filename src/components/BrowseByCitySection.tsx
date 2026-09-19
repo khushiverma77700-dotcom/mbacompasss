@@ -4,14 +4,14 @@ import { MapPin, Building2, ArrowRight, GraduationCap, ChevronLeft, ChevronRight
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
-import { useCollegesLight } from "@/hooks/useInstitutes";
+import { useCollegeLocationCounts, countCollegesForAliases } from "@/hooks/useInstitutes";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
 import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const BrowseByCitySection = () => {
   const { data: cityPages } = useCityPages();
-  const { data: colleges } = useCollegesLight();
+  const { data: locationCounts } = useCollegeLocationCounts();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -22,13 +22,7 @@ const BrowseByCitySection = () => {
 
   const cities = (cityPages || []).slice(0, 12).map((cp) => {
     const aliases = cp.city_aliases || [cp.name.toLowerCase()];
-    const count = (colleges || []).filter((c) =>
-      aliases.some(
-        (a) =>
-          (c.city || "").toLowerCase().includes(a.toLowerCase()) ||
-          (c.state || "").toLowerCase().includes(a.toLowerCase())
-      )
-    ).length;
+    const count = countCollegesForAliases(locationCounts, aliases);
     const adminImage = cp.hero_image_url && !isGeneratedBanner(cp.hero_image_url) ? cp.hero_image_url : null;
     const image = adminImage || getLocationImage(cp.name, cp.state);
     return { ...cp, count, image };

@@ -2,7 +2,7 @@ import { Link } from "@/lib/router-compat";
 import { Building2, Landmark, Cpu, BookOpen, Building, Church, Warehouse, BrickWall } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCityPages } from "@/hooks/useCityPages";
-import { useCollegesLight } from "@/hooks/useInstitutes";
+import { useCollegeLocationCounts, countCollegesForAliases } from "@/hooks/useInstitutes";
 
 const iconMap: Record<string, any> = {
   Delhi: Landmark, Mumbai: Building2, Bangalore: Cpu, Pune: BookOpen,
@@ -16,16 +16,11 @@ const colorCycle = [
 
 const TopCitiesSection = () => {
   const { data: cityPages } = useCityPages();
-  const { data: colleges } = useCollegesLight();
+  const { data: locationCounts } = useCollegeLocationCounts();
 
   const cities = (cityPages || []).filter(p => p.type === "city").slice(0, 8).map((p, i) => {
     const aliases = p.city_aliases || [p.name.toLowerCase()];
-    const count = (colleges || []).filter((c) =>
-      aliases.some((a) =>
-        (c.city || "").toLowerCase().includes(a.toLowerCase()) ||
-        (c.state || "").toLowerCase().includes(a.toLowerCase())
-      )
-    ).length;
+    const count = countCollegesForAliases(locationCounts, aliases);
     return {
       name: p.name,
       slug: p.slug,
