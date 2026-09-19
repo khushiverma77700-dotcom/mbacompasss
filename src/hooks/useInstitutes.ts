@@ -84,6 +84,28 @@ export const useColleges = () => {
   return useQuery(collegesListingQuery);
 };
 
+/**
+ * Six related colleges for a detail page. Previously the page downloaded the
+ * entire catalogue and sliced the first six off it.
+ */
+export const useSuggestedColleges = (excludeSlug?: string) => {
+  return useQuery({
+    queryKey: ["colleges_suggested", excludeSlug ?? null],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("colleges")
+        .select("id, name, slug, city, state, logo_url, fees, placement_avg, ranking, type")
+        .not("slug", "is", null)
+        .neq("slug", excludeSlug ?? "")
+        .order("ranking")
+        .limit(6);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
 export interface CollegeLocationCount {
   city: string;
   state: string;
