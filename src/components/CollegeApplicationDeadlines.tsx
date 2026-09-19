@@ -31,7 +31,7 @@ const initials = (name: string) =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-const DeadlineCard = ({ college }: { college: DeadlineCollege }) => {
+const DeadlineCard = ({ college, compact = false }: { college: DeadlineCollege; compact?: boolean }) => {
   const days = daysUntil(college.application_deadline);
   const deadlineLabel = days === null
     ? "Date to be announced"
@@ -40,6 +40,62 @@ const DeadlineCard = ({ college }: { college: DeadlineCollege }) => {
       : days > 0
         ? `${days} days left`
         : "Applications closed";
+
+  if (compact) {
+    return (
+      <article className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-primary/15 bg-primary/5">
+              {college.logo_url ? (
+                <img src={college.logo_url} alt={`${college.name} logo`} loading="lazy" decoding="async" className="h-full w-full object-contain p-1" />
+              ) : (
+                <span className="text-sm font-bold text-primary">{initials(college.name)}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <h3 className="line-clamp-2 text-sm font-bold leading-snug text-foreground">{college.name}</h3>
+              <p className="mt-1 truncate text-xs text-muted-foreground">{college.program ?? "MBA programme"}</p>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-full bg-destructive/10 px-2 py-1 text-xs font-bold text-destructive">{deadlineLabel}</span>
+        </div>
+
+        <div className="mx-4 flex items-center justify-between border-t border-border py-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Application deadline</p>
+            <p className="mt-0.5 text-sm font-bold text-foreground">{formatDate(college.application_deadline)}</p>
+          </div>
+          <Button asChild variant="link" size="sm" className="shrink-0 px-0">
+            <a href={`/mba-application/${college.slug}`}>View details <ArrowRight /></a>
+          </Button>
+        </div>
+
+        <dl className="grid grid-cols-3 border-t border-border bg-secondary/30 px-2 py-3 text-center">
+          <div className="min-w-0 px-1">
+            <dt className="text-xs text-muted-foreground">Average</dt>
+            <dd className="mt-0.5 truncate text-sm font-bold text-foreground">{formatPackage(college.average_package)}</dd>
+          </div>
+          <div className="min-w-0 border-x border-border px-1">
+            <dt className="text-xs text-muted-foreground">Highest</dt>
+            <dd className="mt-0.5 truncate text-sm font-bold text-foreground">{formatPackage(college.highest_package)}</dd>
+          </div>
+          <div className="min-w-0 px-1">
+            <dt className="text-xs text-muted-foreground">App fee</dt>
+            <dd className="mt-0.5 truncate text-sm font-bold text-foreground">{formatFee(college.application_fee)}</dd>
+          </div>
+        </dl>
+
+        {college.apply_url && days !== null && days >= 0 && (
+          <div className="border-t border-border p-3">
+            <Button asChild className="w-full">
+              <a href={college.apply_url} target="_blank" rel="noopener noreferrer">Apply now <ArrowRight /></a>
+            </Button>
+          </div>
+        )}
+      </article>
+    );
+  }
 
   return (
     <article className="w-[310px] shrink-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md sm:w-[350px]">
@@ -119,21 +175,30 @@ export default function CollegeApplicationDeadlines() {
   const loop = data.length > 2 ? [...data, ...data] : data;
 
   return (
-    <section className="overflow-hidden border-y border-border bg-secondary/40 py-14" aria-labelledby="college-deadlines-heading">
+    <section className="overflow-hidden border-y border-border bg-secondary/40 py-12 sm:py-14" aria-labelledby="college-deadlines-heading">
       <div className="container mx-auto px-4">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="mb-2 text-sm font-bold uppercase text-primary">Admissions now open</p>
-            <h2 id="college-deadlines-heading" className="font-heading text-3xl font-bold text-foreground">Top College Application Deadlines</h2>
+            <h2 id="college-deadlines-heading" className="font-heading text-2xl font-bold text-foreground sm:text-3xl">Top College Application Deadlines</h2>
             <p className="mt-2 max-w-2xl text-base text-muted-foreground">Compare placement outcomes, application fees and closing dates before you apply.</p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="hidden sm:inline-flex">
             <a href="/mba-application">View all applications <ArrowRight /></a>
           </Button>
         </div>
       </div>
 
-      <div className="relative mt-8">
+      <div className="container mx-auto mt-6 px-4 sm:hidden">
+        <div className="space-y-3">
+          {data.slice(0, 4).map((college) => <DeadlineCard key={college.id} college={college} compact />)}
+        </div>
+        <Button asChild variant="outline" className="mt-5 w-full">
+          <a href="/mba-application">View all applications <ArrowRight /></a>
+        </Button>
+      </div>
+
+      <div className="relative mt-8 hidden sm:block">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-secondary/80 to-transparent sm:w-24" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-secondary/80 to-transparent sm:w-24" />
         <div className={`flex w-max gap-4 px-4 ${data.length > 2 ? "animate-marquee hover:[animation-play-state:paused] motion-reduce:animate-none" : "mx-auto"}`}>
