@@ -43,7 +43,7 @@ const DeadlineCard = ({ college, compact = false }: { college: DeadlineCollege; 
 
   if (compact) {
     return (
-      <article className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <article className="w-[calc(100vw-2rem)] max-w-[360px] shrink-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-primary/15 bg-primary/5">
@@ -189,13 +189,21 @@ export default function CollegeApplicationDeadlines() {
         </div>
       </div>
 
-      <div className="container mx-auto mt-6 px-4 sm:hidden">
-        <div className="space-y-3">
-          {data.slice(0, 4).map((college) => <DeadlineCard key={college.id} college={college} compact />)}
+      <div className="mt-6 sm:hidden">
+        <div className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-secondary/80 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-gradient-to-l from-secondary/80 to-transparent" />
+          <div className={`flex w-max gap-3 px-4 ${data.length > 1 ? "animate-marquee hover:[animation-play-state:paused] motion-reduce:animate-none" : "mx-auto"}`}>
+            {(data.length > 1 ? [...data, ...data] : data).map((college, index) => (
+              <DeadlineCard key={`${college.id}-mobile-${index}`} college={college} compact />
+            ))}
+          </div>
         </div>
-        <Button asChild variant="outline" className="mt-5 w-full">
-          <a href="/mba-application">View all applications <ArrowRight /></a>
-        </Button>
+        <div className="container mx-auto px-4">
+          <Button asChild variant="outline" className="mt-5 w-full">
+            <a href="/mba-application">View all applications <ArrowRight /></a>
+          </Button>
+        </div>
       </div>
 
       <div className="relative mt-8 hidden sm:block">
