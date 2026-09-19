@@ -194,6 +194,7 @@ const AdminColleges = () => {
       const { submitToGoogleIndexing } = await import("@/lib/googleIndexing");
       submitToGoogleIndexing("college", slug, savedId ?? undefined).catch(() => {});
     }
+    void (await import("@/lib/refreshCollegesCache")).refreshCollegesCache();
     toast({ title: editId ? "College updated" : "College created" });
     setShowForm(false); setForm(emptyForm); setEditId(null); fetchColleges();
   };
@@ -231,6 +232,7 @@ const AdminColleges = () => {
       const { cleanupDeletedPage } = await import("@/lib/adminCleanup");
       await cleanupDeletedPage({ contentType: "college", id, slug: item.slug, name: item.name });
     }
+    void (await import("@/lib/refreshCollegesCache")).refreshCollegesCache();
     fetchColleges(); toast({ title: "College deleted" });
   };
 
@@ -362,6 +364,7 @@ const AdminColleges = () => {
         setBulkFilterProgress({ done, total: rows.length, failed });
       }));
     }
+    void (await import("@/lib/refreshCollegesCache")).refreshCollegesCache();
     setBulkFilterRunning(false);
     toast({
       title: "Bulk filter upload complete",
