@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { collegesListingPreviewQuery } from "@/lib/queries/listingQueries";
 import { useColleges } from "@/hooks/useInstitutes";
+
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +32,13 @@ const tabs = [
 
 const CollegesPage = () => {
   const navigate = useNavigate();
-  const { data: colleges = [], isLoading } = useColleges();
+  // Full catalogue (needed for filters/sort) loads in the background; the
+  // small server-rendered first screen is shown until it arrives.
+  const { data: allColleges, isLoading: allLoading } = useColleges();
+  const { data: previewColleges = [] } = useQuery(collegesListingPreviewQuery);
+  const colleges = allColleges ?? previewColleges;
+  const isLoading = allLoading && previewColleges.length === 0;
+
   const { data: cityPages } = useCityPages();
   const { data: specOptions = [] } = useSpecializations("college");
   const [searchParams, setSearchParams] = useSearchParams();

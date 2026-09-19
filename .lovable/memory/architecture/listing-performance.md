@@ -1,6 +1,6 @@
 ---
 name: Listing Performance
-description: Colleges directory is served from a pre-built snapshot (colleges_listing_cache) refreshed hourly and after admin saves; never load the full catalogue in the browser.
+description: Colleges directory is served from a pre-built snapshot (colleges_listing_cache) refreshed hourly; SSR ships only a 120-row preview, never the full catalogue.
 type: feature
 ---
 - `public.colleges_listing()` reads the materialised view `public.colleges_listing_cache` (was ~2.6s per call, now ~14ms). Never revert it to computing over `colleges` directly.
@@ -9,3 +9,4 @@ type: feature
 - Never fetch the whole 5k-row catalogue in the browser for counts or related lists:
   - city counts → `public.colleges_location_counts()` + `countCollegesForAliases` (`useCollegeLocationCounts`).
   - related colleges → `useSuggestedColleges(slug)` (limit 6).
+- SSR must never prefetch `collegesListingQuery` (all ~5.2k rows): dehydrating it made `/colleges` a ~5.8 MB HTML download. The route loader prefetches `collegesListingPreviewQuery` (first 120 rows, key `["colleges","preview"]`) only; `CollegesPage` renders that until the full client-side list arrives. Page is now ~0.57 MB.
