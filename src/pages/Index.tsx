@@ -38,6 +38,7 @@ const ExamCutoffsTable = lazy(() => import("@/components/ExamCutoffsTable"));
 const PlacementsBySectorSection = lazy(() => import("@/components/PlacementsBySectorSection"));
 const MBAJourneyStrip = lazy(() => import("@/components/MBAJourneyStrip"));
 const FreeToolsShowcase = lazy(() => import("@/components/FreeToolsShowcase"));
+const CollegeApplicationDeadlines = lazy(() => import("@/components/CollegeApplicationDeadlines"));
 const ROIComparisonTable = lazy(() => import("@/components/ROIComparisonTable"));
 const FreebiesPreview = lazy(() => import("@/components/FreebiesPreview"));
 const TopperWall = lazy(() => import("@/components/TopperWall"));
@@ -227,6 +228,7 @@ const Index = () => {
 
         {/* Everything else: code-split + mount on scroll */}
         <Deferred height={44} rootMargin="120px"><MBANewsBar /></Deferred>
+        <Deferred height={470} rootMargin="200px"><CollegeApplicationDeadlines /></Deferred>
         <Deferred height={560} rootMargin="200px" id="home-tools"><FreeToolsShowcase /></Deferred>
         <Deferred height={320}><ExamDeadlinesTicker /></Deferred>
         <Deferred height={520}><TopRankedCollegesSection /></Deferred>

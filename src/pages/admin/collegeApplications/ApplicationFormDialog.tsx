@@ -42,6 +42,8 @@ type FormState = {
   application_deadline: string;
   application_fee: string;
   program_fee: string;
+  average_package: string;
+  highest_package: string;
   accepted_exams: string;
   apply_url: string;
   inside_info_url: string;
@@ -49,6 +51,8 @@ type FormState = {
   short_description: string;
   status: string;
   is_active: boolean;
+  is_homepage_featured: boolean;
+  homepage_order: string;
 };
 
 const EMPTY: FormState = {
@@ -63,6 +67,8 @@ const EMPTY: FormState = {
   application_deadline: "",
   application_fee: "",
   program_fee: "",
+  average_package: "",
+  highest_package: "",
   accepted_exams: "",
   apply_url: "",
   inside_info_url: "",
@@ -70,6 +76,8 @@ const EMPTY: FormState = {
   short_description: "",
   status: "open",
   is_active: true,
+  is_homepage_featured: false,
+  homepage_order: "0",
 };
 
 const toDateInput = (v: string | null) => (v ? new Date(v).toISOString().slice(0, 10) : "");
@@ -93,6 +101,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
         application_deadline: toDateInput(row.application_deadline),
         application_fee: row.application_fee?.toString() ?? "",
         program_fee: row.program_fee?.toString() ?? "",
+        average_package: row.average_package?.toString() ?? "",
+        highest_package: row.highest_package?.toString() ?? "",
         accepted_exams: (row.accepted_exams ?? []).join(", "),
         apply_url: row.apply_url ?? "",
         inside_info_url: row.inside_info_url ?? "",
@@ -100,6 +110,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
         short_description: row.short_description ?? "",
         status: row.status,
         is_active: row.is_active,
+        is_homepage_featured: row.is_homepage_featured,
+        homepage_order: row.homepage_order.toString(),
       });
     } else {
       setForm(EMPTY);
@@ -131,6 +143,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
       application_deadline: form.application_deadline ? new Date(form.application_deadline).toISOString() : null,
       application_fee: form.application_fee === "" ? null : Number(form.application_fee),
       program_fee: form.program_fee === "" ? null : Number(form.program_fee),
+      average_package: form.average_package === "" ? null : Number(form.average_package),
+      highest_package: form.highest_package === "" ? null : Number(form.highest_package),
       accepted_exams: form.accepted_exams
         ? form.accepted_exams.split(",").map((s) => s.trim()).filter(Boolean)
         : [],
@@ -140,6 +154,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
       short_description: form.short_description || null,
       status: form.status,
       is_active: form.is_active,
+      is_homepage_featured: form.is_homepage_featured,
+      homepage_order: form.homepage_order === "" ? 0 : Number(form.homepage_order),
     };
 
     const { error } = row
@@ -219,6 +235,14 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
             <Input type="number" value={form.program_fee} onChange={(e) => set("program_fee", e.target.value)} />
           </div>
           <div className="space-y-1.5">
+            <Label>Average package (₹ per year)</Label>
+            <Input type="number" value={form.average_package} onChange={(e) => set("average_package", e.target.value)} placeholder="3450000" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Highest package (₹ per year)</Label>
+            <Input type="number" value={form.highest_package} onChange={(e) => set("highest_package", e.target.value)} placeholder="11500000" />
+          </div>
+          <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={form.status} onValueChange={(v) => set("status", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -238,6 +262,20 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
                 <SelectItem value="no">Inactive</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Show in homepage deadlines</Label>
+            <Select value={form.is_homepage_featured ? "yes" : "no"} onValueChange={(v) => set("is_homepage_featured", v === "yes")}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes">Featured</SelectItem>
+                <SelectItem value="no">Not featured</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Homepage order</Label>
+            <Input type="number" min="0" value={form.homepage_order} onChange={(e) => set("homepage_order", e.target.value)} />
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Apply Now URL</Label>

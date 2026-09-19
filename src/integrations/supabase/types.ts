@@ -425,11 +425,13 @@ export type Database = {
           display_order: number
           eligibility: string | null
           highest_package: number | null
+          homepage_order: number
           id: string
           inside_info_notes: string | null
           inside_info_url: string | null
           is_active: boolean
           is_archived: boolean
+          is_homepage_featured: boolean
           is_recommended: boolean
           location: string | null
           logo_url: string | null
@@ -471,11 +473,13 @@ export type Database = {
           display_order?: number
           eligibility?: string | null
           highest_package?: number | null
+          homepage_order?: number
           id?: string
           inside_info_notes?: string | null
           inside_info_url?: string | null
           is_active?: boolean
           is_archived?: boolean
+          is_homepage_featured?: boolean
           is_recommended?: boolean
           location?: string | null
           logo_url?: string | null
@@ -517,11 +521,13 @@ export type Database = {
           display_order?: number
           eligibility?: string | null
           highest_package?: number | null
+          homepage_order?: number
           id?: string
           inside_info_notes?: string | null
           inside_info_url?: string | null
           is_active?: boolean
           is_archived?: boolean
+          is_homepage_featured?: boolean
           is_recommended?: boolean
           location?: string | null
           logo_url?: string | null
