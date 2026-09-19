@@ -13,6 +13,11 @@
 ## Preview stability
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
 
+## Homepage college deadlines
+- [x] Add an auto-scrolling college application deadlines section above the tools section
+- [x] Make deadline cards, placement packages, fees, links, logos, visibility, and order admin-managed
+- [x] Add six starter college entries and verify desktop/mobile presentation
+
 ## Project monitoring findings
 - [x] Keep the SEO approvals injected count stable across refreshes
 - [x] Prevent category landing pages from overwriting the main application filters
