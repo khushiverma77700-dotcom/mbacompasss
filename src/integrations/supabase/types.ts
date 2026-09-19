@@ -1738,6 +1738,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "college_sections_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges_listing_cache"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "college_sections_parent_section_id_fkey"
             columns: ["parent_section_id"]
             isOneToOne: false
@@ -15028,6 +15035,36 @@ export type Database = {
       }
     }
     Views: {
+      colleges_listing_cache: {
+        Row: {
+          accreditations: string[] | null
+          campus_size: string | null
+          city: string | null
+          college_category: string | null
+          description: string | null
+          established: number | null
+          exams_accepted: string[] | null
+          fees: string | null
+          fees_lakhs: number | null
+          id: string | null
+          listing_sort_order: number | null
+          logo_url: string | null
+          name: string | null
+          placement_avg: string | null
+          placement_highest: string | null
+          placement_median: string | null
+          ranking: number | null
+          slug: string | null
+          specializations: string[] | null
+          state: string | null
+          tier: string | null
+          top_recruiters: string[] | null
+          top_recruiters_total: number | null
+          total_students: number | null
+          type: string | null
+        }
+        Relationships: []
+      }
       mock_leaderboard: {
         Row: {
           all_india_rank: number | null
@@ -15597,6 +15634,7 @@ export type Database = {
         Args: { _job_id: string }
         Returns: undefined
       }
+      refresh_colleges_listing_cache: { Args: never; Returns: undefined }
       refresh_leaderboard_caches: { Args: never; Returns: undefined }
       rollover_planner_tasks: { Args: { _user_id: string }; Returns: number }
       rollup_mock_generation: {
