@@ -57,6 +57,8 @@ export type TrackerRow = {
   is_active: boolean;
   is_archived: boolean;
   display_order: number;
+  is_homepage_featured: boolean;
+  homepage_order: number;
   view_count: number;
   apply_click_count: number;
   created_at?: string;
@@ -356,7 +358,7 @@ export const formatDate = (value: string | null | undefined): string => {
 /* ------------------------------------------------------------- queries */
 
 export const TRACKER_SELECT =
-  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt";
+  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, is_homepage_featured, homepage_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt";
 
 /** Public catalogue (RLS already limits this to active, non-archived rows). */
 export const publicTrackersQuery = queryOptions({
@@ -385,6 +387,8 @@ export const normalizeTracker = (row: TrackerRow): TrackerRow => ({
   seo_faqs: Array.isArray(row.seo_faqs) ? row.seo_faqs : [],
   is_recommended: !!row.is_recommended,
   recommendation_priority: row.recommendation_priority ?? 0,
+  is_homepage_featured: !!row.is_homepage_featured,
+  homepage_order: row.homepage_order ?? 0,
 });
 
 /** Single application, used by the indexable college/exam landing pages. */
