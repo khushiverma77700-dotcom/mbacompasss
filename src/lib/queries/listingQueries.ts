@@ -139,3 +139,22 @@ export const mbaCompassCoursesQuery = queryOptions({
     return data ?? [];
   },
 });
+
+/**
+ * First screen of the colleges directory (SEO + first paint).
+ *
+ * The /colleges route used to server-prefetch the ENTIRE 5.2k catalogue, which
+ * meant the SSR HTML shipped ~5.8 MB of dehydrated JSON to every visitor before
+ * anything was interactive. Only this small slice is prefetched now; the full
+ * catalogue loads in the background on the client for filters/sorting.
+ */
+export const collegesListingPreviewQuery = queryOptions({
+  queryKey: ["colleges", "preview"],
+  queryFn: async () => {
+    const { data, error } = await supabase.rpc("colleges_listing").range(0, 119);
+    if (error) throw error;
+    return data || [];
+  },
+  staleTime: 10 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+});
