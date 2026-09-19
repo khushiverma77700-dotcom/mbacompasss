@@ -106,6 +106,9 @@ const AdminInformationPortal = () => {
         if (canonicalId) { const { error } = await supabase.from("exams").update(examPayload).eq("id", canonicalId); if (error) throw error; }
         else { const { data, error } = await supabase.from("exams").insert(examPayload).select("id").single(); if (error) throw error; canonicalId = data.id; }
       }
+      if (selected.entity_type === "college") {
+        void (await import("@/lib/refreshCollegesCache")).refreshCollegesCache();
+      }
       const { data: auth } = await supabase.auth.getUser();
       const now = new Date().toISOString();
       const { error } = await supabase.from("information_drafts").update({ approved_payload: approvedPayload as Json, canonical_record_id: canonicalId, status: "published", published_at: now, reviewed_at: now, reviewed_by: auth.user?.id ?? null }).eq("id", selected.id);

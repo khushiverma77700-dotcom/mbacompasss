@@ -84,6 +84,70 @@ export const useColleges = () => {
   return useQuery(collegesListingQuery);
 };
 
+/**
+ * Six related colleges for a detail page. Previously the page downloaded the
+ * entire catalogue and sliced the first six off it.
+ */
+export const useSuggestedColleges = (excludeSlug?: string) => {
+  return useQuery({
+    queryKey: ["colleges_suggested", excludeSlug ?? null],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("colleges")
+        .select("id, name, slug, city, state, logo_url, fees, placement_avg, ranking, type")
+        .not("slug", "is", null)
+        .neq("slug", excludeSlug ?? "")
+        .order("ranking")
+        .limit(6);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
+export interface CollegeLocationCount {
+  city: string;
+  state: string;
+  total: number;
+}
+
+/**
+ * City/state college counts, aggregated in the database. The homepage used to
+ * download all ~5,200 college rows just to count them per city; this returns a
+ * few hundred grouped rows instead.
+ */
+export const useCollegeLocationCounts = () => {
+  return useQuery({
+    queryKey: ["colleges_location_counts"],
+    queryFn: async (): Promise<CollegeLocationCount[]> => {
+      const { data, error } = await (
+        supabase.rpc as unknown as (
+          fn: string,
+        ) => PromiseLike<{ data: CollegeLocationCount[] | null; error: { message: string } | null }>
+      )("colleges_location_counts");
+      if (error) throw new Error(error.message);
+      return (data || []).map((r) => ({ ...r, total: Number(r.total) || 0 }));
+    },
+    staleTime: 30 * 60 * 1000,
+  });
+};
+
+/** Sum the grouped counts whose city or state matches any of a city page's aliases. */
+export const countCollegesForAliases = (
+  rows: CollegeLocationCount[] | undefined,
+  aliases: string[],
+): number =>
+  (rows || []).reduce((sum, r) => {
+    const city = (r.city || "").toLowerCase();
+    const state = (r.state || "").toLowerCase();
+    const hit = aliases.some((a) => {
+      const alias = a.toLowerCase();
+      return city.includes(alias) || state.includes(alias);
+    });
+    return hit ? sum + r.total : sum;
+  }, 0);
+
 // Light variant — for homepage city counts, spotlight cards, related-college sidebars.
 // Drops description (huge HTML blob) + specializations/recruiters/accreditations arrays.
 // Cuts the colleges payload from ~1.8s/large to a fast lean response.

@@ -125,6 +125,7 @@ const AdminShortlisterColleges = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "College added" });
     }
+    void (await import("@/lib/refreshCollegesCache")).refreshCollegesCache();
     setShowForm(false); setForm(emptyForm); setEditId(null); fetchColleges();
   };
 
@@ -148,6 +149,7 @@ const AdminShortlisterColleges = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this college? This cannot be undone.")) return;
     await supabase.from("colleges").delete().eq("id", id);
+    void (await import("@/lib/refreshCollegesCache")).refreshCollegesCache();
     fetchColleges(); toast({ title: "College deleted" });
   };
 
