@@ -27,6 +27,8 @@
 - [x] Replace the sparse first screen with a dense offer summary and remove the empty media panel
 - [x] Add preparation journey, ideal-student guidance, access summary, analysis workflow, and fallback FAQs
 - [x] Add exam-wise animated charts, a detailed coverage table, complete offer groupings, and scroll-led motion
+- [x] Detail vocabulary, formula, insight, analytics, planner, predictor, and practice tools with an automatic feature slider
+- [x] Keep the automatic text-testimonial slider connected to approved reviews with an honest verified-feedback state
 
 ## Homepage college deadlines
 - [x] Add an auto-scrolling college application deadlines section above the tools section

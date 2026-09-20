@@ -23,6 +23,7 @@ import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCom
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
 import DashboardShowcase from "@/components/mock/DashboardShowcase";
+import { allFeaturesOn, type FeatureMap } from "@/lib/courseFeatures";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
@@ -111,6 +112,7 @@ function DetailInner() {
   const [related, setRelated] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [bundleFeatures, setBundleFeatures] = useState<FeatureMap>({});
   const pageRef = useRef<HTMLDivElement | null>(null);
   const compare = useCompassCompare();
 
@@ -133,6 +135,20 @@ function DetailInner() {
       const { data: cb } = await supabase.from("course_bundles").select("bundle_id").eq("course_id", data.id);
       const bundleIds = (cb ?? []).map((r: any) => r.bundle_id);
       if (bundleIds.length === 0) return;
+
+      const { data: linkedBundles } = await supabase.from("mock_bundles").select("features").in("id", bundleIds);
+      const featureRows = (linkedBundles ?? []).map((bundle) => bundle.features).filter((value): value is Record<string, boolean> => Boolean(value) && typeof value === "object" && !Array.isArray(value));
+      const usesLegacyAllAccess = featureRows.length === 0 || featureRows.every((features) => Object.keys(features).length === 0);
+      if (usesLegacyAllAccess) {
+        setBundleFeatures(allFeaturesOn());
+      } else {
+        setBundleFeatures(featureRows.reduce<FeatureMap>((merged, features) => {
+          Object.entries(features).forEach(([key, enabled]) => {
+            if (enabled) merged[key as keyof FeatureMap] = true;
+          });
+          return merged;
+        }, {}));
+      }
 
       const { data: items } = await supabase.from("mock_bundle_items").select("test_id").in("bundle_id", bundleIds);
       const testIds = Array.from(new Set((items ?? []).map((r: any) => r.test_id)));
@@ -410,6 +426,112 @@ function DetailInner() {
     })
     .sort((a, b) => b.total - a.total);
   const maxExamTests = Math.max(1, ...examRows.map((row) => row.total));
+  const learningTools = [
+    {
+      icon: BookOpen,
+      title: "B-School Vocabulary Hub",
+      label: "Verbal preparation",
+      description: "Build exam and MBA-ready vocabulary through a daily word feed, pronunciation, contextual meanings and focused revision.",
+      details: ["Word of the day", "Audio pronunciation", "Saved-word revision", "Quizzes, streaks and XP"],
+      enabled: Boolean(bundleFeatures.vocabulary_hub),
+    },
+    {
+      icon: FileText,
+      title: "Quant Formula Book",
+      label: "Revision library",
+      description: "Keep important Quant formulas, shortcuts and exam-tagged concepts in one searchable revision dashboard.",
+      details: ["Topic-wise formulas", "Search and filters", "Bookmarks and revise-later list", "Daily revision progress"],
+      enabled: Boolean(bundleFeatures.formula_book),
+    },
+    {
+      icon: Brain,
+      title: "AI Insights & Goals",
+      label: "Personal direction",
+      description: "Turn attempt data into a clearer view of weak topics, preparation priorities and measurable goals.",
+      details: ["Weak-area signals", "Goal setting", "Practice direction", "Progress checkpoints"],
+      enabled: Boolean(c.has_ai_insights),
+    },
+    {
+      icon: BarChart3,
+      title: "Performance Analytics",
+      label: "Attempt intelligence",
+      description: "Review scores beyond the headline number with accuracy, section performance and attempt-level trends.",
+      details: ["Accuracy tracking", "Section comparison", "Attempt history", "Performance trends"],
+      enabled: Boolean(c.has_performance_analytics),
+    },
+    {
+      icon: Sparkles,
+      title: "Personalized Mock Hub",
+      label: "Adaptive practice",
+      description: "Create focused practice around your exam, section and preparation needs instead of following one fixed sequence.",
+      details: ["Exam selection", "Focused mock generation", "Personal practice queue", "Multiple MBA exams"],
+      enabled: Boolean(c.has_personalized_hub),
+    },
+    {
+      icon: Calendar,
+      title: "AI Study & CAT Planner",
+      label: "Daily structure",
+      description: "Organise preparation into practical daily and weekly actions so mocks, revision and weak areas move together.",
+      details: ["Weekly planning", "Daily priorities", "Study goals", "Preparation continuity"],
+      enabled: Boolean(c.has_ai_study_planner || c.has_cat_planner),
+    },
+    {
+      icon: Gauge,
+      title: "Deep Mock Analysis",
+      label: "Post-test review",
+      description: "Study every completed attempt through question review, solution access and section-level performance signals.",
+      details: ["Attempt review", "Correct and incorrect split", "Solution review", "Section diagnostics"],
+      enabled: Boolean(c.has_mock_analysis),
+    },
+    {
+      icon: Trophy,
+      title: "Leaderboard & Predictor",
+      label: "Benchmarking",
+      description: "Place your mock performance in context through enabled rank, leaderboard and percentile-prediction views.",
+      details: ["Leaderboard access", "Rank context", "Percentile prediction", "Progress benchmarks"],
+      enabled: Boolean(c.has_leaderboard_access || c.has_percentile_predictor),
+    },
+    {
+      icon: ListChecks,
+      title: "Daily Tests & Mocks",
+      label: "Practice rhythm",
+      description: "Maintain a consistent test-taking habit with daily practice alongside the complete linked mock library.",
+      details: ["Daily tests", "Daily mocks", "Sectional drills", "Topic-wise practice"],
+      enabled: Boolean(c.has_daily_test || c.has_daily_mocks),
+    },
+    {
+      icon: Layers,
+      title: "Previous Year Papers",
+      label: "Pattern familiarity",
+      description: "Use available previous-year practice to understand recurring formats, difficulty and exam-specific expectations.",
+      details: ["Past-paper practice", "Exam-pattern exposure", "Timed attempts", "Solution-led review"],
+      enabled: Boolean(c.has_previous_year_papers),
+    },
+    {
+      icon: FileText,
+      title: "MBA Newsroom & Insights",
+      label: "Current affairs",
+      description: "Follow curated MBA news and current-affairs briefs that support exam awareness, WAT, GD and interview preparation.",
+      details: ["Daily news briefs", "Current affairs", "GDPI and WAT context", "English, Hindi and Hinglish"],
+      enabled: Boolean(bundleFeatures.mba_newsroom),
+    },
+    {
+      icon: Sparkles,
+      title: "MBA Decision Tools",
+      label: "Application support",
+      description: "Use the available AI-assisted tools for profile analysis, college discovery and better-informed MBA decisions.",
+      details: ["Profile analysis", "College discovery", "Preparation utilities", "Decision support"],
+      enabled: Boolean(c.has_ai_tools || bundleFeatures.ai_tools),
+    },
+    {
+      icon: Shield,
+      title: "Student Support Centre",
+      label: "Course assistance",
+      description: "Raise and track support requests from the same student environment when you need help with course access or usage.",
+      details: ["Ticket-based support", "Request tracking", "Course-access help", "One student workspace"],
+      enabled: Boolean(c.has_doubt_resolution || bundleFeatures.support),
+    },
+  ].filter((tool) => tool.enabled);
 
   return (
     <div ref={pageRef} className="course-sales-page bg-background pb-24 lg:pb-0">
@@ -610,7 +732,7 @@ function DetailInner() {
 
       <nav className="course-jump-nav border-b border-sky-100 bg-card" aria-label="Course page sections">
         <div className="container mx-auto flex gap-2 overflow-x-auto px-4 py-3">
-          {[['Course plan', 'course-plan'], ['Dashboard', 'course-dashboard'], ['Student voices', 'course-testimonials'], ['Mock library', 'course-mocks'], ['What’s included', 'course-included'], ['FAQs', 'course-faqs']].map(([label, target]) => (
+          {[['Course plan', 'course-plan'], ['Learning tools', 'course-learning-tools'], ['Dashboard', 'course-dashboard'], ['Student voices', 'course-testimonials'], ['Mock library', 'course-mocks'], ['What’s included', 'course-included'], ['FAQs', 'course-faqs']].map(([label, target]) => (
             <a key={target} href={`#${target}`} className="shrink-0 rounded-md border border-sky-100 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:border-sky-300 hover:bg-sky-100">{label}</a>
           ))}
         </div>
@@ -766,6 +888,67 @@ function DetailInner() {
         </div>
       </section>
 
+      {learningTools.length > 0 && (
+        <section id="course-learning-tools" className="course-learning-tools border-y border-sky-100 bg-card py-10" aria-labelledby="learning-tools-heading">
+          <div className="container mx-auto px-4">
+            <div data-course-reveal className="course-reveal">
+              <SectionHead eyebrow="More than a mock series" title="A complete preparation ecosystem inside your dashboard" />
+              <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-relaxed text-muted-foreground">
+                Your course combines timed practice with revision, planning and performance tools. Each enabled tool below supports a different part of the preparation cycle.
+              </p>
+            </div>
+
+            <div className="course-tool-slider mt-8 overflow-hidden" aria-label="Included learning tools">
+              <div className="course-tool-track">
+                {[...learningTools, ...learningTools].map((tool, index) => (
+                  <article key={`${tool.title}-${index}`} className="course-tool-slide rounded-lg border border-sky-100 bg-background p-5 shadow-sm" aria-hidden={index >= learningTools.length}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-sky-100 text-sky-700"><tool.icon className="h-5 w-5" /></div>
+                      <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">Included</Badge>
+                    </div>
+                    <div className="mt-4 text-sm font-bold uppercase text-sky-700">{tool.label}</div>
+                    <h3 className="mt-1 text-xl font-bold text-foreground">{tool.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tool.description}</p>
+                    <ul className="mt-4 grid grid-cols-2 gap-2 border-t border-sky-100 pt-4">
+                      {tool.details.map((detail) => <li key={detail} className="flex items-start gap-1.5 text-sm text-foreground"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><span>{detail}</span></li>)}
+                    </ul>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 overflow-hidden rounded-lg border border-sky-100 bg-background" data-course-reveal>
+              <div className="border-b border-sky-100 p-5">
+                <h3 id="learning-tools-heading" className="font-bold text-foreground">Your preparation toolkit, explained</h3>
+                <p className="mt-1 text-sm text-muted-foreground">See where each resource fits into your daily preparation.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead className="bg-sky-50 text-sky-800"><tr><th className="px-4 py-3">Included resource</th><th className="px-4 py-3">Use it for</th><th className="px-4 py-3">What you can do</th><th className="px-4 py-3">Best time to use it</th></tr></thead>
+                  <tbody className="divide-y divide-sky-100">
+                    {learningTools.map((tool) => (
+                      <tr key={tool.title} className="align-top transition-colors hover:bg-sky-50/60">
+                        <td className="px-4 py-4 font-bold text-foreground">{tool.title}</td>
+                        <td className="px-4 py-4 text-sky-700">{tool.label}</td>
+                        <td className="px-4 py-4 text-muted-foreground">{tool.details.join(" • ")}</td>
+                        <td className="px-4 py-4 text-muted-foreground">{tool.title.includes("Analysis") || tool.title.includes("Insights") ? "After every mock" : tool.title.includes("Planner") ? "At the start of each week" : "During daily preparation"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {!enrolled && c.price ? (
+              <div className="mt-6 flex flex-col gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div><h3 className="font-bold text-foreground">Unlock the full learning toolkit</h3><p className="mt-1 text-sm text-muted-foreground">Mocks, analysis, vocabulary, formulas and planning stay together in one student dashboard.</p></div>
+                <Button size="lg" className="shrink-0" onClick={handlePay} disabled={paying}>{paying ? "Processing…" : <>Buy now for {formatINR(c.price)} <ArrowRight className="ml-1 h-4 w-4" /></>}</Button>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      )}
+
       {/* DASHBOARD SHOWCASE */}
       <div id="course-dashboard"><DashboardShowcase /></div>
 
@@ -781,7 +964,7 @@ function DetailInner() {
 
       <section id="course-testimonials" className="border-y border-sky-100 bg-sky-50/60 py-10" aria-labelledby="course-testimonials-heading">
           <div className="container mx-auto px-4">
-            <SectionHead eyebrow="Student voices" title={testimonials.length > 0 ? "What learners say about their experience" : "Verified student stories will live here"} />
+            <SectionHead eyebrow="Text testimonials" title={testimonials.length > 0 ? "What learners say about their experience" : "Verified student feedback is being collected"} />
             {testimonials.length > 0 ? (
               <div className="mx-auto mt-7 max-w-4xl">
                 <Card className="relative min-h-64 overflow-hidden rounded-lg border-sky-200 bg-card p-6 shadow-lg sm:p-8">
@@ -801,8 +984,12 @@ function DetailInner() {
                 <div className="mt-4 flex justify-center gap-2">{testimonials.map((testimonial, index) => <button key={testimonial.id} type="button" aria-label={`Show testimonial ${index + 1}`} onClick={() => setTestimonialIndex(index)} className={`h-2 rounded-full transition-all ${index === testimonialIndex ? 'w-7 bg-sky-600' : 'w-2 bg-sky-200'}`} />)}</div>
               </div>
             ) : (
-              <div className="mx-auto mt-7 grid max-w-4xl gap-3 md:grid-cols-3">
-                {[['No anonymous claims', 'Every testimonial shown here is tied to an approved student record.'], ['No invented scores', 'Scores and outcomes are only displayed when a learner has supplied them.'], ['Quality checked', 'New stories appear automatically after review and approval.']].map(([title, copy]) => <Card key={title} className="rounded-lg border-sky-200 bg-card p-5 shadow-sm"><Quote className="h-6 w-6 text-sky-300" /><h3 className="mt-3 font-bold">{title}</h3><p className="mt-2 text-sm text-muted-foreground">{copy}</p></Card>)}
+              <div className="mx-auto mt-7 max-w-4xl">
+                <Card className="rounded-lg border-sky-200 bg-card p-6 text-center shadow-sm sm:p-8">
+                  <Quote className="mx-auto h-8 w-8 text-sky-300" />
+                  <h3 className="mt-4 text-xl font-bold text-foreground">Only approved, attributable student quotes are published</h3>
+                  <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">The text testimonial slider is ready and rotates automatically. It will display student name, course or institute, rating and the complete written review as soon as approved testimonials are available.</p>
+                </Card>
               </div>
             )}
           </div>
