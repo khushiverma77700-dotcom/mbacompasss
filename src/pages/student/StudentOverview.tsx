@@ -539,44 +539,33 @@ export default function StudentOverview() {
   const targetProgress = target > 0 && predicted != null ? Math.min(100, Math.round((predicted / target) * 100)) : 0;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="student-overview space-y-4 sm:space-y-6">
       {/* ── HERO: Personalised greeting + projection ring + smart CTAs ───────── */}
-      <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 text-white">
-        {/* Decorative orbs (non-interactive) */}
-        <div className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-12 h-56 w-56 rounded-full bg-cyan-300/15 blur-3xl pointer-events-none" />
-        <div
-          className="absolute inset-0 opacity-[0.07] pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)",
-            backgroundSize: "22px 22px",
-          }}
-        />
+      <Card className="student-hero-grid relative overflow-hidden border-sky-100 bg-card text-card-foreground shadow-sm dark:border-border">
 
         <div className="relative p-4 sm:p-6 md:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 sm:gap-6">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center">
             {/* Left: greeting */}
             <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
-              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white/15 backdrop-blur-sm grid place-items-center text-xl sm:text-2xl font-bold border border-white/25 shadow-inner shrink-0">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-sky-100 text-sky-700 grid place-items-center text-xl sm:text-2xl font-bold border border-sky-200 shrink-0 dark:bg-sky-500/20 dark:text-sky-200 dark:border-sky-500/30">
                 {initial}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-xs text-sky-100/90">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
                     <CalendarDays className="h-3.5 w-3.5" />
                     <span>{todayLabel}</span>
                   </span>
                   {stats.streak > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300">
                       <Flame className="h-3 w-3" /> {stats.streak}-day streak
                     </span>
                   )}
                 </div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 leading-tight break-words">
-                  {greeting}, <span className="text-cyan-200">{firstName}</span>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 leading-tight break-words text-foreground">
+                  {greeting}, <span className="text-sky-600 dark:text-sky-300">{firstName}</span>
                 </h1>
-                <p className="text-sky-100/90 mt-1.5 text-sm sm:text-sm max-w-lg">
+                <p className="text-muted-foreground mt-1.5 text-sm max-w-xl">
                   {target && gap != null
                     ? gap > 0
                       ? `You're ${gap}% away from your ${target}% score target — let's close the gap.`
@@ -589,26 +578,26 @@ export default function StudentOverview() {
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-4">
                   {resumeMock ? (
                     <Link to={mockAttemptPath(resumeMock.id)} className="col-span-2 sm:col-auto" onClick={ensureStudentMode} onPointerDown={ensureStudentMode}>
-                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 shadow-sm">
                         <Clock className="h-4 w-4" /> Resume Mock
                       </Button>
                     </Link>
                   ) : nextMock?.test?.slug ? (
                     <Link to={mockIntroPath(nextMock.test.slug)} className="col-span-2 sm:col-auto" onClick={ensureStudentMode} onPointerDown={ensureStudentMode}>
-                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 shadow-sm">
                         <Rocket className="h-4 w-4" /> Start Next Mock
                       </Button>
                     </Link>
                   ) : (
                     <Link to="/student/buy-mocks" className="col-span-2 sm:col-auto">
-                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 shadow-sm">
                         <ShoppingBag className="h-4 w-4" /> Browse Mocks
                       </Button>
                     </Link>
                   )}
                   {/* CAT Score Engine button hidden */}
                   <Link to="/student/day-planner">
-                    <Button size="lg" variant="ghost" className="w-full sm:w-auto gap-2 text-white hover:bg-white/15 hover:text-white border border-white/15 sm:border-0">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 bg-card">
                       <CalendarDays className="h-4 w-4" /> Today's Plan
                     </Button>
                   </Link>
@@ -618,12 +607,12 @@ export default function StudentOverview() {
 
             {/* Right: projection ring */}
             <div className="shrink-0 w-full lg:w-auto">
-              <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-5 flex items-center gap-4 sm:gap-5 lg:min-w-[280px]">
+               <div className="rounded-lg bg-sky-50/80 border border-sky-100 p-4 sm:p-5 flex items-center gap-4 sm:gap-5 lg:min-w-[280px] dark:bg-sky-500/10 dark:border-sky-500/20">
                 <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0">
                   <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                    <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.15)" strokeWidth="9" fill="none" />
+                    <circle cx="50" cy="50" r="42" className="stroke-sky-100 dark:stroke-sky-500/20" strokeWidth="9" fill="none" />
                     <circle
-                      cx="50" cy="50" r="42" stroke="white" strokeWidth="9" fill="none"
+                       cx="50" cy="50" r="42" className="stroke-sky-500" strokeWidth="9" fill="none"
                       strokeDasharray={2 * Math.PI * 42}
                       strokeDashoffset={(1 - (predicted ?? 0) / 100) * 2 * Math.PI * 42}
                       strokeLinecap="round"
@@ -633,27 +622,27 @@ export default function StudentOverview() {
                   <div className="absolute inset-0 grid place-items-center text-center">
                     <div>
                       <div className="text-xl sm:text-2xl font-bold leading-none">{predicted ?? "—"}</div>
-                      <div className="text-xs uppercase tracking-wider text-sky-100/80 mt-0.5">score %</div>
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground mt-0.5">score %</div>
                     </div>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs uppercase tracking-wider text-sky-100/80">Projected Score %</div>
+                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Projected Score %</div>
                   <div className="text-sm font-semibold mt-0.5">
                     {target > 0 ? `Target ${target}%` : "Set a target to track gap"}
                   </div>
                   {target > 0 && (
                     <div className="mt-2">
-                      <div className="h-1.5 w-full max-w-[160px] rounded-full bg-white/15 overflow-hidden">
+                       <div className="h-1.5 w-full max-w-[160px] rounded-full bg-sky-100 dark:bg-sky-500/20 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-cyan-300 to-emerald-300 transition-all duration-700"
+                           className="h-full bg-gradient-to-r from-sky-500 to-emerald-500 transition-all duration-700"
                           style={{ width: `${targetProgress}%` }}
                         />
                       </div>
-                      <div className="text-xs text-sky-100/80 mt-1">{targetProgress}% to target</div>
+                       <div className="text-xs text-muted-foreground mt-1">{targetProgress}% to target</div>
                     </div>
                   )}
-                  <Link to="/student/performance" className="inline-flex items-center text-xs text-cyan-200 hover:text-white mt-2">
+                   <Link to="/student/performance" className="inline-flex items-center text-xs text-sky-700 dark:text-sky-300 hover:underline mt-2">
                     View deep analytics <ChevronRight className="h-3 w-3" />
                   </Link>
                 </div>
@@ -662,7 +651,7 @@ export default function StudentOverview() {
           </div>
 
           {/* Inline KPI strip */}
-          <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
+           <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 border-t border-sky-100 pt-4 dark:border-border">
             <Kpi label="Enrolled" value={stats.enrolledCount} />
             <Kpi label="Completed" value={stats.submittedCount} />
             <Kpi label="Avg Score" value={stats.avgScore} />
@@ -1212,11 +1201,11 @@ const ActivityHeatmap = memo(function ActivityHeatmap({ days, max }: { days: { d
 
 const Kpi = memo(function Kpi({ label, value, icon }: any) {
   return (
-    <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-2.5 sm:px-3 py-2 sm:py-2.5 border border-white/20 min-w-0">
-      <div className="text-xs sm:text-xs uppercase tracking-wider text-white/75 flex items-center gap-1 truncate">
+    <div className="student-metric-card hover:bg-sky-50 transition-colors rounded-md px-2.5 sm:px-3 py-2 sm:py-2.5 border border-sky-100 dark:bg-muted/30 dark:border-border min-w-0">
+      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1 truncate">
         {icon} <span className="truncate">{label}</span>
       </div>
-      <div className="text-base sm:text-xl font-bold mt-0.5 tabular-nums">{value}</div>
+      <div className="text-base sm:text-xl font-bold mt-0.5 tabular-nums text-foreground">{value}</div>
     </div>
   );
 });
@@ -1238,7 +1227,7 @@ const StatTile = memo(function StatTile({ icon: Icon, label, value, sub, tone = 
     ? trend > 0 ? "text-emerald-600 dark:text-emerald-400" : trend < 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"
     : "text-muted-foreground";
   return (
-    <Card className={`group relative overflow-hidden p-4 ring-1 ${t.ring} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}>
+    <Card className={`group relative overflow-hidden p-4 ring-1 ${t.ring} hover:shadow-sm transition-shadow duration-200`}>
       <div className={`absolute inset-0 bg-gradient-to-br ${t.bg} to-transparent opacity-60 pointer-events-none`} />
       <div className="relative flex items-start justify-between">
         <div className={`h-9 w-9 rounded-lg grid place-items-center ${t.icon}`}>
@@ -1258,7 +1247,7 @@ const QuickAction = memo(function QuickAction({ to, icon: Icon, label, desc, ton
   return (
     <Link
       to={to}
-      className={`group relative overflow-hidden rounded-xl border border-border bg-card p-3 sm:p-4 ring-1 ${t.ring} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2.5 sm:gap-3`}
+      className={`group relative overflow-hidden rounded-lg border border-border bg-card p-3 sm:p-4 ring-1 ${t.ring} hover:shadow-sm transition-shadow duration-200 flex items-center gap-2.5 sm:gap-3`}
     >
       <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-xl grid place-items-center ${t.icon} group-hover:scale-110 transition-transform shrink-0`}>
         <Icon className="h-5 w-5" />
@@ -1311,7 +1300,7 @@ const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { r
   const xpToNext = 500 - xpInLevel;
   const pct = Math.round((xpInLevel / 500) * 100);
   return (
-    <Card className="p-4 sm:p-5 border-sky-100 bg-gradient-to-br from-white via-sky-50/40 to-blue-50/30 dark:from-background dark:via-sky-500/5 dark:to-background">
+    <Card className="p-4 sm:p-5 border-sky-100 bg-card dark:border-border">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-md shrink-0">

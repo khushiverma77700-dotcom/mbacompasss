@@ -141,6 +141,46 @@
   }
 }
 
+@font-face {
+  font-family: "Manrope Student";
+  src: url("/fonts/manrope-400.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Manrope Student";
+  src: url("/fonts/manrope-600.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Manrope Student";
+  src: url("/fonts/manrope-700.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sora Student";
+  src: url("/fonts/sora-600.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sora Student";
+  src: url("/fonts/sora-700.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* v3 container config: center + 2rem padding + 2xl capped at 1400px.
    v4 dropped container configuration, so the utility is redefined here. */
 @utility container {
@@ -1131,6 +1171,34 @@ main>section:first-of-type{min-height:520px}
   -webkit-tap-highlight-color: transparent;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
+  font-family: "Manrope Student", var(--font-body);
+  --student-surface: hsl(0 0% 100%);
+  --student-canvas: hsl(204 45% 98%);
+  --student-line: hsl(201 36% 88%);
+  --student-sky: hsl(199 89% 48%);
+  --student-emerald: hsl(160 84% 39%);
+}
+.student-scope h1,
+.student-scope h2,
+.student-scope h3,
+.student-scope h4,
+.student-scope h5,
+.student-scope h6 { font-family: "Sora Student", var(--font-heading); letter-spacing: 0; }
+.student-shell { background: var(--student-canvas); }
+.student-overview { margin-inline: auto; max-width: 90rem; }
+.student-overview > [class*="rounded"],
+.student-overview > div > [class*="rounded"] { box-shadow: var(--card-shadow); }
+.student-hero-grid {
+  background-image:
+    linear-gradient(hsl(199 89% 48% / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(199 89% 48% / 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.student-metric-card { background: hsl(0 0% 100% / 0.78); }
+.dark .student-scope {
+  --student-surface: hsl(var(--card));
+  --student-canvas: hsl(var(--background));
+  --student-line: hsl(var(--border));
 }
 .student-scope * { min-width: 0; }
 .student-scope img,
