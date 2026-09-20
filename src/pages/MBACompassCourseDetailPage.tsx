@@ -980,6 +980,27 @@ function Stat({ n, l }: { n: any; l: string }) {
   );
 }
 
+function EnrollmentBand({ eyebrow, title, price, paying, onBuy }: { eyebrow: string; title: string; price: string; paying: boolean; onBuy: () => void }) {
+  return (
+    <section className="container mx-auto px-4 py-5" aria-label="Course enrollment">
+      <div className="course-enrollment-band flex flex-col gap-5 rounded-lg border border-sky-200 bg-card p-5 shadow-md sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="min-w-0">
+          <div className="text-sm font-bold uppercase text-emerald-700">{eyebrow}</div>
+          <h2 className="mt-1 text-xl font-bold text-foreground">{title}</h2>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><CreditCard className="h-4 w-4 text-sky-600" /> Secure checkout</span>
+            <span className="inline-flex items-center gap-1"><Zap className="h-4 w-4 text-emerald-600" /> Instant activation</span>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
+          <div><div className="text-sm text-muted-foreground">Complete access</div><div className="text-2xl font-bold text-foreground">{price}</div></div>
+          <Button size="lg" disabled={paying} onClick={onBuy}>{paying ? "Processing…" : <>Buy now <ArrowRight className="ml-1 h-4 w-4" /></>}</Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function HeroChip({ icon: Icon, label, value, tint }: { icon: any; label: string; value: any; tint: "sky"|"violet"|"emerald"|"amber" }) {
   const map: Record<string,string> = {
     sky: "from-sky-50 to-blue-50 border-sky-200 text-sky-700",
