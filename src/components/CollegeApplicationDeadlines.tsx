@@ -67,7 +67,7 @@ const DeadlineCard = ({ college, compact = false }: { college: DeadlineCollege; 
             <p className="mt-0.5 text-sm font-bold text-foreground">{formatDate(college.application_deadline)}</p>
           </div>
           <Button asChild variant="link" size="sm" className="shrink-0 px-0">
-            <a href={`/mba-application/${college.slug}`}>View details <ArrowRight /></a>
+            <a href={`/mba-application/college/${college.slug}`}>View details <ArrowRight /></a>
           </Button>
         </div>
 
@@ -138,7 +138,7 @@ const DeadlineCard = ({ college, compact = false }: { college: DeadlineCollege; 
 
         <div className="mt-4 flex gap-2">
           <Button asChild variant="outline" className="flex-1">
-            <a href={`/mba-application/${college.slug}`}>View details</a>
+            <a href={`/mba-application/college/${college.slug}`}>View details</a>
           </Button>
           {college.apply_url && days !== null && days >= 0 && (
             <Button asChild className="flex-1">
