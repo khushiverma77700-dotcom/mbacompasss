@@ -394,11 +394,12 @@ const CollegeShortlisterPage = () => {
   const saveSubmission = async (payload: Record<string, any>, status: "login_incomplete" | "completed", resultsCount?: number) => {
     try {
       const { data, error } = await supabase.rpc("save_shortlister_submission", {
-        p_submission_id: submissionIdRef.current ?? null,
+        // Generated RPC arg types are non-nullable; the function accepts NULLs.
+        p_submission_id: (submissionIdRef.current ?? null) as unknown as string,
         p_status: status,
         p_form_data: form as any,
         p_payload: payload as any,
-        p_results_count: resultsCount ?? null,
+        p_results_count: (resultsCount ?? null) as unknown as number,
         p_email: (user as any)?.email ?? null,
         p_full_name:
           (user as any)?.user_metadata?.display_name ??
