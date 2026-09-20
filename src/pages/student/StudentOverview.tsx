@@ -4,7 +4,7 @@ import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } fro
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";
 import {
-  DEMO_PROFILE, DEMO_TASKS, DEMO_GOALS, DEMO_STUDY_PROFILE, DEMO_WEAK_TOPICS,
+  DEMO_PROFILE, DEMO_TASKS, DEMO_STUDY_PROFILE, DEMO_WEAK_TOPICS,
   DEMO_REWARDS, DEMO_ENROLLMENTS, DEMO_EXAM_COUNTDOWNS, DEMO_LEADERBOARD_RANK,
 } from "@/lib/demoData";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +65,7 @@ function ChartRowSkeleton({ cols = 2, height = 260 }: { cols?: 2 | 3; height?: n
 // then fetch refreshes in the background. Cleared by the browser at tab close.
 const OVERVIEW_CACHE_KEY = (uid: string) => `student-overview-cache:v1:${uid}`;
 type OverviewCache = {
-  enrollments?: any[]; goals?: any[]; profile?: any; tasks?: any[]; weak?: any[];
+  enrollments?: any[]; profile?: any; tasks?: any[]; weak?: any[];
   displayName?: string; examCountdowns?: any[]; rewards?: any; leaderboardRank?: number | null;
 };
 function readOverviewCache(uid: string): OverviewCache | null {
@@ -87,7 +87,6 @@ export default function StudentOverview() {
   const { attempts } = useStudentPerformance();
   const cached = (!isDemo && user) ? readOverviewCache(user.id) : null;
   const [enrollments, setEnrollments] = useState<any[]>(cached?.enrollments ?? []);
-  const [goals, setGoals] = useState<any[]>(cached?.goals ?? []);
   const [profile, setProfile] = useState<any>(cached?.profile ?? null);
   const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? []);
   const [weak, setWeak] = useState<any[]>(cached?.weak ?? []);
@@ -118,7 +117,6 @@ export default function StudentOverview() {
     if (isDemo) {
       setDisplayName(DEMO_PROFILE.display_name);
       setTasks(DEMO_TASKS as any);
-      setGoals(DEMO_GOALS as any);
       setProfile(DEMO_STUDY_PROFILE as any);
       setWeak(DEMO_WEAK_TOPICS as any);
       setRewards(DEMO_REWARDS as any);
@@ -132,7 +130,7 @@ export default function StudentOverview() {
 
     // Fire each query independently so the UI fills in progressively instead
     // of blocking on the slowest query in a Promise.all. Cheap queries
-    // (display name, daily tasks, goals) hydrate first; heavier joins
+    // (display name and daily tasks) hydrate first; heavier joins
     // (enrollments with mock_tests, exam list) populate as they arrive.
     const run = <T,>(p: PromiseLike<{ data: T | null }>, apply: (d: T | null) => void) => {
       Promise.resolve(p).then(({ data }) => { if (!cancelled) apply(data); }).catch(() => {});
@@ -146,25 +144,20 @@ export default function StudentOverview() {
       },
     );
     run(
-      supabase.from("student_daily_tasks").select("*").eq("user_id", user.id).eq("task_date", today),
+      supabase.from("student_daily_tasks").select("id, title, section, is_completed").eq("user_id", user.id).eq("task_date", today),
       (tk: any) => { setTasks(tk ?? []); writeOverviewCache(user.id, { tasks: tk ?? [] }); },
     );
     run(
-      supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
-        .order("due_date", { ascending: true }).limit(3),
-      (g: any) => { setGoals(g ?? []); writeOverviewCache(user.id, { goals: g ?? [] }); },
-    );
-    run(
-      supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("student_study_profile").select("target_percentile").eq("user_id", user.id).maybeSingle(),
       (pf: any) => { setProfile(pf); writeOverviewCache(user.id, { profile: pf }); },
     );
     run(
-      supabase.from("student_weak_topics").select("*").eq("user_id", user.id)
+      supabase.from("student_weak_topics").select("id, topic, section, level").eq("user_id", user.id)
         .order("level", { ascending: true }).limit(12),
       (wk: any) => { setWeak(wk ?? []); writeOverviewCache(user.id, { weak: wk ?? [] }); },
     );
     run(
-      supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("student_rewards").select("xp, level, coins, streak_days, longest_streak").eq("user_id", user.id).maybeSingle(),
       (rw: any) => { setRewards(rw); writeOverviewCache(user.id, { rewards: rw }); },
     );
     run(

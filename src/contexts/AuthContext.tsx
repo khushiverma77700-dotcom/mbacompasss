@@ -98,13 +98,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
-  const initialSession = useRef<Session | null>(readStoredSession());
-  const initialNeedsAdmin = typeof window !== "undefined" && shouldResolveAdminForPath(window.location.pathname);
-  const [user, setUser] = useState<User | null>(initialSession.current?.user ?? null);
-  const [session, setSession] = useState<Session | null>(initialSession.current);
-  const [loading, setLoading] = useState(!initialSession.current);
+  // The server cannot read browser storage, so begin from the same state on
+  // both sides. Reading a saved session during the first client render caused
+  // React to discard the server dashboard shell and rebuild the whole page.
+  const initialSession = useRef<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminLoading, setAdminLoading] = useState(!!initialSession.current && initialNeedsAdmin);
+  const [adminLoading, setAdminLoading] = useState(false);
   const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
   const resolvedAdminUserIdRef = useRef<string | null>(null);
 
@@ -126,6 +128,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       window.clearTimeout(bootTimeout);
       setLoading(false);
     };
+
+    // Restore the browser's last verified session immediately after hydration;
+    // the network refresh below then confirms it without delaying first paint.
+    const storedSession = readStoredSession();
+    if (storedSession) applySession(storedSession);
 
     let subscription: { unsubscribe: () => void } | undefined;
     let cancelIdleStart: (() => void) | undefined;
@@ -185,7 +192,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (typeof window !== "undefined" && (window.location.pathname.startsWith("/student") || window.location.pathname.startsWith("/demo"))) {
+      if (
+        typeof window !== "undefined" &&
+        (window.location.hostname === "dashboard.mbacompass.in" ||
+          window.location.pathname.startsWith("/student") ||
+          window.location.pathname.startsWith("/demo"))
+      ) {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
         setAllowedSections(null);
