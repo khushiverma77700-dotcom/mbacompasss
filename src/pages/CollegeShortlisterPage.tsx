@@ -386,24 +386,28 @@ const CollegeShortlisterPage = () => {
     };
   };
 
-  /** Persists every submission — even when login is never completed. */
+  /**
+   * Persists every submission — even when login is never completed.
+   * Uses a security-definer RPC because anonymous visitors may insert but not
+   * read shortlister rows, so `insert().select()` would fail under RLS.
+   */
   const saveSubmission = async (payload: Record<string, any>, status: "login_incomplete" | "completed", resultsCount?: number) => {
     try {
-      const row = {
-        user_id: user?.id ?? null,
-        status,
-        form_data: form as any,
-        payload: payload as any,
-        results_count: resultsCount ?? null,
-        email: (user as any)?.email ?? null,
-        full_name: (user as any)?.user_metadata?.display_name ?? (user as any)?.user_metadata?.full_name ?? null,
-      };
-      if (submissionIdRef.current) {
-        await supabase.from("shortlister_submissions").update(row).eq("id", submissionIdRef.current);
-      } else {
-        const { data } = await supabase.from("shortlister_submissions").insert(row).select("id").maybeSingle();
-        if (data?.id) submissionIdRef.current = data.id;
-      }
+      const { data, error } = await supabase.rpc("save_shortlister_submission", {
+        // Generated RPC arg types are non-nullable; the function accepts NULLs.
+        p_submission_id: (submissionIdRef.current ?? null) as unknown as string,
+        p_status: status,
+        p_form_data: form as any,
+        p_payload: payload as any,
+        p_results_count: (resultsCount ?? null) as unknown as number,
+        p_email: (user as any)?.email ?? null,
+        p_full_name:
+          (user as any)?.user_metadata?.display_name ??
+          (user as any)?.user_metadata?.full_name ??
+          null,
+      });
+      if (error) throw error;
+      if (typeof data === "string" && data) submissionIdRef.current = data;
     } catch (e) {
       console.error("[shortlister] save submission failed", e);
     }

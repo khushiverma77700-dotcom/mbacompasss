@@ -114,17 +114,25 @@ const AdminInformationPortal = () => {
       const { error } = await supabase.from("information_drafts").update({ approved_payload: approvedPayload as Json, canonical_record_id: canonicalId, status: "published", published_at: now, reviewed_at: now, reviewed_by: auth.user?.id ?? null }).eq("id", selected.id);
       if (error) throw error;
       await supabase.from("information_audit_events").insert({ draft_id: selected.id, actor_id: auth.user?.id ?? null, entity_type: selected.entity_type, event_type: "approved_and_published", canonical_record_id: canonicalId, details: { canonical_record_id: canonicalId } });
+      await syncExamJobReview(selected.id, "published");
       toast({ title: "Approved and published", description: `${selected.requested_name} is now live.` }); setSelected(null); await loadDrafts();
     } catch (error) { toast({ title: "Publish failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" }); }
     finally { setSaving(false); setConfirmPublish(false); }
+  };
+
+  /** Keeps the AI exam generation console in sync with the draft's review outcome. */
+  const syncExamJobReview = async (draftId: string, reviewStatus: "published" | "rejected") => {
+    await supabase.from("exam_generation_jobs").update({ review_status: reviewStatus, reviewed_at: new Date().toISOString() }).eq("draft_id", draftId);
   };
 
   const rejectDraft = async () => {
     if (!selected) return;
     const { error } = await supabase.from("information_drafts").update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", selected.id);
     if (error) { toast({ title: "Could not reject draft", description: error.message, variant: "destructive" }); return; }
+    await syncExamJobReview(selected.id, "rejected");
     setSelected(null); await loadDrafts();
   };
+
 
   const queueBulk = async () => {
     const names = Array.from(new Set(bulkNames.split(/\r?\n|,/).map((name) => name.trim()).filter(Boolean)));

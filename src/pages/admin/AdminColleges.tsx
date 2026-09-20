@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,36 +74,24 @@ const AdminColleges = () => {
     preserveKeys: ["edit"],
   });
 
-  const stateOptions = useMemo(() => {
-    const s = new Set<string>();
-    colleges.forEach((c: any) => c.state && s.add(c.state));
-    return Array.from(s).sort();
-  }, [colleges]);
-  const cityOptions = useMemo(() => {
-    const s = new Set<string>();
-    colleges.forEach((c: any) => {
-      if (c.city && (filters.state === "all" || c.state === filters.state)) s.add(c.city);
-    });
-    return Array.from(s).sort();
-  }, [colleges, filters.state]);
-  const typeOptions = useMemo(() => {
-    const s = new Set<string>();
-    colleges.forEach((c: any) => c.type && s.add(c.type));
-    return Array.from(s).sort();
-  }, [colleges]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [listLoading, setListLoading] = useState(true);
+  const [options, setOptions] = useState<{ types: string[]; states: string[]; cities: { city: string; state: string | null }[] }>({
+    types: [], states: [], cities: [],
+  });
 
-  const filteredColleges = useMemo(() => {
-    const q = filters.search.trim().toLowerCase();
-    return colleges.filter((c: any) => {
-      if (q && !(c.name?.toLowerCase().includes(q) || c.slug?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))) return false;
-      if (filters.tier !== "all" && c.tier !== filters.tier) return false;
-      if (filters.category !== "all" && c.college_category !== filters.category) return false;
-      if (filters.type !== "all" && c.type !== filters.type) return false;
-      if (filters.state !== "all" && c.state !== filters.state) return false;
-      if (filters.city !== "all" && c.city !== filters.city) return false;
-      return true;
+  const stateOptions = options.states;
+  const typeOptions = options.types;
+  const cityOptions = useMemo(() => {
+    const seen = new Set<string>();
+    options.cities.forEach((c) => {
+      if (c.city && (filters.state === "all" || c.state === filters.state)) seen.add(c.city);
     });
-  }, [colleges, filters]);
+    return Array.from(seen).sort();
+  }, [options.cities, filters.state]);
+
+  // Rows arrive already filtered from the database, so no client-side pass is needed.
+  const filteredColleges = colleges;
 
   const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(filteredColleges);
 
@@ -115,15 +102,53 @@ const AdminColleges = () => {
   const [bulkFilterProgress, setBulkFilterProgress] = useState({ done: 0, total: 0, failed: 0 });
   const bulkFileRef = (typeof window !== "undefined") ? { current: null as HTMLInputElement | null } : { current: null };
 
-  const fetchColleges = async () => {
-    const data = await fetchAllRows<any>((from, to) =>
-      supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, listing_sort_order, established, created_at, source, last_updated_by").order("listing_sort_order", { ascending: true, nullsFirst: false }).order("ranking", { ascending: true }).range(from, to) as any,
-    ).catch(() => []);
-    setColleges(data);
-  };
+  const LIST_LIMIT = 300;
 
+  /** Server-side filtered listing: only the rows on screen travel to the browser. */
+  const fetchColleges = useCallback(async () => {
+    setListLoading(true);
+    let query = supabase
+      .from("colleges")
+      .select(
+        "id, name, slug, city, state, type, tier, college_category, ranking, listing_sort_order, established, created_at, source, last_updated_by",
+        { count: "exact" },
+      );
+    const q = filters.search.trim().replace(/[,()%*]/g, " ").trim();
+    if (q) query = query.or(`name.ilike.%${q}%,slug.ilike.%${q}%,city.ilike.%${q}%`);
+    if (filters.tier !== "all") query = query.eq("tier", filters.tier);
+    if (filters.category !== "all") query = query.eq("college_category", filters.category);
+    if (filters.type !== "all") query = query.eq("type", filters.type);
+    if (filters.state !== "all") query = query.eq("state", filters.state);
+    if (filters.city !== "all") query = query.eq("city", filters.city);
 
-  useEffect(() => { fetchColleges(); }, []);
+    const { data, count, error } = await query
+      .order("listing_sort_order", { ascending: true, nullsFirst: false })
+      .order("ranking", { ascending: true })
+      .limit(LIST_LIMIT);
+    if (!error) {
+      setColleges(data ?? []);
+      setTotalCount(count ?? 0);
+    }
+    setListLoading(false);
+  }, [filters.search, filters.tier, filters.category, filters.type, filters.state, filters.city]);
+
+  // Debounced so typing in the search box doesn't fire a query per keystroke.
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void fetchColleges(); }, 250);
+    return () => window.clearTimeout(timer);
+  }, [fetchColleges]);
+
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase.rpc("admin_college_filter_options");
+      const raw = (data ?? {}) as { types?: string[]; states?: string[]; cities?: { city: string; state: string | null }[] };
+      setOptions({
+        types: Array.isArray(raw.types) ? raw.types : [],
+        states: Array.isArray(raw.states) ? raw.states : [],
+        cities: Array.isArray(raw.cities) ? raw.cities : [],
+      });
+    })();
+  }, []);
 
   // Auto-open edit form when ?edit=<id> is present (used by AI generator redirect)
   useEffect(() => {
@@ -627,7 +652,7 @@ const AdminColleges = () => {
         onFilterChange={setFilter}
         onClearAll={clearAll}
         activeCount={activeCount}
-        resultsHint={`${sortedColleges.length} of ${colleges.length} colleges`}
+        resultsHint={listLoading ? "Loading…" : `${sortedColleges.length} shown of ${totalCount} matching colleges`}
         filters={[
           { type: "select", key: "tier", label: "Tier", width: "w-32", options: [{ label: "All Tiers", value: "all" }, ...TIER_OPTIONS.map(t => ({ label: t, value: t }))] },
           { type: "select", key: "category", label: "Category", width: "w-36", options: [{ label: "All", value: "all" }, ...CATEGORY_OPTIONS.map(c => ({ label: c, value: c }))] },
@@ -701,7 +726,7 @@ const AdminColleges = () => {
                 </TableRow>
               ))}
               {sortedColleges.length === 0 && (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">{colleges.length === 0 ? "No colleges yet" : "No colleges match your filters"}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">{listLoading ? "Loading colleges…" : "No colleges match your filters"}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

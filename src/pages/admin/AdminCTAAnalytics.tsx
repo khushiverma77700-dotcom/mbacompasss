@@ -18,51 +18,26 @@ type Cta = {
   requires_login: boolean;
 };
 
-type EventRow = {
-  cta_key: string;
+type GroupRow = { key: string; total: number; executed: number; prompted: number };
+type RecentRow = {
+  cta_key: string; label: string; category: string;
   outcome: "login_prompted" | "executed";
-  created_at: string;
-  page_path: string | null;
-  user_id: string | null;
-  context: Record<string, any> | null;
+  created_at: string; page_path: string | null; section: string; user_id: string | null;
+};
+type Summary = {
+  totals: { total: number; executed: number; prompted: number; unique: number };
+  sections: string[];
+  by_cta: GroupRow[]; by_category: GroupRow[]; by_section: GroupRow[];
+  by_page: GroupRow[]; by_entity: GroupRow[];
+  trend: { date: string; total: number; executed: number; prompted: number }[];
+  recent: RecentRow[];
 };
 
 const RANGES: Record<string, number> = { "24h": 1, "7d": 7, "30d": 30, "90d": 90, "all": 3650 };
 
-// Heuristic: turn a path like /colleges/iim-ahmedabad into a section name.
-const sectionForPath = (path: string | null): string => {
-  if (!path) return "Unknown";
-  const p = path.split("?")[0].split("#")[0];
-  if (p === "/" || p === "") return "Home";
-  const seg = p.split("/").filter(Boolean)[0] || "Home";
-  const map: Record<string, string> = {
-    colleges: "Colleges",
-    college: "Colleges",
-    coaching: "Coaching",
-    exams: "Exams",
-    exam: "Exams",
-    blog: "Blog",
-    articles: "Articles",
-    courses: "Courses",
-    "mba-compass": "MBA Compass",
-    mocks: "Mocks",
-    student: "Student LMS",
-    admin: "Admin",
-    auth: "Auth",
-  };
-  return map[seg] || seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-};
-
-// Pretty entity label from path: e.g. /colleges/iim-ahmedabad -> "iim-ahmedabad"
-const entityForPath = (path: string | null): string | null => {
-  if (!path) return null;
-  const parts = path.split("?")[0].split("#")[0].split("/").filter(Boolean);
-  return parts[1] || null;
-};
-
 const AdminCTAAnalytics = () => {
   const [range, setRange] = useState<keyof typeof RANGES>("7d");
-  const [events, setEvents] = useState<EventRow[]>([]);
+  const [summary, setSummary] = useState<Summary | null>(null);
   const [ctas, setCtas] = useState<Cta[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -77,23 +52,28 @@ const AdminCTAAnalytics = () => {
       .then(({ data }) => setCtas((data as any) || []));
   }, []);
 
+  // All aggregation happens in the database, so only summary rows reach the browser.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     const since = new Date(Date.now() - RANGES[range] * 86400000).toISOString();
-    supabase
-      .from("cta_events")
-      .select("cta_key, outcome, created_at, page_path, user_id, context")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(50000)
-      .then(({ data }) => {
-        if (cancelled) return;
-        setEvents((data as any) || []);
-        setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [range]);
+    const timer = window.setTimeout(() => {
+      void supabase
+        .rpc("cta_analytics_summary", {
+          p_since: since,
+          p_outcome: outcomeFilter,
+          p_section: sectionFilter,
+          p_category: categoryFilter,
+          p_search: q.trim(),
+        })
+        .then(({ data }) => {
+          if (cancelled) return;
+          setSummary((data ?? null) as unknown as Summary | null);
+          setLoading(false);
+        });
+    }, 250);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [range, outcomeFilter, sectionFilter, categoryFilter, q]);
 
   const meta = useMemo(() => {
     const m = new Map<string, Cta>();
@@ -107,85 +87,29 @@ const AdminCTAAnalytics = () => {
     return Array.from(s).sort();
   }, [ctas]);
 
-  const allSections = useMemo(() => {
-    const s = new Set<string>();
-    events.forEach((e) => s.add(sectionForPath(e.page_path)));
-    return Array.from(s).sort();
-  }, [events]);
+  const allSections = summary?.sections ?? [];
+  const recentEvents = summary?.recent ?? [];
 
-  // Apply all filters once
-  const filteredEvents = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return events.filter((e) => {
-      const m = meta.get(e.cta_key);
-      if (categoryFilter !== "all" && (m?.category || "Unknown") !== categoryFilter) return false;
-      if (sectionFilter !== "all" && sectionForPath(e.page_path) !== sectionFilter) return false;
-      if (outcomeFilter !== "all" && e.outcome !== outcomeFilter) return false;
-      if (t) {
-        const label = m?.label?.toLowerCase() || "";
-        const path = e.page_path?.toLowerCase() || "";
-        if (
-          !e.cta_key.toLowerCase().includes(t) &&
-          !label.includes(t) &&
-          !path.includes(t) &&
-          !(m?.category || "").toLowerCase().includes(t)
-        ) return false;
-      }
-      return true;
-    });
-  }, [events, meta, q, categoryFilter, sectionFilter, outcomeFilter]);
+  const totals = summary?.totals ?? { total: 0, executed: 0, prompted: 0, unique: 0 };
 
-  const totals = useMemo(() => {
-    const t = { total: 0, prompted: 0, executed: 0, unique: new Set<string>() };
-    filteredEvents.forEach((e) => {
-      t.total++;
-      if (e.outcome === "login_prompted") t.prompted++;
-      else t.executed++;
-      if (e.user_id) t.unique.add(e.user_id);
-    });
-    return { ...t, unique: t.unique.size };
-  }, [filteredEvents]);
-
-  // Aggregations
-  const byCta = useMemo(() => groupCount(filteredEvents, (e) => e.cta_key, meta), [filteredEvents, meta]);
-  const byCategory = useMemo(() => groupCount(filteredEvents, (e) => meta.get(e.cta_key)?.category || "Unknown"), [filteredEvents, meta]);
-  const bySection = useMemo(() => groupCount(filteredEvents, (e) => sectionForPath(e.page_path)), [filteredEvents]);
-  const byPage = useMemo(() => groupCount(filteredEvents, (e) => e.page_path || "(unknown)"), [filteredEvents]);
-  const byEntity = useMemo(
-    () =>
-      groupCount(
-        filteredEvents.filter((e) => sectionForPath(e.page_path) === "Colleges" || sectionForPath(e.page_path) === "Coaching" || sectionForPath(e.page_path) === "Exams"),
-        (e) => `${sectionForPath(e.page_path)} → ${entityForPath(e.page_path) || "(list)"}`
-      ),
-    [filteredEvents]
-  );
-
-  // Daily trend
-  const trend = useMemo(() => {
-    const m = new Map<string, { date: string; total: number; executed: number; prompted: number }>();
-    filteredEvents.forEach((e) => {
-      const d = e.created_at.slice(0, 10);
-      const row = m.get(d) || { date: d, total: 0, executed: 0, prompted: 0 };
-      row.total++;
-      if (e.outcome === "login_prompted") row.prompted++;
-      else row.executed++;
-      m.set(d, row);
-    });
-    return Array.from(m.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredEvents]);
+  const byCta = summary?.by_cta ?? [];
+  const byCategory = summary?.by_category ?? [];
+  const bySection = summary?.by_section ?? [];
+  const byPage = summary?.by_page ?? [];
+  const byEntity = summary?.by_entity ?? [];
+  const trend = summary?.trend ?? [];
 
   const exportCsv = () => {
     const header = ["created_at", "cta_key", "label", "category", "outcome", "page_path", "section", "user_id"];
-    const rows = filteredEvents.map((e) => {
-      const m = meta.get(e.cta_key);
+    const rows = recentEvents.map((e) => {
       return [
         e.created_at,
         e.cta_key,
-        m?.label || "",
-        m?.category || "",
+        e.label || "",
+        e.category || "",
         e.outcome,
         e.page_path || "",
-        sectionForPath(e.page_path),
+        e.section,
         e.user_id || "",
       ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
     });
@@ -214,7 +138,7 @@ const AdminCTAAnalytics = () => {
             Drill into clicks by CTA, section, category, page and login outcome.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={!filteredEvents.length}>
+        <Button variant="outline" size="sm" onClick={exportCsv} disabled={!recentEvents.length}>
           <Download className="w-4 h-4 mr-1.5" /> Export CSV
         </Button>
       </div>
@@ -387,12 +311,11 @@ const AdminCTAAnalytics = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredEvents.slice(0, 200).map((e, i) => {
-                      const m = meta.get(e.cta_key);
+                    {recentEvents.slice(0, 200).map((e, i) => {
                       return (
                         <tr key={i} className="border-b last:border-0 hover:bg-muted/40">
                           <td className="py-1.5 pr-2 whitespace-nowrap">{new Date(e.created_at).toLocaleString()}</td>
-                          <td className="py-1.5 pr-2">{m?.label || e.cta_key}</td>
+                          <td className="py-1.5 pr-2">{e.label || e.cta_key}</td>
                           <td className="py-1.5 pr-2">
                             {e.outcome === "executed" ? (
                               <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-300">Ran</Badge>
@@ -400,13 +323,13 @@ const AdminCTAAnalytics = () => {
                               <Badge variant="outline" className="text-xs text-amber-700 border-amber-300">Login</Badge>
                             )}
                           </td>
-                          <td className="py-1.5 pr-2">{sectionForPath(e.page_path)}</td>
+                          <td className="py-1.5 pr-2">{e.section}</td>
                           <td className="py-1.5 pr-2 max-w-[260px] truncate font-mono">{e.page_path || "—"}</td>
                           <td className="py-1.5 pr-2 font-mono text-xs">{e.user_id?.slice(0, 8) || "anon"}</td>
                         </tr>
                       );
                     })}
-                    {filteredEvents.length === 0 && (
+                    {recentEvents.length === 0 && (
                       <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No matching events.</td></tr>
                     )}
                   </tbody>
@@ -421,25 +344,6 @@ const AdminCTAAnalytics = () => {
 };
 
 // ---------- helpers ----------
-
-type GroupRow = { key: string; total: number; executed: number; prompted: number };
-
-function groupCount(
-  events: EventRow[],
-  keyer: (e: EventRow) => string,
-  _meta?: Map<string, Cta>
-): GroupRow[] {
-  const m = new Map<string, GroupRow>();
-  events.forEach((e) => {
-    const k = keyer(e);
-    const r = m.get(k) || { key: k, total: 0, executed: 0, prompted: 0 };
-    r.total++;
-    if (e.outcome === "login_prompted") r.prompted++;
-    else r.executed++;
-    m.set(k, r);
-  });
-  return Array.from(m.values()).sort((a, b) => b.total - a.total);
-}
 
 const BreakdownCard = ({
   title, rows, renderLabel, icon: Icon, empty,

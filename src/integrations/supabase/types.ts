@@ -3342,6 +3342,7 @@ export type Database = {
           batch_label: string | null
           created_at: string
           created_by: string | null
+          draft_id: string | null
           error: string | null
           exam_category: string | null
           exam_id: string | null
@@ -3355,6 +3356,8 @@ export type Database = {
           official_website: string | null
           published_slug: string | null
           result: Json | null
+          review_status: string
+          reviewed_at: string | null
           sort_order: number | null
           sources: Json | null
           status: string
@@ -3372,6 +3375,7 @@ export type Database = {
           batch_label?: string | null
           created_at?: string
           created_by?: string | null
+          draft_id?: string | null
           error?: string | null
           exam_category?: string | null
           exam_id?: string | null
@@ -3385,6 +3389,8 @@ export type Database = {
           official_website?: string | null
           published_slug?: string | null
           result?: Json | null
+          review_status?: string
+          reviewed_at?: string | null
           sort_order?: number | null
           sources?: Json | null
           status?: string
@@ -3402,6 +3408,7 @@ export type Database = {
           batch_label?: string | null
           created_at?: string
           created_by?: string | null
+          draft_id?: string | null
           error?: string | null
           exam_category?: string | null
           exam_id?: string | null
@@ -3415,6 +3422,8 @@ export type Database = {
           official_website?: string | null
           published_slug?: string | null
           result?: Json | null
+          review_status?: string
+          reviewed_at?: string | null
           sort_order?: number | null
           sources?: Json | null
           status?: string
@@ -15122,6 +15131,7 @@ export type Database = {
         Args: { _slug: string; _table: string }
         Returns: string
       }
+      admin_college_filter_options: { Args: never; Returns: Json }
       admin_delete_bundle: { Args: { _bundle_id: string }; Returns: Json }
       admin_search_students: {
         Args: { _limit?: number; _query?: string }
@@ -15269,6 +15279,7 @@ export type Database = {
           batch_label: string | null
           created_at: string
           created_by: string | null
+          draft_id: string | null
           error: string | null
           exam_category: string | null
           exam_id: string | null
@@ -15282,6 +15293,8 @@ export type Database = {
           official_website: string | null
           published_slug: string | null
           result: Json | null
+          review_status: string
+          reviewed_at: string | null
           sort_order: number | null
           sources: Json | null
           status: string
@@ -15467,6 +15480,16 @@ export type Database = {
           state: string
           total: number
         }[]
+      }
+      cta_analytics_summary: {
+        Args: {
+          p_category?: string
+          p_outcome?: string
+          p_search?: string
+          p_section?: string
+          p_since: string
+        }
+        Returns: Json
       }
       dedupe_faq_jsonb: { Args: { _faqs: Json }; Returns: Json }
       dedupe_site_settings_faqs: { Args: { _value: Json }; Returns: Json }
@@ -15658,6 +15681,18 @@ export type Database = {
       rollup_personalized_bulk_job: {
         Args: { _job_id: string }
         Returns: undefined
+      }
+      save_shortlister_submission: {
+        Args: {
+          p_email: string
+          p_form_data: Json
+          p_full_name: string
+          p_payload: Json
+          p_results_count: number
+          p_status: string
+          p_submission_id: string
+        }
+        Returns: string
       }
       seo_intel_claim_job: {
         Args: { p_lease_seconds?: number }

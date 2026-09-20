@@ -37,6 +37,9 @@ interface Job {
   error: string | null;
   tokens_used: number;
   created_at: string;
+  review_status: string | null;
+  draft_id: string | null;
+  reviewed_at: string | null;
 }
 
 const STATUS_META: Record<string, { icon: React.JSX.Element; className: string; label: string }> = {
@@ -45,6 +48,14 @@ const STATUS_META: Record<string, { icon: React.JSX.Element; className: string; 
   completed: { icon: <CheckCircle2 className="w-3.5 h-3.5" />, className: "bg-emerald-500/10 text-emerald-600", label: "Ready for review" },
   published: { icon: <CheckCircle2 className="w-3.5 h-3.5" />, className: "bg-emerald-500/10 text-emerald-600", label: "Published" },
   failed: { icon: <XCircle className="w-3.5 h-3.5" />, className: "bg-destructive/10 text-destructive", label: "Failed" },
+};
+
+/** Review lifecycle of the draft this job produced — separate from generation status. */
+const REVIEW_META: Record<string, { className: string; label: string }> = {
+  pending: { className: "bg-amber-500/10 text-amber-600", label: "Pending approval" },
+  accepted: { className: "bg-sky-500/10 text-sky-600", label: "Accepted" },
+  rejected: { className: "bg-destructive/10 text-destructive", label: "Rejected" },
+  published: { className: "bg-emerald-500/10 text-emerald-600", label: "Published live" },
 };
 
 interface Props {
@@ -181,10 +192,20 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
                     </span>
                     <Badge variant="secondary" className="text-xs">{job.steps_done}/{job.steps_total} groups</Badge>
                     {job.tokens_used > 0 && <Badge variant="outline" className="text-xs">{job.tokens_used.toLocaleString()} tokens</Badge>}
+                    {job.draft_id && (
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${(REVIEW_META[job.review_status ?? "pending"] ?? REVIEW_META.pending).className}`}>
+                        {(REVIEW_META[job.review_status ?? "pending"] ?? REVIEW_META.pending).label}
+                      </span>
+                    )}
                     <div className="ml-auto flex items-center gap-1">
+                      {job.draft_id && (
+                        <Button asChild size="sm" variant="outline" className="gap-1">
+                          <a href="/admin/information-portal">Review in portal <ChevronRight className="w-3.5 h-3.5" /></a>
+                        </Button>
+                      )}
                       {job.status === "completed" && (
                         <Button size="sm" variant="outline" className="gap-1" onClick={() => openReview(job)}>
-                          Review & publish <ChevronRight className="w-3.5 h-3.5" />
+                          {job.draft_id ? "Edit draft" : "Review & publish"} <ChevronRight className="w-3.5 h-3.5" />
                         </Button>
                       )}
                       {job.status === "failed" && (
@@ -240,9 +261,12 @@ const ExamAIGenerator = ({ onPublished }: Props) => {
               existingExamId={activeJob.exam_id}
               sortOrder={activeJob.sort_order ?? null}
               onSectionsChange={setEditorSections}
-              onPublished={async (examId) => {
+              onPublished={async (draftId) => {
+                // The editor saves a draft for approval — it does NOT write the
+                // live exam page, so the job stays "completed" and is marked
+                // pending review until an admin approves it in the portal.
                 await supabase.from("exam_generation_jobs")
-                  .update({ status: "published", exam_id: examId })
+                  .update({ review_status: "pending", draft_id: draftId, reviewed_at: null })
                   .eq("id", activeJob.id);
                 setActiveJobId(null); setEditorSections(null);
                 fetchJobs();
