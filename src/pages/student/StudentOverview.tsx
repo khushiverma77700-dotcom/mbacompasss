@@ -4,7 +4,7 @@ import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } fro
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";
 import {
-  DEMO_PROFILE, DEMO_TASKS, DEMO_GOALS, DEMO_STUDY_PROFILE, DEMO_WEAK_TOPICS,
+  DEMO_PROFILE, DEMO_TASKS, DEMO_STUDY_PROFILE, DEMO_WEAK_TOPICS,
   DEMO_REWARDS, DEMO_ENROLLMENTS, DEMO_EXAM_COUNTDOWNS, DEMO_LEADERBOARD_RANK,
 } from "@/lib/demoData";
 import { supabase } from "@/integrations/supabase/client";
