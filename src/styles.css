@@ -169,18 +169,33 @@
 
 .course-sales-page .course-offer-hero {
   background:
-    linear-gradient(120deg, hsl(var(--secondary)) 0%, hsl(var(--background)) 58%, hsl(var(--accent)) 160%);
+    linear-gradient(112deg, hsl(var(--secondary)) 0%, hsl(var(--background)) 64%, hsl(var(--card)) 100%);
 }
 
 .course-sales-page .course-jump-nav {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 40;
+  box-shadow: 0 1px 0 hsl(var(--border));
 }
 
 .course-sales-page .course-enrollment-band {
   background:
     linear-gradient(100deg, hsl(var(--card)) 0%, hsl(var(--secondary)) 72%, hsl(var(--accent)) 180%);
+}
+
+.course-sales-page section {
+  min-height: 0;
+}
+
+.course-sales-page .course-offer-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(hsl(var(--primary) / 0.035) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
 }
 
 .course-sales-page > section,
