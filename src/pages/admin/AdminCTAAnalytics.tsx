@@ -77,23 +77,28 @@ const AdminCTAAnalytics = () => {
       .then(({ data }) => setCtas((data as any) || []));
   }, []);
 
+  // All aggregation happens in the database, so only summary rows reach the browser.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     const since = new Date(Date.now() - RANGES[range] * 86400000).toISOString();
-    supabase
-      .from("cta_events")
-      .select("cta_key, outcome, created_at, page_path, user_id, context")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(50000)
-      .then(({ data }) => {
-        if (cancelled) return;
-        setEvents((data as any) || []);
-        setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [range]);
+    const timer = window.setTimeout(() => {
+      void supabase
+        .rpc("cta_analytics_summary", {
+          p_since: since,
+          p_outcome: outcomeFilter,
+          p_section: sectionFilter,
+          p_category: categoryFilter,
+          p_search: q.trim(),
+        })
+        .then(({ data }) => {
+          if (cancelled) return;
+          setSummary((data ?? null) as Summary | null);
+          setLoading(false);
+        });
+    }, 250);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [range, outcomeFilter, sectionFilter, categoryFilter, q]);
 
   const meta = useMemo(() => {
     const m = new Map<string, Cta>();
@@ -107,72 +112,17 @@ const AdminCTAAnalytics = () => {
     return Array.from(s).sort();
   }, [ctas]);
 
-  const allSections = useMemo(() => {
-    const s = new Set<string>();
-    events.forEach((e) => s.add(sectionForPath(e.page_path)));
-    return Array.from(s).sort();
-  }, [events]);
+  const allSections = summary?.sections ?? [];
+  const recentEvents = summary?.recent ?? [];
 
-  // Apply all filters once
-  const filteredEvents = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return events.filter((e) => {
-      const m = meta.get(e.cta_key);
-      if (categoryFilter !== "all" && (m?.category || "Unknown") !== categoryFilter) return false;
-      if (sectionFilter !== "all" && sectionForPath(e.page_path) !== sectionFilter) return false;
-      if (outcomeFilter !== "all" && e.outcome !== outcomeFilter) return false;
-      if (t) {
-        const label = m?.label?.toLowerCase() || "";
-        const path = e.page_path?.toLowerCase() || "";
-        if (
-          !e.cta_key.toLowerCase().includes(t) &&
-          !label.includes(t) &&
-          !path.includes(t) &&
-          !(m?.category || "").toLowerCase().includes(t)
-        ) return false;
-      }
-      return true;
-    });
-  }, [events, meta, q, categoryFilter, sectionFilter, outcomeFilter]);
+  const totals = summary?.totals ?? { total: 0, executed: 0, prompted: 0, unique: 0 };
 
-  const totals = useMemo(() => {
-    const t = { total: 0, prompted: 0, executed: 0, unique: new Set<string>() };
-    filteredEvents.forEach((e) => {
-      t.total++;
-      if (e.outcome === "login_prompted") t.prompted++;
-      else t.executed++;
-      if (e.user_id) t.unique.add(e.user_id);
-    });
-    return { ...t, unique: t.unique.size };
-  }, [filteredEvents]);
-
-  // Aggregations
-  const byCta = useMemo(() => groupCount(filteredEvents, (e) => e.cta_key, meta), [filteredEvents, meta]);
-  const byCategory = useMemo(() => groupCount(filteredEvents, (e) => meta.get(e.cta_key)?.category || "Unknown"), [filteredEvents, meta]);
-  const bySection = useMemo(() => groupCount(filteredEvents, (e) => sectionForPath(e.page_path)), [filteredEvents]);
-  const byPage = useMemo(() => groupCount(filteredEvents, (e) => e.page_path || "(unknown)"), [filteredEvents]);
-  const byEntity = useMemo(
-    () =>
-      groupCount(
-        filteredEvents.filter((e) => sectionForPath(e.page_path) === "Colleges" || sectionForPath(e.page_path) === "Coaching" || sectionForPath(e.page_path) === "Exams"),
-        (e) => `${sectionForPath(e.page_path)} → ${entityForPath(e.page_path) || "(list)"}`
-      ),
-    [filteredEvents]
-  );
-
-  // Daily trend
-  const trend = useMemo(() => {
-    const m = new Map<string, { date: string; total: number; executed: number; prompted: number }>();
-    filteredEvents.forEach((e) => {
-      const d = e.created_at.slice(0, 10);
-      const row = m.get(d) || { date: d, total: 0, executed: 0, prompted: 0 };
-      row.total++;
-      if (e.outcome === "login_prompted") row.prompted++;
-      else row.executed++;
-      m.set(d, row);
-    });
-    return Array.from(m.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredEvents]);
+  const byCta = summary?.by_cta ?? [];
+  const byCategory = summary?.by_category ?? [];
+  const bySection = summary?.by_section ?? [];
+  const byPage = summary?.by_page ?? [];
+  const byEntity = summary?.by_entity ?? [];
+  const trend = summary?.trend ?? [];
 
   const exportCsv = () => {
     const header = ["created_at", "cta_key", "label", "category", "outcome", "page_path", "section", "user_id"];
