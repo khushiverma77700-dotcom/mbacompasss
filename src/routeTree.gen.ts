@@ -313,6 +313,7 @@ import { Route as DemoMocksTestSlugRouteImport } from './routes/demo.mocks.test.
 import { Route as DemoPersonalizedHubAttemptAttemptIdRouteImport } from './routes/demo.personalized-hub.attempt.$attemptId'
 import { Route as DemoPersonalizedHubResultAttemptIdRouteImport } from './routes/demo.personalized-hub.result.$attemptId'
 import { Route as DemoVocabularyWordSlugRouteImport } from './routes/demo.vocabulary.word.$slug'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as StudentDailyTestReportAttemptIdRouteImport } from './routes/student.daily-test.report.$attemptId'
 import { Route as StudentMocksAttemptAttemptIdRouteImport } from './routes/student.mocks.attempt.$attemptId'
 import { Route as StudentMocksLeaderboardSlugRouteImport } from './routes/student.mocks.leaderboard.$slug'
@@ -1887,6 +1888,12 @@ const DemoVocabularyWordSlugRoute = DemoVocabularyWordSlugRouteImport.update({
   path: '/word/$slug',
   getParentRoute: () => DemoVocabularyRoute,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const StudentDailyTestReportAttemptIdRoute =
   StudentDailyTestReportAttemptIdRouteImport.update({
     id: '/report/$attemptId',
@@ -2251,6 +2258,7 @@ export interface FileRoutesByFullPath {
   '/demo/personalized-hub/attempt/$attemptId': typeof DemoPersonalizedHubAttemptAttemptIdRoute
   '/demo/personalized-hub/result/$attemptId': typeof DemoPersonalizedHubResultAttemptIdRoute
   '/demo/vocabulary/word/$slug': typeof DemoVocabularyWordSlugRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/student/daily-test/report/$attemptId': typeof StudentDailyTestReportAttemptIdRoute
   '/student/mocks/attempt/$attemptId': typeof StudentMocksAttemptAttemptIdRoute
   '/student/mocks/leaderboard/$slug': typeof StudentMocksLeaderboardSlugRoute
@@ -2548,6 +2556,7 @@ export interface FileRoutesByTo {
   '/demo/personalized-hub/attempt/$attemptId': typeof DemoPersonalizedHubAttemptAttemptIdRoute
   '/demo/personalized-hub/result/$attemptId': typeof DemoPersonalizedHubResultAttemptIdRoute
   '/demo/vocabulary/word/$slug': typeof DemoVocabularyWordSlugRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/student/daily-test/report/$attemptId': typeof StudentDailyTestReportAttemptIdRoute
   '/student/mocks/attempt/$attemptId': typeof StudentMocksAttemptAttemptIdRoute
   '/student/mocks/leaderboard/$slug': typeof StudentMocksLeaderboardSlugRoute
@@ -2865,6 +2874,7 @@ export interface FileRoutesById {
   '/demo/personalized-hub/attempt/$attemptId': typeof DemoPersonalizedHubAttemptAttemptIdRoute
   '/demo/personalized-hub/result/$attemptId': typeof DemoPersonalizedHubResultAttemptIdRoute
   '/demo/vocabulary/word/$slug': typeof DemoVocabularyWordSlugRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/student/daily-test/report/$attemptId': typeof StudentDailyTestReportAttemptIdRoute
   '/student/mocks/attempt/$attemptId': typeof StudentMocksAttemptAttemptIdRoute
   '/student/mocks/leaderboard/$slug': typeof StudentMocksLeaderboardSlugRoute
@@ -3182,6 +3192,7 @@ export interface FileRouteTypes {
     | '/demo/personalized-hub/attempt/$attemptId'
     | '/demo/personalized-hub/result/$attemptId'
     | '/demo/vocabulary/word/$slug'
+    | '/lovable/email/queue/process'
     | '/student/daily-test/report/$attemptId'
     | '/student/mocks/attempt/$attemptId'
     | '/student/mocks/leaderboard/$slug'
@@ -3479,6 +3490,7 @@ export interface FileRouteTypes {
     | '/demo/personalized-hub/attempt/$attemptId'
     | '/demo/personalized-hub/result/$attemptId'
     | '/demo/vocabulary/word/$slug'
+    | '/lovable/email/queue/process'
     | '/student/daily-test/report/$attemptId'
     | '/student/mocks/attempt/$attemptId'
     | '/student/mocks/leaderboard/$slug'
@@ -3795,6 +3807,7 @@ export interface FileRouteTypes {
     | '/demo/personalized-hub/attempt/$attemptId'
     | '/demo/personalized-hub/result/$attemptId'
     | '/demo/vocabulary/word/$slug'
+    | '/lovable/email/queue/process'
     | '/student/daily-test/report/$attemptId'
     | '/student/mocks/attempt/$attemptId'
     | '/student/mocks/leaderboard/$slug'
@@ -3822,6 +3835,7 @@ export interface RootRouteChildren {
   CollegeSlugProgrammeRoute: typeof CollegeSlugProgrammeRouteWithChildren
   MocksAttemptAttemptIdRoute: typeof MocksAttemptAttemptIdRoute
   MocksCheckoutReturnRoute: typeof MocksCheckoutReturnRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -5954,6 +5968,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoVocabularyWordSlugRouteImport
       parentRoute: typeof DemoVocabularyRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/daily-test/report/$attemptId': {
       id: '/student/daily-test/report/$attemptId'
       path: '/report/$attemptId'
@@ -6929,6 +6950,7 @@ const rootRouteChildren: RootRouteChildren = {
   CollegeSlugProgrammeRoute: CollegeSlugProgrammeRouteWithChildren,
   MocksAttemptAttemptIdRoute: MocksAttemptAttemptIdRoute,
   MocksCheckoutReturnRoute: MocksCheckoutReturnRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
