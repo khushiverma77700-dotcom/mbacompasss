@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Upload, X, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { enqueueImageOptimization } from "@/lib/enqueueImageOptimization";
+import { isPrivateBucket, useSignedStorageUrl } from "@/lib/privateStorage";
 
 interface FileUploadProps {
   bucket: string;
