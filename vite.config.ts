@@ -31,6 +31,9 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    server: {
+      allowedHosts: ["dashboard.mbacompass.in"],
+    },
     define: {
       __BUILD_ID__: JSON.stringify(BUILD_ID),
     },

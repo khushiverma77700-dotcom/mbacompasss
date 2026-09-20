@@ -51,21 +51,21 @@ const isMainHost = (hostname: string) => MAIN_HOSTS.includes(hostname);
  * mounts — so the user never sees a flash of wrong content.
  */
 export const computeSubdomainRedirect = (loc: Location): string | null => {
-  const { hostname, pathname, search, hash, protocol } = loc;
+  const { hostname, pathname, search, hash, origin } = loc;
 
   // ---- Dashboard host: lock to /student/* + auth. ----
   if (isDashboardHost(hostname)) {
     const rewrittenMockPath = rewriteDashboardMockPath(pathname);
-    if (rewrittenMockPath) return `${protocol}//${hostname}${rewrittenMockPath}${search}${hash}`;
+    if (rewrittenMockPath) return `${origin}${rewrittenMockPath}${search}${hash}`;
 
     if (pathname === "/" || pathname === "") {
-      return `${protocol}//${hostname}/student${search}${hash}`;
+      return `${origin}/student${search}${hash}`;
     }
     const allowed = DASHBOARD_ALLOWED_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
     );
     if (allowed) return null;
-    return `${protocol}//${hostname}/student${search}${hash}`;
+    return `${origin}/student${search}${hash}`;
   }
 
   // ---- Main marketing host: no redirects, hosts are independent. ----
