@@ -15443,6 +15443,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_shortlister_submissions: { Args: never; Returns: number }
       colleges_listing: {
         Args: never
         Returns: {
