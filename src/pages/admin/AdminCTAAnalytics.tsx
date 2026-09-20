@@ -18,15 +18,6 @@ type Cta = {
   requires_login: boolean;
 };
 
-type EventRow = {
-  cta_key: string;
-  outcome: "login_prompted" | "executed";
-  created_at: string;
-  page_path: string | null;
-  user_id: string | null;
-  context: Record<string, any> | null;
-};
-
 type GroupRow = { key: string; total: number; executed: number; prompted: number };
 type RecentRow = {
   cta_key: string; label: string; category: string;
@@ -43,37 +34,6 @@ type Summary = {
 };
 
 const RANGES: Record<string, number> = { "24h": 1, "7d": 7, "30d": 30, "90d": 90, "all": 3650 };
-
-// Heuristic: turn a path like /colleges/iim-ahmedabad into a section name.
-const sectionForPath = (path: string | null): string => {
-  if (!path) return "Unknown";
-  const p = path.split("?")[0].split("#")[0];
-  if (p === "/" || p === "") return "Home";
-  const seg = p.split("/").filter(Boolean)[0] || "Home";
-  const map: Record<string, string> = {
-    colleges: "Colleges",
-    college: "Colleges",
-    coaching: "Coaching",
-    exams: "Exams",
-    exam: "Exams",
-    blog: "Blog",
-    articles: "Articles",
-    courses: "Courses",
-    "mba-compass": "MBA Compass",
-    mocks: "Mocks",
-    student: "Student LMS",
-    admin: "Admin",
-    auth: "Auth",
-  };
-  return map[seg] || seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-};
-
-// Pretty entity label from path: e.g. /colleges/iim-ahmedabad -> "iim-ahmedabad"
-const entityForPath = (path: string | null): string | null => {
-  if (!path) return null;
-  const parts = path.split("?")[0].split("#")[0].split("/").filter(Boolean);
-  return parts[1] || null;
-};
 
 const AdminCTAAnalytics = () => {
   const [range, setRange] = useState<keyof typeof RANGES>("7d");
@@ -384,25 +344,6 @@ const AdminCTAAnalytics = () => {
 };
 
 // ---------- helpers ----------
-
-type GroupRow = { key: string; total: number; executed: number; prompted: number };
-
-function groupCount(
-  events: EventRow[],
-  keyer: (e: EventRow) => string,
-  _meta?: Map<string, Cta>
-): GroupRow[] {
-  const m = new Map<string, GroupRow>();
-  events.forEach((e) => {
-    const k = keyer(e);
-    const r = m.get(k) || { key: k, total: 0, executed: 0, prompted: 0 };
-    r.total++;
-    if (e.outcome === "login_prompted") r.prompted++;
-    else r.executed++;
-    m.set(k, r);
-  });
-  return Array.from(m.values()).sort((a, b) => b.total - a.total);
-}
 
 const BreakdownCard = ({
   title, rows, renderLabel, icon: Icon, empty,
