@@ -27,6 +27,21 @@ type EventRow = {
   context: Record<string, any> | null;
 };
 
+type GroupRow = { key: string; total: number; executed: number; prompted: number };
+type RecentRow = {
+  cta_key: string; label: string; category: string;
+  outcome: "login_prompted" | "executed";
+  created_at: string; page_path: string | null; section: string; user_id: string | null;
+};
+type Summary = {
+  totals: { total: number; executed: number; prompted: number; unique: number };
+  sections: string[];
+  by_cta: GroupRow[]; by_category: GroupRow[]; by_section: GroupRow[];
+  by_page: GroupRow[]; by_entity: GroupRow[];
+  trend: { date: string; total: number; executed: number; prompted: number }[];
+  recent: RecentRow[];
+};
+
 const RANGES: Record<string, number> = { "24h": 1, "7d": 7, "30d": 30, "90d": 90, "all": 3650 };
 
 // Heuristic: turn a path like /colleges/iim-ahmedabad into a section name.
@@ -62,7 +77,7 @@ const entityForPath = (path: string | null): string | null => {
 
 const AdminCTAAnalytics = () => {
   const [range, setRange] = useState<keyof typeof RANGES>("7d");
-  const [events, setEvents] = useState<EventRow[]>([]);
+  const [summary, setSummary] = useState<Summary | null>(null);
   const [ctas, setCtas] = useState<Cta[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -126,16 +141,15 @@ const AdminCTAAnalytics = () => {
 
   const exportCsv = () => {
     const header = ["created_at", "cta_key", "label", "category", "outcome", "page_path", "section", "user_id"];
-    const rows = filteredEvents.map((e) => {
-      const m = meta.get(e.cta_key);
+    const rows = recentEvents.map((e) => {
       return [
         e.created_at,
         e.cta_key,
-        m?.label || "",
-        m?.category || "",
+        e.label || "",
+        e.category || "",
         e.outcome,
         e.page_path || "",
-        sectionForPath(e.page_path),
+        e.section,
         e.user_id || "",
       ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
     });
@@ -164,7 +178,7 @@ const AdminCTAAnalytics = () => {
             Drill into clicks by CTA, section, category, page and login outcome.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={!filteredEvents.length}>
+        <Button variant="outline" size="sm" onClick={exportCsv} disabled={!recentEvents.length}>
           <Download className="w-4 h-4 mr-1.5" /> Export CSV
         </Button>
       </div>
@@ -337,12 +351,11 @@ const AdminCTAAnalytics = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredEvents.slice(0, 200).map((e, i) => {
-                      const m = meta.get(e.cta_key);
+                    {recentEvents.slice(0, 200).map((e, i) => {
                       return (
                         <tr key={i} className="border-b last:border-0 hover:bg-muted/40">
                           <td className="py-1.5 pr-2 whitespace-nowrap">{new Date(e.created_at).toLocaleString()}</td>
-                          <td className="py-1.5 pr-2">{m?.label || e.cta_key}</td>
+                          <td className="py-1.5 pr-2">{e.label || e.cta_key}</td>
                           <td className="py-1.5 pr-2">
                             {e.outcome === "executed" ? (
                               <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-300">Ran</Badge>
@@ -350,13 +363,13 @@ const AdminCTAAnalytics = () => {
                               <Badge variant="outline" className="text-xs text-amber-700 border-amber-300">Login</Badge>
                             )}
                           </td>
-                          <td className="py-1.5 pr-2">{sectionForPath(e.page_path)}</td>
+                          <td className="py-1.5 pr-2">{e.section}</td>
                           <td className="py-1.5 pr-2 max-w-[260px] truncate font-mono">{e.page_path || "—"}</td>
                           <td className="py-1.5 pr-2 font-mono text-xs">{e.user_id?.slice(0, 8) || "anon"}</td>
                         </tr>
                       );
                     })}
-                    {filteredEvents.length === 0 && (
+                    {recentEvents.length === 0 && (
                       <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No matching events.</td></tr>
                     )}
                   </tbody>
