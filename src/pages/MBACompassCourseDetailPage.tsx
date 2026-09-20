@@ -372,9 +372,9 @@ function DetailInner() {
       {/* HERO */}
       <section className="course-offer-hero relative overflow-hidden border-b border-sky-100 pt-7 pb-10 sm:pt-10 sm:pb-12">
         <div className="container mx-auto px-4 relative">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            <div className="lg:col-span-8 pt-2">
-              <div className="mb-4 inline-flex items-center gap-2 border-l-4 border-emerald-500 bg-card px-3 py-2 text-sm font-bold uppercase text-sky-700 shadow-sm">MBA Compass premium preparation series</div>
+          <div className="grid lg:grid-cols-12 gap-7 lg:gap-10 items-start">
+            <div className="lg:col-span-7 pt-2">
+              <div className="mb-4 inline-flex items-center gap-2 border-l-4 border-emerald-500 bg-card px-3 py-2 text-sm font-bold uppercase text-sky-700 shadow-sm">Complete MBA entrance test series</div>
               <div className="flex flex-wrap gap-2 mb-3">
                 {(c.exam_focus ?? []).map((e: string) => (
                   <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-100">{e}</Badge>
@@ -423,8 +423,16 @@ function DetailInner() {
                   </p>
                 )}
 
+              <div className="mt-6 grid gap-2 sm:grid-cols-3" aria-label="Course advantages">
+                {["Exam-pattern practice", "Detailed performance analysis", `${c.validity_months ?? 12}-month course access`].map((item) => (
+                  <div key={item} className="flex items-center gap-2 border-l-2 border-emerald-400 bg-card px-3 py-2 text-sm font-semibold text-foreground shadow-sm">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" /> {item}
+                  </div>
+                ))}
+              </div>
+
               {/* Hero highlight strip */}
-               <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
+               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="sky" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
@@ -454,17 +462,20 @@ function DetailInner() {
               )}
             </div>
 
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-5">
               <Card className="overflow-hidden rounded-lg border-sky-200 shadow-lg lg:sticky lg:top-20">
                 {c.thumbnail_url ? (
-                  <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover"  loading="lazy" decoding="async" />
+                  <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-[16/7] object-cover" loading="eager" decoding="async" />
                 ) : (
-                  <div className="aspect-video bg-gradient-to-br from-sky-100 to-blue-100 grid place-items-center">
-                    <GraduationCap className="h-12 w-12 text-sky-400" />
+                  <div className="border-b border-sky-100 bg-sky-50 p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground"><GraduationCap className="h-6 w-6" /></div>
+                      <div><div className="font-bold text-foreground">BSB Full Series Advance</div><div className="text-sm text-muted-foreground">One plan. Multiple MBA entrance exams.</div></div>
+                    </div>
                   </div>
                 )}
-                 <div className="p-6">
-                   <div className="text-sm font-semibold text-muted-foreground mb-2">Get complete course access</div>
+                 <div className="p-5 sm:p-6">
+                   <div className="flex items-center justify-between gap-3"><div className="text-sm font-semibold text-muted-foreground">Complete course access</div>{hasDiscount ? <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">Limited-price offer</Badge> : null}</div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900">{formatINR(c.price)}</span>
                     {hasDiscount && (
@@ -475,6 +486,15 @@ function DetailInner() {
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">{c.validity_months ?? 12} months access • Taxes included</div>
+
+                   <div className="mt-5 grid grid-cols-2 gap-2">
+                     {[
+                       [mockAgg.total || c.full_mocks_count || 0, "included mocks"],
+                       [Object.keys(mockAgg.byExam).length || (c.exam_focus?.length ?? 0), "exam families"],
+                       [mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "Detailed", "question analysis"],
+                       [c.validity_months ?? 12, "months access"],
+                     ].map(([value, label]) => <div key={label} className="rounded-md border border-sky-100 bg-sky-50 p-3"><div className="font-bold text-foreground">{value}</div><div className="text-sm text-muted-foreground">{label}</div></div>)}
+                   </div>
 
                   <div className="mt-4 space-y-2">
                     {enrolled ? (
@@ -507,7 +527,7 @@ function DetailInner() {
                     </div>
                   </div>
 
-                  <div className="mt-5 pt-4 border-t border-sky-100 space-y-2 text-sm">
+                   <div className="mt-5 pt-4 border-t border-sky-100 space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-gray-700"><Shield className="h-4 w-4 text-emerald-500" /> Secure checkout via Razorpay</div>
                     <div className="flex items-center gap-2 text-gray-700"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Instant access after payment</div>
                     <div className="flex items-center gap-2 text-gray-700"><BarChart3 className="h-4 w-4 text-emerald-500" /> Detailed analytics & solutions</div>
@@ -519,22 +539,56 @@ function DetailInner() {
         </div>
       </section>
 
+      {/* STATS STRIP */}
+       <section className="border-b border-sky-100 bg-card py-5" aria-label="Course facts">
+        <div className="container mx-auto grid grid-cols-2 gap-3 px-4 md:grid-cols-3 lg:grid-cols-5">
+          <StatCard icon={Layers} value={mockAgg.total || c.full_mocks_count || 0} label="Total Mocks" />
+          <StatCard icon={Target} value={mockAgg.byType.full_length || c.full_mocks_count || 0} label="Full Length" />
+          <StatCard icon={ListChecks} value={(mockAgg.byType.sectional || 0) + (mockAgg.byType.topic_wise || 0) || c.sectional_mocks_count || 0} label="Sectional / Topic" />
+          <StatCard icon={FileText} value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "Detailed"} label="Question Analysis" />
+          <StatCard icon={Clock} value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.validity_months ?? 12} mo`} label={mockAgg.totalDurationMins ? "Practice Hours" : "Course Access"} />
+        </div>
+      </section>
+
       <nav className="course-jump-nav border-b border-sky-100 bg-card" aria-label="Course page sections">
         <div className="container mx-auto flex gap-2 overflow-x-auto px-4 py-3">
-          {[['Dashboard', 'course-dashboard'], ['Student voices', 'course-testimonials'], ['Mock library', 'course-mocks'], ['What’s included', 'course-included'], ['FAQs', 'course-faqs']].map(([label, target]) => (
+          {[['Course plan', 'course-plan'], ['Dashboard', 'course-dashboard'], ['Student voices', 'course-testimonials'], ['Mock library', 'course-mocks'], ['What’s included', 'course-included'], ['FAQs', 'course-faqs']].map(([label, target]) => (
             <a key={target} href={`#${target}`} className="shrink-0 rounded-md border border-sky-100 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:border-sky-300 hover:bg-sky-100">{label}</a>
           ))}
         </div>
       </nav>
 
-      {/* STATS STRIP */}
-       <section className="container mx-auto px-4 -mt-7 relative z-10" aria-label="Course facts">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard icon={Layers} value={mockAgg.total || c.full_mocks_count || 0} label="Total Mocks" />
-          <StatCard icon={Target} value={mockAgg.byType.full_length || c.full_mocks_count || 0} label="Full Length" />
-          <StatCard icon={ListChecks} value={(mockAgg.byType.sectional || 0) + (mockAgg.byType.topic_wise || 0) || c.sectional_mocks_count || 0} label="Sectional / Topic" />
-          <StatCard icon={FileText} value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} label="Total Questions" />
-          <StatCard icon={Clock} value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} label="Practice Hours" />
+      <section id="course-plan" className="border-b border-sky-100 bg-background py-10">
+        <div className="container mx-auto px-4">
+          <SectionHead eyebrow="Built for serious preparation" title="One preparation system from diagnosis to exam day" />
+          <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: Gauge, title: "1. Diagnose", desc: "Start with a full-length or sectional test to identify where time and accuracy are being lost." },
+              { icon: Target, title: "2. Focus", desc: "Use section-level performance data to choose the next practice set instead of preparing at random." },
+              { icon: Brain, title: "3. Improve", desc: "Review solutions, attempt patterns and weak areas after every completed mock." },
+              { icon: Trophy, title: "4. Repeat", desc: "Return to timed exam practice and compare performance across attempts throughout your access period." },
+            ].map((item) => (
+              <Card key={item.title} className="rounded-lg border-sky-100 p-5 shadow-sm">
+                <div className="grid h-10 w-10 place-items-center rounded-md bg-sky-100 text-sky-700"><item.icon className="h-5 w-5" /></div>
+                <h3 className="mt-4 font-bold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-4 grid gap-3 lg:grid-cols-3">
+            <div className="rounded-lg border border-sky-100 bg-sky-50 p-5 lg:col-span-2">
+              <div className="text-sm font-bold uppercase text-sky-700">The complete practice loop</div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {[['Before the mock', 'Choose by exam, test type and current preparation need.'], ['During the mock', 'Practise in a timed environment built around test-taking discipline.'], ['After the mock', 'Use analysis and solutions to decide what to revise next.']].map(([title, copy]) => <div key={title}><h3 className="font-bold text-foreground">{title}</h3><p className="mt-1 text-sm text-muted-foreground">{copy}</p></div>)}
+              </div>
+            </div>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+              <div className="text-sm font-bold uppercase text-emerald-700">Access summary</div>
+              <div className="mt-3 text-3xl font-bold text-foreground">{c.validity_months ?? 12} months</div>
+              <p className="mt-2 text-sm text-muted-foreground">Your enrolled course, mock library, analysis and available preparation tools remain together in your student dashboard.</p>
+              {!enrolled && c.price ? <Button className="mt-4 w-full" onClick={handlePay} disabled={paying}>{paying ? "Processing…" : <>Buy now for {formatINR(c.price)} <ArrowRight className="ml-1 h-4 w-4" /></>}</Button> : null}
+            </div>
+          </div>
         </div>
       </section>
 
