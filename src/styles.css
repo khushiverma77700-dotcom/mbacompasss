@@ -149,6 +149,23 @@
   font-display: swap;
 }
 
+.course-sales-page {
+  font-family: "Manrope Student", var(--font-body);
+  --course-sky: 202 83% 45%;
+  --course-emerald: 159 82% 36%;
+  --course-canvas: 204 100% 98%;
+}
+
+.course-sales-page h1,
+.course-sales-page h2,
+.course-sales-page h3,
+.course-sales-page h4 {
+  font-family: "Sora Student", var(--font-heading);
+  letter-spacing: 0;
+}
+
+.course-sales-page img { max-width: 100%; height: auto; }
+
 @font-face {
   font-family: "Manrope Student";
   src: url("/fonts/manrope-600.ttf") format("truetype");

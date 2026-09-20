@@ -3,6 +3,16 @@ import MBACompassCourseDetailPage from "@/pages/MBACompassCourseDetailPage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 
 export const Route = createFileRoute("/_public/mba-compass/$slug")({
+  head: () => ({
+    meta: [
+      { title: "MBA Entrance Mock Course | MBA Compass" },
+      { name: "description", content: "Explore MBA Compass mock course details, included tests, analytics, access and enrollment." },
+      { property: "og:title", content: "MBA Entrance Mock Course | MBA Compass" },
+      { property: "og:description", content: "Explore MBA Compass mock course details, included tests, analytics, access and enrollment." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: () => <MBACompassCourseDetailPage />,
   pendingComponent: PublicPageSkeleton,
 });
