@@ -13,6 +13,11 @@
 ## Preview stability
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
 
+## Student dashboard redesign
+- [x] Apply the selected immersive analytical composition in a light Sky and Emerald system
+- [x] Scope Sora and Manrope typography to the student experience
+- [x] Verify signed-in desktop and mobile dashboard presentation
+
 ## Homepage college deadlines
 - [x] Add an auto-scrolling college application deadlines section above the tools section
 - [x] Make deadline cards, placement packages, fees, links, logos, visibility, and order admin-managed

@@ -34,7 +34,7 @@ export default function StudentBottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_20px_-8px_rgba(2,132,199,0.15)]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-xl border-t border-sky-100 dark:border-border shadow-sm"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Student bottom navigation"
     >
@@ -60,9 +60,9 @@ export default function StudentBottomNav() {
                 onTouchStart={() => preloadStudentRoute(tab.to)}
                 onMouseEnter={() => preloadStudentRoute(tab.to)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 py-2 mx-0.5 rounded-xl text-xs font-semibold transition-all duration-200",
+                  "relative flex flex-col items-center justify-center gap-1 py-2 mx-0.5 rounded-md text-xs font-semibold transition-all duration-200",
                   isActive
-                    ? "text-white bg-gradient-to-br from-sky-500 to-blue-600 shadow-md shadow-sky-500/30"
+                    ? "text-primary-foreground bg-primary shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
                 )}
               >

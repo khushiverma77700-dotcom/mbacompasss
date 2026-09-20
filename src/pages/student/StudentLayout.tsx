@@ -284,13 +284,13 @@ export default function StudentLayout() {
   return (
     <StudentThemeProvider>
       {isDemo && <DemoBanner />}
-      <div className="student-scope min-h-[100dvh] bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
+      <div className="student-scope student-shell min-h-[100dvh] text-foreground">
         {/* Top bar */}
         <header
-          className="fixed left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border"
+          className="fixed left-0 right-0 z-30 bg-card/95 backdrop-blur-xl border-b border-sky-100/80 dark:border-border"
           style={{ top: demoOffset, paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
-          <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-6 h-14">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-6 h-16">
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
               <button
                 className="lg:hidden p-1.5 -ml-1 rounded-md hover:bg-accent shrink-0"
@@ -315,7 +315,7 @@ export default function StudentLayout() {
                       </>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground hidden sm:block">CAT Prep LMS</div>
+                  <div className="text-xs text-muted-foreground hidden sm:block">Performance workspace</div>
                 </div>
               </Link>
             </div>
@@ -365,12 +365,12 @@ export default function StudentLayout() {
 
         <div
           className="flex"
-          style={{ paddingTop: `calc(env(safe-area-inset-top, 0px) + 3.5rem + ${demoOffset})` }}
+           style={{ paddingTop: `calc(env(safe-area-inset-top, 0px) + 4rem + ${demoOffset})` }}
         >
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
           <aside
-            className="hidden lg:flex flex-col w-72 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20"
-            style={{ top: `calc(env(safe-area-inset-top, 0px) + 3.5rem + ${demoOffset})` }}
+            className="hidden lg:flex flex-col w-64 shrink-0 border-r border-sky-100/80 dark:border-border bg-card/90 backdrop-blur-xl fixed left-0 bottom-0 overflow-y-auto z-20"
+            style={{ top: `calc(env(safe-area-inset-top, 0px) + 4rem + ${demoOffset})` }}
           >
             <SidebarContent />
           </aside>
@@ -381,7 +381,7 @@ export default function StudentLayout() {
               <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setMobileOpen(false)} />
               <aside
                 className="absolute left-0 top-0 bottom-0 w-[82vw] max-w-sm bg-card shadow-2xl border-r border-border overflow-y-auto animate-in slide-in-from-left duration-300"
-                style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3.5rem)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+                style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 4rem)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
               >
                 <SidebarContent />
               </aside>
@@ -390,7 +390,7 @@ export default function StudentLayout() {
 
           {/* Main — offset by sidebar width on desktop; padded for bottom nav on mobile */}
           <main
-            className="flex-1 min-w-0 px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:ml-72 pb-[calc(env(safe-area-inset-bottom,0px)+88px)] lg:pb-8"
+            className="flex-1 min-w-0 px-3 sm:px-5 lg:px-7 xl:px-10 py-4 sm:py-6 lg:ml-64 pb-[calc(env(safe-area-inset-bottom,0px)+88px)] lg:pb-10"
           >
             <QuickViewProvider>
               <Outlet />
@@ -479,10 +479,10 @@ function SidebarContent() {
         onFocus={() => preloadStudentRoute(item.to)}
         className={({ isActive }) =>
           cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
+            "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors relative",
             opts.indent && "ml-3 py-1.5 text-sm",
             isActive
-              ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-xs dark:from-sky-500/20 dark:to-blue-500/10 dark:text-sky-200"
+              ? "bg-sky-50 text-sky-700 shadow-xs ring-1 ring-sky-100 dark:bg-sky-500/15 dark:text-sky-200 dark:ring-sky-500/20"
               : "text-foreground/80 hover:bg-accent hover:text-foreground"
           )
         }
@@ -536,7 +536,7 @@ function SidebarContent() {
             "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold overflow-hidden border transition-all duration-300 group",
             isActive
               ? cn(opts.activeBorder, "bg-white shadow-lg scale-[1.02] translate-x-0.5")
-              : cn("border-slate-200/60 bg-gradient-to-br", opts.gradient, "text-foreground hover:shadow-xl hover:-translate-y-0.5 hover:border-slate-300/80 dark:border-slate-500/20")
+              : cn("border-slate-200/60 bg-gradient-to-br", opts.gradient, "text-foreground hover:shadow-sm hover:border-slate-300/80 dark:border-slate-500/20")
           )
         }
       >
@@ -562,7 +562,7 @@ function SidebarContent() {
   };
 
   return (
-    <nav className="w-full p-3 space-y-0.5">
+    <nav className="w-full p-3 space-y-1">
       {overview && renderRow(overview)}
       {updates && renderRow(updates)}
       {dayPlanner && renderRow(dayPlanner)}
@@ -570,7 +570,7 @@ function SidebarContent() {
       {/* My Mocks — subtle highlight so students immediately recognise it as the primary section */}
       <div
         className={cn(
-          "rounded-xl border my-2 overflow-hidden transition-colors",
+          "rounded-lg border my-2 overflow-hidden transition-colors",
           isMocksActive
             ? "border-sky-200/80 bg-gradient-to-br from-sky-50/70 to-blue-50/40 dark:border-sky-500/25 dark:from-sky-500/10 dark:to-blue-500/5"
             : "border-border/60 bg-muted/30 dark:bg-muted/20"
@@ -617,10 +617,10 @@ function SidebarContent() {
       {/* My Insights — highlighted analytics block (Strength, Weak, Performance, Leaderboard) */}
       <div
         className={cn(
-          "rounded-xl border my-2 overflow-hidden transition-colors",
+          "rounded-lg border my-2 overflow-hidden transition-colors",
           isInsightsActive
-            ? "border-violet-200/80 bg-gradient-to-br from-violet-50/70 to-sky-50/40 dark:border-violet-500/25 dark:from-violet-500/10 dark:to-sky-500/5"
-            : "border-violet-200/60 bg-gradient-to-br from-violet-50/40 to-sky-50/20 dark:border-violet-500/15 dark:from-violet-500/5 dark:to-sky-500/5"
+            ? "border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 to-sky-50/40 dark:border-emerald-500/25 dark:from-emerald-500/10 dark:to-sky-500/5"
+            : "border-emerald-200/60 bg-gradient-to-br from-emerald-50/40 to-sky-50/20 dark:border-emerald-500/15 dark:from-emerald-500/5 dark:to-sky-500/5"
         )}
       >
         <button
@@ -629,7 +629,7 @@ function SidebarContent() {
           aria-expanded={insightsOpen}
           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent/40 transition-colors"
         >
-          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500 to-sky-600 grid place-items-center text-white shadow-xs">
+          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500 to-sky-600 grid place-items-center text-white shadow-xs">
             <BarChart3 className="h-3.5 w-3.5" />
           </span>
           <span className="flex-1 text-left">My Insights</span>
@@ -684,7 +684,7 @@ function SidebarContent() {
       </NavLink>
 
       {/* Knowledge Duo — B-School Vocabulary + Quant Formula Book side by side / stacked premium cards */}
-      <div className="my-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/90 via-white to-sky-50/80 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-sky-900/10 dark:border-slate-700/40 shadow-xs backdrop-blur p-2 space-y-1.5">
+      <div className="my-2 rounded-lg border border-sky-100 bg-gradient-to-br from-sky-50/90 via-white to-emerald-50/60 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-emerald-900/10 dark:border-slate-700/40 shadow-xs backdrop-blur p-2 space-y-1.5">
         <div className="flex items-center gap-2 px-1 pb-1">
           <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs shadow-xs">
             <Sparkles className="h-3 w-3" />
@@ -701,9 +701,9 @@ function SidebarContent() {
           })}
         {formulaItem &&
           renderKnowledgeDuo(formulaItem, {
-            iconBg: "bg-gradient-to-br from-violet-500 to-fuchsia-600",
-            gradient: "from-violet-50/80 to-fuchsia-50/60",
-            activeBorder: "border-violet-300/80 ring-1 ring-violet-300/40 text-violet-700 dark:text-violet-300",
+            iconBg: "bg-gradient-to-br from-sky-500 to-emerald-600",
+            gradient: "from-sky-50/80 to-emerald-50/60",
+            activeBorder: "border-sky-300/80 ring-1 ring-sky-300/40 text-sky-700 dark:text-sky-300",
           })}
         {newsroomItem &&
           renderKnowledgeDuo(newsroomItem, {
