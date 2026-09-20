@@ -234,6 +234,10 @@ function DetailInner() {
       });
     }, { threshold: 0.12, rootMargin: "0px 0px -8%" });
     revealItems.forEach((item) => observer.observe(item));
+    page.querySelectorAll<HTMLElement>(".course-chart-fill[data-width]").forEach((bar) => {
+      const width = Number(bar.dataset.width);
+      if (Number.isFinite(width)) bar.style.setProperty("--chart-width", `${Math.min(100, Math.max(0, width))}%`);
+    });
 
     let frame = 0;
     const updateParallax = () => {
