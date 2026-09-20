@@ -631,6 +631,42 @@ function DetailInner() {
         </section>
       )}
 
+      <section className="border-y border-sky-100 bg-sky-50/60 py-10">
+        <div className="container mx-auto px-4">
+          <SectionHead eyebrow="Is this the right series for you?" title="Choose it when you need breadth, repetition and one clear dashboard" />
+          <div className="mt-8 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                ["Preparing for multiple exams", "Keep CAT, NMAT, XAT, SNAP and the available OMET practice library under one enrollment."],
+                ["Need more timed practice", "Move beyond passive revision with full-length, sectional and topic-led tests available in the course."],
+                ["Want evidence after each attempt", "Use the available analysis, solutions and performance views to review every completed test."],
+                ["Prefer a structured routine", "Combine baseline testing, focused practice and repeated mocks across the full access period."],
+              ].map(([title, copy]) => (
+                <Card key={title} className="rounded-lg border-sky-100 bg-card p-5 shadow-sm">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <h3 className="mt-3 font-bold text-foreground">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{copy}</p>
+                </Card>
+              ))}
+            </div>
+            <Card className="rounded-lg border-sky-200 bg-card p-5 shadow-md sm:p-6">
+              <div className="text-sm font-bold uppercase text-sky-700">At a glance</div>
+              <h3 className="mt-2 text-xl font-bold text-foreground">What your enrollment brings together</h3>
+              <div className="mt-5 divide-y divide-sky-100 border-y border-sky-100">
+                {[
+                  ["Exam coverage", (c.exam_focus ?? []).join(", ") || "MBA entrance exams"],
+                  ["Practice formats", [mockAgg.byType.full_length ? "Full length" : null, mockAgg.byType.sectional ? "Sectional" : null, mockAgg.byType.topic_wise ? "Topic-wise" : null].filter(Boolean).join(", ") || "Full-length and focused practice"],
+                  ["Included tests", `${mockAgg.total || c.full_mocks_count || 0} mocks`],
+                  ["Access period", `${c.validity_months ?? 12} months`],
+                  ["Delivery", "MBA Compass student dashboard"],
+                ].map(([label, value]) => <div key={label} className="grid grid-cols-[0.85fr_1.15fr] gap-3 py-3 text-sm"><span className="text-muted-foreground">{label}</span><span className="font-semibold text-foreground">{value}</span></div>)}
+              </div>
+              {!enrolled && c.price ? <Button size="lg" className="mt-5 w-full" disabled={paying} onClick={handlePay}>{paying ? "Processing…" : <>Enroll for {formatINR(c.price)} <ArrowRight className="ml-1 h-4 w-4" /></>}</Button> : null}
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* DASHBOARD SHOWCASE */}
       <div id="course-dashboard"><DashboardShowcase /></div>
 
@@ -786,9 +822,30 @@ function DetailInner() {
         })()}
       </section>
 
+      <section className="border-y border-sky-100 bg-card py-10">
+        <div className="container mx-auto px-4">
+          <SectionHead eyebrow="After every mock" title="Turn each attempt into the next preparation decision" />
+          <div className="mt-8 overflow-hidden rounded-lg border border-sky-100 bg-background">
+            {[
+              ["Attempt review", "Revisit your completed test and understand how the attempt unfolded."],
+              ["Accuracy signals", "Separate correct, incorrect and unattempted questions to identify avoidable losses."],
+              ["Section view", "Read performance by section so the next practice session has a defined focus."],
+              ["Solution review", "Use the solutions available with the test to correct concepts and approach."],
+              ["Progress tracking", "Compare completed practice over time from the same student experience."],
+            ].map(([title, copy], index) => (
+              <div key={title} className="grid gap-2 border-b border-sky-100 p-4 last:border-b-0 sm:grid-cols-[3rem_1fr_2fr] sm:items-center sm:gap-4">
+                <div className="grid h-9 w-9 place-items-center rounded-md bg-sky-100 font-bold text-sky-700">{String(index + 1).padStart(2, "0")}</div>
+                <h3 className="font-bold text-foreground">{title}</h3>
+                <p className="text-sm text-muted-foreground">{copy}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CURRICULUM */}
       {curriculum.length > 0 && (
-        <section id="course-faqs" className="container mx-auto px-4 py-10">
+        <section className="container mx-auto px-4 py-10">
           <SectionHead eyebrow="Curriculum" title="A step-by-step plan from basics to exam mastery" />
           <Card className="p-6 border-sky-100 mt-8">
             <Accordion type="multiple" defaultValue={curriculum.map((_, i) => `m-${i}`)} className="space-y-2">
@@ -816,7 +873,7 @@ function DetailInner() {
 
       {/* INSTRUCTORS */}
       {instructors.length > 0 && (
-        <section className="container mx-auto px-4 py-12">
+        <section id="course-faqs" className="container mx-auto px-4 py-12">
           <SectionHead eyebrow="Mentors" title="Learn from people who have cracked the exam" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
             {instructors.map((p, i) => (
@@ -829,6 +886,21 @@ function DetailInner() {
                 {p.bio && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{p.bio}</p>}
               </Card>
             ))}
+          </div>
+        </section>
+      )}
+
+      {faqs.length === 0 && (
+        <section id="course-faqs" className="container mx-auto px-4 py-10">
+          <SectionHead eyebrow="Before you enroll" title="Important course and access details" />
+          <div className="mx-auto mt-8 max-w-4xl divide-y divide-sky-100 rounded-lg border border-sky-100 bg-card px-5">
+            {[
+              ["How long will I have access?", `This course currently includes ${c.validity_months ?? 12} months of access after successful enrollment.`],
+              ["Where do I take the mocks?", "Your included tests and performance information are available through the MBA Compass student dashboard."],
+              ["Which exams are covered?", (c.exam_focus ?? []).length > 0 ? `The course is configured for ${(c.exam_focus ?? []).join(", ")}. The mock library above shows the currently available exam-wise coverage.` : "The current exam-wise mock coverage is shown in the practice library above."],
+              ["When does access start?", "Course access activates after payment is successfully verified."],
+              ["Can I see what is included before buying?", "Yes. This page lists the current mock formats, exam coverage, enabled tools and a preview of available tests."],
+            ].map(([question, answer]) => <div key={question} className="py-5"><h3 className="font-bold text-foreground">{question}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{answer}</p></div>)}
           </div>
         </section>
       )}
@@ -1075,7 +1147,7 @@ function HeroChip({ icon: Icon, label, value, tint }: { icon: any; label: string
 
 function StatCard({ icon: Icon, value, label }: { icon: any; value: any; label: string }) {
   return (
-    <div className="rounded-2xl bg-white border border-sky-100 shadow-xs p-4 hover:shadow-md transition">
+    <div className="rounded-lg bg-card border border-sky-100 shadow-xs p-4 hover:shadow-md transition">
       <div className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center mb-2">
         <Icon className="h-5 w-5" />
       </div>
@@ -1088,10 +1160,10 @@ function StatCard({ icon: Icon, value, label }: { icon: any; value: any; label: 
 function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="text-center max-w-2xl mx-auto">
-      <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.15em] uppercase text-sky-600 bg-sky-50 border border-sky-200 rounded-full px-3 py-1">
+      <div className="inline-flex items-center gap-2 text-sm font-bold uppercase text-sky-700 border-b-2 border-emerald-400 pb-1">
         <Sparkles className="h-3 w-3" /> {eyebrow}
       </div>
-      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mt-3 tracking-tight">{title}</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mt-3">{title}</h2>
     </div>
   );
 }
