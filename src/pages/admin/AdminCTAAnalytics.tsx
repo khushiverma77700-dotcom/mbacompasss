@@ -68,7 +68,7 @@ const AdminCTAAnalytics = () => {
         })
         .then(({ data }) => {
           if (cancelled) return;
-          setSummary((data ?? null) as Summary | null);
+          setSummary((data ?? null) as unknown as Summary | null);
           setLoading(false);
         });
     }, 250);
