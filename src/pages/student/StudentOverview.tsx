@@ -157,7 +157,7 @@ export default function StudentOverview() {
       (wk: any) => { setWeak(wk ?? []); writeOverviewCache(user.id, { weak: wk ?? [] }); },
     );
     run(
-      supabase.from("student_rewards").select("xp, total_xp, level, coins, streak_days, longest_streak").eq("user_id", user.id).maybeSingle(),
+      supabase.from("student_rewards").select("xp, level, coins, streak_days, longest_streak").eq("user_id", user.id).maybeSingle(),
       (rw: any) => { setRewards(rw); writeOverviewCache(user.id, { rewards: rw }); },
     );
     run(
