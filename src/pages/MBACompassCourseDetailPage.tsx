@@ -11,7 +11,7 @@ import {
   Sparkles, Target, BookOpen, ArrowRight,
   ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
   Trophy, Brain, Rocket,
-  PlayCircle, Quote, LockKeyhole, Gauge,
+  PlayCircle, Quote, LockKeyhole, Gauge, ChevronLeft, ChevronRight, CreditCard,
 } from "lucide-react";
 
 
@@ -110,6 +110,7 @@ function DetailInner() {
   }>({ total: 0, byType: {}, byExam: {}, bySection: {}, totalDurationMins: 0, totalQuestions: 0, tests: [] });
   const [related, setRelated] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
   const compare = useCompassCompare();
 
 
@@ -204,6 +205,14 @@ function DetailInner() {
       setTestimonials((data ?? []).filter((item: any) => item.name?.trim() && item.content?.trim()));
     })();
   }, []);
+
+  useEffect(() => {
+    if (testimonials.length < 2) return;
+    const timer = window.setInterval(() => {
+      setTestimonialIndex((current) => (current + 1) % testimonials.length);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [testimonials.length]);
 
 
 
@@ -361,11 +370,11 @@ function DetailInner() {
       />
 
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-sky-100 bg-gradient-to-b from-sky-50 via-background to-background pt-7 pb-14 sm:pt-10 sm:pb-16">
+      <section className="course-offer-hero relative overflow-hidden border-b border-sky-100 pt-7 pb-10 sm:pt-10 sm:pb-12">
         <div className="container mx-auto px-4 relative">
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             <div className="lg:col-span-8 pt-2">
-              <div className="mb-4 text-sm font-bold uppercase text-sky-700">Advanced preparation series</div>
+              <div className="mb-4 inline-flex items-center gap-2 border-l-4 border-emerald-500 bg-card px-3 py-2 text-sm font-bold uppercase text-sky-700 shadow-sm">MBA Compass premium preparation series</div>
               <div className="flex flex-wrap gap-2 mb-3">
                 {(c.exam_focus ?? []).map((e: string) => (
                   <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-100">{e}</Badge>
@@ -420,6 +429,17 @@ function DetailInner() {
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="sky" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
               </div>
+
+              {!enrolled && c.price ? (
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button size="lg" disabled={paying} onClick={handlePay} className="sm:min-w-56">
+                    {paying ? "Processing…" : <>Buy now for {formatINR(c.price)} <ArrowRight className="ml-1 h-4 w-4" /></>}
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Shield className="h-4 w-4 text-emerald-600" /> Secure payment · Instant activation
+                  </div>
+                </div>
+              ) : null}
 
 
               {Object.keys(mockAgg.byExam).length > 0 && (
@@ -499,6 +519,14 @@ function DetailInner() {
         </div>
       </section>
 
+      <nav className="course-jump-nav border-b border-sky-100 bg-card" aria-label="Course page sections">
+        <div className="container mx-auto flex gap-2 overflow-x-auto px-4 py-3">
+          {[['Dashboard', 'course-dashboard'], ['Student voices', 'course-testimonials'], ['Mock library', 'course-mocks'], ['What’s included', 'course-included'], ['FAQs', 'course-faqs']].map(([label, target]) => (
+            <a key={target} href={`#${target}`} className="shrink-0 rounded-md border border-sky-100 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:border-sky-300 hover:bg-sky-100">{label}</a>
+          ))}
+        </div>
+      </nav>
+
       {/* STATS STRIP */}
        <section className="container mx-auto px-4 -mt-7 relative z-10" aria-label="Course facts">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -550,46 +578,50 @@ function DetailInner() {
       )}
 
       {/* DASHBOARD SHOWCASE */}
-      <DashboardShowcase />
+      <div id="course-dashboard"><DashboardShowcase /></div>
 
-      <section className="border-y border-sky-100 bg-sky-50/60 py-14" aria-labelledby="course-testimonials-heading">
+      {!enrolled && c.price ? (
+        <EnrollmentBand
+          eyebrow="See the platform. Start practising today."
+          title={`Unlock ${c.title}`}
+          price={formatINR(c.price)}
+          paying={paying}
+          onBuy={handlePay}
+        />
+      ) : null}
+
+      <section id="course-testimonials" className="border-y border-sky-100 bg-sky-50/60 py-10" aria-labelledby="course-testimonials-heading">
           <div className="container mx-auto px-4">
-            <SectionHead eyebrow="Student voices" title="What learners say about their experience" />
+            <SectionHead eyebrow="Student voices" title={testimonials.length > 0 ? "What learners say about their experience" : "Verified student stories will live here"} />
             {testimonials.length > 0 ? (
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {testimonials.slice(0, 3).map((testimonial) => (
-                <Card key={testimonial.id} className="rounded-lg border-sky-100 bg-card p-6 shadow-sm">
-                  <Quote className="h-7 w-7 text-sky-300" aria-hidden />
-                  <p className="mt-4 text-base leading-relaxed text-foreground">“{testimonial.content}”</p>
-                  <div className="mt-5 flex items-center gap-3 border-t border-sky-100 pt-4">
-                    {testimonial.image_url ? (
-                      <img src={testimonial.image_url} alt="" className="h-10 w-10 rounded-full object-cover" loading="lazy" decoding="async" />
-                    ) : (
-                      <div className="grid h-10 w-10 place-items-center rounded-full bg-sky-100 font-bold text-sky-700">{testimonial.name.charAt(0)}</div>
-                    )}
-                    <div>
-                      <div className="font-semibold text-foreground">{testimonial.name}</div>
-                      {(testimonial.designation || testimonial.institute) && (
-                        <div className="text-sm text-muted-foreground">{[testimonial.designation, testimonial.institute].filter(Boolean).join(" • ")}</div>
-                      )}
+              <div className="mx-auto mt-7 max-w-4xl">
+                <Card className="relative min-h-64 overflow-hidden rounded-lg border-sky-200 bg-card p-6 shadow-lg sm:p-8">
+                  <Quote className="pointer-events-none absolute right-6 top-5 h-14 w-14 text-sky-100" aria-hidden />
+                  <div key={testimonials[testimonialIndex]?.id} className="animate-fade-in">
+                    <div className="flex gap-1" aria-label={`${testimonials[testimonialIndex]?.rating || 5} out of 5 stars`}>
+                      {Array.from({ length: testimonials[testimonialIndex]?.rating || 5 }).map((_, starIndex) => <Star key={starIndex} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
+                    </div>
+                    <p className="mt-5 max-w-3xl text-base leading-relaxed text-foreground">“{testimonials[testimonialIndex]?.content}”</p>
+                    <div className="mt-6 flex items-center gap-3 border-t border-sky-100 pt-5">
+                      {testimonials[testimonialIndex]?.image_url ? <img src={testimonials[testimonialIndex].image_url} alt="" className="h-12 w-12 rounded-full object-cover" loading="lazy" decoding="async" /> : <div className="grid h-12 w-12 place-items-center rounded-full bg-sky-100 font-bold text-sky-700">{testimonials[testimonialIndex]?.name?.charAt(0)}</div>}
+                      <div><div className="font-semibold text-foreground">{testimonials[testimonialIndex]?.name}</div><div className="text-sm text-muted-foreground">{[testimonials[testimonialIndex]?.designation, testimonials[testimonialIndex]?.institute].filter(Boolean).join(" • ")}</div></div>
                     </div>
                   </div>
+                  {testimonials.length > 1 ? <div className="absolute bottom-6 right-6 flex gap-2"><Button size="icon" variant="outline" aria-label="Previous testimonial" onClick={() => setTestimonialIndex((testimonialIndex - 1 + testimonials.length) % testimonials.length)}><ChevronLeft className="h-4 w-4" /></Button><Button size="icon" variant="outline" aria-label="Next testimonial" onClick={() => setTestimonialIndex((testimonialIndex + 1) % testimonials.length)}><ChevronRight className="h-4 w-4" /></Button></div> : null}
                 </Card>
-                ))}
+                <div className="mt-4 flex justify-center gap-2">{testimonials.map((testimonial, index) => <button key={testimonial.id} type="button" aria-label={`Show testimonial ${index + 1}`} onClick={() => setTestimonialIndex(index)} className={`h-2 rounded-full transition-all ${index === testimonialIndex ? 'w-7 bg-sky-600' : 'w-2 bg-sky-200'}`} />)}</div>
               </div>
             ) : (
-              <Card className="mx-auto mt-8 max-w-3xl rounded-lg border-sky-200 bg-card p-6 text-center shadow-sm">
-                <Quote className="mx-auto h-7 w-7 text-sky-300" aria-hidden />
-                <h3 className="mt-3 font-bold text-foreground">Student stories are being verified</h3>
-                <p className="mt-2 text-muted-foreground">Verified text testimonials will appear here as students share their course experience.</p>
-              </Card>
+              <div className="mx-auto mt-7 grid max-w-4xl gap-3 md:grid-cols-3">
+                {[['No anonymous claims', 'Every testimonial shown here is tied to an approved student record.'], ['No invented scores', 'Scores and outcomes are only displayed when a learner has supplied them.'], ['Quality checked', 'New stories appear automatically after review and approval.']].map(([title, copy]) => <Card key={title} className="rounded-lg border-sky-200 bg-card p-5 shadow-sm"><Quote className="h-6 w-6 text-sky-300" /><h3 className="mt-3 font-bold">{title}</h3><p className="mt-2 text-sm text-muted-foreground">{copy}</p></Card>)}
+              </div>
             )}
           </div>
         </section>
 
       {/* EXAM COVERAGE + MOCK LIBRARY */}
       {(Object.keys(mockAgg.byExam).length > 0 || mockAgg.total > 0) && (
-        <section className="container mx-auto px-4 py-8">
+        <section id="course-mocks" className="container mx-auto px-4 py-10">
           <SectionHead eyebrow="Practice library" title="Mocks, exams & sections — everything inside" />
           <div className="grid lg:grid-cols-3 gap-6 mt-8">
             <Card className="p-6 border-sky-100 lg:col-span-2">
@@ -671,8 +703,12 @@ function DetailInner() {
         </section>
       )}
 
+      {!enrolled && c.price ? (
+        <EnrollmentBand eyebrow="Your full practice library" title="Get every included mock in one enrollment" price={formatINR(c.price)} paying={paying} onBuy={handlePay} />
+      ) : null}
+
       {/* EVERYTHING INCLUDED */}
-      <section className="container mx-auto px-4 py-12">
+      <section id="course-included" className="container mx-auto px-4 py-10">
         <SectionHead eyebrow="Inside the program" title="Everything included in this course" />
         {(() => {
           const included = featureCheck.filter(([, on]) => on);
@@ -698,7 +734,7 @@ function DetailInner() {
 
       {/* CURRICULUM */}
       {curriculum.length > 0 && (
-        <section className="container mx-auto px-4 py-12">
+        <section id="course-faqs" className="container mx-auto px-4 py-10">
           <SectionHead eyebrow="Curriculum" title="A step-by-step plan from basics to exam mastery" />
           <Card className="p-6 border-sky-100 mt-8">
             <Accordion type="multiple" defaultValue={curriculum.map((_, i) => `m-${i}`)} className="space-y-2">
