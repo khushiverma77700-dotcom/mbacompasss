@@ -21,7 +21,7 @@
 ## Course detail sales redesign
 - [x] Lock the authority-led Sky/Emerald sales direction
 - [x] Recompose the course page around factual offer, proof, and enrollment actions
-- [x] Add approved text testimonials with no fabricated claims
+- [x] Add approved text testimonials with an honest empty state until records are available
 - [ ] Verify desktop and mobile course-page presentation and interactions
 
 ## Homepage college deadlines

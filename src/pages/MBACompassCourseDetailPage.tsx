@@ -11,7 +11,7 @@ import {
   Sparkles, Target, BookOpen, ArrowRight,
   ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
   Trophy, Brain, Rocket,
-  PlayCircle, Quote, LockKeyhole, Gauge, BookMarked,
+  PlayCircle, Quote, LockKeyhole, Gauge,
 } from "lucide-react";
 
 
@@ -552,12 +552,12 @@ function DetailInner() {
       {/* DASHBOARD SHOWCASE */}
       <DashboardShowcase />
 
-      {testimonials.length > 0 && (
-        <section className="border-y border-sky-100 bg-sky-50/60 py-14" aria-labelledby="course-testimonials-heading">
+      <section className="border-y border-sky-100 bg-sky-50/60 py-14" aria-labelledby="course-testimonials-heading">
           <div className="container mx-auto px-4">
             <SectionHead eyebrow="Student voices" title="What learners say about their experience" />
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {testimonials.slice(0, 3).map((testimonial) => (
+            {testimonials.length > 0 ? (
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {testimonials.slice(0, 3).map((testimonial) => (
                 <Card key={testimonial.id} className="rounded-lg border-sky-100 bg-card p-6 shadow-sm">
                   <Quote className="h-7 w-7 text-sky-300" aria-hidden />
                   <p className="mt-4 text-base leading-relaxed text-foreground">“{testimonial.content}”</p>
@@ -575,11 +575,17 @@ function DetailInner() {
                     </div>
                   </div>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <Card className="mx-auto mt-8 max-w-3xl rounded-lg border-sky-200 bg-card p-6 text-center shadow-sm">
+                <Quote className="mx-auto h-7 w-7 text-sky-300" aria-hidden />
+                <h3 className="mt-3 font-bold text-foreground">Student stories are being verified</h3>
+                <p className="mt-2 text-muted-foreground">Verified text testimonials will appear here as students share their course experience.</p>
+              </Card>
+            )}
           </div>
         </section>
-      )}
 
       {/* EXAM COVERAGE + MOCK LIBRARY */}
       {(Object.keys(mockAgg.byExam).length > 0 || mockAgg.total > 0) && (
