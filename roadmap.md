@@ -22,7 +22,7 @@
 - [x] Lock the authority-led Sky/Emerald sales direction
 - [x] Recompose the course page around factual offer, proof, and enrollment actions
 - [x] Add approved text testimonials with an honest empty state until records are available
-- [ ] Verify desktop and mobile course-page presentation and interactions
+- [x] Verify desktop and mobile course-page presentation and interactions
 
 ## Homepage college deadlines
 - [x] Add an auto-scrolling college application deadlines section above the tools section
