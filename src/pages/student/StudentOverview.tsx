@@ -695,9 +695,9 @@ export default function StudentOverview() {
       <div>
         <SectionHeading icon={Award} title="Scores & time invested" subtitle="How hard you've worked and how it's paying off" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatTile icon={Award} label="Avg Total Score" value={`${stats.avgScore}`} sub={`out of ${stats.avgMaxScore}`} tone="violet" />
+          <StatTile icon={Award} label="Avg Total Score" value={`${stats.avgScore}`} sub={`out of ${stats.avgMaxScore}`} tone="emerald" />
           <StatTile icon={Percent} label="Avg % of Max" value={`${stats.avgPctScore}%`} sub="across all mocks" tone="cyan" />
-          <StatTile icon={Timer} label="Total Hours" value={`${stats.totalHours}h`} sub={`Avg ${stats.avgTimeMin} min/mock`} tone="fuchsia" />
+          <StatTile icon={Timer} label="Total Hours" value={`${stats.totalHours}h`} sub={`Avg ${stats.avgTimeMin} min/mock`} tone="sky" />
           <StatTile icon={Gauge} label="Consistency" value={`${stats.consistency}/100`} sub="100 = zero variance" tone="green" />
         </div>
       </div>
@@ -1313,14 +1313,14 @@ const GamificationStrip = memo(function GamificationStrip({ rewards, rank }: { r
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 grid place-items-center text-white shadow-md shrink-0">
+          <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-sky-500 to-emerald-600 grid place-items-center text-white shadow-sm shrink-0">
             <Zap className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">XP</div>
             <div className="text-xl font-bold tabular-nums leading-tight">{xp.toLocaleString("en-IN")}</div>
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mt-1">
-              <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${pct}%` }} />
+              <div className="h-full bg-gradient-to-r from-sky-500 to-emerald-500" style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>

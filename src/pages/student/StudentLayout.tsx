@@ -536,7 +536,7 @@ function SidebarContent() {
             "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold overflow-hidden border transition-all duration-300 group",
             isActive
               ? cn(opts.activeBorder, "bg-white shadow-lg scale-[1.02] translate-x-0.5")
-              : cn("border-slate-200/60 bg-gradient-to-br", opts.gradient, "text-foreground hover:shadow-xl hover:-translate-y-0.5 hover:border-slate-300/80 dark:border-slate-500/20")
+              : cn("border-slate-200/60 bg-gradient-to-br", opts.gradient, "text-foreground hover:shadow-sm hover:border-slate-300/80 dark:border-slate-500/20")
           )
         }
       >
@@ -619,8 +619,8 @@ function SidebarContent() {
         className={cn(
           "rounded-lg border my-2 overflow-hidden transition-colors",
           isInsightsActive
-            ? "border-violet-200/80 bg-gradient-to-br from-violet-50/70 to-sky-50/40 dark:border-violet-500/25 dark:from-violet-500/10 dark:to-sky-500/5"
-            : "border-violet-200/60 bg-gradient-to-br from-violet-50/40 to-sky-50/20 dark:border-violet-500/15 dark:from-violet-500/5 dark:to-sky-500/5"
+            ? "border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 to-sky-50/40 dark:border-emerald-500/25 dark:from-emerald-500/10 dark:to-sky-500/5"
+            : "border-emerald-200/60 bg-gradient-to-br from-emerald-50/40 to-sky-50/20 dark:border-emerald-500/15 dark:from-emerald-500/5 dark:to-sky-500/5"
         )}
       >
         <button
@@ -629,7 +629,7 @@ function SidebarContent() {
           aria-expanded={insightsOpen}
           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent/40 transition-colors"
         >
-          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500 to-sky-600 grid place-items-center text-white shadow-xs">
+          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500 to-sky-600 grid place-items-center text-white shadow-xs">
             <BarChart3 className="h-3.5 w-3.5" />
           </span>
           <span className="flex-1 text-left">My Insights</span>
@@ -684,7 +684,7 @@ function SidebarContent() {
       </NavLink>
 
       {/* Knowledge Duo — B-School Vocabulary + Quant Formula Book side by side / stacked premium cards */}
-      <div className="my-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/90 via-white to-sky-50/80 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-sky-900/10 dark:border-slate-700/40 shadow-xs backdrop-blur p-2 space-y-1.5">
+      <div className="my-2 rounded-lg border border-sky-100 bg-gradient-to-br from-sky-50/90 via-white to-emerald-50/60 dark:from-slate-800/40 dark:via-slate-900/20 dark:to-emerald-900/10 dark:border-slate-700/40 shadow-xs backdrop-blur p-2 space-y-1.5">
         <div className="flex items-center gap-2 px-1 pb-1">
           <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs shadow-xs">
             <Sparkles className="h-3 w-3" />
@@ -701,9 +701,9 @@ function SidebarContent() {
           })}
         {formulaItem &&
           renderKnowledgeDuo(formulaItem, {
-            iconBg: "bg-gradient-to-br from-violet-500 to-fuchsia-600",
-            gradient: "from-violet-50/80 to-fuchsia-50/60",
-            activeBorder: "border-violet-300/80 ring-1 ring-violet-300/40 text-violet-700 dark:text-violet-300",
+            iconBg: "bg-gradient-to-br from-sky-500 to-emerald-600",
+            gradient: "from-sky-50/80 to-emerald-50/60",
+            activeBorder: "border-sky-300/80 ring-1 ring-sky-300/40 text-sky-700 dark:text-sky-300",
           })}
         {newsroomItem &&
           renderKnowledgeDuo(newsroomItem, {
