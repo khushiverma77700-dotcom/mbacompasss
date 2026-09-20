@@ -112,8 +112,8 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
           className="text-sm"
         />
       )}
-      {value && accept?.includes("image") && (
-        <img src={value} alt="Preview" className="h-20 w-auto rounded-[0.25rem] border border-border object-cover"  loading="lazy" decoding="async" />
+      {previewUrl && accept?.includes("image") && (
+        <img src={previewUrl} alt="Preview" className="h-20 w-auto rounded-[0.25rem] border border-border object-cover"  loading="lazy" decoding="async" />
       )}
     </div>
   );
