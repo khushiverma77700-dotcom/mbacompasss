@@ -23,6 +23,7 @@
 - [x] Recompose the course page around factual offer, proof, and enrollment actions
 - [x] Add approved text testimonials with an honest empty state until records are available
 - [x] Verify desktop and mobile course-page presentation and interactions
+- [x] Add automatic testimonial rotation, compact section navigation, and repeated buy-now bands
 
 ## Homepage college deadlines
 - [x] Add an auto-scrolling college application deadlines section above the tools section
