@@ -6,13 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Star, Users, Clock, Award, CheckCircle2, GraduationCap,
   Sparkles, Target, BookOpen, ArrowRight,
   ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
-  Trophy, Headphones, RefreshCw, BadgeCheck, Brain, Rocket, LineChart,
-  PlayCircle, X as XIcon, MessageSquare, Globe, IndianRupee, TrendingUp,
+  Trophy, Brain, Rocket,
+  PlayCircle, Quote, LockKeyhole, Gauge,
 } from "lucide-react";
 
 
@@ -110,6 +109,7 @@ function DetailInner() {
     tests: Array<{ id: string; name: string; slug: string; exam_code: string; test_type: string; total_duration_minutes: number; difficulty: string }>;
   }>({ total: 0, byType: {}, byExam: {}, bySection: {}, totalDurationMins: 0, totalQuestions: 0, tests: [] });
   const [related, setRelated] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const compare = useCompassCompare();
 
 
@@ -190,6 +190,20 @@ function DetailInner() {
 
     })();
   }, [c?.id]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("testimonials")
+        .select("id,name,designation,institute,content,image_url,rating,type")
+        .eq("active", true)
+        .eq("type", "text")
+        .not("content", "is", null)
+        .order("sort_order")
+        .limit(6);
+      setTestimonials((data ?? []).filter((item: any) => item.name?.trim() && item.content?.trim()));
+    })();
+  }, []);
 
 
 
@@ -332,7 +346,7 @@ function DetailInner() {
   ] as [string, boolean][];
 
   return (
-    <>
+    <div className="course-sales-page bg-background pb-24 lg:pb-0">
       <SEOHead
         title={seo.title}
         description={seo.description}
@@ -347,14 +361,11 @@ function DetailInner() {
       />
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-6 pb-10 sm:pt-8 sm:pb-12">
-        <div className="absolute inset-0 pointer-events-none opacity-60" aria-hidden>
-          <div className="absolute -top-24 -right-24 hidden h-80 w-80 rounded-full bg-sky-200/40 blur-3xl sm:block" />
-          <div className="absolute -bottom-32 -left-20 hidden h-80 w-80 rounded-full bg-blue-200/40 blur-3xl sm:block" />
-        </div>
+      <section className="relative overflow-hidden border-b border-sky-100 bg-gradient-to-b from-sky-50 via-background to-background pt-7 pb-14 sm:pt-10 sm:pb-16">
         <div className="container mx-auto px-4 relative">
-          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
-            <div className="lg:col-span-7">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div className="lg:col-span-8 pt-2">
+              <div className="mb-4 text-sm font-bold uppercase text-sky-700">Advanced preparation series</div>
               <div className="flex flex-wrap gap-2 mb-3">
                 {(c.exam_focus ?? []).map((e: string) => (
                   <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-100">{e}</Badge>
@@ -364,7 +375,7 @@ function DetailInner() {
                 {c.has_certificate && <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50"><Award className="h-3 w-3 mr-1" /> Certified</Badge>}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight break-words">{c.title}</h1>
+               <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight break-words max-w-4xl">{c.title}</h1>
               {c.subtitle && <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-3">{c.subtitle}</p>}
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 sm:mt-5 text-xs sm:text-sm">
@@ -404,7 +415,7 @@ function DetailInner() {
                 )}
 
               {/* Hero highlight strip */}
-              <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+               <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <HeroChip icon={Layers} label="Total Mocks" value={mockAgg.total || c.full_mocks_count || 0} tint="sky" />
                 <HeroChip icon={FileText} label="Questions" value={mockAgg.totalQuestions ? mockAgg.totalQuestions.toLocaleString("en-IN") : "—"} tint="sky" />
                 <HeroChip icon={Clock} label="Mock Hours" value={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} tint="emerald" />
@@ -423,8 +434,8 @@ function DetailInner() {
               )}
             </div>
 
-            <div className="lg:col-span-5">
-              <Card className="overflow-hidden border-sky-100 shadow-xl lg:sticky lg:top-20">
+            <div className="lg:col-span-4">
+              <Card className="overflow-hidden rounded-lg border-sky-200 shadow-lg lg:sticky lg:top-20">
                 {c.thumbnail_url ? (
                   <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover"  loading="lazy" decoding="async" />
                 ) : (
@@ -432,13 +443,14 @@ function DetailInner() {
                     <GraduationCap className="h-12 w-12 text-sky-400" />
                   </div>
                 )}
-                <div className="p-5">
+                 <div className="p-6">
+                   <div className="text-sm font-semibold text-muted-foreground mb-2">Get complete course access</div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900">{formatINR(c.price)}</span>
                     {hasDiscount && (
                       <>
                         <span className="text-base text-muted-foreground line-through">{formatINR(c.original_price)}</span>
-                        {c.discount_percent ? <Badge className="bg-rose-500 text-white border-0">{c.discount_percent}% OFF</Badge> : null}
+                        {c.discount_percent ? <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">{c.discount_percent}% OFF</Badge> : null}
                       </>
                     )}
                   </div>
@@ -450,8 +462,8 @@ function DetailInner() {
                         <Link to="/student"><CheckCircle2 className="h-4 w-4 mr-1" /> Enrolled — Go to Dashboard</Link>
                       </Button>
                     ) : c.price ? (
-                      <Button size="lg" className="w-full bg-sky-600 hover:bg-sky-700" disabled={paying} onClick={handlePay}>
-                        {paying ? "Processing…" : <>Enroll Now <ArrowRight className="h-4 w-4 ml-1" /></>}
+                       <Button size="lg" className="w-full" disabled={paying} onClick={handlePay}>
+                         {paying ? "Processing…" : <>Enroll now for {formatINR(c.price)} <ArrowRight className="h-4 w-4 ml-1" /></>}
                       </Button>
                     ) : c.enroll_url ? (
                       <Button asChild size="lg" className="w-full bg-sky-600 hover:bg-sky-700">
@@ -488,7 +500,7 @@ function DetailInner() {
       </section>
 
       {/* STATS STRIP */}
-      <section className="container mx-auto px-4 -mt-6 relative z-10">
+       <section className="container mx-auto px-4 -mt-7 relative z-10" aria-label="Course facts">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatCard icon={Layers} value={mockAgg.total || c.full_mocks_count || 0} label="Total Mocks" />
           <StatCard icon={Target} value={mockAgg.byType.full_length || c.full_mocks_count || 0} label="Full Length" />
@@ -539,6 +551,41 @@ function DetailInner() {
 
       {/* DASHBOARD SHOWCASE */}
       <DashboardShowcase />
+
+      <section className="border-y border-sky-100 bg-sky-50/60 py-14" aria-labelledby="course-testimonials-heading">
+          <div className="container mx-auto px-4">
+            <SectionHead eyebrow="Student voices" title="What learners say about their experience" />
+            {testimonials.length > 0 ? (
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {testimonials.slice(0, 3).map((testimonial) => (
+                <Card key={testimonial.id} className="rounded-lg border-sky-100 bg-card p-6 shadow-sm">
+                  <Quote className="h-7 w-7 text-sky-300" aria-hidden />
+                  <p className="mt-4 text-base leading-relaxed text-foreground">“{testimonial.content}”</p>
+                  <div className="mt-5 flex items-center gap-3 border-t border-sky-100 pt-4">
+                    {testimonial.image_url ? (
+                      <img src={testimonial.image_url} alt="" className="h-10 w-10 rounded-full object-cover" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="grid h-10 w-10 place-items-center rounded-full bg-sky-100 font-bold text-sky-700">{testimonial.name.charAt(0)}</div>
+                    )}
+                    <div>
+                      <div className="font-semibold text-foreground">{testimonial.name}</div>
+                      {(testimonial.designation || testimonial.institute) && (
+                        <div className="text-sm text-muted-foreground">{[testimonial.designation, testimonial.institute].filter(Boolean).join(" • ")}</div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="mx-auto mt-8 max-w-3xl rounded-lg border-sky-200 bg-card p-6 text-center shadow-sm">
+                <Quote className="mx-auto h-7 w-7 text-sky-300" aria-hidden />
+                <h3 className="mt-3 font-bold text-foreground">Student stories are being verified</h3>
+                <p className="mt-2 text-muted-foreground">Verified text testimonials will appear here as students share their course experience.</p>
+              </Card>
+            )}
+          </div>
+        </section>
 
       {/* EXAM COVERAGE + MOCK LIBRARY */}
       {(Object.keys(mockAgg.byExam).length > 0 || mockAgg.total > 0) && (
@@ -778,49 +825,22 @@ function DetailInner() {
         </div>
       </section>
 
-      {/* WHY THIS COURSE — Comparison table */}
-      <section className="container mx-auto px-4 py-12">
-        <SectionHead eyebrow="Why MBA Compass" title="How this course compares with typical prep" />
-        <Card className="mt-8 border-sky-100 overflow-hidden">
-          <div className="grid grid-cols-12 text-sm">
-            <div className="col-span-6 md:col-span-6 px-4 py-3 font-semibold bg-slate-50 border-b border-r border-sky-100">Feature</div>
-            <div className="col-span-3 md:col-span-3 px-4 py-3 font-semibold bg-gradient-to-r from-sky-600 to-blue-700 text-white text-center border-b border-sky-100">This Course</div>
-            <div className="col-span-3 md:col-span-3 px-4 py-3 font-semibold bg-slate-100 text-slate-700 text-center border-b border-l border-sky-100">Typical Prep</div>
+      <section className="border-y border-sky-100 bg-sky-50/50 py-12">
+        <div className="container mx-auto px-4">
+          <SectionHead eyebrow="Clear decision" title="Know exactly what happens after you enroll" />
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              ["AI-personalised study plan", true, false],
-              ["Section-wise analytics", true, "Limited"],
-              ["Daily tests + sectional mocks", true, "Weekly only"],
-              ["Live mentor support", true, false],
-              ["Percentile predictor", c.has_percentile_predictor, false],
-              ["GD-PI prep included", c.has_gd_pi_prep, "Extra cost"],
-              ["Lifetime access", true, false],
-              ["Total questions", mockAgg.totalQuestions ? `${mockAgg.totalQuestions.toLocaleString("en-IN")}+` : "5,000+", "1,500"],
-            ].map(([label, a, b]: any, i) => (
-              <CompareRow key={i} label={label} a={a} b={b} />
+              { icon: LockKeyhole, title: "Protected payment", desc: "Complete checkout securely through Razorpay." },
+              { icon: Zap, title: "Immediate activation", desc: "Your course access activates after successful payment." },
+              { icon: Gauge, title: "Actionable analysis", desc: "Review detailed analytics and solutions after practice." },
+            ].map((item) => (
+              <Card key={item.title} className="rounded-lg border-sky-100 p-5 shadow-sm">
+                <item.icon className="h-6 w-6 text-emerald-600" />
+                <h3 className="mt-3 font-bold text-foreground">{item.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
+              </Card>
             ))}
           </div>
-        </Card>
-      </section>
-
-      {/* GUARANTEE STRIP */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-4 gap-3">
-          {[
-            { icon: BadgeCheck, title: "Verified mentors", desc: "IIM alumni & 99%ilers" },
-            { icon: RefreshCw, title: "Lifetime updates", desc: "Stay current every season" },
-            { icon: Headphones, title: "Priority support", desc: "Response within 24 hours" },
-            { icon: Shield, title: "Secure checkout", desc: "Razorpay • UPI • Cards • EMI" },
-          ].map((g, i) => (
-            <div key={i} className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white p-4 flex items-start gap-3">
-              <span className="h-10 w-10 rounded-lg bg-emerald-500 text-white grid place-items-center shrink-0">
-                <g.icon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <div className="font-bold text-gray-900 text-sm">{g.title}</div>
-                <div className="text-xs text-muted-foreground">{g.desc}</div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -866,18 +886,18 @@ function DetailInner() {
 
       {/* CTA FOOTER */}
       <section className="container mx-auto px-4 py-12">
-        <Card className="p-8 md:p-10 border-0 bg-gradient-to-r from-sky-600 to-blue-700 text-white text-center shadow-xl">
+         <Card className="rounded-lg border-sky-200 bg-sky-50 p-8 text-center shadow-sm md:p-10">
           <h3 className="text-2xl md:text-3xl font-bold">Ready to start with {c.title}?</h3>
-          <p className="text-sky-100 mt-2 max-w-2xl mx-auto">Join {(c.total_students_enrolled ?? 0).toLocaleString("en-IN")}+ aspirants already preparing. Instant access, full analytics, structured curriculum.</p>
+           <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Get {c.validity_months ?? 12} months of access, detailed analytics and the complete course experience.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {enrolled ? (
-              <Button asChild size="lg" className="bg-white text-sky-700 hover:bg-sky-50"><Link to="/student">Go to Dashboard <ArrowRight className="h-4 w-4 ml-1" /></Link></Button>
+               <Button asChild size="lg"><Link to="/student">Go to Dashboard <ArrowRight className="h-4 w-4 ml-1" /></Link></Button>
             ) : (
-              <Button size="lg" className="bg-white text-sky-700 hover:bg-sky-50" disabled={paying} onClick={handlePay}>
+               <Button size="lg" disabled={paying} onClick={handlePay}>
                 {paying ? "Processing…" : <>Enroll Now for {formatINR(c.price)} <ArrowRight className="h-4 w-4 ml-1" /></>}
               </Button>
             )}
-            <Button asChild size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 hover:text-white"><Link to="/courses">Explore more courses</Link></Button>
+             <Button asChild size="lg" variant="outline"><Link to="/courses">Explore more courses</Link></Button>
           </div>
         </Card>
 
@@ -898,7 +918,20 @@ function DetailInner() {
           userEmail={phoneGateUser.email}
         />
       )}
-    </>
+      {!enrolled && c.price ? (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-sky-200 bg-background/95 p-3 shadow-lg backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="font-bold text-foreground">{formatINR(c.price)}</div>
+              <div className="text-sm text-muted-foreground">{c.validity_months ?? 12}-month access</div>
+            </div>
+            <Button disabled={paying} onClick={handlePay} className="shrink-0">
+              {paying ? "Processing…" : <>Enroll now <ArrowRight className="ml-1 h-4 w-4" /></>}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -961,30 +994,3 @@ function BreakdownRow({ label, value }: { label: string; value: any }) {
   );
 }
 
-function CompareCell({ value, positive }: { value: any; positive: boolean }) {
-  if (value === true) return (
-    <div className={`px-4 py-3 text-center border-b border-sky-100 ${positive ? "bg-sky-50/40" : ""}`}>
-      <CheckCircle2 className={`h-5 w-5 mx-auto ${positive ? "text-emerald-500" : "text-slate-400"}`} />
-    </div>
-  );
-  if (value === false) return (
-    <div className={`px-4 py-3 text-center border-b border-sky-100 ${positive ? "bg-sky-50/40" : ""}`}>
-      <XIcon className="h-5 w-5 mx-auto text-rose-300" />
-    </div>
-  );
-  return (
-    <div className={`px-4 py-3 text-center text-sm border-b border-sky-100 ${positive ? "bg-sky-50/40 font-semibold text-sky-800" : "text-slate-500"}`}>
-      {String(value)}
-    </div>
-  );
-}
-
-function CompareRow({ label, a, b }: { label: string; a: any; b: any }) {
-  return (
-    <>
-      <div className="col-span-6 px-4 py-3 text-sm font-medium text-gray-800 border-b border-r border-sky-100 bg-white">{label}</div>
-      <div className="col-span-3 border-r border-sky-100"><CompareCell value={a} positive /></div>
-      <div className="col-span-3"><CompareCell value={b} positive={false} /></div>
-    </>
-  );
-}

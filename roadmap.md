@@ -18,6 +18,12 @@
 - [x] Scope Sora and Manrope typography to the student experience
 - [x] Verify signed-in desktop and mobile dashboard presentation
 
+## Course detail sales redesign
+- [x] Lock the authority-led Sky/Emerald sales direction
+- [x] Recompose the course page around factual offer, proof, and enrollment actions
+- [x] Add approved text testimonials with an honest empty state until records are available
+- [x] Verify desktop and mobile course-page presentation and interactions
+
 ## Homepage college deadlines
 - [x] Add an auto-scrolling college application deadlines section above the tools section
 - [x] Make deadline cards, placement packages, fees, links, logos, visibility, and order admin-managed
