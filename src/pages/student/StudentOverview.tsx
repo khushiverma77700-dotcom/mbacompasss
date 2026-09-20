@@ -612,11 +612,11 @@ export default function StudentOverview() {
                   <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
                     <circle cx="50" cy="50" r="42" className="stroke-sky-100 dark:stroke-sky-500/20" strokeWidth="9" fill="none" />
                     <circle
-                       cx="50" cy="50" r="42" className="stroke-sky-500" strokeWidth="9" fill="none"
+                      cx="50" cy="50" r="42" strokeWidth="9" fill="none"
                       strokeDasharray={2 * Math.PI * 42}
                       strokeDashoffset={(1 - (predicted ?? 0) / 100) * 2 * Math.PI * 42}
                       strokeLinecap="round"
-                      className="transition-all duration-1000"
+                      className="stroke-sky-500 transition-all duration-1000"
                     />
                   </svg>
                   <div className="absolute inset-0 grid place-items-center text-center">
