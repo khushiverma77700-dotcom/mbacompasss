@@ -23,6 +23,8 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const privateBucket = isPrivateBucket(bucket);
+  const previewUrl = useSignedStorageUrl(bucket, value);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,7 +33,17 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
     setUploading(true);
     try {
       const ext = file.name.split(".").pop();
-      const fileName = `${folder ? folder + "/" : ""}${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+      let prefix = folder ? `${folder}/` : "";
+
+      if (privateBucket) {
+        // Private buckets enforce owner-scoped folders in their access rules.
+        const { data: authData } = await supabase.auth.getUser();
+        const uid = authData.user?.id;
+        if (!uid) throw new Error("Please sign in before uploading files.");
+        prefix = `${uid}/${prefix}`;
+      }
+
+      const fileName = `${prefix}${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
 
       const { error } = await supabase.storage.from(bucket).upload(fileName, file, {
         cacheControl: "3600",
@@ -40,11 +52,16 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
 
       if (error) throw error;
 
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
-      onChange(urlData.publicUrl);
-      // Automatic image SEO pipeline — non-blocking
-      if (file.type.startsWith("image/")) {
-        enqueueImageOptimization(urlData.publicUrl);
+      if (privateBucket) {
+        // Store the object path only; display code signs it on demand.
+        onChange(fileName);
+      } else {
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
+        onChange(urlData.publicUrl);
+        // Automatic image SEO pipeline — non-blocking
+        if (file.type.startsWith("image/")) {
+          enqueueImageOptimization(urlData.publicUrl);
+        }
       }
       toast({ title: "File uploaded successfully" });
     } catch (err: any) {
