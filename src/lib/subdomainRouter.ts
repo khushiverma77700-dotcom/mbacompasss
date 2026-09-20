@@ -9,7 +9,8 @@
  *       Owns: /student/* and shared auth pages.
  *
  * Rules:
- *   1. On the dashboard host, only /student/* and auth pages render. Legacy
+ *   1. On the dashboard host, only /student/* and auth pages render. The root
+ *      redirects to /student before the public homepage JavaScript loads. Legacy
  *      /mocks/* student links are rewritten under /student/mocks/* so the LMS
  *      header/sidebar remain mounted for Report, Review, Resume, and Retake.
  *   2. On the main marketing host we DO NOT redirect anything. /mocks,
@@ -52,17 +53,19 @@ const isMainHost = (hostname: string) => MAIN_HOSTS.includes(hostname);
 export const computeSubdomainRedirect = (loc: Location): string | null => {
   const { hostname, pathname, search, hash, protocol } = loc;
 
-  // ---- Dashboard host: lock to /student/* + auth, but keep "/" as the home ----
+  // ---- Dashboard host: lock to /student/* + auth. ----
   if (isDashboardHost(hostname)) {
     const rewrittenMockPath = rewriteDashboardMockPath(pathname);
     if (rewrittenMockPath) return `${protocol}//${hostname}${rewrittenMockPath}${search}${hash}`;
 
-    if (pathname === "/" || pathname === "") return null;
+    if (pathname === "/" || pathname === "") {
+      return `${protocol}//${hostname}/student${search}${hash}`;
+    }
     const allowed = DASHBOARD_ALLOWED_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
     );
     if (allowed) return null;
-    return `${protocol}//${hostname}/${search}${hash}`;
+    return `${protocol}//${hostname}/student${search}${hash}`;
   }
 
   // ---- Main marketing host: no redirects, hosts are independent. ----

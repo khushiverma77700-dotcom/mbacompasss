@@ -155,11 +155,12 @@ export default function StudentLayout() {
     };
   }, []);
 
-  // On dashboard.mbacompass.in, the LMS lives at "/" instead of "/student".
+  // Keep one canonical dashboard home path on every host. The dashboard domain
+  // redirects its root before hydration so it never downloads the public home.
   const onDashboardHost =
     typeof window !== "undefined" &&
     window.location.hostname === "dashboard.mbacompass.in";
-  const homePath = isDemo ? "/demo" : onDashboardHost ? "/" : "/student";
+  const homePath = isDemo ? "/demo" : "/student";
 
   // Mark "student mode" so mock pages know the user lives inside the dashboard
   // and route their back / post-submit navigation back into /student/*.
@@ -203,7 +204,7 @@ export default function StudentLayout() {
       window.setTimeout(() => {
         const path = window.location.pathname;
         const isInside = onDashboardHost
-          ? (path === "/" || path.startsWith("/student"))
+          ? path.startsWith("/student")
           : path.startsWith("/student");
         const shouldReturn = path === "/student/login" || !isInside;
         if (shouldReturn) navigate(homePath, { replace: true });

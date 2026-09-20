@@ -185,7 +185,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (typeof window !== "undefined" && (window.location.pathname.startsWith("/student") || window.location.pathname.startsWith("/demo"))) {
+      if (
+        typeof window !== "undefined" &&
+        (window.location.hostname === "dashboard.mbacompass.in" ||
+          window.location.pathname.startsWith("/student") ||
+          window.location.pathname.startsWith("/demo"))
+      ) {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
         setAllowedSections(null);
