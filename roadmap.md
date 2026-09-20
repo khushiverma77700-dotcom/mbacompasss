@@ -26,6 +26,7 @@
 - [x] Add automatic testimonial rotation, compact section navigation, and repeated buy-now bands
 - [x] Replace the sparse first screen with a dense offer summary and remove the empty media panel
 - [x] Add preparation journey, ideal-student guidance, access summary, analysis workflow, and fallback FAQs
+- [x] Add exam-wise animated charts, a detailed coverage table, complete offer groupings, and scroll-led motion
 
 ## Homepage college deadlines
 - [x] Add an auto-scrolling college application deadlines section above the tools section

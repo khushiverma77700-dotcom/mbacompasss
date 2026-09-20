@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "@/lib/router-compat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,6 +111,7 @@ function DetailInner() {
   const [related, setRelated] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const pageRef = useRef<HTMLDivElement | null>(null);
   const compare = useCompassCompare();
 
 
@@ -213,6 +214,50 @@ function DetailInner() {
     }, 4500);
     return () => window.clearInterval(timer);
   }, [testimonials.length]);
+
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const revealItems = Array.from(page.querySelectorAll<HTMLElement>("[data-course-reveal]"));
+    if (reducedMotion) {
+      revealItems.forEach((item) => item.classList.add("is-visible"));
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -8%" });
+    revealItems.forEach((item) => observer.observe(item));
+    page.querySelectorAll<HTMLElement>(".course-chart-fill[data-width]").forEach((bar) => {
+      const width = Number(bar.dataset.width);
+      if (Number.isFinite(width)) bar.style.setProperty("--chart-width", `${Math.min(100, Math.max(0, width))}%`);
+    });
+
+    let frame = 0;
+    const updateParallax = () => {
+      frame = 0;
+      const rect = page.getBoundingClientRect();
+      const progress = Math.max(0, Math.min(1, -rect.top / Math.max(1, rect.height - window.innerHeight)));
+      page.style.setProperty("--course-scroll", progress.toFixed(4));
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateParallax);
+    };
+    updateParallax();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [loading, c?.id, mockAgg.total]);
 
 
 
@@ -354,8 +399,21 @@ function DetailInner() {
     ["Lifetime Access", c.has_lifetime_access],
   ] as [string, boolean][];
 
+  const examRows = Object.entries(mockAgg.byExam)
+    .map(([exam, total]) => {
+      const examTests = mockAgg.tests.filter((test) => test.exam_code === exam);
+      const fullLength = examTests.filter((test) => test.test_type === "full_length").length;
+      const sectional = examTests.filter((test) => test.test_type === "sectional").length;
+      const topicWise = examTests.filter((test) => test.test_type === "topic_wise").length;
+      const minutes = examTests.reduce((sum, test) => sum + (test.total_duration_minutes || 0), 0);
+      return { exam, total, fullLength, sectional, topicWise, minutes };
+    })
+    .sort((a, b) => b.total - a.total);
+  const maxExamTests = Math.max(1, ...examRows.map((row) => row.total));
+
   return (
-    <div className="course-sales-page bg-background pb-24 lg:pb-0">
+    <div ref={pageRef} className="course-sales-page bg-background pb-24 lg:pb-0">
+      <div className="course-scroll-progress pointer-events-none" aria-hidden />
       <SEOHead
         title={seo.title}
         description={seo.description}
@@ -558,9 +616,9 @@ function DetailInner() {
         </div>
       </nav>
 
-      <section id="course-plan" className="border-b border-sky-100 bg-background py-10">
+      <section id="course-plan" className="course-parallax-band border-b border-sky-100 bg-background py-10">
         <div className="container mx-auto px-4">
-          <SectionHead eyebrow="Built for serious preparation" title="One preparation system from diagnosis to exam day" />
+          <div data-course-reveal><SectionHead eyebrow="Built for serious preparation" title="One preparation system from diagnosis to exam day" /></div>
           <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: Gauge, title: "1. Diagnose", desc: "Start with a full-length or sectional test to identify where time and accuracy are being lost." },
@@ -568,7 +626,7 @@ function DetailInner() {
               { icon: Brain, title: "3. Improve", desc: "Review solutions, attempt patterns and weak areas after every completed mock." },
               { icon: Trophy, title: "4. Repeat", desc: "Return to timed exam practice and compare performance across attempts throughout your access period." },
             ].map((item) => (
-              <Card key={item.title} className="rounded-lg border-sky-100 p-5 shadow-sm">
+              <Card key={item.title} data-course-reveal className="course-reveal rounded-lg border-sky-100 p-5 shadow-sm">
                 <div className="grid h-10 w-10 place-items-center rounded-md bg-sky-100 text-sky-700"><item.icon className="h-5 w-5" /></div>
                 <h3 className="mt-4 font-bold text-foreground">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
@@ -591,6 +649,47 @@ function DetailInner() {
           </div>
         </div>
       </section>
+
+      {examRows.length > 0 && (
+        <section className="course-exam-intelligence border-b border-sky-100 bg-card py-10" aria-labelledby="exam-coverage-heading">
+          <div className="container mx-auto px-4">
+            <div data-course-reveal className="course-reveal"><SectionHead eyebrow="Exam-wise coverage" title="See exactly how the practice library is distributed" /></div>
+            <p className="mx-auto mt-3 max-w-3xl text-center text-sm text-muted-foreground">Counts below come from the currently published mocks linked to this course. Use the distribution to understand where the series is deepest before enrolling.</p>
+
+            <div className="mt-8 grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+              <Card data-course-reveal className="course-reveal rounded-lg border-sky-100 p-5 sm:p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div><h3 id="exam-coverage-heading" className="font-bold text-foreground">Mock distribution</h3><p className="mt-1 text-sm text-muted-foreground">Published tests by exam</p></div>
+                  <Badge variant="outline">{examRows.length} exams</Badge>
+                </div>
+                <div className="mt-6 space-y-4">
+                  {examRows.map((row) => (
+                    <div key={row.exam} className="course-chart-row">
+                      <div className="mb-1 flex items-center justify-between gap-3 text-sm"><span className="font-bold text-foreground">{row.exam}</span><span className="font-semibold text-sky-700">{row.total} mocks</span></div>
+                      <div className="h-3 overflow-hidden rounded-sm bg-sky-50" role="img" aria-label={`${row.exam}: ${row.total} published mocks`}>
+                        <div className="course-chart-fill h-full rounded-sm bg-primary" data-width={Math.max(7, Math.round((row.total / maxExamTests) * 100))} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card data-course-reveal className="course-reveal overflow-hidden rounded-lg border-sky-100">
+                <div className="border-b border-sky-100 p-5"><h3 className="font-bold text-foreground">Exam and format table</h3><p className="mt-1 text-sm text-muted-foreground">Actual published mock counts and total timed duration</p></div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[680px] text-left text-sm">
+                    <thead className="bg-sky-50 text-sky-800"><tr><th className="px-4 py-3">Exam</th><th className="px-4 py-3 text-right">All mocks</th><th className="px-4 py-3 text-right">Full length</th><th className="px-4 py-3 text-right">Sectional</th><th className="px-4 py-3 text-right">Topic-wise</th><th className="px-4 py-3 text-right">Timed hours</th></tr></thead>
+                    <tbody className="divide-y divide-sky-100">
+                      {examRows.map((row) => <tr key={row.exam} className="transition-colors hover:bg-sky-50/60"><td className="px-4 py-3 font-bold text-foreground">{row.exam}</td><td className="px-4 py-3 text-right font-bold text-sky-700">{row.total}</td><td className="px-4 py-3 text-right">{row.fullLength}</td><td className="px-4 py-3 text-right">{row.sectional}</td><td className="px-4 py-3 text-right">{row.topicWise}</td><td className="px-4 py-3 text-right">{Math.round(row.minutes / 60)}h</td></tr>)}
+                    </tbody>
+                    <tfoot className="border-t border-sky-200 bg-sky-50 font-bold"><tr><td className="px-4 py-3">Total</td><td className="px-4 py-3 text-right">{examRows.reduce((sum, row) => sum + row.total, 0)}</td><td className="px-4 py-3 text-right">{examRows.reduce((sum, row) => sum + row.fullLength, 0)}</td><td className="px-4 py-3 text-right">{examRows.reduce((sum, row) => sum + row.sectional, 0)}</td><td className="px-4 py-3 text-right">{examRows.reduce((sum, row) => sum + row.topicWise, 0)}</td><td className="px-4 py-3 text-right">{Math.round(examRows.reduce((sum, row) => sum + row.minutes, 0) / 60)}h</td></tr></tfoot>
+                  </table>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* WHAT YOU'LL LEARN + KEY FEATURES */}
       {(learn.length > 0 || features.length > 0) && (
@@ -808,7 +907,7 @@ function DetailInner() {
               {included.length > 0 && (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {included.map(([label]) => (
-                    <div key={label} className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3 border bg-emerald-50/60 border-emerald-200 text-gray-900 shadow-xs">
+                    <div key={label} data-course-reveal className="course-reveal flex items-center gap-2.5 text-sm rounded-lg px-4 py-3 border bg-emerald-50/60 border-emerald-200 text-gray-900 shadow-xs">
                       <span className="h-7 w-7 rounded-md grid place-items-center shrink-0 bg-emerald-500 text-white">
                         <CheckCircle2 className="h-4 w-4" />
                       </span>
@@ -820,6 +919,20 @@ function DetailInner() {
             </div>
           );
         })()}
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {[
+            { icon: Layers, title: "Practice library", copy: "Full-length, sectional and topic-wise formats are shown from the mocks currently linked to this course.", facts: [`${mockAgg.total || c.full_mocks_count || 0} total mocks`, `${examRows.length || (c.exam_focus?.length ?? 0)} exam families`, `${mockAgg.totalDurationMins ? Math.round(mockAgg.totalDurationMins / 60) : 0} timed hours`] },
+            { icon: BarChart3, title: "Performance system", copy: "Use the enabled analysis and insight tools after attempts to understand accuracy, weak sections and practice direction.", facts: featureCheck.filter(([label, on]) => on && /analysis|analytics|predictor|insights|leaderboard/i.test(label)).map(([label]) => label) },
+            { icon: Calendar, title: "Planning and continuity", copy: "Keep preparation, daily activity and available planning tools together throughout the course access period.", facts: [`${c.validity_months ?? 12}-month access`, ...featureCheck.filter(([label, on]) => on && /planner|daily|previous year/i.test(label)).map(([label]) => label)] },
+          ].map((group) => (
+            <Card key={group.title} data-course-reveal className="course-reveal rounded-lg border-sky-100 p-5 shadow-sm">
+              <div className="grid h-10 w-10 place-items-center rounded-md bg-sky-100 text-sky-700"><group.icon className="h-5 w-5" /></div>
+              <h3 className="mt-4 text-xl font-bold text-foreground">{group.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{group.copy}</p>
+              <ul className="mt-4 space-y-2 border-t border-sky-100 pt-4">{group.facts.length > 0 ? group.facts.map((fact) => <li key={fact} className="flex items-start gap-2 text-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><span>{fact}</span></li>) : <li className="text-sm text-muted-foreground">Details are reflected in the enabled course features above.</li>}</ul>
+            </Card>
+          ))}
+        </div>
       </section>
 
       <section className="border-y border-sky-100 bg-card py-10">
