@@ -23,6 +23,7 @@ import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCom
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
 import DashboardShowcase from "@/components/mock/DashboardShowcase";
+import { allFeaturesOn, type FeatureMap } from "@/lib/courseFeatures";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
@@ -111,6 +112,7 @@ function DetailInner() {
   const [related, setRelated] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [bundleFeatures, setBundleFeatures] = useState<FeatureMap>({});
   const pageRef = useRef<HTMLDivElement | null>(null);
   const compare = useCompassCompare();
 
@@ -133,6 +135,20 @@ function DetailInner() {
       const { data: cb } = await supabase.from("course_bundles").select("bundle_id").eq("course_id", data.id);
       const bundleIds = (cb ?? []).map((r: any) => r.bundle_id);
       if (bundleIds.length === 0) return;
+
+      const { data: linkedBundles } = await supabase.from("mock_bundles").select("features").in("id", bundleIds);
+      const featureRows = (linkedBundles ?? []).map((bundle) => bundle.features).filter((value): value is Record<string, boolean> => Boolean(value) && typeof value === "object" && !Array.isArray(value));
+      const usesLegacyAllAccess = featureRows.length === 0 || featureRows.every((features) => Object.keys(features).length === 0);
+      if (usesLegacyAllAccess) {
+        setBundleFeatures(allFeaturesOn());
+      } else {
+        setBundleFeatures(featureRows.reduce<FeatureMap>((merged, features) => {
+          Object.entries(features).forEach(([key, enabled]) => {
+            if (enabled) merged[key as keyof FeatureMap] = true;
+          });
+          return merged;
+        }, {}));
+      }
 
       const { data: items } = await supabase.from("mock_bundle_items").select("test_id").in("bundle_id", bundleIds);
       const testIds = Array.from(new Set((items ?? []).map((r: any) => r.test_id)));
@@ -417,7 +433,7 @@ function DetailInner() {
       label: "Verbal preparation",
       description: "Build exam and MBA-ready vocabulary through a daily word feed, pronunciation, contextual meanings and focused revision.",
       details: ["Word of the day", "Audio pronunciation", "Saved-word revision", "Quizzes, streaks and XP"],
-      enabled: Boolean(c.has_ai_tools),
+      enabled: Boolean(bundleFeatures.vocabulary_hub),
     },
     {
       icon: FileText,
@@ -425,7 +441,7 @@ function DetailInner() {
       label: "Revision library",
       description: "Keep important Quant formulas, shortcuts and exam-tagged concepts in one searchable revision dashboard.",
       details: ["Topic-wise formulas", "Search and filters", "Bookmarks and revise-later list", "Daily revision progress"],
-      enabled: Boolean(c.has_ai_tools),
+      enabled: Boolean(bundleFeatures.formula_book),
     },
     {
       icon: Brain,
@@ -490,6 +506,30 @@ function DetailInner() {
       description: "Use available previous-year practice to understand recurring formats, difficulty and exam-specific expectations.",
       details: ["Past-paper practice", "Exam-pattern exposure", "Timed attempts", "Solution-led review"],
       enabled: Boolean(c.has_previous_year_papers),
+    },
+    {
+      icon: FileText,
+      title: "MBA Newsroom & Insights",
+      label: "Current affairs",
+      description: "Follow curated MBA news and current-affairs briefs that support exam awareness, WAT, GD and interview preparation.",
+      details: ["Daily news briefs", "Current affairs", "GDPI and WAT context", "English, Hindi and Hinglish"],
+      enabled: Boolean(bundleFeatures.mba_newsroom),
+    },
+    {
+      icon: Sparkles,
+      title: "MBA Decision Tools",
+      label: "Application support",
+      description: "Use the available AI-assisted tools for profile analysis, college discovery and better-informed MBA decisions.",
+      details: ["Profile analysis", "College discovery", "Preparation utilities", "Decision support"],
+      enabled: Boolean(c.has_ai_tools || bundleFeatures.ai_tools),
+    },
+    {
+      icon: Shield,
+      title: "Student Support Centre",
+      label: "Course assistance",
+      description: "Raise and track support requests from the same student environment when you need help with course access or usage.",
+      details: ["Ticket-based support", "Request tracking", "Course-access help", "One student workspace"],
+      enabled: Boolean(c.has_doubt_resolution || bundleFeatures.support),
     },
   ].filter((tool) => tool.enabled);
 
