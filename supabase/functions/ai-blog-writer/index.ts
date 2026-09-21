@@ -8,6 +8,7 @@ import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck,
 import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
 import { researchReferences, referenceGroundingRules, referenceReport, type ReferenceResearch } from "../_shared/referenceResearch.ts";
 import { structureArticle } from "../_shared/blogStructure.ts";
+import { seoMasterRules, detectTopicDomain, buildQualityAudit } from "../_shared/seoMasterRules.ts";
 import { getKeywordMetrics, metricsFactBlock, opportunityScore, semrushExpand } from "../_shared/keywordMetrics.ts";
 
 const corsHeaders = {
@@ -414,7 +415,16 @@ Final quality checklist (self-verify before returning):
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
 ✓ "About MBA Compass" present after the Conclusion (LAST H2).
 ✓ Reads like a human MBA mentor.
-${factGroundingRules(facts || null)}${referenceGroundingRules(brief.research || null)}`;
+${factGroundingRules(facts || null)}${referenceGroundingRules(brief.research || null)}
+
+${seoMasterRules({
+  title: brief.title,
+  keyword: brief.targetKeyword || brief.title,
+  secondaryKeywords: brief.secondaryKeywords,
+  domain: detectTopicDomain(brief.title, brief.targetKeyword, (brief.secondaryKeywords || []).join(" "), brief.category),
+  hasReferences: !!(brief.research && brief.research.sources && brief.research.sources.length > 0),
+  todayIso,
+})}`;
 }
 
 async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null) {
