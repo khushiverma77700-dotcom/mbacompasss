@@ -1677,6 +1677,19 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       },
       tocEntries: singleShotStructured.tocCount,
       sourceResearch: referenceReport(brief.research || null),
+      qualityAudit: buildQualityAudit({
+        title: article.title || brief.title,
+        metaTitle: article.metaTitle,
+        metaDescription: article.metaDescription,
+        slug: inserted.slug,
+        keyword: brief.targetKeyword || brief.title,
+        secondaryKeywords: brief.secondaryKeywords,
+        intro: article.intro || "",
+        content: article.content || "",
+        faqCount: extractedFaqs.length,
+        tocEntries: singleShotStructured.tocCount,
+        referenceCount: brief.research?.sources?.length || 0,
+      }),
     };
 
     if (activeJobId) {
