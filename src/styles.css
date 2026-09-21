@@ -1789,3 +1789,40 @@ html, body, #root {
 .prose figcaption,
 .prose th,
 .prose td { font-size: var(--fs-detail); }
+
+/* Auto-generated article table of contents (Summary → Contents → Body) */
+.prose .blog-toc {
+  margin: 1.5rem 0 2rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  background: hsl(var(--muted) / 0.4);
+}
+.prose .blog-toc .blog-toc-title {
+  margin: 0 0 0.5rem;
+  font-size: var(--fs-body);
+}
+.prose .blog-toc .blog-toc-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+.prose .blog-toc .blog-toc-item {
+  margin: 0.2rem 0;
+  font-size: var(--fs-detail);
+}
+.prose .blog-toc .blog-toc-h3 {
+  list-style: disc;
+  margin-left: 1rem;
+}
+.prose .blog-toc a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+.prose .blog-toc a:hover {
+  text-decoration: underline;
+}
+.prose h2,
+.prose h3 {
+  scroll-margin-top: 6rem;
+}
