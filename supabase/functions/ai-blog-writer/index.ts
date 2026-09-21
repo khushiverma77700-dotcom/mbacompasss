@@ -1082,8 +1082,9 @@ Deno.serve(async (req) => {
     // NO upper cap on word count — long-form (10K+) is fully supported via expansion loop.
     const wmin = Math.max(300, brief.wordCountMin ?? 2500);
     const wmax = Math.max(wmin, brief.wordCountMax ?? 3500);
-    // Respect admin-chosen density. Cap at 8% (anything higher is pure stuffing).
-    const density = Math.max(0.5, Math.min(brief.keywordDensityPct ?? 2, 8));
+    // No fixed density target unless the editor explicitly sets one. Cap at 8%.
+    const densitySpecified = typeof brief.keywordDensityPct === "number" && brief.keywordDensityPct > 0;
+    const density = densitySpecified ? Math.max(0.5, Math.min(brief.keywordDensityPct as number, 8)) : 1;
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
