@@ -1489,7 +1489,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       const postPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
       const postStats = computeDensity(postPlain, targetKw);
       const minAcceptable = Math.max(3, Math.floor(targetOccurrences * 0.8));
-      if (postStats.occurrences < minAcceptable) {
+      if (densitySpecified && postStats.occurrences < minAcceptable) {
         const need = targetOccurrences - postStats.occurrences;
         console.log(`Density boost: ${postStats.occurrences} occurrences (${postStats.density}%) < ${minAcceptable}, need +${need}`);
         try {
