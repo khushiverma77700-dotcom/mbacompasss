@@ -44,6 +44,7 @@ const AdminCTAAnalytics = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sectionFilter, setSectionFilter] = useState<string>("all");
   const [outcomeFilter, setOutcomeFilter] = useState<"all" | "executed" | "login_prompted">("all");
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     supabase
@@ -152,8 +153,9 @@ const AdminCTAAnalytics = () => {
             Drill into clicks by CTA, section, category, page and login outcome.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={!recentEvents.length}>
-          <Download className="w-4 h-4 mr-1.5" /> Export CSV
+        <Button variant="outline" size="sm" onClick={() => void exportCsv()} disabled={exporting || !totals.total}>
+          {exporting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
+          {exporting ? "Preparing…" : "Export CSV"}
         </Button>
       </div>
 
