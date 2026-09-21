@@ -255,6 +255,7 @@ const AdminWriteBlog = () => {
           wordCountMax: wordMax,
           keywordDensityPct: densityPct,
           allowedInternalUrls: Object.values(selectedUrls),
+          referenceUrls,
         },
       });
 
@@ -397,6 +398,34 @@ const AdminWriteBlog = () => {
               onChange={(e) => setTargetKeyword(e.target.value)}
               placeholder="e.g. MBA colleges in Bangalore"
             />
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold mb-1.5 block">Reference Links (highest-priority sources)</Label>
+            <p className="text-xs text-muted-foreground mb-1.5">
+              Paste one or more web addresses (one per line). These pages are read first and every fact, number, date and ranking is taken from them before anything else. Extra sources are only searched if these pages do not cover the topic.
+            </p>
+            <div className="flex gap-2">
+              <Textarea
+                value={refInput}
+                onChange={(e) => setRefInput(e.target.value)}
+                onBlur={addReferenceUrls}
+                rows={3}
+                placeholder={"https://iimcat.ac.in/notification\nhttps://www.iima.ac.in/placement-report"}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addReferenceUrls}><Plus className="h-3 w-3" /></Button>
+            </div>
+            {referenceUrls.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {referenceUrls.map(u => (
+                  <Badge key={u} variant="secondary" className="gap-1 text-xs max-w-full">
+                    <Link2 className="h-3 w-3 shrink-0" />
+                    <span className="truncate max-w-[22rem]">{u}</span>
+                    <button type="button" onClick={() => removeReferenceUrl(u)} className="ml-0.5"><X className="h-3 w-3" /></button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
