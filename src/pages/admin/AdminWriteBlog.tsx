@@ -82,6 +82,8 @@ const AdminWriteBlog = () => {
   const [category, setCategory] = useState<string>(seed.category || "news");
   const [secondaryKws, setSecondaryKws] = useState<string[]>(seed.secondaryKeywords || []);
   const [secInput, setSecInput] = useState("");
+  const [referenceUrls, setReferenceUrls] = useState<string[]>(seed.referenceUrls || []);
+  const [refInput, setRefInput] = useState("");
   const buildLatestDateContext = () => {
     const y = new Date().getFullYear();
     return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.`;
@@ -150,6 +152,44 @@ const AdminWriteBlog = () => {
   };
   const removeSecKw = (k: string) => setSecondaryKws(secondaryKws.filter(x => x !== k));
 
+  const addReferenceUrls = () => {
+    const raw = refInput.split(/[\s,]+/).map(v => v.trim()).filter(Boolean);
+    if (raw.length === 0) return;
+    const accepted: string[] = [];
+    const rejected: string[] = [];
+    raw.forEach((item) => {
+      const candidate = /^https?:\/\//i.test(item) ? item : `https://${item}`;
+      try {
+        const u = new URL(candidate);
+        if (!u.hostname.includes(".")) throw new Error("bad host");
+        const clean = u.toString();
+        if (!referenceUrls.includes(clean) && !accepted.includes(clean)) accepted.push(clean);
+      } catch {
+        rejected.push(item);
+      }
+    });
+    if (accepted.length) setReferenceUrls([...referenceUrls, ...accepted].slice(0, 8));
+    setRefInput("");
+    if (rejected.length) {
+      toast({
+        title: "Some links were not added",
+        description: `These do not look like web addresses: ${rejected.join(", ")}`,
+        variant: "destructive",
+      });
+    }
+  };
+  const removeReferenceUrl = (u: string) => setReferenceUrls(referenceUrls.filter(x => x !== u));
+
+  // Keep the brief (including reference links) across refreshes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        title, slug, targetKeyword, metaTitle, metaDescription, category,
+        secondaryKeywords: secondaryKws, referenceUrls,
+      }));
+    } catch { /* storage unavailable */ }
+  }, [title, slug, targetKeyword, metaTitle, metaDescription, category, secondaryKws, referenceUrls]);
+
   const toggleUrl = (opt: LinkOption) => {
     setSelectedUrls(prev => {
       const next = { ...prev };
@@ -215,6 +255,7 @@ const AdminWriteBlog = () => {
           wordCountMax: wordMax,
           keywordDensityPct: densityPct,
           allowedInternalUrls: Object.values(selectedUrls),
+          referenceUrls,
         },
       });
 
@@ -357,6 +398,34 @@ const AdminWriteBlog = () => {
               onChange={(e) => setTargetKeyword(e.target.value)}
               placeholder="e.g. MBA colleges in Bangalore"
             />
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold mb-1.5 block">Reference Links (highest-priority sources)</Label>
+            <p className="text-xs text-muted-foreground mb-1.5">
+              Paste one or more web addresses (one per line). These pages are read first and every fact, number, date and ranking is taken from them before anything else. Extra sources are only searched if these pages do not cover the topic.
+            </p>
+            <div className="flex gap-2">
+              <Textarea
+                value={refInput}
+                onChange={(e) => setRefInput(e.target.value)}
+                onBlur={addReferenceUrls}
+                rows={3}
+                placeholder={"https://iimcat.ac.in/notification\nhttps://www.iima.ac.in/placement-report"}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addReferenceUrls}><Plus className="h-3 w-3" /></Button>
+            </div>
+            {referenceUrls.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {referenceUrls.map(u => (
+                  <Badge key={u} variant="secondary" className="gap-1 text-xs max-w-full">
+                    <Link2 className="h-3 w-3 shrink-0" />
+                    <span className="truncate max-w-[22rem]">{u}</span>
+                    <button type="button" onClick={() => removeReferenceUrl(u)} className="ml-0.5"><X className="h-3 w-3" /></button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -529,6 +598,36 @@ const AdminWriteBlog = () => {
             <p>Words: {stats.actualWords} (target {stats.targetWordsRange?.[0]}-{stats.targetWordsRange?.[1]})</p>
             <p>Keyword density: {stats.actualDensityPct}% (target ~{stats.targetDensityPct}%)</p>
             <p>Primary keyword occurrences: {stats.actualOccurrences} (target ~{stats.targetOccurrences})</p>
+            {typeof stats.tocEntries === "number" && stats.tocEntries > 0 && (
+              <p>Table of contents entries: {stats.tocEntries}</p>
+            )}
+            {stats.sourceResearch && Array.isArray(stats.sourceResearch.sources) && stats.sourceResearch.sources.length > 0 && (
+              <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
+                <p className="font-semibold text-foreground">Sources used for research</p>
+                {Array.isArray(stats.sourceResearch.toolsUsed) && stats.sourceResearch.toolsUsed.length > 0 && (
+                  <p className="text-muted-foreground">Research tools: {stats.sourceResearch.toolsUsed.join(", ")}</p>
+                )}
+                <div className="space-y-1.5">
+                  {stats.sourceResearch.sources.map((s: { url: string; title?: string; kind?: string; status?: string }, i: number) => (
+                    <div key={`${s.url}-${i}`} className="rounded-md border bg-muted/30 p-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={s.kind === "primary" ? "default" : "secondary"}>
+                          {s.kind === "primary" ? "Your link" : "Additional source"}
+                        </Badge>
+                        <Badge variant={s.status === "read" ? "outline" : "destructive"}>
+                          {s.status === "read" ? "used" : "could not be read"}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-foreground break-words">{s.title || s.url}</p>
+                      <p className="text-muted-foreground break-all font-mono text-xs">{s.url}</p>
+                    </div>
+                  ))}
+                </div>
+                {Array.isArray(stats.sourceResearch.notes) && stats.sourceResearch.notes.map((n: string, i: number) => (
+                  <p key={`note-${i}`} className="text-muted-foreground">{n}</p>
+                ))}
+              </div>
+            )}
             {Array.isArray(stats.factCheckReport) && stats.factCheckReport.length > 0 && (
               <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
                 <div className="flex items-center justify-between gap-2">

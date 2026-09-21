@@ -6,6 +6,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck, type QualityIssue } from "../_shared/aiContentRules.ts";
 import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
+import { researchReferences, referenceGroundingRules, referenceReport, type ReferenceResearch } from "../_shared/referenceResearch.ts";
+import { structureArticle } from "../_shared/blogStructure.ts";
 import { getKeywordMetrics, metricsFactBlock, opportunityScore, semrushExpand } from "../_shared/keywordMetrics.ts";
 
 const corsHeaders = {
@@ -27,6 +29,10 @@ interface BlogBrief {
   wordCountMax?: number;
   keywordDensityPct?: number;
   allowedInternalUrls?: { url: string; label?: string }[];
+  /** Editor-supplied reference URLs — highest-priority research sources. */
+  referenceUrls?: string[];
+  /** Attached at runtime after the reference research pass. */
+  research?: ReferenceResearch | null;
 }
 
 const json = (status: number, body: unknown) => new Response(
@@ -408,7 +414,7 @@ Final quality checklist (self-verify before returning):
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
 ✓ "About MBA Compass" present after the Conclusion (LAST H2).
 ✓ Reads like a human MBA mentor.
-${factGroundingRules(facts || null)}`;
+${factGroundingRules(facts || null)}${referenceGroundingRules(brief.research || null)}`;
 }
 
 async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null) {
@@ -726,8 +732,10 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (dataViolations.length || introAudit.removedBlocks || contentAudit.removedBlocks) {
     console.warn(`[ai-blog-writer] verified-data audit for "${targetKw}": removed ${introAudit.removedBlocks + contentAudit.removedBlocks} unverified block(s), ${dataViolations.length} unresolved violation(s)`);
   }
-  const intro = introAudit.html;
-  const content = contentAudit.html;
+  // Final shape: Summary → Table of Contents → full body, with key data bolded.
+  const structured = structureArticle(introAudit.html, contentAudit.html);
+  const intro = structured.intro;
+  const content = structured.content;
   if (contentQC.issues.length) {
     console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
   }
@@ -842,6 +850,8 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
       heldForReview: dataViolations.length > 0,
     },
     seo25: { ...validation, warnings },
+    tocEntries: structured.tocCount,
+    sourceResearch: referenceReport(brief.research || null),
   };
 }
 
@@ -854,7 +864,17 @@ async function processBlogJobStep(adminClient: any, job: any) {
   await adminClient.from("ai_blog_generation_jobs").update({ status: "running", started_at: job.started_at || now, error_message: null }).eq("id", jobId);
 
   if (phase === "outline") {
-    await adminClient.from("ai_blog_generation_jobs").update({ progress: 10, current_step: "Creating SEO outline and intro" }).eq("id", jobId);
+    await adminClient.from("ai_blog_generation_jobs").update({ progress: 6, current_step: "Reading reference links and verifying sources" }).eq("id", jobId);
+    const research = await researchReferences({
+      urls: brief.referenceUrls,
+      topic: brief.title,
+      keyword: brief.targetKeyword,
+    }).catch((e) => {
+      console.warn("[ai-blog-writer] reference research failed", e instanceof Error ? e.message : e);
+      return null;
+    });
+    brief.research = research;
+    stats.research = research;
     const facts = await fetchVerifiedFacts(adminClient, brief);
     const draft = await createOutlineDraft(brief, facts);
     stats.facts = facts;
@@ -867,6 +887,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
     return;
   }
 
+  if (!brief.research && stats.research) brief.research = stats.research as ReferenceResearch;
   const jobFacts: VerifiedFacts | null = (stats.facts as VerifiedFacts | undefined) || await fetchVerifiedFacts(adminClient, brief).catch(() => null);
   const draft = stats.draft || await createOutlineDraft(brief, jobFacts);
   if (phase === "sections") {
@@ -1265,6 +1286,18 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       return null;
     });
 
+    // Reference links are the highest-priority sources; read them before writing.
+    if (!brief.research) {
+      brief.research = await researchReferences({
+        urls: brief.referenceUrls,
+        topic: brief.title,
+        keyword: brief.targetKeyword,
+      }).catch((e) => {
+        console.warn("[ai-blog-writer] reference research failed", e instanceof Error ? e.message : e);
+        return null;
+      });
+    }
+
     // Scale tokens with target word count. Cap at 32K to stay within edge wall-clock limits.
     const dynamicMaxTokens = Math.min(32000, Math.max(12000, Math.round(wmax * 3) + 3000));
 
@@ -1274,7 +1307,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         model,
         max_tokens: dynamicMaxTokens,
         messages: [
-          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES + factGroundingRules(singleShotFacts) },
+          { role: "system", content: systemPrompt + MBA_COMPASS_SECTION_RULES + factGroundingRules(singleShotFacts) + referenceGroundingRules(brief.research || null) },
 
           { role: "user", content: userPrompt },
         ],
@@ -1490,10 +1523,16 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       }
       article.intro = introAudit.html;
       article.content = contentAudit.html;
+
       if (contentQC.issues.length) {
         console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
       }
     }
+
+    // Final shape: Summary → Table of Contents → full body, with key data bolded.
+    const singleShotStructured = structureArticle(article.intro || "", article.content || "");
+    article.intro = singleShotStructured.intro;
+    article.content = singleShotStructured.content;
 
     // Recompute final stats after possible expansion
     const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
@@ -1613,6 +1652,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         violations: singleShotDataViolations,
         heldForReview: singleShotDataViolations.length > 0,
       },
+      tocEntries: singleShotStructured.tocCount,
+      sourceResearch: referenceReport(brief.research || null),
     };
 
     if (activeJobId) {
