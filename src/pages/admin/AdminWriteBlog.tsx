@@ -82,6 +82,8 @@ const AdminWriteBlog = () => {
   const [category, setCategory] = useState<string>(seed.category || "news");
   const [secondaryKws, setSecondaryKws] = useState<string[]>(seed.secondaryKeywords || []);
   const [secInput, setSecInput] = useState("");
+  const [referenceUrls, setReferenceUrls] = useState<string[]>(seed.referenceUrls || []);
+  const [refInput, setRefInput] = useState("");
   const buildLatestDateContext = () => {
     const y = new Date().getFullYear();
     return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.`;
@@ -149,6 +151,44 @@ const AdminWriteBlog = () => {
     setSecInput("");
   };
   const removeSecKw = (k: string) => setSecondaryKws(secondaryKws.filter(x => x !== k));
+
+  const addReferenceUrls = () => {
+    const raw = refInput.split(/[\s,]+/).map(v => v.trim()).filter(Boolean);
+    if (raw.length === 0) return;
+    const accepted: string[] = [];
+    const rejected: string[] = [];
+    raw.forEach((item) => {
+      const candidate = /^https?:\/\//i.test(item) ? item : `https://${item}`;
+      try {
+        const u = new URL(candidate);
+        if (!u.hostname.includes(".")) throw new Error("bad host");
+        const clean = u.toString();
+        if (!referenceUrls.includes(clean) && !accepted.includes(clean)) accepted.push(clean);
+      } catch {
+        rejected.push(item);
+      }
+    });
+    if (accepted.length) setReferenceUrls([...referenceUrls, ...accepted].slice(0, 8));
+    setRefInput("");
+    if (rejected.length) {
+      toast({
+        title: "Some links were not added",
+        description: `These do not look like web addresses: ${rejected.join(", ")}`,
+        variant: "destructive",
+      });
+    }
+  };
+  const removeReferenceUrl = (u: string) => setReferenceUrls(referenceUrls.filter(x => x !== u));
+
+  // Keep the brief (including reference links) across refreshes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        title, slug, targetKeyword, metaTitle, metaDescription, category,
+        secondaryKeywords: secondaryKws, referenceUrls,
+      }));
+    } catch { /* storage unavailable */ }
+  }, [title, slug, targetKeyword, metaTitle, metaDescription, category, secondaryKws, referenceUrls]);
 
   const toggleUrl = (opt: LinkOption) => {
     setSelectedUrls(prev => {
