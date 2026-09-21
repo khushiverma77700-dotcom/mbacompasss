@@ -1791,7 +1791,8 @@ html, body, #root {
 .prose td { font-size: var(--fs-detail); }
 
 /* Auto-generated article table of contents (Summary → Contents → Body) */
-.prose .blog-toc, .ai-content .blog-toc , .ai-content .blog-toc, .ai-content .blog-toc {
+.prose .blog-toc,
+.ai-content .blog-toc {
   margin: 1.5rem 0 2rem;
   padding: 1rem 1.25rem;
   border: 1px solid hsl(var(--border));
