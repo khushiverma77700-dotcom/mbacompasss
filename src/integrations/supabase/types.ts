@@ -15482,6 +15482,17 @@ export type Database = {
           total: number
         }[]
       }
+      cta_analytics_export: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_outcome?: string
+          p_search?: string
+          p_section?: string
+          p_since: string
+        }
+        Returns: Json
+      }
       cta_analytics_summary: {
         Args: {
           p_category?: string
