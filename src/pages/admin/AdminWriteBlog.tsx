@@ -628,6 +628,35 @@ const AdminWriteBlog = () => {
                 ))}
               </div>
             )}
+            {stats.qualityAudit && Array.isArray(stats.qualityAudit.checks) && stats.qualityAudit.checks.length > 0 && (
+              <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-semibold text-foreground">SEO &amp; quality audit</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={stats.qualityAudit.score >= 85 ? "default" : stats.qualityAudit.score >= 70 ? "secondary" : "destructive"}>
+                      Score {stats.qualityAudit.score}/100
+                    </Badge>
+                    <Badge variant="outline">Intent: {stats.qualityAudit.intentType}</Badge>
+                    <Badge variant={stats.qualityAudit.stuffingRisk === "low" ? "outline" : "destructive"}>
+                      Stuffing risk: {stats.qualityAudit.stuffingRisk}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {stats.qualityAudit.checks.map((c: { area: string; label: string; status: string; detail: string }, i: number) => (
+                    <div key={`audit-${i}`} className="rounded-md border bg-muted/30 p-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={c.status === "pass" ? "outline" : "destructive"}>
+                          {c.status === "pass" ? "OK" : "Check"}
+                        </Badge>
+                        <span className="font-medium text-foreground">{c.label}</span>
+                      </div>
+                      <p className="mt-1 text-muted-foreground">{c.area} — {c.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {Array.isArray(stats.factCheckReport) && stats.factCheckReport.length > 0 && (
               <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
                 <div className="flex items-center justify-between gap-2">

@@ -8,6 +8,7 @@ import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck,
 import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
 import { researchReferences, referenceGroundingRules, referenceReport, type ReferenceResearch } from "../_shared/referenceResearch.ts";
 import { structureArticle } from "../_shared/blogStructure.ts";
+import { seoMasterRules, detectTopicDomain, buildQualityAudit } from "../_shared/seoMasterRules.ts";
 import { getKeywordMetrics, metricsFactBlock, opportunityScore, semrushExpand } from "../_shared/keywordMetrics.ts";
 
 const corsHeaders = {
@@ -170,7 +171,7 @@ function getTargets(brief: BlogBrief) {
     wmax,
     targetWords,
     sectionCount: Math.max(5, Math.min(16, Math.round(targetWords / 550))),
-    density: Math.max(0.5, Math.min(brief.keywordDensityPct ?? 2, 8)),
+    density: Math.max(0.5, Math.min(brief.keywordDensityPct ?? 1, 8)),
     todayIso: new Date().toISOString().slice(0, 10),
     currentYear: new Date().getFullYear(),
   };
@@ -414,7 +415,16 @@ Final quality checklist (self-verify before returning):
 ✓ Conclusion is 100-150 words with primary keyword used once and a final CTA.
 ✓ "About MBA Compass" present after the Conclusion (LAST H2).
 ✓ Reads like a human MBA mentor.
-${factGroundingRules(facts || null)}${referenceGroundingRules(brief.research || null)}`;
+${factGroundingRules(facts || null)}${referenceGroundingRules(brief.research || null)}
+
+${seoMasterRules({
+  title: brief.title,
+  keyword: brief.targetKeyword || brief.title,
+  secondaryKeywords: brief.secondaryKeywords,
+  domain: detectTopicDomain(brief.title, brief.targetKeyword, (brief.secondaryKeywords || []).join(" "), brief.category),
+  hasReferences: !!(brief.research && brief.research.sources && brief.research.sources.length > 0),
+  todayIso,
+})}`;
 }
 
 async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null) {
@@ -852,6 +862,19 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     seo25: { ...validation, warnings },
     tocEntries: structured.tocCount,
     sourceResearch: referenceReport(brief.research || null),
+    qualityAudit: buildQualityAudit({
+      title: draft.title || brief.title,
+      metaTitle: draft.metaTitle,
+      metaDescription: draft.metaDescription,
+      slug: inserted.slug,
+      keyword: brief.targetKeyword || brief.title,
+      secondaryKeywords: brief.secondaryKeywords,
+      intro,
+      content,
+      faqCount: extractedFaqs.length,
+      tocEntries: structured.tocCount,
+      referenceCount: brief.research?.sources?.length || 0,
+    }),
   };
 }
 
@@ -1059,8 +1082,9 @@ Deno.serve(async (req) => {
     // NO upper cap on word count — long-form (10K+) is fully supported via expansion loop.
     const wmin = Math.max(300, brief.wordCountMin ?? 2500);
     const wmax = Math.max(wmin, brief.wordCountMax ?? 3500);
-    // Respect admin-chosen density. Cap at 8% (anything higher is pure stuffing).
-    const density = Math.max(0.5, Math.min(brief.keywordDensityPct ?? 2, 8));
+    // No fixed density target unless the editor explicitly sets one. Cap at 8%.
+    const densitySpecified = typeof brief.keywordDensityPct === "number" && brief.keywordDensityPct > 0;
+    const density = densitySpecified ? Math.max(0.5, Math.min(brief.keywordDensityPct as number, 8)) : 1;
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
@@ -1204,7 +1228,9 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - 1-2 contextual internal links anchored to topic-relevant entities
    - At least one <h3> subsection (60-150 words) drilling into a sub-angle (eligibility, fees, cutoffs, recruiters, timeline, alternatives, mistakes, expert tips, etc.)
    - A short closing takeaway sentence; you may bold ONLY a 2-4 word fragment of it with <strong>. NEVER wrap the whole sentence in <strong>.
-3. **Keyword usage — HIT THE TARGET DENSITY**: primary keyword "${targetKw}" MUST appear EXACTLY ${targetOccurrences} times (±10%) across the full article to hit ~${density}% density over ${targetWords} words. This is a HARD requirement set by the editor — do NOT under-deliver. Place exact-match in title, H1, slug, meta title, meta description, first 100 words, every H2 cluster (~once per 200-300 words of body), and the conclusion. Distribute evenly across sections — never cluster all occurrences in one paragraph. Also weave 20-30 LSI/semantic variants for natural readability, but those are IN ADDITION to the ${targetOccurrences} exact-match occurrences, not a substitute. Count as you write.
+3. **Keyword usage**: ${densitySpecified
+      ? `the editor set a target of ~${density}% exact-match density, so aim for roughly ${targetOccurrences} natural uses of "${targetKw}" across ${targetWords} words — never at the cost of readability.`
+      : `use "${targetKw}" only where it reads naturally — no density target. Cover the topic with variations, entities and semantic phrasing instead of repeating the exact phrase.`} Place the exact phrase in the title, H1, slug, meta title, meta description, the first 100 words, at least one H2 and the conclusion. Weave 20-30 LSI/semantic variants throughout. Never cluster repetitions in one paragraph and never force a keyword into an awkward sentence.
 4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMAN MENTOR VOICE — 8th-grade English, conversational, NOT AI**. Write like a real senior advising a junior over coffee. Use contractions (you're, don't, it's, you'll). Vary sentence length and structure — never start 3 sentences in a row the same way. Use natural mentor openers like "Here's the thing —", "Quick reality check:", "If you're in this boat,", "Most students get this wrong because…", "A simple way to think about it —". Address the reader as "you". Drop a personal aside or worked mini-example every 2-3 sections.
@@ -1463,7 +1489,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       const postPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
       const postStats = computeDensity(postPlain, targetKw);
       const minAcceptable = Math.max(3, Math.floor(targetOccurrences * 0.8));
-      if (postStats.occurrences < minAcceptable) {
+      if (densitySpecified && postStats.occurrences < minAcceptable) {
         const need = targetOccurrences - postStats.occurrences;
         console.log(`Density boost: ${postStats.occurrences} occurrences (${postStats.density}%) < ${minAcceptable}, need +${need}`);
         try {
@@ -1654,6 +1680,19 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       },
       tocEntries: singleShotStructured.tocCount,
       sourceResearch: referenceReport(brief.research || null),
+      qualityAudit: buildQualityAudit({
+        title: article.title || brief.title,
+        metaTitle: article.metaTitle,
+        metaDescription: article.metaDescription,
+        slug: inserted.slug,
+        keyword: brief.targetKeyword || brief.title,
+        secondaryKeywords: brief.secondaryKeywords,
+        intro: article.intro || "",
+        content: article.content || "",
+        faqCount: extractedFaqs.length,
+        tocEntries: singleShotStructured.tocCount,
+        referenceCount: brief.research?.sources?.length || 0,
+      }),
     };
 
     if (activeJobId) {
