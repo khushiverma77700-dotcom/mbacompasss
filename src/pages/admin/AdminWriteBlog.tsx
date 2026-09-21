@@ -598,6 +598,36 @@ const AdminWriteBlog = () => {
             <p>Words: {stats.actualWords} (target {stats.targetWordsRange?.[0]}-{stats.targetWordsRange?.[1]})</p>
             <p>Keyword density: {stats.actualDensityPct}% (target ~{stats.targetDensityPct}%)</p>
             <p>Primary keyword occurrences: {stats.actualOccurrences} (target ~{stats.targetOccurrences})</p>
+            {typeof stats.tocEntries === "number" && stats.tocEntries > 0 && (
+              <p>Table of contents entries: {stats.tocEntries}</p>
+            )}
+            {stats.sourceResearch && Array.isArray(stats.sourceResearch.sources) && stats.sourceResearch.sources.length > 0 && (
+              <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
+                <p className="font-semibold text-foreground">Sources used for research</p>
+                {Array.isArray(stats.sourceResearch.toolsUsed) && stats.sourceResearch.toolsUsed.length > 0 && (
+                  <p className="text-muted-foreground">Research tools: {stats.sourceResearch.toolsUsed.join(", ")}</p>
+                )}
+                <div className="space-y-1.5">
+                  {stats.sourceResearch.sources.map((s: { url: string; title?: string; kind?: string; status?: string }, i: number) => (
+                    <div key={`${s.url}-${i}`} className="rounded-md border bg-muted/30 p-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={s.kind === "primary" ? "default" : "secondary"}>
+                          {s.kind === "primary" ? "Your link" : "Additional source"}
+                        </Badge>
+                        <Badge variant={s.status === "read" ? "outline" : "destructive"}>
+                          {s.status === "read" ? "used" : "could not be read"}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-foreground break-words">{s.title || s.url}</p>
+                      <p className="text-muted-foreground break-all font-mono text-xs">{s.url}</p>
+                    </div>
+                  ))}
+                </div>
+                {Array.isArray(stats.sourceResearch.notes) && stats.sourceResearch.notes.map((n: string, i: number) => (
+                  <p key={`note-${i}`} className="text-muted-foreground">{n}</p>
+                ))}
+              </div>
+            )}
             {Array.isArray(stats.factCheckReport) && stats.factCheckReport.length > 0 && (
               <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
                 <div className="flex items-center justify-between gap-2">
