@@ -864,7 +864,6 @@ async function processBlogJobStep(adminClient: any, job: any) {
   await adminClient.from("ai_blog_generation_jobs").update({ status: "running", started_at: job.started_at || now, error_message: null }).eq("id", jobId);
 
   if (phase === "outline") {
-    await adminClient.from("ai_blog_generation_jobs").update({ progress: 10, current_step: "Creating SEO outline and intro" }).eq("id", jobId);
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 6, current_step: "Reading reference links and verifying sources" }).eq("id", jobId);
     const research = await researchReferences({
       urls: brief.referenceUrls,
@@ -1287,6 +1286,18 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       return null;
     });
 
+    // Reference links are the highest-priority sources; read them before writing.
+    if (!brief.research) {
+      brief.research = await researchReferences({
+        urls: brief.referenceUrls,
+        topic: brief.title,
+        keyword: brief.targetKeyword,
+      }).catch((e) => {
+        console.warn("[ai-blog-writer] reference research failed", e instanceof Error ? e.message : e);
+        return null;
+      });
+    }
+
     // Scale tokens with target word count. Cap at 32K to stay within edge wall-clock limits.
     const dynamicMaxTokens = Math.min(32000, Math.max(12000, Math.round(wmax * 3) + 3000));
 
@@ -1512,10 +1523,16 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       }
       article.intro = introAudit.html;
       article.content = contentAudit.html;
+
       if (contentQC.issues.length) {
         console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
       }
     }
+
+    // Final shape: Summary → Table of Contents → full body, with key data bolded.
+    const singleShotStructured = structureArticle(article.intro || "", article.content || "");
+    article.intro = singleShotStructured.intro;
+    article.content = singleShotStructured.content;
 
     // Recompute final stats after possible expansion
     const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
@@ -1635,6 +1652,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
         violations: singleShotDataViolations,
         heldForReview: singleShotDataViolations.length > 0,
       },
+      tocEntries: singleShotStructured.tocCount,
+      sourceResearch: referenceReport(brief.research || null),
     };
 
     if (activeJobId) {
