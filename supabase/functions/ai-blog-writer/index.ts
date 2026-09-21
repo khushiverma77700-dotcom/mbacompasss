@@ -862,6 +862,19 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     seo25: { ...validation, warnings },
     tocEntries: structured.tocCount,
     sourceResearch: referenceReport(brief.research || null),
+    qualityAudit: buildQualityAudit({
+      title: draft.title || brief.title,
+      metaTitle: draft.metaTitle,
+      metaDescription: draft.metaDescription,
+      slug: inserted.slug,
+      keyword: brief.targetKeyword || brief.title,
+      secondaryKeywords: brief.secondaryKeywords,
+      intro,
+      content,
+      faqCount: extractedFaqs.length,
+      tocEntries: structured.tocCount,
+      referenceCount: brief.research?.sources?.length || 0,
+    }),
   };
 }
 
