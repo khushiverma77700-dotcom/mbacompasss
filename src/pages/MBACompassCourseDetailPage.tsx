@@ -650,7 +650,7 @@ function DetailInner() {
                   <div className="border-b border-sky-100 bg-sky-50 p-5">
                     <div className="flex items-center gap-3">
                       <div className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground"><GraduationCap className="h-6 w-6" /></div>
-                      <div><div className="font-bold text-foreground">BSB Full Series Advance</div><div className="text-sm text-muted-foreground">One plan. Multiple MBA entrance exams.</div></div>
+                      <div><div className="font-bold text-foreground">{c.title}</div>{c.subtitle ? <div className="text-sm text-muted-foreground">{c.subtitle}</div> : null}</div>
                     </div>
                   </div>
                 )}

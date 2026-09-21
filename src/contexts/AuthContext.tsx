@@ -132,7 +132,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Restore the browser's last verified session immediately after hydration;
     // the network refresh below then confirms it without delaying first paint.
     const storedSession = readStoredSession();
-    if (storedSession) applySession(storedSession);
+    if (storedSession) {
+      // Hold role-gated routes on "loading" in the SAME commit that sets the
+      // user; otherwise admin guards see user && !isAdmin and redirect to /auth
+      // before the admin-status effect can start.
+      if (shouldResolveAdminForPath(window.location.pathname)) setAdminLoading(true);
+      applySession(storedSession);
+    }
 
     let subscription: { unsubscribe: () => void } | undefined;
     let cancelIdleStart: (() => void) | undefined;

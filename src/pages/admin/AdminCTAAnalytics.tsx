@@ -44,6 +44,7 @@ const AdminCTAAnalytics = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sectionFilter, setSectionFilter] = useState<string>("all");
   const [outcomeFilter, setOutcomeFilter] = useState<"all" | "executed" | "login_prompted">("all");
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     supabase
@@ -99,9 +100,23 @@ const AdminCTAAnalytics = () => {
   const byEntity = summary?.by_entity ?? [];
   const trend = summary?.trend ?? [];
 
-  const exportCsv = () => {
+  const exportCsv = async () => {
+    setExporting(true);
+    // The summary RPC only returns the 300 most recent rows for the table; the
+    // export pulls the complete filtered set from the database.
+    const since = new Date(Date.now() - RANGES[range] * 86400000).toISOString();
+    const { data, error } = await supabase.rpc("cta_analytics_export", {
+      p_since: since,
+      p_outcome: outcomeFilter,
+      p_section: sectionFilter,
+      p_category: categoryFilter,
+      p_search: q.trim(),
+      p_limit: 50000,
+    });
+    setExporting(false);
+    const events = (error ? recentEvents : ((data ?? []) as unknown as RecentRow[]));
     const header = ["created_at", "cta_key", "label", "category", "outcome", "page_path", "section", "user_id"];
-    const rows = recentEvents.map((e) => {
+    const rows = events.map((e) => {
       return [
         e.created_at,
         e.cta_key,
@@ -138,8 +153,9 @@ const AdminCTAAnalytics = () => {
             Drill into clicks by CTA, section, category, page and login outcome.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={!recentEvents.length}>
-          <Download className="w-4 h-4 mr-1.5" /> Export CSV
+        <Button variant="outline" size="sm" onClick={() => void exportCsv()} disabled={exporting || !totals.total}>
+          {exporting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
+          {exporting ? "Preparing…" : "Export CSV"}
         </Button>
       </div>
 

@@ -76,6 +76,7 @@ const AdminColleges = () => {
 
   const [totalCount, setTotalCount] = useState(0);
   const [listLoading, setListLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [options, setOptions] = useState<{ types: string[]; states: string[]; cities: { city: string; state: string | null }[] }>({
     types: [], states: [], cities: [],
   });
@@ -102,11 +103,10 @@ const AdminColleges = () => {
   const [bulkFilterProgress, setBulkFilterProgress] = useState({ done: 0, total: 0, failed: 0 });
   const bulkFileRef = (typeof window !== "undefined") ? { current: null as HTMLInputElement | null } : { current: null };
 
-  const LIST_LIMIT = 300;
+  const PAGE_SIZE = 300;
 
   /** Server-side filtered listing: only the rows on screen travel to the browser. */
-  const fetchColleges = useCallback(async () => {
-    setListLoading(true);
+  const buildListQuery = useCallback(() => {
     let query = supabase
       .from("colleges")
       .select(
@@ -120,17 +120,32 @@ const AdminColleges = () => {
     if (filters.type !== "all") query = query.eq("type", filters.type);
     if (filters.state !== "all") query = query.eq("state", filters.state);
     if (filters.city !== "all") query = query.eq("city", filters.city);
-
-    const { data, count, error } = await query
+    return query
       .order("listing_sort_order", { ascending: true, nullsFirst: false })
-      .order("ranking", { ascending: true })
-      .limit(LIST_LIMIT);
+      .order("ranking", { ascending: true });
+  }, [filters.search, filters.tier, filters.category, filters.type, filters.state, filters.city]);
+
+  const fetchColleges = useCallback(async () => {
+    setListLoading(true);
+    const { data, count, error } = await buildListQuery().range(0, PAGE_SIZE - 1);
     if (!error) {
       setColleges(data ?? []);
       setTotalCount(count ?? 0);
     }
     setListLoading(false);
-  }, [filters.search, filters.tier, filters.category, filters.type, filters.state, filters.city]);
+  }, [buildListQuery]);
+
+  /** Appends the next page so sorting and bulk tools can cover every matching row. */
+  const loadMoreColleges = useCallback(async () => {
+    setLoadingMore(true);
+    const from = colleges.length;
+    const { data, count, error } = await buildListQuery().range(from, from + PAGE_SIZE - 1);
+    if (!error) {
+      setColleges((prev) => [...prev, ...(data ?? [])]);
+      setTotalCount(count ?? 0);
+    }
+    setLoadingMore(false);
+  }, [buildListQuery, colleges.length]);
 
   // Debounced so typing in the search box doesn't fire a query per keystroke.
   useEffect(() => {
@@ -730,6 +745,16 @@ const AdminColleges = () => {
               )}
             </TableBody>
           </Table>
+          {!listLoading && colleges.length < totalCount && (
+            <div className="flex flex-col items-center gap-2 py-4">
+              <p className="text-xs text-muted-foreground">
+                Showing {colleges.length} of {totalCount} matching colleges
+              </p>
+              <Button variant="outline" size="sm" onClick={() => void loadMoreColleges()} disabled={loadingMore}>
+                {loadingMore ? "Loading…" : `Load next ${Math.min(PAGE_SIZE, totalCount - colleges.length)}`}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
