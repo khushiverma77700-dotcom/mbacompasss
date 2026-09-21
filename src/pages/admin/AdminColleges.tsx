@@ -745,6 +745,16 @@ const AdminColleges = () => {
               )}
             </TableBody>
           </Table>
+          {!listLoading && colleges.length < totalCount && (
+            <div className="flex flex-col items-center gap-2 py-4">
+              <p className="text-xs text-muted-foreground">
+                Showing {colleges.length} of {totalCount} matching colleges
+              </p>
+              <Button variant="outline" size="sm" onClick={() => void loadMoreColleges()} disabled={loadingMore}>
+                {loadingMore ? "Loading…" : `Load next ${Math.min(PAGE_SIZE, totalCount - colleges.length)}`}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

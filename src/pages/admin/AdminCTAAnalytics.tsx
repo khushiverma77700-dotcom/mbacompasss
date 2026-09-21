@@ -99,9 +99,23 @@ const AdminCTAAnalytics = () => {
   const byEntity = summary?.by_entity ?? [];
   const trend = summary?.trend ?? [];
 
-  const exportCsv = () => {
+  const exportCsv = async () => {
+    setExporting(true);
+    // The summary RPC only returns the 300 most recent rows for the table; the
+    // export pulls the complete filtered set from the database.
+    const since = new Date(Date.now() - RANGES[range] * 86400000).toISOString();
+    const { data, error } = await supabase.rpc("cta_analytics_export", {
+      p_since: since,
+      p_outcome: outcomeFilter,
+      p_section: sectionFilter,
+      p_category: categoryFilter,
+      p_search: q.trim(),
+      p_limit: 50000,
+    });
+    setExporting(false);
+    const events = (error ? recentEvents : ((data ?? []) as unknown as RecentRow[]));
     const header = ["created_at", "cta_key", "label", "category", "outcome", "page_path", "section", "user_id"];
-    const rows = recentEvents.map((e) => {
+    const rows = events.map((e) => {
       return [
         e.created_at,
         e.cta_key,
