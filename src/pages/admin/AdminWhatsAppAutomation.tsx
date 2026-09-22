@@ -55,7 +55,21 @@ type Campaign = {
   status: "draft" | "running" | "paused" | "completed" | "stopped";
   last_run_at: string | null;
   created_at: string;
+  send_start_time: string;
+  send_end_time: string;
+  send_timezone: string;
 };
+
+const TIME_ZONES = [
+  "Asia/Kolkata",
+  "Asia/Dubai",
+  "Asia/Singapore",
+  "Europe/London",
+  "America/New_York",
+  "UTC",
+];
+
+const shortTime = (value: string | null | undefined) => (value ?? "").slice(0, 5);
 
 type Recipient = {
   id: string;
