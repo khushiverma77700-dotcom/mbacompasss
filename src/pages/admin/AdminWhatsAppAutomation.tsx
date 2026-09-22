@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useServerFn } from "@tanstack/react-start";
 import { runWhatsAppDispatch, getWhatsAppConnectionStatus } from "@/lib/whatsappAutomation.functions";
 import { Card } from "@/components/ui/card";
@@ -209,7 +210,7 @@ export default function AdminWhatsAppAutomation() {
 
   useEffect(() => {
     void loadCampaigns();
-    void checkConnection({ data: {} })
+    void checkConnection()
       .then((res) => setConnection({ connected: res.connected, phoneNumberId: res.phoneNumberId }))
       .catch(() => setConnection({ connected: false, phoneNumberId: null }));
   }, [loadCampaigns, checkConnection]);
@@ -281,7 +282,7 @@ export default function AdminWhatsAppAutomation() {
       return;
     }
     const seen = new Set<string>();
-    const rows: { campaign_id: string; phone: string; name: string | null; variables: Record<string, unknown> }[] = [];
+    const rows: { campaign_id: string; phone: string; name: string | null; variables: Json }[] = [];
     let invalid = 0;
     for (const entry of entries) {
       const phone = normalisePhone(entry.phone);
@@ -295,7 +296,7 @@ export default function AdminWhatsAppAutomation() {
         campaign_id: selectedId,
         phone,
         name: entry.name ?? null,
-        variables: entry.variables ?? {},
+        variables: (entry.variables ?? {}) as Json,
       });
     }
     if (rows.length === 0) {
