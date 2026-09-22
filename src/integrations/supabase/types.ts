@@ -15048,6 +15048,226 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          daily_limit: number
+          id: string
+          last_run_at: string | null
+          message_body: string | null
+          message_type: string
+          name: string
+          notes: string | null
+          start_date: string
+          status: string
+          template_language: string
+          template_name: string | null
+          template_params: Json
+          total_target: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          daily_limit?: number
+          id?: string
+          last_run_at?: string | null
+          message_body?: string | null
+          message_type?: string
+          name: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          template_language?: string
+          template_name?: string | null
+          template_params?: Json
+          total_target?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          daily_limit?: number
+          id?: string
+          last_run_at?: string | null
+          message_body?: string | null
+          message_type?: string
+          name?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          template_language?: string
+          template_name?: string | null
+          template_params?: Json
+          total_target?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_daily_stats: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          failed_count: number
+          id: string
+          processed_count: number
+          send_date: string
+          sent_count: number
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          processed_count?: number
+          send_date?: string
+          sent_count?: number
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          processed_count?: number
+          send_date?: string
+          sent_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_daily_stats_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_recipients: {
+        Row: {
+          attempts: number
+          campaign_id: string
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          last_error_code: string | null
+          name: string | null
+          next_retry_at: string | null
+          phone: string
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+          variables: Json
+        }
+        Insert: {
+          attempts?: number
+          campaign_id: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_error_code?: string | null
+          name?: string | null
+          next_retry_at?: string | null
+          phone: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          variables?: Json
+        }
+        Update: {
+          attempts?: number
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_error_code?: string | null
+          name?: string | null
+          next_retry_at?: string | null
+          phone?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          variables?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_send_logs: {
+        Row: {
+          attempt: number
+          campaign_id: string | null
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          next_retry_at: string | null
+          phone: string
+          provider_message_id: string | null
+          recipient_id: string | null
+          response: Json | null
+          status: string
+        }
+        Insert: {
+          attempt?: number
+          campaign_id?: string | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          next_retry_at?: string | null
+          phone: string
+          provider_message_id?: string | null
+          recipient_id?: string | null
+          response?: Json | null
+          status: string
+        }
+        Update: {
+          attempt?: number
+          campaign_id?: string | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          next_retry_at?: string | null
+          phone?: string
+          provider_message_id?: string | null
+          recipient_id?: string | null
+          response?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_send_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_send_logs_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       colleges_listing_cache: {
@@ -15817,6 +16037,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      whatsapp_bump_daily: {
+        Args: {
+          p_campaign: string
+          p_date: string
+          p_failed: number
+          p_sent: number
+        }
+        Returns: undefined
       }
     }
     Enums: {
