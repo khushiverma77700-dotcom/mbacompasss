@@ -304,6 +304,7 @@ import { Route as PublicMocksLeaderboardSlugRouteImport } from './routes/_public
 import { Route as PublicMocksResultAttemptIdRouteImport } from './routes/_public.mocks.result.$attemptId'
 import { Route as PublicMocksReviewAttemptIdRouteImport } from './routes/_public.mocks.review.$attemptId'
 import { Route as AdminMockTestsTestIdBuilderRouteImport } from './routes/admin.mock-tests_.$testId.builder'
+import { Route as ApiPublicWhatsappDispatchRouteImport } from './routes/api/public/whatsapp/dispatch'
 import { Route as CollegeSlugProgrammeProgrammeSlugRouteImport } from './routes/college.$slug.programme.$programmeSlug'
 import { Route as DemoDailyTestReportAttemptIdRouteImport } from './routes/demo.daily-test.report.$attemptId'
 import { Route as DemoMocksLeaderboardSlugRouteImport } from './routes/demo.mocks.leaderboard.$slug'
@@ -1836,6 +1837,12 @@ const AdminMockTestsTestIdBuilderRoute =
     path: '/mock-tests/$testId/builder',
     getParentRoute: () => AdminRoute,
   } as any)
+const ApiPublicWhatsappDispatchRoute =
+  ApiPublicWhatsappDispatchRouteImport.update({
+    id: '/api/public/whatsapp/dispatch',
+    path: '/api/public/whatsapp/dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CollegeSlugProgrammeProgrammeSlugRoute =
   CollegeSlugProgrammeProgrammeSlugRouteImport.update({
     id: '/$programmeSlug',
@@ -2249,6 +2256,7 @@ export interface FileRoutesByFullPath {
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
   '/admin/mock-tests/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
+  '/api/public/whatsapp/dispatch': typeof ApiPublicWhatsappDispatchRoute
   '/college/$slug/programme/$programmeSlug': typeof CollegeSlugProgrammeProgrammeSlugRoute
   '/demo/daily-test/report/$attemptId': typeof DemoDailyTestReportAttemptIdRoute
   '/demo/mocks/leaderboard/$slug': typeof DemoMocksLeaderboardSlugRoute
@@ -2547,6 +2555,7 @@ export interface FileRoutesByTo {
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
   '/admin/mock-tests/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
+  '/api/public/whatsapp/dispatch': typeof ApiPublicWhatsappDispatchRoute
   '/college/$slug/programme/$programmeSlug': typeof CollegeSlugProgrammeProgrammeSlugRoute
   '/demo/daily-test/report/$attemptId': typeof DemoDailyTestReportAttemptIdRoute
   '/demo/mocks/leaderboard/$slug': typeof DemoMocksLeaderboardSlugRoute
@@ -2865,6 +2874,7 @@ export interface FileRoutesById {
   '/_public/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/_public/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
   '/admin/mock-tests_/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
+  '/api/public/whatsapp/dispatch': typeof ApiPublicWhatsappDispatchRoute
   '/college/$slug/programme/$programmeSlug': typeof CollegeSlugProgrammeProgrammeSlugRoute
   '/demo/daily-test/report/$attemptId': typeof DemoDailyTestReportAttemptIdRoute
   '/demo/mocks/leaderboard/$slug': typeof DemoMocksLeaderboardSlugRoute
@@ -3183,6 +3193,7 @@ export interface FileRouteTypes {
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
     | '/admin/mock-tests/$testId/builder'
+    | '/api/public/whatsapp/dispatch'
     | '/college/$slug/programme/$programmeSlug'
     | '/demo/daily-test/report/$attemptId'
     | '/demo/mocks/leaderboard/$slug'
@@ -3481,6 +3492,7 @@ export interface FileRouteTypes {
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
     | '/admin/mock-tests/$testId/builder'
+    | '/api/public/whatsapp/dispatch'
     | '/college/$slug/programme/$programmeSlug'
     | '/demo/daily-test/report/$attemptId'
     | '/demo/mocks/leaderboard/$slug'
@@ -3798,6 +3810,7 @@ export interface FileRouteTypes {
     | '/_public/mocks/result/$attemptId'
     | '/_public/mocks/review/$attemptId'
     | '/admin/mock-tests_/$testId/builder'
+    | '/api/public/whatsapp/dispatch'
     | '/college/$slug/programme/$programmeSlug'
     | '/demo/daily-test/report/$attemptId'
     | '/demo/mocks/leaderboard/$slug'
@@ -3835,6 +3848,7 @@ export interface RootRouteChildren {
   CollegeSlugProgrammeRoute: typeof CollegeSlugProgrammeRouteWithChildren
   MocksAttemptAttemptIdRoute: typeof MocksAttemptAttemptIdRoute
   MocksCheckoutReturnRoute: typeof MocksCheckoutReturnRoute
+  ApiPublicWhatsappDispatchRoute: typeof ApiPublicWhatsappDispatchRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
@@ -5905,6 +5919,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMockTestsTestIdBuilderRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/whatsapp/dispatch': {
+      id: '/api/public/whatsapp/dispatch'
+      path: '/api/public/whatsapp/dispatch'
+      fullPath: '/api/public/whatsapp/dispatch'
+      preLoaderRoute: typeof ApiPublicWhatsappDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/college/$slug/programme/$programmeSlug': {
       id: '/college/$slug/programme/$programmeSlug'
       path: '/$programmeSlug'
@@ -6950,6 +6971,7 @@ const rootRouteChildren: RootRouteChildren = {
   CollegeSlugProgrammeRoute: CollegeSlugProgrammeRouteWithChildren,
   MocksAttemptAttemptIdRoute: MocksAttemptAttemptIdRoute,
   MocksCheckoutReturnRoute: MocksCheckoutReturnRoute,
+  ApiPublicWhatsappDispatchRoute: ApiPublicWhatsappDispatchRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
