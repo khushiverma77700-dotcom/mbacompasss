@@ -28,6 +28,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import WhatsAppMessageLibrary, {
+  type SavedMessage,
+} from "@/components/admin/whatsapp/WhatsAppMessageLibrary";
+import WhatsAppCampaignOverview from "@/components/admin/whatsapp/WhatsAppCampaignOverview";
 import { toast } from "sonner";
 import {
   Play,
@@ -157,6 +161,9 @@ export default function AdminWhatsAppAutomation() {
   const [sendTimezone, setSendTimezone] = useState("Asia/Kolkata");
   const [totalTarget, setTotalTarget] = useState("");
 
+  const [savedMessageId, setSavedMessageId] = useState<string | null>(null);
+  const [tab, setTab] = useState("dashboard");
+
   // Numbers
   const [manualNumbers, setManualNumbers] = useState("");
   const [recipientFilter, setRecipientFilter] = useState<string>("all");
@@ -278,6 +285,7 @@ export default function AdminWhatsAppAutomation() {
         send_start_time: sendStartTime || "09:00",
         send_end_time: sendEndTime || "21:00",
         send_timezone: sendTimezone || "Asia/Kolkata",
+        message_id: savedMessageId,
       })
       .select("id")
       .single();
@@ -292,7 +300,26 @@ export default function AdminWhatsAppAutomation() {
     setTemplateParams("");
     await loadCampaigns();
     if (data?.id) setSelectedId(data.id as string);
+    setTab("numbers");
   };
+
+  // Load a saved library message into the new-campaign form.
+  const useSavedMessage = (message: SavedMessage) => {
+    setSavedMessageId(message.id);
+    setMessageType(message.message_type);
+    setTemplateName(message.template_name ?? "");
+    setTemplateLanguage(message.template_language ?? "en");
+    setTemplateParams(
+      Array.isArray(message.template_params)
+        ? message.template_params.map((p) => String(p)).join(" | ")
+        : "",
+    );
+    setMessageBody(message.message_body ?? "");
+    setName((current) => current || `${message.name} — ${new Date().toISOString().slice(0, 10)}`);
+    setTab("new");
+    toast.success(`"${message.name}" loaded into the new campaign form`);
+  };
+
 
   const insertRecipients = async (
     entries: { phone: string; name?: string | null; variables?: Record<string, unknown> }[],
@@ -578,14 +605,31 @@ export default function AdminWhatsAppAutomation() {
         </Card>
 
         <div className="space-y-6">
-          <Tabs defaultValue="dashboard">
-            <TabsList>
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList className="flex-wrap h-auto">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="all">All campaigns</TabsTrigger>
+              <TabsTrigger value="messages">Message library</TabsTrigger>
               <TabsTrigger value="numbers">Numbers</TabsTrigger>
               <TabsTrigger value="queue">Retry queue</TabsTrigger>
               <TabsTrigger value="logs">Activity logs</TabsTrigger>
               <TabsTrigger value="new">New campaign</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="all" className="pt-4">
+              <WhatsAppCampaignOverview
+                onSelect={(id) => {
+                  setSelectedId(id);
+                  setTab("dashboard");
+                }}
+                onChanged={() => void loadCampaigns()}
+              />
+            </TabsContent>
+
+            <TabsContent value="messages" className="pt-4">
+              <WhatsAppMessageLibrary onUse={useSavedMessage} />
+            </TabsContent>
+
 
             <TabsContent value="dashboard" className="space-y-4 pt-4">
               {!selected ? (
@@ -906,6 +950,16 @@ export default function AdminWhatsAppAutomation() {
 
             <TabsContent value="new" className="pt-4">
               <Card className="p-4 space-y-4 max-w-2xl">
+                {savedMessageId ? (
+                  <div className="flex items-center justify-between gap-2 rounded-md bg-primary/5 px-3 py-2">
+                    <span className="text-sm text-muted-foreground">
+                      Using a saved message from the library.
+                    </span>
+                    <Button size="sm" variant="ghost" onClick={() => setSavedMessageId(null)}>
+                      Unlink
+                    </Button>
+                  </div>
+                ) : null}
                 <div>
                   <Label>Campaign name</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="CAT 2026 mock offer" />
