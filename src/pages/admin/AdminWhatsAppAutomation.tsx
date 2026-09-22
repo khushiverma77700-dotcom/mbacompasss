@@ -950,6 +950,16 @@ export default function AdminWhatsAppAutomation() {
 
             <TabsContent value="new" className="pt-4">
               <Card className="p-4 space-y-4 max-w-2xl">
+                {savedMessageId ? (
+                  <div className="flex items-center justify-between gap-2 rounded-md bg-primary/5 px-3 py-2">
+                    <span className="text-sm text-muted-foreground">
+                      Using a saved message from the library.
+                    </span>
+                    <Button size="sm" variant="ghost" onClick={() => setSavedMessageId(null)}>
+                      Unlink
+                    </Button>
+                  </div>
+                ) : null}
                 <div>
                   <Label>Campaign name</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="CAT 2026 mock offer" />
