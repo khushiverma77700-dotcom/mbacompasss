@@ -15059,6 +15059,9 @@ export type Database = {
           message_type: string
           name: string
           notes: string | null
+          send_end_time: string
+          send_start_time: string
+          send_timezone: string
           start_date: string
           status: string
           template_language: string
@@ -15077,6 +15080,9 @@ export type Database = {
           message_type?: string
           name: string
           notes?: string | null
+          send_end_time?: string
+          send_start_time?: string
+          send_timezone?: string
           start_date?: string
           status?: string
           template_language?: string
@@ -15095,6 +15101,9 @@ export type Database = {
           message_type?: string
           name?: string
           notes?: string | null
+          send_end_time?: string
+          send_start_time?: string
+          send_timezone?: string
           start_date?: string
           status?: string
           template_language?: string
