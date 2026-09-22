@@ -28,6 +28,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import WhatsAppMessageLibrary, {
+  type SavedMessage,
+} from "@/components/admin/whatsapp/WhatsAppMessageLibrary";
+import WhatsAppCampaignOverview from "@/components/admin/whatsapp/WhatsAppCampaignOverview";
 import { toast } from "sonner";
 import {
   Play,
@@ -156,6 +160,9 @@ export default function AdminWhatsAppAutomation() {
   const [sendEndTime, setSendEndTime] = useState("21:00");
   const [sendTimezone, setSendTimezone] = useState("Asia/Kolkata");
   const [totalTarget, setTotalTarget] = useState("");
+
+  const [savedMessageId, setSavedMessageId] = useState<string | null>(null);
+  const [tab, setTab] = useState("dashboard");
 
   // Numbers
   const [manualNumbers, setManualNumbers] = useState("");
