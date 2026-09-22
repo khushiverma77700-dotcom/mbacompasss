@@ -275,6 +275,9 @@ export default function AdminWhatsAppAutomation() {
         daily_limit: Math.max(parseInt(dailyLimit, 10) || 50, 1),
         start_date: startDate,
         total_target: totalTarget ? Math.max(parseInt(totalTarget, 10) || 0, 0) || null : null,
+        send_start_time: sendStartTime || "09:00",
+        send_end_time: sendEndTime || "21:00",
+        send_timezone: sendTimezone || "Asia/Kolkata",
       })
       .select("id")
       .single();
@@ -437,6 +440,19 @@ export default function AdminWhatsAppAutomation() {
       return;
     }
     toast.success(`Daily limit set to ${limit}`);
+    await loadCampaigns();
+  };
+
+  const saveSendWindow = async (
+    patch: { send_start_time?: string; send_end_time?: string; send_timezone?: string },
+  ) => {
+    if (!selectedId) return;
+    const { error } = await supabase.from("whatsapp_campaigns").update(patch).eq("id", selectedId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Sending time updated");
     await loadCampaigns();
   };
 
