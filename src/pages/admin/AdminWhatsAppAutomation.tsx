@@ -300,7 +300,26 @@ export default function AdminWhatsAppAutomation() {
     setTemplateParams("");
     await loadCampaigns();
     if (data?.id) setSelectedId(data.id as string);
+    setTab("numbers");
   };
+
+  // Load a saved library message into the new-campaign form.
+  const useSavedMessage = (message: SavedMessage) => {
+    setSavedMessageId(message.id);
+    setMessageType(message.message_type);
+    setTemplateName(message.template_name ?? "");
+    setTemplateLanguage(message.template_language ?? "en");
+    setTemplateParams(
+      Array.isArray(message.template_params)
+        ? message.template_params.map((p) => String(p)).join(" | ")
+        : "",
+    );
+    setMessageBody(message.message_body ?? "");
+    setName((current) => current || `${message.name} — ${new Date().toISOString().slice(0, 10)}`);
+    setTab("new");
+    toast.success(`"${message.name}" loaded into the new campaign form`);
+  };
+
 
   const insertRecipients = async (
     entries: { phone: string; name?: string | null; variables?: Record<string, unknown> }[],
