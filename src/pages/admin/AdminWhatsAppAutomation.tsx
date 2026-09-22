@@ -605,14 +605,31 @@ export default function AdminWhatsAppAutomation() {
         </Card>
 
         <div className="space-y-6">
-          <Tabs defaultValue="dashboard">
-            <TabsList>
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList className="flex-wrap h-auto">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="all">All campaigns</TabsTrigger>
+              <TabsTrigger value="messages">Message library</TabsTrigger>
               <TabsTrigger value="numbers">Numbers</TabsTrigger>
               <TabsTrigger value="queue">Retry queue</TabsTrigger>
               <TabsTrigger value="logs">Activity logs</TabsTrigger>
               <TabsTrigger value="new">New campaign</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="all" className="pt-4">
+              <WhatsAppCampaignOverview
+                onSelect={(id) => {
+                  setSelectedId(id);
+                  setTab("dashboard");
+                }}
+                onChanged={() => void loadCampaigns()}
+              />
+            </TabsContent>
+
+            <TabsContent value="messages" className="pt-4">
+              <WhatsAppMessageLibrary onUse={useSavedMessage} />
+            </TabsContent>
+
 
             <TabsContent value="dashboard" className="space-y-4 pt-4">
               {!selected ? (
