@@ -15056,6 +15056,7 @@ export type Database = {
           id: string
           last_run_at: string | null
           message_body: string | null
+          message_id: string | null
           message_type: string
           name: string
           notes: string | null
@@ -15077,6 +15078,7 @@ export type Database = {
           id?: string
           last_run_at?: string | null
           message_body?: string | null
+          message_id?: string | null
           message_type?: string
           name: string
           notes?: string | null
@@ -15098,6 +15100,7 @@ export type Database = {
           id?: string
           last_run_at?: string | null
           message_body?: string | null
+          message_id?: string | null
           message_type?: string
           name?: string
           notes?: string | null
@@ -15112,7 +15115,15 @@ export type Database = {
           total_target?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaigns_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_daily_stats: {
         Row: {
@@ -15154,6 +15165,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message_body: string | null
+          message_type: string
+          name: string
+          notes: string | null
+          template_language: string
+          template_name: string | null
+          template_params: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_body?: string | null
+          message_type?: string
+          name: string
+          notes?: string | null
+          template_language?: string
+          template_name?: string | null
+          template_params?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_body?: string | null
+          message_type?: string
+          name?: string
+          notes?: string | null
+          template_language?: string
+          template_name?: string | null
+          template_params?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       whatsapp_recipients: {
         Row: {
@@ -16055,6 +16105,17 @@ export type Database = {
           p_sent: number
         }
         Returns: undefined
+      }
+      whatsapp_campaign_progress: {
+        Args: never
+        Returns: {
+          campaign_id: string
+          failed: number
+          pending: number
+          retry: number
+          sent: number
+          total: number
+        }[]
       }
     }
     Enums: {
