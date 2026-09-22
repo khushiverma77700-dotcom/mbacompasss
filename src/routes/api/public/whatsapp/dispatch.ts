@@ -19,7 +19,8 @@ export const Route = createFileRoute("/api/public/whatsapp/dispatch")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected = process.env["WHATSAPP_AUTOMATION_CRON_SECRET"];
+        const expected =
+          process.env["WHATSAPP_CRON_TOKEN"] ?? process.env["WHATSAPP_AUTOMATION_CRON_SECRET"];
         const provided =
           request.headers.get("x-automation-secret") ??
           request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
