@@ -276,7 +276,7 @@ export type DispatchResult = {
  */
 export async function dispatchWhatsAppQueue(
   supabase: Client,
-  options: { campaignId?: string; maxPerCampaign?: number } = {},
+  options: { campaignId?: string; maxPerCampaign?: number; ignoreWindow?: boolean } = {},
 ): Promise<DispatchResult> {
   const ranAt = new Date().toISOString();
   const config = await loadWhatsAppConfig(supabase);
