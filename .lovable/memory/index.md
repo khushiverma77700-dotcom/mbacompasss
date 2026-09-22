@@ -1,0 +1,66 @@
+# Project Memory
+
+## Core
+- Theme: White/light blue, strictly no dark blue/navy. No emojis.
+- Typography: exactly 4 font sizes sitewide (14px detail, 16px body, ~22px subhead, ~36px heading). Never use arbitrary `text-[..px]`.
+- Tone: Professional "smart MBA advisor", never generic AI phrasing.
+- UI Constraint: `pointer-events-none` on ALL absolute decorative overlays to prevent blocked clicks.
+- Images: Site-wide constraint `max-width: 100%`, `height: auto`.
+- Tech: Supabase RLS/RBAC. React Router on static host (use `.htaccess` to index.html).
+- Data: Filter out blank names/slugs site-wide. `site_settings` JSONB must be wrapped as `{ items: [...] }`.
+- Auth: Google OAuth requires mobile OTP onboarding. Auto-confirm email is ON for instant post-purchase login.
+
+## Memories
+- [Type Scale](mem://style/type-scale) — The four allowed font sizes, Tailwind mapping and CSS vars
+- [Brand Vision](mem://project/vision) — "MBAHub by B School Buzz" branding, organic academic look, advisor persona
+- [Color Palette](mem://style/color-palette) — White and light blue theme, strictly no dark blue/navy
+- [Icons](mem://style/icons) — Professional, uniform, no emojis
+- [Backend Stack](mem://architecture/backend-stack) — Supabase RLS, uploads bucket, inline CORS, JSONB standard
+- [College Directory](mem://features/college-directory) — 13-tab admin, Tier and Category mandatory filters
+- [Exams Directory](mem://features/exams-directory) — 365-day countdown logic, JSON pattern aggregation
+- [Blog & Articles](mem://features/blog-and-articles) — 16:9 thumbnails, image fallbacks, boolean publish flag
+- [Domain Configuration](mem://project/domain) — bschoolbuzz.com, sitemap proxy edge function
+- [Regional SEO Pages](mem://architecture/seo-regional-pages) — Manually add colleges to override location mapping
+- [Security Hardening](mem://architecture/security-hardening) — Profiles owner-only, public institute contacts
+- [Offer Banners Layout](mem://style/offer-banners-layout) — 2x2 grid on mobile replacing sliders
+- [Hero Visuals](mem://style/hero-visuals) — 3D SVG, glassmorphism, pointer-events-none overlays
+- [Promotions](mem://features/promotions) — 4-step coupon flow, login gate for brochures and codes
+- [Layout Rules](mem://style/layout) — Overlays must not intercept clicks, responsive image constraints
+- [Admin Panel Data](mem://features/admin-panel) — Ignore 'static:' pages in bulk database updates
+- [Results Terminology](mem://features/results-section) — Use 'Calls' and 'Converts', never 'IIM Selections'
+- [Data Integrity](mem://constraints/data-integrity) — Automatically filter blank names or missing slugs
+- [Admin Access Control](mem://architecture/admin-access-control) — Super-admin fallback for users not in permissions table
+- [Lead Gen Popup](mem://features/lead-generation-popup) — 8s delay, 1x/session, suppressed if already analyzed
+- [Pagespeed Integration](mem://architecture/pagespeed-integration) — Morning cron jobs, unoptimized image criteria
+- [Deployment Strategy](mem://architecture/deployment-strategy) — Static frontend on Hostinger requires .htaccess redirect
+- [Comparison Tool](mem://features/comparison-tool) — Soft-filtering fallback for AI Coaching Finder
+- [Image Dimensions](mem://constraints/image-dimensions) — Exact dimensions and aspect ratios for all uploads
+- [Profile Analyzer](mem://features/profile-analyzer) — One per user, 2014-2035 graduation year bounds
+- [Data Lifecycle](mem://architecture/data-lifecycle-and-cleanup) — Admin deletion cascade (SEO, sitemap, links)
+- [User Registration](mem://features/user-leads-and-registration) — Mandatory Name, Email, 10-digit Mobile, 6-digit OTP
+- [College Shortlister](mem://features/college-shortlister-simulator) — 100-point scoring weights formula
+- [Typography Settings](mem://style/typography) — dangerouslySetInnerHTML with prose classes for TipTap content
+- [AI Summarization](mem://features/ai-gist-summarization) — Gemini 2.5 Flash fallback, login gated without hints
+- [Usage Monitoring](mem://features/usage-monitoring) — logAIUsage helper required after all AI completions
+- [Institute Details](mem://features/institute-details) — Course fields conditional, hidden when empty
+- [OTP Verification](mem://auth/otp-verification) — 5m expiry, 30s resend, max 3 requests per 10m
+- [Social Onboarding](mem://auth/social-onboarding-logic) — Google OAuth mandatory OTP mobile verification
+- [Location System](mem://features/standardized-location-system) — Cascading state/city dropdown, no manual entry
+- [Location Visuals](mem://style/location-visuals) — Fallback chain, warm brownish dual-overlay tint
+- [Google Sheets Integration](mem://integrations/google-sheets-strategy) — Apps Script web app URL for data push
+- [Google Indexing API](mem://features/google-indexing) — Automated URL submission, hourly refresh cron, admin dashboard at /admin/google-indexing
+- [Mocks Landing Page](mem://features/mocks-landing-page) — /mocks conversion landing, admin-managed at /admin/mocks-landing, Meta Pixel events
+- [Student LMS Dashboard](mem://features/student-lms-dashboard) — /student LMS with mocks, performance, goals, announcements; admin assigns at /admin/student-mocks
+- [Day Planner & MBA Compass](mem://features/day-planner-and-mba-compass) — /student/day-planner replaces Rewards (tasks + analytics + XP); /mba-compass paid courses catalog
+- [Mock Buy Razorpay Flow](mem://features/mock-buy-razorpay-flow) — /mocks guest checkout: name/email/phone → Razorpay → auto-account + credentials popup; admin Course Sold at /admin/course-sold; StudentLayout login lock
+- [Personalized Mock Hub](mem://features/personalized-mock-hub) — /student/personalized-hub AI mocks (CAT/NMAT/XAT/SNAP/IIFT/CMAT/MAT) using OpenAI gpt-4o; admin manages bank + access at /admin/personalized-hub
+- [Mock Bundles](mem://features/mock-bundles) — /admin/mock-bundles groups mocks into paid bundles; /courses public buy via Razorpay; auto-unlocks via mock_enrollments
+- [Course Builder & Feature Gating](mem://features/course-builder-and-feature-gating) — 3-step course wizard (Details → Features → Mocks), FeatureGate locks, live AI mock generation progress via useMockGenerationProgress
+- [Student Mode Navigation](mem://features/student-mode-nav) — sessionStorage flag keeps mock back/post-submit nav inside /student/* dashboard
+- [Dashboard Subdomain](mem://features/dashboard-subdomain) — dashboard.mbacompass.in same app, redirects to /student; configured via Lovable Domains
+- [Bulk Mock Generation](mem://features/bulk-mock-generation) — /admin/bulk-mock-generation queues N mock requests; bulk-mock-worker dispatches each via generate-mock-questions in background
+- [Vocabulary Hub](mem://features/vocabulary-hub) — /student/vocabulary AI MBA vocab builder (WOTD, quiz, SM-2 revision, XP leaderboard); admin manages library at /admin/vocabulary
+- [Reverse Siloing Engine](mem://features/reverse-siloing-engine) — /admin/reverse-siloing internal PageRank + AI link recommendations routing authority to money pages; silo-crawl / silo-analyze / silo-apply
+- [AEO/GEO Content Standard](mem://features/aeo-geo-standard) — answer-first + key-facts + question-heading rulebook in aeoGeoRules.ts, scoreAeoGeo scorer, aeo_score on seo_intel_pages, aeoSchema.ts/AnswerBlock frontend layer
+- [MBA Application Module](mem://features/mba-application-module) — /mba-application hub + category + college pages, /my-mba-2027 301s here, admin tabs via ?tab=, AI SEO server function
+- [WhatsApp Automation](mem://features/whatsapp-automation) — /admin/whatsapp-automation bulk campaigns, daily limit, 3-attempt retry queue, hourly cron dispatch through SmartPing partner API
