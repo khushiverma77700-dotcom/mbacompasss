@@ -102,6 +102,12 @@ export const adminNavGroups: AdminNavGroup[] = [
   },
 
   {
+    label: "WhatsApp Automation",
+    items: [
+      { label: "Campaigns & Dashboard", path: "/admin/whatsapp-automation", icon: MessageCircle },
+    ],
+  },
+  {
     label: "MBA Newsroom",
     items: [
       { label: "Newsroom Ticker Bar", path: "/admin/mba-newsroom-bar", icon: Newspaper },
