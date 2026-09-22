@@ -929,6 +929,35 @@ export default function AdminWhatsAppAutomation() {
                   </div>
                 </div>
 
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <Label>Send from (time)</Label>
+                    <Input type="time" value={sendStartTime} onChange={(e) => setSendStartTime(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Send until (time)</Label>
+                    <Input type="time" value={sendEndTime} onChange={(e) => setSendEndTime(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Time zone</Label>
+                    <Select value={sendTimezone} onValueChange={setSendTimezone}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIME_ZONES.map((tz) => (
+                          <SelectItem key={tz} value={tz}>
+                            {tz}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-sm text-muted-foreground sm:col-span-3">
+                    Messages are only sent inside this daily time span, in the selected time zone.
+                  </p>
+                </div>
+
                 {messageType === "template" ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
