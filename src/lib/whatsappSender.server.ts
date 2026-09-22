@@ -317,6 +317,14 @@ export async function dispatchWhatsAppQueue(
       completed: false,
     };
 
+    const window = isWithinSendWindow(campaign);
+    const today = window.localDate;
+    if (!window.allowed && !options.ignoreWindow) {
+      result.skippedReason = window.reason;
+      results.push(result);
+      continue;
+    }
+
     const { data: statsRow } = await supabase
       .from("whatsapp_daily_stats")
       .select("processed_count")
