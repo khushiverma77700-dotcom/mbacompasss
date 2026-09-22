@@ -153,6 +153,7 @@ import { Route as AdminUserSubmissionsRouteImport } from './routes/admin.user-su
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminVocabularyRouteImport } from './routes/admin.vocabulary'
 import { Route as AdminWebsiteOptimizerRouteImport } from './routes/admin.website-optimizer'
+import { Route as AdminWhatsappAutomationRouteImport } from './routes/admin.whatsapp-automation'
 import { Route as AdmissionsSplatRouteImport } from './routes/admissions.$'
 import { Route as CourseSlugRouteImport } from './routes/course.$slug'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
@@ -1051,6 +1052,11 @@ const AdminVocabularyRoute = AdminVocabularyRouteImport.update({
 const AdminWebsiteOptimizerRoute = AdminWebsiteOptimizerRouteImport.update({
   id: '/website-optimizer',
   path: '/website-optimizer',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWhatsappAutomationRoute = AdminWhatsappAutomationRouteImport.update({
+  id: '/whatsapp-automation',
+  path: '/whatsapp-automation',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdmissionsSplatRoute = AdmissionsSplatRouteImport.update({
@@ -2104,6 +2110,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/vocabulary': typeof AdminVocabularyRoute
   '/admin/website-optimizer': typeof AdminWebsiteOptimizerRoute
+  '/admin/whatsapp-automation': typeof AdminWhatsappAutomationRoute
   '/admissions/$': typeof AdmissionsSplatRoute
   '/course/$slug': typeof CourseSlugRoute
   '/demo/all-india-rank': typeof DemoAllIndiaRankRoute
@@ -2414,6 +2421,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/vocabulary': typeof AdminVocabularyRoute
   '/admin/website-optimizer': typeof AdminWebsiteOptimizerRoute
+  '/admin/whatsapp-automation': typeof AdminWhatsappAutomationRoute
   '/admissions/$': typeof AdmissionsSplatRoute
   '/course/$slug': typeof CourseSlugRoute
   '/demo/all-india-rank': typeof DemoAllIndiaRankRoute
@@ -2721,6 +2729,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/vocabulary': typeof AdminVocabularyRoute
   '/admin/website-optimizer': typeof AdminWebsiteOptimizerRoute
+  '/admin/whatsapp-automation': typeof AdminWhatsappAutomationRoute
   '/admissions/$': typeof AdmissionsSplatRoute
   '/course/$slug': typeof CourseSlugRoute
   '/demo/all-india-rank': typeof DemoAllIndiaRankRoute
@@ -3041,6 +3050,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/vocabulary'
     | '/admin/website-optimizer'
+    | '/admin/whatsapp-automation'
     | '/admissions/$'
     | '/course/$slug'
     | '/demo/all-india-rank'
@@ -3351,6 +3361,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/vocabulary'
     | '/admin/website-optimizer'
+    | '/admin/whatsapp-automation'
     | '/admissions/$'
     | '/course/$slug'
     | '/demo/all-india-rank'
@@ -3657,6 +3668,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/vocabulary'
     | '/admin/website-optimizer'
+    | '/admin/whatsapp-automation'
     | '/admissions/$'
     | '/course/$slug'
     | '/demo/all-india-rank'
@@ -4860,6 +4872,13 @@ declare module '@tanstack/react-router' {
       path: '/website-optimizer'
       fullPath: '/admin/website-optimizer'
       preLoaderRoute: typeof AdminWebsiteOptimizerRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/whatsapp-automation': {
+      id: '/admin/whatsapp-automation'
+      path: '/whatsapp-automation'
+      fullPath: '/admin/whatsapp-automation'
+      preLoaderRoute: typeof AdminWhatsappAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admissions/$': {
@@ -6432,6 +6451,7 @@ interface AdminRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVocabularyRoute: typeof AdminVocabularyRoute
   AdminWebsiteOptimizerRoute: typeof AdminWebsiteOptimizerRoute
+  AdminWhatsappAutomationRoute: typeof AdminWhatsappAutomationRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCoachingInstitutesIdRoute: typeof AdminCoachingInstitutesIdRoute
   AdminCoachingInstitutesBulkCreateRoute: typeof AdminCoachingInstitutesBulkCreateRoute
@@ -6550,6 +6570,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdminVocabularyRoute: AdminVocabularyRoute,
   AdminWebsiteOptimizerRoute: AdminWebsiteOptimizerRoute,
+  AdminWhatsappAutomationRoute: AdminWhatsappAutomationRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCoachingInstitutesIdRoute: AdminCoachingInstitutesIdRoute,
   AdminCoachingInstitutesBulkCreateRoute:
