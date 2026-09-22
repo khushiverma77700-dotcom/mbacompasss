@@ -78,7 +78,85 @@ type Campaign = {
   start_date: string;
   total_target: number | null;
   status: string;
+  send_start_time: string | null;
+  send_end_time: string | null;
+  send_timezone: string | null;
 };
+
+const DEFAULT_TIMEZONE = "Asia/Kolkata";
+
+function timeToMinutes(value: string | null | undefined, fallback: number): number {
+  const match = /^(\d{1,2}):(\d{2})/.exec((value ?? "").trim());
+  if (!match) return fallback;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return fallback;
+  return Math.min(hours, 23) * 60 + Math.min(minutes, 59);
+}
+
+/** Local calendar date (YYYY-MM-DD) and minutes-since-midnight in a time zone. */
+export function localClock(timeZone: string, now: Date = new Date()): { date: string; minutes: number } {
+  let zone = timeZone || DEFAULT_TIMEZONE;
+  let parts: Intl.DateTimeFormatPart[];
+  try {
+    parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: zone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
+  } catch {
+    zone = DEFAULT_TIMEZONE;
+    parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: zone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
+  }
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "00";
+  const hour = get("hour") === "24" ? "00" : get("hour");
+  return {
+    date: `${get("year")}-${get("month")}-${get("day")}`,
+    minutes: Number(hour) * 60 + Number(get("minute")),
+  };
+}
+
+function formatMinutes(total: number): string {
+  const h = Math.floor(total / 60)
+    .toString()
+    .padStart(2, "0");
+  const m = (total % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+/**
+ * Sending window check. A window where the end is earlier than the start is
+ * treated as crossing midnight (e.g. 22:00 -> 02:00).
+ */
+export function isWithinSendWindow(
+  campaign: Pick<Campaign, "send_start_time" | "send_end_time" | "send_timezone">,
+  now: Date = new Date(),
+): { allowed: boolean; localDate: string; reason?: string } {
+  const zone = campaign.send_timezone || DEFAULT_TIMEZONE;
+  const { date, minutes } = localClock(zone, now);
+  const start = timeToMinutes(campaign.send_start_time, 0);
+  const end = timeToMinutes(campaign.send_end_time, 24 * 60 - 1);
+  const allowed = start <= end ? minutes >= start && minutes <= end : minutes >= start || minutes <= end;
+  if (allowed) return { allowed, localDate: date };
+  return {
+    allowed,
+    localDate: date,
+    reason: `Outside sending window ${formatMinutes(start)}–${formatMinutes(end)} (${zone})`,
+  };
+}
 
 function resolveToken(token: string, recipient: Recipient): string {
   return token.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_all, key: string) => {
@@ -198,7 +276,7 @@ export type DispatchResult = {
  */
 export async function dispatchWhatsAppQueue(
   supabase: Client,
-  options: { campaignId?: string; maxPerCampaign?: number } = {},
+  options: { campaignId?: string; maxPerCampaign?: number; ignoreWindow?: boolean } = {},
 ): Promise<DispatchResult> {
   const ranAt = new Date().toISOString();
   const config = await loadWhatsAppConfig(supabase);
@@ -211,14 +289,14 @@ export async function dispatchWhatsAppQueue(
     };
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const queryDate = localClock(DEFAULT_TIMEZONE).date;
   let campaignQuery = supabase
     .from("whatsapp_campaigns")
     .select(
-      "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status",
+      "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status, send_start_time, send_end_time, send_timezone",
     )
     .eq("status", "running")
-    .lte("start_date", today)
+    .lte("start_date", queryDate)
     .order("created_at", { ascending: true })
     .limit(20);
   if (options.campaignId) campaignQuery = campaignQuery.eq("id", options.campaignId);
@@ -238,6 +316,14 @@ export async function dispatchWhatsAppQueue(
       throttled: false,
       completed: false,
     };
+
+    const window = isWithinSendWindow(campaign);
+    const today = window.localDate;
+    if (!window.allowed && !options.ignoreWindow) {
+      result.skippedReason = window.reason;
+      results.push(result);
+      continue;
+    }
 
     const { data: statsRow } = await supabase
       .from("whatsapp_daily_stats")

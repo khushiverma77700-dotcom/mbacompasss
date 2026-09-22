@@ -17,13 +17,21 @@ async function assertAdmin(context: { supabase: any; userId: string }): Promise<
 export const runWhatsAppDispatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({ campaignId: z.string().uuid().optional() }).parse(data ?? {}),
+    z
+      .object({
+        campaignId: z.string().uuid().optional(),
+        ignoreWindow: z.boolean().optional(),
+      })
+      .parse(data ?? {}),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { dispatchWhatsAppQueue } = await import("@/lib/whatsappSender.server");
-    return dispatchWhatsAppQueue(supabaseAdmin, data.campaignId ? { campaignId: data.campaignId } : {});
+    return dispatchWhatsAppQueue(supabaseAdmin, {
+      ...(data.campaignId ? { campaignId: data.campaignId } : {}),
+      ...(data.ignoreWindow ? { ignoreWindow: true } : {}),
+    });
   });
 
 export const getWhatsAppConnectionStatus = createServerFn({ method: "POST" })

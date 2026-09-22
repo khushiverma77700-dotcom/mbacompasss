@@ -55,7 +55,21 @@ type Campaign = {
   status: "draft" | "running" | "paused" | "completed" | "stopped";
   last_run_at: string | null;
   created_at: string;
+  send_start_time: string;
+  send_end_time: string;
+  send_timezone: string;
 };
+
+const TIME_ZONES = [
+  "Asia/Kolkata",
+  "Asia/Dubai",
+  "Asia/Singapore",
+  "Europe/London",
+  "America/New_York",
+  "UTC",
+];
+
+const shortTime = (value: string | null | undefined) => (value ?? "").slice(0, 5);
 
 type Recipient = {
   id: string;
@@ -138,6 +152,9 @@ export default function AdminWhatsAppAutomation() {
   const [messageBody, setMessageBody] = useState("");
   const [dailyLimit, setDailyLimit] = useState("100");
   const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [sendStartTime, setSendStartTime] = useState("09:00");
+  const [sendEndTime, setSendEndTime] = useState("21:00");
+  const [sendTimezone, setSendTimezone] = useState("Asia/Kolkata");
   const [totalTarget, setTotalTarget] = useState("");
 
   // Numbers
@@ -156,7 +173,7 @@ export default function AdminWhatsAppAutomation() {
     const { data, error } = await supabase
       .from("whatsapp_campaigns")
       .select(
-        "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status, last_run_at, created_at",
+        "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status, last_run_at, created_at, send_start_time, send_end_time, send_timezone",
       )
       .order("created_at", { ascending: false })
       .limit(200);
@@ -258,6 +275,9 @@ export default function AdminWhatsAppAutomation() {
         daily_limit: Math.max(parseInt(dailyLimit, 10) || 50, 1),
         start_date: startDate,
         total_target: totalTarget ? Math.max(parseInt(totalTarget, 10) || 0, 0) || null : null,
+        send_start_time: sendStartTime || "09:00",
+        send_end_time: sendEndTime || "21:00",
+        send_timezone: sendTimezone || "Asia/Kolkata",
       })
       .select("id")
       .single();
@@ -423,11 +443,24 @@ export default function AdminWhatsAppAutomation() {
     await loadCampaigns();
   };
 
+  const saveSendWindow = async (
+    patch: { send_start_time?: string; send_end_time?: string; send_timezone?: string },
+  ) => {
+    if (!selectedId) return;
+    const { error } = await supabase.from("whatsapp_campaigns").update(patch).eq("id", selectedId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Sending time updated");
+    await loadCampaigns();
+  };
+
   const runNow = async () => {
     if (!selectedId) return;
     setBusy(true);
     try {
-      const result = await dispatchNow({ data: { campaignId: selectedId } });
+      const result = await dispatchNow({ data: { campaignId: selectedId, ignoreWindow: true } });
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -569,7 +602,8 @@ export default function AdminWhatsAppAutomation() {
                           {selected.message_type === "template"
                             ? `Template: ${selected.template_name} (${selected.template_language})`
                             : "Plain text message"}{" "}
-                          · starts {selected.start_date}
+                          · starts {selected.start_date} · sends {shortTime(selected.send_start_time)}
+                          –{shortTime(selected.send_end_time)} ({selected.send_timezone})
                           {selected.last_run_at
                             ? ` · last run ${new Date(selected.last_run_at).toLocaleString()}`
                             : ""}
@@ -634,6 +668,50 @@ export default function AdminWhatsAppAutomation() {
                       <Button size="sm" variant="ghost" onClick={() => void deleteCampaign()}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
+                    </div>
+
+                    <div className="flex flex-wrap items-end gap-3 border-t pt-3">
+                      <div>
+                        <Label className="text-sm">Send from</Label>
+                        <Input
+                          type="time"
+                          className="w-32"
+                          defaultValue={shortTime(selected.send_start_time)}
+                          onBlur={(e) => void saveSendWindow({ send_start_time: e.target.value || "09:00" })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Send until</Label>
+                        <Input
+                          type="time"
+                          className="w-32"
+                          defaultValue={shortTime(selected.send_end_time)}
+                          onBlur={(e) => void saveSendWindow({ send_end_time: e.target.value || "21:00" })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Time zone</Label>
+                        <Select
+                          value={selected.send_timezone}
+                          onValueChange={(v) => void saveSendWindow({ send_timezone: v })}
+                        >
+                          <SelectTrigger className="w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIME_ZONES.map((tz) => (
+                              <SelectItem key={tz} value={tz}>
+                                {tz}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="text-sm text-muted-foreground max-w-md">
+                        Daily messages only go out inside this time span. Set the end time earlier than
+                        the start time to run across midnight. &quot;Send today&apos;s batch now&quot;
+                        ignores the time span.
+                      </p>
                     </div>
                   </Card>
 
@@ -849,6 +927,35 @@ export default function AdminWhatsAppAutomation() {
                     <Label>Start date</Label>
                     <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                   </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <Label>Send from (time)</Label>
+                    <Input type="time" value={sendStartTime} onChange={(e) => setSendStartTime(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Send until (time)</Label>
+                    <Input type="time" value={sendEndTime} onChange={(e) => setSendEndTime(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Time zone</Label>
+                    <Select value={sendTimezone} onValueChange={setSendTimezone}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIME_ZONES.map((tz) => (
+                          <SelectItem key={tz} value={tz}>
+                            {tz}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-sm text-muted-foreground sm:col-span-3">
+                    Messages are only sent inside this daily time span, in the selected time zone.
+                  </p>
                 </div>
 
                 {messageType === "template" ? (
