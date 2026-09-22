@@ -152,6 +152,9 @@ export default function AdminWhatsAppAutomation() {
   const [messageBody, setMessageBody] = useState("");
   const [dailyLimit, setDailyLimit] = useState("100");
   const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [sendStartTime, setSendStartTime] = useState("09:00");
+  const [sendEndTime, setSendEndTime] = useState("21:00");
+  const [sendTimezone, setSendTimezone] = useState("Asia/Kolkata");
   const [totalTarget, setTotalTarget] = useState("");
 
   // Numbers
@@ -170,7 +173,7 @@ export default function AdminWhatsAppAutomation() {
     const { data, error } = await supabase
       .from("whatsapp_campaigns")
       .select(
-        "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status, last_run_at, created_at",
+        "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status, last_run_at, created_at, send_start_time, send_end_time, send_timezone",
       )
       .order("created_at", { ascending: false })
       .limit(200);
@@ -441,7 +444,7 @@ export default function AdminWhatsAppAutomation() {
     if (!selectedId) return;
     setBusy(true);
     try {
-      const result = await dispatchNow({ data: { campaignId: selectedId } });
+      const result = await dispatchNow({ data: { campaignId: selectedId, ignoreWindow: true } });
       if (result.error) {
         toast.error(result.error);
       } else {
