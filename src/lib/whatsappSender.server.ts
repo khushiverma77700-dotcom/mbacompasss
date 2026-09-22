@@ -289,14 +289,14 @@ export async function dispatchWhatsAppQueue(
     };
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const queryDate = localClock(DEFAULT_TIMEZONE).date;
   let campaignQuery = supabase
     .from("whatsapp_campaigns")
     .select(
-      "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status",
+      "id, name, message_type, template_name, template_language, template_params, message_body, daily_limit, start_date, total_target, status, send_start_time, send_end_time, send_timezone",
     )
     .eq("status", "running")
-    .lte("start_date", today)
+    .lte("start_date", queryDate)
     .order("created_at", { ascending: true })
     .limit(20);
   if (options.campaignId) campaignQuery = campaignQuery.eq("id", options.campaignId);
