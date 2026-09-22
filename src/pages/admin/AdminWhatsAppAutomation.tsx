@@ -602,7 +602,8 @@ export default function AdminWhatsAppAutomation() {
                           {selected.message_type === "template"
                             ? `Template: ${selected.template_name} (${selected.template_language})`
                             : "Plain text message"}{" "}
-                          · starts {selected.start_date}
+                          · starts {selected.start_date} · sends {shortTime(selected.send_start_time)}
+                          –{shortTime(selected.send_end_time)} ({selected.send_timezone})
                           {selected.last_run_at
                             ? ` · last run ${new Date(selected.last_run_at).toLocaleString()}`
                             : ""}
@@ -667,6 +668,50 @@ export default function AdminWhatsAppAutomation() {
                       <Button size="sm" variant="ghost" onClick={() => void deleteCampaign()}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
+                    </div>
+
+                    <div className="flex flex-wrap items-end gap-3 border-t pt-3">
+                      <div>
+                        <Label className="text-sm">Send from</Label>
+                        <Input
+                          type="time"
+                          className="w-32"
+                          defaultValue={shortTime(selected.send_start_time)}
+                          onBlur={(e) => void saveSendWindow({ send_start_time: e.target.value || "09:00" })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Send until</Label>
+                        <Input
+                          type="time"
+                          className="w-32"
+                          defaultValue={shortTime(selected.send_end_time)}
+                          onBlur={(e) => void saveSendWindow({ send_end_time: e.target.value || "21:00" })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Time zone</Label>
+                        <Select
+                          value={selected.send_timezone}
+                          onValueChange={(v) => void saveSendWindow({ send_timezone: v })}
+                        >
+                          <SelectTrigger className="w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIME_ZONES.map((tz) => (
+                              <SelectItem key={tz} value={tz}>
+                                {tz}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="text-sm text-muted-foreground max-w-md">
+                        Daily messages only go out inside this time span. Set the end time earlier than
+                        the start time to run across midnight. &quot;Send today&apos;s batch now&quot;
+                        ignores the time span.
+                      </p>
                     </div>
                   </Card>
 
