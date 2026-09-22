@@ -285,6 +285,7 @@ export default function AdminWhatsAppAutomation() {
         send_start_time: sendStartTime || "09:00",
         send_end_time: sendEndTime || "21:00",
         send_timezone: sendTimezone || "Asia/Kolkata",
+        message_id: savedMessageId,
       })
       .select("id")
       .single();
