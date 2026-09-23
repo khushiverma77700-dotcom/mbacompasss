@@ -47,3 +47,16 @@ export const getWhatsAppConnectionStatus = createServerFn({ method: "POST" })
       baseUrl: config ? config.baseUrl : null,
     };
   });
+
+/** Pull the approved template list from the WhatsApp provider. */
+export const syncWhatsAppTemplatesFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ businessAccountId: z.string().trim().max(64).optional() }).parse(data ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { syncWhatsAppTemplates } = await import("@/lib/whatsappTemplates.server");
+    return syncWhatsAppTemplates(supabaseAdmin, data.businessAccountId ?? null);
+  });
