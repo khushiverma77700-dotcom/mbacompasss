@@ -15065,6 +15065,7 @@ export type Database = {
           send_timezone: string
           start_date: string
           status: string
+          template_id: string | null
           template_language: string
           template_name: string | null
           template_params: Json
@@ -15087,6 +15088,7 @@ export type Database = {
           send_timezone?: string
           start_date?: string
           status?: string
+          template_id?: string | null
           template_language?: string
           template_name?: string | null
           template_params?: Json
@@ -15109,6 +15111,7 @@ export type Database = {
           send_timezone?: string
           start_date?: string
           status?: string
+          template_id?: string | null
           template_language?: string
           template_name?: string | null
           template_params?: Json
@@ -15121,6 +15124,13 @@ export type Database = {
             columns: ["message_id"]
             isOneToOne: false
             referencedRelation: "whatsapp_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -15326,6 +15336,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_templates: {
+        Row: {
+          body_text: string | null
+          category: string | null
+          components: Json | null
+          created_at: string
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          language: string
+          name: string
+          provider_id: string | null
+          source: string
+          status: string
+          synced_at: string | null
+          updated_at: string
+          variable_count: number
+        }
+        Insert: {
+          body_text?: string | null
+          category?: string | null
+          components?: Json | null
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          language?: string
+          name: string
+          provider_id?: string | null
+          source?: string
+          status?: string
+          synced_at?: string | null
+          updated_at?: string
+          variable_count?: number
+        }
+        Update: {
+          body_text?: string | null
+          category?: string | null
+          components?: Json | null
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          language?: string
+          name?: string
+          provider_id?: string | null
+          source?: string
+          status?: string
+          synced_at?: string | null
+          updated_at?: string
+          variable_count?: number
+        }
+        Relationships: []
       }
     }
     Views: {
