@@ -64,3 +64,4 @@
 - [AEO/GEO Content Standard](mem://features/aeo-geo-standard) — answer-first + key-facts + question-heading rulebook in aeoGeoRules.ts, scoreAeoGeo scorer, aeo_score on seo_intel_pages, aeoSchema.ts/AnswerBlock frontend layer
 - [MBA Application Module](mem://features/mba-application-module) — /mba-application hub + category + college pages, /my-mba-2027 301s here, admin tabs via ?tab=, AI SEO server function
 - [WhatsApp Automation](mem://features/whatsapp-automation) — /admin/whatsapp-automation bulk campaigns, daily limit, 3-attempt retry queue, hourly cron dispatch through SmartPing partner API
+- [Course Refund Policy](mem://features/course-refund-policy) — All course purchases are final and non-refundable; disclose clearly before payment
