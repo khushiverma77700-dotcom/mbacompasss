@@ -1,6 +1,6 @@
 // Shared JSON-LD helpers to satisfy Google Merchant Listings enhancement:
 // every Offer with a price should carry shippingDetails + hasMerchantReturnPolicy.
-// MBA Compass sells digital products/services — instant delivery, 7-day return.
+// Shared digital-offer markup; external institute listings may have different return policies.
 
 export const DIGITAL_SHIPPING_DETAILS = {
   "@type": "OfferShippingDetails",

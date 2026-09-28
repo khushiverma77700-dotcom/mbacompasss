@@ -1,0 +1,1 @@
+- Keep MBA Compass course refund disclosure in one shared presentation component and apply its offer-schema rule only to MBA Compass course detail markup, because third-party institutes may have different policies.

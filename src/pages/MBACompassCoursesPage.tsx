@@ -16,6 +16,7 @@ import {
 import SEOHead from "@/components/SEOHead";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import { toast } from "sonner";
+import CourseRefundNotice from "@/components/course/CourseRefundNotice";
 
 // Prefetch the course-detail chunk on Link hover so navigation feels instant.
 const prefetchDetail = () => import("./MBACompassCourseDetailPage").catch(() => {});
@@ -162,6 +163,9 @@ function CoursesInner() {
 
       {/* Filters bar */}
       <section className="container mx-auto px-4 py-6">
+        <div className="mb-5 border-l-4 border-amber-500 bg-amber-50 px-4 py-3" role="note" aria-label="Course refund policy">
+          <CourseRefundNotice />
+        </div>
         <Card className="p-4 border-sky-100">
           <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
             <div className="relative flex-1">
@@ -400,6 +404,7 @@ function CourseCard({ course }: { course: Course }) {
             <Link to={`/mba-compass/${course.slug}`} onMouseEnter={prefetchDetail} onTouchStart={prefetchDetail}>View <ArrowRight className="h-4 w-4 ml-1" /></Link>
           </Button>
         </div>
+        <div className="mt-3"><CourseRefundNotice compact /></div>
       </div>
     </Card>
   );

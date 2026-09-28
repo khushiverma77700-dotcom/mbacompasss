@@ -1,5 +1,9 @@
 # Roadmap
 
+## Course refund disclosure
+- [x] Show no-refund terms on course listings, course details, and beside enrollment actions
+- [x] Align MBA Compass course offer metadata without changing third-party institute policies
+
 ## Connectors (new workspace)
 - [x] Connect Firecrawl
 - [ ] Connect Google Search Console — connection card declined

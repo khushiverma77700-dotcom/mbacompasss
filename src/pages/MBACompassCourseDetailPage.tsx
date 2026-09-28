@@ -24,6 +24,8 @@ import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
 import DashboardShowcase from "@/components/mock/DashboardShowcase";
 import { allFeaturesOn, type FeatureMap } from "@/lib/courseFeatures";
+import CourseRefundNotice from "@/components/course/CourseRefundNotice";
+import { withCourseReturnPolicy } from "@/lib/mbaCourseReturnPolicy";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
@@ -541,7 +543,7 @@ function DetailInner() {
         description={seo.description}
         keywords={seo.keywords}
         canonical={seo.canonical}
-        jsonLd={seo.jsonLd as any}
+        jsonLd={seo.jsonLd ? withCourseReturnPolicy(seo.jsonLd) : undefined}
         ogTitle={seo.ogTitle}
         ogDescription={seo.ogDescription}
         ogImage={c.thumbnail_url || c.banner_url || undefined}
@@ -628,6 +630,7 @@ function DetailInner() {
                   </div>
                 </div>
               ) : null}
+              {!enrolled && c.price ? <div className="mt-3"><CourseRefundNotice compact /></div> : null}
 
 
               {Object.keys(mockAgg.byExam).length > 0 && (
@@ -666,6 +669,7 @@ function DetailInner() {
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">{c.validity_months ?? 12} months access • Taxes included</div>
+                  <div className="mt-3 border-l-4 border-amber-500 bg-amber-50 px-3 py-2" role="note" aria-label="Course refund policy"><CourseRefundNotice compact /></div>
 
                    <div className="mt-5 grid grid-cols-2 gap-2">
                      {[
@@ -1351,6 +1355,7 @@ function DetailInner() {
          <Card className="rounded-lg border-sky-200 bg-sky-50 p-8 text-center shadow-sm md:p-10">
           <h3 className="text-2xl md:text-3xl font-bold">Ready to start with {c.title}?</h3>
            <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Get {c.validity_months ?? 12} months of access, detailed analytics and the complete course experience.</p>
+          <div className="mx-auto mt-3 max-w-xl text-left"><CourseRefundNotice compact /></div>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {enrolled ? (
                <Button asChild size="lg"><Link to="/student">Go to Dashboard <ArrowRight className="h-4 w-4 ml-1" /></Link></Button>
@@ -1391,6 +1396,7 @@ function DetailInner() {
               {paying ? "Processing…" : <>Enroll now <ArrowRight className="ml-1 h-4 w-4" /></>}
             </Button>
           </div>
+          <div className="mx-auto mt-1 max-w-lg"><CourseRefundNotice compact /></div>
         </div>
       ) : null}
     </div>
@@ -1417,6 +1423,7 @@ function EnrollmentBand({ eyebrow, title, price, paying, onBuy }: { eyebrow: str
             <span className="inline-flex items-center gap-1"><CreditCard className="h-4 w-4 text-sky-600" /> Secure checkout</span>
             <span className="inline-flex items-center gap-1"><Zap className="h-4 w-4 text-emerald-600" /> Instant activation</span>
           </div>
+          <div className="mt-3"><CourseRefundNotice compact /></div>
         </div>
         <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
           <div><div className="text-sm text-muted-foreground">Complete access</div><div className="text-2xl font-bold text-foreground">{price}</div></div>
