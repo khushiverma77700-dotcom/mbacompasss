@@ -6,7 +6,7 @@ export default function CourseRefundNotice({ compact = false }: { compact?: bool
   return (
     <p className={`flex items-start gap-2 text-muted-foreground ${compact ? "text-sm" : "text-base"}`}>
       <ShieldAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-      <span><strong className="text-foreground">No refunds.</strong> {COURSE_REFUND_NOTICE}</span>
+      <span><strong className="text-foreground">No-refund policy.</strong> {COURSE_REFUND_NOTICE}</span>
     </p>
   );
 }

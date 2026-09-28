@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import DashboardShowcase from "@/components/mock/DashboardShowcase";
 import { allFeaturesOn, type FeatureMap } from "@/lib/courseFeatures";
 import CourseRefundNotice from "@/components/course/CourseRefundNotice";
+import { withCourseReturnPolicy } from "@/lib/mbaCourseReturnPolicy";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
@@ -542,7 +543,7 @@ function DetailInner() {
         description={seo.description}
         keywords={seo.keywords}
         canonical={seo.canonical}
-        jsonLd={seo.jsonLd as any}
+        jsonLd={seo.jsonLd ? withCourseReturnPolicy(seo.jsonLd) : undefined}
         ogTitle={seo.ogTitle}
         ogDescription={seo.ogDescription}
         ogImage={c.thumbnail_url || c.banner_url || undefined}
