@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -113,7 +114,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
 
       // Phone duplicates allowed — same number can belong to multiple accounts.
 
-      if (otpRes.error) throw new Error(otpRes.error.message);
+      if (otpRes.error) throw new Error(await readFunctionError(otpRes.error));
       if (otpRes.data?.error) throw new Error(otpRes.data.error);
       toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });
       setOtpStep(true);

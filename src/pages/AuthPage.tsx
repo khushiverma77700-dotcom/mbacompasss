@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Link } from "@/lib/router-compat";
 import { Mail, Lock, User, ShieldCheck, ArrowRight, Loader2, Phone } from "lucide-react";
@@ -153,7 +154,7 @@ const AuthPage = () => {
         return;
       }
 
-      if (otpRes.error) throw new Error(otpRes.error.message);
+      if (otpRes.error) throw new Error(await readFunctionError(otpRes.error));
       if ((otpRes.data as any)?.error) throw new Error((otpRes.data as any).error);
 
       toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });

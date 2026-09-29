@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { Mail, Phone, Lock, ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -65,7 +66,7 @@ const ForgotPasswordPage = () => {
       }
       setResolvedEmail(linkedEmail);
 
-      if (otpRes.error) throw new Error(otpRes.error.message);
+      if (otpRes.error) throw new Error(await readFunctionError(otpRes.error));
       if ((otpRes.data as any)?.error) throw new Error((otpRes.data as any).error);
 
       toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });

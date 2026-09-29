@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/lib/router-compat";
@@ -232,7 +233,7 @@ const MBARoiCalculatorPage = () => {
     setOtpSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone: form.phone } });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error));
       if (data?.error) throw new Error(data.error);
       toast({ title: "OTP call incoming", description: getOtpCallToastDescription(form.phone) });
       setOtpStep(true);
