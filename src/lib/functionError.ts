@@ -1,5 +1,5 @@
 /** Extracts the real message from a backend function error (instead of "non-2xx status code"). */
-export async function readFunctionError(error: unknown): Promise<string> {
+export async function readFunctionError(error: unknown, fallback = "OTP could not be sent. Please wait 10 minutes before trying again."): Promise<string> {
   const e = error as {
     message?: string;
     context?: {
@@ -44,7 +44,7 @@ export async function readFunctionError(error: unknown): Promise<string> {
       }
 
       if (ctx.status === 429) {
-        return "Too many OTP requests. Please try again after 10 minutes.";
+        return "Too many attempts. Please try again after 10 minutes.";
       }
     }
   } catch {
@@ -54,5 +54,5 @@ export async function readFunctionError(error: unknown): Promise<string> {
   if (e?.message && !/edge function returned a non-2xx status code/i.test(e.message)) {
     return e.message;
   }
-  return "OTP could not be sent. Please wait 10 minutes before trying again.";
+  return fallback;
 }

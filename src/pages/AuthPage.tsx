@@ -108,7 +108,7 @@ const AuthPage = () => {
         const { data, error } = await supabase.functions.invoke("lookup-email-by-phone", {
           body: { phone: id },
         });
-        if (error) throw new Error(error.message);
+        if (error) throw new Error(await readFunctionError(error, "Verification failed. Please check the OTP and try again."));
         if (!data?.email) throw new Error("No account found for this mobile number.");
         emailToUse = data.email;
       }
@@ -201,7 +201,7 @@ const AuthPage = () => {
       const [{ data: verifyData, error: verifyErr }, { error: signUpErr }] =
         await Promise.all([verifyP, signUpP]);
 
-      if (verifyErr) throw new Error(verifyErr.message);
+      if (verifyErr) throw new Error(await readFunctionError(verifyErr, "Verification failed. Please check the OTP and try again."));
       if ((verifyData as any)?.error) throw new Error((verifyData as any).error);
       if (!(verifyData as any)?.verified) throw new Error("OTP verification failed");
       if (signUpErr) throw signUpErr;
