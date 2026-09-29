@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import {

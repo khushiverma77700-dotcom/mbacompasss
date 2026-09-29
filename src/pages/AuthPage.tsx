@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Link } from "@/lib/router-compat";
 import { Mail, Lock, User, ShieldCheck, ArrowRight, Loader2, Phone } from "lucide-react";

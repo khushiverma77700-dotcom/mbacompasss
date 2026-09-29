@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { Loader2, Mail, Lock, User as UserIcon, Phone, Briefcase, ShieldCheck } from "lucide-react";

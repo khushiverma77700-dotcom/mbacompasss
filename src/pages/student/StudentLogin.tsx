@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";

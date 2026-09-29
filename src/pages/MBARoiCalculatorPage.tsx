@@ -1,3 +1,4 @@
+import { readFunctionError } from "@/lib/functionError";
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/lib/router-compat";
