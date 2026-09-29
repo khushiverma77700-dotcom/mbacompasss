@@ -174,7 +174,7 @@ export default function StudentLogin() {
       const { data: signRes, error: signErr } = await supabase.functions.invoke("otp-sign-in", {
         body: { phone, otp },
       });
-      if (signErr) throw new Error(signErr.message);
+      if (signErr) throw new Error(await readFunctionError(signErr, "Verification failed. Please check the OTP and try again."));
       if (signRes?.error) throw new Error(signRes.error);
       if (signRes?.noAccount) {
         setError(NO_PURCHASE_MESSAGE);

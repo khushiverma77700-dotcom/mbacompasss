@@ -248,7 +248,7 @@ const MBARoiCalculatorPage = () => {
     setOtpVerifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-otp", { body: { phone: form.phone, otp: otpValue } });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error, "Verification failed. Please check the OTP and try again."));
       if (data?.error) throw new Error(data.error);
       if (data?.verified) {
         setForm(f => ({ ...f, phoneVerified: true }));
@@ -298,7 +298,7 @@ const MBARoiCalculatorPage = () => {
           expected_salary_lakhs: form.expected_salary_lakhs,
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error, "Verification failed. Please check the OTP and try again."));
       if (data?.error) throw new Error(data.error);
       setLoadingProgress(100);
       setTimeout(() => {

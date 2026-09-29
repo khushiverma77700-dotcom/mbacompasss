@@ -93,7 +93,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
       const { data, error } = await supabase.functions.invoke("verify-otp", {
         body: { phone, otp: otpValue },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error, "Verification failed. Please check the OTP and try again."));
       if (data?.error) throw new Error(data.error);
       if (data?.verified) {
         setPhoneVerified(true);

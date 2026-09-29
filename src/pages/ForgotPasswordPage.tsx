@@ -87,7 +87,7 @@ const ForgotPasswordPage = () => {
       const { data, error } = await supabase.functions.invoke("verify-otp", {
         body: { phone, otp: code },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error, "Verification failed. Please check the OTP and try again."));
       if ((data as any)?.error) throw new Error((data as any).error);
       if ((data as any)?.verified) {
         setStep("reset");
@@ -128,7 +128,7 @@ const ForgotPasswordPage = () => {
       const { data, error } = await supabase.functions.invoke("reset-password-otp", {
         body: { email: resolvedEmail, phone, newPassword },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error, "Verification failed. Please check the OTP and try again."));
       if ((data as any)?.error) throw new Error((data as any).error);
 
       toast({ title: "Password updated", description: "Sign in with your new password." });
