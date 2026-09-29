@@ -153,7 +153,7 @@ const AuthPage = () => {
         return;
       }
 
-      if (otpRes.error) throw new Error(otpRes.error.message);
+      if (otpRes.error) throw new Error(await readFunctionError(otpRes.error));
       if ((otpRes.data as any)?.error) throw new Error((otpRes.data as any).error);
 
       toast({ title: "OTP call incoming", description: getOtpCallToastDescription(phone) });

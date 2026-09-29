@@ -151,7 +151,7 @@ export default function StudentLogin() {
     setOtpSending(true);
     try {
       const { data, error: err } = await supabase.functions.invoke("send-otp", { body: { phone } });
-      if (err) throw new Error(err.message);
+      if (err) throw new Error(await readFunctionError(err));
       if (data?.error) throw new Error(data.error);
       setOtpSent(true);
       toast({ title: "OTP Sent", description: `Code sent to ${phone}.` });

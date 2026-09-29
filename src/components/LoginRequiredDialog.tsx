@@ -70,7 +70,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
       const { data, error } = await supabase.functions.invoke("send-otp", {
         body: { phone },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error));
       if (data?.error) throw new Error(data.error);
       toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to ${phone}.` });
       setOtpStep(true);

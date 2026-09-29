@@ -123,7 +123,7 @@ const InlineAuthPanel = ({
       const { data, error } = await supabase.functions.invoke("send-otp", {
         body: { phone: signupForm.phone },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await readFunctionError(error));
       if (data?.error) throw new Error(data.error);
       toast.success(getOtpCallToastDescription(signupForm.phone));
       setOtpStep(true);
