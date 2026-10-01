@@ -48,8 +48,8 @@ export function AutoTOC({ contentRef, title = "Table of Contents", className, de
     const root = contentRef.current;
     if (!root) return;
 
-    // Defer to next paint to ensure HTML is in the DOM
-    const tid = window.setTimeout(() => {
+    let tid = 0;
+    const scan = () => {
       const headings = Array.from(root.querySelectorAll("h2, h3")) as HTMLHeadingElement[];
       const used = new Set<string>();
       const built: TocItem[] = [];
@@ -72,10 +72,25 @@ export function AutoTOC({ contentRef, title = "Table of Contents", className, de
 
         built.push({ id, text, level: h.tagName === "H2" ? 2 : 3 });
       }
-      setItems(built);
-    }, 50);
+      setItems((prev) =>
+        prev.length === built.length && prev.every((p, i) => p.id === built[i].id && p.text === built[i].text)
+          ? prev
+          : built,
+      );
+    };
+    tid = window.setTimeout(scan, 50);
+    // Content can be re-rendered (sanitizer load, hydration) which drops the
+    // injected ids, so re-scan whenever the content subtree changes.
+    const mo = new MutationObserver(() => {
+      window.clearTimeout(tid);
+      tid = window.setTimeout(scan, 30);
+    });
+    mo.observe(root, { childList: true, subtree: true });
 
-    return () => window.clearTimeout(tid);
+    return () => {
+      window.clearTimeout(tid);
+      mo.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentRef, ...deps]);
 
@@ -100,15 +115,26 @@ export function AutoTOC({ contentRef, title = "Table of Contents", className, de
     return () => obs.disconnect();
   }, [items]);
 
-  const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, id: string, index: number) => {
     e.preventDefault();
-    const el = document.getElementById(id);
+    let el = document.getElementById(id);
+    if (!el) {
+      // Fallback: ids were lost on re-render — locate the heading by position/text.
+      const root = contentRef.current;
+      const hs = root
+        ? (Array.from(root.querySelectorAll("h2, h3")) as HTMLElement[]).filter(
+            (h) => (h.textContent || "").trim().length >= 2 && !h.closest("nav, aside, form, button, [data-no-toc]"),
+          )
+        : [];
+      el = hs[index] ?? null;
+      if (el) el.id = id;
+    }
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - 88;
-    window.scrollTo({ top, behavior: "smooth" });
+    el.style.scrollMarginTop = "96px";
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
     history.replaceState(null, "", `#${id}`);
     setOpenMobile(false);
-  }, []);
+  }, [contentRef]);
 
   if (items.length < 2) return null;
 
@@ -120,7 +146,7 @@ export function AutoTOC({ contentRef, title = "Table of Contents", className, de
           <li key={item.id} className={cn(item.level === 3 && "ml-4")}>
             <a
               href={`#${item.id}`}
-              onClick={(e) => handleClick(e, item.id)}
+              onClick={(e) => handleClick(e, item.id, idx)}
               className={cn(
                 "group flex items-start gap-2 rounded-md px-2.5 py-1.5 leading-snug transition-colors",
                 active
