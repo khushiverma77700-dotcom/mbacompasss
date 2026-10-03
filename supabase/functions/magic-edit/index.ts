@@ -24,7 +24,7 @@ const json = (body: unknown, status = 200) =>
 
 const SEO_FIELDS = ["meta_title", "meta_description", "h1_tag", "primary_keyword", "keywords"];
 const ADMIN_EMAIL = Deno.env.get("MASTER_ADMIN_EMAIL") || "admin@mbacompass.in";
-const SENDER_DOMAIN = "notify.mbacompass.in";
+const SENDER_DOMAIN = "notify.mail.mbacompass.in";
 const SENDER_FROM = `MBA Compass <no-reply@${SENDER_DOMAIN}>`;
 
 const admin = () =>

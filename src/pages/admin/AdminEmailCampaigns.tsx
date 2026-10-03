@@ -87,7 +87,7 @@ export default function AdminEmailCampaigns() {
         <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
         <p className="text-sm text-amber-800">
           Emails are queued immediately but will only be delivered once your sender domain
-          (notify.mbacompass.in) is verified. Until then they stay in the queue.
+          (notify.mail.mbacompass.in) is verified. Until then they stay in the queue.
         </p>
       </Card>
 
