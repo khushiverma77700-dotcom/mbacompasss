@@ -32,7 +32,9 @@ export default function EmailComposerFields({ draft, onChange, variables, sample
       const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: false });
       if (error) throw error;
       const { data } = supabase.storage.from("uploads").getPublicUrl(path);
-      set({ bodyHtml: `${draft.bodyHtml}<p><img src="${data.publicUrl}" alt="" /></p>` });
+      const fallback = file.name.replace(/\.\w+$/, "").replace(/[-_]+/g, " ").trim() || "MBA Compass image";
+      const alt = (window.prompt("Describe this image in a few words (shown if images are blocked)", fallback) || fallback).replace(/["<>]/g, "").slice(0, 120);
+      set({ bodyHtml: `${draft.bodyHtml}<p><img src="${data.publicUrl}" alt="${alt}" /></p>` });
       setEditorKey((k) => k + 1);
       toast.success("Image added to the email body");
     } catch (e: any) {
