@@ -15,6 +15,7 @@
 - [x] Expenses breakdown must be far more detailed
 - [x] Replace the directory table with a formal sectioned application-dossier layout
 - [x] Add three record actions, expandable college highlights, richer facts, and live deadline urgency
+- [x] Make every public application dossier field manageable from the admin editor
 
 ## Preview stability
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
