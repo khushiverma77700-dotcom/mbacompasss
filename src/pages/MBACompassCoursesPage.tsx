@@ -1,3 +1,4 @@
+import { cdnImage } from "@/lib/imageTransform";
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useQuery } from "@tanstack/react-query";
@@ -302,7 +303,7 @@ function CourseCard({ course }: { course: Course }) {
     <Card className="overflow-hidden border-sky-100 hover:shadow-xl hover:-translate-y-0.5 transition group flex flex-col">
       <div className="relative aspect-[16/9] bg-gradient-to-br from-sky-100 to-blue-100">
         {course.thumbnail_url ? (
-          <img src={course.thumbnail_url} alt={course.title} className="w-full h-full object-cover" loading="lazy" />
+          <img src={cdnImage(course.thumbnail_url, { width: 640, quality: 72 })} alt={course.title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full grid place-items-center">
             <GraduationCap className="h-12 w-12 text-sky-400" />
