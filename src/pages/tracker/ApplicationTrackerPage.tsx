@@ -20,20 +20,14 @@ import {
   ArrowUpRight,
   CalendarClock,
   ClipboardList,
-  ChevronDown,
   ChevronRight,
-  ChevronUp,
   CircleCheckBig,
-  GraduationCap,
-  Info,
   LayoutDashboard,
-  MapPin,
   RotateCcw,
   Search,
   ShieldCheck,
   Sparkles,
   Timer,
-  TrendingUp,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -50,6 +44,9 @@ import {
   examOptions,
   formatDate,
   formatFee,
+  rowPrograms,
+  PROGRAM_OPTIONS,
+  TIER_OPTIONS,
   matchesCategory,
   matchesDeadlineFilter,
   matchesExam,
@@ -133,6 +130,12 @@ type Props = {
   presetCategory?: Exclude<CategoryKey, "all">;
 };
 
+const FEE_BANDS = [
+  { key: "lt10", label: "Under ₹10 Lakhs", min: 0, max: 999999 },
+  { key: "10to20", label: "₹10–20 Lakhs", min: 1000000, max: 2000000 },
+  { key: "gt20", label: "Above ₹20 Lakhs", min: 2000001, max: Number.MAX_SAFE_INTEGER },
+];
+
 export default function ApplicationTrackerPage({ presetCategory }: Props) {
   const { user } = useAuth();
   const { data, isLoading, isError } = useQuery(publicTrackersQuery);
@@ -144,7 +147,9 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
   const [search, setSearch] = useState("");
   const [applying, setApplying] = useState<string | null>(null);
   const [prefsReady, setPrefsReady] = useState(false);
-  const [expandedHighlights, setExpandedHighlights] = useState<Set<string>>(() => new Set());
+  const [tierFilter, setTierFilter] = useState("");
+  const [programFilter, setProgramFilter] = useState("");
+  const [feeFilter, setFeeFilter] = useState("");
   const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
@@ -153,14 +158,6 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
     return () => window.clearInterval(interval);
   }, []);
 
-  const toggleHighlights = (id: string) => {
-    setExpandedHighlights((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   /* Restore the student's last filter choice (profile first, then this device). */
   useEffect(() => {
@@ -209,15 +206,21 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       if (!matchesDeadlineFilter(row, deadlineFilter)) return false;
       if (!matchesCategory(row, category)) return false;
       if (!matchesExam(row, exam)) return false;
+      if (tierFilter && row.tier !== tierFilter) return false;
+      if (programFilter && !rowPrograms(row).includes(programFilter)) return false;
+      if (feeFilter) {
+        const band = FEE_BANDS.find((b) => b.key === feeFilter);
+        if (band && (row.program_fee == null || row.program_fee < band.min || row.program_fee > band.max)) return false;
+      }
       if (!q) return true;
-      const haystack = `${row.name} ${row.short_name ?? ""} ${row.program ?? ""} ${row.location ?? ""} ${(row.accepted_exams ?? []).join(" ")}`;
+      const haystack = `${row.name} ${row.short_name ?? ""} ${rowPrograms(row).join(" ")} ${row.location ?? ""} ${(row.accepted_exams ?? []).join(" ")}`;
       return haystack.toLowerCase().includes(q);
     });
     if (category === "recommended") {
       return [...list].sort((a, b) => a.recommendation_priority - b.recommendation_priority);
     }
     return list;
-  }, [scoped, deadlineFilter, category, exam, search]);
+  }, [scoped, deadlineFilter, category, exam, search, tierFilter, programFilter, feeFilter]);
 
   const stats = useMemo(() => {
     let open = 0;
@@ -252,11 +255,14 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       .slice(0, 10);
   }, [scoped]);
 
-  const filtersDirty = deadlineFilter !== DEFAULT_PREFS.deadline_filter || exam !== null || !!search ||
+  const filtersDirty = deadlineFilter !== DEFAULT_PREFS.deadline_filter || exam !== null || !!search || !!tierFilter || !!programFilter || !!feeFilter ||
     (!presetCategory && category !== "all");
 
   const resetFilters = () => {
     setDeadlineFilter("all");
+    setTierFilter("");
+    setProgramFilter("");
+    setFeeFilter("");
     if (!presetCategory) setCategory("all");
     setExam(null);
     setSearch("");
@@ -289,7 +295,6 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
     }
   };
 
-  const hasInside = (row: TrackerRow) => !!row.inside_info_url || !!row.inside_info_notes;
 
   const groupedVisible = useMemo(() => {
     const definitions = [
@@ -333,7 +338,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
             <h1 className="text-3xl font-semibold leading-tight text-application-ink md:text-4xl">{meta.h1}</h1>
             <p className="max-w-3xl text-base text-application-copy">
             Every MBA application form in one place — college-wise last dates, application fees, programme fees,
-            accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT), cutoff notes, average package and official
+            accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT) and official
             apply-online links for IIMs, Tier 1 and Tier 2 B-schools.
             </p>
             <Button asChild className="gap-2 shadow-sm">
@@ -438,6 +443,25 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
             </div>
           </div>
         )}
+        <div className="grid gap-2 sm:grid-cols-3">
+          {[
+            { label: "Tier", value: tierFilter, set: setTierFilter, options: TIER_OPTIONS.map((t) => [t, t]) },
+            { label: "Program", value: programFilter, set: setProgramFilter, options: PROGRAM_OPTIONS.map((t) => [t, t]) },
+            { label: "Program fees", value: feeFilter, set: setFeeFilter, options: FEE_BANDS.map((b) => [b.key, b.label]) },
+          ].map((f) => (
+            <label key={f.label} className="text-sm font-semibold text-application-copy">
+              {f.label}
+              <select
+                value={f.value}
+                onChange={(e) => f.set(e.target.value)}
+                className="mt-1 block h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
+              >
+                <option value="">All</option>
+                {f.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </label>
+          ))}
+        </div>
         <div className="flex flex-col gap-2 pt-1 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-application-copy" />
@@ -504,7 +528,6 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
               <div className="space-y-3">
                 {group.rows.map((row) => {
                   const info = deadlineInfo(row);
-                  const highlightsOpen = expandedHighlights.has(row.id);
                   const finalFiveDays = info.isOpen && info.daysLeft !== null && info.daysLeft >= 0 && info.daysLeft <= 5;
                   const closingSoon = info.isOpen && info.daysLeft !== null && info.daysLeft > 5 && info.daysLeft <= 15;
                   const liveCountdown = finalFiveDays && now !== null ? countdownLabel(row.application_deadline, now) : "Calculating…";
@@ -518,12 +541,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                               <h3 className="text-base font-semibold leading-snug text-application-ink transition-colors group-hover:text-application-blue">
                                 <Link to={collegeUrl(row)}>{row.name}</Link>
                               </h3>
-                              <p className="mt-1 text-sm text-application-copy">{row.program || row.location || "MBA application"}</p>
-                              {row.location && row.program && (
-                                <p className="mt-2 flex items-center gap-1.5 text-sm text-application-copy">
-                                  <MapPin className="h-3.5 w-3.5 text-application-blue" /> {row.location}
-                                </p>
-                              )}
+                              <p className="mt-1 text-sm text-application-copy">Deadline: {formatDate(row.application_deadline)}</p>
                               <div className="mt-3 flex flex-wrap gap-2">
                                 <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
                                   {CATEGORY_LABEL[row.category] ?? row.category}
@@ -540,10 +558,10 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
                         <div className="grid grid-cols-2 gap-px bg-application-line lg:col-span-5">
                           {[
-                            { label: "Application opens", value: formatDate(row.application_open_date) },
-                            { label: "Last date", value: formatDate(row.application_deadline) },
-                            { label: "Application fee", value: formatFee(row.application_fee) },
-                            { label: "Programme fee", value: formatFee(row.program_fee) },
+                            { label: "Program", value: rowPrograms(row).join(", ") || "—" },
+                            { label: "Tier", value: row.tier || "—" },
+                            { label: "Program fees", value: formatFee(row.program_fee) },
+                            { label: "Application fees", value: formatFee(row.application_fee) },
                           ].map((item) => (
                             <div key={item.label} className="bg-application-panel p-4 md:p-5">
                               <dt className="text-sm font-semibold text-application-copy">{item.label}</dt>
@@ -571,9 +589,13 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                                 {closingSoon ? "Closing Soon" : info.label}
                               </span>
                             )}
-                            <p className="mt-3 text-sm text-application-copy">
-                              {(row.accepted_exams ?? []).length > 0 ? `Accepts ${(row.accepted_exams ?? []).join(", ")}` : "See the complete eligibility and selection details."}
-                            </p>
+                            {(row.accepted_exams ?? []).length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-1.5">
+                                {(row.accepted_exams ?? []).map((e) => (
+                                  <span key={e} className="rounded border border-application-line bg-application-panel px-2 py-0.5 text-sm text-application-ink">{e}</span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <div className="grid gap-2">
                             <Button
@@ -585,65 +607,13 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                               {info.isOpen && <ArrowUpRight className="h-4 w-4" />}
                             </Button>
                             <Button asChild variant="outline" className="w-full gap-1.5 rounded-md">
-                              <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, hasInside(row) ? "inside_info" : "view")}>
-                                {hasInside(row) ? <Info className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                                View Details
+                              <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, "view")}>
+                                View College Details <ChevronRight className="h-4 w-4" />
                               </Link>
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full justify-between gap-1.5 rounded-md"
-                              aria-expanded={highlightsOpen}
-                              aria-controls={`college-highlights-${row.id}`}
-                              onClick={() => toggleHighlights(row.id)}
-                            >
-                              Check College Highlights
-                              {highlightsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             </Button>
                           </div>
                         </div>
                       </div>
-                      {highlightsOpen && (
-                        <div id={`college-highlights-${row.id}`} className="border-t border-application-line bg-application-canvas p-5 md:p-6">
-                          <div className="mb-4 flex items-center justify-between gap-3">
-                            <div>
-                              <h4 className="text-base font-semibold text-application-ink">College highlights</h4>
-                              <p className="mt-1 text-sm text-application-copy">Key facts to review before starting this application.</p>
-                            </div>
-                            {row.is_recommended && (
-                              <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-application-warning">
-                                {row.recommendation_label || "Recommended"}
-                              </Badge>
-                            )}
-                          </div>
-                          {row.short_description && <p className="mb-4 max-w-5xl text-sm leading-relaxed text-application-copy">{row.short_description}</p>}
-                          <dl className="grid gap-px overflow-hidden rounded-lg border border-application-line bg-application-line sm:grid-cols-2 lg:grid-cols-4">
-                            {[
-                              { icon: GraduationCap, label: "Eligibility", value: row.eligibility || "View the complete eligibility criteria" },
-                              { icon: ShieldCheck, label: "Selection process", value: row.selection_process || "See the official selection process" },
-                              { icon: TrendingUp, label: "Average package", value: row.average_package ? formatFee(row.average_package) : "Not published" },
-                              { icon: TrendingUp, label: "Highest package", value: row.highest_package ? formatFee(row.highest_package) : "Not published" },
-                              { icon: Info, label: "Cutoff guidance", value: row.cutoff_note || "Check the detailed application dossier" },
-                              { icon: CalendarClock, label: "Application window", value: `${formatDate(row.application_open_date)} – ${formatDate(row.application_deadline)}` },
-                              { icon: MapPin, label: "Campus / location", value: row.location || "See institution details" },
-                              { icon: GraduationCap, label: "Accepted exams", value: (row.accepted_exams ?? []).join(", ") || "See admission criteria" },
-                            ].map((highlight) => (
-                              <div key={highlight.label} className="bg-application-panel p-4">
-                                <dt className="flex items-center gap-2 text-sm font-semibold text-application-copy">
-                                  <highlight.icon className="h-4 w-4 shrink-0 text-application-blue" /> {highlight.label}
-                                </dt>
-                                <dd className="mt-2 text-sm font-medium leading-relaxed text-application-ink">{highlight.value}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                          {row.recommendation_note && (
-                            <div className="mt-4 border-l-2 border-application-blue bg-application-blue-soft px-4 py-3 text-sm text-application-copy">
-                              <span className="font-semibold text-application-ink">MBA Compass note:</span> {row.recommendation_note}
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </article>
                   );
                 })}

@@ -14,16 +14,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowUpRight, ExternalLink, FileText, Timer } from "lucide-react";
+import { ArrowUpRight, ExternalLink, Timer } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import ExpenseBreakdownView from "@/components/application/ExpenseBreakdown";
-import { buildExpenseBreakdown } from "@/lib/applicationExpenses";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import {
   CATEGORY_LABEL,
   type TrackerRow,
   deadlineInfo,
   formatDate,
   formatFee,
+  rowPrograms,
   publicTrackersQuery,
   startTrackedApplication,
   trackerBySlugQuery,
@@ -92,7 +92,6 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
   const faqs = collegeFaqs(row);
   const keywords = collegeKeywords(row);
   const isExam = row.category === "exam";
-  const expenseBreakdown = buildExpenseBreakdown(row);
 
   const handleApply = async () => {
     if (!row.apply_url) {
@@ -120,7 +119,6 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
     }
   };
 
-  const openInside = () => void trackTrackerView(row, user ?? null, "inside_info");
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-20 md:p-6">
@@ -164,7 +162,7 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
           <div className="min-w-0">
             <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">{meta.h1}</h1>
             <p className="pt-1 text-sm text-slate-500">
-              {[row.program, row.location, row.tier].filter(Boolean).join(" • ") || row.name}
+              {[rowPrograms(row).join(" / "), row.tier].filter(Boolean).join(" • ") || row.name}
             </p>
           </div>
         </div>
@@ -189,86 +187,21 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
           {row.name} application dates, fees &amp; {isExam ? "registration" : "admission"} details
         </h2>
         <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Fact label="Application opens" value={formatDate(row.application_open_date)} />
-          <Fact label="Application last date" value={formatDate(row.application_deadline)} />
-          <Fact label="Application fee" value={formatFee(row.application_fee)} />
-          <Fact label={isExam ? "Exam fee / programme fee" : "Programme fee"} value={formatFee(row.program_fee)} />
-          {row.average_package !== null && <Fact label="Average package" value={formatFee(row.average_package)} />}
-          {row.median_package !== null && <Fact label="Median package" value={formatFee(row.median_package)} />}
-          {row.highest_package !== null && <Fact label="Highest package" value={formatFee(row.highest_package)} />}
+          <Fact label="Program" value={rowPrograms(row).join(", ") || "—"} />
+          {!isExam && <Fact label="Tier" value={row.tier || "—"} />}
+          <Fact label="Program fees" value={formatFee(row.program_fee)} />
+          <Fact label="Application fees" value={formatFee(row.application_fee)} />
+          <Fact label="Application deadline" value={formatDate(row.application_deadline)} />
           {(row.accepted_exams ?? []).length > 0 && (
-            <Fact label="Accepted exams" value={(row.accepted_exams ?? []).join(", ")} />
+            <Fact label="Exams accepted" value={(row.accepted_exams ?? []).join(", ")} />
           )}
         </dl>
       </section>
 
-      <section
-        aria-label={`${row.name} detailed application and programme expenses`}
-        className="space-y-3"
-      >
-        <div>
-          <h2 className="text-[1.375rem] font-semibold text-slate-900">
-            {row.name} complete expense breakdown
-          </h2>
-          <p className="pt-1 text-sm text-slate-600">
-            Plan beyond the form fee with application, programme, living and financing costs shown separately.
-          </p>
-        </div>
-        <ExpenseBreakdownView name={row.name} breakdown={expenseBreakdown} />
-      </section>
-
-      {(row.eligibility || row.selection_process || row.cutoff_note || row.recommendation_note) && (
-        <section aria-label={`${row.name} eligibility, cutoff and selection process`} className="space-y-3">
-          {row.eligibility && (
-            <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-base font-semibold text-slate-900">{row.name} eligibility criteria</h3>
-              <p className="pt-1 text-sm text-slate-600">{row.eligibility}</p>
-            </article>
-          )}
-          {row.cutoff_note && (
-            <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-base font-semibold text-slate-900">{row.name} cutoff</h3>
-              <p className="pt-1 text-sm text-slate-600">{row.cutoff_note}</p>
-            </article>
-          )}
-          {row.selection_process && (
-            <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-base font-semibold text-slate-900">{row.name} selection process</h3>
-              <p className="pt-1 text-sm text-slate-600">{row.selection_process}</p>
-            </article>
-          )}
-          {row.recommendation_note && (
-            <article className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
-              <h3 className="text-base font-semibold text-slate-900">Why our team recommends applying</h3>
-              <p className="pt-1 text-sm text-slate-700">{row.recommendation_note}</p>
-            </article>
-          )}
-        </section>
-      )}
-
-      {(row.inside_info_notes || row.inside_info_url) && (
-        <section aria-label={`${row.name} inside information`} className="rounded-2xl border border-sky-100 bg-sky-50/50 p-5">
-          <h2 className="text-[1.375rem] font-semibold text-slate-900">Inside Information — {row.name}</h2>
-          {row.inside_info_notes && (
-            <p className="whitespace-pre-line pt-2 text-sm text-slate-700">{row.inside_info_notes}</p>
-          )}
-          {row.inside_info_url && (
-            <div className="space-y-3 pt-3">
-              <Button asChild variant="outline" className="gap-1.5" onClick={openInside}>
-                <a href={row.inside_info_url} target="_blank" rel="noopener noreferrer">
-                  <FileText className="h-4 w-4" /> Open document <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </Button>
-              {/\.pdf($|\?)/i.test(row.inside_info_url) && (
-                <iframe
-                  title={`${row.name} inside information document`}
-                  src={row.inside_info_url}
-                  loading="lazy"
-                  className="h-[55vh] w-full rounded-xl border border-slate-200 bg-white"
-                />
-              )}
-            </div>
-          )}
+      {row.details_html && (
+        <section aria-label={`${row.name} college details`} className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="pb-2 text-[1.375rem] font-semibold text-slate-900">{row.name} college details</h2>
+          <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(row.details_html) }} />
         </section>
       )}
 
