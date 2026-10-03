@@ -337,7 +337,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    let q = admin.from("email_campaigns").select("id,name,subject,from_name,audience,list_name,template_name,recipient_count,failed_count,status,created_at").order("created_at", { ascending: false }).limit(500);
+    let q = admin.from("email_campaigns").select("id,name,subject,from_name,audience,list_name,template_name,recipient_count,failed_count,status,created_at,interval_seconds,batch_size,sent_count,next_send_at,started_at,completed_at").order("created_at", { ascending: false }).limit(500);
     if (data.from) q = q.gte("created_at", data.from);
     if (data.to) q = q.lte("created_at", data.to);
     if (data.campaignId) q = q.eq("id", data.campaignId);
@@ -346,7 +346,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
     const recs: any[] = [];
     for (let i = 0; i < ids.length; i += 50) {
       for (let from = 0; ; from += 1000) {
-        const { data: r } = await admin.from("email_campaign_recipients").select("campaign_id,message_id,queued_at,first_opened_at,first_clicked_at,open_count,click_count").in("campaign_id", ids.slice(i, i + 50)).range(from, from + 999);
+        const { data: r } = await admin.from("email_campaign_recipients").select("campaign_id,message_id,status,queued_at,first_opened_at,first_clicked_at,open_count,click_count").in("campaign_id", ids.slice(i, i + 50)).range(from, from + 999);
         recs.push(...(r ?? []));
         if (!r || r.length < 1000) break;
       }
@@ -384,7 +384,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
       const k = d.toISOString().slice(0, 13);
       return { hour: `${String(d.getHours()).padStart(2, "0")}:00`, ...(hourly.get(k) ?? blank()) };
     });
-    return { campaigns: rows, totals, series };
+    return { campaigns: rows, totals, series, hourlySeries };
   });
 
 /** Per-recipient report for one campaign. */
@@ -395,7 +395,7 @@ export const getCampaignRecipients = createServerFn({ method: "POST" })
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    const { data: recs } = await admin.from("email_campaign_recipients").select("email,name,message_id,queued_at,first_opened_at,open_count,first_clicked_at,click_count").eq("campaign_id", data.campaignId).order("queued_at").limit(5000);
+    const { data: recs } = await admin.from("email_campaign_recipients").select("email,name,message_id,status,queued_at,first_opened_at,open_count,first_clicked_at,click_count").eq("campaign_id", data.campaignId).order("queued_at").limit(5000);
     const statuses = await latestStatuses(admin, (recs ?? []).map((r: any) => r.message_id));
     const { data: events } = await admin.from("email_tracking_events").select("event_type,url,created_at").eq("campaign_id", data.campaignId).order("created_at").limit(10000);
     const links = new Map<string, number>();
