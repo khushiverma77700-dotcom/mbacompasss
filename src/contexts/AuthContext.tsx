@@ -233,7 +233,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const { supabase } = await import("@/integrations/supabase/client");
-        const [rolesRes, permRes] = await Promise.all([
+        // On a hard refresh the saved access token may be expired. Wait for the
+        // client to refresh it first, otherwise the role check fails and the
+        // admin is wrongly sent to the sign-in page.
+        try { await supabase.auth.getSession(); } catch { /* ignore */ }
+        const runCheck = () => Promise.all([
           supabase
             .from("user_roles")
             .select("role")
@@ -246,6 +250,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .eq("email", user.email?.toLowerCase() || "")
             .maybeSingle(),
         ]);
+        let [rolesRes, permRes] = await runCheck();
+        for (let attempt = 0; rolesRes.error && attempt < 3 && !cancelled; attempt++) {
+          await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+          try { await supabase.auth.refreshSession(); } catch { /* ignore */ }
+          [rolesRes, permRes] = await runCheck();
+        }
 
         if (cancelled) return;
 
