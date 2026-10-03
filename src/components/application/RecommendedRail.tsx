@@ -113,7 +113,7 @@ export default function RecommendedRail({ rows, onApply }: Props) {
           return (
             <article
               key={row.id}
-              className="flex w-[17.5rem] shrink-0 flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              className="group flex w-[17.5rem] shrink-0 flex-col gap-3 rounded-2xl border border-application-line bg-application-panel p-4 shadow-[0_8px_30px_rgb(19,36,58,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-application-blue/30 hover:shadow-[0_16px_40px_rgb(19,36,58,0.10)]"
             >
               <div className="flex items-start gap-3">
                 {row.logo_url ? (
@@ -124,34 +124,34 @@ export default function RecommendedRail({ rows, onApply }: Props) {
                     decoding="async"
                     width={40}
                     height={40}
-                    className="h-10 w-10 shrink-0 rounded-xl border border-sky-100 bg-white object-contain p-1"
+                    className="h-11 w-11 shrink-0 rounded-xl border border-application-blue/10 bg-application-blue-soft object-contain p-1 shadow-sm"
                   />
                 ) : (
                   <span
                     aria-hidden
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-100 bg-sky-50 text-sm font-semibold text-sky-700"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-application-blue/10 bg-application-blue-soft text-base font-bold text-application-blue shadow-sm"
                   >
                     {row.name.slice(0, 2).toUpperCase()}
                   </span>
                 )}
                 <div className="min-w-0">
-                  <h3 className="truncate text-base font-medium text-slate-900">
-                    <Link to={collegeUrl(row)} className="hover:text-sky-700">
+                  <h3 className="truncate text-base font-semibold text-application-ink">
+                    <Link to={collegeUrl(row)} className="transition-colors group-hover:text-application-blue">
                       {row.short_name || row.name}
                     </Link>
                   </h3>
-                  <p className="truncate text-sm text-slate-500">
+                  <p className="truncate text-sm text-application-copy">
                     {row.program || row.location || "MBA / PGDM"}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-[11px] font-bold uppercase tracking-wide text-application-warning">
                   {row.recommendation_label || "Advisor pick"}
                 </Badge>
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-sm ${
+                  className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${
                     TONE_CLASS[info.tone] ?? TONE_CLASS["unknown"]
                   }`}
                 >
@@ -159,24 +159,24 @@ export default function RecommendedRail({ rows, onApply }: Props) {
                 </span>
               </div>
 
-              <dl className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <dt className="text-slate-500">Last date</dt>
-                  <dd className="text-slate-900">{formatDate(row.application_deadline)}</dd>
+              <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line text-sm">
+                <div className="bg-application-canvas p-2.5">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-application-copy/70">Last date</dt>
+                  <dd className="mt-0.5 text-sm font-semibold text-application-ink">{formatDate(row.application_deadline)}</dd>
                 </div>
-                <div>
-                  <dt className="text-slate-500">Form fee</dt>
-                  <dd className="text-slate-900">{formatFee(row.application_fee)}</dd>
+                <div className="bg-application-canvas p-2.5">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-application-copy/70">Form fee</dt>
+                  <dd className="mt-0.5 text-sm font-semibold text-application-ink">{formatFee(row.application_fee)}</dd>
                 </div>
               </dl>
 
               <div className="mt-auto flex gap-2">
-                <Button asChild variant="outline" size="sm" className="flex-1">
+                <Button asChild variant="outline" size="sm" className="flex-1 rounded-xl">
                   <Link to={collegeUrl(row)}>Details</Link>
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 gap-1"
+                  className="flex-1 gap-1 rounded-xl shadow-[0_4px_12px_rgb(22,119,184,0.25)]"
                   disabled={!info.isOpen}
                   onClick={() => onApply(row)}
                 >
