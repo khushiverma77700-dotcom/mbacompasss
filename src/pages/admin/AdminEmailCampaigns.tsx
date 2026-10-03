@@ -25,7 +25,7 @@ type Audience = "all" | "enrolled" | "list" | "selected";
 
 const INTERVALS: [number, string][] = [[5, "5 sec"], [10, "10 sec"], [30, "30 sec"], [60, "1 min"], [120, "2 min"], [300, "5 min"], [600, "10 min"], [1800, "30 min"], [3600, "1 hour"]];
 const intervalLabel = (s: number) => INTERVALS.find(([v]) => v === s)?.[1] ?? `${s} sec`;
-const STATUS_LABEL: Record<string, string> = { running: "Running", paused: "Paused", completed: "Completed", sent: "Completed", failed: "Failed", sending: "Running", queued: "Queued" };
+const STATUS_LABEL: Record<string, string> = { running: "Running", paused: "Paused", completed: "Completed", sent: "Completed", failed: "Failed", sending: "Preparing", queued: "Queued" };
 const statusBadge = (s: string) => s === "running" || s === "sending" ? "bg-primary/10 text-primary" : s === "paused" ? "bg-accent text-accent-foreground" : s === "failed" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground";
 
 function SpeedFields({ interval, batch, onInterval, onBatch }: { interval: number; batch: number; onInterval: (n: number) => void; onBatch: (n: number) => void }) {
@@ -267,15 +267,19 @@ export default function AdminEmailCampaigns() {
     if (audience === "list" && !listId) return toast.error("Choose a contact list");
     const n = audience === "all" ? counts.all : audience === "enrolled" ? counts.enrolled : audience === "list" ? selectedList?.contact_count : selectedEmails.split(/[\s,;]+/).filter(Boolean).length;
     if (!window.confirm(`Send this campaign to about ${n ?? 0} recipients?`)) return;
-    setSending(true);
-    try {
-      const r: any = await send({ data: payload(audience) });
-      toast.success(`Campaign started: ${r.queued} emails${r.failed ? `, ${r.failed} skipped` : ""}`);
-      if (r.errors?.length) toast.warning(r.errors.slice(0, 3).join("\n"), { duration: 12000 });
-      setDraft(emptyDraft()); setCampaignName(""); setTemplateId("none"); setComposerKey((k) => k + 1);
-      await loadAnalytics(); setTab("campaigns");
-    } catch (e: any) { toast.error(e?.message || "Send failed"); }
-    finally { setSending(false); }
+    // Hand the campaign off and go straight to the live list; preparation and sending continue in the background.
+    const body = payload(audience);
+    const tId = toast.loading("Preparing campaign in the background. You can keep working.");
+    setDraft(emptyDraft()); setCampaignName(""); setTemplateId("none"); setComposerKey((k) => k + 1);
+    setTab("campaigns");
+    setTimeout(() => loadAnalytics(), 1500);
+    send({ data: body })
+      .then((r: any) => {
+        toast.success(`Campaign started: ${r.queued} emails${r.failed ? `, ${r.failed} skipped` : ""}`, { id: tId });
+        if (r.errors?.length) toast.warning(r.errors.slice(0, 3).join("\n"), { duration: 12000 });
+      })
+      .catch((e: any) => toast.error(e?.message || "Send failed", { id: tId }))
+      .finally(() => loadAnalytics());
   };
 
   const openDetail = async (c: any) => {
