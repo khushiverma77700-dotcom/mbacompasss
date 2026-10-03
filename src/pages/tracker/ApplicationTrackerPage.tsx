@@ -50,6 +50,9 @@ import {
   examOptions,
   formatDate,
   formatFee,
+  rowPrograms,
+  PROGRAM_OPTIONS,
+  TIER_OPTIONS,
   matchesCategory,
   matchesDeadlineFilter,
   matchesExam,
@@ -161,14 +164,6 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
     return () => window.clearInterval(interval);
   }, []);
 
-  const toggleHighlights = (id: string) => {
-    setExpandedHighlights((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   /* Restore the student's last filter choice (profile first, then this device). */
   useEffect(() => {
