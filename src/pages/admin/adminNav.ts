@@ -108,6 +108,12 @@ export const adminNavGroups: AdminNavGroup[] = [
     ],
   },
   {
+    label: "Email Campaigns",
+    items: [
+      { label: "Compose & Send", path: "/admin/email-campaigns", icon: Mail },
+    ],
+  },
+  {
     label: "MBA Newsroom",
     items: [
       { label: "Newsroom Ticker Bar", path: "/admin/mba-newsroom-bar", icon: Newspaper },
