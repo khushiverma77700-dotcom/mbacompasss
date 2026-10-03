@@ -2997,6 +2997,8 @@ export type Database = {
           name: string | null
           next_send_at: string | null
           recipient_count: number
+          sender_identity_id: string | null
+          sender_label: string | null
           sent_count: number
           started_at: string | null
           status: string
@@ -3026,6 +3028,8 @@ export type Database = {
           name?: string | null
           next_send_at?: string | null
           recipient_count?: number
+          sender_identity_id?: string | null
+          sender_label?: string | null
           sent_count?: number
           started_at?: string | null
           status?: string
@@ -3055,6 +3059,8 @@ export type Database = {
           name?: string | null
           next_send_at?: string | null
           recipient_count?: number
+          sender_identity_id?: string | null
+          sender_label?: string | null
           sent_count?: number
           started_at?: string | null
           status?: string
@@ -3062,7 +3068,15 @@ export type Database = {
           template_id?: string | null
           template_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_sender_identity_id_fkey"
+            columns: ["sender_identity_id"]
+            isOneToOne: false
+            referencedRelation: "email_sender_identities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_contact_lists: {
         Row: {
@@ -3191,6 +3205,63 @@ export type Database = {
           retry_after_until?: string | null
           send_delay_ms?: number
           transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_sender_identities: {
+        Row: {
+          created_at: string
+          daily_cap: number
+          from_name: string
+          id: string
+          key: string
+          label: string
+          local_part: string
+          match_keywords: string[]
+          max_bounce_pct: number
+          max_complaint_pct: number
+          min_sample: number
+          paused_at: string | null
+          paused_reason: string | null
+          purpose: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_cap?: number
+          from_name: string
+          id?: string
+          key: string
+          label: string
+          local_part: string
+          match_keywords?: string[]
+          max_bounce_pct?: number
+          max_complaint_pct?: number
+          min_sample?: number
+          paused_at?: string | null
+          paused_reason?: string | null
+          purpose?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_cap?: number
+          from_name?: string
+          id?: string
+          key?: string
+          label?: string
+          local_part?: string
+          match_keywords?: string[]
+          max_bounce_pct?: number
+          max_complaint_pct?: number
+          min_sample?: number
+          paused_at?: string | null
+          paused_reason?: string | null
+          purpose?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -16146,6 +16217,7 @@ export type Database = {
       email_campaign_tick: { Args: never; Returns: number }
       email_campaign_wake: { Args: never; Returns: undefined }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      email_sender_health_check: { Args: { _sid: string }; Returns: boolean }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
