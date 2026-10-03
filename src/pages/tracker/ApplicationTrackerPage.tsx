@@ -111,14 +111,14 @@ const LogoBadge = ({ row }: { row: TrackerRow }) => {
         decoding="async"
         width={44}
         height={44}
-        className="h-11 w-11 shrink-0 rounded-lg border border-application-line bg-application-panel object-contain p-1"
+        className="h-12 w-12 shrink-0 rounded-xl border border-application-blue/10 bg-application-blue-soft object-contain p-1 shadow-sm"
       />
     );
   }
   return (
     <span
       aria-hidden
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-application-line bg-application-blue-soft text-base font-semibold text-application-blue"
+      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-application-blue/10 bg-application-blue-soft text-lg font-bold text-application-blue shadow-sm"
     >
       {row.name.slice(0, 2).toUpperCase()}
     </span>
@@ -532,7 +532,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                   const closingSoon = info.isOpen && info.daysLeft !== null && info.daysLeft > 5 && info.daysLeft <= 15;
                   const liveCountdown = finalFiveDays && now !== null ? countdownLabel(row.application_deadline, now) : "Calculating…";
                   return (
-                    <article key={row.id} className="group overflow-hidden rounded-lg border border-application-line bg-application-panel shadow-sm transition-shadow duration-300 hover:shadow-md">
+                    <article key={row.id} className="group overflow-hidden rounded-2xl border border-application-line bg-application-panel shadow-[0_8px_30px_rgb(19,36,58,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-application-blue/30 hover:shadow-[0_16px_40px_rgb(19,36,58,0.10)]">
                       <div className="grid lg:grid-cols-12">
                         <div className="border-b border-application-line bg-application-blue-soft/50 p-5 lg:col-span-4 lg:border-b-0 lg:border-r md:p-6">
                           <div className="flex items-start gap-4">
@@ -541,18 +541,35 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                               <h3 className="text-base font-semibold leading-snug text-application-ink transition-colors group-hover:text-application-blue">
                                 <Link to={collegeUrl(row)}>{row.name}</Link>
                               </h3>
-                              <p className="mt-1 text-sm text-application-copy">Deadline: {formatDate(row.application_deadline)}</p>
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
+                              <div className="mt-2.5 flex flex-wrap gap-2">
+                                <Badge variant="outline" className="rounded-md border-application-blue/10 bg-application-blue-soft text-[11px] font-bold uppercase tracking-wide text-application-blue">
                                   {CATEGORY_LABEL[row.category] ?? row.category}
                                 </Badge>
                                 {row.is_recommended && (
-                                  <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-application-warning">
+                                  <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-[11px] font-bold uppercase tracking-wide text-application-warning">
                                     {row.recommendation_label || "Recommended"}
                                   </Badge>
                                 )}
                               </div>
                             </div>
+                          </div>
+                          <div className="mt-4 flex items-center gap-2 rounded-lg border border-application-line bg-application-panel px-3 py-2">
+                            {finalFiveDays ? (
+                              <>
+                                <span className="relative flex h-2 w-2 shrink-0">
+                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-application-warning opacity-60 motion-reduce:animate-none" />
+                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-application-warning" />
+                                </span>
+                                <span className="text-xs font-semibold text-application-warning">Closing in</span>
+                                <span className="ml-auto font-mono text-xs font-semibold tabular-nums text-application-ink" aria-live="polite">{liveCountdown}</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className={`h-2 w-2 shrink-0 rounded-full ${info.isOpen ? (closingSoon ? "bg-application-warning" : "bg-emerald-500") : "bg-slate-400"}`} />
+                                <span className="text-xs font-semibold text-application-ink">{closingSoon ? "Closing Soon" : info.label}</span>
+                                <span className="ml-auto text-[11px] text-application-copy">Deadline: {formatDate(row.application_deadline)}</span>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -564,35 +581,18 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                             { label: "Application fees", value: formatFee(row.application_fee) },
                           ].map((item) => (
                             <div key={item.label} className="bg-application-panel p-4 md:p-5">
-                              <dt className="text-sm font-semibold text-application-copy">{item.label}</dt>
-                              <dd className="mt-1 text-base font-semibold text-application-ink">{item.value}</dd>
+                              <dt className="text-[10px] font-bold uppercase tracking-wider text-application-copy/70">{item.label}</dt>
+                              <dd className="mt-1 text-sm font-semibold text-application-ink">{item.value}</dd>
                             </div>
                           ))}
                         </div>
 
                         <div className="flex flex-col justify-between gap-4 border-t border-application-line bg-application-canvas p-5 lg:col-span-3 lg:border-l lg:border-t-0 md:p-6">
                           <div>
-                            {finalFiveDays ? (
-                              <div className="inline-flex flex-col gap-1 rounded-md border border-application-warning/30 bg-application-warning-soft px-3 py-2 text-application-warning" aria-live="polite">
-                                <span className="flex items-center gap-2 text-sm font-semibold">
-                                  <span className="relative flex h-2 w-2">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-application-warning opacity-60 motion-reduce:animate-none" />
-                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-application-warning" />
-                                  </span>
-                                  Closing in
-                                </span>
-                                <span className="font-mono text-base font-semibold tabular-nums text-application-ink">{liveCountdown}</span>
-                              </div>
-                            ) : (
-                              <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm font-semibold ${closingSoon ? TONE_CLASS.soon : TONE_CLASS[info.tone]}`}>
-                                {info.isOpen ? <Timer className="h-3.5 w-3.5" /> : <CircleCheckBig className="h-3.5 w-3.5" />}
-                                {closingSoon ? "Closing Soon" : info.label}
-                              </span>
-                            )}
                             {(row.accepted_exams ?? []).length > 0 && (
-                              <div className="mt-3 flex flex-wrap gap-1.5">
+                              <div className="flex flex-wrap gap-1.5">
                                 {(row.accepted_exams ?? []).map((e) => (
-                                  <span key={e} className="rounded border border-application-line bg-application-panel px-2 py-0.5 text-sm text-application-ink">{e}</span>
+                                  <span key={e} className="rounded border border-application-line bg-application-panel px-2 py-0.5 text-xs text-application-ink">{e}</span>
                                 ))}
                               </div>
                             )}
@@ -601,12 +601,12 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                             <Button
                               disabled={applying === row.id || !info.isOpen}
                               onClick={() => void handleApply(row)}
-                              className="w-full gap-1.5 rounded-md"
+                              className="w-full gap-1.5 rounded-xl shadow-[0_4px_12px_rgb(22,119,184,0.25)]"
                             >
                               {info.isOpen ? "Apply Now" : "Applications Closed"}
                               {info.isOpen && <ArrowUpRight className="h-4 w-4" />}
                             </Button>
-                            <Button asChild variant="outline" className="w-full gap-1.5 rounded-md">
+                            <Button asChild variant="outline" className="w-full gap-1.5 rounded-xl">
                               <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, "view")}>
                                 View College Details <ChevronRight className="h-4 w-4" />
                               </Link>
