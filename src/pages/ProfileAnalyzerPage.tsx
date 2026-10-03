@@ -1645,9 +1645,9 @@ const ProfileAnalyzerPage = () => {
                 {step === 1 && (
                   <>
                     <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 mb-2">
-                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                        <Mail className="w-4 h-4 shrink-0" />
-                        Kindly enter your correct email — we will send your detailed report over your email.
+                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                        <Mail className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span>Kindly enter your correct email — we will send your detailed report over your email.</span>
                       </p>
                     </div>
                     <div className="space-y-1.5">
@@ -1668,7 +1668,7 @@ const ProfileAnalyzerPage = () => {
                           type="tel"
                           inputMode="numeric"
                           maxLength={10}
-                          placeholder="Enter 10-digit mobile number"
+                          placeholder="10-digit mobile number"
                           value={phone}
                           onChange={e => {
                             const v = e.target.value.replace(/\D/g, "").slice(0, 10);
