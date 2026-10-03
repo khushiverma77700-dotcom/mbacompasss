@@ -145,7 +145,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       if (error) failed++; else queued++;
     }
 
-    await supabaseAdmin.from("email_campaigns").insert({
+    await (supabaseAdmin as any).from("email_campaigns").insert({
       id: campaignId,
       subject: data.subject,
       body: data.body,
@@ -159,7 +159,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     });
 
     try {
-      await supabaseAdmin.rpc("email_queue_wake");
+      await (supabaseAdmin as any).rpc("email_queue_wake");
     } catch {
       // non-fatal
     }
