@@ -422,6 +422,7 @@ export type Database = {
           college_website: string | null
           created_at: string
           cutoff_note: string | null
+          details_html: string | null
           display_order: number
           eligibility: string | null
           highest_package: number | null
@@ -439,6 +440,7 @@ export type Database = {
           name: string
           program: string | null
           program_fee: number | null
+          programs: string[]
           recommendation_label: string | null
           recommendation_note: string | null
           recommendation_priority: number
@@ -470,6 +472,7 @@ export type Database = {
           college_website?: string | null
           created_at?: string
           cutoff_note?: string | null
+          details_html?: string | null
           display_order?: number
           eligibility?: string | null
           highest_package?: number | null
@@ -487,6 +490,7 @@ export type Database = {
           name: string
           program?: string | null
           program_fee?: number | null
+          programs?: string[]
           recommendation_label?: string | null
           recommendation_note?: string | null
           recommendation_priority?: number
@@ -518,6 +522,7 @@ export type Database = {
           college_website?: string | null
           created_at?: string
           cutoff_note?: string | null
+          details_html?: string | null
           display_order?: number
           eligibility?: string | null
           highest_package?: number | null
@@ -535,6 +540,7 @@ export type Database = {
           name?: string
           program?: string | null
           program_fee?: number | null
+          programs?: string[]
           recommendation_label?: string | null
           recommendation_note?: string | null
           recommendation_priority?: number
