@@ -16,6 +16,7 @@ import { getCampaignRecipients, getEmailAnalytics, getEmailAudienceCounts, sendE
 import EmailComposerFields from "./email/EmailComposerFields";
 import ContactListsTab from "./email/ContactListsTab";
 import TemplatesTab from "./email/TemplatesTab";
+import EngagementTab from "./email/EngagementTab";
 import { BUILTIN_VARS, type EmailDraft, emptyDraft, pct } from "./email/emailShared";
 
 const db = supabase as any;
@@ -383,6 +384,11 @@ export default function AdminEmailCampaigns() {
             </Card>
           </div>
           <p className="text-sm text-muted-foreground">Open rates are approximate: some mail apps load images automatically, others block them. Clicks are exact.</p>
+          <div className="space-y-2 pt-2">
+            <h2 className="text-xl font-semibold">Recipient engagement</h2>
+            <p className="text-sm text-muted-foreground">Who opened, read and clicked, for the date range and campaign selected above. Updates live.</p>
+          </div>
+          <EngagementTab rows={analytics?.engagement ?? []} onExport={(rows) => downloadCsv("email-engagement.csv", rows.map((r) => ({ name: r.name, email: r.email, campaign: r.campaign, sent: r.sent, sent_at: r.sent_at, delivery: r.delivery, opened: r.opened, open_count: r.open_count, read: r.read, clicked: r.clicked, click_count: r.click_count, possible_forward: r.possible_forward, last_activity: r.last_activity })))} />
         </TabsContent>
 
         <TabsContent value="campaigns">
