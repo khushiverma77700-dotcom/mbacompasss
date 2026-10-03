@@ -351,26 +351,38 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
         if (!r || r.length < 1000) break;
       }
     }
-    const statuses = await latestStatuses(admin, recs.map((r) => r.message_id));
-    const blank = () => ({ sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, failed: 0, pending: 0 });
+    const statuses = await latestStatuses(admin, recs.filter((r) => r.status !== "waiting" && r.status !== "cancelled").map((r) => r.message_id));
+    const blank = () => ({ total: 0, sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, failed: 0, pending: 0, remaining: 0 });
     const per = new Map<string, ReturnType<typeof blank>>();
     const daily = new Map<string, ReturnType<typeof blank>>();
+    const hourly = new Map<string, ReturnType<typeof blank>>();
+    const since24 = Date.now() - 864e5;
     const day = (s: string) => s.slice(0, 10);
+    const hour = (s: string) => s.slice(0, 13);
     const bump = (m: Map<string, any>, k: string, f: string) => { if (!m.has(k)) m.set(k, blank()); m.get(k)[f]++; };
+    const bumpH = (s: string, f: string) => { if (new Date(s).getTime() >= since24) bump(hourly, hour(new Date(s).toISOString()), f); };
     for (const r of recs) {
-      const st = statuses.get(r.message_id)?.status ?? "pending";
-      bump(per, r.campaign_id, "sent"); bump(daily, day(r.queued_at), "sent");
+      if (r.status === "cancelled") continue;
+      bump(per, r.campaign_id, "total");
+      if (r.status === "waiting" || !r.queued_at) { bump(per, r.campaign_id, "remaining"); continue; }
+      const st = r.status === "failed" ? "failed" : statuses.get(r.message_id)?.status ?? "pending";
+      bump(per, r.campaign_id, "sent"); bump(daily, day(r.queued_at), "sent"); bumpH(r.queued_at, "sent");
       const bucket = st === "sent" ? "delivered" : st === "bounced" || st === "complained" ? "bounced" : st === "dlq" || st === "failed" || st === "suppressed" ? "failed" : "pending";
-      bump(per, r.campaign_id, bucket); bump(daily, day(r.queued_at), bucket);
-      if (r.first_opened_at) { bump(per, r.campaign_id, "opened"); bump(daily, day(r.first_opened_at), "opened"); }
-      if (r.first_clicked_at) { bump(per, r.campaign_id, "clicked"); bump(daily, day(r.first_clicked_at), "clicked"); }
+      bump(per, r.campaign_id, bucket); bump(daily, day(r.queued_at), bucket); bumpH(r.queued_at, bucket);
+      if (r.first_opened_at) { bump(per, r.campaign_id, "opened"); bump(daily, day(r.first_opened_at), "opened"); bumpH(r.first_opened_at, "opened"); }
+      if (r.first_clicked_at) { bump(per, r.campaign_id, "clicked"); bump(daily, day(r.first_clicked_at), "clicked"); bumpH(r.first_clicked_at, "clicked"); }
     }
     const rows = (campaigns ?? []).map((c: any) => ({ ...c, stats: per.get(c.id) ?? blank() }));
     const totals = rows.reduce((a: any, r: any) => { for (const k of Object.keys(a)) a[k] += r.stats[k]; return a; }, blank());
     let cum = blank();
     const series = [...daily.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, s]) => {
       cum = Object.fromEntries(Object.keys(cum).map((k) => [k, (cum as any)[k] + (s as any)[k]])) as any;
-      return { date, ...s, cumSent: cum.sent, cumOpened: cum.opened, cumClicked: cum.clicked };
+      return { date, ...s, cumSent: cum.sent, cumDelivered: cum.delivered, cumOpened: cum.opened, cumClicked: cum.clicked, cumFailed: cum.failed + cum.bounced };
+    });
+    const hourlySeries = Array.from({ length: 24 }, (_, i) => {
+      const d = new Date(Date.now() - (23 - i) * 36e5);
+      const k = d.toISOString().slice(0, 13);
+      return { hour: `${String(d.getHours()).padStart(2, "0")}:00`, ...(hourly.get(k) ?? blank()) };
     });
     return { campaigns: rows, totals, series };
   });
