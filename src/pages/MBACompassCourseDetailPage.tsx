@@ -1,3 +1,4 @@
+import { cdnImage } from "@/lib/imageTransform";
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "@/lib/router-compat";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -648,7 +649,7 @@ function DetailInner() {
             <div className="lg:col-span-5">
               <Card className="overflow-hidden rounded-lg border-sky-200 shadow-lg lg:sticky lg:top-20">
                 {c.thumbnail_url ? (
-                  <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-[16/7] object-cover" loading="eager" decoding="async" />
+                  <img src={cdnImage(c.thumbnail_url, { width: 1200, quality: 75 })} alt={c.title} className="w-full aspect-[16/7] object-cover" loading="eager" decoding="async" />
                 ) : (
                   <div className="border-b border-sky-100 bg-sky-50 p-5">
                     <div className="flex items-center gap-3">
@@ -1319,7 +1320,7 @@ function DetailInner() {
               <Link key={r.id} to={`/mba-compass/${r.slug}`} className="group">
                 <Card className="overflow-hidden border-sky-100 hover:shadow-lg transition h-full">
                   {r.thumbnail_url ? (
-                    <img src={r.thumbnail_url} alt={r.title} className="w-full aspect-video object-cover group-hover:scale-[1.02] transition"  loading="lazy" decoding="async" />
+                    <img src={cdnImage(r.thumbnail_url, { width: 640, quality: 72 })} alt={r.title} className="w-full aspect-video object-cover group-hover:scale-[1.02] transition"  loading="lazy" decoding="async" />
                   ) : (
                     <div className="aspect-video bg-gradient-to-br from-sky-100 to-blue-100 grid place-items-center"><GraduationCap className="h-10 w-10 text-sky-400" /></div>
                   )}
