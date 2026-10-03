@@ -2917,47 +2917,187 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaign_recipients: {
+        Row: {
+          campaign_id: string
+          click_count: number
+          email: string
+          error: string | null
+          first_clicked_at: string | null
+          first_opened_at: string | null
+          id: string
+          message_id: string
+          name: string | null
+          open_count: number
+          queued_at: string
+          status: string
+          tracking_token: string
+        }
+        Insert: {
+          campaign_id: string
+          click_count?: number
+          email: string
+          error?: string | null
+          first_clicked_at?: string | null
+          first_opened_at?: string | null
+          id?: string
+          message_id: string
+          name?: string | null
+          open_count?: number
+          queued_at?: string
+          status?: string
+          tracking_token: string
+        }
+        Update: {
+          campaign_id?: string
+          click_count?: number
+          email?: string
+          error?: string | null
+          first_clicked_at?: string | null
+          first_opened_at?: string | null
+          id?: string
+          message_id?: string
+          name?: string | null
+          open_count?: number
+          queued_at?: string
+          status?: string
+          tracking_token?: string
+        }
+        Relationships: []
+      }
       email_campaigns: {
         Row: {
           audience: string
           body: string
+          body_html: string | null
           created_at: string
           created_by: string | null
           cta_label: string | null
           cta_url: string | null
+          ctas: Json
           failed_count: number
+          from_name: string | null
+          heading: string | null
           id: string
+          list_id: string | null
+          list_name: string | null
+          name: string | null
           recipient_count: number
           status: string
           subject: string
+          template_id: string | null
+          template_name: string | null
         }
         Insert: {
           audience: string
           body: string
+          body_html?: string | null
           created_at?: string
           created_by?: string | null
           cta_label?: string | null
           cta_url?: string | null
+          ctas?: Json
           failed_count?: number
+          from_name?: string | null
+          heading?: string | null
           id?: string
+          list_id?: string | null
+          list_name?: string | null
+          name?: string | null
           recipient_count?: number
           status?: string
           subject: string
+          template_id?: string | null
+          template_name?: string | null
         }
         Update: {
           audience?: string
           body?: string
+          body_html?: string | null
           created_at?: string
           created_by?: string | null
           cta_label?: string | null
           cta_url?: string | null
+          ctas?: Json
           failed_count?: number
+          from_name?: string | null
+          heading?: string | null
           id?: string
+          list_id?: string | null
+          list_name?: string | null
+          name?: string | null
           recipient_count?: number
           status?: string
           subject?: string
+          template_id?: string | null
+          template_name?: string | null
         }
         Relationships: []
+      }
+      email_contact_lists: {
+        Row: {
+          consent_confirmed: boolean
+          contact_count: number
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          variables: string[]
+        }
+        Insert: {
+          consent_confirmed?: boolean
+          contact_count?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          variables?: string[]
+        }
+        Update: {
+          consent_confirmed?: boolean
+          contact_count?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          variables?: string[]
+        }
+        Relationships: []
+      }
+      email_contacts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          list_id: string
+          name: string | null
+          vars: Json
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          list_id: string
+          name?: string | null
+          vars?: Json
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          list_id?: string
+          name?: string | null
+          vars?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_contacts_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "email_contact_lists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_send_log: {
         Row: {
@@ -3019,6 +3159,75 @@ export type Database = {
           send_delay_ms?: number
           transactional_email_ttl_minutes?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body_html: string
+          created_at: string
+          created_by: string | null
+          ctas: Json
+          from_name: string | null
+          heading: string | null
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string
+          created_at?: string
+          created_by?: string | null
+          ctas?: Json
+          from_name?: string | null
+          heading?: string | null
+          id?: string
+          name: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          created_by?: string | null
+          ctas?: Json
+          from_name?: string | null
+          heading?: string | null
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_tracking_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_type: string
+          id: string
+          recipient_id: string
+          url: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          recipient_id: string
+          url?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          recipient_id?: string
+          url?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
