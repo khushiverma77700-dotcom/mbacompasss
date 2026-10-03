@@ -1,11 +1,10 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { ImagePlus, Plus, Trash2 } from "lucide-react";
-import RichTextEditor from "@/components/admin/RichTextEditor";
-import { supabase } from "@/integrations/supabase/client";
+import { Plus, Trash2 } from "lucide-react";
+import EmailBlockEditor from "./EmailBlockEditor";
+import { layoutColors } from "./emailBlocks";
 import { type EmailDraft, previewPersonalize } from "./emailShared";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailAiReview from "./EmailAiReview";
@@ -19,30 +18,8 @@ interface Props {
 
 export default function EmailComposerFields({ draft, onChange, variables, sampleVars }: Props) {
   const [editorKey, setEditorKey] = useState(0);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
   const set = (p: Partial<EmailDraft>) => onChange({ ...draft, ...p });
-
-  const uploadImage = async (file: File) => {
-    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) return toast.error("Use PNG, JPG, WebP or GIF");
-    if (file.size > 3 * 1024 * 1024) return toast.error("Image must be under 3 MB");
-    setUploading(true);
-    try {
-      const path = `email-images/${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-      const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: false });
-      if (error) throw error;
-      const { data } = supabase.storage.from("uploads").getPublicUrl(path);
-      const fallback = file.name.replace(/\.\w+$/, "").replace(/[-_]+/g, " ").trim() || "MBA Compass image";
-      const alt = (window.prompt("Describe this image in a few words (shown if images are blocked)", fallback) || fallback).replace(/["<>]/g, "").slice(0, 120);
-      set({ bodyHtml: `${draft.bodyHtml}<p><img src="${data.publicUrl}" alt="${alt}" /></p>` });
-      setEditorKey((k) => k + 1);
-      toast.success("Image added to the email body");
-    } catch (e: any) {
-      toast.error(e?.message || "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
+  const colors = layoutColors(draft.bodyHtml);
 
   const setCta = (i: number, p: Partial<{ label: string; url: string }>) =>
     set({ ctas: draft.ctas.map((c, j) => (j === i ? { ...c, ...p } : c)) });
@@ -74,19 +51,13 @@ export default function EmailComposerFields({ draft, onChange, variables, sample
           <Input value={draft.heading} onChange={(e) => set({ heading: e.target.value })} placeholder="Big news for {{college|aspirants}}" />
         </div>
         <div>
-          <div className="mb-1 flex items-center justify-between">
-            <Label>Email body</Label>
-            <Button type="button" size="sm" variant="outline" disabled={uploading} onClick={() => fileRef.current?.click()}>
-              <ImagePlus className="mr-1 h-4 w-4" /> {uploading ? "Uploading…" : "Upload image"}
-            </Button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }} />
-          </div>
-          <RichTextEditor key={editorKey} content={draft.bodyHtml} onChange={(html) => set({ bodyHtml: html })} placeholder="Write your message…" />
+          <Label>Email body — add text, images and dividers, then arrange them</Label>
+          <div className="mt-1"><EmailBlockEditor html={draft.bodyHtml} resetKey={editorKey} onChange={(html) => set({ bodyHtml: html })} /></div>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>Buttons (up to 2)</Label>
-            {draft.ctas.length < 2 && (
+            <Label>Buttons (up to 4)</Label>
+            {draft.ctas.length < 4 && (
               <Button type="button" size="sm" variant="outline" onClick={() => set({ ctas: [...draft.ctas, { label: "", url: "" }] })}>
                 <Plus className="mr-1 h-4 w-4" /> Add button
               </Button>
@@ -111,7 +82,8 @@ export default function EmailComposerFields({ draft, onChange, variables, sample
 
       <div>
         <Label>Live preview</Label>
-        <div className="mt-1 rounded-xl border bg-card p-6">
+        <div className="mt-1 rounded-xl border p-4" style={{ background: colors.bg }}>
+        <div className="rounded-xl border p-6" style={{ background: colors.card }}>
           <p className="text-sm text-muted-foreground">From: {draft.fromName || "MBA Compass"}</p>
           <p className="mb-4 text-sm font-semibold">Subject: {previewPersonalize(draft.subject, sampleVars) || "—"}</p>
           {draft.heading && <h2 className="mb-3 text-xl font-semibold">{previewPersonalize(draft.heading, sampleVars)}</h2>}
@@ -126,6 +98,7 @@ export default function EmailComposerFields({ draft, onChange, variables, sample
             </div>
           )}
           <p className="mt-6 border-t pt-3 text-sm text-muted-foreground">Team MBA Compass · unsubscribe link added automatically</p>
+        </div>
         </div>
       </div>
     </div>
