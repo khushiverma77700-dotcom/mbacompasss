@@ -112,9 +112,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let cancelled = false;
+    // On role-gated pages (admin), never give up waiting for the session after a
+    // short timeout — doing so treated a slow refresh as "signed out" and sent
+    // admins to /auth. Allow a much longer safety window there.
+    const roleGated = shouldResolveAdminForPath(window.location.pathname);
     const bootTimeout = window.setTimeout(() => {
       if (!cancelled) setLoading(false);
-    }, 1200);
+    }, roleGated ? 10000 : 1200);
 
     const applySession = (nextSession: Session | null) => {
       if (cancelled) return;
@@ -122,9 +126,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession((prev) =>
         prev?.access_token === nextSession?.access_token ? prev : nextSession
       );
-      setUser((prev) =>
-        prev?.id === nextSession?.user?.id ? prev : nextSession?.user ?? null
-      );
+      setUser((prev) => {
+        const nextUser = nextSession?.user ?? null;
+        if (prev?.id === nextUser?.id) return prev;
+        // Hold admin guards in "loading" in the same commit the user appears,
+        // so they don't redirect before the role check starts.
+        if (nextUser && shouldResolveAdminForPath(window.location.pathname)) setAdminLoading(true);
+        return nextUser;
+      });
       window.clearTimeout(bootTimeout);
       setLoading(false);
     };
