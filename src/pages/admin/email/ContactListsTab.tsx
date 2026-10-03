@@ -32,6 +32,29 @@ export default function ContactListsTab({ onChanged }: { onChanged?: () => void 
   };
   useEffect(() => { load(); }, []);
 
+  const [seedText, setSeedText] = useState("");
+  const saveSeeds = async () => {
+    const emails = [...new Set(seedText.split(/[\s,;]+/).map((e) => e.trim().toLowerCase()).filter((e) => EMAIL_RE.test(e)))].slice(0, 50);
+    if (!emails.length) return toast.error("Enter at least one valid email");
+    let list = lists.find((l) => l.is_test_inbox && l.name === "Test Inboxes");
+    if (!list) {
+      const { data, error } = await db.from("email_contact_lists").insert({ name: "Test Inboxes", is_test_inbox: true, contact_count: 0, variables: [] }).select().single();
+      if (error) return toast.error(`Could not create Test Inboxes: ${error.message}`);
+      list = data;
+    }
+    const { error } = await db.from("email_contacts").upsert(emails.map((email) => ({ list_id: list.id, email, name: "Test inbox", vars: {} })), { onConflict: "list_id,email" });
+    if (error) return toast.error(`Could not save test emails: ${error.message}`);
+    const { count } = await db.from("email_contacts").select("id", { count: "exact", head: true }).eq("list_id", list.id);
+    await db.from("email_contact_lists").update({ contact_count: count ?? emails.length }).eq("id", list.id);
+    toast.success(`${emails.length} test inbox(es) saved. They will receive every campaign.`);
+    setSeedText(""); load(); onChanged?.();
+  };
+  const toggleSeed = async (l: any) => {
+    const { error } = await db.from("email_contact_lists").update({ is_test_inbox: !l.is_test_inbox }).eq("id", l.id);
+    if (error) return toast.error(error.message);
+    load(); onChanged?.();
+  };
+
   const onFile = async (file: File) => {
     try {
       const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
@@ -153,6 +176,16 @@ export default function ContactListsTab({ onChanged }: { onChanged?: () => void 
         )}
       </Card>
 
+      <Card className="space-y-3 p-6">
+        <h3 className="text-base font-semibold">Test Inboxes</h3>
+        <p className="text-sm text-muted-foreground">These addresses are added to every campaign and sent first. Use a Gmail, an Outlook and a Yahoo account, then mark where each email landed in the campaign report.</p>
+        <div className="flex flex-wrap gap-2">
+          <Input className="max-w-lg" value={seedText} onChange={(e) => setSeedText(e.target.value)} placeholder="you@gmail.com, you@outlook.com" />
+          <Button onClick={saveSeeds}>Add test inboxes</Button>
+        </div>
+        {lists.filter((l) => l.is_test_inbox).map((l) => <p key={l.id} className="text-sm">Active: <b>{l.name}</b> ({l.contact_count})</p>)}
+      </Card>
+
       <Card className="p-6">
         <h3 className="mb-4 text-base font-semibold">Saved lists</h3>
         {!lists.length && <p className="text-sm text-muted-foreground">No lists yet.</p>}
@@ -164,6 +197,7 @@ export default function ContactListsTab({ onChanged }: { onChanged?: () => void 
                 <p className="font-medium">{l.name}</p>
                 <p className="text-sm text-muted-foreground">{l.contact_count} contacts · variables: {(l.variables ?? []).join(", ") || "—"}</p>
               </div>
+              <Button size="sm" variant={l.is_test_inbox ? "default" : "outline"} onClick={() => toggleSeed(l)}>{l.is_test_inbox ? "Test inbox: on" : "Use as test inbox"}</Button>
               <Button size="sm" variant="outline" onClick={() => view(l)}>View</Button>
               <Button size="icon" variant="ghost" onClick={() => rename(l)}><Pencil className="h-4 w-4" /></Button>
               <Button size="icon" variant="ghost" onClick={() => remove(l)}><Trash2 className="h-4 w-4" /></Button>

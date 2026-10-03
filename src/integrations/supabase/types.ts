@@ -2926,10 +2926,12 @@ export type Database = {
           first_clicked_at: string | null
           first_opened_at: string | null
           id: string
+          is_test_inbox: boolean
           message_id: string
           name: string | null
           open_count: number
           payload: Json | null
+          placement: string | null
           queued_at: string | null
           status: string
           tracking_token: string
@@ -2942,10 +2944,12 @@ export type Database = {
           first_clicked_at?: string | null
           first_opened_at?: string | null
           id?: string
+          is_test_inbox?: boolean
           message_id: string
           name?: string | null
           open_count?: number
           payload?: Json | null
+          placement?: string | null
           queued_at?: string | null
           status?: string
           tracking_token: string
@@ -2958,10 +2962,12 @@ export type Database = {
           first_clicked_at?: string | null
           first_opened_at?: string | null
           id?: string
+          is_test_inbox?: boolean
           message_id?: string
           name?: string | null
           open_count?: number
           payload?: Json | null
+          placement?: string | null
           queued_at?: string | null
           status?: string
           tracking_token?: string
@@ -2985,6 +2991,7 @@ export type Database = {
           heading: string | null
           id: string
           interval_seconds: number
+          last_error: string | null
           list_id: string | null
           list_name: string | null
           name: string | null
@@ -3013,6 +3020,7 @@ export type Database = {
           heading?: string | null
           id?: string
           interval_seconds?: number
+          last_error?: string | null
           list_id?: string | null
           list_name?: string | null
           name?: string | null
@@ -3041,6 +3049,7 @@ export type Database = {
           heading?: string | null
           id?: string
           interval_seconds?: number
+          last_error?: string | null
           list_id?: string | null
           list_name?: string | null
           name?: string | null
@@ -3062,6 +3071,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_test_inbox: boolean
           name: string
           variables: string[]
         }
@@ -3071,6 +3081,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_test_inbox?: boolean
           name: string
           variables?: string[]
         }
@@ -3080,6 +3091,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_test_inbox?: boolean
           name?: string
           variables?: string[]
         }

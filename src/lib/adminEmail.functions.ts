@@ -25,7 +25,7 @@ interface SendInput {
   batchSize?: number;
 }
 
-interface Recipient { email: string; name?: string | null; vars: Record<string, string> }
+interface Recipient { email: string; name?: string | null; vars: Record<string, string>; isTest?: boolean }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -191,6 +191,23 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     const ctas = (data.ctas ?? []).filter((c) => c.label?.trim() && c.url?.trim());
 
     const recipients = await resolveRecipients(admin, data);
+    // Every real campaign also goes to the admin's Test Inboxes so placement can be checked by hand.
+    if (data.audience !== "test") {
+      const { data: seedLists } = await admin.from("email_contact_lists").select("id").eq("is_test_inbox", true);
+      const ids = (seedLists ?? []).map((l: any) => l.id);
+      if (ids.length) {
+        const { data: seeds } = await admin.from("email_contacts").select("email,name").in("list_id", ids).limit(50);
+        const have = new Map(recipients.map((r) => [r.email, r]));
+        for (const c of seeds ?? []) {
+          const e = String(c.email).trim().toLowerCase();
+          if (!EMAIL_RE.test(e)) continue;
+          const ex = have.get(e);
+          if (ex) { ex.isTest = true; continue; }
+          const r: Recipient = { email: e, name: c.name ?? "Test inbox", vars: { email: e, name: c.name || "Test inbox", first_name: (c.name || "Test").split(" ")[0] }, isTest: true };
+          recipients.push(r); have.set(e, r);
+        }
+      }
+    }
     if (!recipients.length) throw new Error("No valid recipients found");
     if (recipients.length > 20000) throw new Error("Maximum 20,000 recipients per campaign");
 
@@ -236,10 +253,12 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
 
     let queued = 0;
     let failed = suppressed.size;
+    const errors: string[] = [];
+    if (suppressed.size) errors.push(`${suppressed.size} address(es) skipped: previously unsubscribed, bounced or complained.`);
     const recRows: any[] = [];
     for (const r of sendable) {
       const unsub = tokens.get(r.email);
-      if (!unsub) { failed++; continue; }
+      if (!unsub) { failed++; errors.push(`${r.email}: could not create an unsubscribe link, so it was not sent.`); continue; }
       const trackingToken = crypto.randomUUID().replaceAll("-", "");
       const messageId = `admin_campaign_${campaignId}_${r.email}`;
       const subject = personalize(data.subject, r.vars, false);
@@ -251,7 +270,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       queued++;
       recRows.push({
         campaign_id: campaignId, email: r.email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken,
-        status: "waiting", queued_at: null,
+        status: "waiting", queued_at: null, is_test_inbox: !!r.isTest,
         payload: {
           unsubscribe_token: unsub, to: r.email, from: `${fromName} <${SENDER_EMAIL}>`, sender_domain: SENDER_DOMAIN,
           subject, html, text, purpose: "transactional", label: "admin_campaign",
@@ -261,23 +280,26 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     }
     for (let i = 0; i < recRows.length; i += 200) {
       const { error: recErr } = await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 200));
-      if (recErr) { console.error("campaign recipients insert failed", recErr.message); queued -= recRows.slice(i, i + 200).length; failed += recRows.slice(i, i + 200).length; }
+      if (recErr) { console.error("campaign recipients insert failed", recErr.message); errors.push(`Could not save ${recRows.slice(i, i + 200).length} recipient(s): ${recErr.message}`); queued -= recRows.slice(i, i + 200).length; failed += recRows.slice(i, i + 200).length; }
     }
 
     const isTest = data.audience === "test";
     await admin.from("email_campaigns").update({
       recipient_count: queued, failed_count: failed,
       status: queued === 0 ? "failed" : "running",
+      last_error: errors.length ? errors.slice(0, 20).join("\n") : null,
       interval_seconds: isTest ? 5 : clampInt(data.intervalSeconds, 5, 86400, 30),
       batch_size: isTest ? 10 : clampInt(data.batchSize, 1, 2000, 100),
       next_send_at: new Date().toISOString(),
       started_at: new Date().toISOString(),
     }).eq("id", campaignId);
-    if (queued > 0) {
-      await admin.rpc("email_campaign_wake");
-      await admin.rpc("email_campaign_tick");
-    }
-    return { queued, failed, suppressed: suppressed.size, campaignId };
+    if (queued === 0) throw new Error(`Campaign not sent. ${errors.join(" ") || "No recipient could be prepared."}`);
+    const { error: wakeErr } = await admin.rpc("email_campaign_wake");
+    if (wakeErr) errors.push(`Could not start the sending timer: ${wakeErr.message}`);
+    const { error: tickErr } = await admin.rpc("email_campaign_tick");
+    if (tickErr) errors.push(`First batch failed: ${tickErr.message}`);
+    if (wakeErr || tickErr) await admin.from("email_campaigns").update({ last_error: errors.join("\n") }).eq("id", campaignId);
+    return { queued, failed, suppressed: suppressed.size, campaignId, errors };
   });
 
 function clampInt(v: unknown, min: number, max: number, fb: number) {
@@ -337,7 +359,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    let q = admin.from("email_campaigns").select("id,name,subject,from_name,audience,list_name,template_name,recipient_count,failed_count,status,created_at,interval_seconds,batch_size,sent_count,next_send_at,started_at,completed_at").order("created_at", { ascending: false }).limit(500);
+    let q = admin.from("email_campaigns").select("id,name,subject,from_name,audience,list_name,template_name,recipient_count,failed_count,status,created_at,interval_seconds,batch_size,sent_count,next_send_at,started_at,completed_at,last_error").order("created_at", { ascending: false }).limit(500);
     if (data.from) q = q.gte("created_at", data.from);
     if (data.to) q = q.lte("created_at", data.to);
     if (data.campaignId) q = q.eq("id", data.campaignId);
@@ -395,13 +417,13 @@ export const getCampaignRecipients = createServerFn({ method: "POST" })
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    const { data: recs } = await admin.from("email_campaign_recipients").select("email,name,message_id,status,queued_at,first_opened_at,open_count,first_clicked_at,click_count").eq("campaign_id", data.campaignId).order("queued_at").limit(5000);
+    const { data: recs } = await admin.from("email_campaign_recipients").select("id,email,name,message_id,status,error,is_test_inbox,placement,queued_at,first_opened_at,open_count,first_clicked_at,click_count").eq("campaign_id", data.campaignId).order("queued_at").limit(5000);
     const statuses = await latestStatuses(admin, (recs ?? []).map((r: any) => r.message_id));
     const { data: events } = await admin.from("email_tracking_events").select("event_type,url,created_at").eq("campaign_id", data.campaignId).order("created_at").limit(10000);
     const links = new Map<string, number>();
     (events ?? []).filter((e: any) => e.event_type === "click" && e.url).forEach((e: any) => links.set(e.url, (links.get(e.url) ?? 0) + 1));
     return {
-      recipients: (recs ?? []).map((r: any) => ({ ...r, status: statuses.get(r.message_id)?.status ?? "pending", error: statuses.get(r.message_id)?.error ?? null })),
+      recipients: (recs ?? []).map((r: any) => ({ ...r, status: statuses.get(r.message_id)?.status ?? "pending", error: r.error ?? statuses.get(r.message_id)?.error ?? null })),
       events: events ?? [],
       links: [...links.entries()].map(([url, clicks]) => ({ url, clicks })).sort((a, b) => b.clicks - a.clicks),
     };

@@ -69,7 +69,7 @@ function LiveCampaignRow({ c, onChanged, onOpen }: { c: any; onChanged: () => vo
       <div className="h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${total ? (done / total) * 100 : 0}%` }} /></div>
       <div className="flex flex-wrap gap-4 text-sm">
         <span><b>{c.stats.sent}</b> sent</span><span><b>{c.stats.remaining}</b> remaining</span>
-        <span><b>{c.stats.delivered}</b> delivered</span><span><b>{c.stats.opened}</b> opened</span><span><b>{c.stats.clicked}</b> clicked</span>
+        <span><b>{c.stats.delivered}</b> delivered</span><span><b>{c.stats.opened}</b> opened ({pct(c.stats.opened, c.stats.delivered)})</span><span><b>{c.stats.clicked}</b> clicked ({pct(c.stats.clicked, c.stats.delivered)})</span>
         <span><b>{c.stats.failed + c.stats.bounced}</b> failed/bounced</span>
         {c.status === "running" && c.next_send_at && <span className="text-muted-foreground">Next batch {new Date(c.next_send_at).toLocaleTimeString()}</span>}
       </div>
@@ -239,6 +239,7 @@ export default function AdminEmailCampaigns() {
     try {
       const r: any = await send({ data: payload(audience) });
       toast.success(`Campaign started: ${r.queued} emails${r.failed ? `, ${r.failed} skipped` : ""}`);
+      if (r.errors?.length) toast.warning(r.errors.slice(0, 3).join("\n"), { duration: 12000 });
       setDraft(emptyDraft()); setCampaignName(""); setTemplateId("none"); setComposerKey((k) => k + 1);
       await loadAnalytics(); setTab("campaigns");
     } catch (e: any) { toast.error(e?.message || "Send failed"); }
@@ -395,6 +396,42 @@ export default function AdminEmailCampaigns() {
                   {(["total", "sent", "remaining", "delivered", "opened", "clicked"] as const).map((k) => <StatCard key={k} label={k[0].toUpperCase() + k.slice(1)} value={detail.campaign.stats[k]} />)}
                 </div>
               </Card>
+              {(detail.campaign.last_error || detail.data.recipients.some((r: any) => r.error)) && (
+                <Card className="border-destructive/40 p-5">
+                  <p className="mb-2 font-medium text-destructive">Problems with this campaign</p>
+                  {detail.campaign.last_error && <pre className="mb-2 whitespace-pre-wrap text-sm">{detail.campaign.last_error}</pre>}
+                  {Object.entries(detail.data.recipients.filter((r: any) => r.error).reduce((a: any, r: any) => { a[r.error] = (a[r.error] ?? 0) + 1; return a; }, {})).slice(0, 10).map(([err, n]: any) => (
+                    <p key={err} className="text-sm"><b>{n}×</b> {err}</p>
+                  ))}
+                </Card>
+              )}
+              {detail.data.recipients.some((r: any) => r.is_test_inbox) && (
+                <Card className="p-5">
+                  <p className="mb-1 font-medium">Test inbox placement</p>
+                  <p className="mb-3 text-sm text-muted-foreground">Mail providers never tell senders where an email lands. Check each test inbox and mark it here.</p>
+                  {detail.data.recipients.filter((r: any) => r.is_test_inbox).map((r: any) => (
+                    <div key={r.id} className="flex flex-wrap items-center gap-3 border-b py-2 text-sm">
+                      <span className="min-w-0 flex-1 truncate">{r.email}</span>
+                      <span className={`rounded px-2 py-0.5 ${statusTone(r.status)}`}>{r.status === "sent" ? "delivered" : r.status === "dlq" ? "failed" : r.status === "waiting" ? "remaining" : r.status}</span>
+                      <span className="text-muted-foreground">{r.open_count ? "Opened" : "Not opened"}</span>
+                      <Select value={r.placement ?? "unchecked"} onValueChange={async (v) => {
+                        const { error } = await db.from("email_campaign_recipients").update({ placement: v === "unchecked" ? null : v }).eq("id", r.id);
+                        if (error) return toast.error(error.message);
+                        setDetail((d) => d && { ...d, data: { ...d.data, recipients: d.data.recipients.map((x: any) => x.id === r.id ? { ...x, placement: v === "unchecked" ? null : v } : x) } });
+                      }}>
+                        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unchecked">Not checked</SelectItem>
+                          <SelectItem value="inbox">Inbox</SelectItem>
+                          <SelectItem value="promotions">Promotions</SelectItem>
+                          <SelectItem value="spam">Spam</SelectItem>
+                          <SelectItem value="missing">Not received</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </Card>
+              )}
               {(detail.campaign.status === "running" || detail.campaign.status === "paused") && <LiveCampaignRow c={detail.campaign} onChanged={loadAnalytics} />}
               {detail.data.links.length > 0 && (
                 <Card className="p-5">
@@ -414,6 +451,7 @@ export default function AdminEmailCampaigns() {
                       <span className={`rounded px-2 py-0.5 ${statusTone(r.status)}`}>{r.status === "sent" ? "delivered" : r.status === "dlq" ? "failed" : r.status === "waiting" ? "remaining" : r.status}</span>
                       <span className="w-28 text-muted-foreground">{r.open_count ? `Opened ×${r.open_count}` : "Not opened"}</span>
                       <span className="w-24 text-muted-foreground">{r.click_count ? `Clicks ×${r.click_count}` : "No clicks"}</span>
+                      {r.error && <span className="w-full text-destructive">{r.error}</span>}
                     </div>
                   ))}
                 </div>
@@ -432,6 +470,7 @@ export default function AdminEmailCampaigns() {
                     <span className={`rounded px-2 py-0.5 text-sm ${statusBadge(c.status)}`}>{STATUS_LABEL[c.status] ?? c.status}</span>
                     <span className="w-20 text-sm">{c.stats.sent} sent</span>
                     <span className="w-24 text-sm">{c.stats.remaining} remaining</span>
+                    {c.last_error && <span className="w-full text-sm text-destructive">{c.last_error.split("\n")[0]}</span>}
                     <span className="w-24 text-sm">{pct(c.stats.delivered, c.stats.sent)} deliv.</span>
                     <span className="w-24 text-sm">{pct(c.stats.opened, c.stats.delivered)} open</span>
                     <span className="w-24 text-sm">{pct(c.stats.clicked, c.stats.delivered)} click</span>
