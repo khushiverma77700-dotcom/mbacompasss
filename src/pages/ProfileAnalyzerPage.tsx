@@ -1231,7 +1231,7 @@ const ProfileAnalyzerPage = () => {
           <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }}>
 
             {/* ──── HERO with 3D Elements ──── */}
-            <section className="min-h-[90vh] flex items-center justify-center px-4 relative overflow-hidden">
+            <section className="min-h-[80vh] sm:min-h-[90vh] flex items-center justify-center px-4 py-16 sm:py-0 relative overflow-hidden">
               {/* Background glow orbs */}
               <GlowOrb className="hidden sm:block w-72 h-72 bg-primary/20 top-[-5%] left-[-5%]" />
               <GlowOrb className="hidden sm:block w-96 h-96 bg-primary/10 bottom-[-10%] right-[-8%]" />
@@ -1381,7 +1381,7 @@ const ProfileAnalyzerPage = () => {
                       else { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }
                     }}
                     disabled={!!(user && cooldownDate) && !isAdmin}
-                    className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
+                    className="text-base sm:text-lg px-6 sm:px-12 py-5 sm:py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
                   >
                     <span className="relative z-10 flex items-center gap-2">
                       {user && cooldownDate
