@@ -56,21 +56,21 @@ export default function RecommendedRail({ rows, onApply }: Props) {
   return (
     <section
       aria-label="Today's recommended MBA applications"
-      className="relative overflow-hidden rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50/70 via-white to-sky-50/70 p-4 md:p-5"
+      className="relative overflow-hidden rounded-2xl border border-application-line bg-application-panel p-4 shadow-[0_8px_30px_rgb(19,36,58,0.05)] md:p-5"
     >
-      <div className="flex items-center justify-between gap-3 pb-3">
+      <div className="flex items-center justify-between gap-3 border-b border-application-line pb-3">
         <div className="flex items-center gap-2">
           <span
             aria-hidden
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-amber-600"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-application-blue/10 bg-application-blue-soft text-application-blue"
           >
             <Sparkles className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-[1.375rem] font-semibold leading-tight text-slate-900">
+            <h2 className="text-xl font-semibold leading-tight text-application-ink">
               Today&rsquo;s recommended applications
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-application-copy">
               Hand-picked by our MBA advisors — worth applying to right now.
             </p>
           </div>
