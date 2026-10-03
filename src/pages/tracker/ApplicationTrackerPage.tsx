@@ -20,20 +20,14 @@ import {
   ArrowUpRight,
   CalendarClock,
   ClipboardList,
-  ChevronDown,
   ChevronRight,
-  ChevronUp,
   CircleCheckBig,
-  GraduationCap,
-  Info,
   LayoutDashboard,
-  MapPin,
   RotateCcw,
   Search,
   ShieldCheck,
   Sparkles,
   Timer,
-  TrendingUp,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {

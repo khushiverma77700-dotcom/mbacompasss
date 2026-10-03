@@ -14,10 +14,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowUpRight, ExternalLink, FileText, Timer } from "lucide-react";
+import { ArrowUpRight, ExternalLink, Timer } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
-import ExpenseBreakdownView from "@/components/application/ExpenseBreakdown";
 import { buildExpenseBreakdown } from "@/lib/applicationExpenses";
 import {
   CATEGORY_LABEL,
@@ -94,7 +93,6 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
   const faqs = collegeFaqs(row);
   const keywords = collegeKeywords(row);
   const isExam = row.category === "exam";
-  const expenseBreakdown = buildExpenseBreakdown(row);
 
   const handleApply = async () => {
     if (!row.apply_url) {
@@ -122,7 +120,6 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
     }
   };
 
-  const openInside = () => void trackTrackerView(row, user ?? null, "inside_info");
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-20 md:p-6">
