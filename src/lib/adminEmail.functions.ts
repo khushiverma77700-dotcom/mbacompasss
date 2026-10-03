@@ -124,11 +124,35 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
 
     let queued = 0;
     let failed = 0;
+    const { data: suppressedRows } = await (supabaseAdmin as any)
+      .from("suppressed_emails")
+      .select("email")
+      .in("email", recipients);
+    const suppressed = new Set((suppressedRows ?? []).map((r: any) => String(r.email).toLowerCase()));
     for (const email of recipients) {
+      if (suppressed.has(email)) { failed++; continue; }
+      // Every send needs an unsubscribe token (one per address).
+      let unsubscribeToken: string | undefined;
+      const { data: existing } = await (supabaseAdmin as any)
+        .from("email_unsubscribe_tokens").select("token").eq("email", email).maybeSingle();
+      if (existing?.token) {
+        unsubscribeToken = existing.token;
+      } else {
+        const token = crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
+        const { error: tokErr } = await (supabaseAdmin as any)
+          .from("email_unsubscribe_tokens").insert({ token, email });
+        if (tokErr) {
+          const { data: again } = await (supabaseAdmin as any)
+            .from("email_unsubscribe_tokens").select("token").eq("email", email).maybeSingle();
+          unsubscribeToken = again?.token;
+        } else unsubscribeToken = token;
+      }
+      if (!unsubscribeToken) { failed++; continue; }
       const messageId = `admin_campaign_${campaignId}_${email}`;
       const { error } = await supabaseAdmin.rpc("enqueue_email", {
         queue_name: "transactional_emails",
         payload: {
+          unsubscribe_token: unsubscribeToken,
           to: email,
           from: SENDER_FROM,
           sender_domain: SENDER_DOMAIN,
