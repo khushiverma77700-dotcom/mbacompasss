@@ -2929,7 +2929,8 @@ export type Database = {
           message_id: string
           name: string | null
           open_count: number
-          queued_at: string
+          payload: Json | null
+          queued_at: string | null
           status: string
           tracking_token: string
         }
@@ -2944,7 +2945,8 @@ export type Database = {
           message_id: string
           name?: string | null
           open_count?: number
-          queued_at?: string
+          payload?: Json | null
+          queued_at?: string | null
           status?: string
           tracking_token: string
         }
@@ -2959,7 +2961,8 @@ export type Database = {
           message_id?: string
           name?: string | null
           open_count?: number
-          queued_at?: string
+          payload?: Json | null
+          queued_at?: string | null
           status?: string
           tracking_token?: string
         }
@@ -2968,8 +2971,10 @@ export type Database = {
       email_campaigns: {
         Row: {
           audience: string
+          batch_size: number
           body: string
           body_html: string | null
+          completed_at: string | null
           created_at: string
           created_by: string | null
           cta_label: string | null
@@ -2979,10 +2984,14 @@ export type Database = {
           from_name: string | null
           heading: string | null
           id: string
+          interval_seconds: number
           list_id: string | null
           list_name: string | null
           name: string | null
+          next_send_at: string | null
           recipient_count: number
+          sent_count: number
+          started_at: string | null
           status: string
           subject: string
           template_id: string | null
@@ -2990,8 +2999,10 @@ export type Database = {
         }
         Insert: {
           audience: string
+          batch_size?: number
           body: string
           body_html?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by?: string | null
           cta_label?: string | null
@@ -3001,10 +3012,14 @@ export type Database = {
           from_name?: string | null
           heading?: string | null
           id?: string
+          interval_seconds?: number
           list_id?: string | null
           list_name?: string | null
           name?: string | null
+          next_send_at?: string | null
           recipient_count?: number
+          sent_count?: number
+          started_at?: string | null
           status?: string
           subject: string
           template_id?: string | null
@@ -3012,8 +3027,10 @@ export type Database = {
         }
         Update: {
           audience?: string
+          batch_size?: number
           body?: string
           body_html?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by?: string | null
           cta_label?: string | null
@@ -3023,10 +3040,14 @@ export type Database = {
           from_name?: string | null
           heading?: string | null
           id?: string
+          interval_seconds?: number
           list_id?: string | null
           list_name?: string | null
           name?: string | null
+          next_send_at?: string | null
           recipient_count?: number
+          sent_count?: number
+          started_at?: string | null
           status?: string
           subject?: string
           template_id?: string | null
@@ -16110,6 +16131,8 @@ export type Database = {
         Returns: boolean
       }
       distinct_text_count: { Args: { arr: string[] }; Returns: number }
+      email_campaign_tick: { Args: never; Returns: number }
+      email_campaign_wake: { Args: never; Returns: undefined }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }

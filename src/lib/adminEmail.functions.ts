@@ -21,6 +21,8 @@ interface SendInput {
   testEmail?: string;
   templateId?: string;
   templateName?: string;
+  intervalSeconds?: number;
+  batchSize?: number;
 }
 
 interface Recipient { email: string; name?: string | null; vars: Record<string, string> }
@@ -235,9 +237,9 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     let queued = 0;
     let failed = suppressed.size;
     const recRows: any[] = [];
-    const work = sendable.map((r) => async () => {
+    for (const r of sendable) {
       const unsub = tokens.get(r.email);
-      if (!unsub) { failed++; return; }
+      if (!unsub) { failed++; continue; }
       const trackingToken = crypto.randomUUID().replaceAll("-", "");
       const messageId = `admin_campaign_${campaignId}_${r.email}`;
       const subject = personalize(data.subject, r.vars, false);
@@ -246,37 +248,73 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       const pCtas = ctas.map((c) => ({ label: personalize(c.label, r.vars, false), url: c.url }));
       const html = buildHtml({ heading, bodyHtml, ctas: pCtas, token: trackingToken, preheader: htmlToText(bodyHtml).slice(0, 120) });
       const text = `${htmlToText(heading)}\n\n${htmlToText(bodyHtml)}\n\n${pCtas.map((c) => `${c.label}: ${c.url}`).join("\n")}\n\nTeam MBA Compass`;
-      const { error } = await admin.rpc("enqueue_email", {
-        queue_name: "transactional_emails",
+      queued++;
+      recRows.push({
+        campaign_id: campaignId, email: r.email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken,
+        status: "waiting", queued_at: null,
         payload: {
-          unsubscribe_token: unsub,
-          to: r.email,
-          from: `${fromName} <${SENDER_EMAIL}>`,
-          sender_domain: SENDER_DOMAIN,
-          subject, html, text,
-          purpose: "transactional",
-          label: "admin_campaign",
-          idempotency_key: messageId,
-          message_id: messageId,
-          queued_at: new Date().toISOString(),
+          unsubscribe_token: unsub, to: r.email, from: `${fromName} <${SENDER_EMAIL}>`, sender_domain: SENDER_DOMAIN,
+          subject, html, text, purpose: "transactional", label: "admin_campaign",
+          idempotency_key: messageId, message_id: messageId, queued_at: new Date().toISOString(),
         },
       });
-      if (error) { failed++; return; }
-      queued++;
-      recRows.push({ campaign_id: campaignId, email: r.email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken });
-    });
-    for (let i = 0; i < work.length; i += 20) await Promise.all(work.slice(i, i + 20).map((f) => f()));
-    for (let i = 0; i < recRows.length; i += 500) {
-      const { error: recErr } = await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 500));
-      if (recErr) console.error("campaign recipients insert failed", recErr.message);
+    }
+    for (let i = 0; i < recRows.length; i += 200) {
+      const { error: recErr } = await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 200));
+      if (recErr) { console.error("campaign recipients insert failed", recErr.message); queued -= recRows.slice(i, i + 200).length; failed += recRows.slice(i, i + 200).length; }
     }
 
+    const isTest = data.audience === "test";
     await admin.from("email_campaigns").update({
       recipient_count: queued, failed_count: failed,
-      status: queued === 0 ? "failed" : "sent",
+      status: queued === 0 ? "failed" : "running",
+      interval_seconds: isTest ? 5 : clampInt(data.intervalSeconds, 5, 86400, 30),
+      batch_size: isTest ? 10 : clampInt(data.batchSize, 1, 2000, 100),
+      next_send_at: new Date().toISOString(),
+      started_at: new Date().toISOString(),
     }).eq("id", campaignId);
-    try { await admin.rpc("email_queue_wake"); } catch { /* non-fatal */ }
+    if (queued > 0) {
+      await admin.rpc("email_campaign_wake");
+      await admin.rpc("email_campaign_tick");
+    }
     return { queued, failed, suppressed: suppressed.size, campaignId };
+  });
+
+function clampInt(v: unknown, min: number, max: number, fb: number) {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fb;
+}
+
+/** Change speed or pause/resume/stop a campaign. Speed changes apply to the remaining emails immediately. */
+export const updateCampaignDelivery = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { campaignId: string; intervalSeconds?: number; batchSize?: number; action?: "pause" | "resume" | "stop" }) => {
+    if (!i?.campaignId) throw new Error("campaignId required");
+    return i;
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: c } = await admin.from("email_campaigns").select("status,next_send_at").eq("id", data.campaignId).maybeSingle();
+    if (!c) throw new Error("Campaign not found");
+    const patch: Record<string, unknown> = {};
+    if (data.intervalSeconds != null) patch.interval_seconds = clampInt(data.intervalSeconds, 5, 86400, 30);
+    if (data.batchSize != null) patch.batch_size = clampInt(data.batchSize, 1, 2000, 100);
+    if (data.intervalSeconds != null && c.status === "running") {
+      // Re-time the next batch against the new interval so a faster speed takes effect right away.
+      patch.next_send_at = new Date(Date.now() + Math.min(5, Number(patch.interval_seconds)) * 1000).toISOString();
+    }
+    if (data.action === "pause" && c.status === "running") patch.status = "paused";
+    if (data.action === "resume" && c.status === "paused") { patch.status = "running"; patch.next_send_at = new Date().toISOString(); }
+    if (data.action === "stop" && (c.status === "running" || c.status === "paused")) {
+      patch.status = "completed"; patch.completed_at = new Date().toISOString(); patch.next_send_at = null;
+      await admin.from("email_campaign_recipients").update({ status: "cancelled", payload: null }).eq("campaign_id", data.campaignId).eq("status", "waiting");
+    }
+    const { error } = await admin.from("email_campaigns").update(patch).eq("id", data.campaignId);
+    if (error) throw new Error(error.message);
+    if (patch.status === "running") await admin.rpc("email_campaign_wake");
+    return { ok: true };
   });
 
 interface AnalyticsInput { from?: string; to?: string; campaignId?: string }
@@ -299,7 +337,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    let q = admin.from("email_campaigns").select("id,name,subject,from_name,audience,list_name,template_name,recipient_count,failed_count,status,created_at").order("created_at", { ascending: false }).limit(500);
+    let q = admin.from("email_campaigns").select("id,name,subject,from_name,audience,list_name,template_name,recipient_count,failed_count,status,created_at,interval_seconds,batch_size,sent_count,next_send_at,started_at,completed_at").order("created_at", { ascending: false }).limit(500);
     if (data.from) q = q.gte("created_at", data.from);
     if (data.to) q = q.lte("created_at", data.to);
     if (data.campaignId) q = q.eq("id", data.campaignId);
@@ -308,33 +346,45 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
     const recs: any[] = [];
     for (let i = 0; i < ids.length; i += 50) {
       for (let from = 0; ; from += 1000) {
-        const { data: r } = await admin.from("email_campaign_recipients").select("campaign_id,message_id,queued_at,first_opened_at,first_clicked_at,open_count,click_count").in("campaign_id", ids.slice(i, i + 50)).range(from, from + 999);
+        const { data: r } = await admin.from("email_campaign_recipients").select("campaign_id,message_id,status,queued_at,first_opened_at,first_clicked_at,open_count,click_count").in("campaign_id", ids.slice(i, i + 50)).range(from, from + 999);
         recs.push(...(r ?? []));
         if (!r || r.length < 1000) break;
       }
     }
-    const statuses = await latestStatuses(admin, recs.map((r) => r.message_id));
-    const blank = () => ({ sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, failed: 0, pending: 0 });
+    const statuses = await latestStatuses(admin, recs.filter((r) => r.status !== "waiting" && r.status !== "cancelled").map((r) => r.message_id));
+    const blank = () => ({ total: 0, sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, failed: 0, pending: 0, remaining: 0 });
     const per = new Map<string, ReturnType<typeof blank>>();
     const daily = new Map<string, ReturnType<typeof blank>>();
+    const hourly = new Map<string, ReturnType<typeof blank>>();
+    const since24 = Date.now() - 864e5;
     const day = (s: string) => s.slice(0, 10);
+    const hour = (s: string) => s.slice(0, 13);
     const bump = (m: Map<string, any>, k: string, f: string) => { if (!m.has(k)) m.set(k, blank()); m.get(k)[f]++; };
+    const bumpH = (s: string, f: string) => { if (new Date(s).getTime() >= since24) bump(hourly, hour(new Date(s).toISOString()), f); };
     for (const r of recs) {
-      const st = statuses.get(r.message_id)?.status ?? "pending";
-      bump(per, r.campaign_id, "sent"); bump(daily, day(r.queued_at), "sent");
+      if (r.status === "cancelled") continue;
+      bump(per, r.campaign_id, "total");
+      if (r.status === "waiting" || !r.queued_at) { bump(per, r.campaign_id, "remaining"); continue; }
+      const st = r.status === "failed" ? "failed" : statuses.get(r.message_id)?.status ?? "pending";
+      bump(per, r.campaign_id, "sent"); bump(daily, day(r.queued_at), "sent"); bumpH(r.queued_at, "sent");
       const bucket = st === "sent" ? "delivered" : st === "bounced" || st === "complained" ? "bounced" : st === "dlq" || st === "failed" || st === "suppressed" ? "failed" : "pending";
-      bump(per, r.campaign_id, bucket); bump(daily, day(r.queued_at), bucket);
-      if (r.first_opened_at) { bump(per, r.campaign_id, "opened"); bump(daily, day(r.first_opened_at), "opened"); }
-      if (r.first_clicked_at) { bump(per, r.campaign_id, "clicked"); bump(daily, day(r.first_clicked_at), "clicked"); }
+      bump(per, r.campaign_id, bucket); bump(daily, day(r.queued_at), bucket); bumpH(r.queued_at, bucket);
+      if (r.first_opened_at) { bump(per, r.campaign_id, "opened"); bump(daily, day(r.first_opened_at), "opened"); bumpH(r.first_opened_at, "opened"); }
+      if (r.first_clicked_at) { bump(per, r.campaign_id, "clicked"); bump(daily, day(r.first_clicked_at), "clicked"); bumpH(r.first_clicked_at, "clicked"); }
     }
     const rows = (campaigns ?? []).map((c: any) => ({ ...c, stats: per.get(c.id) ?? blank() }));
     const totals = rows.reduce((a: any, r: any) => { for (const k of Object.keys(a)) a[k] += r.stats[k]; return a; }, blank());
     let cum = blank();
     const series = [...daily.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, s]) => {
       cum = Object.fromEntries(Object.keys(cum).map((k) => [k, (cum as any)[k] + (s as any)[k]])) as any;
-      return { date, ...s, cumSent: cum.sent, cumOpened: cum.opened, cumClicked: cum.clicked };
+      return { date, ...s, cumSent: cum.sent, cumDelivered: cum.delivered, cumOpened: cum.opened, cumClicked: cum.clicked, cumFailed: cum.failed + cum.bounced };
     });
-    return { campaigns: rows, totals, series };
+    const hourlySeries = Array.from({ length: 24 }, (_, i) => {
+      const d = new Date(Date.now() - (23 - i) * 36e5);
+      const k = d.toISOString().slice(0, 13);
+      return { hour: `${String(d.getHours()).padStart(2, "0")}:00`, ...(hourly.get(k) ?? blank()) };
+    });
+    return { campaigns: rows, totals, series, hourlySeries };
   });
 
 /** Per-recipient report for one campaign. */
@@ -345,7 +395,7 @@ export const getCampaignRecipients = createServerFn({ method: "POST" })
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    const { data: recs } = await admin.from("email_campaign_recipients").select("email,name,message_id,queued_at,first_opened_at,open_count,first_clicked_at,click_count").eq("campaign_id", data.campaignId).order("queued_at").limit(5000);
+    const { data: recs } = await admin.from("email_campaign_recipients").select("email,name,message_id,status,queued_at,first_opened_at,open_count,first_clicked_at,click_count").eq("campaign_id", data.campaignId).order("queued_at").limit(5000);
     const statuses = await latestStatuses(admin, (recs ?? []).map((r: any) => r.message_id));
     const { data: events } = await admin.from("email_tracking_events").select("event_type,url,created_at").eq("campaign_id", data.campaignId).order("created_at").limit(10000);
     const links = new Map<string, number>();
