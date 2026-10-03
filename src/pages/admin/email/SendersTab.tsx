@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getSenderIdentities } from "@/lib/adminEmail.functions";
+import { getSenderIdentities, getGlobalDailyCap, setGlobalDailyCap } from "@/lib/adminEmail.functions";
 
 const db = supabase as any;
 const DOMAIN = "notify.mail.mbacompass.in";
@@ -75,9 +75,35 @@ export default function SendersTab({ onChanged }: { onChanged?: () => void }) {
       <p className="text-sm text-muted-foreground">
         Each sender has its own name and address on your verified email domain. A campaign keeps one sender for every email. When the daily cap is reached, sending waits until the next day. If bounces or complaints go above the limits, the sender and its campaigns pause on their own until you resume them.
       </p>
+      <GlobalCapCard />
       <SenderReport rows={rows} />
       <div className="grid gap-4 lg:grid-cols-3">{rows.map((s) => <SenderCard key={s.id} s={s} onSaved={() => { load(); onChanged?.(); }} />)}</div>
     </div>
+  );
+}
+
+function GlobalCapCard() {
+  const fetchCap = useServerFn(getGlobalDailyCap);
+  const saveCap = useServerFn(setGlobalDailyCap);
+  const [info, setInfo] = useState({ cap: 1000, today: 0 });
+  const [val, setVal] = useState("1000");
+  const load = () => fetchCap({}).then((r: any) => { setInfo(r); setVal(String(r.cap)); }).catch(() => {});
+  useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, []);
+  const save = async () => {
+    try { await saveCap({ data: { cap: Number(val) } }); toast.success("Daily total cap saved"); load(); }
+    catch (e: any) { toast.error(e?.message || "Could not save"); }
+  };
+  return (
+    <Card className="space-y-3 p-4">
+      <p className="text-xl font-semibold">Daily total cap (all senders)</p>
+      <p className="text-sm text-muted-foreground">A safety brake while your domain warms up. Once this many emails go out today (India time) across every sender, all campaigns wait until tomorrow and continue on their own. Test inbox emails don't count.</p>
+      <div className="flex justify-between text-sm"><span>Sent today</span><span>{info.today} / {info.cap}</span></div>
+      <Progress value={Math.min(100, (info.today * 100) / Math.max(1, info.cap))} />
+      <div className="flex flex-wrap items-end gap-2">
+        <div><Label>Max emails per day</Label><Input type="number" min={1} value={val} onChange={(e) => setVal(e.target.value)} /></div>
+        <Button onClick={save}>Save</Button>
+      </div>
+    </Card>
   );
 }
 
