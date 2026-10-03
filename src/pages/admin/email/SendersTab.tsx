@@ -75,7 +75,57 @@ export default function SendersTab({ onChanged }: { onChanged?: () => void }) {
       <p className="text-sm text-muted-foreground">
         Each sender has its own name and address on your verified email domain. A campaign keeps one sender for every email. When the daily cap is reached, sending waits until the next day. If bounces or complaints go above the limits, the sender and its campaigns pause on their own until you resume them.
       </p>
+      <SenderReport rows={rows} />
       <div className="grid gap-4 lg:grid-cols-3">{rows.map((s) => <SenderCard key={s.id} s={s} onSaved={() => { load(); onChanged?.(); }} />)}</div>
     </div>
+  );
+}
+
+const rate = (n: number, d: number) => (d ? (n * 100) / d : 0);
+
+function SenderReport({ rows }: { rows: any[] }) {
+  const data = rows.map((s) => {
+    const p = s.perf ?? { sent: 0, delivered: 0, opened: 0, clicked: 0, failed: 0 };
+    return { id: s.id, label: s.label, ...p, dRate: rate(p.delivered, p.sent), oRate: rate(p.opened, p.delivered), cRate: rate(p.clicked, p.delivered), ctor: rate(p.clicked, p.opened) };
+  });
+  const best = (k: "dRate" | "oRate" | "cRate") => {
+    const c = data.filter((d) => d.sent > 0).sort((a, b) => b[k] - a[k])[0];
+    return c && c[k] > 0 ? c : null;
+  };
+  const winners = { dRate: best("dRate"), oRate: best("oRate"), cRate: best("cRate") };
+  const cards: [string, "dRate" | "oRate" | "cRate"][] = [["Best delivery rate", "dRate"], ["Best open rate", "oRate"], ["Best click rate", "cRate"]];
+  return (
+    <Card className="space-y-4 p-4">
+      <p className="text-xl font-semibold">Sender performance report</p>
+      <div className="grid gap-3 md:grid-cols-3">
+        {cards.map(([l, k]) => (
+          <div key={k} className="rounded border bg-primary/5 p-3">
+            <p className="text-sm text-muted-foreground">{l}</p>
+            <p className="text-xl font-semibold">{winners[k] ? winners[k]!.label : "Not enough data"}</p>
+            {winners[k] && <p className="text-sm text-primary">{winners[k]![k].toFixed(1)}%</p>}
+          </div>
+        ))}
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left text-muted-foreground">
+            <tr><th className="py-2">Sender</th><th>Sent</th><th>Delivered</th><th>Delivery rate</th><th>Opened</th><th>Open rate</th><th>Clicked</th><th>Click rate</th><th>Click-to-open</th><th>Failed</th></tr>
+          </thead>
+          <tbody className="divide-y">
+            {data.map((d) => {
+              const mark = (k: "dRate" | "oRate" | "cRate") => winners[k]?.id === d.id ? <Badge className="ml-1 bg-primary/10 text-primary">Best</Badge> : null;
+              return (
+                <tr key={d.id}>
+                  <td className="py-2 font-medium">{d.label}</td><td>{d.sent}</td><td>{d.delivered}</td>
+                  <td>{d.dRate.toFixed(1)}%{mark("dRate")}</td><td>{d.opened}</td><td>{d.oRate.toFixed(1)}%{mark("oRate")}</td>
+                  <td>{d.clicked}</td><td>{d.cRate.toFixed(1)}%{mark("cRate")}</td><td>{d.ctor.toFixed(1)}%</td><td>{d.failed}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-sm text-muted-foreground">All-time figures per sender. Open and click rates are measured against delivered emails. Open rates are approximate because some mail apps load images automatically or block them.</p>
+    </Card>
   );
 }

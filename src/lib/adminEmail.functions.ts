@@ -344,7 +344,7 @@ export const updateCampaignDelivery = createServerFn({ method: "POST" })
     }
     if (data.action === "pause" && c.status === "running") patch.status = "paused";
     if (data.action === "resume" && c.status === "paused") { patch.status = "running"; patch.next_send_at = new Date().toISOString(); }
-    if (data.action === "stop" && (c.status === "running" || c.status === "paused")) {
+    if (data.action === "stop" && ["running", "paused", "queued", "sending"].includes(c.status)) {
       patch.status = "completed"; patch.completed_at = new Date().toISOString(); patch.next_send_at = null;
       await admin.from("email_campaign_recipients").update({ status: "cancelled", payload: null }).eq("campaign_id", data.campaignId).eq("status", "waiting");
     }
@@ -502,7 +502,24 @@ export const getSenderIdentities = createServerFn({ method: "POST" })
       const st = await latestStatuses(admin, recent.map((r) => r.message_id));
       let bounced = 0, complained = 0;
       st.forEach((v) => { if (v.status === "bounced") bounced++; if (v.status === "complained") complained++; });
-      out.push({ ...s, today, week: recent.length, bounced, complained, campaigns: cids.length });
+      // All-time performance for the sender comparison report.
+      const all: any[] = [];
+      for (let i = 0; i < cids.length; i += 50) {
+        for (let from = 0; ; from += 1000) {
+          const { data: r } = await admin.from("email_campaign_recipients").select("message_id,status,first_opened_at,first_clicked_at").in("campaign_id", cids.slice(i, i + 50)).not("queued_at", "is", null).neq("status", "cancelled").neq("status", "waiting").range(from, from + 999);
+          all.push(...(r ?? []));
+          if (!r || r.length < 1000) break;
+        }
+      }
+      const allSt = await latestStatuses(admin, all.map((r) => r.message_id).filter(Boolean));
+      const perf = { sent: all.length, delivered: 0, opened: 0, clicked: 0, failed: 0 };
+      for (const r of all) {
+        const x = r.status === "failed" ? "failed" : allSt.get(r.message_id)?.status;
+        if (x === "sent") perf.delivered++; else if (x && x !== "pending") perf.failed++;
+        if (r.first_opened_at) perf.opened++;
+        if (r.first_clicked_at) perf.clicked++;
+      }
+      out.push({ ...s, today, week: recent.length, bounced, complained, campaigns: cids.length, perf });
     }
     return out;
   });
