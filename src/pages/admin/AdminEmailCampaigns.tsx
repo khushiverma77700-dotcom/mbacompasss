@@ -504,19 +504,33 @@ export default function AdminEmailCampaigns() {
               {!campaigns.length && <p className="text-sm text-muted-foreground">No campaigns in this period.</p>}
               <div className="divide-y">
                 {campaigns.map((c) => (
-                  <div key={c.id} role="button" tabIndex={0} onClick={() => openDetail(c)} onKeyDown={(e) => e.key === "Enter" && openDetail(c)} className="flex w-full cursor-pointer flex-wrap items-center gap-3 py-3 text-left hover:bg-muted/40">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium">{c.name || c.subject}</p>
-                      <p className="text-sm text-muted-foreground">{c.list_name || c.audience} · {c.template_name || "No template"} · {new Date(c.created_at).toLocaleString()}</p>
+                  <div key={c.id} role="button" tabIndex={0} onClick={() => openDetail(c)} onKeyDown={(e) => e.key === "Enter" && openDetail(c)} className="w-full cursor-pointer space-y-2 py-3 text-left hover:bg-muted/40">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">{c.name || c.subject}</p>
+                        <p className="text-sm text-muted-foreground">{c.list_name || c.audience} · {c.template_name || "No template"} · {new Date(c.created_at).toLocaleString()} · {c.batch_size ?? "—"} per batch every {intervalLabel(c.interval_seconds ?? 30)}</p>
+                      </div>
+                      <span className={`inline-flex items-center gap-2 rounded px-2 py-0.5 text-sm ${statusBadge(c.status)}`}>
+                        {(c.status === "running" || c.status === "sending") && <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-primary" /></span>}
+                        {STATUS_LABEL[c.status] ?? c.status}
+                      </span>
+                      {STOPPABLE.includes(c.status) && <StopButton id={c.id} onDone={loadAnalytics} />}
                     </div>
-                    <span className={`rounded px-2 py-0.5 text-sm ${statusBadge(c.status)}`}>{STATUS_LABEL[c.status] ?? c.status}</span>
-                    <span className="w-20 text-sm">{c.stats.sent} sent</span>
-                    <span className="w-24 text-sm">{c.stats.remaining} remaining</span>
-                    {c.last_error && <span className="w-full text-sm text-destructive">{c.last_error.split("\n")[0]}</span>}
-                    <span className="w-24 text-sm">{pct(c.stats.delivered, c.stats.sent)} deliv.</span>
-                    <span className="w-24 text-sm">{pct(c.stats.opened, c.stats.delivered)} open</span>
-                    <span className="w-24 text-sm">{pct(c.stats.clicked, c.stats.delivered)} click</span>
-                    {STOPPABLE.includes(c.status) && <StopButton id={c.id} onDone={loadAnalytics} />}
+                    {(() => { const tot = c.stats.total || c.recipient_count || 0; const gone = tot - c.stats.remaining; return (
+                      <>
+                        <div className="h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${tot ? (gone / tot) * 100 : 0}%` }} /></div>
+                        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                          <span><b>{gone.toLocaleString()}</b> / {tot.toLocaleString()} gone</span>
+                          <span><b>{c.stats.remaining.toLocaleString()}</b> remaining</span>
+                          <span><b>{c.stats.delivered.toLocaleString()}</b> delivered ({pct(c.stats.delivered, c.stats.sent)})</span>
+                          <span><b>{c.stats.opened.toLocaleString()}</b> opened ({pct(c.stats.opened, c.stats.delivered)})</span>
+                          <span><b>{c.stats.clicked.toLocaleString()}</b> clicked ({pct(c.stats.clicked, c.stats.delivered)})</span>
+                          <span><b>{(c.stats.failed + c.stats.bounced).toLocaleString()}</b> failed</span>
+                          {c.status === "running" && c.next_send_at && <span className="text-muted-foreground">Next batch {new Date(c.next_send_at).toLocaleTimeString()}</span>}
+                        </div>
+                      </>
+                    ); })()}
+                    {c.last_error && <p className="text-sm text-destructive">{c.last_error.split("\n")[0]}</p>}
                   </div>
                 ))}
               </div>
