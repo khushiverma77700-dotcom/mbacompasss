@@ -50,6 +50,13 @@
       "when": 1791043994188,
       "tag": "0006_email_campaign_tick_record_errors",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791045805145,
+      "tag": "0007_email_sender_identities",
+      "breakpoints": true
     }
   ]
 }
