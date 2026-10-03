@@ -63,14 +63,15 @@ export const parseProfileNarrative = (value: unknown): ProfileNarrative | null =
   let candidate: unknown = value.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   for (let attempt = 0; attempt < 2; attempt += 1) {
     if (typeof candidate !== "string") break;
+    const source = candidate;
     try {
-      candidate = JSON.parse(candidate);
+      candidate = JSON.parse(source);
     } catch {
-      const start = candidate.indexOf("{");
-      const end = candidate.lastIndexOf("}");
+      const start = source.indexOf("{");
+      const end = source.lastIndexOf("}");
       if (start < 0 || end <= start) return null;
       try {
-        candidate = JSON.parse(candidate.slice(start, end + 1));
+        candidate = JSON.parse(source.slice(start, end + 1));
       } catch {
         return null;
       }
