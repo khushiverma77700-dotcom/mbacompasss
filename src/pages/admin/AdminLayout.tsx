@@ -143,12 +143,14 @@ const AdminLayout = () => {
   const stripQuery = (p: string) => p.split("?")[0].split("#")[0];
   const isActive = (path: string) => location.pathname === stripQuery(path);
   const isSuperAdmin = allowedSections === null;
-  const hasAccess = (path: string) => isSuperAdmin || (allowedSections?.includes(stripQuery(path)) ?? false);
+  // Saved sections may include ?tab= query strings; compare on the path only.
+  const allowedPaths = (allowedSections ?? []).map(stripQuery);
+  const hasAccess = (path: string) => isSuperAdmin || allowedPaths.includes(stripQuery(path));
 
   const isRouteAllowed = (path: string) => {
     if (isSuperAdmin) return true;
     if (!allowedSections) return false;
-    return allowedSections.some(section => path === section || path.startsWith(section + "/"));
+    return allowedPaths.some(section => path === section || path.startsWith(section + "/"));
   };
 
   const currentRouteAllowed = isRouteAllowed(location.pathname) || location.pathname === "/admin";
