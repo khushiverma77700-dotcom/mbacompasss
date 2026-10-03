@@ -82,10 +82,27 @@ function LiveCampaignRow({ c, onChanged, onOpen }: { c: any; onChanged: () => vo
           {c.status === "running"
             ? <Button size="sm" variant="outline" onClick={() => act({ action: "pause" }, "Paused")}><Pause className="mr-1 h-4 w-4" /> Pause</Button>
             : <Button size="sm" variant="outline" onClick={() => act({ action: "resume" }, "Resumed")}><Play className="mr-1 h-4 w-4" /> Resume</Button>}
-          <Button size="sm" variant="ghost" onClick={() => window.confirm("Stop this campaign? Remaining emails will not be sent.") && act({ action: "stop" }, "Stopped")}><Square className="mr-1 h-4 w-4" /> Stop</Button>
+          <StopButton id={c.id} onDone={onChanged} />
         </div>
       )}
     </Card>
+  );
+}
+
+const STOPPABLE = ["running", "paused", "queued", "sending"];
+
+function StopButton({ id, onDone }: { id: string; onDone: () => void }) {
+  const update = useServerFn(updateCampaignDelivery);
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button size="sm" variant="destructive" disabled={busy} onClick={async (e) => {
+      e.stopPropagation();
+      if (!window.confirm("Stop this campaign now? Emails not yet sent will be cancelled. This cannot be undone.")) return;
+      setBusy(true);
+      try { await update({ data: { campaignId: id, action: "stop" } }); toast.success("Campaign stopped"); onDone(); }
+      catch (err: any) { toast.error(err?.message || "Could not stop"); }
+      finally { setBusy(false); }
+    }}><Square className="mr-1 h-4 w-4" /> Stop</Button>
   );
 }
 
@@ -483,7 +500,7 @@ export default function AdminEmailCampaigns() {
               {!campaigns.length && <p className="text-sm text-muted-foreground">No campaigns in this period.</p>}
               <div className="divide-y">
                 {campaigns.map((c) => (
-                  <button key={c.id} onClick={() => openDetail(c)} className="flex w-full flex-wrap items-center gap-3 py-3 text-left hover:bg-muted/40">
+                  <div key={c.id} role="button" tabIndex={0} onClick={() => openDetail(c)} onKeyDown={(e) => e.key === "Enter" && openDetail(c)} className="flex w-full cursor-pointer flex-wrap items-center gap-3 py-3 text-left hover:bg-muted/40">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{c.name || c.subject}</p>
                       <p className="text-sm text-muted-foreground">{c.list_name || c.audience} · {c.template_name || "No template"} · {new Date(c.created_at).toLocaleString()}</p>
@@ -495,7 +512,8 @@ export default function AdminEmailCampaigns() {
                     <span className="w-24 text-sm">{pct(c.stats.delivered, c.stats.sent)} deliv.</span>
                     <span className="w-24 text-sm">{pct(c.stats.opened, c.stats.delivered)} open</span>
                     <span className="w-24 text-sm">{pct(c.stats.clicked, c.stats.delivered)} click</span>
-                  </button>
+                    {STOPPABLE.includes(c.status) && <StopButton id={c.id} onDone={loadAnalytics} />}
+                  </div>
                 ))}
               </div>
             </Card>
