@@ -64,15 +64,17 @@ function buildHtml(opts: {
 }): string {
   const body = opts.bodyHtml
     .replace(/href\s*=\s*"(https?:\/\/[^"]+)"/gi, (_m, u: string) => `href="${trackUrl(opts.token, u.replaceAll("&amp;", "&"))}"`)
-    .replace(/<img /gi, '<img style="max-width:100%;height:auto;border-radius:8px" ');
+    .replace(/<img (?![^>]*style=)/gi, '<img style="max-width:100%;height:auto;border-radius:8px" ');
   const ctas = opts.ctas
     .filter((c) => c.url && c.label)
     .map((c, i) => `<a href="${trackUrl(opts.token, c.url)}" style="display:inline-block;margin:6px;${i === 0 ? "background:#2563eb;color:#ffffff" : "background:#ffffff;color:#2563eb;border:1px solid #2563eb"};text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:600;font-size:15px">${escapeHtml(c.label)}</a>`)
     .join("");
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#0f172a">
+  const bg = /data-bg="(#[0-9a-fA-F]{3,8})"/.exec(opts.bodyHtml)?.[1] || "#ffffff";
+  const card = /data-card="(#[0-9a-fA-F]{3,8})"/.exec(opts.bodyHtml)?.[1] || "#ffffff";
+  return `<!doctype html><html><body style="margin:0;padding:0;background:${bg};font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#0f172a">
 <span style="display:none;max-height:0;overflow:hidden">${escapeHtml(opts.preheader)}</span>
 <div style="max-width:600px;margin:0 auto;padding:32px 20px">
-  <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:32px">
+  <div style="background:${card};border:1px solid #e2e8f0;border-radius:16px;padding:32px">
     ${opts.heading ? `<h1 style="margin:0 0 16px;font-size:22px;color:#0f172a">${opts.heading}</h1>` : ""}
     <div style="color:#475569;line-height:1.7;font-size:15px">${body}</div>
     ${ctas ? `<div style="text-align:center;margin:28px 0 8px">${ctas}</div>` : ""}
@@ -181,7 +183,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     if (!input?.subject?.trim()) throw new Error("Subject is required");
     if (!input?.bodyHtml?.replace(/<[^>]+>/g, "").trim() && !/<img/i.test(input?.bodyHtml || "")) throw new Error("Email body is required");
     if (!["all", "enrolled", "selected", "list", "test"].includes(input.audience)) throw new Error("Invalid audience");
-    if ((input.ctas ?? []).length > 2) throw new Error("Maximum 2 buttons");
+    if ((input.ctas ?? []).length > 4) throw new Error("Maximum 4 buttons");
     for (const c of input.ctas ?? []) if (c.url && !/^https?:\/\//i.test(c.url)) throw new Error("Button links must start with http(s)://");
     return input;
   })
