@@ -13,6 +13,7 @@
 - [x] Tables not horizontally scrollable (left/right slide)
 - [x] "My Application" button must open a dedicated application tracking portal, not the student dashboard
 - [x] Expenses breakdown must be far more detailed
+- [x] Replace the directory table with a formal sectioned application-dossier layout
 
 ## Preview stability
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
