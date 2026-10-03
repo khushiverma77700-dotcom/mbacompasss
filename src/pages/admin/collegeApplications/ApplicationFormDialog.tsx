@@ -32,6 +32,7 @@ type Props = {
 
 type FormState = {
   name: string;
+  short_name: string;
   slug: string;
   logo_url: string;
   category: string;
@@ -44,19 +45,26 @@ type FormState = {
   program_fee: string;
   average_package: string;
   highest_package: string;
+  median_package: string;
   accepted_exams: string;
   apply_url: string;
+  college_website: string;
   inside_info_url: string;
   inside_info_notes: string;
   short_description: string;
+  eligibility: string;
+  selection_process: string;
+  cutoff_note: string;
   status: string;
   is_active: boolean;
   is_homepage_featured: boolean;
   homepage_order: string;
+  display_order: string;
 };
 
 const EMPTY: FormState = {
   name: "",
+  short_name: "",
   slug: "",
   logo_url: "",
   category: "iim",
@@ -69,15 +77,21 @@ const EMPTY: FormState = {
   program_fee: "",
   average_package: "",
   highest_package: "",
+  median_package: "",
   accepted_exams: "",
   apply_url: "",
+  college_website: "",
   inside_info_url: "",
   inside_info_notes: "",
   short_description: "",
+  eligibility: "",
+  selection_process: "",
+  cutoff_note: "",
   status: "open",
   is_active: true,
   is_homepage_featured: false,
   homepage_order: "0",
+  display_order: "0",
 };
 
 const toDateInput = (v: string | null) => (v ? new Date(v).toISOString().slice(0, 10) : "");
@@ -91,6 +105,7 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
     if (row) {
       setForm({
         name: row.name,
+        short_name: row.short_name ?? "",
         slug: row.slug,
         logo_url: row.logo_url ?? "",
         category: row.category,
@@ -103,15 +118,21 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
         program_fee: row.program_fee?.toString() ?? "",
         average_package: row.average_package?.toString() ?? "",
         highest_package: row.highest_package?.toString() ?? "",
+        median_package: row.median_package?.toString() ?? "",
         accepted_exams: (row.accepted_exams ?? []).join(", "),
         apply_url: row.apply_url ?? "",
+        college_website: row.college_website ?? "",
         inside_info_url: row.inside_info_url ?? "",
         inside_info_notes: row.inside_info_notes ?? "",
         short_description: row.short_description ?? "",
+        eligibility: row.eligibility ?? "",
+        selection_process: row.selection_process ?? "",
+        cutoff_note: row.cutoff_note ?? "",
         status: row.status,
         is_active: row.is_active,
         is_homepage_featured: row.is_homepage_featured,
         homepage_order: row.homepage_order.toString(),
+        display_order: row.display_order.toString(),
       });
     } else {
       setForm(EMPTY);
@@ -130,9 +151,14 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
       toast({ title: "Apply URL must start with http:// or https://", variant: "destructive" });
       return;
     }
+    if (form.college_website && !/^https?:\/\//i.test(form.college_website)) {
+      toast({ title: "Official website must start with http:// or https://", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     const payload = {
       name: form.name.trim(),
+      short_name: form.short_name.trim() || null,
       slug: (form.slug.trim() || slugify(form.name)).toLowerCase(),
       logo_url: form.logo_url || null,
       category: form.category,
@@ -145,17 +171,23 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
       program_fee: form.program_fee === "" ? null : Number(form.program_fee),
       average_package: form.average_package === "" ? null : Number(form.average_package),
       highest_package: form.highest_package === "" ? null : Number(form.highest_package),
+      median_package: form.median_package === "" ? null : Number(form.median_package),
       accepted_exams: form.accepted_exams
         ? form.accepted_exams.split(",").map((s) => s.trim()).filter(Boolean)
         : [],
       apply_url: form.apply_url || null,
+      college_website: form.college_website || null,
       inside_info_url: form.inside_info_url || null,
       inside_info_notes: form.inside_info_notes || null,
       short_description: form.short_description || null,
+      eligibility: form.eligibility || null,
+      selection_process: form.selection_process || null,
+      cutoff_note: form.cutoff_note || null,
       status: form.status,
       is_active: form.is_active,
       is_homepage_featured: form.is_homepage_featured,
       homepage_order: form.homepage_order === "" ? 0 : Number(form.homepage_order),
+      display_order: form.display_order === "" ? 0 : Number(form.display_order),
     };
 
     const { error } = row
@@ -182,6 +214,10 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
           <div className="space-y-1.5 md:col-span-2">
             <Label>College / Exam name *</Label>
             <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="IIM Ahmedabad" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Short name</Label>
+            <Input value={form.short_name} onChange={(e) => set("short_name", e.target.value)} placeholder="IIMA" />
           </div>
           <div className="space-y-1.5">
             <Label>Slug</Label>
@@ -243,6 +279,10 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
             <Input type="number" value={form.highest_package} onChange={(e) => set("highest_package", e.target.value)} placeholder="11500000" />
           </div>
           <div className="space-y-1.5">
+            <Label>Median package (₹ per year)</Label>
+            <Input type="number" value={form.median_package} onChange={(e) => set("median_package", e.target.value)} placeholder="3200000" />
+          </div>
+          <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={form.status} onValueChange={(v) => set("status", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -277,9 +317,17 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
             <Label>Homepage order</Label>
             <Input type="number" min="0" value={form.homepage_order} onChange={(e) => set("homepage_order", e.target.value)} />
           </div>
+          <div className="space-y-1.5">
+            <Label>Application directory order</Label>
+            <Input type="number" min="0" value={form.display_order} onChange={(e) => set("display_order", e.target.value)} />
+          </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Apply Now URL</Label>
             <Input value={form.apply_url} onChange={(e) => set("apply_url", e.target.value)} placeholder="https://admissions.example.ac.in/apply" />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Official college / exam website</Label>
+            <Input value={form.college_website} onChange={(e) => set("college_website", e.target.value)} placeholder="https://www.example.ac.in" />
           </div>
           <div className="md:col-span-2">
             <FileUpload
@@ -305,6 +353,18 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
           <div className="space-y-1.5 md:col-span-2">
             <Label>Short description (shown on the tracker)</Label>
             <Textarea rows={2} value={form.short_description} onChange={(e) => set("short_description", e.target.value)} />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Eligibility</Label>
+            <Textarea rows={3} value={form.eligibility} onChange={(e) => set("eligibility", e.target.value)} placeholder="Graduation, score and work-experience requirements" />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Selection process</Label>
+            <Textarea rows={3} value={form.selection_process} onChange={(e) => set("selection_process", e.target.value)} placeholder="Entrance score, shortlist, interview and final selection" />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Cutoff guidance</Label>
+            <Textarea rows={3} value={form.cutoff_note} onChange={(e) => set("cutoff_note", e.target.value)} placeholder="Expected or officially published cutoff context" />
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Inside Information notes</Label>
