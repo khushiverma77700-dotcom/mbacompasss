@@ -17,7 +17,6 @@ import {
 import { ArrowUpRight, ExternalLink, Timer } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
-import { buildExpenseBreakdown } from "@/lib/applicationExpenses";
 import {
   CATEGORY_LABEL,
   type TrackerRow,

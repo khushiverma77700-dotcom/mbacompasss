@@ -295,7 +295,6 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
     }
   };
 
-  const hasInside = (row: TrackerRow) => !!row.inside_info_url || !!row.inside_info_notes;
 
   const groupedVisible = useMemo(() => {
     const definitions = [
