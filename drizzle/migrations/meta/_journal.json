@@ -36,6 +36,13 @@
       "when": 1791043623675,
       "tag": "0004_email_campaign_throttled_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791043910216,
+      "tag": "0005_email_test_inboxes_and_errors",
+      "breakpoints": true
     }
   ]
 }
