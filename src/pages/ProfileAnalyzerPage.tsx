@@ -1605,7 +1605,7 @@ const ProfileAnalyzerPage = () => {
 
         {/* ════════════════ FORM STEPS 1-4 ════════════════ */}
         {step >= 1 && step <= 5 && (
-          <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-12">
+          <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-6 sm:py-12">
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-muted-foreground">Step {step} of 5</span>
@@ -1641,7 +1641,7 @@ const ProfileAnalyzerPage = () => {
                   {step === 5 && <><IndianRupee className="w-5 h-5 text-primary" /> Financial & Profile Extras</>}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-5 px-4 sm:px-6">
                 {step === 1 && (
                   <>
                     <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 mb-2">
