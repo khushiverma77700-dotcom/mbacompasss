@@ -16,6 +16,7 @@
 - [x] Replace the directory table with a formal sectioned application-dossier layout
 - [x] Add three record actions, expandable college highlights, richer facts, and live deadline urgency
 - [x] Make every public application dossier field manageable from the admin editor
+- [x] Simplify the admin application list into responsive summary records with progressive actions
 
 ## Preview stability
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
