@@ -92,6 +92,7 @@ import { Route as AdminCtrOptimizerRouteImport } from './routes/admin.ctr-optimi
 import { Route as AdminDailyTestsRouteImport } from './routes/admin.daily-tests'
 import { Route as AdminDatabaseBackupRouteImport } from './routes/admin.database-backup'
 import { Route as AdminDemoLeadsRouteImport } from './routes/admin.demo-leads'
+import { Route as AdminEmailCampaignsRouteImport } from './routes/admin.email-campaigns'
 import { Route as AdminExamCountdownsRouteImport } from './routes/admin.exam-countdowns'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
 import { Route as AdminExplanationCleanerRouteImport } from './routes/admin.explanation-cleaner'
@@ -743,6 +744,11 @@ const AdminDatabaseBackupRoute = AdminDatabaseBackupRouteImport.update({
 const AdminDemoLeadsRoute = AdminDemoLeadsRouteImport.update({
   id: '/demo-leads',
   path: '/demo-leads',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmailCampaignsRoute = AdminEmailCampaignsRouteImport.update({
+  id: '/email-campaigns',
+  path: '/email-campaigns',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminExamCountdownsRoute = AdminExamCountdownsRouteImport.update({
@@ -2049,6 +2055,7 @@ export interface FileRoutesByFullPath {
   '/admin/daily-tests': typeof AdminDailyTestsRoute
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
+  '/admin/email-campaigns': typeof AdminEmailCampaignsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/explanation-cleaner': typeof AdminExplanationCleanerRoute
@@ -2360,6 +2367,7 @@ export interface FileRoutesByTo {
   '/admin/daily-tests': typeof AdminDailyTestsRoute
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
+  '/admin/email-campaigns': typeof AdminEmailCampaignsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/explanation-cleaner': typeof AdminExplanationCleanerRoute
@@ -2668,6 +2676,7 @@ export interface FileRoutesById {
   '/admin/daily-tests': typeof AdminDailyTestsRoute
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
+  '/admin/email-campaigns': typeof AdminEmailCampaignsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/explanation-cleaner': typeof AdminExplanationCleanerRoute
@@ -2989,6 +2998,7 @@ export interface FileRouteTypes {
     | '/admin/daily-tests'
     | '/admin/database-backup'
     | '/admin/demo-leads'
+    | '/admin/email-campaigns'
     | '/admin/exam-countdowns'
     | '/admin/exams'
     | '/admin/explanation-cleaner'
@@ -3300,6 +3310,7 @@ export interface FileRouteTypes {
     | '/admin/daily-tests'
     | '/admin/database-backup'
     | '/admin/demo-leads'
+    | '/admin/email-campaigns'
     | '/admin/exam-countdowns'
     | '/admin/exams'
     | '/admin/explanation-cleaner'
@@ -3607,6 +3618,7 @@ export interface FileRouteTypes {
     | '/admin/daily-tests'
     | '/admin/database-backup'
     | '/admin/demo-leads'
+    | '/admin/email-campaigns'
     | '/admin/exam-countdowns'
     | '/admin/exams'
     | '/admin/explanation-cleaner'
@@ -4445,6 +4457,13 @@ declare module '@tanstack/react-router' {
       path: '/demo-leads'
       fullPath: '/admin/demo-leads'
       preLoaderRoute: typeof AdminDemoLeadsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/email-campaigns': {
+      id: '/admin/email-campaigns'
+      path: '/email-campaigns'
+      fullPath: '/admin/email-campaigns'
+      preLoaderRoute: typeof AdminEmailCampaignsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/exam-countdowns': {
@@ -6390,6 +6409,7 @@ interface AdminRouteChildren {
   AdminDailyTestsRoute: typeof AdminDailyTestsRoute
   AdminDatabaseBackupRoute: typeof AdminDatabaseBackupRoute
   AdminDemoLeadsRoute: typeof AdminDemoLeadsRoute
+  AdminEmailCampaignsRoute: typeof AdminEmailCampaignsRoute
   AdminExamCountdownsRoute: typeof AdminExamCountdownsRoute
   AdminExamsRoute: typeof AdminExamsRoute
   AdminExplanationCleanerRoute: typeof AdminExplanationCleanerRoute
@@ -6509,6 +6529,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDailyTestsRoute: AdminDailyTestsRoute,
   AdminDatabaseBackupRoute: AdminDatabaseBackupRoute,
   AdminDemoLeadsRoute: AdminDemoLeadsRoute,
+  AdminEmailCampaignsRoute: AdminEmailCampaignsRoute,
   AdminExamCountdownsRoute: AdminExamCountdownsRoute,
   AdminExamsRoute: AdminExamsRoute,
   AdminExplanationCleanerRoute: AdminExplanationCleanerRoute,
