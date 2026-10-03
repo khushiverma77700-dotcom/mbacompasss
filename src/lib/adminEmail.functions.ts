@@ -95,7 +95,7 @@ export const listEmailCampaigns = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
+    const { data } = await (supabaseAdmin as any)
       .from("email_campaigns")
       .select("id, subject, audience, recipient_count, status, created_at")
       .order("created_at", { ascending: false })
