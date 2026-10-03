@@ -144,9 +144,10 @@ export default function StudentApplications() {
   ];
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-[1.375rem] font-semibold text-foreground">My Applications</h1>
+    <div className="student-applications-page space-y-6">
+      <header className="student-page-heading">
+        <div className="student-eyebrow">Admissions workspace</div>
+        <h1 className="text-2xl font-semibold text-foreground">My Applications</h1>
         <p className="text-sm text-muted-foreground">
           Every college and exam application you have started, with live deadlines and status tracking.
         </p>

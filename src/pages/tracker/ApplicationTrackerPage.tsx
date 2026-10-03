@@ -16,8 +16,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  ArrowRight,
   ArrowUpRight,
   CalendarClock,
+  ClipboardList,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -332,12 +334,13 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
             <p className="max-w-3xl text-base text-application-copy">
             Every MBA application form in one place — college-wise last dates, application fees, programme fees,
             accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT), cutoff notes, average package and official
-            apply-online links for IIMs, Tier 1 and Tier 2 B-schools. Start an application and we keep it updated inside{" "}
-            <Link to="/mba-application/my-applications" className="font-semibold text-application-blue underline-offset-2 hover:underline">
-              My Applications
-            </Link>
-            .
+            apply-online links for IIMs, Tier 1 and Tier 2 B-schools.
             </p>
+            <Button asChild className="gap-2 shadow-sm">
+              <Link to="/mba-application/my-applications">
+                <ClipboardList className="h-4 w-4" /> My Applications <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line sm:grid-cols-4 lg:min-w-[470px]">
             {[

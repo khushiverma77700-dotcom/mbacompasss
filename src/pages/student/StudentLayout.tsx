@@ -467,6 +467,7 @@ function SidebarContent() {
       );
     }
     const badge = counts[item.to] ?? 0;
+    const isApplications = item.to === "/student/applications";
     return (
       <NavLink
         key={item.to}
@@ -481,6 +482,7 @@ function SidebarContent() {
           cn(
             "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors relative",
             opts.indent && "ml-3 py-1.5 text-sm",
+            isApplications && "student-applications-nav",
             isActive
               ? "bg-sky-50 text-sky-700 shadow-xs ring-1 ring-sky-100 dark:bg-sky-500/15 dark:text-sky-200 dark:ring-sky-500/20"
               : "text-foreground/80 hover:bg-accent hover:text-foreground"
@@ -497,6 +499,9 @@ function SidebarContent() {
           )}
         </span>
         <span className="flex-1 truncate">{item.label}</span>
+        {isApplications && badge === 0 && (
+          <span className="student-nav-priority">Track</span>
+        )}
         {badge > 0 && (
           <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold bg-rose-500 text-white">
             {badge > 9 ? "9+" : badge}

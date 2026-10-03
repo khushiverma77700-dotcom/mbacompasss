@@ -21,9 +21,10 @@
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
 
 ## Student dashboard redesign
-- [x] Apply the selected immersive analytical composition in a light Sky and Emerald system
+- [x] Apply the selected Institutional Executive composition in the Academic Blue system
 - [x] Scope Sora and Manrope typography to the student experience
 - [x] Verify signed-in desktop and mobile dashboard presentation
+- [x] Highlight My Applications across the public directory, student navigation, and application workspace
 
 ## Course detail sales redesign
 - [x] Lock the authority-led Sky/Emerald sales direction
