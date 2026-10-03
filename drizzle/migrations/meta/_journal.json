@@ -57,6 +57,13 @@
       "when": 1791045805145,
       "tag": "0007_email_sender_identities",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791051856720,
+      "tag": "0008_global_daily_email_cap",
+      "breakpoints": true
     }
   ]
 }
