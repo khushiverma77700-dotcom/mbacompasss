@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Download, FlaskConical, Pause, Play, Send, Square, Gauge } from "lucide-react";
+import { ArrowLeft, Download, FlaskConical, Pause, Play, RotateCcw, Send, Square, Gauge } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { getCampaignRecipients, getEmailAnalytics, getEmailAudienceCounts, resendFailedCampaign, sendEmailCampaign, updateCampaignDelivery } from "@/lib/adminEmail.functions";
