@@ -1396,7 +1396,7 @@ function DetailInner() {
               {paying ? "Processing…" : <>Enroll now <ArrowRight className="ml-1 h-4 w-4" /></>}
             </Button>
           </div>
-          <div className="mx-auto mt-1 max-w-lg"><CourseRefundNotice compact /></div>
+          <p className="mx-auto mt-1 max-w-lg text-center text-sm text-muted-foreground">Non-refundable purchase</p>
         </div>
       ) : null}
     </div>
