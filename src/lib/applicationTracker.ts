@@ -25,6 +25,8 @@ export type TrackerRow = {
   category: string;
   tier: string | null;
   program: string | null;
+  programs: string[];
+  details_html: string | null;
   location: string | null;
   application_open_date: string | null;
   application_deadline: string | null;
@@ -345,8 +347,18 @@ export const writeRemotePrefs = async (userId: string, prefs: TrackerPrefs): Pro
 export const formatFee = (value: number | null | undefined): string => {
   if (value === null || value === undefined) return "—";
   if (value === 0) return "Free";
-  return `₹${Number(value).toLocaleString("en-IN")}`;
+  const n = Number(value);
+  if (n >= 100000) return `₹${(n / 100000).toFixed(2)} Lakhs`;
+  return `₹${n.toLocaleString("en-IN")}`;
 };
+
+export const PROGRAM_OPTIONS = ["MBA", "PGDM", "MMS", "PGP", "Others"] as const;
+export const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "GRE", "MAH MBA CET", "CUET-PG", "ATMA", "IIFT", "TISSNET", "Other"] as const;
+export const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"] as const;
+
+/** Programs for a row, falling back to the retired single `program` text. */
+export const rowPrograms = (row: Pick<TrackerRow, "programs" | "program">): string[] =>
+  row.programs?.length ? row.programs : row.program ? [row.program] : [];
 
 export const formatDate = (value: string | null | undefined): string => {
   if (!value) return "—";
@@ -358,7 +370,7 @@ export const formatDate = (value: string | null | undefined): string => {
 /* ------------------------------------------------------------- queries */
 
 export const TRACKER_SELECT =
-  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, is_homepage_featured, homepage_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt";
+  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, is_homepage_featured, homepage_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt, programs, details_html";
 
 /** Public catalogue (RLS already limits this to active, non-archived rows). */
 export const publicTrackersQuery = queryOptions({
