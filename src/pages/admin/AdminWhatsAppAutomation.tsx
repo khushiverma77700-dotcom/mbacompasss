@@ -557,7 +557,7 @@ export default function AdminWhatsAppAutomation() {
         </Card>
       ) : null}
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={(v) => { setTab(v); if (v === "new") void loadTemplates(); }}>
         <TabsList>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
