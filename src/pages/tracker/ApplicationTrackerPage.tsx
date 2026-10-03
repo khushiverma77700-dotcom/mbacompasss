@@ -18,15 +18,20 @@ import {
 import {
   ArrowUpRight,
   CalendarClock,
+  ChevronDown,
   ChevronRight,
+  ChevronUp,
   CircleCheckBig,
+  GraduationCap,
   Info,
   LayoutDashboard,
+  MapPin,
   RotateCcw,
   Search,
   ShieldCheck,
   Sparkles,
   Timer,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -78,6 +83,25 @@ const TONE_CLASS: Record<DeadlineTone, string> = {
   unknown: "bg-muted text-muted-foreground border-border",
 };
 
+const deadlineTimestamp = (value: string | null): number | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) date.setHours(23, 59, 59, 999);
+  return date.getTime();
+};
+
+const countdownLabel = (deadline: string | null, now: number): string | null => {
+  const target = deadlineTimestamp(deadline);
+  if (target === null) return null;
+  const remaining = Math.max(0, target - now);
+  const days = Math.floor(remaining / 86_400_000);
+  const hours = Math.floor((remaining % 86_400_000) / 3_600_000);
+  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+  const seconds = Math.floor((remaining % 60_000) / 1_000);
+  return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+};
+
 const LogoBadge = ({ row }: { row: TrackerRow }) => {
   if (row.logo_url) {
     return (
@@ -118,6 +142,22 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
   const [search, setSearch] = useState("");
   const [applying, setApplying] = useState<string | null>(null);
   const [prefsReady, setPrefsReady] = useState(false);
+  const [expandedHighlights, setExpandedHighlights] = useState<Set<string>>(() => new Set());
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const toggleHighlights = (id: string) => {
+    setExpandedHighlights((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   /* Restore the student's last filter choice (profile first, then this device). */
   useEffect(() => {
@@ -460,6 +500,10 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
               <div className="space-y-3">
                 {group.rows.map((row) => {
                   const info = deadlineInfo(row);
+                  const highlightsOpen = expandedHighlights.has(row.id);
+                  const finalFiveDays = info.isOpen && info.daysLeft !== null && info.daysLeft >= 0 && info.daysLeft <= 5;
+                  const closingSoon = info.isOpen && info.daysLeft !== null && info.daysLeft > 5 && info.daysLeft <= 15;
+                  const liveCountdown = finalFiveDays ? countdownLabel(row.application_deadline, now) : null;
                   return (
                     <article key={row.id} className="group overflow-hidden rounded-lg border border-application-line bg-application-panel shadow-sm transition-shadow duration-300 hover:shadow-md">
                       <div className="grid lg:grid-cols-12">
@@ -471,6 +515,11 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                                 <Link to={collegeUrl(row)}>{row.name}</Link>
                               </h3>
                               <p className="mt-1 text-sm text-application-copy">{row.program || row.location || "MBA application"}</p>
+                              {row.location && row.program && (
+                                <p className="mt-2 flex items-center gap-1.5 text-sm text-application-copy">
+                                  <MapPin className="h-3.5 w-3.5 text-application-blue" /> {row.location}
+                                </p>
+                              )}
                               <div className="mt-3 flex flex-wrap gap-2">
                                 <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
                                   {CATEGORY_LABEL[row.category] ?? row.category}
@@ -501,10 +550,23 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
                         <div className="flex flex-col justify-between gap-4 border-t border-application-line bg-application-canvas p-5 lg:col-span-3 lg:border-l lg:border-t-0 md:p-6">
                           <div>
-                            <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm font-semibold ${TONE_CLASS[info.tone]}`}>
-                              {info.isOpen ? <Timer className="h-3.5 w-3.5" /> : <CircleCheckBig className="h-3.5 w-3.5" />}
-                              {info.label}
-                            </span>
+                            {finalFiveDays ? (
+                              <div className="inline-flex flex-col gap-1 rounded-md border border-application-warning/30 bg-application-warning-soft px-3 py-2 text-application-warning" aria-live="polite">
+                                <span className="flex items-center gap-2 text-sm font-semibold">
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-application-warning opacity-60 motion-reduce:animate-none" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-application-warning" />
+                                  </span>
+                                  Closing in
+                                </span>
+                                <span className="font-mono text-base font-semibold tabular-nums text-application-ink">{liveCountdown}</span>
+                              </div>
+                            ) : (
+                              <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm font-semibold ${closingSoon ? TONE_CLASS.soon : TONE_CLASS[info.tone]}`}>
+                                {info.isOpen ? <Timer className="h-3.5 w-3.5" /> : <CircleCheckBig className="h-3.5 w-3.5" />}
+                                {closingSoon ? "Closing Soon" : info.label}
+                              </span>
+                            )}
                             <p className="mt-3 text-sm text-application-copy">
                               {(row.accepted_exams ?? []).length > 0 ? `Accepts ${(row.accepted_exams ?? []).join(", ")}` : "See the complete eligibility and selection details."}
                             </p>
@@ -515,18 +577,69 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                               onClick={() => void handleApply(row)}
                               className="w-full gap-1.5 rounded-md"
                             >
-                              {info.isOpen ? "Apply now" : "Applications closed"}
+                              {info.isOpen ? "Apply Now" : "Applications Closed"}
                               {info.isOpen && <ArrowUpRight className="h-4 w-4" />}
                             </Button>
                             <Button asChild variant="outline" className="w-full gap-1.5 rounded-md">
                               <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, hasInside(row) ? "inside_info" : "view")}>
                                 {hasInside(row) ? <Info className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                                {hasInside(row) ? "Inside information" : "View application dossier"}
+                                View Details
                               </Link>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-between gap-1.5 rounded-md"
+                              aria-expanded={highlightsOpen}
+                              aria-controls={`college-highlights-${row.id}`}
+                              onClick={() => toggleHighlights(row.id)}
+                            >
+                              Check College Highlights
+                              {highlightsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             </Button>
                           </div>
                         </div>
                       </div>
+                      {highlightsOpen && (
+                        <div id={`college-highlights-${row.id}`} className="border-t border-application-line bg-application-canvas p-5 md:p-6">
+                          <div className="mb-4 flex items-center justify-between gap-3">
+                            <div>
+                              <h4 className="text-base font-semibold text-application-ink">College highlights</h4>
+                              <p className="mt-1 text-sm text-application-copy">Key facts to review before starting this application.</p>
+                            </div>
+                            {row.is_recommended && (
+                              <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-application-warning">
+                                {row.recommendation_label || "Recommended"}
+                              </Badge>
+                            )}
+                          </div>
+                          {row.short_description && <p className="mb-4 max-w-5xl text-sm leading-relaxed text-application-copy">{row.short_description}</p>}
+                          <dl className="grid gap-px overflow-hidden rounded-lg border border-application-line bg-application-line sm:grid-cols-2 lg:grid-cols-4">
+                            {[
+                              { icon: GraduationCap, label: "Eligibility", value: row.eligibility || "View the complete eligibility criteria" },
+                              { icon: ShieldCheck, label: "Selection process", value: row.selection_process || "See the official selection process" },
+                              { icon: TrendingUp, label: "Average package", value: row.average_package ? formatFee(row.average_package) : "Not published" },
+                              { icon: TrendingUp, label: "Highest package", value: row.highest_package ? formatFee(row.highest_package) : "Not published" },
+                              { icon: Info, label: "Cutoff guidance", value: row.cutoff_note || "Check the detailed application dossier" },
+                              { icon: CalendarClock, label: "Application window", value: `${formatDate(row.application_open_date)} – ${formatDate(row.application_deadline)}` },
+                              { icon: MapPin, label: "Campus / location", value: row.location || "See institution details" },
+                              { icon: GraduationCap, label: "Accepted exams", value: (row.accepted_exams ?? []).join(", ") || "See admission criteria" },
+                            ].map((highlight) => (
+                              <div key={highlight.label} className="bg-application-panel p-4">
+                                <dt className="flex items-center gap-2 text-sm font-semibold text-application-copy">
+                                  <highlight.icon className="h-4 w-4 shrink-0 text-application-blue" /> {highlight.label}
+                                </dt>
+                                <dd className="mt-2 text-sm font-medium leading-relaxed text-application-ink">{highlight.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                          {row.recommendation_note && (
+                            <div className="mt-4 border-l-2 border-application-blue bg-application-blue-soft px-4 py-3 text-sm text-application-copy">
+                              <span className="font-semibold text-application-ink">MBA Compass note:</span> {row.recommendation_note}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </article>
                   );
                 })}
