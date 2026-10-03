@@ -1,4 +1,5 @@
 - Keep MBA Compass course refund disclosure in one shared presentation component and apply its offer-schema rule only to MBA Compass course detail markup, because third-party institutes may have different policies.
 - Present the public MBA application directory as category-grouped dossiers rather than a wide data table, because students need section-led scanning on every screen size.
 - Keep every public MBA application dossier field editable in the College Applications admin module, with recommendations and SEO managed in their dedicated admin tools.
+- Keep College Applications list views summary-first and route all field editing through the full record dialog, because spreadsheet-style inline editing is too complex for routine administration.
 - Structure the student home as an institutional executive dashboard with applications, score overview, study priorities, and analytics in that order, because students need a clear action hierarchy.

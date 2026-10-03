@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,13 +36,14 @@ import { toast } from "@/hooks/use-toast";
 import {
   Archive,
   BarChart3,
+  CalendarDays,
   Copy,
-  ExternalLink,
   Eye,
+  IndianRupee,
+  MoreHorizontal,
   MousePointerClick,
   Pencil,
   Plus,
-  Save,
   Sparkles,
   Trash2,
   Upload,
@@ -58,18 +67,10 @@ import {
   TRACKER_SELECT,
   deadlineInfo,
   formatFee,
+  formatDate,
   matchesCategory,
   matchesDeadlineFilter,
 } from "@/lib/applicationTracker";
-
-type InlineEdit = Partial<
-  Pick<
-    TrackerRow,
-    "application_deadline" | "application_open_date" | "application_fee" | "program_fee" | "category" | "status" | "apply_url"
-  >
->;
-
-const toDateInput = (v: string | null | undefined) => (v ? new Date(v).toISOString().slice(0, 10) : "");
 
 type Props = { initialTab?: string; initialAction?: string };
 
@@ -86,8 +87,6 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
   const [category, setCategory] = useState<"all" | TrackerCategory>("all");
   const [deadlineFilter, setDeadlineFilter] = useState<DeadlineFilterKey>("all");
   const [showArchived, setShowArchived] = useState(false);
-  const [edits, setEdits] = useState<Record<string, InlineEdit>>({});
-  const [savingId, setSavingId] = useState<string | null>(null);
   const [formRow, setFormRow] = useState<TrackerRow | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -197,32 +196,6 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
     return map;
   }, [studentAppsQuery.data]);
 
-  const setEdit = (id: string, patch: InlineEdit) =>
-    setEdits((e) => ({ ...e, [id]: { ...(e[id] ?? {}), ...patch } }));
-
-  const saveInline = async (row: TrackerRow) => {
-    const patch = edits[row.id];
-    if (!patch) return;
-    if (patch.apply_url && !/^https?:\/\//i.test(patch.apply_url)) {
-      toast({ title: "Apply URL must start with http:// or https://", variant: "destructive" });
-      return;
-    }
-    setSavingId(row.id);
-    const { error } = await supabase.from("application_trackers").update(patch as never).eq("id", row.id);
-    setSavingId(null);
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
-      return;
-    }
-    setEdits((e) => {
-      const next = { ...e };
-      delete next[row.id];
-      return next;
-    });
-    toast({ title: `${row.name} updated`, description: "The change is live on the frontend." });
-    refresh();
-  };
-
   const toggleFlag = async (row: TrackerRow, field: "is_active" | "is_archived") => {
     const { error } = await supabase
       .from("application_trackers")
@@ -283,22 +256,33 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[1.375rem] font-semibold text-foreground">College Applications</h1>
           <p className="text-sm text-muted-foreground">
-            Manage the application tracker, deadlines, documents, student activity and intent analytics.
+            Manage colleges, exams, deadlines and student applications.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-1.5" onClick={() => setBulkSeoOpen(true)}>
-            <Wand2 className="h-4 w-4" /> Bulk AI SEO
-          </Button>
-          <Button variant="outline" className="gap-1.5" onClick={() => setImportOpen(true)}>
-            <Upload className="h-4 w-4" /> Bulk import
-          </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="More application actions">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>More actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setImportOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" /> Bulk import
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBulkSeoOpen(true)}>
+                <Wand2 className="mr-2 h-4 w-4" /> Bulk AI SEO
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button className="gap-1.5" onClick={() => { setFormRow(null); setFormOpen(true); }}>
-            <Plus className="h-4 w-4" /> Add Application
+            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add Application</span><span className="sm:hidden">Add</span>
           </Button>
         </div>
       </header>
@@ -367,11 +351,11 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
           </Card>
         </TabsContent>
 
-        {/* Applications listing with inline editing */}
+        {/* Applications listing */}
         <TabsContent value="applications" className="space-y-4 pt-4">
           <Card>
-            <CardContent className="grid gap-3 p-4 md:grid-cols-4">
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search college, exam or programme" />
+            <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(240px,1fr)_180px_180px_auto]">
+              <Input className="min-w-0" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search college, exam or programme" />
               <Select value={category} onValueChange={(v) => setCategory(v as "all" | TrackerCategory)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -388,11 +372,22 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant={showArchived ? "default" : "outline"} className="gap-1.5" onClick={() => setShowArchived((v) => !v)}>
+              <Button variant={showArchived ? "default" : "outline"} className="gap-1.5 lg:justify-self-end" onClick={() => setShowArchived((v) => !v)}>
                 <Archive className="h-4 w-4" /> {showArchived ? "Viewing archived" : "View archived"}
               </Button>
             </CardContent>
           </Card>
+
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <p className="min-w-0 text-sm text-muted-foreground">
+              Showing <span className="font-semibold text-foreground">{rows.length}</span> of {showArchived ? all.filter((r) => r.is_archived).length : all.filter((r) => !r.is_archived).length} records
+            </p>
+            {(search || category !== "all" || deadlineFilter !== "all") && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setCategory("all"); setDeadlineFilter("all"); }}>
+                Clear filters
+              </Button>
+            )}
+          </div>
 
           {trackersQuery.isLoading ? (
             <Skeleton className="h-96 w-full rounded-xl" />
@@ -404,160 +399,89 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
               </CardContent>
             </Card>
           ) : (
-            <div className="overflow-auto rounded-xl border border-border bg-card">
-              <table className="w-full min-w-[1200px] text-sm">
-                <thead className="bg-muted text-left text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2 font-medium">College / Exam</th>
-                    <th className="px-3 py-2 font-medium">Category</th>
-                    <th className="px-3 py-2 font-medium">Opens</th>
-                    <th className="px-3 py-2 font-medium">Deadline</th>
-                    <th className="px-3 py-2 font-medium">App fee</th>
-                    <th className="px-3 py-2 font-medium">Programme fee</th>
-                    <th className="px-3 py-2 font-medium">Status</th>
-                    <th className="px-3 py-2 font-medium">Apply URL</th>
-                    <th className="px-3 py-2 font-medium">Activity</th>
-                    <th className="px-3 py-2 text-right font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => {
-                    const edit = edits[row.id] ?? {};
-                    const dirty = Object.keys(edit).length > 0;
-                    return (
-                      <tr key={row.id} className="border-t border-border align-middle">
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            {row.logo_url && (
-                              <img src={row.logo_url} alt="" loading="lazy" decoding="async" className="h-8 w-8 rounded-md border border-border object-contain" />
+            <div className="grid gap-3 xl:grid-cols-2">
+              {rows.map((row) => {
+                const deadline = deadlineInfo(row);
+                return (
+                  <Card key={row.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-4">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
+                            {row.logo_url ? (
+                              <img src={row.logo_url} alt="" loading="lazy" decoding="async" className="h-9 w-9 object-contain" />
+                            ) : (
+                              <span className="font-semibold text-primary">{row.name.slice(0, 1)}</span>
                             )}
-                            <div className="min-w-0">
-                              <p className="truncate font-medium text-foreground">{row.name}</p>
-                              <p className="truncate text-muted-foreground">{row.program || row.location || "—"}</p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-foreground">{row.name}</p>
+                            <p className="truncate text-sm text-muted-foreground">{row.program || row.location || "No programme added"}</p>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              <Badge variant="secondary">{CATEGORY_LABEL[row.category] ?? row.category}</Badge>
+                              <Badge variant={row.is_active ? "default" : "outline"}>{row.is_active ? "Live" : "Inactive"}</Badge>
+                              {row.is_recommended && <Badge variant="outline">Recommended</Badge>}
                             </div>
-                            {!row.is_active && <Badge variant="outline">Inactive</Badge>}
                           </div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <Select
-                            value={edit.category ?? row.category}
-                            onValueChange={(v) => setEdit(row.id, { category: v })}
-                          >
-                            <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {ADMIN_CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
-                                <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="date"
-                            className="h-9 w-[150px]"
-                            value={toDateInput(edit.application_open_date ?? row.application_open_date)}
-                            onChange={(e) => setEdit(row.id, { application_open_date: e.target.value || null })}
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="date"
-                            className="h-9 w-[150px]"
-                            value={toDateInput(edit.application_deadline ?? row.application_deadline)}
-                            onChange={(e) =>
-                              setEdit(row.id, {
-                                application_deadline: e.target.value ? new Date(e.target.value).toISOString() : null,
-                              })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="number"
-                            className="h-9 w-[110px]"
-                            value={(edit.application_fee ?? row.application_fee ?? "").toString()}
-                            onChange={(e) =>
-                              setEdit(row.id, { application_fee: e.target.value === "" ? null : Number(e.target.value) })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="number"
-                            className="h-9 w-[130px]"
-                            value={(edit.program_fee ?? row.program_fee ?? "").toString()}
-                            onChange={(e) =>
-                              setEdit(row.id, { program_fee: e.target.value === "" ? null : Number(e.target.value) })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Select value={edit.status ?? row.status} onValueChange={(v) => setEdit(row.id, { status: v })}>
-                            <SelectTrigger className="h-9 w-[130px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="open">Open</SelectItem>
-                              <SelectItem value="upcoming">Upcoming</SelectItem>
-                              <SelectItem value="closed">Closed</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <p className="pt-1 text-muted-foreground">{deadlineInfo(row).label}</p>
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              className="h-9 w-[200px]"
-                              value={edit.apply_url ?? row.apply_url ?? ""}
-                              onChange={(e) => setEdit(row.id, { apply_url: e.target.value || null })}
-                              placeholder="https://…"
-                            />
-                            {row.apply_url && (
-                              <a href={row.apply_url} target="_blank" rel="noopener noreferrer" aria-label="Open apply URL">
-                                <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
-                          {row.view_count} views · {row.apply_click_count} clicks · {trackedCount[row.id] ?? 0} tracked
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex justify-end gap-1.5">
-                            {dirty && (
-                              <Button size="sm" className="gap-1.5" disabled={savingId === row.id} onClick={() => void saveInline(row)}>
-                                <Save className="h-3.5 w-3.5" /> {savingId === row.id ? "Saving…" : "Save"}
-                              </Button>
-                            )}
-                            <Button size="sm" variant="outline" onClick={() => { setFormRow(row); setFormOpen(true); }} aria-label="Edit">
-                              <Pencil className="h-3.5 w-3.5" />
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="shrink-0" aria-label={`More actions for ${row.name}`}>
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => void duplicate(row)} aria-label="Duplicate">
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => void toggleFlag(row, "is_active")}>
-                              {row.is_active ? "Deactivate" : "Activate"}
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setSeoRow(row)} aria-label="AI SEO">
-                              <Sparkles className="h-3.5 w-3.5 text-primary" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => void toggleFlag(row, "is_archived")} aria-label="Archive">
-                              <Archive className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setToDelete(row)} aria-label="Delete">
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel>Manage record</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setSeoRow(row)}><Sparkles className="mr-2 h-4 w-4" /> AI SEO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => void duplicate(row)}><Copy className="mr-2 h-4 w-4" /> Duplicate</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => void toggleFlag(row, "is_active")}>
+                              <Eye className="mr-2 h-4 w-4" /> {row.is_active ? "Make inactive" : "Make live"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => void toggleFlag(row, "is_archived")}>
+                              <Archive className="mr-2 h-4 w-4" /> {row.is_archived ? "Restore" : "Archive"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setToDelete(row)}>
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete permanently
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-px border-y border-border bg-border sm:grid-cols-4">
+                        <div className="bg-card p-3">
+                          <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Deadline</p>
+                          <p className="mt-1 font-medium text-foreground">{formatDate(row.application_deadline)}</p>
+                          <p className="text-sm text-muted-foreground">{deadline.label}</p>
+                        </div>
+                        <div className="bg-card p-3">
+                          <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><IndianRupee className="h-3.5 w-3.5" /> Application</p>
+                          <p className="mt-1 font-medium text-foreground">{formatFee(row.application_fee)}</p>
+                        </div>
+                        <div className="bg-card p-3">
+                          <p className="text-sm text-muted-foreground">Page activity</p>
+                          <p className="mt-1 font-medium text-foreground">{row.view_count} views</p>
+                          <p className="text-sm text-muted-foreground">{row.apply_click_count} apply clicks</p>
+                        </div>
+                        <div className="bg-card p-3">
+                          <p className="text-sm text-muted-foreground">Students</p>
+                          <p className="mt-1 font-medium text-foreground">{trackedCount[row.id] ?? 0} tracking</p>
+                          <p className="text-sm text-muted-foreground">Order {row.display_order}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end p-3">
+                        <Button size="sm" className="gap-1.5" onClick={() => { setFormRow(row); setFormOpen(true); }}>
+                          <Pencil className="h-3.5 w-3.5" /> Edit details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
-          <p className="text-sm text-muted-foreground">
-            Showing {rows.length} of {all.length} applications. Fees shown in the tracker:{" "}
-            {formatFee(rows[0]?.application_fee ?? null)} onwards.
-          </p>
         </TabsContent>
 
         <TabsContent value="documents" className="pt-4">
