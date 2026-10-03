@@ -338,7 +338,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
             <h1 className="text-3xl font-semibold leading-tight text-application-ink md:text-4xl">{meta.h1}</h1>
             <p className="max-w-3xl text-base text-application-copy">
             Every MBA application form in one place — college-wise last dates, application fees, programme fees,
-            accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT), programme fees and official
+            accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT) and official
             apply-online links for IIMs, Tier 1 and Tier 2 B-schools.
             </p>
             <Button asChild className="gap-2 shadow-sm">
