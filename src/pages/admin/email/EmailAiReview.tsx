@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { reviewEmailWithAi, type EmailReviewResult } from "@/lib/emailAiReview.functions";
 import type { EmailDraft } from "./emailShared";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const FIELD_LABEL: Record<string, string> = { fromName: "From name", subject: "Subject", heading: "Heading", body: "Body", button: "Button" };
 const VERDICT: Record<string, { label: string; cls: string }> = {
@@ -87,7 +88,7 @@ export default function EmailAiReview({ draft, onApply }: Props) {
               <Row label="Heading" before={draft.heading} after={s.heading} />
               <div>
                 <p className="text-sm text-muted-foreground">Body</p>
-                <div className="prose prose-sm max-w-none rounded-md border p-3 [&_img]:h-auto [&_img]:max-w-full" dangerouslySetInnerHTML={{ __html: s.bodyHtml }} />
+                <div className="prose prose-sm max-w-none rounded-md border p-3 [&_img]:h-auto [&_img]:max-w-full" dangerouslySetInnerHTML={{ __html: sanitizeHtml(s.bodyHtml) }} />
               </div>
               {s.ctas.map((c, i) => <Row key={i} label={`Button ${i + 1}`} before={draft.ctas[i]?.label} after={c.label} />)}
               <div className="flex gap-2 pt-2">

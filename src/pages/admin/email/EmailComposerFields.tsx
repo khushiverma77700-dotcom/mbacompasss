@@ -7,6 +7,8 @@ import { ImagePlus, Plus, Trash2 } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { type EmailDraft, previewPersonalize } from "./emailShared";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EmailAiReview from "./EmailAiReview";
 
 interface Props {
   draft: EmailDraft;
@@ -44,6 +46,15 @@ export default function EmailComposerFields({ draft, onChange, variables, sample
     set({ ctas: draft.ctas.map((c, j) => (j === i ? { ...c, ...p } : c)) });
 
   return (
+    <Tabs defaultValue="write">
+      <TabsList className="mb-4">
+        <TabsTrigger value="write">Write</TabsTrigger>
+        <TabsTrigger value="ai">AI Review</TabsTrigger>
+      </TabsList>
+      <TabsContent value="ai">
+        <EmailAiReview draft={draft} onApply={(d) => { onChange(d); setEditorKey((k) => k + 1); }} />
+      </TabsContent>
+      <TabsContent value="write">
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -116,5 +127,7 @@ export default function EmailComposerFields({ draft, onChange, variables, sample
         </div>
       </div>
     </div>
+      </TabsContent>
+    </Tabs>
   );
 }
