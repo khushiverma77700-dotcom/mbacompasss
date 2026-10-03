@@ -31,7 +31,8 @@ const SYSTEM = `You are an email deliverability expert reviewing an email that a
 Goal: maximise inbox placement in Gmail/Outlook (avoid Spam and Promotions where possible).
 Flag, field by field: spam-trigger words (free, guaranteed, act now, limited time, urgent, winner, 100%, cash, discount, offer, buy now, click here, risk-free, etc.), ALL CAPS, excessive punctuation (!!!, ???), emojis, currency/percent-heavy hype, misleading subject lines, vague "click here" buttons, link-heavy or image-only bodies, overly salesy tone, and missing personal/helpful context.
 Then write ONE improved version that keeps the same meaning, facts, links and {{variables}} exactly, sounds like a helpful personal note from an advisor, uses plain professional wording, no emojis, no ALL CAPS, subject under 60 characters, clear specific button text.
-Never invent facts, prices, dates or links. Keep button URLs identical and in the same order. Body must be simple HTML using only <p>, <strong>, <em>, <ul>, <ol>, <li>, <a href>, <br>, <h3>, and must keep any existing <img> tags and links.
+Never invent facts, prices, dates or links. Keep button URLs identical and in the same order. Body must be simple HTML using only <p>, <strong>, <em>, <ul>, <ol>, <li>, <a href>, <br>, <h3>, and must keep every existing <img> tag with the same src; give each image a short descriptive alt text if it has none.
+Only flag problems that actually appear in the text provided, and only problems your improved version fixes. Never flag {{variables}}, link URLs, image URLs, the unsubscribe footer or tracking, since the admin cannot change them. If the email is already clean, return an empty flags list - do not invent minor issues.
 Return ONLY JSON with this exact shape:
 {"score":0-100,"verdict":"inbox_likely"|"at_risk"|"spam_likely","summary":"one or two sentences","flags":[{"field":"fromName"|"subject"|"heading"|"body"|"button","severity":"high"|"medium"|"low","text":"the exact problem word or phrase","reason":"short reason"}],"suggestion":{"fromName":"","subject":"","heading":"","bodyHtml":"","ctas":[{"label":"","url":""}]}}`;
 
@@ -110,23 +111,38 @@ export const reviewEmailWithAi = createServerFn({ method: "POST" })
     try { parsed = extractJson(out); } catch { throw new Error("AI returned an unreadable answer. Please try again."); }
     const s = parsed?.suggestion ?? {};
     // Keep the admin's button URLs: AI may only change wording.
+    const fieldText: Record<string, string> = {
+      fromName: data.fromName, subject: data.subject, heading: data.heading,
+      body: data.bodyHtml, button: data.ctas.map((c) => c.label).join(" "),
+    };
+    const norm = (t: string) => t.toLowerCase().replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+    // Drop flags about text that isn't in the email, and about things the admin can't change.
+    const keepFlag = (f: EmailReviewFlag) => {
+      const t = f.text.trim();
+      if (!t) return true;
+      if (/\{\{|https?:\/\/|unsubscribe/i.test(t)) return false;
+      if (/alt\s*=/i.test(t)) return /alt\s*=\s*(""|'')/i.test(data.bodyHtml);
+      const hay = norm(fieldText[f.field] ?? "") + " " + norm(data.bodyHtml);
+      return hay.includes(norm(t).replace(/^["']|["']$/g, "")) || norm(t).length > 80;
+    };
+    const fillAlt = (html: string) => html.replace(/<img\b([^>]*?)\s*alt\s*=\s*(""|'')([^>]*)>/gi, '<img$1 alt="Image from MBA Compass"$3>').replace(/<img\b(?![^>]*\balt=)([^>]*)>/gi, '<img alt="Image from MBA Compass"$1>');
     const ctas = data.ctas.map((c, i) => ({ label: String(s?.ctas?.[i]?.label || c.label), url: c.url }));
     const verdict = ["inbox_likely", "at_risk", "spam_likely"].includes(parsed?.verdict) ? parsed.verdict : "at_risk";
     return {
       score: Math.max(0, Math.min(100, Number(parsed?.score) || 0)),
       verdict,
       summary: String(parsed?.summary || ""),
-      flags: (Array.isArray(parsed?.flags) ? parsed.flags : []).slice(0, 30).map((f: any) => ({
+      flags: (Array.isArray(parsed?.flags) ? parsed.flags : []).slice(0, 30).map((f: any): EmailReviewFlag => ({
         field: ["fromName", "subject", "heading", "body", "button"].includes(f?.field) ? f.field : "body",
         severity: ["high", "medium", "low"].includes(f?.severity) ? f.severity : "medium",
         text: String(f?.text || ""),
         reason: String(f?.reason || ""),
-      })),
+      })).filter(keepFlag),
       suggestion: {
         fromName: String(s.fromName || data.fromName),
         subject: String(s.subject || data.subject),
         heading: String(s.heading ?? data.heading),
-        bodyHtml: String(s.bodyHtml || data.bodyHtml),
+        bodyHtml: fillAlt(String(s.bodyHtml || data.bodyHtml)),
         ctas,
       },
     };
