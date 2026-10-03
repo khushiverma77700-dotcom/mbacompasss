@@ -143,9 +143,10 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
   const [applying, setApplying] = useState<string | null>(null);
   const [prefsReady, setPrefsReady] = useState(false);
   const [expandedHighlights, setExpandedHighlights] = useState<Set<string>>(() => new Set());
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
+    setNow(Date.now());
     const interval = window.setInterval(() => setNow(Date.now()), 1_000);
     return () => window.clearInterval(interval);
   }, []);
@@ -503,7 +504,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                   const highlightsOpen = expandedHighlights.has(row.id);
                   const finalFiveDays = info.isOpen && info.daysLeft !== null && info.daysLeft >= 0 && info.daysLeft <= 5;
                   const closingSoon = info.isOpen && info.daysLeft !== null && info.daysLeft > 5 && info.daysLeft <= 15;
-                  const liveCountdown = finalFiveDays ? countdownLabel(row.application_deadline, now) : null;
+                  const liveCountdown = finalFiveDays && now !== null ? countdownLabel(row.application_deadline, now) : "Calculating…";
                   return (
                     <article key={row.id} className="group overflow-hidden rounded-lg border border-application-line bg-application-panel shadow-sm transition-shadow duration-300 hover:shadow-md">
                       <div className="grid lg:grid-cols-12">
