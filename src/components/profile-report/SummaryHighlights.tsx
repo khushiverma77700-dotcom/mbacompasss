@@ -96,7 +96,7 @@ export const SummaryHighlights = ({ text, name, narrative, profileScore, rankPer
           <p className="text-base leading-relaxed text-foreground/85">{parsed.final_verdict}</p>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
