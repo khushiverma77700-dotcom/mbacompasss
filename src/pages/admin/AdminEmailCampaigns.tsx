@@ -187,7 +187,7 @@ export default function AdminEmailCampaigns() {
   // Live updates: realtime pushes on campaign/tracking changes plus a short poll for delivery statuses.
   const loadRef = useRef(loadAnalytics);
   loadRef.current = loadAnalytics;
-  const anyRunning = (analytics?.campaigns ?? []).some((c: any) => c.status === "running" || c.status === "paused");
+  const anyRunning = (analytics?.campaigns ?? []).some((c: any) => c.status === "running" || c.status === "paused" || c.status === "sending");
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | null = null;
     const soon = () => { if (!t) t = setTimeout(() => { t = null; loadRef.current(); }, 1500); };
