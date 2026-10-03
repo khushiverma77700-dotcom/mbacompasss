@@ -571,6 +571,39 @@ export const getCampaignRecipients = createServerFn({ method: "POST" })
 export { extractLinks };
 
 /** Sender identities with today's usage and 7-day health. */
+function istDayStart() {
+  const d = new Date(); d.setUTCHours(-5, -30, 0, 0);
+  if (d.getTime() > Date.now()) d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString();
+}
+
+export const getGlobalDailyCap = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data } = await admin.from("email_send_state").select("campaign_global_daily_cap").eq("id", 1).maybeSingle();
+    const { count } = await admin.from("email_campaign_recipients").select("id", { count: "exact", head: true })
+      .eq("status", "queued").eq("is_test_inbox", false).gte("queued_at", istDayStart());
+    return { cap: Number(data?.campaign_global_daily_cap ?? 1000), today: count ?? 0 };
+  });
+
+export const setGlobalDailyCap = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { cap: number }) => {
+    const cap = Math.floor(Number(d?.cap));
+    if (!Number.isFinite(cap) || cap < 1 || cap > 1000000) throw new Error("Cap must be between 1 and 1,000,000");
+    return { cap };
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any).from("email_send_state").update({ campaign_global_daily_cap: data.cap }).eq("id", 1);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const getSenderIdentities = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
