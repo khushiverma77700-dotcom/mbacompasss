@@ -246,7 +246,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .maybeSingle(),
           supabase
             .from("admin_permissions")
-            .select("allowed_sections")
+            .select("allowed_sections, is_full_access")
             .eq("email", user.email?.toLowerCase() || "")
             .maybeSingle(),
         ]);
@@ -260,8 +260,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (cancelled) return;
 
         const adminStatus = !!rolesRes.data;
+        // is_full_access means complete admin: always null (all sections),
+        // so newly added sections are visible without re-syncing the saved list.
         const nextAllowedSections = adminStatus
-          ? ((permRes.data?.allowed_sections as string[] | null) ?? null)
+          ? ((permRes.data as { is_full_access?: boolean } | null)?.is_full_access
+              ? null
+              : ((permRes.data?.allowed_sections as string[] | null) ?? null))
           : null;
 
         setIsAdmin(adminStatus);
