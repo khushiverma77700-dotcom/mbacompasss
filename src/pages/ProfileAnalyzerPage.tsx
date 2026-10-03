@@ -1231,7 +1231,7 @@ const ProfileAnalyzerPage = () => {
           <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }}>
 
             {/* ──── HERO with 3D Elements ──── */}
-            <section className="min-h-[90vh] flex items-center justify-center px-4 relative overflow-hidden">
+            <section className="min-h-[80vh] sm:min-h-[90vh] flex items-center justify-center px-4 py-16 sm:py-0 relative overflow-hidden">
               {/* Background glow orbs */}
               <GlowOrb className="hidden sm:block w-72 h-72 bg-primary/20 top-[-5%] left-[-5%]" />
               <GlowOrb className="hidden sm:block w-96 h-96 bg-primary/10 bottom-[-10%] right-[-8%]" />
@@ -1381,7 +1381,7 @@ const ProfileAnalyzerPage = () => {
                       else { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }
                     }}
                     disabled={!!(user && cooldownDate) && !isAdmin}
-                    className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
+                    className="text-base sm:text-lg px-6 sm:px-12 py-5 sm:py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
                   >
                     <span className="relative z-10 flex items-center gap-2">
                       {user && cooldownDate
@@ -1605,14 +1605,14 @@ const ProfileAnalyzerPage = () => {
 
         {/* ════════════════ FORM STEPS 1-4 ════════════════ */}
         {step >= 1 && step <= 5 && (
-          <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-12">
+          <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-6 sm:py-12">
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-muted-foreground">Step {step} of 5</span>
                 <span className="text-sm text-muted-foreground">{Math.round((step / 5) * 100)}%</span>
               </div>
               <Progress value={(step / 5) * 100} className="h-2" />
-              <div className="flex justify-between mt-2">
+              <div className="flex justify-between mt-3 gap-1">
                 {[
                   { icon: User, label: "Basic Info" },
                   { icon: GraduationCap, label: "Academics" },
@@ -1620,8 +1620,12 @@ const ProfileAnalyzerPage = () => {
                   { icon: Target, label: "Aspirations" },
                   { icon: IndianRupee, label: "Financial & Extras" },
                 ].map((s, i) => (
-                  <div key={s.label} className={`flex items-center gap-1.5 text-xs ${i + 1 <= step ? "text-primary font-semibold" : "text-muted-foreground"}`}>
-                    <s.icon className="w-3.5 h-3.5" /> {s.label}
+                  <div
+                    key={s.label}
+                    className={`flex items-center gap-1.5 text-xs min-w-0 ${i + 1 <= step ? "text-primary font-semibold" : "text-muted-foreground"}`}
+                  >
+                    <s.icon className="w-3.5 h-3.5 shrink-0" />
+                    <span className={i + 1 === step ? "truncate" : "hidden sm:inline truncate"}>{s.label}</span>
                   </div>
                 ))}
               </div>
@@ -1637,13 +1641,13 @@ const ProfileAnalyzerPage = () => {
                   {step === 5 && <><IndianRupee className="w-5 h-5 text-primary" /> Financial & Profile Extras</>}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-5 px-4 sm:px-6">
                 {step === 1 && (
                   <>
                     <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 mb-2">
-                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                        <Mail className="w-4 h-4 shrink-0" />
-                        Kindly enter your correct email — we will send your detailed report over your email.
+                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                        <Mail className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span>Kindly enter your correct email — we will send your detailed report over your email.</span>
                       </p>
                     </div>
                     <div className="space-y-1.5">
@@ -1664,7 +1668,7 @@ const ProfileAnalyzerPage = () => {
                           type="tel"
                           inputMode="numeric"
                           maxLength={10}
-                          placeholder="Enter 10-digit mobile number"
+                          placeholder="10-digit mobile number"
                           value={phone}
                           onChange={e => {
                             const v = e.target.value.replace(/\D/g, "").slice(0, 10);
