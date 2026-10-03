@@ -235,9 +235,9 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     let queued = 0;
     let failed = suppressed.size;
     const recRows: any[] = [];
-    const work = sendable.map((r) => async () => {
+    for (const r of sendable) {
       const unsub = tokens.get(r.email);
-      if (!unsub) { failed++; return; }
+      if (!unsub) { failed++; continue; }
       const trackingToken = crypto.randomUUID().replaceAll("-", "");
       const messageId = `admin_campaign_${campaignId}_${r.email}`;
       const subject = personalize(data.subject, r.vars, false);
@@ -246,37 +246,73 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       const pCtas = ctas.map((c) => ({ label: personalize(c.label, r.vars, false), url: c.url }));
       const html = buildHtml({ heading, bodyHtml, ctas: pCtas, token: trackingToken, preheader: htmlToText(bodyHtml).slice(0, 120) });
       const text = `${htmlToText(heading)}\n\n${htmlToText(bodyHtml)}\n\n${pCtas.map((c) => `${c.label}: ${c.url}`).join("\n")}\n\nTeam MBA Compass`;
-      const { error } = await admin.rpc("enqueue_email", {
-        queue_name: "transactional_emails",
+      queued++;
+      recRows.push({
+        campaign_id: campaignId, email: r.email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken,
+        status: "waiting", queued_at: null,
         payload: {
-          unsubscribe_token: unsub,
-          to: r.email,
-          from: `${fromName} <${SENDER_EMAIL}>`,
-          sender_domain: SENDER_DOMAIN,
-          subject, html, text,
-          purpose: "transactional",
-          label: "admin_campaign",
-          idempotency_key: messageId,
-          message_id: messageId,
-          queued_at: new Date().toISOString(),
+          unsubscribe_token: unsub, to: r.email, from: `${fromName} <${SENDER_EMAIL}>`, sender_domain: SENDER_DOMAIN,
+          subject, html, text, purpose: "transactional", label: "admin_campaign",
+          idempotency_key: messageId, message_id: messageId, queued_at: new Date().toISOString(),
         },
       });
-      if (error) { failed++; return; }
-      queued++;
-      recRows.push({ campaign_id: campaignId, email: r.email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken });
-    });
-    for (let i = 0; i < work.length; i += 20) await Promise.all(work.slice(i, i + 20).map((f) => f()));
-    for (let i = 0; i < recRows.length; i += 500) {
-      const { error: recErr } = await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 500));
-      if (recErr) console.error("campaign recipients insert failed", recErr.message);
+    }
+    for (let i = 0; i < recRows.length; i += 200) {
+      const { error: recErr } = await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 200));
+      if (recErr) { console.error("campaign recipients insert failed", recErr.message); queued -= recRows.slice(i, i + 200).length; failed += recRows.slice(i, i + 200).length; }
     }
 
+    const isTest = data.audience === "test";
     await admin.from("email_campaigns").update({
       recipient_count: queued, failed_count: failed,
-      status: queued === 0 ? "failed" : "sent",
+      status: queued === 0 ? "failed" : "running",
+      interval_seconds: isTest ? 5 : clampInt(data.intervalSeconds, 5, 86400, 30),
+      batch_size: isTest ? 10 : clampInt(data.batchSize, 1, 2000, 100),
+      next_send_at: new Date().toISOString(),
+      started_at: new Date().toISOString(),
     }).eq("id", campaignId);
-    try { await admin.rpc("email_queue_wake"); } catch { /* non-fatal */ }
+    if (queued > 0) {
+      await admin.rpc("email_campaign_wake");
+      await admin.rpc("email_campaign_tick");
+    }
     return { queued, failed, suppressed: suppressed.size, campaignId };
+  });
+
+function clampInt(v: unknown, min: number, max: number, fb: number) {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fb;
+}
+
+/** Change speed or pause/resume/stop a campaign. Speed changes apply to the remaining emails immediately. */
+export const updateCampaignDelivery = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { campaignId: string; intervalSeconds?: number; batchSize?: number; action?: "pause" | "resume" | "stop" }) => {
+    if (!i?.campaignId) throw new Error("campaignId required");
+    return i;
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: c } = await admin.from("email_campaigns").select("status,next_send_at").eq("id", data.campaignId).maybeSingle();
+    if (!c) throw new Error("Campaign not found");
+    const patch: Record<string, unknown> = {};
+    if (data.intervalSeconds != null) patch.interval_seconds = clampInt(data.intervalSeconds, 5, 86400, 30);
+    if (data.batchSize != null) patch.batch_size = clampInt(data.batchSize, 1, 2000, 100);
+    if (data.intervalSeconds != null && c.status === "running") {
+      // Re-time the next batch against the new interval so a faster speed takes effect right away.
+      patch.next_send_at = new Date(Date.now() + Math.min(5, Number(patch.interval_seconds)) * 1000).toISOString();
+    }
+    if (data.action === "pause" && c.status === "running") patch.status = "paused";
+    if (data.action === "resume" && c.status === "paused") { patch.status = "running"; patch.next_send_at = new Date().toISOString(); }
+    if (data.action === "stop" && (c.status === "running" || c.status === "paused")) {
+      patch.status = "completed"; patch.completed_at = new Date().toISOString(); patch.next_send_at = null;
+      await admin.from("email_campaign_recipients").update({ status: "cancelled", payload: null }).eq("campaign_id", data.campaignId).eq("status", "waiting");
+    }
+    const { error } = await admin.from("email_campaigns").update(patch).eq("id", data.campaignId);
+    if (error) throw new Error(error.message);
+    if (patch.status === "running") await admin.rpc("email_campaign_wake");
+    return { ok: true };
   });
 
 interface AnalyticsInput { from?: string; to?: string; campaignId?: string }
