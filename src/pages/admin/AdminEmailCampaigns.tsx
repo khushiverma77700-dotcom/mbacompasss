@@ -9,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Download, FlaskConical, Pause, Play, Send, Square, Gauge } from "lucide-react";
+import { ArrowLeft, Download, FlaskConical, Pause, Play, RotateCcw, Send, Square, Gauge } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { getCampaignRecipients, getEmailAnalytics, getEmailAudienceCounts, sendEmailCampaign, updateCampaignDelivery } from "@/lib/adminEmail.functions";
+import { getCampaignRecipients, getEmailAnalytics, getEmailAudienceCounts, resendFailedCampaign, sendEmailCampaign, updateCampaignDelivery } from "@/lib/adminEmail.functions";
 import EmailComposerFields from "./email/EmailComposerFields";
 import ContactListsTab from "./email/ContactListsTab";
 import TemplatesTab from "./email/TemplatesTab";
@@ -103,6 +103,24 @@ function StopButton({ id, onDone }: { id: string; onDone: () => void }) {
       catch (err: any) { toast.error(err?.message || "Could not stop"); }
       finally { setBusy(false); }
     }}><Square className="mr-1 h-4 w-4" /> Stop</Button>
+  );
+}
+
+function ResendFailedButton({ id, count, onDone }: { id: string; count: number; onDone: () => void }) {
+  const resend = useServerFn(resendFailedCampaign);
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button size="sm" variant="outline" disabled={busy} onClick={async (e) => {
+      e.stopPropagation();
+      if (!window.confirm(`Send this campaign again to the ${count.toLocaleString()} people it failed for? A new campaign will be created so the original report stays intact.`)) return;
+      setBusy(true);
+      try {
+        const r: any = await resend({ data: { campaignId: id } });
+        toast.success(`Resend started for ${r.resent.toLocaleString()} email(s)${r.skipped ? ` — ${r.skipped} skipped (unsubscribed/complained)` : ""}`);
+        onDone();
+      } catch (err: any) { toast.error(err?.message || "Could not resend"); }
+      finally { setBusy(false); }
+    }}><RotateCcw className="mr-1 h-4 w-4" /> {busy ? "Starting…" : "Resend to failed"}</Button>
   );
 }
 
@@ -515,6 +533,7 @@ export default function AdminEmailCampaigns() {
                         {STATUS_LABEL[c.status] ?? c.status}
                       </span>
                       {STOPPABLE.includes(c.status) && <StopButton id={c.id} onDone={loadAnalytics} />}
+                      {(c.stats.failed + c.stats.bounced) > 0 && <ResendFailedButton id={c.id} count={c.stats.failed + c.stats.bounced} onDone={loadAnalytics} />}
                     </div>
                     {(() => { const tot = c.stats.total || c.recipient_count || 0; const gone = tot - c.stats.remaining; return (
                       <>
