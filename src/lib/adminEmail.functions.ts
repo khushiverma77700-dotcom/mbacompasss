@@ -354,6 +354,98 @@ export const updateCampaignDelivery = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Re-send a campaign to everyone it failed for. Creates a new campaign so the original report stays intact. */
+export const resendFailedCampaign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { campaignId: string }) => {
+    if (!i?.campaignId) throw new Error("campaignId required");
+    return i;
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: c } = await admin.from("email_campaigns").select("*").eq("id", data.campaignId).maybeSingle();
+    if (!c) throw new Error("Campaign not found");
+
+    const failed: any[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data: r } = await admin.from("email_campaign_recipients")
+        .select("email,name,vars,is_test_inbox")
+        .eq("campaign_id", data.campaignId).in("status", ["failed", "bounced"]).range(from, from + 999);
+      failed.push(...(r ?? []));
+      if (!r || r.length < 1000) break;
+    }
+    if (!failed.length) throw new Error("No failed emails to resend");
+
+    const emails = failed.map((r) => String(r.email).toLowerCase());
+    const suppressed = new Set<string>();
+    for (let i = 0; i < emails.length; i += 200) {
+      const { data: rows } = await admin.from("suppressed_emails").select("email").in("email", emails.slice(i, i + 200));
+      (rows ?? []).forEach((r: any) => suppressed.add(String(r.email).toLowerCase()));
+    }
+    const sendable = failed.filter((r) => !suppressed.has(String(r.email).toLowerCase()));
+    if (!sendable.length) throw new Error("All failed addresses have unsubscribed or complained, so none can be resent");
+    const tokens = await tokensFor(admin, sendable.map((r) => String(r.email).toLowerCase()));
+
+    const campaignId = crypto.randomUUID();
+    const ctas: EmailCta[] = Array.isArray(c.ctas) ? c.ctas : (c.cta_url && c.cta_label ? [{ label: c.cta_label, url: c.cta_url }] : []);
+    const fromName = c.from_name || "MBA Compass";
+    const fromEmail = c.sender_identity_id
+      ? `${(await admin.from("email_sender_identities").select("local_part").eq("id", c.sender_identity_id).maybeSingle()).data?.local_part || "no-reply"}@${SENDER_DOMAIN}`
+      : SENDER_EMAIL;
+    const { error: campErr } = await admin.from("email_campaigns").insert({
+      id: campaignId,
+      name: `${c.name || c.subject} — resend to failed`,
+      from_name: fromName,
+      sender_identity_id: c.sender_identity_id ?? null,
+      sender_label: c.sender_label ?? null,
+      subject: c.subject, heading: c.heading, body: c.body, body_html: c.body_html,
+      ctas, cta_url: c.cta_url, cta_label: c.cta_label,
+      audience: "selected", list_name: `Failed from: ${c.name || c.subject}`,
+      template_id: c.template_id ?? null, template_name: c.template_name ?? null,
+      recipient_count: 0, failed_count: 0, status: "sending",
+      interval_seconds: c.interval_seconds ?? 30, batch_size: c.batch_size ?? 100,
+      created_by: context.userId,
+    });
+    if (campErr) throw new Error(`Could not save resend campaign: ${campErr.message}`);
+
+    const recRows: any[] = [];
+    for (const r of sendable) {
+      const email = String(r.email).toLowerCase();
+      const unsub = tokens.get(email);
+      if (!unsub) continue;
+      const trackingToken = crypto.randomUUID().replaceAll("-", "");
+      const messageId = `admin_campaign_${campaignId}_${email}`;
+      const vars: Record<string, string> = { email, name: r.name || "", first_name: (r.name || "").split(" ")[0], ...(r.vars ?? {}) };
+      const subject = personalize(c.subject, vars, false);
+      const heading = personalize(c.heading || "", vars, true);
+      const bodyHtml = personalize(c.body_html || "", vars, true);
+      const pCtas = ctas.map((x) => ({ label: personalize(x.label, vars, false), url: x.url }));
+      const html = buildHtml({ heading, bodyHtml, ctas: pCtas, token: trackingToken, preheader: htmlToText(bodyHtml).slice(0, 120) });
+      const text = `${htmlToText(heading)}\n\n${htmlToText(bodyHtml)}\n\n${pCtas.map((x) => `${x.label}: ${x.url}`).join("\n")}\n\nTeam MBA Compass`;
+      recRows.push({
+        campaign_id: campaignId, email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken,
+        status: "waiting", queued_at: null, is_test_inbox: !!r.is_test_inbox,
+        payload: {
+          unsubscribe_token: unsub, to: email, from: `${fromName} <${fromEmail}>`, sender_domain: SENDER_DOMAIN,
+          subject, html, text, purpose: "transactional", label: "admin_campaign",
+          idempotency_key: messageId, message_id: messageId, queued_at: new Date().toISOString(),
+        },
+      });
+    }
+    for (let i = 0; i < recRows.length; i += 200) {
+      const { error: recErr } = await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 200));
+      if (recErr) throw new Error(`Could not save recipients: ${recErr.message}`);
+    }
+    await admin.from("email_campaigns").update({
+      recipient_count: recRows.length, status: "running", next_send_at: new Date().toISOString(), started_at: new Date().toISOString(),
+    }).eq("id", campaignId);
+    await admin.rpc("email_campaign_wake");
+    await admin.rpc("email_campaign_tick");
+    return { ok: true, campaignId, resent: recRows.length, skipped: failed.length - sendable.length };
+  });
+
 interface AnalyticsInput { from?: string; to?: string; campaignId?: string }
 
 async function latestStatuses(admin: any, messageIds: string[]) {
