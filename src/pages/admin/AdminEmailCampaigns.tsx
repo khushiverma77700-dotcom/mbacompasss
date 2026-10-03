@@ -17,6 +17,7 @@ import EmailComposerFields from "./email/EmailComposerFields";
 import ContactListsTab from "./email/ContactListsTab";
 import TemplatesTab from "./email/TemplatesTab";
 import EngagementTab from "./email/EngagementTab";
+import SendersTab from "./email/SendersTab";
 import { BUILTIN_VARS, type EmailDraft, emptyDraft, pct } from "./email/emailShared";
 
 const db = supabase as any;
@@ -135,6 +136,9 @@ export default function AdminEmailCampaigns() {
   const [sending, setSending] = useState(false);
   const [intervalSec, setIntervalSec] = useState(30);
   const [batchSize, setBatchSize] = useState(100);
+  const [senders, setSenders] = useState<any[]>([]);
+  const [senderId, setSenderId] = useState("default");
+  const [senderTouched, setSenderTouched] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [sample, setSample] = useState<Record<string, string>>({});
 
@@ -157,6 +161,8 @@ export default function AdminEmailCampaigns() {
       db.from("email_templates").select("*").order("updated_at", { ascending: false }),
     ]);
     setLists(l ?? []); setTemplates(t ?? []);
+    const { data: sd } = await db.from("email_sender_identities").select("id,label,from_name,local_part,status,match_keywords").order("created_at");
+    setSenders(sd ?? []);
   };
   useEffect(() => { loadRefs(); fetchCounts({}).then((c: any) => setCounts(c)).catch(() => {}); }, []);
   useEffect(() => { loadAnalytics(); }, [range, campaignFilter]);
@@ -184,6 +190,13 @@ export default function AdminEmailCampaigns() {
     if (fresh && fresh !== detail.campaign) fetchRecipients({ data: { campaignId: fresh.id } }).then((d: any) => setDetail({ campaign: fresh, data: d })).catch(() => {});
   }, [analytics]);
 
+  // Rules: auto-pick a sender from its keywords until the admin chooses one by hand.
+  useEffect(() => {
+    if (senderTouched) return;
+    const text = `${campaignName} ${draft.subject}`.toLowerCase();
+    const hit = senders.find((x) => x.status === "active" && (x.match_keywords ?? []).some((k: string) => k && text.includes(k)));
+    setSenderId(hit?.id ?? "default");
+  }, [campaignName, draft.subject, senders, senderTouched]);
   const selectedList = lists.find((l) => l.id === listId);
   const variables = useMemo(() => [...new Set([...BUILTIN_VARS, ...((audience === "list" && selectedList?.variables) || [])])], [audience, selectedList]);
 
@@ -222,6 +235,7 @@ export default function AdminEmailCampaigns() {
     templateName: templates.find((t) => t.id === templateId)?.name,
     intervalSeconds: intervalSec,
     batchSize,
+    senderIdentityId: senderId !== "default" ? senderId : undefined,
   });
 
   const sendTest = async () => {
@@ -271,6 +285,7 @@ export default function AdminEmailCampaigns() {
           <TabsTrigger value="new">New Campaign</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="lists">Contact Lists</TabsTrigger>
+          <TabsTrigger value="senders">Senders</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-6">
@@ -536,6 +551,17 @@ export default function AdminEmailCampaigns() {
               </div>
             </div>
             <div className="space-y-2 rounded-lg border p-4">
+              <p className="font-medium">Sender</p>
+              <Select value={senderId} onValueChange={(v) => { setSenderId(v); setSenderTouched(true); }}>
+                <SelectTrigger className="max-w-md"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default — {draft.fromName || "MBA Compass"} &lt;no-reply@notify.mail.mbacompass.in&gt;</SelectItem>
+                  {senders.map((x) => <SelectItem key={x.id} value={x.id} disabled={x.status === "paused"}>{x.label} — {x.from_name} &lt;{x.local_part}@notify.mail.mbacompass.in&gt;{x.status === "paused" ? " (paused)" : ""}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">{senderTouched ? "Chosen by you." : "Picked automatically from the campaign name and subject."} Every email in this campaign uses this sender, its daily cap and its auto-pause rules.</p>
+            </div>
+            <div className="space-y-2 rounded-lg border p-4">
               <p className="font-medium">Sending speed</p>
               <SpeedFields interval={intervalSec} batch={batchSize} onInterval={setIntervalSec} onBatch={setBatchSize} />
               <p className="text-sm text-muted-foreground">You can change this while the campaign is running — it applies to the remaining emails straight away.</p>
@@ -546,6 +572,7 @@ export default function AdminEmailCampaigns() {
 
         <TabsContent value="templates"><TemplatesTab onUse={applyTemplate} onChanged={loadRefs} /></TabsContent>
         <TabsContent value="lists"><ContactListsTab onChanged={loadRefs} /></TabsContent>
+        <TabsContent value="senders"><SendersTab onChanged={loadRefs} /></TabsContent>
       </Tabs>
     </div>
   );
