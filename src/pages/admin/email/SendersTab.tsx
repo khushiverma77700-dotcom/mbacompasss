@@ -47,8 +47,8 @@ function SenderCard({ s, onSaved }: { s: any; onSaved: () => void }) {
       <div className="grid gap-3 md:grid-cols-2">
         <div><Label>Name</Label><Input value={f.label} onChange={(e) => set("label", e.target.value)} /></div>
         <div><Label>From name</Label><Input value={f.from_name} onChange={(e) => set("from_name", e.target.value)} /></div>
-        <div><Label>Address (before @{DOMAIN})</Label><Input value={f.local_part} onChange={(e) => set("local_part", e.target.value)} /></div>
-        <div><Label>Daily cap (India time)</Label><Input type="number" min={1} value={f.daily_cap} onChange={(e) => set("daily_cap", e.target.value)} /></div>
+        <div><Label>Address name</Label><Input value={f.local_part} onChange={(e) => set("local_part", e.target.value)} /></div>
+        <div><Label>Daily cap</Label><Input type="number" min={1} value={f.daily_cap} onChange={(e) => set("daily_cap", e.target.value)} /></div>
         <div className="md:col-span-2"><Label>Used for</Label><Input value={f.purpose ?? ""} onChange={(e) => set("purpose", e.target.value)} /></div>
         <div className="md:col-span-2"><Label>Auto-pick when campaign name or subject contains (comma separated)</Label><Input value={f.match_keywords} onChange={(e) => set("match_keywords", e.target.value)} /></div>
         <div><Label>Pause if bounces exceed (%)</Label><Input type="number" step="0.1" value={f.max_bounce_pct} onChange={(e) => set("max_bounce_pct", e.target.value)} /></div>
