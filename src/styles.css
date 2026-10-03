@@ -1393,11 +1393,12 @@ main>section:first-of-type{min-height:520px}
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   font-family: "Manrope Student", var(--font-body);
-  --student-surface: hsl(0 0% 100%);
-  --student-canvas: hsl(204 45% 98%);
-  --student-line: hsl(201 36% 88%);
-  --student-sky: hsl(199 89% 48%);
-  --student-emerald: hsl(160 84% 39%);
+  --student-surface: oklch(1 0 0);
+  --student-canvas: oklch(0.98 0.011 235);
+  --student-line: oklch(0.9 0.026 235);
+  --student-sky: oklch(0.55 0.14 241);
+  --student-ink: oklch(0.28 0.054 249);
+  --student-success: oklch(0.56 0.14 153);
 }
 .student-scope h1,
 .student-scope h2,
@@ -1405,7 +1406,7 @@ main>section:first-of-type{min-height:520px}
 .student-scope h4,
 .student-scope h5,
 .student-scope h6 { font-family: "Sora Student", var(--font-heading); letter-spacing: 0; }
-.student-shell { background: var(--student-canvas); }
+.student-shell { background: var(--student-canvas); color: var(--student-ink); }
 .student-overview { margin-inline: auto; max-width: 90rem; }
 .student-overview > [class*="rounded"],
 .student-overview > div > [class*="rounded"] { box-shadow: var(--card-shadow); }
@@ -1415,6 +1416,53 @@ main>section:first-of-type{min-height:520px}
     linear-gradient(90deg, hsl(199 89% 48% / 0.045) 1px, transparent 1px);
   background-size: 28px 28px;
 }
+.student-executive-panel { border-radius: 0.5rem; }
+.student-applications-callout {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
+  box-shadow: 0 14px 34px hsl(var(--primary) / 0.18);
+}
+.student-applications-watermark {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  width: 7rem;
+  height: 7rem;
+  transform: translateY(-50%);
+  opacity: 0.1;
+}
+.student-eyebrow {
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: hsl(var(--primary));
+}
+.student-applications-callout .student-eyebrow { color: hsl(var(--primary-foreground) / 0.78); }
+.student-page-heading {
+  border-bottom: 1px solid var(--student-line);
+  padding-bottom: 1.25rem;
+}
+.student-applications-nav {
+  border: 1px solid hsl(var(--primary) / 0.24);
+  background: hsl(var(--primary) / 0.07);
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+.student-nav-priority {
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: var(--text-xs);
+  line-height: 1.25;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+.student-kpi-strip > * { border-radius: 0.375rem; }
 .student-metric-card { background: hsl(0 0% 100% / 0.78); }
 .dark .student-scope {
   --student-surface: hsl(var(--card));
@@ -1435,6 +1483,8 @@ main>section:first-of-type{min-height:520px}
 
 /* Comfortable tap targets on phones */
 @media (max-width: 640px) {
+  .student-applications-callout { padding: 1rem; }
+  .student-applications-watermark { right: -1rem; width: 6rem; height: 6rem; }
   .student-scope button,
   .student-scope [role="button"],
   .student-scope a.btn,

@@ -17,6 +17,7 @@ import {
   ArrowRight, Sparkles, Zap, ShoppingBag, BarChart3, Activity, Brain, Timer,
   Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
   CalendarDays, GraduationCap, Rocket, ChevronRight, Star, Compass, Layers,
+  FileText,
 } from "lucide-react";
 
 import DailyTestCard from "@/components/student/DailyTestCard";
@@ -540,8 +541,24 @@ export default function StudentOverview() {
 
   return (
     <div className="student-overview space-y-4 sm:space-y-6">
+      <section className="student-applications-callout">
+        <div className="relative z-10 min-w-0">
+          <div className="student-eyebrow">Admissions workspace</div>
+          <h2 className="mt-1 text-xl font-bold text-primary-foreground sm:text-2xl">MBA Applications Directory</h2>
+          <p className="mt-1 max-w-2xl text-sm text-primary-foreground/80">
+            Keep every college and exam application, deadline and status in one organised dossier.
+          </p>
+          <Button asChild variant="secondary" className="mt-4 gap-2 bg-card text-primary hover:bg-card/90">
+            <Link to="/student/applications">
+              <FileText className="h-4 w-4" /> My Applications <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+        <FileText aria-hidden className="student-applications-watermark pointer-events-none" />
+      </section>
+
       {/* ── HERO: Personalised greeting + projection ring + smart CTAs ───────── */}
-      <Card className="student-hero-grid relative overflow-hidden border-sky-100 bg-card text-card-foreground shadow-sm dark:border-border">
+      <Card className="student-hero-grid student-executive-panel relative overflow-hidden border-sky-100 bg-card text-card-foreground shadow-sm dark:border-border">
 
         <div className="relative p-4 sm:p-6 md:p-8">
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center">
@@ -575,7 +592,7 @@ export default function StudentOverview() {
                       : "Take your first mock to unlock AI-powered insights and a personalised plan."}
                 </p>
 
-                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-4">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-4 student-priority-actions">
                   {resumeMock ? (
                     <Link to={mockAttemptPath(resumeMock.id)} className="col-span-2 sm:col-auto" onClick={ensureStudentMode} onPointerDown={ensureStudentMode}>
                       <Button size="lg" className="w-full sm:w-auto gap-2 shadow-sm">
@@ -651,7 +668,7 @@ export default function StudentOverview() {
           </div>
 
           {/* Inline KPI strip */}
-           <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 border-t border-sky-100 pt-4 dark:border-border">
+          <div className="student-kpi-strip relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 border-t border-sky-100 pt-4 dark:border-border">
             <Kpi label="Enrolled" value={stats.enrolledCount} />
             <Kpi label="Completed" value={stats.submittedCount} />
             <Kpi label="Avg Score" value={stats.avgScore} />
@@ -669,12 +686,15 @@ export default function StudentOverview() {
       <ExamCountdownStrip exams={examCountdowns} />
 
       {/* ── Quick navigation rail ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <section aria-labelledby="academic-hub-heading">
+        <SectionHeading icon={GraduationCap} title="Academic hub" subtitle="Your most-used preparation tools" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <QuickAction to="/student/personalized-hub" icon={Sparkles} label="Personalized Hub" desc="AI-built mocks" tone="violet" />
         <QuickAction to="/student/mocks/full-length" icon={Layers} label="Full-Length Mocks" desc="Exam-grade tests" tone="sky" />
         <QuickAction to="/student/performance" icon={BarChart3} label="Deep Analytics" desc="Track every metric" tone="emerald" />
         <QuickAction to="/student/leaderboard" icon={Trophy} label="Leaderboard" desc="See where you rank" tone="amber" />
-      </div>
+        </div>
+      </section>
 
       <DailyTestCard />
 

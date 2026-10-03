@@ -201,10 +201,11 @@ export default function MyApplicationsPortal() {
   ];
 
   return (
+    <div className="application-directory min-h-screen">
     <div className="mx-auto max-w-6xl space-y-6 p-4 pb-20 md:p-6">
       <SiteBreadcrumbs items={breadcrumbItems} />
 
-      <header className="space-y-3 rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-6 md:p-8">
+      <header className="space-y-3 rounded-lg border border-application-line bg-application-panel p-6 shadow-sm md:p-8">
         <div aria-hidden className="pointer-events-none" />
         <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
           My MBA applications {APPLICATION_YEAR}
@@ -346,6 +347,7 @@ export default function MyApplicationsPortal() {
           </ol>
         )}
       </section>
+    </div>
     </div>
   );
 }
