@@ -327,6 +327,8 @@ import { Route as StudentPersonalizedHubAttemptAttemptIdRouteImport } from './ro
 import { Route as StudentPersonalizedHubResultAttemptIdRouteImport } from './routes/student.personalized-hub.result.$attemptId'
 import { Route as StudentVocabularyWordSlugRouteImport } from './routes/student.vocabulary.word.$slug'
 import { Route as PublicInstituteSlugCourseCourseSlugRouteImport } from './routes/_public.institute.$slug.course.$courseSlug'
+import { Route as ApiPublicEmailClickTokenRouteImport } from './routes/api/public/email/click.$token'
+import { Route as ApiPublicEmailOpenTokenRouteImport } from './routes/api/public/email/open.$token'
 
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
@@ -1972,6 +1974,17 @@ const PublicInstituteSlugCourseCourseSlugRoute =
     path: '/course/$courseSlug',
     getParentRoute: () => PublicInstituteSlugRoute,
   } as any)
+const ApiPublicEmailClickTokenRoute =
+  ApiPublicEmailClickTokenRouteImport.update({
+    id: '/api/public/email/click/$token',
+    path: '/api/public/email/click/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicEmailOpenTokenRoute = ApiPublicEmailOpenTokenRouteImport.update({
+  id: '/api/public/email/open/$token',
+  path: '/api/public/email/open/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
@@ -2291,6 +2304,8 @@ export interface FileRoutesByFullPath {
   '/student/personalized-hub/result/$attemptId': typeof StudentPersonalizedHubResultAttemptIdRoute
   '/student/vocabulary/word/$slug': typeof StudentVocabularyWordSlugRoute
   '/institute/$slug/course/$courseSlug': typeof PublicInstituteSlugCourseCourseSlugRoute
+  '/api/public/email/click/$token': typeof ApiPublicEmailClickTokenRoute
+  '/api/public/email/open/$token': typeof ApiPublicEmailOpenTokenRoute
 }
 export interface FileRoutesByTo {
   '/business-inquiry': typeof BusinessInquiryRoute
@@ -2592,6 +2607,8 @@ export interface FileRoutesByTo {
   '/student/personalized-hub/result/$attemptId': typeof StudentPersonalizedHubResultAttemptIdRoute
   '/student/vocabulary/word/$slug': typeof StudentVocabularyWordSlugRoute
   '/institute/$slug/course/$courseSlug': typeof PublicInstituteSlugCourseCourseSlugRoute
+  '/api/public/email/click/$token': typeof ApiPublicEmailClickTokenRoute
+  '/api/public/email/open/$token': typeof ApiPublicEmailOpenTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -2913,6 +2930,8 @@ export interface FileRoutesById {
   '/student/personalized-hub/result/$attemptId': typeof StudentPersonalizedHubResultAttemptIdRoute
   '/student/vocabulary/word/$slug': typeof StudentVocabularyWordSlugRoute
   '/_public/institute/$slug/course/$courseSlug': typeof PublicInstituteSlugCourseCourseSlugRoute
+  '/api/public/email/click/$token': typeof ApiPublicEmailClickTokenRoute
+  '/api/public/email/open/$token': typeof ApiPublicEmailOpenTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -3234,6 +3253,8 @@ export interface FileRouteTypes {
     | '/student/personalized-hub/result/$attemptId'
     | '/student/vocabulary/word/$slug'
     | '/institute/$slug/course/$courseSlug'
+    | '/api/public/email/click/$token'
+    | '/api/public/email/open/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/business-inquiry'
@@ -3535,6 +3556,8 @@ export interface FileRouteTypes {
     | '/student/personalized-hub/result/$attemptId'
     | '/student/vocabulary/word/$slug'
     | '/institute/$slug/course/$courseSlug'
+    | '/api/public/email/click/$token'
+    | '/api/public/email/open/$token'
   id:
     | '__root__'
     | '/_public'
@@ -3855,6 +3878,8 @@ export interface FileRouteTypes {
     | '/student/personalized-hub/result/$attemptId'
     | '/student/vocabulary/word/$slug'
     | '/_public/institute/$slug/course/$courseSlug'
+    | '/api/public/email/click/$token'
+    | '/api/public/email/open/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -3874,6 +3899,8 @@ export interface RootRouteChildren {
   MocksCheckoutReturnRoute: typeof MocksCheckoutReturnRoute
   ApiPublicWhatsappDispatchRoute: typeof ApiPublicWhatsappDispatchRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  ApiPublicEmailClickTokenRoute: typeof ApiPublicEmailClickTokenRoute
+  ApiPublicEmailOpenTokenRoute: typeof ApiPublicEmailOpenTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -6104,6 +6131,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicInstituteSlugCourseCourseSlugRouteImport
       parentRoute: typeof PublicInstituteSlugRoute
     }
+    '/api/public/email/click/$token': {
+      id: '/api/public/email/click/$token'
+      path: '/api/public/email/click/$token'
+      fullPath: '/api/public/email/click/$token'
+      preLoaderRoute: typeof ApiPublicEmailClickTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/email/open/$token': {
+      id: '/api/public/email/open/$token'
+      path: '/api/public/email/open/$token'
+      fullPath: '/api/public/email/open/$token'
+      preLoaderRoute: typeof ApiPublicEmailOpenTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -7015,6 +7056,8 @@ const rootRouteChildren: RootRouteChildren = {
   MocksCheckoutReturnRoute: MocksCheckoutReturnRoute,
   ApiPublicWhatsappDispatchRoute: ApiPublicWhatsappDispatchRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  ApiPublicEmailClickTokenRoute: ApiPublicEmailClickTokenRoute,
+  ApiPublicEmailOpenTokenRoute: ApiPublicEmailOpenTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
