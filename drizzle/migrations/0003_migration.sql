@@ -1,0 +1,2 @@
+ALTER TABLE public.email_campaigns DROP CONSTRAINT IF EXISTS email_campaigns_audience_check;
+ALTER TABLE public.email_campaigns ADD CONSTRAINT email_campaigns_audience_check CHECK (audience = ANY (ARRAY['all','enrolled','selected','list','test']));

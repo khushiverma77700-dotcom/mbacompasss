@@ -209,7 +209,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     } else listName = { all: "All users", enrolled: "Enrolled students", selected: "Selected emails", test: "Test send" }[data.audience as "all"] ?? null;
 
     const fromName = (data.fromName || "MBA Compass").replace(/[<>"]/g, "").trim() || "MBA Compass";
-    await admin.from("email_campaigns").insert({
+    const { error: campErr } = await admin.from("email_campaigns").insert({
       id: campaignId,
       name: data.name?.trim() || data.subject,
       from_name: fromName,
@@ -230,6 +230,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       status: "sending",
       created_by: context.userId,
     });
+    if (campErr) throw new Error(`Could not save campaign: ${campErr.message}`);
 
     let queued = 0;
     let failed = suppressed.size;
@@ -265,7 +266,10 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       recRows.push({ campaign_id: campaignId, email: r.email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken });
     });
     for (let i = 0; i < work.length; i += 20) await Promise.all(work.slice(i, i + 20).map((f) => f()));
-    for (let i = 0; i < recRows.length; i += 500) await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 500));
+    for (let i = 0; i < recRows.length; i += 500) {
+      const { error: recErr } = await admin.from("email_campaign_recipients").insert(recRows.slice(i, i + 500));
+      if (recErr) console.error("campaign recipients insert failed", recErr.message);
+    }
 
     await admin.from("email_campaigns").update({
       recipient_count: queued, failed_count: failed,
