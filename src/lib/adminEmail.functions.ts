@@ -21,6 +21,8 @@ interface SendInput {
   testEmail?: string;
   templateId?: string;
   templateName?: string;
+  intervalSeconds?: number;
+  batchSize?: number;
 }
 
 interface Recipient { email: string; name?: string | null; vars: Record<string, string> }
