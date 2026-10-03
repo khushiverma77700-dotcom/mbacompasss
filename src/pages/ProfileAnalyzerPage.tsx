@@ -1612,7 +1612,7 @@ const ProfileAnalyzerPage = () => {
                 <span className="text-sm text-muted-foreground">{Math.round((step / 5) * 100)}%</span>
               </div>
               <Progress value={(step / 5) * 100} className="h-2" />
-              <div className="flex justify-between mt-2">
+              <div className="flex justify-between mt-3 gap-1">
                 {[
                   { icon: User, label: "Basic Info" },
                   { icon: GraduationCap, label: "Academics" },
@@ -1620,8 +1620,12 @@ const ProfileAnalyzerPage = () => {
                   { icon: Target, label: "Aspirations" },
                   { icon: IndianRupee, label: "Financial & Extras" },
                 ].map((s, i) => (
-                  <div key={s.label} className={`flex items-center gap-1.5 text-xs ${i + 1 <= step ? "text-primary font-semibold" : "text-muted-foreground"}`}>
-                    <s.icon className="w-3.5 h-3.5" /> {s.label}
+                  <div
+                    key={s.label}
+                    className={`flex items-center gap-1.5 text-xs min-w-0 ${i + 1 <= step ? "text-primary font-semibold" : "text-muted-foreground"}`}
+                  >
+                    <s.icon className="w-3.5 h-3.5 shrink-0" />
+                    <span className={i + 1 === step ? "truncate" : "hidden sm:inline truncate"}>{s.label}</span>
                   </div>
                 ))}
               </div>
