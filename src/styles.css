@@ -47,10 +47,54 @@
   --color-cat-medical: hsl(var(--cat-medical));
   --color-cat-engineering: hsl(var(--cat-engineering));
   --color-cat-government: hsl(var(--cat-government));
+  --color-application-canvas: var(--application-canvas);
+  --color-application-panel: var(--application-panel);
+  --color-application-ink: var(--application-ink);
+  --color-application-copy: var(--application-copy);
+  --color-application-line: var(--application-line);
+  --color-application-blue: var(--application-blue);
+  --color-application-blue-soft: var(--application-blue-soft);
+  --color-application-green: var(--application-green);
+  --color-application-green-soft: var(--application-green-soft);
+  --color-application-warning: var(--application-warning);
+  --color-application-warning-soft: var(--application-warning-soft);
+  --color-application-danger: var(--application-danger);
+  --color-application-danger-soft: var(--application-danger-soft);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+}
+
+.application-directory {
+  --application-canvas: #f8fbfe;
+  --application-panel: #ffffff;
+  --application-ink: #13243a;
+  --application-copy: #52677d;
+  --application-line: #dceffd;
+  --application-blue: #1677b8;
+  --application-blue-soft: #eaf6fd;
+  --application-green: #198754;
+  --application-green-soft: #eaf7f0;
+  --application-warning: #a86108;
+  --application-warning-soft: #fff7e6;
+  --application-danger: #b63d4a;
+  --application-danger-soft: #fff0f2;
+  background: var(--application-canvas);
+  color: var(--application-ink);
+  font-family: "Manrope Student", var(--font-body);
+}
+
+.application-directory h1,
+.application-directory h2,
+.application-directory h3 {
+  font-family: "Sora Student", var(--font-heading);
+  letter-spacing: 0;
+}
+
+.application-directory img {
+  max-width: 100%;
+  height: auto;
 }
 
 @theme {

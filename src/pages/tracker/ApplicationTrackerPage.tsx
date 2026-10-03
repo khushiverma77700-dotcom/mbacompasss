@@ -18,6 +18,8 @@ import {
 import {
   ArrowUpRight,
   CalendarClock,
+  ChevronRight,
+  CircleCheckBig,
   Info,
   LayoutDashboard,
   RotateCcw,
@@ -68,12 +70,12 @@ import NotificationOptIn from "@/components/NotificationOptIn";
 
 
 const TONE_CLASS: Record<DeadlineTone, string> = {
-  today: "bg-rose-50 text-rose-700 border-rose-200",
-  urgent: "bg-orange-50 text-orange-700 border-orange-200",
-  soon: "bg-amber-50 text-amber-700 border-amber-200",
-  open: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  closed: "bg-slate-100 text-slate-600 border-slate-200",
-  unknown: "bg-slate-100 text-slate-600 border-slate-200",
+  today: "bg-application-danger-soft text-application-danger border-application-danger/20",
+  urgent: "bg-application-warning-soft text-application-warning border-application-warning/20",
+  soon: "bg-application-warning-soft text-application-warning border-application-warning/20",
+  open: "bg-application-green-soft text-application-green border-application-green/20",
+  closed: "bg-muted text-muted-foreground border-border",
+  unknown: "bg-muted text-muted-foreground border-border",
 };
 
 const LogoBadge = ({ row }: { row: TrackerRow }) => {
@@ -86,14 +88,14 @@ const LogoBadge = ({ row }: { row: TrackerRow }) => {
         decoding="async"
         width={44}
         height={44}
-        className="h-11 w-11 shrink-0 rounded-xl border border-sky-100 bg-white object-contain p-1"
+        className="h-11 w-11 shrink-0 rounded-lg border border-application-line bg-application-panel object-contain p-1"
       />
     );
   }
   return (
     <span
       aria-hidden
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-sky-100 bg-sky-50 text-base font-semibold text-sky-700"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-application-line bg-application-blue-soft text-base font-semibold text-application-blue"
     >
       {row.name.slice(0, 2).toUpperCase()}
     </span>
@@ -246,6 +248,22 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
   const hasInside = (row: TrackerRow) => !!row.inside_info_url || !!row.inside_info_notes;
 
+  const groupedVisible = useMemo(() => {
+    const definitions = [
+      { key: "exam", title: "MBA entrance examinations", note: "Registration windows, test fees and official exam applications." },
+      { key: "iim", title: "IIM applications", note: "Application dossiers for Indian Institutes of Management." },
+      { key: "tier1", title: "Tier 1 non-IIM institutions", note: "Priority applications for leading independent business schools." },
+      { key: "tier2", title: "Tier 2 non-IIM institutions", note: "Additional programmes to strengthen a balanced application portfolio." },
+    ];
+    const groups = definitions
+      .map((definition) => ({ ...definition, rows: visible.filter((row) => row.category === definition.key) }))
+      .filter((group) => group.rows.length > 0);
+    const known = new Set(definitions.map((definition) => definition.key));
+    const other = visible.filter((row) => !known.has(row.category));
+    if (other.length > 0) groups.push({ key: "other", title: "Other MBA applications", note: "Additional active application opportunities.", rows: other });
+    return groups;
+  }, [visible]);
+
   const breadcrumbItems = presetCategory
     ? [
         { name: `MBA College & Exam Application ${APPLICATION_YEAR}`, url: APPLICATION_BASE },
@@ -254,7 +272,8 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
     : [{ name: `MBA College & Exam Application ${APPLICATION_YEAR}`, url: APPLICATION_BASE }];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 pb-20 md:p-6">
+    <div className="application-directory min-h-screen">
+    <div className="mx-auto max-w-7xl space-y-8 p-4 pb-20 md:p-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema(meta, scoped)) }}
@@ -262,36 +281,36 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
       <SiteBreadcrumbs items={breadcrumbItems} />
 
-      <header className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-6 md:p-10">
-        <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-sky-200/30 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
-        <div className="relative space-y-4">
-          <Badge variant="outline" className="border-sky-200 bg-white/80 text-sky-700">
-            <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Deadlines verified daily by the MBA Compass team
-          </Badge>
-          <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">{meta.h1}</h1>
-          <p className="max-w-3xl text-base text-slate-600">
+      <header className="border-b border-application-line pb-8 pt-2 md:pb-10">
+        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+          <div className="max-w-4xl space-y-4">
+            <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
+              <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Verified daily by the MBA Compass research desk
+            </Badge>
+            <h1 className="text-3xl font-semibold leading-tight text-application-ink md:text-4xl">{meta.h1}</h1>
+            <p className="max-w-3xl text-base text-application-copy">
             Every MBA application form in one place — college-wise last dates, application fees, programme fees,
             accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT), cutoff notes, average package and official
             apply-online links for IIMs, Tier 1 and Tier 2 B-schools. Start an application and we keep it updated inside{" "}
-            <Link to="/mba-application/my-applications" className="font-medium text-sky-700 underline-offset-2 hover:underline">
+            <Link to="/mba-application/my-applications" className="font-semibold text-application-blue underline-offset-2 hover:underline">
               My Applications
             </Link>
             .
-          </p>
-          <div className="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-4">
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line sm:grid-cols-4 lg:min-w-[470px]">
             {[
               { label: "Applications listed", value: stats.total, icon: LayoutDashboard },
               { label: "Currently open", value: stats.open, icon: ShieldCheck },
               { label: "Deadline today", value: stats.today, icon: Timer },
               { label: "Closing this week", value: stats.week, icon: CalendarClock },
             ].map((s) => (
-              <div key={s.label} className="rounded-2xl border border-sky-100 bg-white/80 p-3">
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <s.icon className="h-4 w-4 text-sky-600" />
+              <div key={s.label} className="bg-application-panel p-4">
+                <div className="flex items-center gap-2 text-sm text-application-copy">
+                  <s.icon className="h-4 w-4 text-application-blue" />
                   {s.label}
                 </div>
-                <div className="pt-1 text-[1.375rem] font-semibold text-slate-900">{s.value}</div>
+                <div className="pt-2 text-xl font-semibold text-application-ink">{s.value}</div>
               </div>
             ))}
           </div>
@@ -307,11 +326,11 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       {/* Filters */}
       <section
         aria-label="Filter MBA applications"
-        className="sticky top-16 z-20 space-y-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80"
+        className="sticky top-16 z-20 space-y-4 rounded-lg border border-application-line bg-application-panel/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-application-panel/90"
       >
 
         <div>
-          <p className="pb-2 text-sm font-medium text-slate-500">Application deadline</p>
+          <p className="pb-2 text-sm font-semibold text-application-copy">Application deadline</p>
           <div className="flex flex-wrap gap-2">
             {DEADLINE_FILTERS.map((f) => (
               <Button
@@ -320,7 +339,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                 size="sm"
                 variant={deadlineFilter === f.key ? "default" : "outline"}
                 onClick={() => setDeadlineFilter(f.key)}
-                className="rounded-full"
+                className="rounded-md"
               >
                 {f.label}
               </Button>
@@ -329,7 +348,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
         </div>
         {!presetCategory && (
           <div>
-            <p className="pb-2 text-sm font-medium text-slate-500">Category</p>
+            <p className="pb-2 text-sm font-semibold text-application-copy">Category</p>
             <div className="flex flex-wrap gap-2">
               {CATEGORY_FILTERS.map((f) => (
                 <Button
@@ -338,7 +357,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                   size="sm"
                   variant={category === f.key ? "default" : "outline"}
                   onClick={() => setCategory(f.key)}
-                  className="rounded-full"
+                  className="rounded-md"
                 >
                   {f.key === "recommended" && <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
                   {f.label}
@@ -349,14 +368,14 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
         )}
         {exams.length > 0 && (
           <div>
-            <p className="pb-2 text-sm font-medium text-slate-500">Entrance exam</p>
+            <p className="pb-2 text-sm font-semibold text-application-copy">Entrance exam</p>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 size="sm"
                 variant={exam === null ? "default" : "outline"}
                 onClick={() => setExam(null)}
-                className="rounded-full"
+                className="rounded-md"
               >
                 All exams
               </Button>
@@ -367,7 +386,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                   size="sm"
                   variant={exam === e ? "default" : "outline"}
                   onClick={() => setExam(exam === e ? null : e)}
-                  className="rounded-full"
+                  className="rounded-md"
                 >
                   {e}
                 </Button>
@@ -377,7 +396,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
         )}
         <div className="flex flex-col gap-2 pt-1 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-application-copy" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -395,8 +414,8 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       {/* Results */}
       {!isLoading && !isError && (
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-          <p className="text-sm text-slate-600">
-            Showing <span className="font-medium text-slate-900">{visible.length}</span> of {stats.total}{" "}
+          <p className="text-sm text-application-copy">
+            Showing <span className="font-semibold text-application-ink">{visible.length}</span> of {stats.total}{" "}
             applications{search ? ` for “${search}”` : ""}
           </p>
           <NotificationOptIn compact />
@@ -405,206 +424,131 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-44 w-full rounded-lg" />
           ))}
         </div>
       ) : isError ? (
-        <Card>
-          <CardContent className="p-8 text-center text-slate-600">
+        <Card className="rounded-lg border-application-line">
+          <CardContent className="p-8 text-center text-application-copy">
             We could not load applications right now. Please refresh the page.
           </CardContent>
         </Card>
       ) : visible.length === 0 ? (
-        <Card>
+        <Card className="rounded-lg border-application-line">
           <CardContent className="space-y-2 p-10 text-center">
-            <p className="text-base font-medium text-slate-900">No applications match these filters</p>
-            <p className="text-sm text-slate-500">Try clearing the search or switching back to “All”.</p>
+            <p className="text-base font-medium text-application-ink">No applications match these filters</p>
+            <p className="text-sm text-application-copy">Try clearing the search or switching back to “All”.</p>
             <Button variant="outline" onClick={resetFilters}>
               Reset filters
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <>
-          {/* Desktop table — scrolls sideways when the columns exceed the width */}
-          <div className="hidden rounded-2xl border border-slate-200 bg-white lg:block">
-            <div
-              className="overflow-x-auto overscroll-x-contain rounded-2xl [scrollbar-width:thin]"
-              tabIndex={0}
-              role="region"
-              aria-label="MBA application table — scroll sideways for more columns"
-            >
-            <table className="w-full min-w-[1180px] text-sm">
-              <caption className="sr-only">
-                MBA college and exam application forms with last dates, application fees and programme fees
-              </caption>
-              <thead className="bg-slate-50 text-left text-sm text-slate-500">
-                <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">College / Exam</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Category</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Opens</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Last date</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Application fee</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Programme fee</th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((row) => {
+        <div className="space-y-10">
+          {groupedVisible.map((group) => (
+            <section key={group.key} aria-labelledby={`application-group-${group.key}`} className="space-y-4">
+              <div className="flex flex-col justify-between gap-3 border-b border-application-line pb-3 sm:flex-row sm:items-end">
+                <div>
+                  <div className="mb-2 h-1 w-10 rounded-full bg-application-blue" />
+                  <h2 id={`application-group-${group.key}`} className="text-xl font-semibold text-application-ink">{group.title}</h2>
+                  <p className="mt-1 text-sm text-application-copy">{group.note}</p>
+                </div>
+                <span className="text-sm font-semibold text-application-blue">{group.rows.length} applications</span>
+              </div>
+
+              <div className="space-y-3">
+                {group.rows.map((row) => {
                   const info = deadlineInfo(row);
                   return (
-                    <tr key={row.id} className="border-t border-slate-100 align-middle hover:bg-sky-50/40">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <LogoBadge row={row} />
-                          <div className="min-w-0">
-                            <Link
-                              to={collegeUrl(row)}
-                              className="block truncate font-medium text-slate-900 hover:text-sky-700"
-                            >
-                              {row.name}
-                            </Link>
-                            <p className="truncate text-sm text-slate-500">
-                              {row.program || row.location || (row.accepted_exams ?? []).join(", ") || "—"}
-                            </p>
+                    <article key={row.id} className="group overflow-hidden rounded-lg border border-application-line bg-application-panel shadow-sm transition-shadow duration-300 hover:shadow-md">
+                      <div className="grid lg:grid-cols-12">
+                        <div className="border-b border-application-line bg-application-blue-soft/50 p-5 lg:col-span-4 lg:border-b-0 lg:border-r md:p-6">
+                          <div className="flex items-start gap-4">
+                            <LogoBadge row={row} />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-base font-semibold leading-snug text-application-ink transition-colors group-hover:text-application-blue">
+                                <Link to={collegeUrl(row)}>{row.name}</Link>
+                              </h3>
+                              <p className="mt-1 text-sm text-application-copy">{row.program || row.location || "MBA application"}</p>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
+                                  {CATEGORY_LABEL[row.category] ?? row.category}
+                                </Badge>
+                                {row.is_recommended && (
+                                  <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-application-warning">
+                                    {row.recommendation_label || "Recommended"}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
-                          {CATEGORY_LABEL[row.category] ?? row.category}
-                        </Badge>
-                        {row.is_recommended && (
-                          <Badge variant="outline" className="ml-1 border-amber-200 bg-amber-50 text-amber-700">
-                            {row.recommendation_label || "Recommended"}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm ${TONE_CLASS[info.tone]}`}>
-                          <Timer className="h-3.5 w-3.5" />
-                          {info.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">{formatDate(row.application_open_date)}</td>
-                      <td className="px-4 py-3 text-slate-600">{formatDate(row.application_deadline)}</td>
-                      <td className="px-4 py-3 text-slate-600">{formatFee(row.application_fee)}</td>
-                      <td className="px-4 py-3 text-slate-600">{formatFee(row.program_fee)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          {hasInside(row) && (
-                            <Button asChild size="sm" variant="outline" className="gap-1.5">
-                              <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, "inside_info")}>
-                                <Info className="h-3.5 w-3.5" /> Inside Information
+
+                        <div className="grid grid-cols-2 gap-px bg-application-line lg:col-span-5">
+                          {[
+                            { label: "Application opens", value: formatDate(row.application_open_date) },
+                            { label: "Last date", value: formatDate(row.application_deadline) },
+                            { label: "Application fee", value: formatFee(row.application_fee) },
+                            { label: "Programme fee", value: formatFee(row.program_fee) },
+                          ].map((item) => (
+                            <div key={item.label} className="bg-application-panel p-4 md:p-5">
+                              <dt className="text-sm font-semibold text-application-copy">{item.label}</dt>
+                              <dd className="mt-1 text-base font-semibold text-application-ink">{item.value}</dd>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex flex-col justify-between gap-4 border-t border-application-line bg-application-canvas p-5 lg:col-span-3 lg:border-l lg:border-t-0 md:p-6">
+                          <div>
+                            <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm font-semibold ${TONE_CLASS[info.tone]}`}>
+                              {info.isOpen ? <Timer className="h-3.5 w-3.5" /> : <CircleCheckBig className="h-3.5 w-3.5" />}
+                              {info.label}
+                            </span>
+                            <p className="mt-3 text-sm text-application-copy">
+                              {(row.accepted_exams ?? []).length > 0 ? `Accepts ${(row.accepted_exams ?? []).join(", ")}` : "See the complete eligibility and selection details."}
+                            </p>
+                          </div>
+                          <div className="grid gap-2">
+                            <Button
+                              disabled={applying === row.id || !info.isOpen}
+                              onClick={() => void handleApply(row)}
+                              className="w-full gap-1.5 rounded-md"
+                            >
+                              {info.isOpen ? "Apply now" : "Applications closed"}
+                              {info.isOpen && <ArrowUpRight className="h-4 w-4" />}
+                            </Button>
+                            <Button asChild variant="outline" className="w-full gap-1.5 rounded-md">
+                              <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, hasInside(row) ? "inside_info" : "view")}>
+                                {hasInside(row) ? <Info className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                {hasInside(row) ? "Inside information" : "View application dossier"}
                               </Link>
                             </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            disabled={applying === row.id || !info.isOpen}
-                            onClick={() => void handleApply(row)}
-                            className="gap-1.5"
-                          >
-                            {info.isOpen ? "Apply Now" : "Closed"}
-                            {info.isOpen && <ArrowUpRight className="h-3.5 w-3.5" />}
-                          </Button>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </article>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-          </div>
-
-          {/* Mobile / tablet cards */}
-          <div className="grid gap-3 lg:hidden">
-            {visible.map((row) => {
-              const info = deadlineInfo(row);
-              return (
-                <article key={row.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="flex items-start gap-3">
-                    <LogoBadge row={row} />
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-base font-medium leading-snug text-slate-900">
-                        <Link to={collegeUrl(row)} className="hover:text-sky-700">
-                          {row.name}
-                        </Link>
-                      </h2>
-                      <p className="truncate text-sm text-slate-500">
-                        {row.program || row.location || (row.accepted_exams ?? []).join(", ") || "—"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-3">
-                    <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
-                      {CATEGORY_LABEL[row.category] ?? row.category}
-                    </Badge>
-                    {row.is_recommended && (
-                      <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-                        {row.recommendation_label || "Recommended"}
-                      </Badge>
-                    )}
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm ${TONE_CLASS[info.tone]}`}>
-                      <Timer className="h-3.5 w-3.5" /> {info.label}
-                    </span>
-                  </div>
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 text-sm">
-                    <div>
-                      <dt className="text-slate-500">Opens</dt>
-                      <dd className="text-slate-900">{formatDate(row.application_open_date)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-slate-500">Last date</dt>
-                      <dd className="text-slate-900">{formatDate(row.application_deadline)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-slate-500">Application fee</dt>
-                      <dd className="text-slate-900">{formatFee(row.application_fee)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-slate-500">Programme fee</dt>
-                      <dd className="text-slate-900">{formatFee(row.program_fee)}</dd>
-                    </div>
-                  </dl>
-                  <div className="flex flex-col gap-2 pt-4 sm:flex-row">
-                    {hasInside(row) && (
-                      <Button asChild variant="outline" className="flex-1 gap-1.5">
-                        <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, "inside_info")}>
-                          <Info className="h-4 w-4" /> Inside Information
-                        </Link>
-                      </Button>
-                    )}
-                    <Button
-                      className="flex-1 gap-1.5"
-                      disabled={applying === row.id || !info.isOpen}
-                      onClick={() => void handleApply(row)}
-                    >
-                      {info.isOpen ? "Apply Now" : "Closed"}
-                    </Button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </>
+              </div>
+            </section>
+          ))}
+        </div>
       )}
 
       {/* Internal links to the category landing pages */}
       {!presetCategory && (
-        <section aria-label="Browse MBA applications by category" className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-[1.375rem] font-semibold text-slate-900">Browse MBA application forms by category</h2>
+        <section aria-label="Browse MBA applications by category" className="rounded-lg border border-application-line bg-application-panel p-5">
+          <h2 className="text-xl font-semibold text-application-ink">Browse MBA application forms by category</h2>
           <div className="grid gap-2 pt-3 sm:grid-cols-2 lg:grid-cols-3">
             {CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
               <Link
                 key={c.key}
                 to={categoryUrl(c.key as Exclude<CategoryKey, "all">)}
-                className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 hover:border-sky-200 hover:bg-sky-50/60"
+                className="flex items-center justify-between rounded-md border border-application-line px-4 py-3 text-sm text-application-copy transition-colors hover:bg-application-blue-soft hover:text-application-blue"
               >
-                {c.label} — application forms, deadlines &amp; fees {APPLICATION_YEAR}
+                <span>{c.label} — application forms, deadlines &amp; fees {APPLICATION_YEAR}</span>
+                <ChevronRight className="h-4 w-4 shrink-0" />
               </Link>
             ))}
           </div>
@@ -612,17 +556,18 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       )}
 
       {/* FAQs (also emitted as FAQPage schema above) */}
-      <section aria-label="MBA application FAQs" className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-[1.375rem] font-semibold text-slate-900">MBA application FAQs</h2>
+      <section aria-label="MBA application FAQs" className="rounded-lg border border-application-line bg-application-panel p-5">
+        <h2 className="text-xl font-semibold text-application-ink">MBA application FAQs</h2>
         <Accordion type="single" collapsible className="pt-2">
           {faqs.map((faq, i) => (
             <AccordionItem key={faq.question} value={`faq-${i}`}>
               <AccordionTrigger className="text-left text-base">{faq.question}</AccordionTrigger>
-              <AccordionContent className="text-sm text-slate-600">{faq.answer}</AccordionContent>
+              <AccordionContent className="text-sm text-application-copy">{faq.answer}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
       </section>
+    </div>
     </div>
   );
 }
