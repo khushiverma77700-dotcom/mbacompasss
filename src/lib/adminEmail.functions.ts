@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const SENDER_DOMAIN = "notify.mbacompass.in";
-const SENDER_FROM = "MBA Compass <no-reply@notify.mbacompass.in>";
+const SENDER_DOMAIN = "notify.mail.mbacompass.in";
+const SENDER_FROM = "MBA Compass <no-reply@notify.mail.mbacompass.in>";
 
 export type EmailAudience = "all" | "enrolled" | "selected";
 
