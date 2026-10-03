@@ -21,6 +21,10 @@
 ## Preview stability
 - [x] Resolve all errors reported in `/tmp/observability/build-errors.log`
 
+## AI Profile Analyser report
+- [x] Prevent structured AI narrative data from appearing as raw code
+- [x] Recompose the report summary into formal score, strategy, strength, risk, and verdict sections
+
 ## Student dashboard redesign
 - [x] Apply the selected Institutional Executive composition in the Academic Blue system
 - [x] Scope Sora and Manrope typography to the student experience

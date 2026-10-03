@@ -10,16 +10,17 @@ import CollegeFitHeatmap from "@/components/profile-report/CollegeFitHeatmap";
 import ScenarioSimulator from "@/components/profile-report/ScenarioSimulator";
 import BenchmarkPanel from "@/components/profile-report/BenchmarkPanel";
 import ROIScatterCard from "@/components/profile-report/ROIScatterCard";
-import ExecutiveSummary from "@/components/profile-report/ExecutiveSummary";
+import SummaryHighlights from "@/components/profile-report/SummaryHighlights";
 import PdfDownloadButton from "@/components/profile-report/PdfDownloadButton";
 import SEOHead from "@/components/SEOHead";
+import { parseProfileNarrative, type ProfileNarrative } from "@/lib/profileNarrative";
 
 const SharedReportPage = () => {
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [analysis, setAnalysis] = useState<any>(null);
-  const [narrative, setNarrative] = useState<any>(null);
+  const [narrative, setNarrative] = useState<ProfileNarrative | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,9 +31,7 @@ const SharedReportPage = () => {
         const { data: ar } = await supabase.from("analysis_results").select("*").eq("profile_analysis_id", id).maybeSingle();
         setProfile(pa);
         setAnalysis(ar);
-        if (ar?.ai_summary) {
-          try { setNarrative(JSON.parse(ar.ai_summary)); } catch { /* legacy text summary */ }
-        }
+        if (ar?.ai_summary) setNarrative(parseProfileNarrative(ar.ai_summary));
       } finally { setLoading(false); }
     })();
   }, [id]);
@@ -61,7 +60,7 @@ const SharedReportPage = () => {
           <PdfDownloadButton targetRef={reportRef} fileName={`mba-report-${id?.slice(0, 8)}.pdf`} />
         </div>
 
-        <div ref={reportRef} className="space-y-6">
+        <div ref={reportRef} className="profile-report-page space-y-6">
           <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
             <CardHeader>
               <div className="flex flex-wrap items-center gap-3 justify-between">
@@ -74,14 +73,13 @@ const SharedReportPage = () => {
             </CardHeader>
           </Card>
 
-          {narrative && (
-            <ExecutiveSummary
-              oneLine={narrative.one_line_summary}
-              verdict={narrative.final_verdict}
-              strengths={(narrative.top_advantages || []).map((a: any) => ({ title: a.title, impact: "high" }))}
-              weaknesses={(narrative.top_risks || []).map((r: any) => ({ title: r.title, severity: "high" }))}
-            />
-          )}
+          <SummaryHighlights
+            text={analysis?.ai_summary}
+            narrative={narrative}
+            name={profile.name}
+            profileScore={profile.profile_score}
+            rankPercentile={analysis?.probability_scores?.peer_comparison?.your_rank_percentile}
+          />
 
           {breakdown && <RadarChartCard breakdown={breakdown} />}
           {collegeRows.length > 0 && (

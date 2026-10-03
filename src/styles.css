@@ -394,6 +394,23 @@
   font-display: swap;
 }
 
+.profile-report-page {
+  font-family: "Manrope Student", var(--font-body);
+}
+
+.profile-report-page h1,
+.profile-report-page h2,
+.profile-report-page h3,
+.profile-report-page h4 {
+  font-family: "Sora Student", var(--font-heading);
+  letter-spacing: 0;
+}
+
+.profile-report-page img {
+  max-width: 100%;
+  height: auto;
+}
+
 @font-face {
   font-family: "Sora Student";
   src: url("/fonts/sora-700.ttf") format("truetype");

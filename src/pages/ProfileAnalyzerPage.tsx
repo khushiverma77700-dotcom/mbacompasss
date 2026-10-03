@@ -27,7 +27,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getOtpCallNotice, getOtpCallToastDescription } from "@/lib/otpCopy";
 import SEOHead, { generateBreadcrumbSchema, generateWebsiteSchema } from "@/components/SEOHead";
-import ExecutiveSummary from "@/components/profile-report/ExecutiveSummary";
 import SummaryHighlights from "@/components/profile-report/SummaryHighlights";
 import RadarChartCard from "@/components/profile-report/RadarChartCard";
 import CollegeFitHeatmap from "@/components/profile-report/CollegeFitHeatmap";
@@ -43,16 +42,9 @@ import InternalLinksSection from "@/components/profile-analyzer/InternalLinksSec
 import { buildAnalyzerCanonical, seoSlugify as urlSlugify } from "@/lib/seoUrlBuilder";
 import { buildProfileAnalyzerSchemas } from "@/lib/profileAnalyzerSchema";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
+import { parseProfileNarrative, type ProfileNarrative } from "@/lib/profileNarrative";
 
 const ANALYZER_PENDING_KEY = "profile_analyzer_pending_submit";
-
-interface PremiumNarrative {
-  one_line_summary?: string;
-  final_verdict?: string;
-  top_advantages?: Array<{ title: string; why: string }>;
-  top_risks?: Array<{ title: string; mitigation: string }>;
-  section_insights?: Record<string, string>;
-}
 
 const STORAGE_KEY = "profile_analyzer_v2_draft";
 const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "ATMA"];
@@ -697,7 +689,7 @@ const ProfileAnalyzerPage = () => {
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
-  const [narrative, setNarrative] = useState<PremiumNarrative | null>(null);
+  const [narrative, setNarrative] = useState<ProfileNarrative | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
   // Admin: force a fresh re-test, bypassing existing analysis + cooldown + AI cache
   const [forceRetest, setForceRetest] = useState(false);
@@ -734,7 +726,7 @@ const ProfileAnalyzerPage = () => {
       })
       .then(({ data, error }) => {
         if (error) { console.error("[premium-narrative]", error); return; }
-        if (data && !data.error) setNarrative(data);
+        if (data && !data.error) setNarrative(parseProfileNarrative(data));
       })
       .finally(() => setNarrativeLoading(false));
   }, [unlocked, result?.profile_id]);
@@ -2281,14 +2273,20 @@ const ProfileAnalyzerPage = () => {
         {/* ════════════════ FULL DASHBOARD (UNLOCKED) ════════════════ */}
         {step === 8 && result && unlocked && (
           <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} ref={reportRef}
-            className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+            className="profile-report-page max-w-7xl mx-auto px-4 py-10 space-y-8">
             {/* Header */}
             <div className="text-center space-y-4">
               <Badge className="text-sm"><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Full Report Unlocked</Badge>
               <h2 className="text-3xl md:text-4xl font-bold">
                 {form.name ? `${form.name.split(" ")[0]}'s Complete MBA Roadmap` : "Your Complete MBA Roadmap"}
               </h2>
-              <SummaryHighlights text={result.ai_summary} name={form.name} />
+              <SummaryHighlights
+                text={result.ai_summary}
+                narrative={narrative}
+                name={form.name}
+                profileScore={result.profile_score}
+                rankPercentile={result.peer_comparison?.your_rank_percentile}
+              />
 
               {/* Main score + breakdown */}
               <div className="flex flex-wrap justify-center gap-4 mt-6">
@@ -2323,14 +2321,6 @@ const ProfileAnalyzerPage = () => {
                 )}
               </div>
             </div>
-
-            {/* ─── Premium Executive Summary (AI narrative) ─── */}
-            <ExecutiveSummary
-              oneLine={narrative?.one_line_summary}
-              verdict={narrative?.final_verdict}
-              strengths={result.strengths}
-              weaknesses={result.weaknesses}
-            />
 
             {/* ─── Premium Radar (you vs Top 1%) ─── */}
             <RadarChartCard breakdown={result.score_breakdown as ScoreBreakdown} />
