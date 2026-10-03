@@ -2911,6 +2911,48 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          cta_url: string | null
+          failed_count: number
+          id: string
+          recipient_count: number
+          status: string
+          subject: string
+        }
+        Insert: {
+          audience: string
+          body: string
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          failed_count?: number
+          id?: string
+          recipient_count?: number
+          status?: string
+          subject: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          failed_count?: number
+          id?: string
+          recipient_count?: number
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
