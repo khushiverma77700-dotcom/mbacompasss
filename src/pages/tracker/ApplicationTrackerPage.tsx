@@ -16,8 +16,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  ArrowRight,
   ArrowUpRight,
   CalendarClock,
+  ClipboardList,
   ChevronDown,
   ChevronRight,
   ChevronUp,
