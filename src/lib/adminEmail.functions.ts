@@ -23,6 +23,7 @@ interface SendInput {
   templateName?: string;
   intervalSeconds?: number;
   batchSize?: number;
+  senderIdentityId?: string;
 }
 
 interface Recipient { email: string; name?: string | null; vars: Record<string, string>; isTest?: boolean }
@@ -227,11 +228,23 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       listName = l?.name ?? null;
     } else listName = { all: "All users", enrolled: "Enrolled students", selected: "Selected emails", test: "Test send" }[data.audience as "all"] ?? null;
 
-    const fromName = (data.fromName || "MBA Compass").replace(/[<>"]/g, "").trim() || "MBA Compass";
+    let fromName = (data.fromName || "MBA Compass").replace(/[<>"]/g, "").trim() || "MBA Compass";
+    let fromEmail = SENDER_EMAIL;
+    let sender: any = null;
+    if (data.senderIdentityId) {
+      const { data: sid } = await admin.from("email_sender_identities").select("*").eq("id", data.senderIdentityId).maybeSingle();
+      if (!sid) throw new Error("Selected sender identity no longer exists");
+      if (sid.status === "paused" && data.audience !== "test") throw new Error(`Sender "${sid.label}" is paused: ${sid.paused_reason || "resume it under Senders first"}`);
+      sender = sid;
+      fromName = String(sid.from_name).replace(/[<>"]/g, "").trim() || fromName;
+      fromEmail = `${sid.local_part}@${SENDER_DOMAIN}`;
+    }
     const { error: campErr } = await admin.from("email_campaigns").insert({
       id: campaignId,
       name: data.name?.trim() || data.subject,
       from_name: fromName,
+      sender_identity_id: sender?.id ?? null,
+      sender_label: sender?.label ?? null,
       subject: data.subject,
       heading: data.heading || null,
       body: htmlToText(data.bodyHtml),
@@ -272,7 +285,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
         campaign_id: campaignId, email: r.email, name: r.name ?? null, message_id: messageId, tracking_token: trackingToken,
         status: "waiting", queued_at: null, is_test_inbox: !!r.isTest,
         payload: {
-          unsubscribe_token: unsub, to: r.email, from: `${fromName} <${SENDER_EMAIL}>`, sender_domain: SENDER_DOMAIN,
+          unsubscribe_token: unsub, to: r.email, from: `${fromName} <${fromEmail}>`, sender_domain: SENDER_DOMAIN,
           subject, html, text, purpose: "transactional", label: "admin_campaign",
           idempotency_key: messageId, message_id: messageId, queued_at: new Date().toISOString(),
         },
@@ -359,7 +372,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    let q = admin.from("email_campaigns").select("id,name,subject,from_name,audience,list_name,template_name,recipient_count,failed_count,status,created_at,interval_seconds,batch_size,sent_count,next_send_at,started_at,completed_at,last_error").order("created_at", { ascending: false }).limit(500);
+    let q = admin.from("email_campaigns").select("id,name,subject,from_name,sender_label,audience,list_name,template_name,recipient_count,failed_count,status,created_at,interval_seconds,batch_size,sent_count,next_send_at,started_at,completed_at,last_error").order("created_at", { ascending: false }).limit(500);
     if (data.from) q = q.gte("created_at", data.from);
     if (data.to) q = q.lte("created_at", data.to);
     if (data.campaignId) q = q.eq("id", data.campaignId);
@@ -462,3 +475,32 @@ export const getCampaignRecipients = createServerFn({ method: "POST" })
   });
 
 export { extractLinks };
+
+/** Sender identities with today's usage and 7-day health. */
+export const getSenderIdentities = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: ids } = await admin.from("email_sender_identities").select("*").order("created_at");
+    const istMidnight = new Date(); istMidnight.setUTCHours(-5, -30, 0, 0);
+    if (istMidnight.getTime() > Date.now()) istMidnight.setUTCDate(istMidnight.getUTCDate() - 1);
+    const out = [];
+    for (const s of ids ?? []) {
+      const { data: camps } = await admin.from("email_campaigns").select("id").eq("sender_identity_id", s.id);
+      const cids = (camps ?? []).map((c: any) => c.id);
+      let today = 0; const recent: any[] = [];
+      if (cids.length) {
+        const { count } = await admin.from("email_campaign_recipients").select("id", { count: "exact", head: true }).in("campaign_id", cids).eq("status", "queued").eq("is_test_inbox", false).gte("queued_at", istMidnight.toISOString());
+        today = count ?? 0;
+        const { data: r } = await admin.from("email_campaign_recipients").select("message_id").in("campaign_id", cids).gte("queued_at", new Date(Date.now() - 7 * 864e5).toISOString()).limit(5000);
+        recent.push(...(r ?? []));
+      }
+      const st = await latestStatuses(admin, recent.map((r) => r.message_id));
+      let bounced = 0, complained = 0;
+      st.forEach((v) => { if (v.status === "bounced") bounced++; if (v.status === "complained") complained++; });
+      out.push({ ...s, today, week: recent.length, bounced, complained, campaigns: cids.length });
+    }
+    return out;
+  });
