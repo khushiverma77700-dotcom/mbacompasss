@@ -368,7 +368,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
     const recs: any[] = [];
     for (let i = 0; i < ids.length; i += 50) {
       for (let from = 0; ; from += 1000) {
-        const { data: r } = await admin.from("email_campaign_recipients").select("campaign_id,message_id,status,queued_at,first_opened_at,first_clicked_at,open_count,click_count").in("campaign_id", ids.slice(i, i + 50)).range(from, from + 999);
+        const { data: r } = await admin.from("email_campaign_recipients").select("id,campaign_id,email,name,is_test_inbox,message_id,status,queued_at,first_opened_at,first_clicked_at,open_count,click_count").in("campaign_id", ids.slice(i, i + 50)).range(from, from + 999);
         recs.push(...(r ?? []));
         if (!r || r.length < 1000) break;
       }
@@ -394,6 +394,38 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
       if (r.first_opened_at) { bump(per, r.campaign_id, "opened"); bump(daily, day(r.first_opened_at), "opened"); bumpH(r.first_opened_at, "opened"); }
       if (r.first_clicked_at) { bump(per, r.campaign_id, "clicked"); bump(daily, day(r.first_clicked_at), "clicked"); bumpH(r.first_clicked_at, "clicked"); }
     }
+    // Per-recipient engagement from tracking events (last activity, distinct devices for possible forwards).
+    const act = new Map<string, { last: string; uas: Set<string> }>();
+    for (let i = 0; i < ids.length; i += 50) {
+      for (let from = 0; ; from += 1000) {
+        const { data: ev } = await admin.from("email_tracking_events").select("recipient_id,event_type,user_agent,created_at").in("campaign_id", ids.slice(i, i + 50)).order("created_at").range(from, from + 999);
+        for (const e of ev ?? []) {
+          if (!e.recipient_id) continue;
+          const a = act.get(e.recipient_id) ?? { last: e.created_at, uas: new Set<string>() };
+          if (e.created_at > a.last) a.last = e.created_at;
+          if (e.user_agent) a.uas.add(String(e.user_agent).replace(/\d+/g, ""));
+          act.set(e.recipient_id, a);
+        }
+        if (!ev || ev.length < 1000) break;
+      }
+    }
+    const cname = new Map((campaigns ?? []).map((c: any) => [c.id, c.name || c.subject]));
+    const engagement = recs.filter((r) => r.status !== "cancelled").map((r) => {
+      const sent = r.status !== "waiting" && !!r.queued_at;
+      const st = !sent ? "waiting" : r.status === "failed" ? "failed" : statuses.get(r.message_id)?.status ?? "pending";
+      const delivery = !sent ? "waiting" : st === "sent" ? "delivered" : st === "bounced" || st === "complained" ? "bounced" : st === "dlq" || st === "failed" || st === "suppressed" ? "failed" : "pending";
+      const a = act.get(r.id);
+      const opens = r.open_count ?? 0, clicks = r.click_count ?? 0;
+      return {
+        id: r.id, campaign_id: r.campaign_id, campaign: cname.get(r.campaign_id) ?? "", name: r.name, email: r.email, test: !!r.is_test_inbox,
+        sent, sent_at: r.queued_at, delivery, opened: !!r.first_opened_at, open_count: opens, first_opened_at: r.first_opened_at,
+        // "Read" = opened and engaged beyond a single (possibly pre-fetched) pixel load.
+        read: !!r.first_opened_at && (opens >= 2 || clicks > 0),
+        clicked: !!r.first_clicked_at, click_count: clicks,
+        devices: a?.uas.size ?? 0, possible_forward: (a?.uas.size ?? 0) >= 3,
+        last_activity: a?.last ?? r.first_clicked_at ?? r.first_opened_at ?? r.queued_at ?? null,
+      };
+    }).sort((x, y) => String(y.last_activity ?? "").localeCompare(String(x.last_activity ?? "")));
     const rows = (campaigns ?? []).map((c: any) => ({ ...c, stats: per.get(c.id) ?? blank() }));
     const totals = rows.reduce((a: any, r: any) => { for (const k of Object.keys(a)) a[k] += r.stats[k]; return a; }, blank());
     let cum = blank();
@@ -406,7 +438,7 @@ export const getEmailAnalytics = createServerFn({ method: "POST" })
       const k = d.toISOString().slice(0, 13);
       return { hour: `${String(d.getHours()).padStart(2, "0")}:00`, ...(hourly.get(k) ?? blank()) };
     });
-    return { campaigns: rows, totals, series, hourlySeries };
+    return { campaigns: rows, totals, series, hourlySeries, engagement };
   });
 
 /** Per-recipient report for one campaign. */
