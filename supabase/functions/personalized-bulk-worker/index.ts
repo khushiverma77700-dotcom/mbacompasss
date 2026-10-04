@@ -4,13 +4,14 @@
 // - action=resume: re-kicks a job's background loop
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0?target=denonext";
 import { getCredential } from "../_shared/getCredential.ts";
+import { validateMockQuestion } from "../_shared/mockQuestionQuality.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM = `You are an expert MBA entrance exam question setter (CAT, NMAT, XAT, SNAP, IIFT, CMAT, MAT). Generate high-quality multiple-choice questions with exactly 4 options and ONE correct answer. Questions must be original, exam-realistic, and free of trivia. Respond ONLY by calling the provided tool.`;
+const SYSTEM = `You are an elite MBA entrance exam question setter and meticulous copy editor (CAT, NMAT, XAT, SNAP, IIFT, CMAT, MAT). Match the selected exam's real difficulty, syllabus, pacing and style. Never create school-level recall, one-step filler, ambiguous stems, insufficient data, duplicate options or incorrect answer keys. Independently solve and proofread every item before returning it. Respond ONLY by calling the provided tool.`;
 
 const CHUNK = 10; // questions per OpenAI call
 const LOCK_MINUTES = 3;
@@ -40,10 +41,12 @@ async function generateChunk(
 
   const userPrompt = `Generate ${n} ${difficulty} difficulty multiple-choice questions for exam ${exam_code}, section ${section}.
 Each question:
-- Realistic exam-style (no trivia)
+- Realistic ${exam_code} style; difficulty is relative to the actual exam, and even easy questions must not be basic filler
+- Requires at least two meaningful reasoning/application steps
+- No trivia unless this section officially tests it
 - 4 options
 - Single correct answer (index 0–3)
-- Brief explanation (1–3 sentences)
+- Detailed explanation of at least 140 characters that verifies the answer
 - 1–2 word topic tag
 Vary topics, numbers, names, and contexts so questions are clearly different from one another and from any standard textbook questions. Do not reuse stems. Seed: ${crypto.randomUUID()}.`;
 
@@ -101,8 +104,11 @@ Vary topics, numbers, names, and contexts so questions are clearly different fro
   const qs = parsed.questions ?? [];
   if (!qs.length) return { rows: [], error: "no questions" };
 
+  const validQuestions = qs.filter((q: any) => validateMockQuestion({ ...q, question_type: "mcq" }).valid);
+  if (!validQuestions.length) return { rows: [], error: "all generated questions failed the editorial quality check" };
+
   return {
-    rows: qs.map((q: any) => ({
+    rows: validQuestions.map((q: any) => ({
       exam_code,
       section,
       difficulty,

@@ -15,6 +15,8 @@ import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen } from "luci
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import MathContent from "@/components/mock/MathContent";
 import { stripQuestionPrefix, stripOptionPrefix } from "@/lib/cleanQuestionHtml";
+import { getMockQuestionErrors } from "@/lib/mockQuestionValidation";
+import Papa from "papaparse";
 
 type Section = {
   id: string;
@@ -198,14 +200,10 @@ const AdminMockBuilder = () => {
 
   const saveQuestion = async () => {
     if (!editorState) return;
-    if (!editorState.question_html?.trim()) { toast({ title: "Question content is required", variant: "destructive" }); return; }
-    if (editorState.question_type === "mcq") {
-      const correctCount = (editorState.options as OptionRow[]).filter(o => o.is_correct).length;
-      if (correctCount !== 1) { toast({ title: "MCQ must have exactly 1 correct option", variant: "destructive" }); return; }
-      if ((editorState.options as OptionRow[]).some(o => !o.option_html.trim())) { toast({ title: "All option texts required", variant: "destructive" }); return; }
-    } else {
-      const answers = (editorState.tita_correct_answers as string[]).filter(a => a.trim());
-      if (answers.length === 0) { toast({ title: "TITA needs at least 1 correct answer", variant: "destructive" }); return; }
+    const validationErrors = getMockQuestionErrors(editorState);
+    if (validationErrors.length > 0) {
+      toast({ title: "Question needs correction", description: validationErrors.join(" "), variant: "destructive" });
+      return;
     }
     setEditorSaving(true);
     const qPayload: any = {
@@ -267,19 +265,33 @@ const AdminMockBuilder = () => {
         rows = JSON.parse(trimmed);
       } else {
         // CSV: question_html,option_a,option_b,option_c,option_d,correct_label,topic,difficulty,positive_marks,negative_marks
-        const lines = trimmed.split(/\r?\n/).filter(l => l.trim());
-        const header = lines[0].split(",").map(h => h.trim().toLowerCase());
-        rows = lines.slice(1).map(line => {
-          const cols = line.split(",");
-          const obj: any = {};
-          header.forEach((h, i) => { obj[h] = (cols[i] ?? "").trim(); });
-          return obj;
-        });
+        const parsed = Papa.parse<Record<string, string>>(trimmed, { header: true, skipEmptyLines: true });
+        if (parsed.errors.length > 0) throw new Error(`CSV error: ${parsed.errors[0].message}`);
+        rows = parsed.data.map((row) => Object.fromEntries(
+          Object.entries(row).map(([key, value]) => [key.trim().toLowerCase(), String(value ?? "").trim()]),
+        ));
       }
 
       let n = nextQuestionNumber;
       for (const row of rows) {
         const isMcq = (row.question_type ?? "mcq").toLowerCase() === "mcq";
+        const difficulty = String(row.difficulty ?? "hard").toLowerCase();
+        if (!["easy", "medium", "hard"].includes(difficulty)) throw new Error(`Invalid difficulty "${difficulty}". Use easy, medium or hard.`);
+        const opts: OptionRow[] = [];
+        if (isMcq && Array.isArray(row.options)) {
+          row.options.forEach((o: any, i: number) => opts.push({
+            option_label: o.label ?? String.fromCharCode(65 + i),
+            option_html: stripOptionPrefix(o.html ?? o.text ?? ""),
+            is_correct: !!o.is_correct,
+            sort_order: i,
+          }));
+        } else if (isMcq) {
+          const correctLabel = String(row.correct_label ?? row.answer ?? "").toUpperCase();
+          ["a", "b", "c", "d"].forEach((k, i) => opts.push({
+            option_label: k.toUpperCase(), option_html: stripOptionPrefix(row[`option_${k}`] ?? ""), is_correct: correctLabel === k.toUpperCase(), sort_order: i,
+          }));
+        }
+        const answers = !isMcq ? (Array.isArray(row.tita_correct_answers) ? row.tita_correct_answers : String(row.correct_answer ?? "").split("|").filter(Boolean)) : [];
         const qPayload: any = {
           section_id: activeSectionId,
           question_number: row.question_number ? parseInt(row.question_number) : n++,
@@ -287,31 +299,21 @@ const AdminMockBuilder = () => {
           question_html: stripQuestionPrefix(row.question_html ?? row.question ?? ""),
           positive_marks: row.positive_marks ? parseFloat(row.positive_marks) : 3,
           negative_marks: row.negative_marks ? parseFloat(row.negative_marks) : (isMcq ? 1 : 0),
-          difficulty: (row.difficulty ?? "medium").toLowerCase(),
+          difficulty,
           topic: row.topic ?? null,
-          tita_correct_answers: !isMcq ? (Array.isArray(row.tita_correct_answers) ? row.tita_correct_answers : String(row.correct_answer ?? "").split("|").filter(Boolean)) : [],
+          tita_correct_answers: answers,
           explanation_html: row.explanation_html ?? row.explanation ?? null,
         };
+        const validationErrors = getMockQuestionErrors({ ...qPayload, options: opts });
+        if (validationErrors.length > 0) throw new Error(`Question ${qPayload.question_number}: ${validationErrors.join(" ")}`);
         const { data: created, error } = await supabase.from("mock_questions").insert(qPayload).select("id").single();
         if (error || !created) throw new Error(error?.message ?? "Insert failed");
         if (isMcq) {
-          const opts: OptionRow[] = [];
-          if (Array.isArray(row.options)) {
-            row.options.forEach((o: any, i: number) => opts.push({
-              option_label: o.label ?? String.fromCharCode(65 + i),
-              option_html: stripOptionPrefix(o.html ?? o.text ?? ""),
-              is_correct: !!o.is_correct,
-              sort_order: i,
-            }));
-          } else {
-            const correctLabel = String(row.correct_label ?? row.answer ?? "A").toUpperCase();
-            ["a", "b", "c", "d"].forEach((k, i) => {
-              const html = row[`option_${k}`] ?? "";
-              if (html) opts.push({ option_label: k.toUpperCase(), option_html: stripOptionPrefix(html), is_correct: correctLabel === k.toUpperCase(), sort_order: i });
-            });
+          const { error: optionsError } = await supabase.from("mock_question_options").insert(opts.map(o => ({ ...o, question_id: created.id })));
+          if (optionsError) {
+            await supabase.from("mock_questions").delete().eq("id", created.id);
+            throw new Error(`Question ${qPayload.question_number}: ${optionsError.message}`);
           }
-          if (opts.filter(o => o.is_correct).length !== 1) throw new Error(`Question ${qPayload.question_number}: needs exactly 1 correct option`);
-          await supabase.from("mock_question_options").insert(opts.map(o => ({ ...o, question_id: created.id })));
         }
       }
 
