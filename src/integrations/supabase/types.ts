@@ -3187,8 +3187,14 @@ export type Database = {
           id: number
           retry_after_until: string | null
           send_delay_ms: number
+          skip_unengaged_after: number
           transactional_email_ttl_minutes: number
           updated_at: string
+          warmup_enabled: boolean
+          warmup_start_cap: number
+          warmup_started_on: string
+          warmup_step_days: number
+          warmup_step_pct: number
         }
         Insert: {
           auth_email_ttl_minutes?: number
@@ -3197,8 +3203,14 @@ export type Database = {
           id?: number
           retry_after_until?: string | null
           send_delay_ms?: number
+          skip_unengaged_after?: number
           transactional_email_ttl_minutes?: number
           updated_at?: string
+          warmup_enabled?: boolean
+          warmup_start_cap?: number
+          warmup_started_on?: string
+          warmup_step_days?: number
+          warmup_step_pct?: number
         }
         Update: {
           auth_email_ttl_minutes?: number
@@ -3207,8 +3219,14 @@ export type Database = {
           id?: number
           retry_after_until?: string | null
           send_delay_ms?: number
+          skip_unengaged_after?: number
           transactional_email_ttl_minutes?: number
           updated_at?: string
+          warmup_enabled?: boolean
+          warmup_start_cap?: number
+          warmup_started_on?: string
+          warmup_step_days?: number
+          warmup_step_pct?: number
         }
         Relationships: []
       }
@@ -16219,6 +16237,7 @@ export type Database = {
       distinct_text_count: { Args: { arr: string[] }; Returns: number }
       email_campaign_tick: { Args: never; Returns: number }
       email_campaign_wake: { Args: never; Returns: undefined }
+      email_effective_global_cap: { Args: never; Returns: number }
       email_queue_dispatch: { Args: never; Returns: undefined }
       email_sender_health_check: { Args: { _sid: string }; Returns: boolean }
       enqueue_email: {
