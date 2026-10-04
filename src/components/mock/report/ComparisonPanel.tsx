@@ -10,9 +10,13 @@ type Stats = {
   myAccuracy: number;
   myAttempts: number;
   avg: number;
+  median?: number;
   top10: number;
   topper: number;
   count: number;
+  rank?: number | null;
+  percentile?: number | null;
+  provisional?: boolean;
   scatter?: Array<{ attempts: number; accuracy: number; isMe?: boolean }>;
 };
 
@@ -20,7 +24,7 @@ export default function ComparisonPanel({ stats }: { stats: Stats | null }) {
   if (!stats) {
     return (
       <Card className="p-6 text-center text-sm text-muted-foreground">
-        Peer comparison will appear once more students have completed this mock.
+        Verified cohort comparison will appear after another student completes this mock.
       </Card>
     );
   }
@@ -52,6 +56,11 @@ export default function ComparisonPanel({ stats }: { stats: Stats | null }) {
           </BarChart>
         </ResponsiveContainer>
         <p className="text-xs text-muted-foreground mt-2">{verdict} Topper is {gap > 0 ? `${gap} marks` : "matched"} ahead.</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-xs">
+          <div><span className="text-muted-foreground">Verified cohort</span><div className="font-semibold">{stats.count.toLocaleString()} students</div></div>
+          <div><span className="text-muted-foreground">Your standing</span><div className="font-semibold">{stats.rank ? `#${stats.rank} · ${stats.percentile?.toFixed(2)}%ile` : "Provisional"}</div></div>
+        </div>
+        {stats.provisional && <p className="text-xs text-amber-700 mt-2">Provisional benchmark — it becomes more stable after 30 verified students.</p>}
       </Card>
 
       <Card className="p-5">
@@ -71,11 +80,11 @@ export default function ComparisonPanel({ stats }: { stats: Stats | null }) {
             </ScatterChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[240px] flex items-center justify-center text-sm text-muted-foreground">
-            Not enough peer data yet.
+          <div className="h-[240px] flex items-center justify-center text-sm text-muted-foreground text-center px-6">
+            Question-attempt distribution becomes available when enough verified peer data is present.
           </div>
         )}
-        <p className="text-xs text-muted-foreground mt-2">Red dot = you. Aim for the top-right quadrant (high attempts, high accuracy).</p>
+        {stats.scatter && stats.scatter.length > 1 && <p className="text-xs text-muted-foreground mt-2">Red dot = you. Aim for the top-right quadrant.</p>}
       </Card>
     </div>
   );

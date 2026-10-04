@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
 
-type Stats = { myScore: number; avg: number; top10: number; topper: number };
+type Stats = { myScore: number; avg: number; top10: number; topper: number; count: number; provisional?: boolean };
 
 export default function PeerBenchmark({ stats }: { stats: Stats | null }) {
   if (!stats) return null;
@@ -20,6 +20,7 @@ export default function PeerBenchmark({ stats }: { stats: Stats | null }) {
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <Trophy className="h-4 w-4 text-amber-500" /> Peer Benchmarking
       </h3>
+      <p className="text-xs text-muted-foreground mb-4">Based on the first completed attempt from {stats.count.toLocaleString()} verified student{stats.count === 1 ? "" : "s"}.</p>
       <div className="space-y-3">
         {items.map((it) => (
           <div key={it.label}>
@@ -45,6 +46,7 @@ export default function PeerBenchmark({ stats }: { stats: Stats | null }) {
           <p className="text-xs text-muted-foreground mt-0.5">{gapToTopper > 0 ? "marks to the top" : "you're the topper!"}</p>
         </div>
       </div>
+      {stats.provisional && <p className="text-xs text-amber-700 mt-3">Provisional until 30 verified students complete this mock.</p>}
     </Card>
   );
 }

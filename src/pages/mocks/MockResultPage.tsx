@@ -31,6 +31,7 @@ export default function MockResultPage() {
   const [responses, setResponses] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
   const [peerAttempts, setPeerAttempts] = useState<any[]>([]);
+  const [benchmark, setBenchmark] = useState<any>(null);
   const [historyAttempts, setHistoryAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -44,9 +45,7 @@ export default function MockResultPage() {
         supabase.from("mock_tests").select("*").eq("id", a.test_id).maybeSingle(),
         supabase.from("mock_sections").select("*").eq("test_id", a.test_id).order("sort_order"),
         supabase.from("mock_responses").select("*").eq("attempt_id", a.id),
-        supabase.from("mock_attempts")
-          .select("id, user_id, total_score, max_score, accuracy, percentile, total_attempted, total_correct")
-          .eq("test_id", a.test_id).in("status", ["submitted", "auto_submitted"]),
+        supabase.rpc("get_mock_benchmarks", { _test_ids: [a.test_id] }),
       ]);
       const qIds = (rsp ?? []).map((r: any) => r.question_id);
       let qs: any[] = [];
@@ -62,7 +61,8 @@ export default function MockResultPage() {
       setSections(secs ?? []);
       setResponses(rsp ?? []);
       setQuestions(qs);
-      setPeerAttempts(peers ?? []);
+      setBenchmark(peers?.[0] ?? null);
+      setPeerAttempts([]);
 
       // Progress history (same exam_code, same user, last 5)
       const { data: { user } } = await supabase.auth.getUser();
@@ -226,23 +226,21 @@ export default function MockResultPage() {
 
   // Peer stats
   const peerStats = useMemo(() => {
-    if (peerAttempts.length < 2) return null;
-    const scores = peerAttempts.map((p: any) => Number(p.total_score ?? 0)).sort((a, b) => b - a);
-    const top10 = scores[Math.max(0, Math.floor(scores.length * 0.1) - 1)] ?? scores[0];
-    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const topper = scores[0];
-    const scatter = peerAttempts.map((p: any) => ({
-      attempts: Number(p.total_attempted ?? 0),
-      accuracy: Number(p.accuracy ?? 0),
-      isMe: p.id === attempt?.id,
-    }));
+    if (!benchmark) return null;
     return {
       myScore: Number(attempt?.total_score ?? 0),
       myAccuracy: Number(attempt?.accuracy ?? 0),
       myAttempts: Number(attempt?.total_attempted ?? 0),
-      avg, top10, topper, count: scores.length, scatter,
+      avg: Number(benchmark.cohort_average ?? 0),
+      median: Number(benchmark.cohort_median ?? 0),
+      top10: Number(benchmark.top_10_score ?? 0),
+      topper: Number(benchmark.topper_score ?? 0),
+      count: Number(benchmark.verified_students ?? 0),
+      rank: benchmark.my_rank == null ? null : Number(benchmark.my_rank),
+      percentile: benchmark.my_percentile == null ? null : Number(benchmark.my_percentile),
+      provisional: Boolean(benchmark.is_provisional),
     };
-  }, [peerAttempts, attempt]);
+  }, [benchmark, attempt]);
 
   // Strategy
   const totalQuestions = useMemo(() => sections.reduce((a, s) => a + (s.total_questions || 0), 0), [sections]);
@@ -409,7 +407,7 @@ export default function MockResultPage() {
 
           {/* 8. Peer benchmarking */}
           <Section title="8. Peer Benchmarking">
-            <PeerBenchmark stats={peerStats ? { myScore: peerStats.myScore, avg: peerStats.avg, top10: peerStats.top10, topper: peerStats.topper } : null} />
+            <PeerBenchmark stats={peerStats ? { myScore: peerStats.myScore, avg: peerStats.avg, top10: peerStats.top10, topper: peerStats.topper, count: peerStats.count, provisional: peerStats.provisional } : null} />
           </Section>
 
           {/* 9. Strengths & Weaknesses */}

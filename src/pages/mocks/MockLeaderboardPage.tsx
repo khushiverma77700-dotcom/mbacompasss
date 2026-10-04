@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Trophy, Medal, Award, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
@@ -12,6 +12,8 @@ export default function MockLeaderboardPage() {
   const { slug } = useParams();
   const [test, setTest] = useState<any>(null);
   const [rows, setRows] = useState<any[]>([]);
+  const [verifiedStudents, setVerifiedStudents] = useState(0);
+  const [provisional, setProvisional] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,8 +25,10 @@ export default function MockLeaderboardPage() {
         return;
       }
       setTest(t);
-      const { data } = await supabase.rpc("get_mock_leaderboard", { _test_id: t.id, _limit: 100 });
+      const { data } = await supabase.rpc("get_mock_leaderboard_v2", { _test_id: t.id, _limit: 100 });
       setRows((data ?? []) as any);
+      setVerifiedStudents(Number(data?.[0]?.verified_students ?? 0));
+      setProvisional(Boolean(data?.[0]?.is_provisional));
       setLoading(false);
     })();
   }, [slug]);
@@ -40,7 +44,8 @@ export default function MockLeaderboardPage() {
           <Trophy className="h-7 w-7 text-amber-500" />
           {test.name} — Leaderboard
         </h1>
-        <p className="text-muted-foreground mt-1">Top 100 scorers ranked by total score.</p>
+        <p className="text-muted-foreground mt-1 inline-flex items-center gap-1.5"><Users className="h-4 w-4" /> {verifiedStudents.toLocaleString()} verified students completed this mock. One ranked attempt per student.</p>
+        {provisional && <Badge className="mt-2 bg-amber-100 text-amber-800 border-amber-200">Provisional cohort · stabilises after 30 students</Badge>}
       </header>
 
       {rows.length === 0 ? (
@@ -53,7 +58,7 @@ export default function MockLeaderboardPage() {
             <div>Rank</div>
             <div>Candidate</div>
             <div className="text-right">Score</div>
-            <div className="text-right">%ile</div>
+                <div className="text-right">%ile</div>
             <div className="text-right">Submitted</div>
           </div>
           <div className="divide-y">
@@ -73,7 +78,7 @@ export default function MockLeaderboardPage() {
                   {r.is_self && <Badge variant="secondary" className="text-xs">You</Badge>}
                 </div>
                 <div className="text-right font-mono">{Number(r.total_score).toFixed(0)}/{Number(r.max_score ?? 0).toFixed(0)}</div>
-                <div className="text-right">{Number(r.percentile ?? 0).toFixed(2)}</div>
+                <div className="text-right">{r.percentile == null ? "—" : Number(r.percentile).toFixed(2)}</div>
                 <div className="text-right text-xs text-muted-foreground">
                   {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString() : "—"}
                 </div>
