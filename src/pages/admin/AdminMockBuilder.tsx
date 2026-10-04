@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,12 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen, Sparkles, Check, X } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import MathContent from "@/components/mock/MathContent";
 import { stripQuestionPrefix, stripOptionPrefix } from "@/lib/cleanQuestionHtml";
 import { getMockQuestionErrors } from "@/lib/mockQuestionValidation";
 import Papa from "papaparse";
+import { generateTougherQuestionDraft, reviewTougherQuestionDraft } from "@/lib/mockQuestionUpgrade.functions";
 
 type Section = {
   id: string;
@@ -53,6 +55,7 @@ type Question = {
 };
 
 type OptionRow = { id?: string; option_label: string; option_html: string; is_correct: boolean; sort_order: number };
+type UpgradeReview = { id: string; question_id: string; status: string; source_snapshot: any; proposed_question: any; created_at: string };
 
 const emptyQuestion = (section_id: string, nextNumber: number): Partial<Question> & { options: OptionRow[]; passage_id: string | null } => ({
   section_id,
@@ -95,6 +98,48 @@ const AdminMockBuilder = () => {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [upgradeReviews, setUpgradeReviews] = useState<UpgradeReview[]>([]);
+  const [upgradeBusyId, setUpgradeBusyId] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<UpgradeReview | null>(null);
+  const generateUpgrade = useServerFn(generateTougherQuestionDraft);
+  const decideUpgrade = useServerFn(reviewTougherQuestionDraft);
+
+  const fetchUpgradeReviews = async () => {
+    const questionIds = questions.map((question) => question.id);
+    if (!questionIds.length) { setUpgradeReviews([]); return; }
+    const { data } = await supabase.from("mock_question_upgrade_reviews").select("*").in("question_id", questionIds).eq("status", "pending").order("created_at", { ascending: false });
+    setUpgradeReviews((data ?? []) as UpgradeReview[]);
+  };
+
+  useEffect(() => { void fetchUpgradeReviews(); }, [questions]);
+
+  const createUpgradeDraft = async (questionId: string) => {
+    setUpgradeBusyId(questionId);
+    try {
+      await generateUpgrade({ data: { questionId } });
+      toast({ title: "Tougher draft ready", description: "Review it before replacing the live question." });
+      await fetchUpgradeReviews();
+    } catch (error) {
+      toast({ title: "Draft generation failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally { setUpgradeBusyId(null); }
+  };
+
+  const submitReviewDecision = async (decision: "approved" | "rejected") => {
+    if (!reviewing) return;
+    setUpgradeBusyId(reviewing.question_id);
+    try {
+      await decideUpgrade({ data: { reviewId: reviewing.id, decision } });
+      toast({ title: decision === "approved" ? "Tougher question approved" : "Draft rejected" });
+      setReviewing(null);
+      await fetchUpgradeReviews();
+      if (decision === "approved") {
+        const { data } = await supabase.from("mock_questions").select("*").eq("section_id", activeSectionId).order("question_number");
+        setQuestions((data ?? []) as Question[]);
+      }
+    } catch (error) {
+      toast({ title: "Review could not be completed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally { setUpgradeBusyId(null); }
+  };
 
   const fetchAll = async () => {
     if (!testId) return;
@@ -431,12 +476,21 @@ const AdminMockBuilder = () => {
                         <Badge variant="secondary">Q{q.question_number}</Badge>
                         <Badge variant="outline" className="text-xs uppercase">{q.question_type}</Badge>
                         <Badge variant="outline" className="text-xs capitalize">{q.difficulty}</Badge>
+                        {upgradeReviews.some((review) => review.question_id === q.id) && <Badge variant="secondary" className="text-xs">Tougher draft pending</Badge>}
                         {q.topic && <Badge variant="outline" className="text-xs">{q.topic}</Badge>}
                         {q.passage_id && <Badge variant="outline" className="text-xs">linked passage</Badge>}
                       </div>
                       <MathContent html={q.question_html} className="prose prose-sm max-w-none line-clamp-2" />
                     </div>
                     <div className="flex gap-1 shrink-0">
+                      {q.difficulty === "easy" && !upgradeReviews.some((review) => review.question_id === q.id) && (
+                        <Button size="sm" variant="outline" disabled={upgradeBusyId === q.id} onClick={() => createUpgradeDraft(q.id)}>
+                          {upgradeBusyId === q.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}<span className="ml-1">Make Tough</span>
+                        </Button>
+                      )}
+                      {upgradeReviews.find((review) => review.question_id === q.id) && (
+                        <Button size="sm" variant="outline" onClick={() => setReviewing(upgradeReviews.find((review) => review.question_id === q.id) ?? null)}>Review Draft</Button>
+                      )}
                       <Button size="sm" variant="ghost" onClick={() => openEditQuestion(q)}><Pencil className="w-3.5 h-3.5" /></Button>
                       <Button size="sm" variant="ghost" onClick={() => deleteQuestion(q.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                     </div>
@@ -447,6 +501,29 @@ const AdminMockBuilder = () => {
           </Card>
         </>
       )}
+
+      <Dialog open={Boolean(reviewing)} onOpenChange={(open) => { if (!open) setReviewing(null); }}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Review Tougher Question</DialogTitle></DialogHeader>
+          {reviewing && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {[["Current Easy Question", reviewing.source_snapshot], ["Proposed Tough Question", reviewing.proposed_question]].map(([title, value]) => {
+                const content = value as any;
+                return <div key={title as string} className="border border-border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between"><h3 className="font-semibold">{title as string}</h3><Badge variant="outline">{content.difficulty}</Badge></div>
+                  <MathContent html={content.question_html} className="prose prose-sm max-w-none" />
+                  {content.question_type === "mcq" && <div className="space-y-2">{(content.options ?? []).map((option: any, index: number) => <div key={index} className={`border rounded-md p-2 text-sm ${option.is_correct ? "border-primary bg-primary/5" : "border-border"}`}><strong>{String.fromCharCode(65 + index)}.</strong> <MathContent html={option.option_html ?? option.text ?? ""} className="inline" /></div>)}</div>}
+                  <div><p className="text-sm font-medium mb-1">Explanation</p><MathContent html={content.explanation_html ?? ""} className="prose prose-sm max-w-none text-muted-foreground" /></div>
+                </div>;
+              })}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => submitReviewDecision("rejected")} disabled={Boolean(upgradeBusyId)}><X className="w-4 h-4 mr-1" /> Reject</Button>
+            <Button onClick={() => submitReviewDecision("approved")} disabled={Boolean(upgradeBusyId)}>{upgradeBusyId ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} Approve & Replace</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Question editor dialog */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
