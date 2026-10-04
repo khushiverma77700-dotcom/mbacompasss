@@ -318,11 +318,8 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
     const avgPercentile = competitive.length
       ? Math.round(competitive.reduce((s, b) => s + Number(b.my_percentile), 0) / competitive.length)
       : 0;
-    const bestPercentile = competitive.length
-      ? Math.max(...competitive.map((b) => Number(b.my_percentile)))
-      : 0;
     const verifiedEntries = Object.values(benchmarks).reduce((sum, b) => sum + b.verified_students, 0);
-    return { totalUnlocked, totalAttempted, avgPercentile, bestPercentile, verifiedEntries, submittedCount: submitted.length };
+    return { totalUnlocked, totalAttempted, avgPercentile, verifiedEntries, submittedCount: submitted.length };
   }, [attempts, tests, benchmarks]);
 
   if (!user) return <div className="text-muted-foreground">Please sign in.</div>;
@@ -1212,10 +1209,10 @@ function MockCardItem({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs uppercase tracking-wider font-semibold text-emerald-700/80 inline-flex items-center gap-1">
-                  <Award className="h-3 w-3" /> Last Attempt
+                  <Award className="h-3 w-3" /> Competitive First Attempt
                 </div>
                 <div className="text-sm font-bold text-emerald-900">
-                  {latestSubmitted.total_score ?? 0}<span className="text-emerald-700/60 font-medium">/{latestSubmitted.max_score ?? 0}</span>
+                  {benchmark?.my_score ?? latestSubmitted.total_score ?? 0}<span className="text-emerald-700/60 font-medium">/{latestSubmitted.max_score ?? 0}</span>
                 </div>
                 <div className="mt-1 text-xs font-semibold text-emerald-800 inline-flex items-center gap-1">
                   <Users className="h-3 w-3" /> {benchmark?.verified_students ?? 1} verified student{(benchmark?.verified_students ?? 1) === 1 ? "" : "s"}
@@ -1357,7 +1354,7 @@ function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt; bench
                   <div className="text-3xl font-bold leading-none">{pct == null ? "Pending" : pct}</div>
                 </div>
                 <div className="text-right text-xs opacity-90">
-                  <div>Score {attempt.total_score ?? 0}/{attempt.max_score ?? 0}</div>
+                  <div>Competitive score {benchmark?.my_score ?? attempt.total_score ?? 0}/{attempt.max_score ?? 0}</div>
                   <div>Accuracy {accuracy}%</div>
                   <div>{benchmark?.verified_students ?? 1} verified students</div>
                 </div>
