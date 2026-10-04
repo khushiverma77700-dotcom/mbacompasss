@@ -7412,6 +7412,53 @@ export type Database = {
           },
         ]
       }
+      mock_question_upgrade_reviews: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          proposed_question: Json
+          question_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_snapshot: Json
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          proposed_question: Json
+          question_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_snapshot: Json
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          proposed_question?: Json
+          question_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_snapshot?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_question_upgrade_reviews_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "mock_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mock_questions: {
         Row: {
           content_hash: string | null
@@ -15889,6 +15936,10 @@ export type Database = {
           user_id: string
           views: number
         }[]
+      }
+      approve_mock_question_upgrade: {
+        Args: { _review_id: string }
+        Returns: undefined
       }
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
       award_quant_xp: {
