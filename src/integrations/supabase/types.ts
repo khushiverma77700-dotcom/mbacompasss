@@ -16263,6 +16263,23 @@ export type Database = {
           xp: number
         }[]
       }
+      get_mock_benchmarks: {
+        Args: { _test_ids?: string[] }
+        Returns: {
+          cohort_average: number
+          cohort_median: number
+          difficulty: string
+          is_provisional: boolean
+          my_attempt_id: string
+          my_percentile: number
+          my_rank: number
+          my_score: number
+          test_id: string
+          top_10_score: number
+          topper_score: number
+          verified_students: number
+        }[]
+      }
       get_mock_leaderboard: {
         Args: { _limit?: number; _test_id: string }
         Returns: {
@@ -16278,6 +16295,25 @@ export type Database = {
           total_correct: number
           total_score: number
           user_id: string
+        }[]
+      }
+      get_mock_leaderboard_v2: {
+        Args: { _limit?: number; _test_id: string }
+        Returns: {
+          accuracy: number
+          attempt_id: string
+          display_name: string
+          is_provisional: boolean
+          is_self: boolean
+          max_score: number
+          percentile: number
+          rank: number
+          submitted_at: string
+          total_attempted: number
+          total_correct: number
+          total_score: number
+          user_id: string
+          verified_students: number
         }[]
       }
       get_my_leaderboard_rank: { Args: never; Returns: number }
