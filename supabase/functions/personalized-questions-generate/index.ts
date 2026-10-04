@@ -1,6 +1,7 @@
 // Admin-only: bulk-generate MCQ questions via OpenAI gpt-4o
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0?target=denonext";
 import { getCredential } from "../_shared/getCredential.ts";
+import { validateMockQuestion } from "../_shared/mockQuestionQuality.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +9,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM = `You are an expert MBA entrance exam question setter (CAT, NMAT, XAT, SNAP, IIFT, CMAT, MAT). Generate high-quality multiple-choice questions with exactly 4 options and ONE correct answer. Questions must be original, exam-realistic, and free of trivia. Respond ONLY by calling the provided tool.`;
+const SYSTEM = `You are an elite MBA entrance exam question setter and meticulous copy editor (CAT, NMAT, XAT, SNAP, IIFT, CMAT, MAT). Match the selected exam's real difficulty, syllabus, pacing and style. Never create school-level recall, one-step filler, ambiguous stems, insufficient data, duplicate options or incorrect answer keys. Every question must require reasoning or application. Independently solve and proofread every item before returning it. Respond ONLY by calling the provided tool.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -38,16 +39,20 @@ Deno.serve(async (req) => {
       return json({ error: "exam_code, section, difficulty, count required" }, 400);
     }
     const n = Math.min(Math.max(parseInt(count), 1), 25);
+    const allowedDifficulty = new Set(["easy", "moderate", "difficult"]);
+    if (!allowedDifficulty.has(String(difficulty))) return json({ error: "Invalid difficulty" }, 400);
 
     const OPENAI_API_KEY = (await getCredential("OPENAI_API_KEY"));
     if (!OPENAI_API_KEY) return json({ error: "OPENAI_API_KEY missing" }, 500);
 
     const userPrompt = `Generate ${n} ${difficulty} difficulty multiple-choice questions for exam ${exam_code}, section ${section}${topic ? `, topic: ${topic}` : ""}.
 Each question:
-- Realistic exam-style (no trivia, no current affairs unless section demands)
+- Realistic ${exam_code} style and difficulty; "easy" means accessible within ${exam_code}, never basic school-level filler
+- At least two meaningful reasoning/application steps; difficult questions need layered reasoning and close distractors
+- No trivia or current affairs unless this section officially demands it
 - 4 options (A, B, C, D)
 - Single correct answer (index 0–3)
-- Brief explanation (1–3 sentences)
+- Detailed explanation of at least 140 characters that verifies the marked answer
 - 1–2 word topic tag`;
 
     const tools = [{
@@ -110,7 +115,11 @@ Each question:
     const questions = args?.questions ?? [];
     if (!questions.length) return json({ error: "No questions returned by AI" }, 500);
 
-    const rows = questions.map((q: any) => ({
+    const validQuestions = questions.filter((q: any) => validateMockQuestion({ ...q, question_type: "mcq" }).valid);
+    if (validQuestions.length !== n) {
+      return json({ error: `Quality check rejected ${n - validQuestions.length} of ${n} questions. Nothing was saved; generate again.` }, 422);
+    }
+    const rows = validQuestions.map((q: any) => ({
       exam_code,
       section,
       difficulty,
