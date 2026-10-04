@@ -7,3 +7,4 @@
 - Admin email campaigns stage personalised emails as waiting recipients and release them in batches through a database tick that re-reads each campaign's speed settings every run, so speed changes apply to running campaigns; the tick timer arms on start/resume and removes itself when nothing is running.
 - Mock competition metrics use each student's earliest completed attempt and verified unique-student cohorts, because retakes and synthetic aspirants must not inflate ranks or participation.
 - Mock generation uses exam-normalized CAT/XAT-style difficulty plus deterministic editorial validation, because malformed, trivial, ambiguous, or incorrectly keyed questions must never enter a test.
+- Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
