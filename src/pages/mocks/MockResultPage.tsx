@@ -30,7 +30,6 @@ export default function MockResultPage() {
   const [sections, setSections] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
-  const [peerAttempts, setPeerAttempts] = useState<any[]>([]);
   const [benchmark, setBenchmark] = useState<any>(null);
   const [historyAttempts, setHistoryAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +61,6 @@ export default function MockResultPage() {
       setResponses(rsp ?? []);
       setQuestions(qs);
       setBenchmark(peers?.[0] ?? null);
-      setPeerAttempts([]);
 
       // Progress history (same exam_code, same user, last 5)
       const { data: { user } } = await supabase.auth.getUser();
@@ -362,7 +360,7 @@ export default function MockResultPage() {
             <KPIGrid data={{
               totalScore: Number(attempt.total_score ?? 0),
               maxScore: Number(attempt.max_score ?? 0),
-              percentile: Number(attempt.percentile ?? 0),
+              percentile: benchmark?.my_percentile == null ? undefined : Number(benchmark.my_percentile),
               accuracy: Number(attempt.accuracy ?? 0),
               attempted: Number(attempt.total_attempted ?? 0),
               totalQuestions,

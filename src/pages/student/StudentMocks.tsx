@@ -226,7 +226,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
   const buildBucket = (typeKey: TypeKey) => {
     if (typeKey === "attempted") {
-      const items: { test: Test; attempt: Attempt }[] = [];
+      const items: { test: Test; attempt: Attempt; benchmark?: MockBenchmark }[] = [];
       attempts
         .filter((a) => a.status === "submitted" || a.status === "auto_submitted")
         .forEach((a) => {
