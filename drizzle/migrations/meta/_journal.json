@@ -71,6 +71,13 @@
       "when": 1791123773299,
       "tag": "0009_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791135893152,
+      "tag": "0010_add_real_mock_benchmarks",
+      "breakpoints": true
     }
   ]
 }

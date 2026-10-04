@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsDemo } from "@/contexts/DemoModeContext";
 import { DEMO_ATTEMPTS } from "@/lib/demoData";
+import { useMockBenchmarks } from "@/hooks/useMockBenchmarks";
 
 /**
  * Central performance engine for the Student LMS.
@@ -152,6 +153,8 @@ export function useStudentPerformance(): StudentPerformanceData {
     () => attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted"),
     [attempts]
   );
+  const benchmarkTestIds = useMemo(() => submitted.map((attempt) => attempt.test_id), [submitted]);
+  const { data: mockBenchmarks = {} } = useMockBenchmarks(isDemo ? [] : benchmarkTestIds);
   const inProgress = useMemo(() => attempts.filter((x) => x.status === "in_progress"), [attempts]);
 
   const metrics = useMemo(() => {
@@ -170,28 +173,31 @@ export function useStudentPerformance(): StudentPerformanceData {
       }
       return s;
     }, 0);
-    const ps = submitted.map((x) => Number(x.percentile || 0));
+    const ps = submitted
+      .map((x) => mockBenchmarks[x.test_id]?.my_percentile)
+      .filter((value): value is number => value != null)
+      .map(Number);
     const accs = submitted.map((x) => Number(x.accuracy || 0));
 
-    const avgPercentile = +(ps.reduce((a, b) => a + b, 0) / n).toFixed(1);
-    const bestPercentile = Math.max(...ps);
+    const avgPercentile = ps.length ? +(ps.reduce((a, b) => a + b, 0) / ps.length).toFixed(1) : 0;
+    const bestPercentile = ps.length ? Math.max(...ps) : 0;
     const avgAccuracy = Math.round(accs.reduce((a, b) => a + b, 0) / n);
     const avgScore = +(totalScore / n).toFixed(1);
     const totalHours = +(totalSec / 3600).toFixed(1);
 
     let consistency = 0;
-    if (n >= 2) {
-      const mean = ps.reduce((a, b) => a + b, 0) / n;
-      const variance = ps.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+    if (ps.length >= 2) {
+      const mean = ps.reduce((a, b) => a + b, 0) / ps.length;
+      const variance = ps.reduce((s, v) => s + (v - mean) ** 2, 0) / ps.length;
       consistency = Math.max(0, Math.round(100 - Math.sqrt(variance)));
     }
 
     const chrono = submitted.slice().reverse();
-    const improvement = chrono.length >= 2
-      ? +((Number(chrono[chrono.length - 1].percentile || 0)) - Number(chrono[0].percentile || 0)).toFixed(1)
+    const improvement = chrono.length >= 2 && mockBenchmarks[chrono[chrono.length - 1].test_id]?.my_percentile != null && mockBenchmarks[chrono[0].test_id]?.my_percentile != null
+      ? +(Number(mockBenchmarks[chrono[chrono.length - 1].test_id].my_percentile) - Number(mockBenchmarks[chrono[0].test_id].my_percentile)).toFixed(1)
       : 0;
-    const lastDelta = submitted.length >= 2
-      ? +((Number(submitted[0].percentile || 0)) - Number(submitted[1].percentile || 0)).toFixed(1)
+    const lastDelta = submitted.length >= 2 && mockBenchmarks[submitted[0].test_id]?.my_percentile != null && mockBenchmarks[submitted[1].test_id]?.my_percentile != null
+      ? +(Number(mockBenchmarks[submitted[0].test_id].my_percentile) - Number(mockBenchmarks[submitted[1].test_id].my_percentile)).toFixed(1)
       : 0;
 
     const days = new Set(
@@ -203,7 +209,7 @@ export function useStudentPerformance(): StudentPerformanceData {
       avgPercentile, bestPercentile, avgAccuracy, avgScore,
       totalHours, streakDays: days.size, consistency, improvement, lastDelta,
     };
-  }, [submitted]);
+  }, [submitted, mockBenchmarks]);
 
   const sectional = useMemo(() => {
     const agg: Record<string, { score: number; max: number; correct: number; attempted: number; percentile: number; count: number }> = {};
@@ -236,11 +242,11 @@ export function useStudentPerformance(): StudentPerformanceData {
     const chrono = submitted.slice().reverse().slice(-12);
     return chrono.map((x, i) => ({
       name: `M${i + 1}`,
-      percentile: Number(x.percentile || 0),
+      percentile: Number(mockBenchmarks[x.test_id]?.my_percentile || 0),
       score: Number(x.total_score || 0),
       accuracy: Number(x.accuracy || 0),
     }));
-  }, [submitted]);
+  }, [submitted, mockBenchmarks]);
 
   // Demo-mode override: all hooks above ran with `enabled: false`, so we
   // simply ignore their (empty) results and return Aman's hardcoded dataset.

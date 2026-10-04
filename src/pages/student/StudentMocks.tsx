@@ -12,10 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Search, Clock, CheckCircle2, Play, Trophy, FileText, ShoppingBag,
   Lock, Sparkles, Calendar, BookOpen, Layers, Target, Repeat, History,
-  TrendingUp, Award, Flame, BarChart3, Zap, ChevronRight,
+  TrendingUp, Award, Flame, BarChart3, Zap, ChevronRight, Users,
 } from "lucide-react";
 import UpgradeDialog from "@/components/student/UpgradeDialog";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockLeaderboardPath, mockResultPath, mockReviewPath } from "@/lib/studentModeNav";
+import { useMockBenchmarks, type MockBenchmark } from "@/hooks/useMockBenchmarks";
 
 const EXAM_FILTERS = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT"];
 
@@ -110,6 +111,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const [topicFilter, setTopicFilter] = useState<string>("All");
   const [sectionFilter, setSectionFilter] = useState<string>("All");
   const [attemptedTypeFilter, setAttemptedTypeFilter] = useState<string>("all");
+
+  const testIds = useMemo(() => Object.keys(tests), [tests]);
+  const { data: benchmarks = {} } = useMockBenchmarks(testIds);
 
   useEffect(() => {
     if (!user) return;
@@ -222,7 +226,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
   const buildBucket = (typeKey: TypeKey) => {
     if (typeKey === "attempted") {
-      const items: { test: Test; attempt: Attempt }[] = [];
+      const items: { test: Test; attempt: Attempt; benchmark?: MockBenchmark }[] = [];
       attempts
         .filter((a) => a.status === "submitted" || a.status === "auto_submitted")
         .forEach((a) => {
@@ -235,7 +239,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
             else if (attemptedTypeFilter === "topic_wise") { if (cat !== "topic" && tt !== "topic_wise") return; }
             else { if (cat !== attemptedTypeFilter && tt !== attemptedTypeFilter) return; }
           }
-          items.push({ test: t, attempt: a });
+          items.push({ test: t, attempt: a, benchmark: benchmarks[t.id] });
         });
       const seen = new Set<string>();
       return items.filter((i) => {
@@ -298,6 +302,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         owned: hasUniversalAccess || enrolledTestIds.has(t.id),
         inProgress: attemptedByTest[t.id]?.find((x) => x.status === "in_progress") ?? null,
         latestSubmitted: attemptedByTest[t.id]?.find((x) => x.status === "submitted" || x.status === "auto_submitted") ?? null,
+        benchmark: benchmarks[t.id],
       };
     });
   };
@@ -307,14 +312,15 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
     const submitted = attempts.filter((a) => a.status === "submitted" || a.status === "auto_submitted");
     const totalUnlocked = Object.values(tests).filter((t) => getKind(t) !== null).length;
     const totalAttempted = new Set(submitted.map((a) => a.test_id)).size;
-    const avgPercentile = submitted.length
-      ? Math.round(submitted.reduce((s, a) => s + (a.percentile ?? 0), 0) / submitted.length)
+    const competitive = submitted
+      .map((a) => benchmarks[a.test_id])
+      .filter((b): b is MockBenchmark => Boolean(b && b.my_percentile != null));
+    const avgPercentile = competitive.length
+      ? Math.round(competitive.reduce((s, b) => s + Number(b.my_percentile), 0) / competitive.length)
       : 0;
-    const bestPercentile = submitted.length
-      ? Math.max(...submitted.map((a) => a.percentile ?? 0))
-      : 0;
-    return { totalUnlocked, totalAttempted, avgPercentile, bestPercentile, submittedCount: submitted.length };
-  }, [attempts, tests]);
+    const verifiedEntries = Object.values(benchmarks).reduce((sum, b) => sum + b.verified_students, 0);
+    return { totalUnlocked, totalAttempted, avgPercentile, verifiedEntries, submittedCount: submitted.length };
+  }, [attempts, tests, benchmarks]);
 
   if (!user) return <div className="text-muted-foreground">Please sign in.</div>;
   if (loading) {
@@ -359,8 +365,8 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         <div className="relative mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <StatTile icon={Layers} label="Unlocked" value={stats.totalUnlocked} />
           <StatTile icon={CheckCircle2} label="Attempted" value={stats.totalAttempted} />
-          <StatTile icon={TrendingUp} label="Avg %ile" value={stats.avgPercentile} />
-          <StatTile icon={Trophy} label="Best %ile" value={stats.bestPercentile} />
+          <StatTile icon={Users} label="Verified entries" value={stats.verifiedEntries} />
+          <StatTile icon={TrendingUp} label="Cohort avg %ile" value={stats.avgPercentile} />
         </div>
 
         {stats.totalUnlocked > 0 && (
@@ -589,7 +595,7 @@ function TopicWiseView({
   topics, topicFilter, onTopicChange,
   onUpgrade,
 }: {
-  items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
+  items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null; benchmark?: MockBenchmark }[];
   allTopicWise: Test[];
   attemptedByTest: Record<string, Attempt[]>;
   enrolledTestIds: Set<string>;
@@ -844,7 +850,7 @@ function BucketGrid({
   items, typeLabel, examFilter, onUpgrade, groupBySection,
   sectionFilter, onSectionChange, isFullLength,
 }: {
-  items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
+  items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null; benchmark?: MockBenchmark }[];
   typeLabel: string; examFilter: string; onUpgrade: () => void;
   groupBySection?: boolean;
   sectionFilter?: string;
@@ -880,7 +886,7 @@ function BucketGrid({
   // Upcoming full-length launches strip (next 3 scheduled in future)
   // NOTE: must be declared before any conditional early-return to respect Rules of Hooks.
   const upcoming = useMemo(() => {
-    if (!isFullLength) return [] as { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null; at: Date }[];
+    if (!isFullLength) return [] as { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null; benchmark?: MockBenchmark; at: Date }[];
     const now = Date.now();
     return items
       .map((it) => {
@@ -1026,14 +1032,14 @@ function UpcomingLaunchesStrip({ items }: { items: { test: Test; at: Date; owned
 function MockCardItem({
   item, onUpgrade, isFullLength,
 }: {
-  item: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null };
+  item: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null; benchmark?: MockBenchmark };
   onUpgrade: () => void;
   isFullLength?: boolean;
 }) {
-  const { test, owned, inProgress, latestSubmitted } = item;
+  const { test, owned, inProgress, latestSubmitted, benchmark } = item;
   const lock = getLockInfo(test);
   const countdown = useCountdown(lock?.kind === "scheduled" ? lock.unlocksAt : null);
-  const pct = latestSubmitted?.percentile ?? null;
+  const pct = benchmark?.my_percentile ?? null;
   const accuracy = latestSubmitted?.total_attempted
     ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
     : null;
@@ -1176,7 +1182,7 @@ function MockCardItem({
           );
         })()}
 
-        {owned && latestSubmitted && pct != null && !lock && (
+        {owned && latestSubmitted && !lock && (
           <div className="relative rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-cyan-50/40 p-3 mb-3 overflow-hidden">
             <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-200/30 blur-2xl" />
             <div className="relative flex items-center gap-3">
@@ -1187,7 +1193,7 @@ function MockCardItem({
                   <circle
                     cx="18" cy="18" r="15.9" fill="none"
                     stroke="url(#mockGrad)" strokeWidth="3" strokeLinecap="round"
-                    strokeDasharray={`${pct}, 100`}
+                    strokeDasharray={`${pct ?? 0}, 100`}
                   />
                   <defs>
                     <linearGradient id="mockGrad" x1="0" y1="0" x2="1" y2="1">
@@ -1197,16 +1203,20 @@ function MockCardItem({
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center flex-col leading-none">
-                  <span className="text-base font-bold text-emerald-700 tabular-nums">{pct}</span>
-                  <span className="text-xs font-semibold text-emerald-600/80">%ile</span>
+                  <span className="text-base font-bold text-emerald-700 tabular-nums">{pct == null ? "—" : pct}</span>
+                  <span className="text-xs font-semibold text-emerald-600/80">{pct == null ? "pending" : "%ile"}</span>
                 </div>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs uppercase tracking-wider font-semibold text-emerald-700/80 inline-flex items-center gap-1">
-                  <Award className="h-3 w-3" /> Last Attempt
+                  <Award className="h-3 w-3" /> Competitive First Attempt
                 </div>
                 <div className="text-sm font-bold text-emerald-900">
-                  {latestSubmitted.total_score ?? 0}<span className="text-emerald-700/60 font-medium">/{latestSubmitted.max_score ?? 0}</span>
+                  {benchmark?.my_score ?? latestSubmitted.total_score ?? 0}<span className="text-emerald-700/60 font-medium">/{latestSubmitted.max_score ?? 0}</span>
+                </div>
+                <div className="mt-1 text-xs font-semibold text-emerald-800 inline-flex items-center gap-1">
+                  <Users className="h-3 w-3" /> {benchmark?.verified_students ?? 1} verified student{(benchmark?.verified_students ?? 1) === 1 ? "" : "s"}
+                  {benchmark?.is_provisional ? " · Provisional" : ""}
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-emerald-700/80">
                   {accuracy != null && (
@@ -1307,7 +1317,7 @@ function MockCardItem({
   );
 }
 
-function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] }) {
+function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt; benchmark?: MockBenchmark }[] }) {
   if (!items.length) {
     return (
       <Card className="p-10 text-center border-dashed border-2 border-sky-100 bg-gradient-to-br from-sky-50/40 to-white">
@@ -1321,12 +1331,12 @@ function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] })
   }
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map(({ test, attempt }) => {
-        const pct = attempt.percentile ?? 0;
+      {items.map(({ test, attempt, benchmark }) => {
+        const pct = benchmark?.my_percentile ?? null;
         const accuracy = attempt.total_attempted
           ? Math.round(((attempt.total_correct ?? 0) / attempt.total_attempted) * 100)
           : 0;
-        const tone = pct >= 90 ? "from-emerald-500 to-teal-600" : pct >= 70 ? "from-sky-500 to-blue-600" : pct >= 50 ? "from-amber-500 to-orange-600" : "from-rose-500 to-pink-600";
+        const tone = pct != null && pct >= 90 ? "from-emerald-500 to-teal-600" : pct != null && pct >= 70 ? "from-sky-500 to-blue-600" : pct != null && pct >= 50 ? "from-amber-500 to-orange-600" : "from-rose-500 to-pink-600";
 
         return (
           <Card key={attempt.id} className="overflow-hidden p-0 flex flex-col hover:shadow-lg transition-all hover:-translate-y-0.5">
@@ -1340,12 +1350,13 @@ function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] })
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-wider opacity-90">Percentile</div>
-                  <div className="text-3xl font-bold leading-none">{pct}</div>
+                  <div className="text-xs uppercase tracking-wider opacity-90">{benchmark?.is_provisional ? "Provisional percentile" : "Percentile"}</div>
+                  <div className="text-3xl font-bold leading-none">{pct == null ? "Pending" : pct}</div>
                 </div>
                 <div className="text-right text-xs opacity-90">
-                  <div>Score {attempt.total_score ?? 0}/{attempt.max_score ?? 0}</div>
+                  <div>Competitive score {benchmark?.my_score ?? attempt.total_score ?? 0}/{attempt.max_score ?? 0}</div>
                   <div>Accuracy {accuracy}%</div>
+                  <div>{benchmark?.verified_students ?? 1} verified students</div>
                 </div>
               </div>
             </div>

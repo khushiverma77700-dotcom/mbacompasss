@@ -23,11 +23,14 @@ import {
 } from "recharts";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 import AllIndiaRankTab from "@/components/mock/report/AllIndiaRankTab";
+import { useMockBenchmarks } from "@/hooks/useMockBenchmarks";
 
 import SectionSkeleton from "@/components/student/SectionSkeleton";
 export default function StudentPerformance() {
   const { submitted, loading } = useStudentPerformance();
   const attempts = useMemo(() => submitted.slice().reverse(), [submitted]);
+  const testIds = useMemo(() => attempts.map((attempt) => attempt.test_id), [attempts]);
+  const { data: benchmarks = {} } = useMockBenchmarks(testIds);
 
   const trend = useMemo(
     () =>
@@ -39,8 +42,10 @@ export default function StudentPerformance() {
             ? Math.round((Number(x.total_score || 0) / Number(x.max_score)) * 100)
             : 0,
         accuracy: Number(x.accuracy || 0),
+        cohortAverage: Number(benchmarks[x.test_id]?.cohort_average ?? 0),
+        percentile: benchmarks[x.test_id]?.my_percentile == null ? null : Number(benchmarks[x.test_id]?.my_percentile),
       })),
-    [attempts]
+    [attempts, benchmarks]
   );
 
   const sectionalAvg = useMemo(() => {
@@ -127,7 +132,7 @@ export default function StudentPerformance() {
         <TabsContent value="trend" className="mt-4">
           <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
             <Card className="p-3 sm:p-5">
-              <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Score trend</h2>
+              <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Score vs verified cohort average</h2>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={trend} margin={{ top: 5, right: 8, left: -16, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
@@ -136,6 +141,7 @@ export default function StudentPerformance() {
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Line type="monotone" dataKey="score" stroke="#0284c7" strokeWidth={2} name="Score" />
+                  <Line type="monotone" dataKey="cohortAverage" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 3" name="Cohort avg" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>
@@ -260,7 +266,7 @@ export default function StudentPerformance() {
                     <th className="py-2 pr-3">Mock</th>
                     <th className="py-2 pr-3">Date</th>
                     <th className="py-2 pr-3">Score</th>
-                    <th className="py-2 pr-3">Score %</th>
+                    <th className="py-2 pr-3">Verified cohort</th>
                     <th className="py-2 pr-3">Accuracy</th>
                     <th className="py-2 pr-3"></th>
                   </tr>
@@ -277,7 +283,7 @@ export default function StudentPerformance() {
                           {a.submitted_at ? new Date(a.submitted_at).toLocaleDateString() : "—"}
                         </td>
                         <td className="py-2 pr-3">{a.total_score ?? 0}/{a.max_score ?? 0}</td>
-                        <td className="py-2 pr-3 font-semibold text-sky-700">{sp}%</td>
+                        <td className="py-2 pr-3 font-semibold text-sky-700">{benchmarks[a.test_id]?.verified_students ?? 0} students · {benchmarks[a.test_id]?.my_percentile == null ? "Provisional" : `${Number(benchmarks[a.test_id]?.my_percentile).toFixed(2)}%ile`}</td>
                         <td className="py-2 pr-3">{a.accuracy ?? 0}%</td>
                         <td className="py-2 pr-3">
                           <Link to={mockResultPath(a.id)} onClick={ensureStudentMode} onPointerDown={ensureStudentMode} className="text-sky-700 hover:underline text-xs">View →</Link>

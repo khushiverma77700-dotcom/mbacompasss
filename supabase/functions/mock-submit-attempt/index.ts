@@ -190,17 +190,28 @@ Deno.serve(async (req) => {
         .eq("id", u.id);
     }
 
-    // Percentile (simple: % of submitted attempts on this test with lower score)
+    // Store a conservative compatibility percentile for the student's first
+    // completed attempt only. The UI reads live competition metrics from
+    // get_mock_benchmarks, which deduplicates every student in the same way.
     const { data: peerScores } = await admin
       .from("mock_attempts")
-      .select("total_score")
+      .select("id, user_id, total_score, submitted_at")
       .eq("test_id", attempt.test_id)
-      .in("status", ["submitted", "auto_submitted"]);
-    const peers = (peerScores ?? []).map((p: any) => Number(p.total_score ?? 0));
-    let percentile = 100;
-    if (peers.length > 0) {
-      const lower = peers.filter((s) => s < totalScore).length;
-      percentile = Math.round((lower / peers.length) * 10000) / 100;
+      .in("status", ["submitted", "auto_submitted"])
+      .order("submitted_at", { ascending: true });
+    const firstByStudent = new Map<string, number>();
+    (peerScores ?? []).forEach((p: any) => {
+      if (!firstByStudent.has(p.user_id)) firstByStudent.set(p.user_id, Number(p.total_score ?? 0));
+    });
+    const isFirstCompetitiveAttempt = !firstByStudent.has(attempt.user_id);
+    const cohortScores = isFirstCompetitiveAttempt
+      ? [...firstByStudent.values(), totalScore]
+      : [...firstByStudent.values()];
+    let percentile: number | null = null;
+    if (isFirstCompetitiveAttempt && cohortScores.length >= 2) {
+      const lower = cohortScores.filter((score) => score < totalScore).length;
+      const ties = cohortScores.filter((score) => score === totalScore).length;
+      percentile = Math.round(((lower + (ties - 1) / 2) / cohortScores.length) * 10000) / 100;
     }
 
     const accuracy = totalAttempted > 0
