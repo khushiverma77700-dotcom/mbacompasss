@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getSenderIdentities, getGlobalDailyCap, setGlobalDailyCap } from "@/lib/adminEmail.functions";
+import { getSenderIdentities, getGlobalDailyCap, setGlobalDailyCap, getDeliverabilitySettings, setDeliverabilitySettings } from "@/lib/adminEmail.functions";
+import { Switch } from "@/components/ui/switch";
 
 const db = supabase as any;
 const DOMAIN = "notify.mail.mbacompass.in";
@@ -76,6 +77,7 @@ export default function SendersTab({ onChanged }: { onChanged?: () => void }) {
         Each sender has its own name and address on your verified email domain. A campaign keeps one sender for every email. When the daily cap is reached, sending waits until the next day. If bounces or complaints go above the limits, the sender and its campaigns pause on their own until you resume them.
       </p>
       <GlobalCapCard />
+      <WarmupCard />
       <SenderReport rows={rows} />
       <div className="grid gap-4 lg:grid-cols-3">{rows.map((s) => <SenderCard key={s.id} s={s} onSaved={() => { load(); onChanged?.(); }} />)}</div>
     </div>
@@ -102,6 +104,48 @@ function GlobalCapCard() {
       <div className="flex flex-wrap items-end gap-2">
         <div><Label>Max emails per day</Label><Input type="number" min={1} value={val} onChange={(e) => setVal(e.target.value)} /></div>
         <Button onClick={save}>Save</Button>
+      </div>
+    </Card>
+  );
+}
+
+function WarmupCard() {
+  const fetchS = useServerFn(getDeliverabilitySettings);
+  const saveS = useServerFn(setDeliverabilitySettings);
+  const [s, setS] = useState<any>(null);
+  const load = () => fetchS({}).then(setS).catch(() => {});
+  useEffect(() => { load(); }, []);
+  if (!s) return null;
+  const upd = (k: string, v: any) => setS({ ...s, [k]: v });
+  const save = async (restart = false) => {
+    try { await saveS({ data: { ...s, restart } }); toast.success(restart ? "Warm-up restarted from day 1" : "Settings saved"); load(); }
+    catch (e: any) { toast.error(e?.message || "Could not save"); }
+  };
+  const preview = [0, 1, 2, 3, 4, 5].map((i) => Math.min(s.globalCap, Math.round(s.warmupStartCap * Math.pow(1 + s.warmupStepPct / 100, i))));
+  return (
+    <Card className="space-y-4 p-4">
+      <p className="text-xl font-semibold">Automatic warm-up and engagement protection</p>
+      <div className="space-y-2 rounded border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <Label>Auto warm-up schedule</Label>
+          <Switch checked={s.warmupEnabled} onCheckedChange={(v) => upd("warmupEnabled", v)} />
+        </div>
+        <p className="text-sm text-muted-foreground">Starts small and raises the daily limit step by step, never above the daily total cap. Today is day {s.warmupDay}; today's allowed total is <b>{s.effectiveCap}</b> emails.</p>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <div><Label>Start with (per day)</Label><Input type="number" value={s.warmupStartCap} onChange={(e) => upd("warmupStartCap", Number(e.target.value))} /></div>
+          <div><Label>Increase by (%)</Label><Input type="number" value={s.warmupStepPct} onChange={(e) => upd("warmupStepPct", Number(e.target.value))} /></div>
+          <div><Label>Every (days)</Label><Input type="number" value={s.warmupStepDays} onChange={(e) => upd("warmupStepDays", Number(e.target.value))} /></div>
+        </div>
+        <p className="text-sm text-muted-foreground">Schedule: {preview.map((n, i) => `day ${i * s.warmupStepDays + 1}: ${n}`).join(" · ")}</p>
+      </div>
+      <div className="space-y-2 rounded border p-3">
+        <Label>Skip people who never open</Label>
+        <p className="text-sm text-muted-foreground">New campaigns leave out anyone who received this many campaigns and never opened or clicked one. Set 0 to turn off. Test inboxes are never skipped.</p>
+        <Input className="max-w-32" type="number" min={0} value={s.skipUnengagedAfter} onChange={(e) => upd("skipUnengagedAfter", Number(e.target.value))} />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => save(false)}>Save</Button>
+        <Button variant="outline" onClick={() => save(true)}>Restart warm-up from day 1</Button>
       </div>
     </Card>
   );
