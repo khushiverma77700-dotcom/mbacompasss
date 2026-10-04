@@ -220,7 +220,33 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
       const { data: rows } = await admin.from("suppressed_emails").select("email").in("email", emails.slice(i, i + 200));
       (rows ?? []).forEach((r: any) => suppressed.add(String(r.email).toLowerCase()));
     }
-    const sendable = recipients.filter((r) => !suppressed.has(r.email));
+    let sendable = recipients.filter((r) => !suppressed.has(r.email));
+    // Skip people who received the last N campaigns but never opened or clicked any (protects reputation).
+    let unengagedSkipped = 0;
+    if (data.audience !== "test") {
+      const { data: st } = await admin.from("email_send_state").select("skip_unengaged_after").eq("id", 1).maybeSingle();
+      const lim = Number(st?.skip_unengaged_after ?? 0);
+      if (lim > 0) {
+        const cand = sendable.filter((r) => !r.isTest).map((r) => r.email);
+        const stats = new Map<string, { got: number; engaged: boolean }>();
+        for (let i = 0; i < cand.length; i += 200) {
+          for (let from = 0; ; from += 1000) {
+            const { data: rows } = await admin.from("email_campaign_recipients").select("email,first_opened_at,first_clicked_at")
+              .in("email", cand.slice(i, i + 200)).not("queued_at", "is", null).in("status", ["queued", "sent"]).range(from, from + 999);
+            for (const x of rows ?? []) {
+              const k = String(x.email).toLowerCase();
+              const v = stats.get(k) ?? { got: 0, engaged: false };
+              v.got++; if (x.first_opened_at || x.first_clicked_at) v.engaged = true;
+              stats.set(k, v);
+            }
+            if (!rows || rows.length < 1000) break;
+          }
+        }
+        const before = sendable.length;
+        sendable = sendable.filter((r) => { const v = stats.get(r.email); return r.isTest || !v || v.engaged || v.got < lim; });
+        unengagedSkipped = before - sendable.length;
+      }
+    }
     const tokens = await tokensFor(admin, sendable.map((r) => r.email));
 
     const campaignId = crypto.randomUUID();
@@ -270,6 +296,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     let failed = suppressed.size;
     const errors: string[] = [];
     if (suppressed.size) errors.push(`${suppressed.size} address(es) skipped: previously unsubscribed, bounced or complained.`);
+    if (unengagedSkipped) errors.push(`${unengagedSkipped} address(es) skipped: received several campaigns but never opened any.`);
     const recRows: any[] = [];
     for (const r of sendable) {
       const unsub = tokens.get(r.email);
@@ -314,7 +341,7 @@ export const sendEmailCampaign = createServerFn({ method: "POST" })
     const { error: tickErr } = await admin.rpc("email_campaign_tick");
     if (tickErr) errors.push(`First batch failed: ${tickErr.message}`);
     if (wakeErr || tickErr) await admin.from("email_campaigns").update({ last_error: errors.join("\n") }).eq("id", campaignId);
-    return { queued, failed, suppressed: suppressed.size, campaignId, errors };
+    return { queued, failed, suppressed: suppressed.size, unengagedSkipped, campaignId, errors };
   });
 
 function clampInt(v: unknown, min: number, max: number, fb: number) {
@@ -647,4 +674,45 @@ export const getSenderIdentities = createServerFn({ method: "POST" })
       out.push({ ...s, today, week: recent.length, bounced, complained, campaigns: cids.length, perf });
     }
     return out;
+  });
+
+type WarmupSettings = { warmupEnabled: boolean; warmupStartCap: number; warmupStepPct: number; warmupStepDays: number; skipUnengagedAfter: number; restart?: boolean };
+
+export const getDeliverabilitySettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: s } = await admin.from("email_send_state").select("warmup_enabled,warmup_started_on,warmup_start_cap,warmup_step_pct,warmup_step_days,skip_unengaged_after,campaign_global_daily_cap").eq("id", 1).maybeSingle();
+    const { data: eff } = await admin.rpc("email_effective_global_cap");
+    const days = Math.max(0, Math.floor((Date.now() + 5.5 * 3600e3 - new Date(`${s?.warmup_started_on}T00:00:00Z`).getTime()) / 86400e3));
+    return {
+      warmupEnabled: !!s?.warmup_enabled, warmupDay: days + 1,
+      warmupStartCap: Number(s?.warmup_start_cap ?? 100), warmupStepPct: Number(s?.warmup_step_pct ?? 25), warmupStepDays: Number(s?.warmup_step_days ?? 3),
+      skipUnengagedAfter: Number(s?.skip_unengaged_after ?? 4), globalCap: Number(s?.campaign_global_daily_cap ?? 1000), effectiveCap: Number(eff ?? 0),
+    };
+  });
+
+export const setDeliverabilitySettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: WarmupSettings) => ({
+    warmupEnabled: !!d?.warmupEnabled,
+    warmupStartCap: clampInt(d?.warmupStartCap, 10, 100000, 100),
+    warmupStepPct: clampInt(d?.warmupStepPct, 5, 100, 25),
+    warmupStepDays: clampInt(d?.warmupStepDays, 1, 14, 3),
+    skipUnengagedAfter: clampInt(d?.skipUnengagedAfter, 0, 20, 4),
+    restart: !!d?.restart,
+  }))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: any = {
+      warmup_enabled: data.warmupEnabled, warmup_start_cap: data.warmupStartCap, warmup_step_pct: data.warmupStepPct,
+      warmup_step_days: data.warmupStepDays, skip_unengaged_after: data.skipUnengagedAfter,
+    };
+    if (data.restart) patch.warmup_started_on = new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+    const { error } = await (supabaseAdmin as any).from("email_send_state").update(patch).eq("id", 1);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
