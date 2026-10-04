@@ -6,6 +6,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
+import { validateMockQuestion } from "../_shared/mockQuestionQuality.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,26 +65,6 @@ const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less
 // the section reaches its target or the watchdog cancels it after hours.
 const MAX_ATTEMPTS_PER_QUESTION = 200;
 
-
-function buildEmergencyDilrQuestion(n: number, seed: number) {
-  const a = 42 + ((seed + n * 7) % 31);
-  const b = 58 + ((seed + n * 11) % 37);
-  const c = 36 + ((seed + n * 13) % 29);
-  const d = 49 + ((seed + n * 17) % 41);
-  const total = a + b + c + d;
-  const correct = total - Math.min(a, b, c, d);
-  return {
-    question_html: `<div><p>The table shows four teams' completed tasks in a project sprint.</p><table><thead><tr><th>Team</th><th>Tasks</th></tr></thead><tbody><tr><td>A</td><td>${a}</td></tr><tr><td>B</td><td>${b}</td></tr><tr><td>C</td><td>${c}</td></tr><tr><td>D</td><td>${d}</td></tr></tbody></table><p>If the lowest-performing team is excluded, what is the total number of tasks completed by the remaining teams?</p></div>`,
-    options: [correct, correct + 4, correct - 6, total].map((value, idx) => ({
-      label: ["A", "B", "C", "D"][idx],
-      text: String(value),
-      is_correct: idx === 0,
-    })),
-    explanation_html: `The four task counts are ${a}, ${b}, ${c}, and ${d}. The lowest value is ${Math.min(a, b, c, d)}, so exclude that team. The remaining total is ${total} - ${Math.min(a, b, c, d)} = ${correct}.`,
-    topic: "Data Interpretation",
-    subtopic: "Table based calculation",
-  };
-}
 
 function isAIRateLimitError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
@@ -177,7 +158,10 @@ function levelGuidanceText(level: string): string {
   if (lvl === "very_hard") return `DIFFICULTY = VERY HARD (CAT 95+ percentile band). FORBIDDEN: single-step formula plug-ins, definition recall, basic percentage/ratio sums, simple syllogisms, two-line LR puzzles, vocabulary-only RC. EVERY question must require 3-5 non-obvious reasoning steps and take a 99-percentiler 2.5-3.5 minutes. Quant: fuse 2+ concepts (number theory + combinatorics, geometry + coordinate, etc.); use parametric conditions, max/min over constraints, modular arithmetic. VARC: inference questions with subtle scope traps; 6-sentence parajumbles. DILR: caselets with 3+ branching constraints. All distractors must reflect common student errors. If solvable in <90s by a 90-percentile student, REWRITE. Set "difficulty" to "hard".`;
   if (lvl === "extremely_hard") return `DIFFICULTY = EXTREMELY HARD (CAT 99.5+ percentile / Olympiad-adjacent). The hardest 2-3 questions of an entire CAT paper. MANDATORY: each Quant fuses 3+ topics or needs a non-standard insight (telescoping, AM-GM, pigeonhole, invariants, clever substitution). DILR caselets need dense data (6+×5+ tables or multi-layered constraints) with 4-6 deductive steps. VARC hinges on a single subtle word/scope shift. Solve time 3.5-5 min. All 4 options plausible; 2+ deep traps. NO formula recall, NO single-concept items. Set "difficulty" to "hard".`;
   if (lvl === "cat_pyq") return `DIFFICULTY = CAT PYQ-MIRROR. Internally pick a real CAT/XAT/IIFT 2015-2024 PYQ matching the section/topic, then REWRITE with all names, numbers, entities and units changed — preserve EXACT logical structure, concept fusion, trap pattern and difficulty (LOD 3) of the source PYQ. Never reproduce originals verbatim. Never mention "CAT/PYQ/previous year". Distractors must mirror the original's wrong-answer logic. Solve time 2.5-4 min. If the rewrite ends up easier than the source, pick a harder PYQ. Set "difficulty" to "hard".`;
-  return `Difficulty target: ${lvl}.`;
+  if (lvl === "easy") return `Target the accessible end of the real exam, but NEVER write school-level, definition-only, single-step or obvious-elimination questions. Every item must still require at least two meaningful reasoning steps and credible distractor analysis.`;
+  if (lvl === "medium" || lvl === "moderate") return `Match the real exam's competitive baseline. Reject school-level recall, direct formula substitution, obvious vocabulary recall and one-step arithmetic. Require multi-step reasoning, inference or application, with distractors based on realistic mistakes.`;
+  if (lvl === "hard" || lvl === "difficult") return `Target the upper quartile of the real exam while staying in syllabus. Require layered reasoning, close distractors and a non-obvious insight; never inflate difficulty through ambiguity or excessive calculation.`;
+  return `Use an exam-realistic distribution with no basic filler: approximately 20% accessible-but-nontrivial, 50% competitive baseline and 30% upper-quartile questions. Every item must require reasoning or application, not direct recall or one-step substitution.`;
 }
 
 function normalizeForHash(s: string): string {
@@ -467,16 +451,16 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       : opts.set_kind === "caselet"
         ? "an original DI/LR caselet with FULLY DETAILED DATA — include a properly formatted HTML <table> (rows × columns with concrete numbers/names) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc."
         : "an original shared-context block";
-    sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions for the ${opts.section_name} (${opts.section_code}) section ONLY, all tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules}${seedBlock}${avoidBlock} Output ONLY valid JSON.`;
-    user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. Every question MUST belong to this section's syllabus only. Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context AND ALL strictly within the ${opts.section_code} section's syllabus. Use FRESH original content; do NOT reuse any famous passage / caselet and do NOT repeat a scenario already used in another mock. Each MCQ has 4 options A-D with one correct; include a clear 120-180 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
+    sys = `You are an elite ${opts.exam_code} question setter and meticulous copy editor writing a SET of ${opts.count} questions for the ${opts.section_name} (${opts.section_code}) section ONLY, all tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules}${seedBlock}${avoidBlock} Before returning, independently solve every question, confirm exactly one option is correct, verify all data is sufficient and consistent, remove grammatical ambiguity, and check every explanation against the marked answer. Output ONLY valid JSON.`;
+    user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. Every question MUST belong to this section's syllabus only. Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context AND ALL strictly within the ${opts.section_code} section's syllabus. Use FRESH original content; do NOT reuse any famous passage / caselet and do NOT repeat a scenario already used in another mock. Each MCQ has exactly 4 distinct, plausible options A-D with exactly one correct; include a clear 220-400 word, step-by-step explanation per question. Reject and rewrite any basic, ambiguous, unsolvable, duplicated or internally inconsistent item before returning. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
   } else {
-    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section ONLY. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts; never repeat a template from another mock. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include clear 120-180 word explanations. ${mathRules} ${formatRules}${seedBlock}${avoidBlock} Output ONLY valid JSON.`;
+    sys = `You are an elite ${opts.exam_code} question setter and meticulous copy editor writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section ONLY. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts; never repeat a template from another mock. Each MCQ has exactly 4 distinct, plausible options with exactly one correct; each TITA has verified numeric answer(s). Include clear 220-400 word step-by-step explanations. Before returning, independently solve every item, check sufficient data, grammar, option uniqueness, answer accuracy and explanation consistency. Reject and rewrite any basic, ambiguous, unsolvable or internally inconsistent item. ${mathRules} ${formatRules}${seedBlock}${avoidBlock} Output ONLY valid JSON.`;
     user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. EVERY question MUST be strictly from this section's syllabus — DO NOT include any topic that belongs to another section of ${opts.exam_code}. Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
   }
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = "gpt-4o-mini";
+  const modelId = "gpt-4o";
   const callStartedAt = Date.now();
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   // Budget tuned for gpt-4o-mini: enough room for LaTeX + explanations without truncation.
@@ -763,6 +747,11 @@ Deno.serve(async (req) => {
           const preSetShingleLen = corpus.shingles.length;
           for (const q of setQs.slice(0, qPerSet)) {
             if (!q?.question_html) { rejectedInvalid++; continue; }
+            const quality = validateMockQuestion(q);
+            if (!quality.valid) {
+              console.warn(`[retry-mock-section] Rejected invalid set question: ${quality.errors.join("; ")}`);
+              rejectedInvalid++; continue;
+            }
             if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
               console.warn(`[retry-mock-section] Rejected cross-section drift in set for ${job.exam_code}/${job.section_code}: topic="${q.topic}"`);
               rejectedInvalid++; continue;
@@ -833,7 +822,7 @@ Deno.serve(async (req) => {
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
-              if (opts.length === 4 && opts.some((o: any) => o.is_correct)) {
+              if (opts.length === 4 && opts.filter((o: any) => o.is_correct).length === 1) {
                 await admin.from("mock_question_options").insert(opts);
                 if (hubSection) {
                   const correctIdx = opts.findIndex((o: any) => o.is_correct);
@@ -915,11 +904,7 @@ Deno.serve(async (req) => {
 
           let qs: any[] = [];
           try {
-            const pressureBeforeCall = runAttemptNumber + attempts;
-            if (pressureBeforeCall > 200 && sectionFamilyOf(job.section_code) === "logic-data") {
-              qs = Array.from({ length: batch }, (_, idx) => buildEmergencyDilrQuestion(produced + idx + 1, pressureBeforeCall + idx));
-            } else {
-              qs = await callOpenAIBatch({
+            qs = await callOpenAIBatch({
                 exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
                 count: batch, mcq: batchMcq, tita: batchTita, level: job.level || "mixed",
                 positive: job.positive_marks || 1, negative: job.negative_marks || 0,
@@ -928,7 +913,6 @@ Deno.serve(async (req) => {
                 uniquenessSeed: `${runSeed}-batch-${attempts}-${produced}-${crypto.randomUUID()}`,
                 avoidSnippets: corpus.snippets.slice(0, 10),
               }) as any[];
-            }
           } catch (e) {
             const msg = String((e as Error)?.message || e);
             const quotaBlocked = isAIQuotaBlockedError(msg);
@@ -948,6 +932,11 @@ Deno.serve(async (req) => {
           for (const q of qs) {
             if (produced >= target) break;
             if (!q?.question_html) { rejectedInvalid++; continue; }
+            const quality = validateMockQuestion(q);
+            if (!quality.valid) {
+              console.warn(`[retry-mock-section] Rejected invalid question: ${quality.errors.join("; ")}`);
+              rejectedInvalid++; continue;
+            }
             if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
               console.warn(`[retry-mock-section] Rejected cross-section drift for ${job.exam_code}/${job.section_code}: topic="${q.topic}"`);
               rejectedInvalid++; continue;
@@ -1029,7 +1018,7 @@ Deno.serve(async (req) => {
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
-              if (opts.length === 4 && opts.some((o: any) => o.is_correct)) {
+              if (opts.length === 4 && opts.filter((o: any) => o.is_correct).length === 1) {
                 await admin.from("mock_question_options").insert(opts);
                 if (hubSection) {
                   const correctIdx = opts.findIndex((o: any) => o.is_correct);

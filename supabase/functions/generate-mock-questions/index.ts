@@ -509,13 +509,13 @@ function buildSystemPrompt(opts: {
     {
       const sc = String(opts.section_code || "").toUpperCase();
       if (["VARC", "VALR", "LS", "GE", "LC"].includes(sc)) {
-        levelGuidance = "Mix Easy ~30%, Moderate ~45%, Hard ~25%. Hard items must demand inference / scope-trap elimination, not vocabulary.";
+        levelGuidance = "Use ~20% accessible-but-nontrivial, ~50% competitive baseline, ~30% hard. No basic vocabulary recall; require inference and scope-trap elimination.";
       } else if (["DILR", "LRDI", "DI", "LR", "AR"].includes(sc)) {
-        levelGuidance = "Mix Easy ~20%, Moderate ~40%, Hard ~40%. Hard caselets require multi-step constraint logic with dense data tables.";
+        levelGuidance = "Use ~15% accessible-but-nontrivial, ~45% competitive baseline, ~40% hard. Every caselet requires multi-step constraint logic with complete data.";
       } else if (["QA", "QADI", "QADS", "QS", "MS", "DA"].includes(sc)) {
-        levelGuidance = "Mix Easy ~25%, Moderate ~40%, Hard ~35%. Hard items must fuse 2+ topics or need a non-obvious insight — NO single-step formula plug-ins, NO trivial percentage/ratio sums, NO direct definition recall.";
+        levelGuidance = "Use ~15% accessible-but-nontrivial, ~50% competitive baseline, ~35% hard. Items require application or a non-obvious insight — NO single-step formula plug-ins, trivial percentage/ratio sums or direct definition recall.";
       } else {
-        levelGuidance = "Mix Easy ~30%, Moderate ~40%, Hard ~30%.";
+        levelGuidance = "Use ~20% accessible-but-nontrivial, ~50% competitive baseline, ~30% hard. No direct-recall filler unless the official section specifically tests current affairs or GK.";
       }
     }
   } else if (lvl === "very_hard") {
@@ -551,7 +551,7 @@ RULES:
 
 If the rewritten question is materially easier than the source PYQ, discard and pick a harder PYQ. Set "difficulty" to exactly "hard".`;
   } else {
-    levelGuidance = `Strictly target ${normalizeDifficulty(null, opts.level).toUpperCase()} difficulty. Every returned question difficulty must be exactly "${normalizeDifficulty(null, opts.level)}".`;
+    levelGuidance = `Strictly target ${normalizeDifficulty(null, opts.level).toUpperCase()} difficulty relative to the actual exam. Even the accessible band must require at least two meaningful reasoning or application steps; never use school-level recall or one-step filler. Every returned question difficulty must be exactly "${normalizeDifficulty(null, opts.level)}".`;
   }
 
   const topicLock = opts.strict_topic
@@ -648,6 +648,7 @@ CRITICAL RULES:
    - JSON STRING ESCAPING (CRITICAL): Because LaTeX lives inside a JSON string, EVERY single backslash MUST be doubled. Write \\\\frac, \\\\sqrt, \\\\cdot, \\\\times, \\\\div, \\\\le, \\\\ge, \\\\neq, \\\\sum, \\\\int, \\\\pi, \\\\theta, \\\\Rightarrow, \\\\therefore, \\\\circ etc. Single-backslash LaTeX (\\frac, \\sqrt) will render as garbage — ALWAYS use \\\\. Do not use unicode math symbols (×, ÷, ≤, ≥, ≠, √, π, ∑, ∫) inside math expressions — use the LaTeX command instead.
    - Use proper LaTeX for: percentages ($45\\\\%$), degrees ($60^{\\\\circ}$), units ($12\\\\text{ cm}$), subscripts ($x_{1}$), superscripts ($x^{2}$), mixed fractions ($2\\\\tfrac{1}{3}$).
 11. INLINE SVG VISUALS — whenever a question implies a chart, graph, diagram, arrangement, or geometric figure, you MUST emit a clean inline <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">…</svg> (or 480x320 for geometry) with proper <rect>/<circle>/<line>/<polygon>/<path>/<text> elements. Required for: DI charts (bar/pie/line/scatter/stacked/Venn), LR arrangements (seating/floor/network/tournament/blood-relations), Quant geometry/mensuration/coordinate/trigonometry diagrams. Label vertices (A, B, C…), axes, bars, slices, and given measurements directly in the SVG. NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below" or "as shown in figure" without actually drawing it. The SVG must be self-contained, human-readable, and use stroke="#1e293b" fill colors that render on white backgrounds.
+12. FINAL EDITORIAL CHECK — before returning, independently solve every item and verify that all supplied data is sufficient, exactly one MCQ option is correct, TITA answers are valid, all four options are distinct and plausible, the explanation reaches the marked answer, grammar is clean, and no placeholder/missing-figure text remains. Silently discard and rewrite any item that fails.
 
 EXPLANATION FORMAT (NON-NEGOTIABLE — bad explanations will be rejected):
 The explanation_html MUST be well-structured, scannable HTML using these building blocks:
@@ -733,7 +734,7 @@ async function callOpenAIBatch(args: {
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
   // Using gpt-4o-mini for cost efficiency. Formatting/LaTeX quality is maintained via
   // strict prompt rules (double-escaped backslashes, explicit LaTeX guidelines).
-  const modelId = "gpt-4o-mini";
+  const modelId = "gpt-4o";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
   // ~1800 tokens per question keeps room for LaTeX + explanations without overspending.
   const tokenBudget = Math.min(12000, 1800 * Math.max(1, args.count));
@@ -949,7 +950,7 @@ Deno.serve(async (req) => {
       exam_code, category, level,
       request: body, status: "running",
       total_requested: safePerSet * setsCount,
-      ai_model: "gpt-4o-mini",
+      ai_model: "gpt-4o",
       created_by: user.id,
     }).select("id").single();
     const genId = gen?.id;
