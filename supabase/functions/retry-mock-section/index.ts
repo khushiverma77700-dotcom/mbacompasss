@@ -199,8 +199,9 @@ async function loadExistingQuestionHashes(
       .select("id")
       .eq("code", sectionCode)
       .in("test_id", testIds);
-    sectionIds = (secRows || []).map((r: any) => r.id);
-    if (sectionIds.length === 0) return seen;
+    const resolvedSectionIds = (secRows || []).map((r: any) => r.id);
+    if (resolvedSectionIds.length === 0) return seen;
+    sectionIds = resolvedSectionIds;
   }
 
   const pageSize = 1000;
@@ -1069,12 +1070,12 @@ Deno.serve(async (req) => {
           if (!auto) return;
           const workerUrl = `${url}/functions/v1/retry-mock-section`;
           const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
-          const queued = admin.from("mock_section_jobs").update({
+          const queued = Promise.resolve(admin.from("mock_section_jobs").update({
             status: "pending",
             worker_lock_until: null,
             current_step: "Queued next generation tick…",
             updated_at: new Date().toISOString(),
-          }).eq("id", job_id);
+          }).eq("id", job_id));
           const next = queued.then(() => fetch(workerUrl, {
             method: "POST",
             headers: {
@@ -1092,7 +1093,7 @@ Deno.serve(async (req) => {
                 updated_at: new Date().toISOString(),
               }).eq("id", job_id);
             }
-          }).catch(async (e) => {
+          }).catch(async (e: unknown) => {
             console.error("[retry-mock-section] next worker failed", e);
             await admin.from("mock_section_jobs").update({
               status: "pending",

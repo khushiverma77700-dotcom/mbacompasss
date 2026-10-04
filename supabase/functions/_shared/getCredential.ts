@@ -103,10 +103,10 @@ async function resolveCredential(name: string, required: boolean, options?: { en
     if (data?.is_active && typeof data.key_value === "string" && data.key_value.length > 0) {
       dbValue = data.key_value.trim();
       // best-effort touch last_used_at
-      sb.from("api_credentials")
+      void Promise.resolve(sb.from("api_credentials")
         .update({ last_used_at: new Date().toISOString() })
         .eq("key_name", name)
-        .then(() => {})
+        .then(() => {}))
         .catch(() => {});
     }
   } catch (_) {
