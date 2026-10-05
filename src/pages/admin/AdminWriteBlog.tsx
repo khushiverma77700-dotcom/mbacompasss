@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText, Link2, Search } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText, Link2, Search, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
 import SeoLengthHint from "@/components/admin/SeoLengthHint";
@@ -112,6 +112,47 @@ const AdminWriteBlog = () => {
   const [searchIntent, setSearchIntent] = useState<string>(seed.searchIntent || "");
   const [instructions, setInstructions] = useState<string>(seed.instructions || "");
   const [samplesText, setSamplesText] = useState<string>(seed.samplesText || "");
+  const [modelUrl, setModelUrl] = useState<string>(seed.modelUrl || "");
+  const [modelDoc, setModelDoc] = useState<{ name: string; text: string } | null>(null);
+  const [modelReading, setModelReading] = useState(false);
+
+  const handleModelFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) { toast({ title: "File too large", description: "Please upload a file under 20 MB.", variant: "destructive" }); return; }
+    setModelReading(true);
+    try {
+      const buf = await file.arrayBuffer();
+      let text = "";
+      const name = file.name.toLowerCase();
+      if (name.endsWith(".pdf")) {
+        const pdfjs: any = await import("pdfjs-dist");
+        pdfjs.GlobalWorkerOptions.workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+        const pdf = await pdfjs.getDocument({ data: buf }).promise;
+        const pages: string[] = [];
+        for (let i = 1; i <= Math.min(pdf.numPages, 60); i++) {
+          const content = await (await pdf.getPage(i)).getTextContent();
+          pages.push(content.items.map((it: any) => it.str + (it.hasEOL ? "\n" : " ")).join(""));
+        }
+        text = pages.join("\n\n");
+      } else if (name.endsWith(".docx")) {
+        const mammoth: any = await import("mammoth/mammoth.browser");
+        text = (await mammoth.extractRawText({ arrayBuffer: buf })).value || "";
+      } else {
+        text = new TextDecoder().decode(buf);
+      }
+      text = text.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+      if (text.length < 200) throw new Error("Could not find readable text in this file. Scanned image PDFs are not supported.");
+      setModelDoc({ name: file.name, text });
+      setModelUrl("");
+      toast({ title: "File read", description: `${text.split(/\s+/).length.toLocaleString()} words extracted.` });
+    } catch (err: any) {
+      toast({ title: "Could not read file", description: err?.message || "Unknown error", variant: "destructive" });
+    } finally {
+      setModelReading(false);
+    }
+  };
   const [jobId, setJobId] = useState<string | null>(null);
 
   const [generating, setGenerating] = useState(false);
@@ -294,6 +335,9 @@ const AdminWriteBlog = () => {
           searchIntent,
           instructions: instructions.trim(),
           sampleBlogs: parseSamples(samplesText),
+          modelBlog: modelDoc
+            ? { name: modelDoc.name, text: modelDoc.text.slice(0, 30000) }
+            : /^https?:\/\/\S+$/i.test(modelUrl.trim()) ? { url: modelUrl.trim() } : null,
         },
       });
 
@@ -577,6 +621,27 @@ const AdminWriteBlog = () => {
               Paste sample article links (one per line) or full sample text. Separate pasted articles with a line containing only ---. The AI learns tone and structure only and never copies sentences.
             </p>
             <Textarea rows={5} value={samplesText} onChange={(e) => setSamplesText(e.target.value)} placeholder={"https://example.com/sample-article\n---\nOr paste a full sample article here"} />
+          </div>
+
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+            <Label className="text-xs font-semibold block">Write a Similar Blog (optional)</Label>
+            <p className="text-xs text-muted-foreground">
+              Add a link or upload a PDF / Word file. The system reads the whole page, works out what it covers, and writes a similar article in fresh, human-sounding words. Nothing is copied.
+            </p>
+            <Input value={modelUrl} onChange={(e) => setModelUrl(e.target.value)} placeholder="https://example.com/blog-you-want-a-similar-version-of" disabled={!!modelDoc} />
+            <div className="flex flex-wrap items-center gap-2">
+              <input id="model-blog-file" type="file" accept=".pdf,.docx,.txt,.md" className="hidden" onChange={handleModelFile} />
+              <Button type="button" variant="outline" size="sm" disabled={modelReading} onClick={() => document.getElementById("model-blog-file")?.click()}>
+                {modelReading ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
+                {modelReading ? "Reading file..." : "Upload PDF / Word"}
+              </Button>
+              {modelDoc && (
+                <Badge variant="secondary" className="gap-1 text-xs">
+                  <FileText className="h-3 w-3" /> {modelDoc.name} · {modelDoc.text.split(/\s+/).length.toLocaleString()} words read
+                  <button type="button" onClick={() => setModelDoc(null)} aria-label="Remove file"><X className="h-3 w-3" /></button>
+                </Badge>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
