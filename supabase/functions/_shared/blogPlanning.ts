@@ -36,6 +36,8 @@ export interface BlogAnalysis {
   timeSensitiveTopics: string[];
   style: StyleProfile | null;
   sampleCount: number;
+  /** Present when the editor supplied a model blog to write a similar article from. */
+  model?: { requirement: string; coverage: string[]; headings: string[] } | null;
 }
 
 /** Phrases that make copy read machine-written. Shared by writer + editor. */
@@ -83,8 +85,12 @@ export async function analyzeBlogBrief(opts: {
   instructions?: string;
   sampleBlogs?: unknown;
   sourceDigest?: string;
+  modelBlog?: string;
 }): Promise<BlogAnalysis> {
   const samples = await readSamples(opts.sampleBlogs);
+  const model = String(opts.modelBlog || "").trim().slice(0, 14000);
+  // With no separate samples, the model blog also teaches the style.
+  if (model.length > 300 && !samples.length) samples.push(model.slice(0, SAMPLE_CHARS));
   const fallback: BlogAnalysis = {
     searchIntent: opts.searchIntent || "informational",
     articleType: "guide",
@@ -95,6 +101,7 @@ export async function analyzeBlogBrief(opts: {
     timeSensitiveTopics: [],
     style: null,
     sampleCount: samples.length,
+    model: null,
   };
 
   const strList = { type: "array", items: { type: "string" } };
@@ -113,6 +120,9 @@ export async function analyzeBlogBrief(opts: {
       recommendedStructure: strList,
       timeSensitive: { type: "boolean" },
       timeSensitiveTopics: strList,
+      modelRequirement: { type: "string" },
+      modelCoverage: strList,
+      modelHeadings: strList,
       style: {
         type: ["object", "null"],
         additionalProperties: false,
@@ -120,7 +130,7 @@ export async function analyzeBlogBrief(opts: {
         required: styleProps,
       },
     },
-    required: ["searchIntent", "articleType", "readerQuestion", "mustInclude", "canInclude", "mustNotInclude", "allowedEntities", "recommendedStructure", "timeSensitive", "timeSensitiveTopics", "style"],
+    required: ["searchIntent", "articleType", "readerQuestion", "mustInclude", "canInclude", "mustNotInclude", "allowedEntities", "recommendedStructure", "timeSensitive", "timeSensitiveTopics", "modelRequirement", "modelCoverage", "modelHeadings", "style"],
   };
 
   const user = `Blog title: ${opts.title}
@@ -142,6 +152,8 @@ Tasks:
 4. recommendedStructure: an ordered list of section types that suits THIS intent (do not force a fixed template).
 5. timeSensitive + timeSensitiveTopics: which facts change by year (fees, dates, cutoffs, placements, rankings, eligibility).
 6. style: ${samples.length ? "describe the writing style of the SAMPLE BLOGS below (tone, paragraph length, heading pattern, intro style, table usage, sentence style, level of detail, use of examples, formatting). Describe patterns only — never quote sentences." : "null (no samples supplied)."}
+7. modelRequirement / modelCoverage / modelHeadings: ${model ? "a MODEL BLOG is supplied below. The editor wants a SIMILAR article. Summarise in modelRequirement the reader need it serves; list in modelCoverage every point/subtopic it covers (paraphrased); list its heading flow in modelHeadings (paraphrased, not copied). Fold its coverage into mustInclude and its named entities into allowedEntities when they fit the title." : "empty string and empty arrays (no model blog)."}
+${model ? `\n--- MODEL BLOG (write a similar article; never copy sentences) ---\n${model}\n--- END MODEL BLOG ---` : ""}
 ${samples.map((s, i) => `\n--- SAMPLE BLOG ${i + 1} (style reference only) ---\n${s}`).join("\n")}`;
 
   try {
@@ -175,6 +187,7 @@ ${samples.map((s, i) => `\n--- SAMPLE BLOG ${i + 1} (style reference only) ---\n
       timeSensitiveTopics: arr(a.timeSensitiveTopics),
       style: samples.length && a.style ? a.style as StyleProfile : null,
       sampleCount: samples.length,
+      model: model ? { requirement: String(a.modelRequirement || ""), coverage: arr(a.modelCoverage), headings: arr(a.modelHeadings) } : null,
     };
   } catch (e) {
     console.warn("[blogPlanning] analysis failed, using fallback", e instanceof Error ? e.message : e);
@@ -208,6 +221,13 @@ Sentences: ${a.style.sentenceStyle}
 Detail: ${a.style.detailLevel}
 Examples: ${a.style.examples}
 Formatting: ${a.style.formatting}
+` : ""}${a.model && (a.model.coverage.length || a.model.requirement) ? `
+## SIMILAR-BLOG MODE (editor supplied a model article)
+Reader need it serves: ${a.model.requirement}
+Cover the same ground, in your own words:
+${list(a.model.coverage)}
+Model heading flow (adapt, never copy wording): ${a.model.headings.join(" → ") || "(not detected)"}
+Write a fully original, humanised article: never reuse a sentence or distinctive phrase from the model. Use its figures only as sourced facts; where unsure, say to confirm on the official website.
 ` : ""}
 Accuracy > word count. Relevance > length. Readability > keyword density. If you don't know, don't invent.`;
 }
