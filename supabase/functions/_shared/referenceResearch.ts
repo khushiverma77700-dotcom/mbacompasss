@@ -176,7 +176,7 @@ export async function researchReferences(opts: {
     .reduce((sum, s) => sum + s.chars, 0);
 
   let supplementalUsed = false;
-  if (primaryChars < MIN_PRIMARY_CHARS) {
+  if (primaryChars < MIN_PRIMARY_CHARS && useFirecrawl) {
     const query = `${opts.topic} ${opts.keyword || ""} official latest data India MBA`.trim();
     const results = await firecrawlSearch({
       query,
@@ -200,7 +200,8 @@ export async function researchReferences(opts: {
           status: text.length > 200 ? "read" : "unreadable",
           tool: "Firecrawl web search",
           chars: text.length,
-          excerpt: text.slice(0, MAX_CHARS_PER_SOURCE),
+          excerpt: text.slice(0, 12000),
+          extracted: extractStructure(text),
         });
       }
     } else if (urls.length) {
@@ -266,6 +267,7 @@ export function referenceReport(research?: ReferenceResearch | null) {
       status: s.status,
       tool: s.tool,
       chars: s.chars,
+      extracted: s.extracted || null,
     })),
   };
 }
