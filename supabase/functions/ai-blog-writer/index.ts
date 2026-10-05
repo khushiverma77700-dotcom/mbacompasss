@@ -709,6 +709,9 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     tocEntries: structured.tocCount,
     sourceResearch: referenceReport(brief.research || null),
     analysis: brief.analysis || null,
+    sourceExcerpts: (brief.research?.sources || [])
+      .filter((s) => s.status === "read")
+      .map((s) => ({ url: s.url, title: s.title, kind: s.kind, excerpt: s.excerpt.slice(0, 4000) })),
     qualityAudit: buildQualityAudit({
       title: draft.title || brief.title,
       metaTitle: draft.metaTitle,
