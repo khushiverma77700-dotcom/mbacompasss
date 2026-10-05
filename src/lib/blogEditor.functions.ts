@@ -251,6 +251,40 @@ ${clip(htmlOf(a), 60000)}`,
     };
   });
 
+
+// ---------- Figure review: missing / outdated / conflicting figures ----------
+export const reviewBlogFigures = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => articleInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const a = await loadArticle(context.supabase, data.articleId);
+    const sources = await loadSources(context.supabase, data.jobId);
+    if (!sources.length) return { items: [], sourceCount: 0 };
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await callJson<{ items: { type: string; figure: string; articleValue: string; sourceValue: string; source: string; explanation: string; suggestion: string }[] }>(
+      "blog_figure_review",
+      EDITOR_SYSTEM,
+      `Compare every number, fee, date, deadline, percentile, ranking, seat count and placement figure in the ARTICLE with the SOURCES. Today is ${today}. Report only real problems:
+- "conflicting": the article value differs from the value a source gives for the same thing (articleValue vs sourceValue).
+- "outdated": the article uses an older year or cycle than a source provides, or the figure is clearly from an older cycle.
+- "missing": an important figure in the sources that the article's topic needs but omits, OR a figure in the article not present in any source (sourceValue "").
+Set "source" to the exact source URL, or "" when none. Never invent values or URLs. "suggestion" is one short instruction for the editor. Max 30 items.
+
+SOURCES:
+${sources.map((s) => `URL: ${s.url}\n${s.excerpt}`).join("\n\n---\n\n").slice(0, 90000)}
+
+ARTICLE:
+${clip(htmlOf(a), 60000)}`,
+      obj({ items: { type: "array", items: obj({ type: { type: "string", enum: ["missing", "outdated", "conflicting"] }, figure: str, articleValue: str, sourceValue: str, source: str, explanation: str, suggestion: str }) } }),
+    );
+    const allowed = new Set(sources.map((s) => s.url));
+    return {
+      items: (res.items || []).slice(0, 30).map((i) => ({ ...i, source: allowed.has(i.source) ? i.source : "" })),
+      sourceCount: sources.length,
+    };
+  });
+
 // ---------- Rewrite (humanize / fix one / fix all / apply links) ----------
 const rewriteInput = articleInput.extend({
   mode: z.enum(["humanize", "fix", "fix_all", "links"]),
