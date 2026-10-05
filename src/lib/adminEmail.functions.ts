@@ -366,8 +366,11 @@ export const updateCampaignDelivery = createServerFn({ method: "POST" })
     if (data.intervalSeconds != null) patch.interval_seconds = clampInt(data.intervalSeconds, 5, 86400, 30);
     if (data.batchSize != null) patch.batch_size = clampInt(data.batchSize, 1, 2000, 100);
     if (data.intervalSeconds != null && c.status === "running") {
-      // Re-time the next batch against the new interval so a faster speed takes effect right away.
-      patch.next_send_at = new Date(Date.now() + Math.min(5, Number(patch.interval_seconds)) * 1000).toISOString();
+      // Re-time the next batch against the new interval: a faster speed pulls it forward,
+      // a slower speed never fires sooner than the already-scheduled batch.
+      const byNewInterval = Date.now() + Number(patch.interval_seconds) * 1000;
+      const existing = c.next_send_at ? new Date(c.next_send_at).getTime() : byNewInterval;
+      patch.next_send_at = new Date(Math.min(existing, byNewInterval)).toISOString();
     }
     if (data.action === "pause" && c.status === "running") patch.status = "paused";
     if (data.action === "resume" && c.status === "paused") { patch.status = "running"; patch.next_send_at = new Date().toISOString(); }
@@ -397,9 +400,10 @@ export const resendFailedCampaign = createServerFn({ method: "POST" })
 
     const failed: any[] = [];
     for (let from = 0; ; from += 1000) {
-      const { data: r } = await admin.from("email_campaign_recipients")
-        .select("email,name,vars,is_test_inbox")
+      const { data: r, error: rErr } = await admin.from("email_campaign_recipients")
+        .select("email,name,is_test_inbox")
         .eq("campaign_id", data.campaignId).in("status", ["failed", "bounced"]).range(from, from + 999);
+      if (rErr) throw new Error(`Could not load failed recipients: ${rErr.message}`);
       failed.push(...(r ?? []));
       if (!r || r.length < 1000) break;
     }

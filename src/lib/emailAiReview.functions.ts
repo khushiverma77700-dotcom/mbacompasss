@@ -53,7 +53,7 @@ export const reviewEmailWithAi = createServerFn({ method: "POST" })
       subject: String(i.subject || "").slice(0, 500),
       heading: String(i.heading || "").slice(0, 500),
       bodyHtml: String(i.bodyHtml || "").slice(0, 30000),
-      ctas: (Array.isArray(i.ctas) ? i.ctas : []).slice(0, 2).map((c) => ({ label: String(c?.label || "").slice(0, 200), url: String(c?.url || "").slice(0, 2000) })),
+      ctas: (Array.isArray(i.ctas) ? i.ctas : []).slice(0, 4).map((c) => ({ label: String(c?.label || "").slice(0, 200), url: String(c?.url || "").slice(0, 2000) })),
     };
   })
   .handler(async ({ data, context }): Promise<EmailReviewResult> => {
