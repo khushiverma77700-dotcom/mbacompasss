@@ -54,6 +54,7 @@ const CHECK_LABEL: Record<string, string> = {
   internalLinks: "Internal links",
   noPlaceholders: "No unfinished sections",
   factsReviewed: "Fact check run, nothing unverified",
+  faq: "FAQ where appropriate",
 };
 
 export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDensity }: Props) {
