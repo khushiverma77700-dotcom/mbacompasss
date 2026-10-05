@@ -39,6 +39,8 @@ interface BlogBrief {
   searchIntent?: string;
   instructions?: string;
   sampleBlogs?: string[];
+  /** "Write a similar blog" model: a page URL or text extracted from an uploaded PDF/DOCX. */
+  modelBlog?: { url?: string; text?: string; name?: string } | null;
   targetWords?: number;
   /** Attached at runtime after the scope/style analysis pass. */
   analysis?: BlogAnalysis | null;
@@ -738,8 +740,9 @@ async function processBlogJobStep(adminClient: any, job: any) {
 
   if (phase === "understand") {
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 5, current_step: "Reading reference links" }).eq("id", jobId);
+    const modelUrl = brief.modelBlog?.url && /^https?:\/\//i.test(brief.modelBlog.url) ? brief.modelBlog.url.trim() : "";
     const research = await researchReferences({
-      urls: brief.referenceUrls,
+      urls: [...(modelUrl ? [modelUrl] : []), ...(brief.referenceUrls || []).filter((u) => u !== modelUrl)],
       topic: brief.title,
       keyword: brief.targetKeyword,
     }).catch((e) => {
@@ -747,6 +750,18 @@ async function processBlogJobStep(adminClient: any, job: any) {
       return null;
     });
     await adminClient.from("ai_blog_generation_jobs").update({ progress: 9, current_step: "Understanding intent, topic boundary and sample style" }).eq("id", jobId);
+    let modelText = String(brief.modelBlog?.text || "").trim().slice(0, 30000);
+    if (research && modelText.length > 200) {
+      research.sources.unshift({
+        url: `upload:${brief.modelBlog?.name || "model-document"}`,
+        title: brief.modelBlog?.name || "Uploaded model document",
+        kind: "primary", status: "read", tool: "Uploaded document reader",
+        chars: modelText.length, excerpt: modelText.slice(0, 12000),
+      });
+    }
+    if (!modelText && modelUrl) {
+      modelText = (research?.sources || []).find((x) => x.url === modelUrl && x.status === "read")?.excerpt || "";
+    }
     const digest = (research?.sources || []).filter((x) => x.status === "read").map((x) => `${x.title}\n${x.excerpt.slice(0, 800)}`).join("\n\n");
     const analysis = await analyzeBlogBrief({
       title: brief.title,
@@ -757,6 +772,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
       instructions: brief.instructions,
       sampleBlogs: brief.sampleBlogs,
       sourceDigest: digest,
+      modelBlog: modelText,
     });
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "queued",
