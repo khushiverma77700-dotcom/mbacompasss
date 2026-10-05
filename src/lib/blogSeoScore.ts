@@ -82,7 +82,7 @@ export function analyzeBlogDeterministic(a: {
       const el = e.toLowerCase();
       if (banned.some((b) => b.includes(el))) return true;
       if (a.boundary!.allowedEntities.length === 0) return false;
-      return !allowedBlob.includes(el) && !(el.startsWith("iim ") && /\biims?\b/.test(allowedBlob) && a.boundary!.allowedEntities.some((x) => /iim/i.test(x)) && allowedBlob.includes(el));
+      return !allowedBlob.includes(el);
     });
   }
 
