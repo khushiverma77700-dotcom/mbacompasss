@@ -395,6 +395,8 @@ const AdminWriteBlog = () => {
               sections: (d.sections || []).map((x: any) => ({ heading: String(x.heading || ""), angle: String(x.angle || "") })),
               faqs: (d.faqQuestions || []).map((q: any) => String(q)),
             });
+            setProgressCurrent("Paused — waiting for you to approve the outline below");
+            setTimeout(() => document.getElementById("outline-review")?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
             await new Promise<void>((resolve) => { outlineWait.current = resolve; });
             continue;
           }
@@ -749,6 +751,12 @@ const AdminWriteBlog = () => {
         </CardContent>
       </Card>
 
+      {outline && (
+        <Button type="button" className="w-full" onClick={() => document.getElementById("outline-review")?.scrollIntoView({ behavior: "smooth" })}>
+          Outline is ready — scroll down to review and approve it
+        </Button>
+      )}
+
       {(generating || progressSteps.length > 0) && (
         <AIGenerationProgress
           workflow="Blog generation"
@@ -773,10 +781,10 @@ const AdminWriteBlog = () => {
       )}
 
       {outline && (
-        <Card className="border-primary/40">
+        <Card id="outline-review" className="border-2 border-primary scroll-mt-24">
           <CardHeader>
-            <CardTitle className="text-base">Review the outline before writing</CardTitle>
-            <CardDescription>Edit, reorder, add or remove sections. Writing starts only after you approve.</CardDescription>
+            <CardTitle className="text-base">Action needed: review the outline before writing</CardTitle>
+            <CardDescription>Generation is paused until you approve. Edit, reorder, add or remove sections, then click "Approve outline & write article" at the bottom of this box.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 md:grid-cols-2">
