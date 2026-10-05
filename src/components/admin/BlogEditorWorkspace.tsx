@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,12 +17,15 @@ import {
   rewriteBlogArticle,
   suggestBlogInternalLinks,
   saveBlogArticle,
+  reviewBlogFigures,
 } from "@/lib/blogEditor.functions";
+import { computeFreshness } from "@/lib/blogFreshness";
 
 type Boundary = { mustInclude: string[]; canInclude: string[]; mustNotInclude: string[]; allowedEntities: string[] };
 type Issue = { id: string; title: string; detail: string; category: string; severity: string; safeToAutoFix: boolean };
 type Analysis = Awaited<ReturnType<typeof analyzeBlogArticle>>;
 type Claim = { claim: string; status: string; source: string; note: string };
+type FigureItem = { type: string; figure: string; articleValue: string; sourceValue: string; source: string; explanation: string; suggestion: string };
 type LinkSug = { anchor: string; target: string; location: string; reason: string };
 
 interface Props {
@@ -55,6 +58,8 @@ const CHECK_LABEL: Record<string, string> = {
   noPlaceholders: "No unfinished sections",
   factsReviewed: "Fact check run, nothing unverified",
   faq: "FAQ where appropriate",
+  figuresReviewed: "Figure review run, no conflicting or outdated figures",
+  fresh: "Source data is recent (freshness 50+)",
 };
 
 export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDensity }: Props) {
@@ -63,6 +68,7 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
   const rewriteFn = useServerFn(rewriteBlogArticle);
   const linksFn = useServerFn(suggestBlogInternalLinks);
   const saveFn = useServerFn(saveBlogArticle);
+  const figuresFn = useServerFn(reviewBlogFigures);
 
   const boundary: Boundary | null = stats?.analysis?.boundary || null;
   const searchIntent: string = stats?.analysis?.searchIntent || "";
@@ -72,6 +78,7 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [claims, setClaims] = useState<Claim[] | null>(null);
   const [links, setLinks] = useState<LinkSug[] | null>(null);
+  const [figures, setFigures] = useState<FigureItem[] | null>(null);
   const [tab, setTab] = useState("issues");
   const [draft, setDraft] = useState({ title: "", h1: "", slug: "", metaTitle: "", metaDescription: "", intro: "", content: "", published: false });
 
@@ -119,6 +126,11 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
       const a = await analyzeFn({ data: base }).catch(() => null);
       if (a) setAnalysis(a);
     });
+  const reviewFigures = () => run("figures", () => figuresFn({ data: base }), (r) => { setFigures(r.items); setTab("figures"); if (!r.sourceCount) toast.info("No sources were read for this article, so figures cannot be compared."); });
+  const freshness = useMemo(
+    () => computeFreshness({ articleHtml: `${draft.intro}\n${draft.content}`, sources: Array.isArray(stats?.sourceExcerpts) ? stats.sourceExcerpts : [] }),
+    [draft.intro, draft.content, stats],
+  );
   const suggestLinks = () => run("links-suggest", () => linksFn({ data: base }), (r) => { setLinks(r.links); setTab("links"); });
 
   const persist = (publish: boolean) =>
@@ -136,6 +148,8 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
         humanized: analysis.humanizationScore >= 75,
         ...analysis.checklist,
         factsReviewed: claims !== null && unverified === 0,
+        figuresReviewed: figures !== null && figures.filter((f) => f.type !== "missing").length === 0,
+        fresh: freshness.score >= 50,
       }
     : null;
   const failing = checklist ? Object.entries(checklist).filter(([, v]) => !v).map(([k]) => k) : [];
@@ -167,6 +181,7 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
           <Button size="sm" variant="outline" onClick={() => setTab("scope")} className="gap-1"><Link2 className="h-4 w-4" /> View Source Data</Button>
           <Button size="sm" onClick={analyze} disabled={!!busy} className="gap-1">{busy === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gauge className="h-4 w-4" />} Analyze SEO</Button>
           <Button size="sm" variant="outline" onClick={factCheck} disabled={!!busy} className="gap-1">{busy === "fact" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Fact Check</Button>
+          <Button size="sm" variant="outline" onClick={reviewFigures} disabled={!!busy} className="gap-1">{busy === "figures" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Review Figures</Button>
           <Button size="sm" variant="outline" onClick={() => rewrite("humanize")} disabled={!!busy} className="gap-1">{busy === "humanize" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Humanize</Button>
           <Button size="sm" variant="outline" onClick={() => setTab("issues")} disabled={!analysis} className="gap-1"><Wrench className="h-4 w-4" /> Fix Issues</Button>
           <Button size="sm" variant="outline" disabled={!!busy || fixable.length === 0} onClick={() => rewrite("fix_all", { issues: fixable.map((i) => ({ title: i.title, detail: i.detail })) })} className="gap-1">{busy === "fix_all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />} Fix All Issues ({fixable.length})</Button>
@@ -176,11 +191,12 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
           <Button size="sm" onClick={() => persist(true)} disabled={!!busy || !ready} className="gap-1" title={ready ? "" : "Run Analyze SEO and Fact Check, then fix every failing checklist item"}>{busy === "publish" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Publish</Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
           {score("SEO Score", analysis?.seoScore ?? "—")}
           {score("Content Quality", analysis?.qualityScore ?? "—")}
           {score("Humanization", analysis?.humanizationScore ?? "—")}
           {score("Accuracy", analysis?.accuracyScore ?? "—")}
+          {score(`Freshness · ${freshness.label}`, freshness.score)}
           {score("Keyword Density", analysis ? `${analysis.density.actual}%` : "—")}
           {score("Target Density", `${targetDensity}%`)}
         </div>
@@ -197,6 +213,8 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
             <TabsTrigger value="issues">Issues {analysis ? `(${analysis.issues.length})` : ""}</TabsTrigger>
             <TabsTrigger value="scores">Score breakdown</TabsTrigger>
             <TabsTrigger value="facts">Fact check {claims ? `(${claims.length})` : ""}</TabsTrigger>
+            <TabsTrigger value="figures">Figure review {figures ? `(${figures.length})` : ""}</TabsTrigger>
+            <TabsTrigger value="freshness">Freshness</TabsTrigger>
             <TabsTrigger value="links">Internal links</TabsTrigger>
             <TabsTrigger value="scope">Scope & sources</TabsTrigger>
             <TabsTrigger value="preview">Preview & edit</TabsTrigger>
@@ -254,6 +272,47 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
                 {c.source && <a href={c.source} target="_blank" rel="noreferrer" className="text-primary break-all">{c.source}</a>}
               </div>
             ))}
+          </TabsContent>
+
+          <TabsContent value="figures" className="space-y-2 mt-3">
+            {!figures && <p className="text-sm text-muted-foreground">Click Review Figures to compare every number in the article with its sources.</p>}
+            {figures?.length === 0 && <p className="text-sm">No missing, outdated or conflicting figures found.</p>}
+            {(figures || []).map((f, n) => (
+              <div key={n} className="rounded-md border p-3 text-sm space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={f.type === "missing" ? "secondary" : "destructive"}>{f.type === "conflicting" ? "Conflicting" : f.type === "outdated" ? "Outdated" : "Missing"}</Badge>
+                  <span className="font-medium">{f.figure}</span>
+                </div>
+                <p>Article: <strong>{f.articleValue || "not mentioned"}</strong> · Source: <strong>{f.sourceValue || "not in sources"}</strong></p>
+                {f.explanation && <p className="text-muted-foreground">{f.explanation}</p>}
+                <div className="flex flex-wrap items-center gap-2">
+                  {f.source && <a href={f.source} target="_blank" rel="noreferrer" className="text-primary break-all">{f.source}</a>}
+                  <Button size="sm" variant="outline" disabled={!!busy} onClick={() => rewrite("fix", { issues: [{ title: `${f.type} figure: ${f.figure}`, detail: `Article says "${f.articleValue}", source says "${f.sourceValue}" (${f.source || "no source"}). ${f.suggestion}. Only use the source value; never invent one.` }] })}>Fix This</Button>
+                </div>
+              </div>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="freshness" className="space-y-3 mt-3 text-sm">
+            <p>Freshness <strong>{freshness.score}/100</strong> ({freshness.label}), measured against {freshness.currentYear}. It combines how recent the source data is with whether fees, deadlines, placements and rankings in the article use current years.</p>
+            {freshness.notes.map((n) => <p key={n} className="text-muted-foreground">{n}</p>)}
+            {freshness.sources.length > 0 && (
+              <div className="space-y-1">
+                <p className="font-semibold">Source dates</p>
+                {freshness.sources.map((s) => (
+                  <div key={s.url} className="flex flex-wrap justify-between gap-2 rounded border p-2">
+                    <span className="break-all">{s.title}</span>
+                    <Badge variant={s.ageYears === null ? "secondary" : s.ageYears <= 1 ? "outline" : "destructive"}>{s.latestDate ? `Latest: ${s.latestDate}` : "No date found"}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+            {freshness.oldTimeSensitive.length > 0 && (
+              <div className="space-y-1">
+                <p className="font-semibold">Older time-sensitive mentions</p>
+                {freshness.oldTimeSensitive.map((o, i) => <p key={i} className="rounded border p-2"><Badge variant="destructive">{o.year}</Badge> {o.context}</p>)}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="links" className="space-y-2 mt-3">

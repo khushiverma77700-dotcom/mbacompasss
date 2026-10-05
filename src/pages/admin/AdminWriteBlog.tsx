@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -154,6 +154,35 @@ const AdminWriteBlog = () => {
     }
   };
   const [jobId, setJobId] = useState<string | null>(null);
+  type OutlineEdit = { jobId: string; title: string; metaTitle: string; metaDescription: string; sections: { heading: string; angle: string }[]; faqs: string[] };
+  const [outline, setOutline] = useState<OutlineEdit | null>(null);
+  const [outlineSaving, setOutlineSaving] = useState(false);
+  const outlineWait = useRef<(() => void) | null>(null);
+  const editSection = (i: number, patch: Partial<{ heading: string; angle: string }>) =>
+    setOutline((o) => o && { ...o, sections: o.sections.map((x, n) => (n === i ? { ...x, ...patch } : x)) });
+  const moveSection = (i: number, d: number) =>
+    setOutline((o) => {
+      if (!o) return o;
+      const j = i + d;
+      if (j < 0 || j >= o.sections.length) return o;
+      const next = [...o.sections];
+      [next[i], next[j]] = [next[j], next[i]];
+      return { ...o, sections: next };
+    });
+  const approveOutline = async () => {
+    if (!outline) return;
+    const sections = outline.sections.filter((x) => x.heading.trim());
+    if (!sections.length) { toast({ title: "Add at least one section", variant: "destructive" }); return; }
+    setOutlineSaving(true);
+    const { data, error } = await supabase.functions.invoke("ai-blog-writer", {
+      body: { action: "approve_outline", jobId: outline.jobId, outline: { ...outline, sections, faqs: outline.faqs.filter((q) => q.trim()) } },
+    });
+    setOutlineSaving(false);
+    if (error || data?.error) { toast({ title: "Could not approve outline", description: data?.error || error?.message, variant: "destructive" }); return; }
+    setOutline(null);
+    outlineWait.current?.();
+    outlineWait.current = null;
+  };
 
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState<any>(null);
@@ -356,6 +385,19 @@ const AdminWriteBlog = () => {
           if (jobErr) throw jobErr;
           const job = jobRes?.job;
           if (job?.current_step) setProgressCurrent(job.current_step);
+          if (job?.status === "awaiting_outline") {
+            const d = job.stats?.draft || {};
+            setOutline({
+              jobId: data.jobId,
+              title: d.title || "",
+              metaTitle: d.metaTitle || "",
+              metaDescription: d.metaDescription || "",
+              sections: (d.sections || []).map((x: any) => ({ heading: String(x.heading || ""), angle: String(x.angle || "") })),
+              faqs: (d.faqQuestions || []).map((q: any) => String(q)),
+            });
+            await new Promise<void>((resolve) => { outlineWait.current = resolve; });
+            continue;
+          }
           if (job?.status === "completed") {
             finalData = { insertedId: job.article_id, stats: job.stats || {} };
             break;
@@ -726,6 +768,45 @@ const AdminWriteBlog = () => {
           <CardContent className="pt-4 flex gap-2 items-start text-sm">
             <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
             <p className="text-destructive">{errorMsg}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {outline && (
+        <Card className="border-primary/40">
+          <CardHeader>
+            <CardTitle className="text-base">Review the outline before writing</CardTitle>
+            <CardDescription>Edit, reorder, add or remove sections. Writing starts only after you approve.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1 md:col-span-2"><Label>Article title</Label><Input value={outline.title} onChange={(e) => setOutline({ ...outline, title: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Meta title</Label><Input value={outline.metaTitle} onChange={(e) => setOutline({ ...outline, metaTitle: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Meta description</Label><Input value={outline.metaDescription} onChange={(e) => setOutline({ ...outline, metaDescription: e.target.value })} /></div>
+            </div>
+            <div className="space-y-2">
+              <Label>Sections (H2)</Label>
+              {outline.sections.map((sec, i) => (
+                <div key={i} className="rounded-md border p-3 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{i + 1}</Badge>
+                    <Input className="flex-1 min-w-[200px]" value={sec.heading} onChange={(e) => editSection(i, { heading: e.target.value })} placeholder="Section heading" />
+                    <Button type="button" size="sm" variant="ghost" onClick={() => moveSection(i, -1)} disabled={i === 0}>Up</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => moveSection(i, 1)} disabled={i === outline.sections.length - 1}>Down</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setOutline({ ...outline, sections: outline.sections.filter((_, n) => n !== i) })}><X className="h-4 w-4" /></Button>
+                  </div>
+                  <Textarea rows={2} value={sec.angle} onChange={(e) => editSection(i, { angle: e.target.value })} placeholder="What this section should cover" />
+                </div>
+              ))}
+              <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => setOutline({ ...outline, sections: [...outline.sections, { heading: "", angle: "" }] })}><Plus className="h-4 w-4" /> Add section</Button>
+            </div>
+            <div className="space-y-1">
+              <Label>FAQ questions (one per line)</Label>
+              <Textarea rows={4} value={outline.faqs.join("\n")} onChange={(e) => setOutline({ ...outline, faqs: e.target.value.split("\n") })} />
+            </div>
+            <Button onClick={approveOutline} disabled={outlineSaving} className="gap-2">
+              {outlineSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Approve outline & write article
+            </Button>
           </CardContent>
         </Card>
       )}

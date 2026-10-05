@@ -806,6 +806,16 @@ async function processBlogJobStep(adminClient: any, job: any) {
     const facts = await fetchVerifiedFacts(adminClient, brief);
     const draft = await createOutlineDraft(brief, facts);
     stats.facts = facts;
+    if ((brief as any).reviewOutline !== false) {
+      // Pause for the admin to review and edit the structure before writing.
+      await adminClient.from("ai_blog_generation_jobs").update({
+        status: "awaiting_outline",
+        progress: 16,
+        current_step: "Outline ready for your review",
+        stats: { ...stats, phase: "outline_review", draft },
+      }).eq("id", jobId);
+      return;
+    }
     await adminClient.from("ai_blog_generation_jobs").update({
       status: "queued",
       progress: 18,
@@ -814,6 +824,7 @@ async function processBlogJobStep(adminClient: any, job: any) {
     }).eq("id", jobId);
     return;
   }
+  if (phase === "outline_review") return;
 
   const jobFacts: VerifiedFacts | null = (stats.facts as VerifiedFacts | undefined) || await fetchVerifiedFacts(adminClient, brief).catch(() => null);
   const draft = stats.draft || await createOutlineDraft(brief, jobFacts);
@@ -905,6 +916,38 @@ Deno.serve(async (req) => {
 
     const brief = (await req.json()) as BlogBrief;
     const action = (brief as any)?.action;
+    if (action === "approve_outline") {
+      const id = String((brief as any)?.jobId || "");
+      const o = (brief as any)?.outline || {};
+      if (!id) return json(400, { error: "jobId is required" });
+      const { data: job } = await adminClient.from("ai_blog_generation_jobs").select("id,status,stats").eq("id", id).maybeSingle();
+      if (!job) return json(404, { error: "Blog generation job not found" });
+      if (job.status !== "awaiting_outline") return json(409, { error: "This outline is no longer waiting for approval." });
+      const s = (job.stats || {}) as any;
+      const clean = (v: unknown, n: number) => String(v ?? "").replace(/<[^>]*>/g, "").trim().slice(0, n);
+      const sections = (Array.isArray(o.sections) ? o.sections : [])
+        .map((x: any) => ({ heading: clean(x?.heading, 140), angle: clean(x?.angle, 600) || "Cover this point using the source facts." }))
+        .filter((x: any) => x.heading)
+        .slice(0, 14);
+      if (!sections.length) return json(400, { error: "Add at least one section heading." });
+      const faqs = (Array.isArray(o.faqs) ? o.faqs : []).map((q: unknown) => clean(q, 200)).filter(Boolean).slice(0, 10);
+      const draft = {
+        ...(s.draft || {}),
+        ...(clean(o.title, 70) ? { title: clean(o.title, 70), h1Tag: clean(o.title, 70) } : {}),
+        ...(clean(o.metaTitle, 60) ? { metaTitle: clean(o.metaTitle, 60) } : {}),
+        ...(clean(o.metaDescription, 160) ? { metaDescription: clean(o.metaDescription, 160) } : {}),
+        sections,
+        faqQuestions: faqs,
+        outlineApproved: true,
+      };
+      await adminClient.from("ai_blog_generation_jobs").update({
+        status: "queued",
+        progress: 18,
+        current_step: `Writing section 1 of ${sections.length}`,
+        stats: { ...s, phase: "sections", sectionIndex: 0, draft },
+      }).eq("id", id);
+      return json(200, { success: true });
+    }
     if (action === "status") {
       const requestedJobId = String((brief as any)?.jobId || "");
       if (!requestedJobId) return json(400, { error: "jobId is required" });
