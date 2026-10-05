@@ -219,9 +219,10 @@ const AdminWriteBlog = () => {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         title, slug, targetKeyword, metaTitle, metaDescription, category,
         secondaryKeywords: secondaryKws, referenceUrls,
+        wordTarget, audience, searchIntent, instructions, samplesText,
       }));
     } catch { /* storage unavailable */ }
-  }, [title, slug, targetKeyword, metaTitle, metaDescription, category, secondaryKws, referenceUrls]);
+  }, [title, slug, targetKeyword, metaTitle, metaDescription, category, secondaryKws, referenceUrls, wordTarget, audience, searchIntent, instructions, samplesText]);
 
   const toggleUrl = (opt: LinkOption) => {
     setSelectedUrls(prev => {

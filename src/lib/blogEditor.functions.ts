@@ -373,7 +373,7 @@ export const saveBlogArticle = createServerFn({ method: "POST" })
       patch.published = true;
       patch.status = "published";
     }
-    const { error } = await context.supabase.from("articles").update(patch).eq("id", data.articleId);
+    const { error } = await context.supabase.from("articles").update(patch as any).eq("id", data.articleId);
     if (error) throw new Error(`Could not save: ${error.message}`);
     return { ok: true, slug: data.slug, published: !!data.publish };
   });
