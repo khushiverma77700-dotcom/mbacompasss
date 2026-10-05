@@ -163,6 +163,8 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" asChild className="gap-1"><a href={`/admin/articles?edit=${articleId}`} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" /> Open in Editor</a></Button>
+          <Button size="sm" variant="outline" onClick={() => setTab("scope")} className="gap-1"><Link2 className="h-4 w-4" /> View Source Data</Button>
           <Button size="sm" onClick={analyze} disabled={!!busy} className="gap-1">{busy === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gauge className="h-4 w-4" />} Analyze SEO</Button>
           <Button size="sm" variant="outline" onClick={factCheck} disabled={!!busy} className="gap-1">{busy === "fact" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Fact Check</Button>
           <Button size="sm" variant="outline" onClick={() => rewrite("humanize")} disabled={!!busy} className="gap-1">{busy === "humanize" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Humanize</Button>
@@ -290,12 +292,33 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
             <div>
               <p className="font-semibold">Sources</p>
               {(stats?.sourceResearch?.sources || []).length === 0 && <p className="text-muted-foreground">No external sources were read.</p>}
-              {(stats?.sourceResearch?.sources || []).map((s: any, i: number) => (
-                <p key={i} className="break-all">
-                  <Badge variant={s.status === "read" ? "outline" : "destructive"} className="mr-2">{s.kind === "primary" ? "Your link" : "Additional"} · {s.status === "read" ? "used" : "not readable"}</Badge>
-                  {s.url}
-                </p>
-              ))}
+              {(stats?.sourceResearch?.sources || []).map((s: any, i: number) => {
+                const ex = s.extracted;
+                const excerpt = (stats?.sourceExcerpts || []).find((x: any) => x.url === s.url)?.excerpt;
+                return (
+                  <div key={i} className="rounded-md border p-3 mt-2 space-y-2">
+                    <p className="break-all">
+                      <Badge variant={s.status === "read" ? "outline" : "destructive"} className="mr-2">{s.kind === "primary" ? "Your link" : "Additional"} · {s.status === "read" ? "used" : "not readable"}</Badge>
+                      <strong>{s.title}</strong>
+                    </p>
+                    {/^https?:/.test(s.url) && <a href={s.url} target="_blank" rel="noreferrer" className="text-primary underline break-all">Open Source</a>}
+                    {ex && (
+                      <p className="text-muted-foreground">
+                        {s.chars.toLocaleString()} characters read · {ex.facts.length} facts · {ex.numbers} data points · {ex.dates} dates · {ex.tables} tables · {ex.headings.length} headings
+                      </p>
+                    )}
+                    {(ex || excerpt) && (
+                      <details>
+                        <summary className="cursor-pointer font-semibold">View Extracted Data</summary>
+                        {ex?.headings?.length ? <><p className="font-semibold mt-2">Headings</p><ul className="list-disc pl-4">{ex.headings.map((h: string, j: number) => <li key={j}>{h}</li>)}</ul></> : null}
+                        {ex?.facts?.length ? <><p className="font-semibold mt-2">Facts and figures</p><ul className="list-disc pl-4">{ex.facts.map((f: string, j: number) => <li key={j}>{f}</li>)}</ul></> : null}
+                        {excerpt && <><p className="font-semibold mt-2">Full text read</p><pre className="whitespace-pre-wrap max-h-96 overflow-auto rounded bg-muted p-2">{excerpt}</pre></>}
+                      </details>
+                    )}
+                  </div>
+                );
+              })}
+              {(stats?.sourceResearch?.notes || []).map((n: string, i: number) => <p key={`n${i}`} className="text-muted-foreground">{n}</p>)}
             </div>
           </TabsContent>
 

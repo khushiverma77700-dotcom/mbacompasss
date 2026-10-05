@@ -8,6 +8,14 @@
 
 import { firecrawlScrape, firecrawlSearch, firecrawlConfigured } from "./firecrawlGateway.ts";
 
+export interface SourceExtract {
+  headings: string[];
+  tables: number;
+  numbers: number;
+  dates: number;
+  facts: string[];
+}
+
 export interface ReferenceSource {
   url: string;
   title: string;
@@ -18,6 +26,8 @@ export interface ReferenceSource {
   tool: string;
   chars: number;
   excerpt: string;
+  /** Structured counts so the admin can see what was extracted. */
+  extracted?: SourceExtract;
 }
 
 export interface ReferenceResearch {
@@ -28,7 +38,7 @@ export interface ReferenceResearch {
 }
 
 const MAX_URLS = 8;
-const MAX_CHARS_PER_SOURCE = 9000;
+const MAX_CHARS_PER_SOURCE = 40000;
 const MIN_PRIMARY_CHARS = 1200;
 
 export const normalizeReferenceUrls = (input: unknown): string[] => {
@@ -66,9 +76,59 @@ const textOf = (payload: unknown): { text: string; title: string } => {
   return { text, title };
 };
 
+const decode = (t: string) =>
+  t.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#8377;|&#x20b9;/gi, "₹").replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&#8217;|&rsquo;|&#8216;|&lsquo;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&#8211;|&ndash;|&#8212;|&mdash;/g, "–").replace(/&#\d+;/g, " ");
+
+/** Convert article HTML to markdown-like text, keeping headings and tables intact. */
+export function htmlToResearchText(html: string): { text: string; title: string } {
+  const title = decode((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "").trim());
+  let body = html.match(/<article[\s\S]*?<\/article>/i)?.[0] || html.match(/<main[\s\S]*?<\/main>/i)?.[0] || html;
+  body = body.replace(/<(script|style|noscript|svg|nav|footer|header|aside|form|iframe)\b[\s\S]*?<\/\1>/gi, " ");
+  body = body.replace(/<table[\s\S]*?<\/table>/gi, (tbl) => {
+    const rows = [...tbl.matchAll(/<tr[\s\S]*?<\/tr>/gi)].map((r) =>
+      [...r[0].matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi)].map((c) => decode(c[1].replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim()),
+    ).filter((r) => r.length);
+    if (!rows.length) return " ";
+    const out = rows.map((r) => `| ${r.join(" | ")} |`);
+    out.splice(1, 0, `| ${rows[0].map(() => "---").join(" | ")} |`);
+    return `\n\n${out.join("\n")}\n\n`;
+  });
+  body = body.replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi, (_m, l, t) => `\n\n${"#".repeat(Number(l))} ${String(t).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}\n\n`);
+  body = body.replace(/<li[^>]*>/gi, "\n- ").replace(/<\/(p|div|li|section)>|<br\s*\/?>/gi, "\n");
+  const text = decode(body.replace(/<[^>]+>/g, " ")).replace(/[ \t]+/g, " ").replace(/\n[ \t]+/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  return { text, title };
+}
+
+async function directRead(url: string): Promise<{ text: string; title: string }> {
+  const r = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; MBACompassResearch/1.0)", Accept: "text/html,application/xhtml+xml" },
+    redirect: "follow",
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!r.ok) throw new Error(`the page returned HTTP ${r.status}`);
+  const type = r.headers.get("content-type") || "";
+  if (!/html|text/i.test(type)) throw new Error(`unsupported content type ${type}`);
+  return htmlToResearchText(await r.text());
+}
+
+/** Count headings, tables, figures and dates; pull the fact-bearing lines. */
+export function extractStructure(text: string): SourceExtract {
+  const headings = [...text.matchAll(/^#{1,4} (.+)$/gm)].map((m) => m[1].trim()).slice(0, 40);
+  const tables = (text.match(/^\| ?---/gm) || []).length;
+  const numbers = (text.match(/(₹|Rs\.?|INR)\s?[\d,.]+(\s?(lakh|lakhs|crore|L|Cr))?|\b\d+(\.\d+)?\s?(%|lakh|lakhs|crore|LPA)\b/gi) || []).length;
+  const dates = (text.match(/\b(\d{1,2}\s)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?,?\s\d{4}\b|\b20\d{2}[-/]\d{2}[-/]\d{2}\b/gi) || []).length;
+  const facts = text.split(/\n/).map((l) => l.trim())
+    .filter((l) => l.length > 20 && l.length < 400 && /\d/.test(l) && !/^\| ?---/.test(l))
+    .slice(0, 80);
+  return { headings, tables, numbers, dates, facts };
+}
+
 /**
  * Read the admin's reference links first, then (only if needed) look for extra
  * trusted sources. Never throws — a failed link is reported, not fatal.
+ * Uses Firecrawl when connected and the built-in page reader otherwise.
  */
 export async function researchReferences(opts: {
   urls?: unknown;
@@ -79,40 +139,36 @@ export async function researchReferences(opts: {
   const sources: ReferenceSource[] = [];
   const toolsUsed: string[] = [];
   const notes: string[] = [];
+  const useFirecrawl = firecrawlConfigured();
 
-  if (!firecrawlConfigured()) {
-    if (urls.length) {
-      notes.push("The page-reading service is not connected, so the reference links could not be read. The article was written from verified database facts only.");
-      for (const url of urls) {
-        sources.push({ url, title: url, kind: "primary", status: "skipped", tool: "none", chars: 0, excerpt: "" });
-      }
-    }
-    return { sources, toolsUsed, supplementalUsed: false, notes };
-  }
-
-  if (urls.length) toolsUsed.push("Firecrawl page reader (reference links)");
+  if (urls.length) toolsUsed.push(useFirecrawl ? "Firecrawl page reader (reference links)" : "Built-in page reader (reference links)");
 
   for (const url of urls) {
-    try {
-      const payload = await firecrawlScrape(url, ["markdown"]);
-      const { text, title } = textOf(payload);
-      if (!text || text.length < 200) {
-        sources.push({ url, title: title || url, kind: "primary", status: "unreadable", tool: "Firecrawl page reader", chars: text.length, excerpt: "" });
-        continue;
+    let text = "", title = "", tool = "";
+    if (useFirecrawl) {
+      try {
+        const got = textOf(await firecrawlScrape(url, ["markdown"]));
+        text = got.text; title = got.title; tool = "Firecrawl page reader";
+      } catch {
+        notes.push(`Firecrawl could not read ${url}; the built-in reader was used instead.`);
       }
-      sources.push({
-        url,
-        title: title || url,
-        kind: "primary",
-        status: "read",
-        tool: "Firecrawl page reader",
-        chars: text.length,
-        excerpt: text.slice(0, MAX_CHARS_PER_SOURCE),
-      });
-    } catch (e) {
-      sources.push({ url, title: url, kind: "primary", status: "unreadable", tool: "Firecrawl page reader", chars: 0, excerpt: "" });
-      notes.push(`Could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
     }
+    if (text.length < 200) {
+      try {
+        const got = await directRead(url);
+        text = got.text; title = title || got.title; tool = "Built-in page reader";
+      } catch (e) {
+        notes.push(`Could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    if (text.length < 200) {
+      sources.push({ url, title: title || url, kind: "primary", status: "unreadable", tool: tool || "page reader", chars: text.length, excerpt: "" });
+      continue;
+    }
+    sources.push({
+      url, title: title || url, kind: "primary", status: "read", tool,
+      chars: text.length, excerpt: text.slice(0, MAX_CHARS_PER_SOURCE), extracted: extractStructure(text),
+    });
   }
 
   const primaryChars = sources
@@ -120,7 +176,7 @@ export async function researchReferences(opts: {
     .reduce((sum, s) => sum + s.chars, 0);
 
   let supplementalUsed = false;
-  if (primaryChars < MIN_PRIMARY_CHARS) {
+  if (primaryChars < MIN_PRIMARY_CHARS && useFirecrawl) {
     const query = `${opts.topic} ${opts.keyword || ""} official latest data India MBA`.trim();
     const results = await firecrawlSearch({
       query,
@@ -144,7 +200,8 @@ export async function researchReferences(opts: {
           status: text.length > 200 ? "read" : "unreadable",
           tool: "Firecrawl web search",
           chars: text.length,
-          excerpt: text.slice(0, MAX_CHARS_PER_SOURCE),
+          excerpt: text.slice(0, 12000),
+          extracted: extractStructure(text),
         });
       }
     } else if (urls.length) {
@@ -210,6 +267,7 @@ export function referenceReport(research?: ReferenceResearch | null) {
       status: s.status,
       tool: s.tool,
       chars: s.chars,
+      extracted: s.extracted || null,
     })),
   };
 }

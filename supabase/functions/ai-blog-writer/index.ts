@@ -713,7 +713,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     analysis: brief.analysis || null,
     sourceExcerpts: (brief.research?.sources || [])
       .filter((s) => s.status === "read")
-      .map((s) => ({ url: s.url, title: s.title, kind: s.kind, excerpt: s.excerpt.slice(0, 4000) })),
+      .map((s) => ({ url: s.url, title: s.title, kind: s.kind, excerpt: s.excerpt.slice(0, 20000) })),
     qualityAudit: buildQualityAudit({
       title: draft.title || brief.title,
       metaTitle: draft.metaTitle,
@@ -762,7 +762,22 @@ async function processBlogJobStep(adminClient: any, job: any) {
     if (!modelText && modelUrl) {
       modelText = (research?.sources || []).find((x) => x.url === modelUrl && x.status === "read")?.excerpt || "";
     }
-    const digest = (research?.sources || []).filter((x) => x.status === "read").map((x) => `${x.title}\n${x.excerpt.slice(0, 800)}`).join("\n\n");
+    const suppliedLinks = (brief.referenceUrls || []).length + (modelUrl ? 1 : 0);
+    const readCount = (research?.sources || []).filter((x) => x.status === "read").length;
+    if (suppliedLinks > 0 && readCount === 0) {
+      // The source is the foundation of the article — never fall back to a generic write-up.
+      const why = (research?.notes || []).join(" ") || "The page could not be opened.";
+      await adminClient.from("ai_blog_generation_jobs").update({
+        status: "failed",
+        progress: 100,
+        current_step: "Reference link could not be read",
+        error_message: `None of your reference links could be read, so no article was written. ${why} Try another link, or upload the page as a PDF.`,
+        stats: { ...stats, research },
+        finished_at: new Date().toISOString(),
+      }).eq("id", jobId);
+      return;
+    }
+    const digest = (research?.sources || []).filter((x) => x.status === "read").map((x) => `${x.title}\n${x.excerpt.slice(0, 6000)}`).join("\n\n");
     const analysis = await analyzeBlogBrief({
       title: brief.title,
       keyword: brief.targetKeyword,
