@@ -15,6 +15,7 @@ import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText, Link2, Se
 import { useToast } from "@/hooks/use-toast";
 import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
 import SeoLengthHint from "@/components/admin/SeoLengthHint";
+import BlogEditorWorkspace from "@/components/admin/BlogEditorWorkspace";
 
 const CATEGORIES = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
 
@@ -31,6 +32,20 @@ const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 
 const STORAGE_KEY = "ai_blog_brief_draft";
+const WORKSPACE_KEY = "ai_blog_workspace";
+const WORD_PRESETS = [500, 1000, 1500, 2000];
+
+const parseSamples = (raw: string): string[] => {
+  const out: string[] = [];
+  for (const block of raw.split(/^\s*---\s*$/m)) {
+    const t = block.trim();
+    if (!t) continue;
+    const lines = t.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    if (lines.every((l) => /^https?:\/\/\S+$/i.test(l))) out.push(...lines);
+    else out.push(t);
+  }
+  return out.slice(0, 5);
+};
 
 const TOOL_URLS: { url: string; label: string }[] = [
   { url: "/mba-compass", label: "MBA Compass" },
@@ -89,15 +104,33 @@ const AdminWriteBlog = () => {
     return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.`;
   };
   const [contentDateContext, setContentDateContext] = useState<string>(buildLatestDateContext());
-  const [wordMin, setWordMin] = useState(2500);
-  const [wordMax, setWordMax] = useState(3500);
-  const [densityPct, setDensityPct] = useState(2);
+  const [wordTarget, setWordTarget] = useState<number>(seed.wordTarget || 1500);
+  const wordMin = Math.round(wordTarget * 0.9);
+  const wordMax = Math.round(wordTarget * 1.1);
+  const [densityPct, setDensityPct] = useState(1);
+  const [audience, setAudience] = useState<string>(seed.audience || "");
+  const [searchIntent, setSearchIntent] = useState<string>(seed.searchIntent || "");
+  const [instructions, setInstructions] = useState<string>(seed.instructions || "");
+  const [samplesText, setSamplesText] = useState<string>(seed.samplesText || "");
+  const [jobId, setJobId] = useState<string | null>(null);
 
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [progressCurrent, setProgressCurrent] = useState<string>("");
+
+  // Restore the last generated article workspace after a refresh.
+  useEffect(() => {
+    let saved: { articleId?: string; jobId?: string | null } | null = null;
+    try { saved = JSON.parse(sessionStorage.getItem(WORKSPACE_KEY) || "null"); } catch {}
+    if (!saved?.articleId) return;
+    setJobId(saved.jobId || null);
+    if (!saved.jobId) { setStats({ insertedId: saved.articleId }); return; }
+    supabase.functions.invoke("ai-blog-writer", { body: { action: "status", jobId: saved.jobId } }).then(({ data }) => {
+      setStats({ ...(data?.job?.stats || {}), insertedId: saved!.articleId });
+    });
+  }, []);
 
   // Internal-link pool
   const [colleges, setColleges] = useState<LinkOption[]>([]);
@@ -186,9 +219,10 @@ const AdminWriteBlog = () => {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         title, slug, targetKeyword, metaTitle, metaDescription, category,
         secondaryKeywords: secondaryKws, referenceUrls,
+        wordTarget, audience, searchIntent, instructions, samplesText,
       }));
     } catch { /* storage unavailable */ }
-  }, [title, slug, targetKeyword, metaTitle, metaDescription, category, secondaryKws, referenceUrls]);
+  }, [title, slug, targetKeyword, metaTitle, metaDescription, category, secondaryKws, referenceUrls, wordTarget, audience, searchIntent, instructions, samplesText]);
 
   const toggleUrl = (opt: LinkOption) => {
     setSelectedUrls(prev => {
@@ -215,10 +249,9 @@ const AdminWriteBlog = () => {
   const validate = () => {
     if (!title.trim()) return "Title is required";
     if (!slug.trim()) return "Slug is required";
-    if (!targetKeyword.trim()) return "Target keyword is required";
-    if (wordMin < 300) return "Min words must be at least 300";
-    if (wordMax < wordMin) return "Max words must be greater than or equal to min words";
-    if (densityPct < 0.5 || densityPct > 5) return "Keyword density should be between 0.5% and 5% (Google-safe range)";
+    if (!targetKeyword.trim()) return "Primary keyword is required";
+    if (wordTarget < 300) return "Word count must be at least 300";
+    if (densityPct < 0.5 || densityPct > 5) return "Keyword density should be between 0.5% and 5%";
     return null;
   };
 
@@ -251,11 +284,16 @@ const AdminWriteBlog = () => {
           metaDescription: metaDescription.trim(),
           category,
           contentDateContext: contentDateContext.trim(),
+          targetWords: wordTarget,
           wordCountMin: wordMin,
           wordCountMax: wordMax,
           keywordDensityPct: densityPct,
           allowedInternalUrls: Object.values(selectedUrls),
           referenceUrls,
+          audience: audience.trim(),
+          searchIntent,
+          instructions: instructions.trim(),
+          sampleBlogs: parseSamples(samplesText),
         },
       });
 
@@ -263,6 +301,7 @@ const AdminWriteBlog = () => {
       if (data?.error) { setStep("research", "fail", data.error); throw new Error(data.error); }
 
       let finalData = data;
+      if (data?.jobId) setJobId(data.jobId);
       if (data?.jobId && !data?.insertedId) {
         setProgressCurrent("AI writing in background");
         for (let attempt = 0; attempt < 900; attempt++) {
@@ -296,6 +335,7 @@ const AdminWriteBlog = () => {
         description: `${finalData.stats?.actualWords ?? "~"} words. Saved successfully — open it in editor to review.`,
       });
       setStats({ ...(finalData.stats || {}), insertedId: finalData.insertedId });
+      try { sessionStorage.setItem(WORKSPACE_KEY, JSON.stringify({ articleId: finalData.insertedId, jobId: data?.jobId || null })); } catch {}
     } catch (e: any) {
       console.error("AI blog generation failed", e);
       setErrorMsg(e?.message || "Generation failed");
@@ -489,20 +529,54 @@ const AdminWriteBlog = () => {
 
           <div className="grid md:grid-cols-3 gap-4 pt-2 border-t">
             <div>
-              <Label className="text-xs font-semibold mb-1.5 block">Min Words</Label>
-              <Input type="number" min={300} step={100} value={wordMin}
-                onChange={(e) => setWordMin(parseInt(e.target.value, 10) || 0)} />
-            </div>
-            <div>
-              <Label className="text-xs font-semibold mb-1.5 block">Max Words</Label>
-              <Input type="number" min={300} step={100} value={wordMax}
-                onChange={(e) => setWordMax(parseInt(e.target.value, 10) || 0)} />
+              <Label className="text-xs font-semibold mb-1.5 block">Target Word Count</Label>
+              <Select value={WORD_PRESETS.includes(wordTarget) ? String(wordTarget) : "custom"} onValueChange={(v) => { if (v !== "custom") setWordTarget(Number(v)); else setWordTarget(1200); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {WORD_PRESETS.map((w) => <SelectItem key={w} value={String(w)}>{w.toLocaleString()} words</SelectItem>)}
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+              {!WORD_PRESETS.includes(wordTarget) && (
+                <Input className="mt-2" type="number" min={300} step={100} value={wordTarget} onChange={(e) => setWordTarget(parseInt(e.target.value, 10) || 0)} />
+              )}
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Keyword Density %</Label>
               <Input type="number" min={0.5} max={5} step={0.1} value={densityPct}
-                onChange={(e) => setDensityPct(parseFloat(e.target.value) || 2)} />
+                onChange={(e) => setDensityPct(parseFloat(e.target.value) || 1)} />
             </div>
+            <div>
+              <Label className="text-xs font-semibold mb-1.5 block">Search Intent</Label>
+              <Select value={searchIntent || "auto"} onValueChange={(v) => setSearchIntent(v === "auto" ? "" : v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Detect automatically</SelectItem>
+                  <SelectItem value="informational">Informational</SelectItem>
+                  <SelectItem value="comparison">Comparison</SelectItem>
+                  <SelectItem value="navigational">Navigational</SelectItem>
+                  <SelectItem value="transactional">Transactional</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold mb-1.5 block">Target Audience</Label>
+            <Input value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. CAT 2026 aspirants comparing IIM costs" />
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold mb-1.5 block">Additional Instructions</Label>
+            <Textarea rows={3} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="e.g. Cover only the 22 IIMs. Include a fee comparison table." />
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold mb-1.5 block">Sample Blogs (writing style only)</Label>
+            <p className="text-xs text-muted-foreground mb-1.5">
+              Paste sample article links (one per line) or full sample text. Separate pasted articles with a line containing only ---. The AI learns tone and structure only and never copies sentences.
+            </p>
+            <Textarea rows={5} value={samplesText} onChange={(e) => setSamplesText(e.target.value)} placeholder={"https://example.com/sample-article\n---\nOr paste a full sample article here"} />
           </div>
         </CardContent>
       </Card>
@@ -591,105 +665,8 @@ const AdminWriteBlog = () => {
         </Card>
       )}
 
-      {stats && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="pt-4 text-xs space-y-1">
-            <p><strong>Generation stats:</strong></p>
-            <p>Words: {stats.actualWords} (target {stats.targetWordsRange?.[0]}-{stats.targetWordsRange?.[1]})</p>
-            <p>Keyword density: {stats.actualDensityPct}% (target ~{stats.targetDensityPct}%)</p>
-            <p>Primary keyword occurrences: {stats.actualOccurrences} (target ~{stats.targetOccurrences})</p>
-            {typeof stats.tocEntries === "number" && stats.tocEntries > 0 && (
-              <p>Table of contents entries: {stats.tocEntries}</p>
-            )}
-            {stats.sourceResearch && Array.isArray(stats.sourceResearch.sources) && stats.sourceResearch.sources.length > 0 && (
-              <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
-                <p className="font-semibold text-foreground">Sources used for research</p>
-                {Array.isArray(stats.sourceResearch.toolsUsed) && stats.sourceResearch.toolsUsed.length > 0 && (
-                  <p className="text-muted-foreground">Research tools: {stats.sourceResearch.toolsUsed.join(", ")}</p>
-                )}
-                <div className="space-y-1.5">
-                  {stats.sourceResearch.sources.map((s: { url: string; title?: string; kind?: string; status?: string }, i: number) => (
-                    <div key={`${s.url}-${i}`} className="rounded-md border bg-muted/30 p-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant={s.kind === "primary" ? "default" : "secondary"}>
-                          {s.kind === "primary" ? "Your link" : "Additional source"}
-                        </Badge>
-                        <Badge variant={s.status === "read" ? "outline" : "destructive"}>
-                          {s.status === "read" ? "used" : "could not be read"}
-                        </Badge>
-                      </div>
-                      <p className="mt-1 text-foreground break-words">{s.title || s.url}</p>
-                      <p className="text-muted-foreground break-all font-mono text-xs">{s.url}</p>
-                    </div>
-                  ))}
-                </div>
-                {Array.isArray(stats.sourceResearch.notes) && stats.sourceResearch.notes.map((n: string, i: number) => (
-                  <p key={`note-${i}`} className="text-muted-foreground">{n}</p>
-                ))}
-              </div>
-            )}
-            {stats.qualityAudit && Array.isArray(stats.qualityAudit.checks) && stats.qualityAudit.checks.length > 0 && (
-              <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-semibold text-foreground">SEO &amp; quality audit</p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={stats.qualityAudit.score >= 85 ? "default" : stats.qualityAudit.score >= 70 ? "secondary" : "destructive"}>
-                      Score {stats.qualityAudit.score}/100
-                    </Badge>
-                    <Badge variant="outline">Intent: {stats.qualityAudit.intentType}</Badge>
-                    <Badge variant={stats.qualityAudit.stuffingRisk === "low" ? "outline" : "destructive"}>
-                      Stuffing risk: {stats.qualityAudit.stuffingRisk}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="grid gap-1.5 sm:grid-cols-2">
-                  {stats.qualityAudit.checks.map((c: { area: string; label: string; status: string; detail: string }, i: number) => (
-                    <div key={`audit-${i}`} className="rounded-md border bg-muted/30 p-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={c.status === "pass" ? "outline" : "destructive"}>
-                          {c.status === "pass" ? "OK" : "Check"}
-                        </Badge>
-                        <span className="font-medium text-foreground">{c.label}</span>
-                      </div>
-                      <p className="mt-1 text-muted-foreground">{c.area} — {c.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {Array.isArray(stats.factCheckReport) && stats.factCheckReport.length > 0 && (
-              <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-foreground">Fact-check validation report</p>
-                  <Badge variant={stats.factCheckReport.some((item: FactCheckReportItem) => item.severity === "error") ? "destructive" : "secondary"}>
-                    {stats.factCheckReport.length} finding{stats.factCheckReport.length === 1 ? "" : "s"}
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  {stats.factCheckReport.map((item: FactCheckReportItem, index: number) => (
-                    <div key={`${item.rule || "rule"}-${index}`} className="rounded-md border bg-muted/30 p-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant={item.severity === "error" ? "destructive" : "outline"}>{item.severity || "warn"}</Badge>
-                        <Badge variant="secondary">{item.field || "content"}</Badge>
-                        <span className="font-mono text-xs text-muted-foreground">{item.rule || "quality_rule"}</span>
-                        {item.autoFixed && <Badge variant="outline">auto-corrected</Badge>}
-                      </div>
-                      <p className="mt-1 text-muted-foreground">{item.message || "Validation warning"}</p>
-                      <p className="mt-1 rounded-[0.25rem] border bg-background px-2 py-1 font-mono text-xs text-foreground break-words">
-                        {item.matchedText || "Matched text was changed during sanitization."}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {stats.insertedId && (
-              <Button size="sm" className="mt-2" onClick={() => navigate(`/admin/articles?edit=${stats.insertedId}`)}>
-                Open in editor
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+      {stats?.insertedId && (
+        <BlogEditorWorkspace articleId={stats.insertedId} jobId={jobId} stats={stats} targetDensity={densityPct} />
       )}
 
       <div className="flex gap-3 sticky bottom-0 bg-background/95 backdrop-blur py-3 border-t -mx-1 px-1">

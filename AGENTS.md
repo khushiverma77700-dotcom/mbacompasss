@@ -8,3 +8,4 @@
 - Mock competition metrics use each student's earliest completed attempt and verified unique-student cohorts, because retakes and synthetic aspirants must not inflate ranks or participation.
 - Mock generation uses exam-normalized CAT/XAT-style difficulty plus deterministic editorial validation, because malformed, trivial, ambiguous, or incorrectly keyed questions must never enter a test.
 - Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
+- AI blog articles are generated as drafts through a scope-first pipeline (intent, topic boundary, sources, style) and are published only from the editor workspace after its checklist passes, because unscoped or unverified articles must never go live automatically.
