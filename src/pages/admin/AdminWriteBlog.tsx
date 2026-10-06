@@ -218,20 +218,22 @@ const AdminWriteBlog = () => {
     const load = async () => {
       setLoadingLinks(true);
       try {
-        const [collRes, examRes, artRes, coachRes] = await Promise.all([
-          supabase.from("colleges").select("name,slug").not("slug", "is", null).order("name").limit(300),
-          supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").limit(80),
-          supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).limit(60),
-          supabase.from("institutes").select("name,slug,institute_type").not("slug", "is", null).order("name").limit(200),
+        // Page through every table — the API caps single responses at 1000 rows.
+        const [collRows, examRows, artRows, coachRows] = await Promise.all([
+          fetchAllRows<any>((f, t) => supabase.from("colleges").select("name,slug,city,short_name").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
+          fetchAllRows<any>((f, t) => supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
+          fetchAllRows<any>((f, t) => supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).range(f, t)).catch(() => []),
+          fetchAllRows<any>((f, t) => supabase.from("institutes").select("name,slug,institute_type").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
         ]);
-        setColleges((collRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name })));
-        setExams((examRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name })));
-        setArticles((artRes.data || []).filter((r: any) => r.slug && r.title).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title })));
-        setCoachings(
-          (coachRes.data || [])
-            .filter((r: any) => r.slug && r.name && (r.institute_type === "coaching" || /coaching/i.test(r.slug)))
+        const uniq = (list: LinkOption[]) => Array.from(new Map(list.map(o => [o.url, o])).values());
+        setColleges(uniq(collRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name, aliases: [r.short_name, r.city].filter(Boolean) }))));
+        setExams(uniq(examRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name }))));
+        setArticles(uniq(artRows.filter((r: any) => r.slug && r.title?.trim()).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title }))));
+        setCoachings(uniq(
+          coachRows
+            .filter((r: any) => r.slug && r.name?.trim() && (r.institute_type === "coaching" || /coaching/i.test(r.slug)))
             .map((r: any) => ({ url: `/coaching/${r.slug}`, label: r.name }))
-        );
+        ));
       } catch (e) {
         console.warn("Could not load link pool", e);
       } finally {
@@ -240,6 +242,31 @@ const AdminWriteBlog = () => {
     };
     load();
   }, []);
+
+  // ---- Auto-pick: score every page against the title, keywords, brief and outline ----
+  const [autoPicked, setAutoPicked] = useState<Record<string, LinkOption & { score: number }>>({});
+  const [autoLink, setAutoLink] = useState(true);
+  const autoText = useMemo(() => [
+    title, targetKeyword, secondaryKws.join(" "), instructions,
+    outline ? JSON.stringify(outline.sections) + " " + outline.faqs.join(" ") : "",
+  ].join(" ").toLowerCase(), [title, targetKeyword, secondaryKws, instructions, outline]);
+
+  useEffect(() => {
+    if (!autoLink) return;
+    const h = setTimeout(() => {
+      const picks = rankLinks(autoText, { colleges, exams, articles, coachings, tools: TOOL_URLS });
+      const nextAuto = Object.fromEntries(picks.map(p => [p.url, p]));
+      setSelectedUrls(prev => {
+        const next = { ...prev };
+        Object.keys(autoPicked).forEach(u => { if (!nextAuto[u] && (next[u] as any)?.auto) delete next[u]; });
+        picks.forEach(p => { if (!next[p.url]) next[p.url] = { ...p, auto: true } as any; });
+        return next;
+      });
+      setAutoPicked(nextAuto);
+    }, 700);
+    return () => clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoText, colleges, exams, articles, coachings, autoLink]);
 
   const setStep = (key: string, status: ProgressStep["status"], error?: string) =>
     setProgressSteps(prev => prev.map(s => s.key === key ? { ...s, status, error } : s));
