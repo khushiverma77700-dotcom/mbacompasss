@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useState, lazy } from "react";
 import { useLocation } from "@/lib/router-compat";
 import BackButton from "@/components/BackButton";
+import { useAdSlots } from "@/components/ads/AdSlots";
 
 const Navbar = lazy(() => import("@/components/Navbar"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -46,7 +47,9 @@ const DeferredChrome = () => {
   );
 };
 
-const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => (
+const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
+  const ads = useAdSlots();
+  return (
   <>
     <a
       href="#main-content"
@@ -58,9 +61,13 @@ const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => (
       <Navbar />
     </Suspense>
     <BackButton />
+    {ads.top}
     <main id="main-content">{children}</main>
+    {ads.end}
+    {ads.portals}
     <DeferredChrome />
   </>
-);
+  );
+};
 
 export default PublicLayoutShell;
