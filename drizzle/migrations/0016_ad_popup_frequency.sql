@@ -1,0 +1,1 @@
+ALTER TABLE public.ad_settings ADD COLUMN IF NOT EXISTS popup_per_session integer NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS popup_per_day integer NOT NULL DEFAULT 2, ADD COLUMN IF NOT EXISTS popup_delay_seconds integer NOT NULL DEFAULT 8, ADD COLUMN IF NOT EXISTS page_section_ads integer NOT NULL DEFAULT 2;
