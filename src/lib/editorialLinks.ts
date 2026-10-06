@@ -49,26 +49,27 @@ export function linkEditorialContent(root: HTMLElement, targets: EditorialTarget
   const match = createEditorialMatcher(targets);
   const seen = new Set<string>([pathname.replace(/\/$/, "")]);
   root.querySelectorAll<HTMLAnchorElement>("a[href]").forEach(a => {
-    try { if (a.origin === window.location.origin) seen.add(a.pathname.replace(/\/$/, "")); } catch { /* invalid existing link */ }
+    try { if ([window.location.hostname, "mbacompass.in", "www.mbacompass.in"].includes(a.hostname)) seen.add(a.pathname.replace(/\/$/, "")); } catch { /* invalid existing link */ }
   });
   const paragraphs = root.querySelectorAll<HTMLElement>("p,li,td,dd");
   const words = (root.textContent || "").split(/\s+/).length;
   const budget = Math.min(24, Math.max(3, Math.floor(words / 80)));
   let added = 0;
+  const existing = root.querySelectorAll("a[data-editorial-link]").length;
   for (const paragraph of paragraphs) {
-    if (paragraph.closest(SKIP) || added >= budget) continue;
+    if (paragraph.closest(SKIP) || added + existing >= budget) continue;
     let inParagraph = paragraph.querySelectorAll("a").length;
     const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
     const nodes: Text[] = [];
     while (walker.nextNode()) if (walker.currentNode instanceof Text) nodes.push(walker.currentNode);
     for (const node of nodes) {
-      if (node.parentElement?.closest(SKIP) || inParagraph >= 3 || added >= budget) continue;
+      if (node.parentElement?.closest(SKIP) || inParagraph >= 3 || added + existing >= budget) continue;
       const text = node.data;
       const matches = match(text).filter(m => !seen.has(m.target.url));
       const fragment = document.createDocumentFragment();
       let offset = 0;
       for (const found of matches) {
-        if (seen.has(found.target.url) || inParagraph >= 3 || added >= budget) continue;
+        if (seen.has(found.target.url) || inParagraph >= 3 || added + existing >= budget) continue;
         fragment.append(document.createTextNode(text.slice(offset, found.start)));
         const anchor = document.createElement("a");
         anchor.href = found.target.url;
