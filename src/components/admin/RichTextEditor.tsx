@@ -201,11 +201,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
 
   const toolbarState = useEditorState({
     editor,
-    selector: ({ editor: activeEditor }) => ({
-      fontSize: selectedStyleValue(activeEditor, "fontSize"),
-      fontFamily: selectedStyleValue(activeEditor, "fontFamily"),
-      color: selectedStyleValue(activeEditor, "color"),
-    }),
+    selector: ({ editor: activeEditor }) => activeEditor
+      ? {
+          fontSize: selectedStyleValue(activeEditor, "fontSize"),
+          fontFamily: selectedStyleValue(activeEditor, "fontFamily"),
+          color: selectedStyleValue(activeEditor, "color"),
+        }
+      : { fontSize: "default", fontFamily: "default", color: "default" },
   });
 
   if (!editor) return null;
