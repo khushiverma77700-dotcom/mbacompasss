@@ -517,7 +517,8 @@ const AdminWriteBlog = () => {
         <ScrollArea className="h-64 rounded-md border bg-background">
           <div className="p-2 space-y-1">
             {filtered.length === 0 && <p className="text-xs text-muted-foreground p-3">{emptyMsg}</p>}
-            {filtered.map(opt => (
+            {filtered.length > 300 && <p className="text-xs text-muted-foreground px-2 pb-1">Showing first 300 of {filtered.length.toLocaleString()} — search to narrow.</p>}
+            {filtered.slice(0, 300).map(opt => (
               <label key={opt.url} className="flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer text-sm">
                 <Checkbox checked={!!selectedUrls[opt.url]} onCheckedChange={() => toggleUrl(opt)} className="mt-0.5" />
                 <div className="min-w-0 flex-1">
@@ -770,13 +771,47 @@ const AdminWriteBlog = () => {
                 <Link2 className="h-4 w-4 text-primary" /> Internal Linking Pool
               </CardTitle>
               <CardDescription>
-                Pick the URLs the AI is allowed to link to. Links are inserted automatically in the right positions.
+                Every published college, exam, blog and coaching page is searchable here. Related pages are picked automatically from the title, keywords and outline, then woven in as editorial in-text links and “Also Read” blocks.
               </CardDescription>
             </div>
             <Badge variant="secondary" className="text-xs">{selectedCount} selected</Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {[
+              ["Colleges", colleges.length], ["Exams", exams.length], ["Blogs", articles.length],
+              ["Coaching", coachings.length], ["Auto-picked", Object.keys(autoPicked).length],
+            ].map(([k, v]) => (
+              <div key={k as string} className="rounded-lg border bg-muted/30 px-3 py-2">
+                <p className="text-xs text-muted-foreground">{k}</p>
+                <p className="text-base font-semibold">{loadingLinks && k !== "Auto-picked" ? "…" : (v as number).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">Auto-pick related pages</p>
+              </div>
+              <Switch checked={autoLink} onCheckedChange={setAutoLink} aria-label="Auto-pick related pages" />
+            </div>
+            {Object.keys(autoPicked).length === 0 ? (
+              <p className="text-xs text-muted-foreground">{autoLink ? "Type a title or keyword — matching colleges, exams and guides appear here." : "Auto-pick is off. Choose links manually below."}</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                {Object.values(autoPicked).sort((a, b) => b.score - a.score).map(p => (
+                  <Badge key={p.url} variant={selectedUrls[p.url] ? "default" : "outline"} className="gap-1 text-xs font-normal cursor-pointer" onClick={() => toggleUrl(p)}>
+                    {p.label}
+                    <span className="opacity-70">{p.score >= 100 ? "exact" : p.score >= 70 ? "strong" : "related"}</span>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -787,7 +822,7 @@ const AdminWriteBlog = () => {
             />
           </div>
 
-          <Tabs defaultValue="tools" className="w-full">
+          <Tabs defaultValue="colleges" className="w-full">
             <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="tools">Tools</TabsTrigger>
               <TabsTrigger value="colleges">Colleges ({colleges.length})</TabsTrigger>
