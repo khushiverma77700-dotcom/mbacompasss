@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/admin/FileUpload";
 import { AdCreative } from "@/components/ads/AdSlots";
 import { PAGE_TYPES, PLACEMENTS, type AdCampaign } from "@/lib/ads/engine";
-import { Copy, Download, Eye, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, CalendarPlus, Copy, Download, Eye, Monitor, Pause, Pencil, Play, Plus, Smartphone, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const AD_TYPES = [
@@ -50,6 +50,9 @@ export default function AdminAdvertisements() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [days, setDays] = useState(30);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [previewCompact, setPreviewCompact] = useState(false);
 
   const { data: ads = [] } = useQuery({
     queryKey: ["admin-ads"],
@@ -110,13 +113,36 @@ export default function AdminAdvertisements() {
   };
   const duplicate = (a: AdCampaign) => { const { id, ad_code, ...rest } = a; setEditing({ ...rest, name: `${a.name} (copy)`, status: "draft" }); };
 
+  const extend = async (a: AdCampaign, extraDays = 7) => {
+    const base = a.end_at && Date.parse(a.end_at) > Date.now() ? Date.parse(a.end_at) : Date.now();
+    const { error } = await supabase.from("ad_campaigns").update({ end_at: new Date(base + extraDays * 86400_000).toISOString() }).eq("id", a.id);
+    if (error) toast({ title: "Could not extend", description: error.message, variant: "destructive" });
+    else { toast({ title: `Extended ${extraDays} days` }); refresh(); }
+  };
+
+  const endsSoon = (a: AdCampaign) => a.status === "active" && !!a.end_at && Date.parse(a.end_at) > Date.now() && Date.parse(a.end_at) - Date.now() < 3 * 86400_000;
+
+  const alerts = useMemo(() => {
+    const out: { id: string; level: "warn" | "info"; text: string }[] = [];
+    for (const a of ads) {
+      const st = effectiveStatus(a);
+      const t = totals[a.id] ?? { imp: 0, clk: 0, conv: 0 };
+      if (st === "active" && t.imp === 0) out.push({ id: `${a.id}-zero`, level: "warn", text: `"${a.name}" is live but had no views in the last ${days} day${days > 1 ? "s" : ""} — check its targeting, schedule or placements.` });
+      if (st === "active" && t.imp >= 500 && t.clk / t.imp < 0.002) out.push({ id: `${a.id}-ctr`, level: "warn", text: `"${a.name}" has ${t.imp.toLocaleString()} views but only a ${((t.clk / t.imp) * 100).toFixed(2)}% click rate — try a sharper headline or new creative.` });
+      if (endsSoon(a)) out.push({ id: `${a.id}-end`, level: "info", text: `"${a.name}" ends within 3 days — extend it if it should keep running.` });
+      if (st === "ended") out.push({ id: `${a.id}-ended`, level: "info", text: `"${a.name}" has ended. Extend it to put it back live.` });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ads, totals, days]);
+
   const saveSettings = async (patch: Record<string, unknown>) => {
     const { error } = await supabase.from("ad_settings").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
     if (error) toast({ title: "Could not save settings", description: error.message, variant: "destructive" });
     else { qc.invalidateQueries({ queryKey: ["admin-ad-settings"] }); qc.invalidateQueries({ queryKey: ["first-party-ads"] }); toast({ title: "Settings saved" }); }
   };
 
-  const filtered = ads.filter((a) => !search || `${a.name} ${a.ad_code}`.toLowerCase().includes(search.toLowerCase()));
+  const filtered = ads.filter((a) => (statusFilter === "all" || effectiveStatus(a) === statusFilter) && (!search || `${a.name} ${a.ad_code}`.toLowerCase().includes(search.toLowerCase())));
   const sum = Object.values(totals).reduce((s, t) => ({ imp: s.imp + t.imp, clk: s.clk + t.clk, conv: s.conv + t.conv }), { imp: 0, clk: 0, conv: 0 });
   const activeCount = ads.filter((a) => effectiveStatus(a) === "active").length;
 
@@ -185,6 +211,13 @@ export default function AdminAdvertisements() {
         <TabsContent value="ads" className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Input placeholder="Search by name or ID" value={search} onChange={(ev) => setSearch(ev.target.value)} className="max-w-xs" />
+            <div className="flex flex-wrap gap-1">
+              {["all", "active", "scheduled", "paused", "draft", "ended"].map((s) => (
+                <Button key={s} size="sm" variant={statusFilter === s ? "default" : "outline"} className="capitalize" onClick={() => setStatusFilter(s)}>
+                  {s}{s !== "all" && ` (${ads.filter((a) => effectiveStatus(a) === s).length})`}
+                </Button>
+              ))}
+            </div>
             {selected.size > 0 && (<>
               <Button size="sm" variant="outline" onClick={() => setStatus([...selected], "paused")}>Pause selected</Button>
               <Button size="sm" variant="outline" onClick={() => setStatus([...selected], "active")}>Activate selected</Button>
@@ -204,11 +237,13 @@ export default function AdminAdvertisements() {
                     <div className="text-sm text-muted-foreground">{a.ad_code} · Priority {a.priority} · {a.placements.join(", ")}</div>
                   </div>
                   <Badge variant={st === "active" ? "default" : "secondary"} className="capitalize">{st}</Badge>
+                  {endsSoon(a) && <Badge variant="outline" className="border-amber-500 text-amber-600">Ends soon</Badge>}
                   <div className="text-sm text-muted-foreground">{t?.imp ?? 0} views · {t?.clk ?? 0} clicks · {t?.imp ? ((t.clk / t.imp) * 100).toFixed(2) : "0"}%</div>
                   <div className="flex gap-1">
                     <Button size="icon" variant="ghost" aria-label="Preview" onClick={() => setPreview(a)}><Eye className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => setEditing(a)}><Pencil className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label="Duplicate" onClick={() => duplicate(a)}><Copy className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Extend by 7 days" title="Extend by 7 days" onClick={() => extend(a, 7)}><CalendarPlus className="h-4 w-4" /></Button>
                     {a.status === "active" ? <Button size="icon" variant="ghost" aria-label="Pause" onClick={() => setStatus([a.id], "paused")}><Pause className="h-4 w-4" /></Button>
                       : <Button size="icon" variant="ghost" aria-label="Activate" onClick={() => setStatus([a.id], "active")}><Play className="h-4 w-4" /></Button>}
                     <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => remove([a.id])}><Trash2 className="h-4 w-4" /></Button>
@@ -228,6 +263,16 @@ export default function AdminAdvertisements() {
             <Button variant="outline" size="sm" onClick={exportCsv} className="gap-1.5"><Download className="h-4 w-4" /> Export CSV</Button>
             <span className="text-sm text-muted-foreground">Updates every 30 seconds</span>
           </div>
+          {alerts.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+              <div className="flex items-center gap-2 font-semibold text-foreground"><AlertTriangle className="h-4 w-4 text-amber-600" /> Needs attention ({alerts.length})</div>
+              {alerts.map((al) => (
+                <div key={al.id} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${al.level === "warn" ? "bg-amber-500" : "bg-blue-400"}`} />{al.text}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-lg border border-border bg-card p-4"><div className="mb-2 font-semibold">Day-wise</div>
               <ResponsiveContainer width="100%" height={240}><BarChart data={daily}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" /><YAxis /><Tooltip /><Legend /><Bar dataKey="impressions" fill="hsl(var(--primary))" /><Bar dataKey="clicks" fill="hsl(var(--accent-foreground))" /></BarChart></ResponsiveContainer></div>
@@ -274,8 +319,29 @@ export default function AdminAdvertisements() {
       </Tabs>
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-3xl"><DialogHeader><DialogTitle>Preview: {preview?.name}</DialogTitle></DialogHeader>
-          {preview && <AdCreative ad={preview} placement="preview" label={settings?.label_text || "Sponsored"} preview />}
+        <DialogContent className="max-w-3xl"><DialogHeader><DialogTitle>Preview studio: {preview?.name}</DialogTitle></DialogHeader>
+          {preview && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex gap-1">
+                  <Button size="sm" variant={previewDevice === "desktop" ? "default" : "outline"} onClick={() => setPreviewDevice("desktop")} className="gap-1.5"><Monitor className="h-4 w-4" /> Desktop</Button>
+                  <Button size="sm" variant={previewDevice === "mobile" ? "default" : "outline"} onClick={() => setPreviewDevice("mobile")} className="gap-1.5"><Smartphone className="h-4 w-4" /> Mobile</Button>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant={!previewCompact ? "default" : "outline"} onClick={() => setPreviewCompact(false)}>Standard</Button>
+                  <Button size="sm" variant={previewCompact ? "default" : "outline"} onClick={() => setPreviewCompact(true)}>Sticky bar</Button>
+                </div>
+              </div>
+              <div className={`rounded-lg border border-dashed border-border bg-muted/30 p-4 ${previewDevice === "mobile" ? "mx-auto max-w-sm" : ""}`}>
+                <AdCreative
+                  key={`${preview.id}-${previewDevice}-${previewCompact}`}
+                  ad={previewDevice === "mobile" ? { ...preview, desktop_image_url: preview.mobile_image_url || preview.desktop_image_url } : preview}
+                  placement="preview" label={settings?.label_text || "Sponsored"} preview compact={previewCompact}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">This is how the creative will look to visitors. The site picks the mobile image automatically on phones.</p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
