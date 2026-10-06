@@ -154,11 +154,12 @@ const AdminWriteBlog = () => {
     }
   };
   const [jobId, setJobId] = useState<string | null>(null);
-  type OutlineEdit = { jobId: string; title: string; metaTitle: string; metaDescription: string; sections: { heading: string; angle: string }[]; faqs: string[] };
+  type OutlineSection = { heading: string; angle: string; chapter: string; tablePlan: string; calloutPlan: string; linkPlan: string };
+  type OutlineEdit = { jobId: string; title: string; metaTitle: string; metaDescription: string; sections: OutlineSection[]; faqs: string[] };
   const [outline, setOutline] = useState<OutlineEdit | null>(null);
   const [outlineSaving, setOutlineSaving] = useState(false);
   const outlineWait = useRef<(() => void) | null>(null);
-  const editSection = (i: number, patch: Partial<{ heading: string; angle: string }>) =>
+  const editSection = (i: number, patch: Partial<OutlineSection>) =>
     setOutline((o) => o && { ...o, sections: o.sections.map((x, n) => (n === i ? { ...x, ...patch } : x)) });
   const moveSection = (i: number, d: number) =>
     setOutline((o) => {
@@ -392,7 +393,14 @@ const AdminWriteBlog = () => {
               title: d.title || "",
               metaTitle: d.metaTitle || "",
               metaDescription: d.metaDescription || "",
-              sections: (d.sections || []).map((x: any) => ({ heading: String(x.heading || ""), angle: String(x.angle || "") })),
+               sections: (d.sections || []).map((x: any) => ({
+                 heading: String(x.heading || ""),
+                 angle: String(x.angle || ""),
+                 chapter: String(x.chapter || "Article"),
+                 tablePlan: String(x.tablePlan || ""),
+                 calloutPlan: String(x.calloutPlan || ""),
+                 linkPlan: String(x.linkPlan || ""),
+               })),
               faqs: (d.faqQuestions || []).map((q: any) => String(q)),
             });
             setProgressCurrent("Paused — waiting for you to approve the outline below");
@@ -793,7 +801,7 @@ const AdminWriteBlog = () => {
               <div className="space-y-1"><Label>Meta description</Label><Input value={outline.metaDescription} onChange={(e) => setOutline({ ...outline, metaDescription: e.target.value })} /></div>
             </div>
             <div className="space-y-2">
-              <Label>Sections (H2)</Label>
+              <Label>Decision-led sections (H2)</Label>
               {outline.sections.map((sec, i) => (
                 <div key={i} className="rounded-md border p-3 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -803,10 +811,16 @@ const AdminWriteBlog = () => {
                     <Button type="button" size="sm" variant="ghost" onClick={() => moveSection(i, 1)} disabled={i === outline.sections.length - 1}>Down</Button>
                     <Button type="button" size="sm" variant="ghost" onClick={() => setOutline({ ...outline, sections: outline.sections.filter((_, n) => n !== i) })}><X className="h-4 w-4" /></Button>
                   </div>
-                  <Textarea rows={2} value={sec.angle} onChange={(e) => editSection(i, { angle: e.target.value })} placeholder="What this section should cover" />
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div className="space-y-1"><Label>Chapter</Label><Input value={sec.chapter} onChange={(e) => editSection(i, { chapter: e.target.value })} placeholder="Understand, Compare, Decide…" /></div>
+                    <div className="space-y-1"><Label>Alert</Label><Input value={sec.calloutPlan} onChange={(e) => editSection(i, { calloutPlan: e.target.value })} placeholder="Deadline, Update, Caution… or leave blank" /></div>
+                  </div>
+                  <Textarea rows={2} value={sec.angle} onChange={(e) => editSection(i, { angle: e.target.value })} placeholder="Distinct reader question and source-backed coverage" />
+                  <Textarea rows={2} value={sec.tablePlan} onChange={(e) => editSection(i, { tablePlan: e.target.value })} placeholder="Planned table and columns, or leave blank" />
+                  <Textarea rows={2} value={sec.linkPlan} onChange={(e) => editSection(i, { linkPlan: e.target.value })} placeholder="Up to two approved links with anchor intent, or leave blank" />
                 </div>
               ))}
-              <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => setOutline({ ...outline, sections: [...outline.sections, { heading: "", angle: "" }] })}><Plus className="h-4 w-4" /> Add section</Button>
+              <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => setOutline({ ...outline, sections: [...outline.sections, { heading: "", angle: "", chapter: "Article", tablePlan: "", calloutPlan: "", linkPlan: "" }] })}><Plus className="h-4 w-4" /> Add section</Button>
             </div>
             <div className="space-y-1">
               <Label>FAQ questions (one per line)</Label>

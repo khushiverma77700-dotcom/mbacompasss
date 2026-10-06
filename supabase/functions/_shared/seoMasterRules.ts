@@ -62,13 +62,13 @@ UNIVERSAL SEO STRATEGIST RULES (apply to every topic, every industry):
 
 4. Keyword use is natural, never mechanical. Primary keyword: "${opts.keyword}".${secondary.length ? ` Supporting keywords available: ${secondary.slice(0, 15).join(", ")}.` : ""} Place the primary keyword where it reads naturally — SEO title, H1, slug, first paragraph, Overview, at least one H2, meta description, conclusion, image alt — and use variations rather than repeating the exact phrase. Ignore any fixed keyword-density figure: there is no density target. If a keyword makes a sentence awkward, rewrite the sentence or drop the keyword. Self-check the draft for stuffing, near-duplicate sentences and over-optimisation, and rewrite anything that reads forced.
 
-5. Structure. H1 (page handles it) → Overview → Table of Contents (generated automatically from your headings) → main sections → Important Points → FAQs → Conclusion. Include substantive paragraphs, at least one useful table where verified comparable data exists, and at least one focused list. Do not invent headings you never write about. Adapt sections to the actual intent instead of reusing one template.
+5. Structure. H1 (page handles it) → direct answer → facts panel when evidence supports one → Table of Contents (generated automatically) → 5-8 intent-led chapters with distinct H2/H3 sections → Important Points → FAQs → Conclusion. Each section must answer one different reader question. Reject overlapping headings and repeated claims. Adapt the journey to the intent instead of reusing one template.
 
 6. Overview must be substantive. Directly answer the main query in the opening Overview block, with the specific facts, numbers and dates that matter. It must be useful even if the reader stops there. Start the intro with <p><strong>Overview:</strong> …</p>.
 
 7. Answer early. If the query is about a price, fee, date, deadline, cutoff, eligibility rule, requirement or statistic, state that answer near the top, then explain the detail, then the context.
 
-8. Tables for structured data. Any information that fits rows × columns becomes a <table>: prices, fees, dates, timelines, rankings, features, specifications, eligibility, comparisons, year-wise data. Keep tables short-celled, consistent in units, mobile-friendly (max 5-6 columns) and never decorative.
+8. Tables for structured data. Any verified information that fits rows × columns becomes a <table>: prices, fees, dates, timelines, rankings, features, specifications, eligibility, comparisons, year-wise data. Introduce each table in one short paragraph and follow it with a practical interpretation. Keep cells short, units consistent and tables mobile-friendly with no more than 6 columns. Split a wider table into logical groups. Never invent a cell; write “Not announced” only when that absence is itself useful.
 
 9. Format the facts. Bold important dates, deadlines, amounts, percentages, cutoffs, ranks, key numbers and critical takeaways. Never bold whole paragraphs or list items wholesale.
 
@@ -78,13 +78,15 @@ UNIVERSAL SEO STRATEGIST RULES (apply to every topic, every industry):
 
 12. E-E-A-T. Show real analysis, cite sources by plain-text name, keep attribution accurate, and reflect the publication/updated date (${today}) for anything time-sensitive. Verify time-sensitive facts before stating them as current; label historical data as historical.
 
-13. Links. Internal links only from the curated pool, with descriptive anchor text tied to the surrounding sentence — never "click here" or "read more", never over-linked. External sources are named in plain text, not as anchors.
+13. Links. Internal links only from the curated pool, with descriptive anchor text tied to the next question a reader may ask — never "click here" or "read more". Use no more than two per section and do not repeat a destination. External sources are editor evidence and may be named in plain text only when an authority or conflict needs explanation.
+
+13A. Decision alerts. Use <blockquote data-callout="TYPE"> only for a deadline, current update, caution, eligibility rule, important decision fact or required action. TYPE is deadline, update, important, caution, eligibility or action. Keep each alert concise, place it inside the relevant section, and never repeat promotional alerts.
 
 14. FAQs. 6-12 genuine questions from real search behaviour, each with a useful, fact-based answer. No FAQ exists to hold a keyword.
 
 15. Deliverables. Alongside the article, give an accurate SEO title, meta description, clean short slug (primary keyword, no keyword pile-up), image alt suggestions that describe the actual image, and only structured-data types the page honestly qualifies for.
 
-16. Self-audit before returning: intent answered, Overview present and specific, main answer early, no fabricated facts, no stuffing, tables where data is comparable, important figures bolded, headings meaningful, FAQs genuine, links contextual, conclusion useful. Never use the standalone labels "Summary", "Key" or "Snapshot". Fix the content itself rather than adding keywords.
+16. Self-audit before returning: intent answered, opening answer specific, main answer early, no fabricated facts, no stuffing, tables where data is comparable, important figures bolded, headings distinct, alerts scarce and useful, FAQs genuine, links contextual and non-duplicated, conclusion useful. Check for conflicting years and figures before returning. Never use the standalone labels "Summary", "Key" or "Snapshot". Fix the content itself rather than adding keywords.
 
 Never promise or imply search rankings anywhere in the output.`;
 }
@@ -105,6 +107,10 @@ export interface QualityAudit {
   primaryKeyword: string;
   stuffingRisk: "low" | "medium" | "high";
 }
+
+const headingTexts = (html: string) => [...html.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/gi)]
+  .map((match) => textOf(match[1]).toLowerCase().replace(/[^a-z0-9\s]/g, "").trim())
+  .filter(Boolean);
 
 const textOf = (html: string) =>
   String(html || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
@@ -171,6 +177,13 @@ export function buildQualityAudit(input: AuditInput): QualityAudit {
   add("Content", "FAQs", (input.faqCount ?? 0) >= 4, `${faqs} FAQ entries.`);
   const strongs = (html.match(/<strong\b/gi) || []).length;
   add("Readability", "Important facts highlighted", strongs >= 5, `${strongs} highlighted data points.`);
+  const alerts = (html.match(/<blockquote\b[^>]*data-callout=/gi) || []).length;
+  add("Content", "Decision alerts", alerts <= Math.max(2, Math.ceil(words / 1200)), `${alerts} contextual alert(s).`);
+  const headings = headingTexts(html);
+  const duplicateHeadings = headings.filter((heading, index) => headings.indexOf(heading) !== index);
+  add("Content", "Distinct section purposes", duplicateHeadings.length === 0, duplicateHeadings.length ? `Repeated headings: ${[...new Set(duplicateHeadings)].join(", ")}.` : "No repeated H2/H3 headings.");
+  const tooWideTables = [...html.matchAll(/<table\b[\s\S]*?<\/table>/gi)].filter((match) => (match[0].match(/<th\b/gi) || []).length > 6).length;
+  add("Mobile", "Tables fit phone screens", tooWideTables === 0, tooWideTables ? `${tooWideTables} table(s) exceed six columns.` : "Tables use no more than six columns.");
 
   // Early answer
   const firstChunk = textOf(input.intro || "").slice(0, 400);
@@ -194,6 +207,9 @@ export function buildQualityAudit(input: AuditInput): QualityAudit {
   add("On-page SEO", "Clean slug", slugLen > 0 && slugLen <= 9, `${slugLen} slug words.`);
   const internal = (html.match(/<a\b[^>]*href="\/[^"]*"/gi) || []).length;
   add("Internal linking", "Contextual internal links", internal >= 3, `${internal} internal links.`);
+  const destinations = [...html.matchAll(/<a\b[^>]*href="(\/[^"]*)"/gi)].map((match) => match[1]);
+  const repeatedDestinations = destinations.filter((destination, index) => destinations.indexOf(destination) !== index);
+  add("Internal linking", "No repeated destinations", repeatedDestinations.length === 0, repeatedDestinations.length ? `${new Set(repeatedDestinations).size} destination(s) linked repeatedly.` : "Each internal destination is used once.");
   const genericAnchor = /<a\b[^>]*>\s*(click here|read more|learn more|here|this page)\s*<\/a>/i.test(html);
   add("Internal linking", "No generic anchors", !genericAnchor, genericAnchor ? "Generic anchor text found." : "All anchors are descriptive.");
 

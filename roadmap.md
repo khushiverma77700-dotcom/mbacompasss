@@ -29,6 +29,9 @@
 - [x] Keep reference attribution in admin while using source facts silently in public prose
 - [x] Enforce overview, paragraphs, tables, pointers, FAQs, important points, and bold data
 - [x] Generate a 100–200-term admin keyword bank with a smaller public related-search set
+- [ ] Add decision-led chapters with editable table, alert, and internal-link plans
+- [ ] Add grouped contents navigation, semantic alerts, back-to-contents links, and mobile checks
+- [ ] Expand the editor report with repetition, table-width, alert, and link validation
 
 ## Student dashboard redesign
 - [x] Apply the selected Institutional Executive composition in the Academic Blue system
