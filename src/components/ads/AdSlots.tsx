@@ -106,7 +106,7 @@ function findContentTargets(): { targets: Targets; paragraphs: number } {
   return { targets, paragraphs };
 }
 
-export default function AdSlots() {
+export function useAdSlots() {
   const { pathname } = useLocation();
   const [targets, setTargets] = useState<Targets>({});
   const [plan, setPlan] = useState<Record<string, AdCampaign>>({});
@@ -190,5 +190,5 @@ export default function AdSlots() {
         )}
       </>
     ),
-  } as unknown as JSX.Element;
+  };
 }
