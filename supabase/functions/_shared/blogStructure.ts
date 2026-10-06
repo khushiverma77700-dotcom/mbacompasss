@@ -5,6 +5,8 @@
 // bolds important data points (dates, ₹ amounts, percentages, percentiles,
 // ranks, package figures) inside paragraphs and list items.
 
+import { cleanBlogProse } from "./blogEvidence.ts";
+
 const slugifyHeading = (raw: string, used: Set<string>): string => {
   const base =
     raw
@@ -136,7 +138,7 @@ const OVERVIEW_HEADING_RE = /<h2[^>]*>\s*overview\s*<\/h2>/i;
 
 /** Remove prohibited standalone editorial labels from visible text, not attributes. */
 export function cleanEditorialLabels(html: string): string {
-  return String(html || "")
+  return cleanBlogProse(String(html || ""))
     .split(/(<[^>]+>)/g)
     .map((part) => {
       if (part.startsWith("<")) return part;

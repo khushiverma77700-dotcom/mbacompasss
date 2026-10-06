@@ -249,7 +249,7 @@ export function buildFactSheet(constraints: FactConstraints, allowed: VerifiedCo
     return `- ${bits.join(" | ")}`;
   });
 
-  return `VERIFIED DATA SHEET (the ONLY permitted source of factual college data — sourced from official college websites into our database)
+  return `VERIFIED DATA SHEET (database evidence and eligible college set; dated reference evidence may fill missing fields)
 ${filterLines.length ? `Topic filters that every listed college already satisfies: ${filterLines.join("; ")}.\n` : ""}${rows.join("\n")}`;
 }
 
@@ -259,7 +259,7 @@ export function factGroundingRules(facts: VerifiedFacts | null): string {
     return `
 MANDATORY DATA-ACCURACY RULES (non-negotiable):
 - Never state a fee, ranking, cutoff, placement package, seat count, eligibility rule or exam date that you are not certain is officially published. No invented, remembered, assumed or "typical" numbers.
-- If an official figure is not available to you, write the qualitative guidance instead and tell the reader to verify on the official website / official notification. Do not fabricate a number to fill a table cell.
+- Use supplied reference evidence first, then credible public-source evidence to fill missing facts. Changing figures need evidence published or updated within 60 days. Omit unsupported claims or use qualitative guidance without repetitive verification disclaimers; record gaps for the editor. Do not fabricate a table value.
 - Never present estimates as confirmed facts.`;
   }
 
@@ -277,11 +277,11 @@ MANDATORY DATA-ACCURACY RULES (non-negotiable):
 
   return `
 MANDATORY DATA-ACCURACY RULES (non-negotiable — a violation makes the article unpublishable):
-- The VERIFIED DATA SHEET below is the ONLY permitted source of college facts (names, fees, rankings, placement packages, exams accepted, location). It is populated from official college websites into our database.
+- The VERIFIED DATA SHEET defines eligible colleges and database evidence. Supplied reference excerpts take priority for facts; credible supplemental excerpts may fill missing fields. Changing figures require source publication/update evidence within 60 days; a database row update or retrieval date alone is not proof of freshness.
 - You may NOT name any college, university or B-school that is not in the sheet — not even as a comparison, example, "honourable mention" or in a table. Do NOT name IIM Ahmedabad, IIM Bangalore, XLRI or any other institute unless it appears in the sheet.
-- You may NOT change, round, average, extrapolate or "update" any number in the sheet. Reproduce fees, rankings and packages exactly as given.
-- If a field is missing for a college ("not on record"), write "not officially published — verify on the official website" instead of inventing a value.
-- Do not state exam dates, cutoffs or seat counts as confirmed unless they are in the sheet; otherwise label them expected / to be confirmed from the official notification.
+- Reproduce supported figures exactly, with their programme, reporting period and fee basis. Replace a database figure only with explicit recent source evidence, never inference or recollection.
+- If a field is missing, use the supplied links first and credible recent supplemental evidence second. If still unsupported, omit that claim/column or use an em dash in its cell. Never write missing-data or verify-on-website boilerplate in prose; leave gaps in the editor report.
+- Never invent expected dates, cutoffs or seat counts. State them only when eligible source evidence explicitly confirms them.
 ${filterText ? `- Every college you mention must satisfy the topic filter: ${filterText}. Colleges failing this filter are excluded on purpose${excludedSample.length ? ` (e.g. ${excludedSample.slice(0, 8).join(", ")})` : ""} — mentioning them is a hard error.` : ""}
 - Statistics, trends and "industry" claims must be either derived from the sheet or written without a fabricated number.
 

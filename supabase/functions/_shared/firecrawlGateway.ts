@@ -11,6 +11,7 @@ export interface FirecrawlSearchOptions {
   limit?: number;
   lang?: string;
   country?: string;
+  tbs?: string;
   scrapeOptions?: { formats?: string[]; onlyMainContent?: boolean };
 }
 
@@ -44,6 +45,7 @@ export async function firecrawlSearch(options: FirecrawlSearchOptions): Promise<
         limit: options.limit ?? 5,
         lang: options.lang ?? "en",
         country: options.country ?? "in",
+        tbs: options.tbs,
         scrapeOptions: options.scrapeOptions,
       }),
     });
