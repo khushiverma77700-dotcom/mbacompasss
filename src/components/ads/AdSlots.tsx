@@ -166,12 +166,48 @@ function findHomeSlots(main: HTMLElement, settings: AdSettings, found: Found) {
   }
 }
 
+/** College/exam/tool pages: place mid-page ads between the main column's sections. */
+function findPageSlots(col: HTMLElement, settings: AdSettings, found: Found) {
+  const sections = Array.from(col.children).filter((s) => !(s as HTMLElement).dataset?.adSlot && (s as HTMLElement).offsetHeight > 80);
+  const n = Math.min(settings.page_section_ads ?? 2, Math.max(0, sections.length - 1));
+  for (let k = 1; k <= n; k++) {
+    const idx = Math.max(0, Math.round((sections.length * k) / (n + 1)) - 1);
+    const key = `mid_${k}`;
+    found.targets[key] = makeSlot(sections[idx], key);
+    found.slots.push({ key, placement: "mid" });
+  }
+}
+
+const RECENT_KEY = "mbc_ad_recent";
+function readRecent(): string[] { try { return JSON.parse(sessionStorage.getItem(RECENT_KEY) || "[]"); } catch { return []; } }
+function pushRecent(ids: string[]) { try { sessionStorage.setItem(RECENT_KEY, JSON.stringify([...ids, ...readRecent().filter((x) => !ids.includes(x))].slice(0, 12))); } catch { /* ignore */ } }
+
+/** Popup frequency: separate, much stricter caps (per visit and per day). */
+function popupAllowed(settings: AdSettings) {
+  try {
+    const t = todayStr();
+    const day = JSON.parse(localStorage.getItem("mbc_ad_popup_day") || "{}");
+    const ses = Number(sessionStorage.getItem("mbc_ad_popup_ses") || 0);
+    const perSes = settings.popup_per_session ?? 1, perDay = settings.popup_per_day ?? 2;
+    if (perSes > 0 && ses >= perSes) return false;
+    if (perDay > 0 && day.d === t && day.n >= perDay) return false;
+    localStorage.setItem("mbc_ad_popup_day", JSON.stringify({ d: t, n: day.d === t ? day.n + 1 : 1 }));
+    sessionStorage.setItem("mbc_ad_popup_ses", String(ses + 1));
+    return true;
+  } catch { return false; }
+}
+
 function findContentTargets(settings: AdSettings, pageType: string): Found {
   const found: Found = { targets: {}, slots: [], paragraphs: 0 };
   const main = document.querySelector<HTMLElement>("#main-content");
   const body = document.querySelector<HTMLElement>("#main-content .prose") || document.querySelector<HTMLElement>("#main-content article");
   if (pageType === "home" && main) findHomeSlots(main, settings, found);
   else if (body) findArticleSlots(body, settings, found);
+  else {
+    const col = document.querySelector<HTMLElement>("#main-content [data-ad-content]");
+    if (col) findPageSlots(col, settings, found);
+    else if (main) findHomeSlots(main, { ...settings, homepage_section_ads: settings.page_section_ads ?? 2 }, found);
+  }
   const side = document.querySelector<HTMLElement>("[data-ad-sidebar]");
   if (side && !isMobile()) {
     const gap = settings.sidebar_gap_px ?? 16;
@@ -245,13 +281,13 @@ export function useAdSlots() {
       setTargets(found);
       const available: SlotSpec[] = [{ key: "top", placement: "top" }, ...slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }, { key: "popup", placement: "popup" }];
       const text = `${document.title} ${document.querySelector("#main-content")?.textContent?.slice(0, 20000) ?? ""}`.toLowerCase();
-      const ctx = { path: pathname, pageType, device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now(), delivery: data.delivery };
+      const ctx = { path: pathname, pageType, device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now(), delivery: data.delivery, recent: readRecent() };
       const p = planPage(applyAbTests(data.ads, visitorId()), data.settings!, available, ctx, paragraphs);
       if (p.popup) {
-        const k = `mbc_ad_popup_${todayStr()}`;
-        if (localStorage.getItem(k)) delete p.popup; else { localStorage.setItem(k, "1"); window.setTimeout(() => setPopupOpen(true), 8000); }
+        if (!popupAllowed(data.settings!)) delete p.popup; else window.setTimeout(() => setPopupOpen(true), Math.max(0, data.settings!.popup_delay_seconds ?? 8) * 1000);
       }
       setPlan(p);
+      pushRecent([...new Set(Object.values(p).map((a) => a.id))]);
       // Fill-rate reporting: one row per slot this page offered, filled or not.
       const dev = isMobile() ? "mobile" : "desktop";
       const rows = available.filter((s) => s.placement !== "popup" || data.settings!.allow_popup)

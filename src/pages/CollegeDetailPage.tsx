@@ -1106,7 +1106,8 @@ const CollegeDetailPage = () => {
 
           {/* ===== Premium Sidebar ===== */}
           <aside className="hidden lg:block min-w-0 w-full self-start">
-            <div className="sticky top-32 max-h-[calc(100vh-9rem)] flex flex-col gap-4 z-10">
+            <div className="sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto flex flex-col gap-4 z-10">
+              <div data-ad-sidebar className="order-last shrink-0" />
               {/* Premium Fees + Brochure Card — pinned at top of sticky sidebar */}
               <Card className="shrink-0 overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
                 <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
