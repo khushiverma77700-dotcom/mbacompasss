@@ -324,7 +324,7 @@ const ExamDetailPage = () => {
         />
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-6 lg:gap-8 min-w-0">
-          <main className="space-y-5 md:space-y-6 min-w-0">
+          <main data-ad-content className="space-y-5 md:space-y-6 min-w-0">
             {/* Answer-first block — feeds the page's speakable/QA schema. */}
             {(answerText || answerFacts.length > 0) && (
               <AnswerBlock
@@ -626,6 +626,7 @@ const ExamDetailPage = () => {
             <div className="sticky top-24 space-y-4">
               <ExamTocCard items={toc} />
               <ExamPlannerCard />
+              <div data-ad-sidebar />
             </div>
           </aside>
 

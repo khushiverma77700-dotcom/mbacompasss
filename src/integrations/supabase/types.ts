@@ -192,6 +192,10 @@ export type Database = {
           label_text: string
           length_tiers: Json
           max_ads_per_page: number
+          page_section_ads: number
+          popup_delay_seconds: number
+          popup_per_day: number
+          popup_per_session: number
           sidebar_gap_px: number
           sidebar_stack_size: number
           sidebar_sticky: boolean
@@ -207,6 +211,10 @@ export type Database = {
           label_text?: string
           length_tiers?: Json
           max_ads_per_page?: number
+          page_section_ads?: number
+          popup_delay_seconds?: number
+          popup_per_day?: number
+          popup_per_session?: number
           sidebar_gap_px?: number
           sidebar_stack_size?: number
           sidebar_sticky?: boolean
@@ -222,6 +230,10 @@ export type Database = {
           label_text?: string
           length_tiers?: Json
           max_ads_per_page?: number
+          page_section_ads?: number
+          popup_delay_seconds?: number
+          popup_per_day?: number
+          popup_per_session?: number
           sidebar_gap_px?: number
           sidebar_stack_size?: number
           sidebar_sticky?: boolean

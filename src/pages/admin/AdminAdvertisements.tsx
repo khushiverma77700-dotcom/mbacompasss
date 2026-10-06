@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/admin/FileUpload";
 import { AdCreative } from "@/components/ads/AdSlots";
+import AdLivePreview from "@/components/ads/AdLivePreview";
 import { PAGE_TYPES, PLACEMENTS, type AdCampaign } from "@/lib/ads/engine";
 import { AlertTriangle, CalendarPlus, Copy, Download, Eye, Monitor, Pause, Pencil, Play, Plus, Smartphone, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -27,7 +28,7 @@ const blank = (): Partial<AdCampaign> => ({
   name: "", ad_type: "image_cta", status: "draft", headline: "", body: "", cta_text: "Learn more",
   desktop_image_url: "", mobile_image_url: "", html_content: "", alt_text: "", destination_url: "",
   start_at: null, end_at: null, priority: 5, weight: 1, page_types: [], include_paths: [], exclude_paths: [],
-  keywords: [], devices: "all", placements: ["end"], max_per_page: 1, min_paragraph_gap: 4,
+  keywords: [], devices: "all", placements: ["top", "after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end"], max_per_page: 2, min_paragraph_gap: 4,
   cap_per_day: 3, cap_per_session: 0, is_fallback: false, conversion_path: "",
   impression_budget: 0, daily_impression_budget: 0, pacing: "asap", schedule_days: [], schedule_start_hour: null, schedule_end_hour: null,
   is_exclusive: false, is_house: false, ab_test: "",
@@ -382,6 +383,13 @@ export default function AdminAdvertisements() {
             <div className="max-w-xl space-y-4 rounded-lg border border-border bg-card p-4">
               <div className="flex items-center justify-between"><Label>Show advertisements site-wide</Label><Switch checked={settings.enabled} onCheckedChange={(v) => saveSettings({ enabled: v })} /></div>
               <div className="flex items-center justify-between"><Label>Allow pop-up advertisements</Label><Switch checked={settings.allow_popup} onCheckedChange={(v) => saveSettings({ allow_popup: v })} /></div>
+              <div className="grid grid-cols-3 gap-3">
+                <div><Label>Pop-ups per visit</Label><Input type="number" min={0} max={5} defaultValue={(settings as any).popup_per_session ?? 1} onBlur={(ev) => saveSettings({ popup_per_session: Number(ev.target.value) } as any)} /></div>
+                <div><Label>Pop-ups per day</Label><Input type="number" min={0} max={10} defaultValue={(settings as any).popup_per_day ?? 2} onBlur={(ev) => saveSettings({ popup_per_day: Number(ev.target.value) } as any)} /></div>
+                <div><Label>Pop-up delay (sec)</Label><Input type="number" min={0} max={120} defaultValue={(settings as any).popup_delay_seconds ?? 8} onBlur={(ev) => saveSettings({ popup_delay_seconds: Number(ev.target.value) } as any)} /></div>
+              </div>
+              <p className="text-sm text-muted-foreground">Pop-ups have their own strict limit; normal in-page ads rotate freely within each ad's own limits. 0 = no limit.</p>
+              <div><Label>Mid-page ads on college, exam and other pages</Label><Input type="number" min={0} max={4} defaultValue={(settings as any).page_section_ads ?? 2} onBlur={(ev) => saveSettings({ page_section_ads: Number(ev.target.value) } as any)} /></div>
               <div><Label>Maximum ads per page (main content, not counting sidebar)</Label><Input type="number" min={1} max={10} defaultValue={settings.max_ads_per_page} onBlur={(ev) => saveSettings({ max_ads_per_page: Number(ev.target.value) || 3 })} /></div>
               <div><Label>Inside-article ads per 1,000 words</Label><Input type="number" step="0.1" min={0.2} max={5} defaultValue={settings.ads_per_1000_words ?? 1.2} onBlur={(ev) => saveSettings({ ads_per_1000_words: Number(ev.target.value) || 1.2 })} /></div>
               <div><Label>Article length limits (one per line: up to words = max ads)</Label>
@@ -451,10 +459,12 @@ export default function AdminAdvertisements() {
       </Dialog>
 
       <Dialog open={!!e} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto">
           <DialogHeader><DialogTitle>{e?.id ? `Edit ${e.ad_code}` : "New advertisement"}</DialogTitle></DialogHeader>
           {e && (
-            <div className="space-y-5">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
+            <div className="lg:order-2"><div className="lg:sticky lg:top-0"><AdLivePreview ad={e} label={settings?.label_text || "Sponsored"} /></div></div>
+            <div className="space-y-5 lg:order-1">
               <section className="grid gap-3 md:grid-cols-2">
                 <div className="md:col-span-2"><Label>Advertisement name</Label><Input value={e.name ?? ""} onChange={(ev) => set({ name: ev.target.value })} placeholder="CAT 2027 Crash Course" /></div>
                 <div><Label>Type</Label><Select value={e.ad_type} onValueChange={(v) => set({ ad_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{AD_TYPES.map((t) => <SelectItem key={t.v} value={t.v}>{t.l}</SelectItem>)}</SelectContent></Select></div>
@@ -526,6 +536,7 @@ export default function AdminAdvertisements() {
                 <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
                 <Button onClick={save}>Save advertisement</Button>
               </div>
+            </div>
             </div>
           )}
         </DialogContent>
