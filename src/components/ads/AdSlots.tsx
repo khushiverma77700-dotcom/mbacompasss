@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "@/lib/router-compat";
-import { detectPageType, planPage, type AdCampaign, type AdSettings, type Caps } from "@/lib/ads/engine";
+import { detectPageType, inContentBudget, planPage, type AdCampaign, type AdSettings, type Caps, type SlotSpec } from "@/lib/ads/engine";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const CAP_KEY = "mbc_ad_caps";
@@ -81,29 +81,108 @@ export function AdCreative({ ad, placement, label, preview, compact }: { ad: AdC
 }
 
 type Targets = Record<string, HTMLElement>;
+type Found = { targets: Targets; slots: SlotSpec[]; paragraphs: number };
 
-function findContentTargets(): { targets: Targets; paragraphs: number } {
-  const targets: Targets = {};
-  const body = document.querySelector<HTMLElement>("#main-content .prose") || document.querySelector<HTMLElement>("#main-content article");
-  let paragraphs = 0;
-  if (body) {
-    const paras = Array.from(body.querySelectorAll(":scope > p"));
-    paragraphs = paras.length;
-    const make = (after: Element | null, key: string, before = false) => {
-      if (!after) return;
-      const el = document.createElement("div");
-      el.dataset.adSlot = key;
-      before ? after.before(el) : after.after(el);
-      targets[key] = el;
-    };
-    make(paras[1] ?? null, "after_intro");
-    if (paras.length >= 8) make(paras[Math.floor(paras.length / 2)], "mid");
-    const faq = Array.from(body.querySelectorAll("h2")).find((h) => /faq|frequently asked/i.test(h.textContent || ""));
-    if (faq && paras.length >= 6) make(faq, "before_faq", true);
+const words = (t: string | null | undefined) => (t || "").trim().split(/\s+/).filter(Boolean).length;
+const BLOCKY = /^(TABLE|FIGURE|IMG|PRE|BLOCKQUOTE|UL|OL|DL|IFRAME|VIDEO)$/;
+const isHeading = (el: Element) => /^H[1-6]$/.test(el.tagName);
+const isFaqHeading = (el: Element) => isHeading(el) && /faq|frequently asked/i.test(el.textContent || "");
+
+function makeSlot(ref: Element, key: string, before = false) {
+  const el = document.createElement("div");
+  el.dataset.adSlot = key;
+  el.style.minHeight = "1px";
+  before ? ref.before(el) : ref.after(el);
+  return el;
+}
+
+/** Top-level content blocks, unwrapping single wrapper divs editors sometimes add. */
+function blocksOf(body: HTMLElement): Element[] {
+  let root: Element = body;
+  while (root.children.length === 1 && root.children[0].tagName === "DIV") root = root.children[0];
+  return Array.from(root.children).filter((c) => !(c as HTMLElement).dataset?.adSlot);
+}
+
+/**
+ * Structure-aware insertion: walks the article, scores the gap after each block
+ * (section boundaries best, never next to tables/lists/images or right under a
+ * heading, never inside the FAQ), then spreads the length-based budget evenly by word position.
+ */
+function findArticleSlots(body: HTMLElement, settings: AdSettings, found: Found) {
+  const blocks = blocksOf(body);
+  const counts = blocks.map((b) => words(b.textContent));
+  const total = counts.reduce((x, y) => x + y, 0);
+  found.paragraphs = blocks.filter((b) => b.tagName === "P").length;
+  const faqIdx = blocks.findIndex(isFaqHeading);
+  const end = faqIdx >= 0 ? faqIdx : blocks.length;
+  type Cand = { i: number; at: number; score: number };
+  const cands: Cand[] = [];
+  let acc = 0;
+  for (let i = 0; i < end - 1; i++) {
+    acc += counts[i];
+    const cur = blocks[i], next = blocks[i + 1];
+    if (cur.tagName !== "P" || counts[i] < 15) continue; // only after a real paragraph
+    if (isHeading(cur) || BLOCKY.test(next.tagName)) continue; // don't split a heading from its text or crowd a table/list/image
+    if (acc < 120) continue; // let the intro breathe
+    if (total - acc < 80 && faqIdx < 0) continue; // not right at the end
+    cands.push({ i, at: acc, score: /^H[23]$/.test(next.tagName) ? 3 : 1 });
   }
+  const budget = Math.min(inContentBudget(settings, total), settings.max_ads_per_page);
+  const picked: Cand[] = [];
+  const minGap = Math.max(150, total / (budget + 1) / 2);
+  for (let n = 1; n <= budget; n++) {
+    const target = (total * n) / (budget + 1);
+    const best = cands
+      .filter((c) => picked.every((p) => Math.abs(p.at - c.at) >= minGap))
+      .sort((x, y) => Math.abs(x.at - target) / (x.score) - Math.abs(y.at - target) / (y.score))[0];
+    if (best) picked.push(best);
+  }
+  picked.sort((x, y) => x.i - y.i).forEach((c, n) => {
+    const key = n === 0 ? "after_intro" : `in_content_${n}`;
+    found.targets[key] = makeSlot(blocks[c.i], key);
+    found.slots.push({ key, placement: n === 0 ? "after_intro" : "in_content" });
+  });
+  if (faqIdx > 0 && total > 600) {
+    found.targets.before_faq = makeSlot(blocks[faqIdx], "before_faq", true);
+    found.slots.push({ key: "before_faq", placement: "before_faq" });
+  }
+}
+
+/** Homepage: place between top-level sections, spread through the page, never before the first (hero). */
+function findHomeSlots(main: HTMLElement, settings: AdSettings, found: Found) {
+  const sections = blocksOf(main).filter((s) => (s as HTMLElement).offsetHeight > 120);
+  const n = Math.min(settings.homepage_section_ads ?? 2, Math.max(0, sections.length - 2));
+  for (let k = 1; k <= n; k++) {
+    const idx = Math.max(1, Math.round((sections.length * k) / (n + 1)) - 1);
+    const key = `home_section_${k}`;
+    const el = makeSlot(sections[idx], key);
+    el.className = "container mx-auto px-4";
+    found.targets[key] = el;
+    found.slots.push({ key, placement: "home_section" });
+  }
+}
+
+function findContentTargets(settings: AdSettings, pageType: string): Found {
+  const found: Found = { targets: {}, slots: [], paragraphs: 0 };
+  const main = document.querySelector<HTMLElement>("#main-content");
+  const body = document.querySelector<HTMLElement>("#main-content .prose") || document.querySelector<HTMLElement>("#main-content article");
+  if (pageType === "home" && main) findHomeSlots(main, settings, found);
+  else if (body) findArticleSlots(body, settings, found);
   const side = document.querySelector<HTMLElement>("[data-ad-sidebar]");
-  if (side) targets.sidebar = side;
-  return { targets, paragraphs };
+  if (side && !isMobile()) {
+    const gap = settings.sidebar_gap_px ?? 16;
+    side.style.display = "flex"; side.style.flexDirection = "column"; side.style.gap = `${gap}px`;
+    if (settings.sidebar_sticky === false) side.style.position = "static";
+    side.querySelectorAll("[data-ad-slot]").forEach((n) => n.remove());
+    for (let k = 1; k <= Math.max(0, Math.min(5, settings.sidebar_stack_size ?? 3)); k++) {
+      const el = document.createElement("div");
+      el.dataset.adSlot = `sidebar_${k}`;
+      side.appendChild(el);
+      found.targets[`sidebar_${k}`] = el;
+      found.slots.push({ key: `sidebar_${k}`, placement: "sidebar" });
+    }
+  }
+  return found;
 }
 
 export function useAdSlots() {
@@ -130,11 +209,12 @@ export function useAdSlots() {
     setStickyClosed(false);
     const t = window.setTimeout(() => {
       document.querySelectorAll("[data-ad-slot]").forEach((n) => n.remove());
-      const { targets: found, paragraphs } = findContentTargets();
+      const pageType = detectPageType(pathname);
+      const { targets: found, slots, paragraphs } = findContentTargets(data.settings!, pageType);
       setTargets(found);
-      const available = ["top", ...Object.keys(found), "end", "sticky", "popup"];
+      const available: SlotSpec[] = [{ key: "top", placement: "top" }, ...slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }, { key: "popup", placement: "popup" }];
       const text = `${document.title} ${document.querySelector("#main-content")?.textContent?.slice(0, 20000) ?? ""}`.toLowerCase();
-      const ctx = { path: pathname, pageType: detectPageType(pathname), device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now() };
+      const ctx = { path: pathname, pageType, device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now() };
       const p = planPage(data.ads, data.settings!, available, ctx, paragraphs);
       if (p.popup) {
         const k = `mbc_ad_popup_${todayStr()}`;
@@ -153,7 +233,7 @@ export function useAdSlots() {
   }, [data, pathname]);
 
   const label = data?.settings?.label_text || "Sponsored";
-  const nodes = useMemo(() => Object.entries(targets).filter(([k]) => plan[k]).map(([k, el]) => createPortal(<AdCreative key={k + pathname} ad={plan[k]} placement={k} label={label} />, el)), [targets, plan, label, pathname]);
+  const nodes = useMemo(() => Object.entries(targets).filter(([k]) => plan[k]).map(([k, el]) => createPortal(<AdCreative key={k + pathname} ad={plan[k]} placement={k.replace(/_\d+$/, "")} label={label} />, el)), [targets, plan, label, pathname]);
 
   // Remember clicks for conversion tracking.
   useEffect(() => {
