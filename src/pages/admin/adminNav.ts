@@ -177,6 +177,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
       { label: "Sitemap Health Check", path: "/admin/sitemap-health", icon: Activity },
       { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
+      { label: "Editorial Backlinks", path: "/admin/editorial-backlinks", icon: Link2 },
       { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
       { label: "CAT Score Submissions", path: "/admin/cat-scores", icon: Calculator },
       { label: "College Shortlister Submissions", path: "/admin/shortlister-submissions", icon: BarChart3 },

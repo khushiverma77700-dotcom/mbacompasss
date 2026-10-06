@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, Search, X, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Search, X, ArrowLeft, Link2 } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
@@ -428,6 +428,7 @@ const AdminArticles = () => {
                     <TableCell>{a.featured ? "⭐" : "—"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(a.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-xs">{new Date(a.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                     <TableCell className="text-right space-x-1">
+                      <Button variant="ghost" size="sm" asChild><a href={`/admin/editorial-backlinks/${a.id}`} aria-label={`Editorial links for ${a.title}`} title="Editorial links"><Link2 className="w-4 h-4" /></a></Button>
                       <Button variant="ghost" size="sm" asChild><a href={`/article/${a.slug}`} target="_blank"><Eye className="w-4 h-4" /></a></Button>
                       <RefreshContentButton entityType="article" entityId={a.id} entityName={a.title} />
                       <MagicLinkButton compact entityType="article" entityId={a.id} entityTitle={a.title} entitySlug={a.slug} />

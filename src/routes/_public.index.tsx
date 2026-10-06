@@ -23,6 +23,14 @@ function HomeRoute() {
 }
 
 export const Route = createFileRoute("/_public/")({
+  head: () => ({ meta: [
+    { title: "MBA Compass | MBA Colleges, Exams and Preparation" },
+    { name: "description", content: "Explore MBA colleges, entrance exams, coaching and preparation tools with MBA Compass." },
+    { property: "og:title", content: "MBA Compass | MBA Colleges, Exams and Preparation" },
+    { property: "og:description", content: "Find MBA colleges, exam information and preparation resources." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: HomeRoute,
   pendingComponent: PublicPageSkeleton,
 });
