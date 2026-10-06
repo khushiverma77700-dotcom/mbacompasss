@@ -1,5 +1,10 @@
 # Roadmap
 
+## Editorial interlinking
+- [ ] Add restrained database-backed entity linking to public editorial content
+- [ ] Add admin blog directory and per-blog editorial link dossiers with live links
+- [ ] Verify matching safeguards and page behavior
+
 ## Course refund disclosure
 - [x] Show no-refund terms on course listings, course details, and beside enrollment actions
 - [x] Align MBA Compass course offer metadata without changing third-party institute policies
