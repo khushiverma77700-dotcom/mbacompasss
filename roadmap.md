@@ -26,8 +26,10 @@
 - [x] Recompose the report summary into formal score, strategy, strength, risk, and verdict sections
 
 ## AI Blog Writer output
-- [ ] Replace missing-data boilerplate with supplied-link-first, recent public-source research and editor-only gaps
-- [ ] Remove robotic Yes/Short answer paragraph openers and test shared output cleanup
+- [x] Replace missing-data boilerplate with supplied-link-first, recent public-source research and editor-only gaps
+- [x] Remove robotic Yes/Short answer paragraph openers and test shared output cleanup
+- [x] Connect Firecrawl and verify the recent-source search request returns page evidence
+- [ ] Verify a complete newly generated article in the signed-in writer — not yet exercised end-to-end
 - [x] Keep reference attribution in admin while using source facts silently in public prose
 - [x] Enforce overview, paragraphs, tables, pointers, FAQs, important points, and bold data
 - [x] Generate a 100–200-term admin keyword bank with a smaller public related-search set
