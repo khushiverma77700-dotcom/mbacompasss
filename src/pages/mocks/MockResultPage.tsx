@@ -224,7 +224,7 @@ export default function MockResultPage() {
 
   // Peer stats
   const peerStats = useMemo(() => {
-    if (!benchmark) return null;
+    if (!benchmark || Number(benchmark.verified_students ?? 0) < 2) return null;
     return {
       myScore: Number(attempt?.total_score ?? 0),
       myAccuracy: Number(attempt?.accuracy ?? 0),

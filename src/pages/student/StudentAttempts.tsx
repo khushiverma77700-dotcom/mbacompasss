@@ -138,7 +138,7 @@ export default function StudentAttempts() {
     const s = filtered.filter(a => a.status === "submitted" || a.status === "auto_submitted");
     const score = s.reduce((x,a)=>x+Number(a.total_score||0),0);
     const max = s.reduce((x,a)=>x+Number(a.max_score||0),0);
-    const pct = s.length ? Math.round(s.reduce((x,a)=>x+Number(a.percentile||0),0)/s.length*10)/10 : 0;
+    const ranked = s.filter(a => a.percentile != null); const pct: number | string = ranked.length ? Math.round(ranked.reduce((x,a)=>x+Number(a.percentile),0)/ranked.length*10)/10 : "Provisional";
     const acc = s.length ? Math.round(s.reduce((x,a)=>x+Number(a.accuracy||0),0)/s.length) : 0;
     return { count: s.length, score, max, pct, acc };
   }, [filtered]);

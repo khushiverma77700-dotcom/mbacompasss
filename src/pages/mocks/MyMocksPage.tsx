@@ -111,7 +111,7 @@ export default function MyMocksPage() {
                       <div className="text-right text-sm">
                         <div className="font-semibold">{a.total_score ?? 0} / {a.max_score ?? 0}</div>
                         <div className="text-xs text-muted-foreground">
-                          %ile {a.percentile ?? 0} · {a.total_correct}/{a.total_attempted} correct
+                          {a.percentile == null ? "%ile provisional" : `%ile ${a.percentile}`} · {a.total_correct}/{a.total_attempted} correct
                         </div>
                       </div>
                     )}

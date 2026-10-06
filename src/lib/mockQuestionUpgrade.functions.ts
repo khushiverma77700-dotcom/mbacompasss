@@ -64,6 +64,13 @@ export const generateTougherQuestionDraft = createServerFn({ method: "POST" })
       .eq("id", data.questionId).single();
     if (error || !question) throw new Error(error?.message ?? "Question not found.");
     if (question.difficulty !== "easy") throw new Error("Only questions marked Easy can be upgraded with this action.");
+    const testId = (question.mock_sections as any)?.test_id;
+    const [{ count: answered }, { count: active }] = await Promise.all([
+      context.supabase.from("mock_responses").select("id", { count: "exact", head: true }).eq("question_id", data.questionId),
+      testId ? context.supabase.from("mock_attempts").select("id", { count: "exact", head: true }).eq("test_id", testId).eq("status", "in_progress") : Promise.resolve({ count: 0 }),
+    ]);
+    if ((answered ?? 0) > 0) throw new Error("Students have already answered this question, so it cannot be replaced. Add a new tougher question or create a new version of this mock instead.");
+    if ((active ?? 0) > 0) throw new Error("A student is taking this mock right now. Try again once active attempts are finished.");
     const sourceSnapshot = {
       question_type: question.question_type, question_html: question.question_html, difficulty: question.difficulty, topic: question.topic,
       options: [...(question.mock_question_options ?? [])].sort((a, b) => a.sort_order - b.sort_order),
@@ -102,7 +109,10 @@ export const reviewTougherQuestionDraft = createServerFn({ method: "POST" })
     await requireAdmin(context);
     if (data.decision === "approved") {
       const { error } = await context.supabase.rpc("approve_mock_question_upgrade", { _review_id: data.reviewId });
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (/student history|active attempt/i.test(error.message)) throw new Error("This question now has student answers or an active attempt, so it cannot be replaced. Reject this draft and add the tougher version as a new question.");
+        throw new Error(error.message);
+      }
     } else {
       const { error } = await context.supabase.from("mock_question_upgrade_reviews").update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: context.userId }).eq("id", data.reviewId).eq("status", "pending");
       if (error) throw new Error(error.message);
