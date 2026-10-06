@@ -256,13 +256,13 @@ const AdminWriteBlog = () => {
       try {
         // Page through every table — the API caps single responses at 1000 rows.
         const [collRows, examRows, artRows, coachRows] = await Promise.all([
-          fetchAllRows<any>((f, t) => supabase.from("colleges").select("name,slug,city,short_name").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
+          fetchAllRows<any>((f, t) => supabase.from("colleges").select("name,slug,city").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
           fetchAllRows<any>((f, t) => supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
           fetchAllRows<any>((f, t) => supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).range(f, t)).catch(() => []),
           fetchAllRows<any>((f, t) => supabase.from("institutes").select("name,slug,institute_type").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
         ]);
         const uniq = (list: LinkOption[]) => Array.from(new Map(list.map(o => [o.url, o])).values());
-        setColleges(uniq(collRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name, aliases: [r.short_name, r.city].filter(Boolean) }))));
+        setColleges(uniq(collRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name, aliases: [r.city].filter(Boolean) }))));
         setExams(uniq(examRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name }))));
         setArticles(uniq(artRows.filter((r: any) => r.slug && r.title?.trim()).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title }))));
         setCoachings(uniq(
