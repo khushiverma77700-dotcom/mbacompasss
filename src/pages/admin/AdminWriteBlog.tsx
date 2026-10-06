@@ -262,7 +262,7 @@ const AdminWriteBlog = () => {
           fetchAllRows<any>((f, t) => supabase.from("institutes").select("name,slug,institute_type").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
         ]);
         const uniq = (list: LinkOption[]) => Array.from(new Map(list.map(o => [o.url, o])).values());
-        setColleges(uniq(collRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name, aliases: [r.city].filter(Boolean) }))));
+        setColleges(uniq(collRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name }))));
         setExams(uniq(examRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name }))));
         setArticles(uniq(artRows.filter((r: any) => r.slug && r.title?.trim()).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title }))));
         setCoachings(uniq(
