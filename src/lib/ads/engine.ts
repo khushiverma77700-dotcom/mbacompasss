@@ -98,27 +98,42 @@ export function pickAd(pool: AdCampaign[], used: Set<string>, rand = Math.random
   return avail[avail.length - 1];
 }
 
-/** Plan which ad goes in which placement for this page. */
-export function planPage(ads: AdCampaign[], settings: AdSettings, available: string[], ctx: Parameters<typeof eligible>[1], paragraphs: number) {
+export type SlotSpec = { key: string; placement: string };
+const IN_CONTENT = ["after_intro", "in_content", "mid"];
+
+/** Does this campaign accept this placement? In-content slots accept any in-content campaign. */
+function accepts(a: AdCampaign, placement: string) {
+  if (a.placements.includes(placement)) return true;
+  return IN_CONTENT.includes(placement) && a.placements.some((p) => IN_CONTENT.includes(p));
+}
+
+/** Plan which ad goes in which slot. Main slots share the page budget; the sidebar stack has its own. */
+export function planPage(ads: AdCampaign[], settings: AdSettings, slots: SlotSpec[], ctx: Parameters<typeof eligible>[1], paragraphs: number) {
   const result: Record<string, AdCampaign> = {};
   if (!settings.enabled || settings.excluded_paths.some((p) => pathMatches(ctx.path, p))) return result;
   const pool = ads.filter((a) => !a.is_fallback && eligible(a, ctx));
   const fallback = ads.filter((a) => a.is_fallback && eligible({ ...a, page_types: [], include_paths: [], keywords: [] }, ctx));
-  // Short articles get fewer ads.
-  let max = settings.max_ads_per_page;
-  if (paragraphs > 0 && paragraphs < 6) max = Math.min(max, 1);
-  else if (paragraphs > 0 && paragraphs < 12) max = Math.min(max, 2);
+  const max = settings.max_ads_per_page;
   const used = new Set<string>();
   const perAd: Record<string, number> = {};
-  for (const slot of available) {
-    if (Object.keys(result).length >= max) break;
-    if (slot === "popup" && !settings.allow_popup) continue;
-    const candidates = pool.filter((a) => a.placements.includes(slot) && (perAd[a.id] ?? 0) < a.max_per_page
-      && (!["after_intro", "mid", "before_faq"].includes(slot) || paragraphs >= a.min_paragraph_gap));
+  let mainCount = 0;
+  const assign = (slot: SlotSpec, allowReuse: boolean) => {
+    const candidates = pool.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < Math.max(1, a.max_per_page)
+      && (!IN_CONTENT.includes(slot.placement) && slot.placement !== "before_faq" || paragraphs >= a.min_paragraph_gap));
     let ad = pickAd(candidates, used);
-    if (!ad && slot === "end") ad = pickAd(fallback, used);
-    if (!ad) continue;
-    result[slot] = ad; used.add(ad.id); perAd[ad.id] = (perAd[ad.id] ?? 0) + 1;
+    // Different ads first; only reuse a campaign when nothing fresh remains and its own per-page limit allows.
+    if (!ad && allowReuse) ad = pickAd(candidates, new Set());
+    if (!ad && (slot.placement === "end" || slot.placement === "sidebar")) ad = pickAd(fallback, used);
+    if (!ad) return false;
+    result[slot.key] = ad; used.add(ad.id); perAd[ad.id] = (perAd[ad.id] ?? 0) + 1;
+    return true;
+  };
+  for (const slot of slots) {
+    if (slot.placement === "sidebar") continue;
+    if (mainCount >= max) break;
+    if (slot.placement === "popup" && !settings.allow_popup) continue;
+    if (assign(slot, true)) mainCount++;
   }
+  for (const slot of slots.filter((s) => s.placement === "sidebar")) assign(slot, false);
   return result;
 }
