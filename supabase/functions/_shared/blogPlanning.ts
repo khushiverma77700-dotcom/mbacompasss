@@ -51,7 +51,7 @@ export const BANNED_PHRASES = [
   "cutting-edge", "world-class", "robust", "leverage", "seamless", "holistic", "tapestry",
   "testament to", "plays a pivotal role", "plays a crucial role", "a myriad of", "plethora",
   "first and foremost", "needless to say", "rest assured", "embark on", "ever-evolving",
-  "look no further", "harness the power", "at the end of the day", "moreover", "furthermore",
+  "look no further", "harness the power", "at the end of the day", "moreover", "furthermore", "short answer:",
 ];
 
 const SAMPLE_CHARS = 6000;
@@ -210,7 +210,7 @@ CAN INCLUDE (only where it genuinely helps):
 ${list(a.boundary.canInclude)}
 MUST NOT INCLUDE:
 ${list(a.boundary.mustNotInclude)}
-${a.boundary.allowedEntities.length ? `ALLOWED NAMED ENTITIES — name ONLY these colleges/exams/programmes; naming any other institution is an error:\n${a.boundary.allowedEntities.join(", ")}\n` : ""}${a.recommendedStructure.length ? `Suggested structure for this intent: ${a.recommendedStructure.join(" → ")}\n` : ""}${a.timeSensitive ? `TIME-SENSITIVE facts (${a.timeSensitiveTopics.join(", ") || "fees, dates, cutoffs"}): use only figures from the supplied sources; where a figure is not supplied, say it should be confirmed on the official website instead of guessing.\n` : ""}${a.style ? `
+${a.boundary.allowedEntities.length ? `ALLOWED NAMED ENTITIES — name ONLY these colleges/exams/programmes; naming any other institution is an error:\n${a.boundary.allowedEntities.join(", ")}\n` : ""}${a.recommendedStructure.length ? `Suggested structure for this intent: ${a.recommendedStructure.join(" → ")}\n` : ""}${a.timeSensitive ? `TIME-SENSITIVE facts (${a.timeSensitiveTopics.join(", ") || "fees, dates, cutoffs"}): use supplied links first, then credible supplemental sources. Current figures need explicit publication/update dates within 60 days, correct reporting period and programme. Undated or stale evidence cannot confirm current figures. Omit unsupported claims rather than adding verification boilerplate; report missing evidence to the editor.\n` : ""}${a.style ? `
 ## WRITING STYLE (learned from editor samples — imitate patterns, never wording)
 Tone: ${a.style.tone}
 Paragraph length: ${a.style.paragraphLength}
@@ -227,7 +227,7 @@ Reader need it serves: ${a.model.requirement}
 Cover the same ground, in your own words:
 ${list(a.model.coverage)}
 Model heading flow (adapt, never copy wording): ${a.model.headings.join(" → ") || "(not detected)"}
-Write a fully original, humanised article: never reuse a sentence or distinctive phrase from the model. Use its figures only as sourced facts; where unsure, say to confirm on the official website.
+Write a fully original article: never reuse a sentence or distinctive phrase from the model. Use its figures only when source evidence meets the freshness rules. Omit unsupported claims. Start answers with the subject, never "Yes" or "Short answer:".
 ` : ""}
 Accuracy > word count. Relevance > length. Readability > keyword density. If you don't know, don't invent.`;
 }
