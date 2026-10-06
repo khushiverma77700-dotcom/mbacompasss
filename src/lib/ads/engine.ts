@@ -9,18 +9,39 @@ export type AdCampaign = {
   devices: string; placements: string[]; max_per_page: number; min_paragraph_gap: number;
   cap_per_day: number; cap_per_session: number; is_fallback: boolean; conversion_path: string | null;
 };
-export type AdSettings = { enabled: boolean; max_ads_per_page: number; excluded_paths: string[]; allow_popup: boolean; label_text: string };
+export type LengthTier = { max_words: number; ads: number };
+export type AdSettings = {
+  enabled: boolean; max_ads_per_page: number; excluded_paths: string[]; allow_popup: boolean; label_text: string;
+  ads_per_1000_words?: number; length_tiers?: LengthTier[]; sidebar_stack_size?: number; sidebar_gap_px?: number;
+  sidebar_sticky?: boolean; homepage_section_ads?: number;
+};
 
 export const PLACEMENTS = [
   { key: "top", label: "Top of page" },
   { key: "after_intro", label: "After introduction (articles)" },
+  { key: "in_content", label: "Inside content — auto-spaced by length" },
   { key: "mid", label: "Mid-content (articles)" },
   { key: "before_faq", label: "Before FAQ (articles)" },
+  { key: "home_section", label: "Between homepage sections" },
   { key: "end", label: "End of content" },
-  { key: "sidebar", label: "Sidebar (where available)" },
+  { key: "sidebar", label: "Sidebar stack (desktop)" },
   { key: "sticky", label: "Sticky bottom bar" },
   { key: "popup", label: "Pop-up (once per day)" },
 ] as const;
+
+export const DEFAULT_TIERS: LengthTier[] = [
+  { max_words: 500, ads: 1 }, { max_words: 1000, ads: 2 }, { max_words: 2000, ads: 3 },
+  { max_words: 3500, ads: 4 }, { max_words: 999999, ads: 5 },
+];
+
+/** How many in-content ads a body of `words` may carry: min of length tier and density. */
+export function inContentBudget(settings: AdSettings, words: number): number {
+  if (words < 150) return 0;
+  const tiers = (settings.length_tiers?.length ? settings.length_tiers : DEFAULT_TIERS).slice().sort((a, b) => a.max_words - b.max_words);
+  const tier = tiers.find((t) => words <= t.max_words)?.ads ?? tiers[tiers.length - 1].ads;
+  const density = Math.max(1, Math.round((words / 1000) * (settings.ads_per_1000_words ?? 1.2)));
+  return Math.max(0, Math.min(tier, density));
+}
 
 export const PAGE_TYPES = ["home", "article", "college", "exam", "tool", "listing", "landing", "course", "static"] as const;
 
