@@ -81,12 +81,12 @@ const tameBold = (html: string): string => {
 const deAiify = (html: string): string => {
   let out = String(html || "");
 
-  // --- Section/heading rename: drop generic "Key" / "Highlights" labels ---
-  out = out.replace(/<h([23])>\s*(?:Key\s+Highlights?|Quick\s+Snapshot|Snapshot|Key\s+Summary|At\s+a\s+Glance)\s*<\/h\1>/gi, "<h$1>Overview</h$1>");
-  out = out.replace(/\bKey\s+Takeaways\b/gi, "Takeaways");
-  out = out.replace(/\bKey\s+Takeaway\b/gi, "Takeaway");
-  out = out.replace(/\bKey\s+Insights?\b/gi, "Insights");
-  out = out.replace(/\bKey\s+Points?\b/gi, "Points");
+  // --- Prohibited editorial labels ---
+  out = out.replace(/<h([23])>\s*(?:Key\s+Highlights?|Quick\s+Snapshot|Snapshot|Key\s+Summary|At\s+a\s+Glance|Summary)\s*<\/h\1>/gi, "<h$1>Overview</h$1>");
+  out = out.replace(/\bKey\s+Takeaways\b/gi, "Important Points");
+  out = out.replace(/\bKey\s+Takeaway\b/gi, "Important Point");
+  out = out.replace(/\bKey\s+Insights?\b/gi, "Important Insights");
+  out = out.replace(/\bKey\s+Points?\b/gi, "Important Points");
 
   // --- Strip leading AI labels inside bold lead phrases:
   //     <strong>Key: …</strong>, <strong>Highlight: …</strong> etc.
@@ -144,9 +144,9 @@ const stripExternalLinks = (html: string) => {
   // Strip inline attributes for uniform typography
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*"[^"]*"/gi, "");
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*'[^']*'/gi, "");
-  // Strip banned summary labels
-  out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
-  out = out.replace(/\bTL;?DR\b/gi, "Summary");
+  // Replace prohibited opening labels.
+  out = out.replace(/\b(?:Quick\s+)?Summary\b/gi, "Overview");
+  out = out.replace(/\bTL;?DR\b/gi, "Overview");
   // Strip generic AI words / labels (Key, Highlight, Pro Tip, etc.)
   out = deAiify(out);
   // Tame runaway bold so only short highlights stay bold
@@ -196,7 +196,7 @@ function fallbackSections(brief: BlogBrief, count: number) {
     `Placements, recruiters and salary trends`,
     `Best colleges and alternatives`,
     `Preparation checklist and common mistakes`,
-    `Expert tips for final decisions`,
+    `Important points for final decisions`,
     `Year-on-year trends and outlook`,
     `Student fit and decision framework`,
     `Documents and application strategy`,
@@ -265,13 +265,14 @@ WRITING RULES
 - Never introduce colleges, exams, universities or statistics outside the ARTICLE SCOPE below. Do not add "other options" or "alternatives" unless asked.
 - Vary sentence and paragraph length naturally. Do not start consecutive sentences the same way. Use transitions only where they help.
 - Use headings only when they organise real content. Do not add sections just to look complete.
-- Use a table only when comparing several items on the same attributes. Not every section needs a table or a list.
+- Include at least one useful table when the verified material contains comparable facts. Include at least one concise bullet or numbered list for practical pointers.
 - Use the primary keyword naturally. Never repeat it just to hit a density figure.
 - Banned phrases and labels (never use): ${BANNED_PHRASES.map((b) => `"${b}"`).join(", ")}, "Quick Summary", "TL;DR".
 - Never invent fees, dates, rankings, percentiles, placement figures, admission rules or college names. If a figure is not in the supplied sources or verified facts, say it should be confirmed on the official website. No placeholders such as "XX".
-- Name sources in plain text only when the figure came from them. No external <a> tags, no bare URLs, no fake citations.
+- Use supplied sources as silent research inputs. Do not repeatedly name the page, publisher, document, or website in public prose. Mention an authority only when essential to explain an official rule or source conflict. Never describe the research process.
 - Return clean HTML only: h2,h3,h4,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes, no images.
-- <strong> only on short figures or names, never whole sentences.
+- Use <strong> on every meaningful fee, date, percentage, percentile, rank, package, count, score, quantity, and short decision-critical phrase. Never bold whole sentences.
+- Include a topic-specific opening overview, substantive paragraphs, at least one useful table, practical pointers, an <h2>Important Points</h2> section, and 4-8 genuine FAQs.
 - The whole article should be about ${targetWords} words. Reach it with useful content only; shorter and accurate beats longer and padded.
 - Today is ${todayIso}. The current admission cycle is ${currentYear}-${currentYear + 1}.
 
@@ -301,7 +302,7 @@ async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null
           excerpt: { type: "string" },
           intro: { type: "string" },
           h1Tag: { type: "string" },
-          keywords: { type: "array", items: { type: "string" } },
+          keywords: { type: "array", minItems: 100, maxItems: 200, items: { type: "string" } },
           author: { type: "string" },
           sections: { type: "array", items: { type: "object", properties: { heading: { type: "string" }, angle: { type: "string" } }, required: ["heading", "angle"], additionalProperties: false } },
           faqs: { type: "array", items: { type: "string" } },
@@ -319,7 +320,8 @@ Return:
 - h1Tag: same intent as title, 50-60 chars.
 - excerpt: 1-2 sentences (≤ 200 chars).
 - intro: 120-220 word HTML block. The FIRST <p> directly answers the reader question in 50-80 words and includes "${targetKw}" naturally. No label prefix, no hype.
-- sections: up to ${targets.sectionCount} H2 section plans (heading + angle) chosen for THIS search intent and the suggested structure in ARTICLE SCOPE. Every heading must stay inside MUST INCLUDE / CAN INCLUDE. Do not add generic sections ("Snapshot", "Key Highlights", "Expert insights", "Important statistics") unless the topic needs them. Fewer, deeper sections beat many thin ones. In each angle, note which source facts it will use.
+- keywords: 100-200 unique, strongly related search terms: short-tail phrases, specific long-tail phrases, comparisons, and real question-style queries. Stay strictly inside the topic boundary; do not attach search-volume claims.
+- sections: up to ${targets.sectionCount} H2 section plans (heading + angle) chosen for THIS search intent and the suggested structure in ARTICLE SCOPE. Every heading must stay inside MUST INCLUDE / CAN INCLUDE. Include a topic-specific table, practical pointers, an "Important Points" section and FAQs. Never use the standalone labels "Summary", "Key" or "Snapshot". In each angle, note which source facts it will use.
 - faqs: 4-8 real questions searchers ask about exactly this topic (fewer if the topic is narrow).
 
 Secondary keywords to weave naturally: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally from topic"}.
@@ -334,9 +336,9 @@ Category: ${brief.category || "news"}.`,
       metaTitle: metaTitleRaw.slice(0, 60),
       metaDescription: metaDescRaw.length > 160 ? metaDescRaw.slice(0, 160) : metaDescRaw,
       excerpt: String(outline.excerpt || ""),
-      intro: stripExternalLinks(outline.intro || `<p><strong>Summary:</strong> ${escapeHtml(brief.title)} is explained below with updated MBA admissions, fees, placements and decision points for Indian applicants.</p>`),
+      intro: stripExternalLinks(outline.intro || `<p><strong>Overview:</strong> ${escapeHtml(brief.title)} is explained below with current facts and practical decision points.</p>`),
       h1Tag: String(outline.h1Tag || brief.title).slice(0, 65),
-      keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 20) : [targetKw],
+      keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 200) : [targetKw],
       primaryKeyword: targetKw,
       author: outline.author || "MBA Compass Editorial",
       sections: sections.slice(0, targets.sectionCount).map((s: any, i: number) => ({ heading: String(s.heading || fallback[i]?.heading || `Section ${i + 1}`), angle: String(s.angle || fallback[i]?.angle || "Detailed MBA analysis") })),
@@ -350,9 +352,9 @@ Category: ${brief.category || "news"}.`,
       metaTitle: (brief.metaTitle || `${targetKw} Guide ${targets.currentYear} | MBA Compass`).slice(0, 70),
       metaDescription: (brief.metaDescription || `${targetKw} explained with latest MBA admissions, fees, cutoffs, placements, ROI, colleges and expert shortlisting advice.`).slice(0, 170),
       excerpt: `${targetKw} guide with current MBA admissions, fees, cutoffs, placements, ROI and decision pointers.`,
-      intro: `<p><strong>Summary:</strong> ${escapeHtml(targetKw)} needs a clear read on eligibility, fees, cutoffs, placements and ROI before students shortlist options. This guide breaks the topic into practical, data-led sections for Indian MBA applicants.</p>`,
+      intro: `<p><strong>Overview:</strong> ${escapeHtml(targetKw)} is explained through verified facts, comparisons and practical decision points.</p>`,
       h1Tag: brief.title,
-      keywords: [targetKw, ...(brief.secondaryKeywords || [])].slice(0, 20),
+      keywords: [targetKw, ...(brief.secondaryKeywords || [])].slice(0, 200),
       primaryKeyword: targetKw,
       author: "MBA Compass Editorial",
       sections: fallback,
