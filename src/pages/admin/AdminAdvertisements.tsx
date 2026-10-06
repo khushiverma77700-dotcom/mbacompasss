@@ -255,7 +255,17 @@ export default function AdminAdvertisements() {
             <div className="max-w-xl space-y-4 rounded-lg border border-border bg-card p-4">
               <div className="flex items-center justify-between"><Label>Show advertisements site-wide</Label><Switch checked={settings.enabled} onCheckedChange={(v) => saveSettings({ enabled: v })} /></div>
               <div className="flex items-center justify-between"><Label>Allow pop-up advertisements</Label><Switch checked={settings.allow_popup} onCheckedChange={(v) => saveSettings({ allow_popup: v })} /></div>
-              <div><Label>Maximum ads per page</Label><Input type="number" min={1} max={8} defaultValue={settings.max_ads_per_page} onBlur={(ev) => saveSettings({ max_ads_per_page: Number(ev.target.value) || 3 })} /></div>
+              <div><Label>Maximum ads per page (main content, not counting sidebar)</Label><Input type="number" min={1} max={10} defaultValue={settings.max_ads_per_page} onBlur={(ev) => saveSettings({ max_ads_per_page: Number(ev.target.value) || 3 })} /></div>
+              <div><Label>Inside-article ads per 1,000 words</Label><Input type="number" step="0.1" min={0.2} max={5} defaultValue={settings.ads_per_1000_words ?? 1.2} onBlur={(ev) => saveSettings({ ads_per_1000_words: Number(ev.target.value) || 1.2 })} /></div>
+              <div><Label>Article length limits (one per line: up to words = max ads)</Label>
+                <Textarea rows={5} defaultValue={(Array.isArray(settings.length_tiers) ? settings.length_tiers : []).map((t: { max_words: number; ads: number }) => `${t.max_words} = ${t.ads}`).join("\n")}
+                  onBlur={(ev) => saveSettings({ length_tiers: toLines(ev.target.value).map((l) => l.split("=").map((x) => Number(x.trim()))).filter(([w, n]) => w > 0 && n >= 0).map(([max_words, ads]) => ({ max_words, ads })) })} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Sidebar ads stacked</Label><Input type="number" min={0} max={5} defaultValue={settings.sidebar_stack_size ?? 3} onBlur={(ev) => saveSettings({ sidebar_stack_size: Number(ev.target.value) })} /></div>
+                <div><Label>Sidebar spacing (8–24px)</Label><Input type="number" min={8} max={24} defaultValue={settings.sidebar_gap_px ?? 16} onBlur={(ev) => saveSettings({ sidebar_gap_px: Math.min(24, Math.max(8, Number(ev.target.value) || 16)) })} /></div>
+              </div>
+              <div className="flex items-center justify-between"><Label>Sidebar follows while scrolling</Label><Switch checked={settings.sidebar_sticky ?? true} onCheckedChange={(v) => saveSettings({ sidebar_sticky: v })} /></div>
+              <div><Label>Ads between homepage sections</Label><Input type="number" min={0} max={4} defaultValue={settings.homepage_section_ads ?? 2} onBlur={(ev) => saveSettings({ homepage_section_ads: Number(ev.target.value) })} /></div>
               <div><Label>Label shown above ads</Label><Input defaultValue={settings.label_text} onBlur={(ev) => saveSettings({ label_text: ev.target.value || "Sponsored" })} /></div>
               <div><Label>Never show ads on these pages (one per line, * = anything)</Label><Textarea rows={6} defaultValue={settings.excluded_paths.join("\n")} onBlur={(ev) => saveSettings({ excluded_paths: toLines(ev.target.value) })} /></div>
             </div>
