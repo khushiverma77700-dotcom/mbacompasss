@@ -38,7 +38,9 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
   const approvedLinks: { path: string; anchorText: string; targetName?: string }[] = snapshot?.internalLinks?.approved || [];
 
   const hasAIKeywords = shortTail.length > 0 || longTail.length > 0;
-  const displayKeywords = hasAIKeywords ? [] : allKeywords;
+  // The complete editorial keyword bank stays in the article record. Readers
+  // see a concise subset so this section remains useful and never looks stuffed.
+  const displayKeywords = hasAIKeywords ? [] : allKeywords.slice(0, 24);
   const hasLinks = approvedLinks.length > 0;
   const hasFaqs = faqs.length > 0;
 

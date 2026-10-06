@@ -288,7 +288,8 @@ export const generateArticleSchema = (article: any) => ({
     logo: { "@type": "ImageObject", url: `${SITE_URL}/og-image.png` },
   },
   mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE_URL}/article/${article.slug}` },
-  keywords: (article.keywords || []).join(", "),
+  // Keep the full editorial bank in admin; structured data gets a concise set.
+  keywords: (article.keywords || []).slice(0, 24).join(", "),
 });
 
 

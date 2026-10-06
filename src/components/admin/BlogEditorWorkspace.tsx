@@ -60,6 +60,9 @@ const CHECK_LABEL: Record<string, string> = {
   faq: "FAQ where appropriate",
   figuresReviewed: "Figure review run, no conflicting or outdated figures",
   fresh: "Source data is recent (freshness 50+)",
+  table: "Useful table included",
+  pointers: "Practical pointers included",
+  importantPoints: "Important Points section included",
 };
 
 export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDensity }: Props) {
@@ -80,12 +83,12 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
   const [links, setLinks] = useState<LinkSug[] | null>(null);
   const [figures, setFigures] = useState<FigureItem[] | null>(null);
   const [tab, setTab] = useState("issues");
-  const [draft, setDraft] = useState({ title: "", h1: "", slug: "", metaTitle: "", metaDescription: "", intro: "", content: "", published: false });
+  const [draft, setDraft] = useState({ title: "", h1: "", slug: "", metaTitle: "", metaDescription: "", intro: "", content: "", keywords: [] as string[], published: false });
 
   const loadArticle = useCallback(async () => {
     const { data } = await supabase
       .from("articles")
-      .select("title, h1_tag, slug, meta_title, meta_description, intro, content, published")
+      .select("title, h1_tag, slug, meta_title, meta_description, intro, content, keywords, published")
       .eq("id", articleId)
       .maybeSingle();
     if (data) {
@@ -97,6 +100,7 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
         metaDescription: data.meta_description || "",
         intro: data.intro || "",
         content: data.content || "",
+        keywords: Array.isArray(data.keywords) ? data.keywords : [],
         published: !!data.published,
       });
     }
@@ -217,6 +221,7 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
             <TabsTrigger value="freshness">Freshness</TabsTrigger>
             <TabsTrigger value="links">Internal links</TabsTrigger>
             <TabsTrigger value="scope">Scope & sources</TabsTrigger>
+            <TabsTrigger value="keywords">Keyword bank ({draft.keywords.length})</TabsTrigger>
             <TabsTrigger value="preview">Preview & edit</TabsTrigger>
             <TabsTrigger value="checklist">Checklist</TabsTrigger>
           </TabsList>
@@ -378,6 +383,19 @@ export default function BlogEditorWorkspace({ articleId, jobId, stats, targetDen
                 );
               })}
               {(stats?.sourceResearch?.notes || []).map((n: string, i: number) => <p key={`n${i}`} className="text-muted-foreground">{n}</p>)}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="keywords" className="space-y-3 mt-3 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="font-semibold">Editorial keyword bank</p>
+                <p className="text-muted-foreground">The full bank stays in admin and SEO data. Readers see only a curated subset.</p>
+              </div>
+              <Badge variant={draft.keywords.length >= 100 && draft.keywords.length <= 200 ? "outline" : "destructive"}>{draft.keywords.length} terms</Badge>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {draft.keywords.map((keyword) => <Badge key={keyword} variant="secondary">{keyword}</Badge>)}
             </div>
           </TabsContent>
 

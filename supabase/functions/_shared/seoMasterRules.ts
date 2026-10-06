@@ -2,7 +2,7 @@
 //
 // The blog writer's base prompt is tuned for MBA/education topics. This module
 // adds the topic-agnostic strategist layer (search intent, source priority,
-// natural keyword use, Summary → Contents → body structure, tables, bolded key
+// natural keyword use, Overview → Contents → body structure, tables, bolded data
 // data, FAQs, links, schema, freshness) and a deterministic post-write audit so
 // the admin can see what was satisfied before publishing.
 
@@ -60,11 +60,11 @@ UNIVERSAL SEO STRATEGIST RULES (apply to every topic, every industry):
 
 3. Never fabricate. No invented statistics, dates, prices, fees, rankings, percentages, quotes, policies, eligibility rules, specifications or company facts. If a number is not verified, give a clearly labelled range or say the official figure is not yet confirmed. Never use placeholders like "XX" or "TBA-value". Never claim personal or hands-on experience you do not have.
 
-4. Keyword use is natural, never mechanical. Primary keyword: "${opts.keyword}".${secondary.length ? ` Supporting keywords available: ${secondary.slice(0, 15).join(", ")}.` : ""} Place the primary keyword where it reads naturally — SEO title, H1, slug, first paragraph, Summary, at least one H2, meta description, conclusion, image alt — and use variations rather than repeating the exact phrase. Ignore any fixed keyword-density figure: there is no density target. If a keyword makes a sentence awkward, rewrite the sentence or drop the keyword. Self-check the draft for stuffing, near-duplicate sentences and over-optimisation, and rewrite anything that reads forced.
+4. Keyword use is natural, never mechanical. Primary keyword: "${opts.keyword}".${secondary.length ? ` Supporting keywords available: ${secondary.slice(0, 15).join(", ")}.` : ""} Place the primary keyword where it reads naturally — SEO title, H1, slug, first paragraph, Overview, at least one H2, meta description, conclusion, image alt — and use variations rather than repeating the exact phrase. Ignore any fixed keyword-density figure: there is no density target. If a keyword makes a sentence awkward, rewrite the sentence or drop the keyword. Self-check the draft for stuffing, near-duplicate sentences and over-optimisation, and rewrite anything that reads forced.
 
-5. Structure. H1 (page handles it) → Summary → Table of Contents (generated automatically from your headings) → main sections → FAQs → Conclusion. Do not invent headings you never write about. Adapt sections to the actual intent instead of reusing one template.
+5. Structure. H1 (page handles it) → Overview → Table of Contents (generated automatically from your headings) → main sections → Important Points → FAQs → Conclusion. Include substantive paragraphs, at least one useful table where verified comparable data exists, and at least one focused list. Do not invent headings you never write about. Adapt sections to the actual intent instead of reusing one template.
 
-6. Summary must be substantive. Directly answer the main query in the opening Summary block, with the specific facts, numbers and dates that matter. It must be useful even if the reader stops there. Start the intro with <p><strong>Summary:</strong> …</p>.
+6. Overview must be substantive. Directly answer the main query in the opening Overview block, with the specific facts, numbers and dates that matter. It must be useful even if the reader stops there. Start the intro with <p><strong>Overview:</strong> …</p>.
 
 7. Answer early. If the query is about a price, fee, date, deadline, cutoff, eligibility rule, requirement or statistic, state that answer near the top, then explain the detail, then the context.
 
@@ -84,7 +84,7 @@ UNIVERSAL SEO STRATEGIST RULES (apply to every topic, every industry):
 
 15. Deliverables. Alongside the article, give an accurate SEO title, meta description, clean short slug (primary keyword, no keyword pile-up), image alt suggestions that describe the actual image, and only structured-data types the page honestly qualifies for.
 
-16. Self-audit before returning: intent answered, Summary present and specific, main answer early, no fabricated facts, no stuffing, tables where data is comparable, key figures bolded, headings meaningful, FAQs genuine, links contextual, conclusion useful. Fix the content itself rather than adding keywords.
+16. Self-audit before returning: intent answered, Overview present and specific, main answer early, no fabricated facts, no stuffing, tables where data is comparable, important figures bolded, headings meaningful, FAQs genuine, links contextual, conclusion useful. Never use the standalone labels "Summary", "Key" or "Snapshot". Fix the content itself rather than adding keywords.
 
 Never promise or imply search rankings anywhere in the output.`;
 }
@@ -159,8 +159,8 @@ export function buildQualityAudit(input: AuditInput): QualityAudit {
     checks.push({ area, label, status: ok ? "pass" : "warn", detail });
 
   // Structure
-  const hasSummary = /<h2[^>]*>\s*summary\s*<\/h2>/i.test(html) || /<strong>\s*Summary\s*:?\s*<\/strong>/i.test(html);
-  add("Content", "Summary block", hasSummary, hasSummary ? "Summary opens the article." : "No Summary block found at the top.");
+  const hasOverview = /<h2[^>]*>\s*overview\s*<\/h2>/i.test(html) || /<strong>\s*Overview\s*:?\s*<\/strong>/i.test(html);
+  add("Content", "Overview block", hasOverview, hasOverview ? "Overview opens the article." : "No Overview block found at the top.");
   const toc = input.tocEntries ?? 0;
   add("Content", "Table of contents", toc >= 3, toc >= 3 ? `${toc} contents entries generated.` : "Too few headings for a table of contents.");
   const h2 = (html.match(/<h2\b/gi) || []).length;
@@ -170,7 +170,7 @@ export function buildQualityAudit(input: AuditInput): QualityAudit {
   const faqs = input.faqCount ?? (html.match(/<h3\b/gi) || []).length;
   add("Content", "FAQs", (input.faqCount ?? 0) >= 4, `${faqs} FAQ entries.`);
   const strongs = (html.match(/<strong\b/gi) || []).length;
-  add("Readability", "Key facts highlighted", strongs >= 5, `${strongs} highlighted data points.`);
+  add("Readability", "Important facts highlighted", strongs >= 5, `${strongs} highlighted data points.`);
 
   // Early answer
   const firstChunk = textOf(input.intro || "").slice(0, 400);

@@ -81,12 +81,12 @@ const tameBold = (html: string): string => {
 const deAiify = (html: string): string => {
   let out = String(html || "");
 
-  // --- Section/heading rename: drop generic "Key" / "Highlights" labels ---
-  out = out.replace(/<h([23])>\s*(?:Key\s+Highlights?|Quick\s+Snapshot|Snapshot|Key\s+Summary|At\s+a\s+Glance)\s*<\/h\1>/gi, "<h$1>Overview</h$1>");
-  out = out.replace(/\bKey\s+Takeaways\b/gi, "Takeaways");
-  out = out.replace(/\bKey\s+Takeaway\b/gi, "Takeaway");
-  out = out.replace(/\bKey\s+Insights?\b/gi, "Insights");
-  out = out.replace(/\bKey\s+Points?\b/gi, "Points");
+  // --- Prohibited editorial labels ---
+  out = out.replace(/<h([23])>\s*(?:Key\s+Highlights?|Quick\s+Snapshot|Snapshot|Key\s+Summary|At\s+a\s+Glance|Summary)\s*<\/h\1>/gi, "<h$1>Overview</h$1>");
+  out = out.replace(/\bKey\s+Takeaways\b/gi, "Important Points");
+  out = out.replace(/\bKey\s+Takeaway\b/gi, "Important Point");
+  out = out.replace(/\bKey\s+Insights?\b/gi, "Important Insights");
+  out = out.replace(/\bKey\s+Points?\b/gi, "Important Points");
 
   // --- Strip leading AI labels inside bold lead phrases:
   //     <strong>Key: …</strong>, <strong>Highlight: …</strong> etc.
@@ -118,6 +118,10 @@ const deAiify = (html: string): string => {
     out = out.replace(re, "");
   }
 
+  // Remove research-process commentary while preserving the verified fact itself.
+  out = out.replace(/(?:this\s+article|this\s+blog|the\s+content)\s+(?:is\s+)?(?:uses?|takes?|draws?|sources?|references?)\s+(?:its\s+)?(?:information|data|figures?|facts?)?\s*(?:from|using)\s+[^.<]{1,160}[.]/gi, "");
+  out = out.replace(/(?:according\s+to|as\s+stated\s+in|taken\s+from)\s+(?:the\s+)?(?:supplied|provided|reference)\s+(?:link|page|document|source)[^,.;:]{0,120}[,;:]?/gi, "");
+
   // Collapse any double spaces / orphan punctuation left by the strips
   out = out.replace(/\s+([,.;:!?])/g, "$1");
   out = out.replace(/<strong>\s*[:\-\u2013\u2014]\s*/gi, "<strong>");
@@ -144,9 +148,9 @@ const stripExternalLinks = (html: string) => {
   // Strip inline attributes for uniform typography
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*"[^"]*"/gi, "");
   out = out.replace(/\s+(style|class|id|face|color|size|align|bgcolor|width|height)\s*=\s*'[^']*'/gi, "");
-  // Strip banned summary labels
-  out = out.replace(/\bQuick\s+Summary\b/gi, "Summary");
-  out = out.replace(/\bTL;?DR\b/gi, "Summary");
+  // Replace prohibited opening labels.
+  out = out.replace(/\b(?:Quick\s+)?Summary\b/gi, "Overview");
+  out = out.replace(/\bTL;?DR\b/gi, "Overview");
   // Strip generic AI words / labels (Key, Highlight, Pro Tip, etc.)
   out = deAiify(out);
   // Tame runaway bold so only short highlights stay bold
@@ -169,6 +173,38 @@ const escapeHtml = (s: string) =>
 
 const toPlainText = (html: string) => String(html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 const countWords = (html: string) => toPlainText(html).split(/\s+/).filter(Boolean).length;
+
+const normalizeKeywordBank = (values: unknown[], brief: BlogBrief): string[] => {
+  const primary = String(brief.targetKeyword || brief.title || "").trim();
+  const title = String(brief.title || primary).trim();
+  const seeds = [primary, title, ...(brief.secondaryKeywords || []), ...values.map(String)]
+    .map((v) => v.replace(/\s+/g, " ").trim())
+    .filter((v) => v.length >= 2 && v.length <= 120);
+  const modifiers = [
+    "guide", "meaning", "eligibility", "fees", "admission process", "application process", "requirements",
+    "dates", "deadline", "cutoff", "selection process", "exam pattern", "syllabus", "preparation",
+    "strategy", "tips", "questions", "results", "score", "percentile", "colleges", "programmes",
+    "placements", "salary", "career options", "ROI", "scholarships", "comparison", "advantages",
+    "disadvantages", "documents required", "latest updates", "for beginners", "in India",
+  ];
+  const questions = ["what is", "how does", "who is eligible for", "when to apply for", "how to prepare for", "is it worth", "which colleges accept", "what are the fees for", "what is the cutoff for", "what comes after"];
+  const candidates = [...seeds];
+  for (const modifier of modifiers) candidates.push(`${primary} ${modifier}`);
+  for (const prefix of questions) candidates.push(`${prefix} ${primary}`);
+  for (const prefix of questions) {
+    for (const modifier of modifiers.slice(0, 8)) candidates.push(`${prefix} ${primary} ${modifier}`);
+  }
+  for (const seed of seeds.slice(0, 25)) {
+    candidates.push(`${seed} ${new Date().getFullYear()}`, `${seed} explained`, `${seed} comparison`, `${seed} questions`);
+  }
+  const seen = new Set<string>();
+  return candidates.filter((value) => {
+    const key = value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 200);
+};
 
 function getTargets(brief: BlogBrief) {
   const tw = Number(brief.targetWords) > 0 ? Math.max(300, Number(brief.targetWords)) : 0;
@@ -196,7 +232,7 @@ function fallbackSections(brief: BlogBrief, count: number) {
     `Placements, recruiters and salary trends`,
     `Best colleges and alternatives`,
     `Preparation checklist and common mistakes`,
-    `Expert tips for final decisions`,
+    `Important points for final decisions`,
     `Year-on-year trends and outlook`,
     `Student fit and decision framework`,
     `Documents and application strategy`,
@@ -265,13 +301,14 @@ WRITING RULES
 - Never introduce colleges, exams, universities or statistics outside the ARTICLE SCOPE below. Do not add "other options" or "alternatives" unless asked.
 - Vary sentence and paragraph length naturally. Do not start consecutive sentences the same way. Use transitions only where they help.
 - Use headings only when they organise real content. Do not add sections just to look complete.
-- Use a table only when comparing several items on the same attributes. Not every section needs a table or a list.
+- Include at least one useful table when the verified material contains comparable facts. Include at least one concise bullet or numbered list for practical pointers.
 - Use the primary keyword naturally. Never repeat it just to hit a density figure.
 - Banned phrases and labels (never use): ${BANNED_PHRASES.map((b) => `"${b}"`).join(", ")}, "Quick Summary", "TL;DR".
 - Never invent fees, dates, rankings, percentiles, placement figures, admission rules or college names. If a figure is not in the supplied sources or verified facts, say it should be confirmed on the official website. No placeholders such as "XX".
-- Name sources in plain text only when the figure came from them. No external <a> tags, no bare URLs, no fake citations.
+- Use supplied sources as silent research inputs. Do not repeatedly name the page, publisher, document, or website in public prose. Mention an authority only when essential to explain an official rule or source conflict. Never describe the research process.
 - Return clean HTML only: h2,h3,h4,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes, no images.
-- <strong> only on short figures or names, never whole sentences.
+- Use <strong> on every meaningful fee, date, percentage, percentile, rank, package, count, score, quantity, and short decision-critical phrase. Never bold whole sentences.
+- Include a topic-specific opening overview, substantive paragraphs, at least one useful table, practical pointers, an <h2>Important Points</h2> section, and 4-8 genuine FAQs.
 - The whole article should be about ${targetWords} words. Reach it with useful content only; shorter and accurate beats longer and padded.
 - Today is ${todayIso}. The current admission cycle is ${currentYear}-${currentYear + 1}.
 
@@ -301,7 +338,7 @@ async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null
           excerpt: { type: "string" },
           intro: { type: "string" },
           h1Tag: { type: "string" },
-          keywords: { type: "array", items: { type: "string" } },
+          keywords: { type: "array", minItems: 100, maxItems: 200, items: { type: "string" } },
           author: { type: "string" },
           sections: { type: "array", items: { type: "object", properties: { heading: { type: "string" }, angle: { type: "string" } }, required: ["heading", "angle"], additionalProperties: false } },
           faqs: { type: "array", items: { type: "string" } },
@@ -319,7 +356,8 @@ Return:
 - h1Tag: same intent as title, 50-60 chars.
 - excerpt: 1-2 sentences (≤ 200 chars).
 - intro: 120-220 word HTML block. The FIRST <p> directly answers the reader question in 50-80 words and includes "${targetKw}" naturally. No label prefix, no hype.
-- sections: up to ${targets.sectionCount} H2 section plans (heading + angle) chosen for THIS search intent and the suggested structure in ARTICLE SCOPE. Every heading must stay inside MUST INCLUDE / CAN INCLUDE. Do not add generic sections ("Snapshot", "Key Highlights", "Expert insights", "Important statistics") unless the topic needs them. Fewer, deeper sections beat many thin ones. In each angle, note which source facts it will use.
+- keywords: 100-200 unique, strongly related search terms: short-tail phrases, specific long-tail phrases, comparisons, and real question-style queries. Stay strictly inside the topic boundary; do not attach search-volume claims.
+- sections: up to ${targets.sectionCount} H2 section plans (heading + angle) chosen for THIS search intent and the suggested structure in ARTICLE SCOPE. Every heading must stay inside MUST INCLUDE / CAN INCLUDE. Include a topic-specific table, practical pointers, an "Important Points" section and FAQs. Never use the standalone labels "Summary", "Key" or "Snapshot". In each angle, note which source facts it will use.
 - faqs: 4-8 real questions searchers ask about exactly this topic (fewer if the topic is narrow).
 
 Secondary keywords to weave naturally: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally from topic"}.
@@ -334,9 +372,9 @@ Category: ${brief.category || "news"}.`,
       metaTitle: metaTitleRaw.slice(0, 60),
       metaDescription: metaDescRaw.length > 160 ? metaDescRaw.slice(0, 160) : metaDescRaw,
       excerpt: String(outline.excerpt || ""),
-      intro: stripExternalLinks(outline.intro || `<p><strong>Summary:</strong> ${escapeHtml(brief.title)} is explained below with updated MBA admissions, fees, placements and decision points for Indian applicants.</p>`),
+      intro: stripExternalLinks(outline.intro || `<p><strong>Overview:</strong> ${escapeHtml(brief.title)} is explained below with current facts and practical decision points.</p>`),
       h1Tag: String(outline.h1Tag || brief.title).slice(0, 65),
-      keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 20) : [targetKw],
+      keywords: normalizeKeywordBank(Array.isArray(outline.keywords) ? outline.keywords : [], brief),
       primaryKeyword: targetKw,
       author: outline.author || "MBA Compass Editorial",
       sections: sections.slice(0, targets.sectionCount).map((s: any, i: number) => ({ heading: String(s.heading || fallback[i]?.heading || `Section ${i + 1}`), angle: String(s.angle || fallback[i]?.angle || "Detailed MBA analysis") })),
@@ -350,9 +388,9 @@ Category: ${brief.category || "news"}.`,
       metaTitle: (brief.metaTitle || `${targetKw} Guide ${targets.currentYear} | MBA Compass`).slice(0, 70),
       metaDescription: (brief.metaDescription || `${targetKw} explained with latest MBA admissions, fees, cutoffs, placements, ROI, colleges and expert shortlisting advice.`).slice(0, 170),
       excerpt: `${targetKw} guide with current MBA admissions, fees, cutoffs, placements, ROI and decision pointers.`,
-      intro: `<p><strong>Summary:</strong> ${escapeHtml(targetKw)} needs a clear read on eligibility, fees, cutoffs, placements and ROI before students shortlist options. This guide breaks the topic into practical, data-led sections for Indian MBA applicants.</p>`,
+      intro: `<p><strong>Overview:</strong> ${escapeHtml(targetKw)} is explained through verified facts, comparisons and practical decision points.</p>`,
       h1Tag: brief.title,
-      keywords: [targetKw, ...(brief.secondaryKeywords || [])].slice(0, 20),
+      keywords: normalizeKeywordBank([], brief),
       primaryKeyword: targetKw,
       author: "MBA Compass Editorial",
       sections: fallback,
@@ -419,7 +457,7 @@ ${imgNote}${isFirst || isMiddle || isLast ? "" : ""}${ctaNote ? "" : ""}`;
 function fallbackClosingHtml(brief: BlogBrief) {
   const kw = escapeHtml(brief.targetKeyword || brief.title);
   return {
-    keyTakeawaysHtml: `<h2>Takeaways</h2><ul><li><strong>Fit first:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>ROI lens:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
+    keyTakeawaysHtml: `<h2>Important Points</h2><ul><li><strong>Fit first:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>ROI lens:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
     faqHtml: `<h2>Frequently Asked Questions</h2><h3>How should students evaluate ${kw}?</h3><p>Students should evaluate ${kw} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit. The strongest shortlist balances brand value with realistic admission probability and return on investment.</p><h3>Is ${kw} worth it for MBA aspirants?</h3><p>${kw} can be worth it when the programme, city, fee level and placement outcomes align with your career target. Check current salary data, median outcomes and role quality before making the final call.</p>`,
     aboutCompassHtml: `<h2>About MBA Compass</h2><p><strong>MBA Compass</strong> is an MBA discovery and decision platform by B School Buzz, built for Indian aspirants and working professionals. It brings colleges, entrance exams, coaching options, full-length mocks and AI-driven tools into one place so you can plan your MBA journey end-to-end.</p><p>The platform helps you shortlist the right colleges, analyze your profile honestly, compare programmes side-by-side, and prepare with realistic mocks. Because an MBA is one of the biggest financial decisions you'll make, MBA Compass also helps you weigh fees, expected packages, ROI and long-term wealth outcomes before you commit — so the choice is grounded in numbers, not just brand pull. Explore <a href="/mba-compass">MBA Compass</a>, the <a href="/college-shortlister">college shortlister</a> and the <a href="/mba-roi-calculator">MBA ROI calculator</a> to get started.</p>`,
     ctaHtml: `<p><strong>Take the next step:</strong> Start your MBA journey by exploring top colleges and admission opportunities — use <a href="/college-shortlister">the college shortlister</a>, <a href="/profile-analyzer">profile analyzer</a> and <a href="/mba-roi-calculator">MBA ROI calculator</a> to turn this ${kw} research into a practical shortlist.</p>`,
@@ -438,7 +476,7 @@ async function createClosingHtml(brief: BlogBrief, draft: any, facts?: VerifiedF
       system: writerSystemPrompt(brief, facts),
       maxTokens: 8000,
       toolName: "write_blog_closing",
-      description: "Write key takeaways, detailed FAQs and final CTA.",
+      description: "Write important points, detailed FAQs and final CTA.",
       parameters: {
         type: "object",
         properties: {
@@ -461,7 +499,7 @@ Return EXACTLY these blocks, in this order, each as standalone HTML strings:
 
 1) aboutCompassHtml — <h2>About MBA Compass</h2> + 120-180 words: what MBA Compass is (MBA discovery + decision platform by B School Buzz), how it helps Indian students and working professionals (shortlist colleges, analyze profile, compare programmes, full mocks), the financial-decision angle (fees, ROI, expected packages, long-term wealth). Educational, not promotional. End with 2-3 contextual internal links chosen from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
 
-2) keyTakeawaysHtml — <h2>Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>) followed by one concrete data point or decision rule. NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:".
+2) keyTakeawaysHtml — <h2>Important Points</h2> + a <ul> of 4-6 bullets. Each bullet starts with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>) followed by one concrete data point or decision rule. Never use the standalone words "Summary", "Key" or "Snapshot".
 
 3) ctaHtml — CTA #3 (before conclusion). One <p><strong>Take the next step:</strong> …</p> paragraph in the tone "Start your MBA journey today by exploring top colleges and admission opportunities." with 2-3 contextual internal links (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks).
 
@@ -565,7 +603,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  // Fixed structural order: sections → Key Takeaways → CTA #3 → FAQs → Conclusion → About MBA Compass (LAST) → updated stamp
+  // Fixed structural order: sections → Important Points → CTA #3 → FAQs → Conclusion → About MBA Compass (LAST) → updated stamp
   const closingHtml = [
     draft.keyTakeawaysHtml || "",
     draft.ctaHtml || "",
@@ -589,7 +627,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (dataViolations.length || introAudit.removedBlocks || contentAudit.removedBlocks) {
     console.warn(`[ai-blog-writer] verified-data audit for "${targetKw}": removed ${introAudit.removedBlocks + contentAudit.removedBlocks} unverified block(s), ${dataViolations.length} unresolved violation(s)`);
   }
-  // Final shape: Summary → Table of Contents → full body, with key data bolded.
+  // Final shape: Overview → Table of Contents → full body, with important data bolded.
   const structured = structureArticle(introAudit.html, contentAudit.html);
   const intro = structured.intro;
   const content = structured.content;
@@ -626,7 +664,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     conclusionWords,
     keywordOccurrences: finalOccurrences,
     keywordDensityPct: finalDensity,
-    hasKeyTakeaways: /<h2[^>]*>\s*(?:Key\s+)?Takeaways/i.test(content),
+    hasImportantPoints: /<h2[^>]*>\s*Important\s+Points/i.test(content),
     hasAboutCompass: /<h2[^>]*>\s*About MBA Compass/i.test(content),
     hasConclusion: /<h2[^>]*>\s*(Conclusion|Final Word|Bottom Line)/i.test(content),
   };
@@ -640,7 +678,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (validation.internalLinkCount < 12) warnings.push(`internal_links=${validation.internalLinkCount}`);
   if (validation.faqCount < 5 || validation.faqCount > 10) warnings.push(`faqs=${validation.faqCount}`);
   if (conclusionWords && (conclusionWords < 100 || conclusionWords > 150)) warnings.push(`conclusion_words=${conclusionWords}`);
-  if (!validation.hasKeyTakeaways) warnings.push("missing_key_takeaways");
+  if (!validation.hasImportantPoints) warnings.push("missing_important_points");
   if (!validation.hasAboutCompass) warnings.push("missing_about_mba_compass");
   if (!validation.hasConclusion) warnings.push("missing_conclusion");
   if (warnings.length) console.log(`[ai-blog-writer] 25-rule warnings for "${targetKw}":`, warnings.join(" | "));
@@ -658,7 +696,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     content,
     meta_title: metaTitleFinal,
     meta_description: metaDescFinal,
-    keywords: Array.isArray(draft.keywords) ? draft.keywords : [targetKw],
+    keywords: normalizeKeywordBank(Array.isArray(draft.keywords) ? draft.keywords : [], brief),
     primary_keyword: targetKw,
     h1_tag: String(draft.h1Tag || draft.title || brief.title).slice(0, 65),
     author: draft.author || "MBA Compass Editorial",
@@ -1102,7 +1140,7 @@ Deno.serve(async (req) => {
 
 # FRESHNESS & MACHINE-READABLE CITATIONS
 - Today is ${todayIso}. Active admission cycle: ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.
-- For key stats (cutoff, fee, package, percentile band, ranking), mention source names only when they are genuinely known from official context. Do not add fake machine-readable [src:...] markers; safer expected bands/windows are better than invented citations.
+- Use verified facts naturally without repeatedly naming sources. Mention an authority only when essential to explain an official rule or source conflict. Do not add fake machine-readable [src:...] markers.
 - End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
 
 # OUTPUT FORMAT
@@ -1178,7 +1216,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 3. **Keyword usage**: ${densitySpecified
       ? `the editor set a target of ~${density}% exact-match density, so aim for roughly ${targetOccurrences} natural uses of "${targetKw}" across ${targetWords} words — never at the cost of readability.`
       : `use "${targetKw}" only where it reads naturally — no density target. Cover the topic with variations, entities and semantic phrasing instead of repeating the exact phrase.`} Place the exact phrase in the title, H1, slug, meta title, meta description, the first 100 words, at least one H2 and the conclusion. Weave 20-30 LSI/semantic variants throughout. Never cluster repetitions in one paragraph and never force a keyword into an awkward sentence.
-4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
+4. **MANDATORY OPENING OVERVIEW**: First element of "intro" MUST be <p><strong>Overview:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMAN MENTOR VOICE — 8th-grade English, conversational, NOT AI**. Write like a real senior advising a junior over coffee. Use contractions (you're, don't, it's, you'll). Vary sentence length and structure — never start 3 sentences in a row the same way. Use natural mentor openers like "Here's the thing —", "Quick reality check:", "If you're in this boat,", "Most students get this wrong because…", "A simple way to think about it —". Address the reader as "you". Drop a personal aside or worked mini-example every 2-3 sections.
    BANNED phrases (zero tolerance, will trigger rejection): "delve", "delve into", "navigate", "navigating", "landscape", "unlock", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further", "furthermore", "moreover", "dive into", "stay tuned", "unleash", "harness the power", "game-changer", "cutting-edge", "world-class", "robust", "leverage", "synergy", "paradigm", "seamless", "holistic", "in conclusion", "to sum up", "as we all know", "needless to say", "tapestry", "testament", "in essence", "at the end of the day", "when it comes to", "plays a pivotal role", "plays a crucial role", "in the world of", "a myriad of", "plethora", "first and foremost", "it is important to note", "it is worth mentioning", "in summary", "to conclude", "remember that", "rest assured".
@@ -1187,10 +1225,10 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - Convert it into a <ul>, <ol>, or <table>.
    Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected. Whenever you'd list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → use a list or table instead of prose. **At least 5 HTML <table> blocks** (each 5+ rows of safe ${currentYear} data/ranges specific to this topic — fees, packages, cutoff bands, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article. The finished article must be fully scannable on a phone — H2 → H3 → bold lead → list/table, with prose only as connective tissue.
 8. **STRUCTURE — REQUIRED ORDER**:
-   a. Summary <p>
+   a. Overview <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
    c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
-   d. <h2>Takeaways</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:", or the heading "Key Takeaways".
+   d. <h2>Important Points</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). Never use the standalone words "Summary", "Key" or "Snapshot".
     e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer should give safe figures/ranges/windows, named entities and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
@@ -1213,8 +1251,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 - metaTitle: ≤ 60 chars, primary keyword near front, ends with "| MBA Compass" if it fits, no "?".
 - metaDescription: 145-160 chars, primary keyword in first 120 chars, declarative.
 - excerpt: 1-2 sentences, plain text, 160-220 chars, declarative, contains primary keyword.
-- intro: opening HTML — Summary <p> first, then 2-3 hook paragraphs. No headings inside intro.
-- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, a "Takeaways" H2 (never "Key Takeaways"), FAQ, final CTA. NEVER use AI-flavoured words: "Key", "Highlights", "At a Glance", "delve", "leverage", "seamless", "robust", "cutting-edge", "game-changer", "pivotal", "tapestry", "in the realm of", "moreover", "furthermore", "in conclusion".
+- intro: opening HTML — Overview <p> first, then 2-3 hook paragraphs. No headings inside intro.
+- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, an "Important Points" H2, FAQ, final CTA. Include paragraphs, at least one verified-data table and practical bullet or numbered pointers. Bold every meaningful number and short decision-critical fact. Never use the standalone words "Summary", "Key" or "Snapshot".
 - h1Tag: on-page H1 (declarative, ≤ 70 chars, contains primary keyword, no "?").
 - keywords: array of **15-20 keywords** UNIQUE to this topic — primary keyword first, then 6-8 short-tail (2-3 words), then 8-12 long-tail (4+ words, question/intent-driven). NEVER generic MBA terms unrelated to "${targetKw}".
 - primaryKeyword: echo "${targetKw}".
@@ -1502,7 +1540,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       }
     }
 
-    // Final shape: Summary → Table of Contents → full body, with key data bolded.
+    // Final shape: Overview → Table of Contents → full body, with important data bolded.
     const singleShotStructured = structureArticle(article.intro || "", article.content || "");
     article.intro = singleShotStructured.intro;
     article.content = singleShotStructured.content;
@@ -1556,13 +1594,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       content: article.content || "",
       meta_title: article.metaTitle || brief.metaTitle || String(article.title || brief.title).slice(0, 60),
       meta_description: article.metaDescription || brief.metaDescription || String(article.excerpt || "").slice(0, 160),
-      keywords: Array.isArray(article.keywords) ? article.keywords : [],
+      keywords: normalizeKeywordBank(Array.isArray(article.keywords) ? article.keywords : [], brief),
       primary_keyword: targetKw,
       h1_tag: article.h1Tag || article.title || brief.title,
       author: article.author || "MBA Compass Editorial",
       category: brief.category || "news",
-      status: singleShotDataViolations.length ? "draft" : "published",
-      published: singleShotDataViolations.length === 0,
+      status: "draft",
+      published: false,
       featured: false,
       priority: 0,
       faqs: extractedFaqs,
