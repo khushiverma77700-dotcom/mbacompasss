@@ -250,9 +250,9 @@ export default function StudentOverview() {
 
   const stats = useMemo(() => {
     const inProgress = attempts.filter((x) => x.status === "in_progress");
-    const avgPercentile = submitted.length
-      ? +(submitted.reduce((s, x) => s + Number(x.percentile || 0), 0) / submitted.length).toFixed(1) : 0;
-    const bestPercentile = submitted.length ? Math.max(...submitted.map((x) => Number(x.percentile || 0))) : 0;
+    const ranked = submitted.filter((x) => x.percentile != null).map((x) => Number(x.percentile));
+    const avgPercentile = ranked.length ? +(ranked.reduce((s, p) => s + p, 0) / ranked.length).toFixed(1) : 0;
+    const bestPercentile = ranked.length ? Math.max(...ranked) : 0;
     const accuracy = submitted.length
       ? Math.round(submitted.reduce((s, x) => s + Number(x.accuracy || 0), 0) / submitted.length) : 0;
     const totalAttempted = submitted.reduce((s, x) => s + Number(x.total_attempted || 0), 0);
@@ -425,8 +425,10 @@ export default function StudentOverview() {
     { metric: "Score %", value: Math.min(100, stats.avgPctScore || 0) },
     { metric: "Accuracy", value: Math.min(100, stats.accuracy || 0) },
     { metric: "Consistency", value: Math.min(100, stats.consistency || 0) },
-    { metric: "Percentile", value: Math.min(100, stats.avgPercentile || 0) },
-    { metric: "Best", value: Math.min(100, stats.bestPercentile || 0) },
+    ...(stats.bestPercentile > 0 ? [
+      { metric: "Percentile", value: Math.min(100, stats.avgPercentile || 0) },
+      { metric: "Best", value: Math.min(100, stats.bestPercentile || 0) },
+    ] : []),
     { metric: "Streak", value: Math.min(100, (stats.streak || 0) * 10) },
   ]), [stats]);
 

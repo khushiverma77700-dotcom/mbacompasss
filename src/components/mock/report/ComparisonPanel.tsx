@@ -41,7 +41,7 @@ export default function ComparisonPanel({ stats }: { stats: Stats | null }) {
       : `You are ${Math.round(stats.avg - stats.myScore)} marks below average. Focus on quick wins in your weak sections.`;
 
   return (
-    <div className="grid lg:grid-cols-2 gap-4">
+    <div className={`grid gap-4 ${stats.scatter && stats.scatter.length > 1 ? "lg:grid-cols-2" : ""}`}>
       <Card className="p-5">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <Users className="h-4 w-4 text-sky-600" /> Score Comparison
@@ -58,11 +58,12 @@ export default function ComparisonPanel({ stats }: { stats: Stats | null }) {
         <p className="text-xs text-muted-foreground mt-2">{verdict} Topper is {gap > 0 ? `${gap} marks` : "matched"} ahead.</p>
         <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-xs">
           <div><span className="text-muted-foreground">Verified cohort</span><div className="font-semibold">{stats.count.toLocaleString()} students</div></div>
-          <div><span className="text-muted-foreground">Your standing</span><div className="font-semibold">{stats.rank ? `#${stats.rank} · ${stats.percentile?.toFixed(2)}%ile` : "Provisional"}</div></div>
+          <div><span className="text-muted-foreground">Your standing</span><div className="font-semibold">{stats.rank && stats.percentile != null ? `#${stats.rank} · ${stats.percentile.toFixed(2)}%ile` : "Provisional"}</div></div>
         </div>
         {stats.provisional && <p className="text-xs text-amber-700 mt-2">Provisional benchmark — it becomes more stable after 30 verified students.</p>}
       </Card>
 
+      {stats.scatter && stats.scatter.length > 1 && (
       <Card className="p-5">
         <h3 className="font-semibold mb-4">Attempts vs Accuracy (Peers)</h3>
         {stats.scatter && stats.scatter.length > 1 ? (
@@ -86,6 +87,7 @@ export default function ComparisonPanel({ stats }: { stats: Stats | null }) {
         )}
         {stats.scatter && stats.scatter.length > 1 && <p className="text-xs text-muted-foreground mt-2">Red dot = you. Aim for the top-right quadrant.</p>}
       </Card>
+      )}
     </div>
   );
 }

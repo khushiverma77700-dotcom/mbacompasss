@@ -411,7 +411,7 @@ export default function StudentPerformX() {
           <div className="grid grid-cols-3 gap-3 shrink-0">
             <HeroStat icon={<Flame className="h-4 w-4" />} value={`${rewards?.streak_days ?? 0}d`} label="Streak" />
             <HeroStat icon={<Trophy className="h-4 w-4" />} value={myRow?.rank ? `#${myRow.rank}` : "—"} label="Global" />
-            <HeroStat icon={<Gauge className="h-4 w-4" />} value={`${avgPercentile.toFixed(1)}`} label="Avg %ile" />
+            <HeroStat icon={<Gauge className="h-4 w-4" />} value={avgPercentile > 0 ? avgPercentile.toFixed(1) : "—"} label="Avg %ile" />
             <HeroStat icon={<BadgeCheck className="h-4 w-4" />} value={`${earnedCount}/${allBadges.length}`} label="Badges" />
             <HeroStat icon={<Hash className="h-4 w-4" />} value={`${totalMocks}`} label="Mocks" />
             <HeroStat icon={<Diamond className="h-4 w-4" />} value={`${rewards?.coins ?? 0}`} label="Coins" />
@@ -471,7 +471,7 @@ export default function StudentPerformX() {
               <div><div className="font-bold text-emerald-600">{Math.round(avgAccuracy)}</div><div className="text-muted-foreground">ACC</div></div>
               <div><div className="font-bold text-sky-600">{consistencyScore}</div><div className="text-muted-foreground">CON</div></div>
               <div><div className="font-bold text-violet-600">{balanceScore}</div><div className="text-muted-foreground">SPD</div></div>
-              <div><div className="font-bold text-amber-600">{Math.round(bestPercentile)}</div><div className="text-muted-foreground">PEAK</div></div>
+              <div><div className="font-bold text-amber-600">{bestPercentile > 0 ? Math.round(bestPercentile) : "—"}</div><div className="text-muted-foreground">PEAK</div></div>
             </div>
           </div>
         </Card>

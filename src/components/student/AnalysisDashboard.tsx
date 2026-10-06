@@ -520,7 +520,7 @@ function PerformanceBlock({
                   <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="percentile" stroke="#0284c7" strokeWidth={2} dot={{ r: 3 }} name="Percentile" />
+                  <Line type="monotone" dataKey="percentile" stroke="#0284c7" strokeWidth={2} dot={{ r: 3 }} name="Percentile" connectNulls />
                   <Line type="monotone" dataKey="accuracy" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} name="Accuracy %" />
                 </LineChart>
               </ResponsiveContainer>
@@ -529,8 +529,8 @@ function PerformanceBlock({
           <Card className="p-4 bg-white">
             <h4 className="text-sm font-semibold mb-3">Performance highlights</h4>
             <ul className="space-y-2 text-sm">
-              <li className="flex justify-between"><span className="text-muted-foreground">Best percentile</span><span className="font-semibold text-sky-700">{perf.bestPercentile}</span></li>
-              <li className="flex justify-between"><span className="text-muted-foreground">Avg percentile</span><span className="font-semibold">{perf.avgPercentile}</span></li>
+              <li className="flex justify-between"><span className="text-muted-foreground">Best percentile</span><span className="font-semibold text-sky-700">{perf.bestPercentile > 0 ? perf.bestPercentile : "Provisional"}</span></li>
+              <li className="flex justify-between"><span className="text-muted-foreground">Avg percentile</span><span className="font-semibold">{perf.avgPercentile > 0 ? perf.avgPercentile : "Provisional"}</span></li>
               <li className="flex justify-between"><span className="text-muted-foreground">Avg accuracy</span><span className="font-semibold">{perf.avgAccuracy}%</span></li>
               <li className="flex justify-between"><span className="text-muted-foreground">Consistency</span><span className="font-semibold">{perf.consistency}%</span></li>
               <li className="flex justify-between">

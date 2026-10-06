@@ -46,7 +46,7 @@ export type StudentPerformanceData = {
   improvement: number;
   lastDelta: number;
   sectional: Array<{ name: string; avgScore: number; avgAccuracy: number; avgPercentile: number; pctOfMax: number }>;
-  trend: Array<{ name: string; percentile: number; score: number; accuracy: number }>;
+  trend: Array<{ name: string; percentile: number | null; score: number; accuracy: number }>;
 };
 
 const QUERY_KEY = (uid?: string) => ["student-performance", uid] as const;
@@ -242,7 +242,7 @@ export function useStudentPerformance(): StudentPerformanceData {
     const chrono = submitted.slice().reverse().slice(-12);
     return chrono.map((x, i) => ({
       name: `M${i + 1}`,
-      percentile: Number(mockBenchmarks[x.test_id]?.my_percentile || 0),
+      percentile: mockBenchmarks[x.test_id]?.my_percentile == null ? null : Number(mockBenchmarks[x.test_id]?.my_percentile),
       score: Number(x.total_score || 0),
       accuracy: Number(x.accuracy || 0),
     }));
@@ -322,7 +322,7 @@ function computeDemoPerformance(): StudentPerformanceData {
   }));
   const trend = submitted.slice().reverse().slice(-12).map((x, i) => ({
     name: `M${i + 1}`,
-    percentile: Number(x.percentile || 0),
+    percentile: x.percentile == null ? null : Number(x.percentile),
     score: Number(x.total_score || 0),
     accuracy: Number(x.accuracy || 0),
   }));
