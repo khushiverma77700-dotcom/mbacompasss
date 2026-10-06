@@ -41,7 +41,7 @@ export function cleanBlogProse(input: string): string {
     // Remove the whole unsupported prose statement, not only its uncertainty label.
     return /^(td|th)$/i.test(tag) ? `<${tag}${attrs || ""}>—</${tag}>` : "";
   });
-  out = out.replace(/(<(?:p|li)\b[^>]*>\s*)(?:<(strong|b|em)>\s*)?(?:short\s+answer\s*:\s*|yes\s*[,.:;!—–-]\s*)(?:<\/(?:strong|b|em)>\s*)?/gi, (_m, start: string, wrapper: string | undefined) => `${start}${wrapper ? `<${wrapper}>` : ""}`);
+  out = out.replace(/(<(?:p|li)\b[^>]*>\s*)(?:<(strong|b|em)>\s*)?(?:short\s+answer\s*:\s*|yes\s*[,.:;!—–-]\s*)(<\/(?:strong|b|em)>\s*)?/gi, (_m, start: string, wrapper: string | undefined, closed: string | undefined) => `${start}${wrapper && !closed ? `<${wrapper}>` : ""}`);
   // Plain-text FAQ answers and excerpts use the same rule.
   if (!/<[a-z][^>]*>/i.test(out)) out = out.replace(/^\s*(?:short\s+answer\s*:\s*|yes\s*[,.:;!—–-]\s*)/i, "");
   return out.replace(/<(strong|b|em)>\s*<\/\1>/gi, "").trim();
