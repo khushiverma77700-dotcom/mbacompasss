@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "@/lib/router-compat";
-import { applyAbTests, detectPageType, inContentBudget, type Delivery, planPage, type AdCampaign, type AdSettings, type Caps, type SlotSpec } from "@/lib/ads/engine";
+import { applyAbTests, detectPageType, inContentBudget, pathMatches, type Delivery, planPage, type AdCampaign, type AdSettings, type Caps, type SlotSpec } from "@/lib/ads/engine";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const CAP_KEY = "mbc_ad_caps";
@@ -232,7 +232,7 @@ export function useAdSlots() {
       const dev = isMobile() ? "mobile" : "desktop";
       const rows = available.filter((s) => s.placement !== "popup" || data.settings!.allow_popup)
         .map((s) => ({ placement: s.placement, device: dev, filled: !!p[s.key], page_path: pathname.slice(0, 400) }));
-      if (rows.length && !data.settings!.excluded_paths.some((x) => pathname.startsWith(x.replace(/\*.*$/, "")))) supabase.from("ad_slot_requests").insert(rows).then(() => {});
+      if (rows.length && data.settings!.enabled && !data.settings!.excluded_paths.some((x) => pathMatches(pathname, x))) supabase.from("ad_slot_requests").insert(rows).then(() => {});
       // Conversion: visitor reached a campaign's thank-you path after a click.
       for (const ad of data.ads) {
         if (ad.conversion_path && pathname.startsWith(ad.conversion_path) && sessionStorage.getItem(`mbc_ad_clicked_${ad.id}`)) {
