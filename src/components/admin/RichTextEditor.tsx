@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
@@ -6,7 +6,7 @@ import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import Highlight from "@tiptap/extension-highlight";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { Color, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
@@ -20,30 +20,15 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Link2, Image as ImageIcon,
   Table2, Highlighter, Undo, Redo, Quote, Code, Minus,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
-  RemoveFormatting, Type,
+  RemoveFormatting, Type, Palette, RotateCcw,
 } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Custom FontSize extension
-const FontSize = TextStyle.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      fontSize: {
-        default: null,
-        parseHTML: (element: HTMLElement) => element.style.fontSize?.replace(/['"]+/g, "") || null,
-        renderHTML: (attributes: Record<string, any>) => {
-          if (!attributes.fontSize) return {};
-          return { style: `font-size: ${attributes.fontSize}` };
-        },
-      },
-    };
-  },
-});
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 interface RichTextEditorProps {
   content: string;
@@ -78,6 +63,32 @@ const FONT_FAMILIES = [
   { label: "Comic Sans MS", value: "Comic Sans MS" },
 ];
 
+const TEXT_COLORS = [
+  { label: "Black", value: "#111827" },
+  { label: "Grey", value: "#4b5563" },
+  { label: "Blue", value: "#2563eb" },
+  { label: "Sky", value: "#0284c7" },
+  { label: "Green", value: "#15803d" },
+  { label: "Amber", value: "#b45309" },
+  { label: "Red", value: "#dc2626" },
+  { label: "Magenta", value: "#be185d" },
+];
+
+type TextStyleAttribute = "fontSize" | "fontFamily" | "color";
+
+const selectedStyleValue = (editor: NonNullable<ReturnType<typeof useEditor>>, attribute: TextStyleAttribute) => {
+  const { from, to, empty } = editor.state.selection;
+  if (empty) return (editor.getAttributes("textStyle")[attribute] as string | undefined) || "default";
+
+  const values = new Set<string>();
+  editor.state.doc.nodesBetween(from, to, (node) => {
+    if (!node.isText) return;
+    const mark = node.marks.find((candidate) => candidate.type.name === "textStyle");
+    values.add((mark?.attrs[attribute] as string | undefined) || "default");
+  });
+  return values.size === 1 ? Array.from(values)[0] : "mixed";
+};
+
 const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", className }: RichTextEditorProps) => {
   const lastExternalContent = useRef(content);
 
@@ -94,6 +105,8 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
       Image,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder }),
+      TextStyle,
+      Color,
       FontSize,
       FontFamily,
       Subscript,
@@ -154,9 +167,10 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     savedSel.current = { from, to };
   }, [editor]);
   const restored = useCallback(() => {
-    const c = editor!.chain().focus();
+    if (!editor) return null;
+    const c = editor.chain().focus();
     const sel = savedSel.current;
-    const max = editor!.state.doc.content.size;
+    const max = editor.state.doc.content.size;
     return sel ? c.setTextSelection({ from: Math.min(sel.from, max), to: Math.min(sel.to, max) }) : c;
   }, [editor]);
   const applyToSelection = useCallback((attrs: Record<string, string | null>) => {
@@ -166,7 +180,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     const chain = from === to
       ? editor.chain().focus().setTextSelection({ from: editor.state.doc.resolve(from).start(), to: editor.state.doc.resolve(from).end() })
       : restored();
-    chain.setMark("textStyle", attrs).removeEmptyTextStyle().run();
+    chain?.setMark("textStyle", attrs).removeEmptyTextStyle().run();
   }, [editor, restored]);
   const setFontSize = useCallback((size: string) => {
     applyToSelection({ fontSize: size === "default" || size === "" ? null : size });
@@ -176,10 +190,23 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     applyToSelection({ fontFamily: family === "default" || family === "" ? null : family });
   }, [applyToSelection]);
 
+  const setTextColor = useCallback((color: string) => {
+    applyToSelection({ color: color === "default" || color === "" ? null : color });
+  }, [applyToSelection]);
+
   const clearFormatting = useCallback(() => {
     if (!editor) return;
     editor.chain().focus().clearNodes().unsetAllMarks().run();
   }, [editor]);
+
+  const toolbarState = useEditorState({
+    editor,
+    selector: ({ editor: activeEditor }) => ({
+      fontSize: selectedStyleValue(activeEditor, "fontSize"),
+      fontFamily: selectedStyleValue(activeEditor, "fontFamily"),
+      color: selectedStyleValue(activeEditor, "color"),
+    }),
+  });
 
   if (!editor) return null;
 
@@ -187,8 +214,10 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onMouseDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -202,7 +231,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
             )}
           >
             {children}
-          </button>
+          </Button>
         </TooltipTrigger>
         {title && <TooltipContent side="bottom" className="text-xs">{title}</TooltipContent>}
       </Tooltip>
@@ -219,7 +248,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
         <div className="flex flex-wrap items-center gap-1.5 px-2 py-1.5 border-b border-border/50">
           {/* Font Family */}
           <Select
-            value={editor.getAttributes("textStyle").fontFamily || "default"}
+            value={toolbarState?.fontFamily || "default"}
             onValueChange={setFontFamily}
           >
             <SelectTrigger onPointerDown={rememberSelection} onKeyDown={rememberSelection} className="h-7 w-[130px] text-xs border-border/60">
@@ -227,6 +256,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
               <SelectValue placeholder="Font" />
             </SelectTrigger>
             <SelectContent onCloseAutoFocus={(e) => e.preventDefault()}>
+              {toolbarState?.fontFamily === "mixed" && <SelectItem value="mixed" disabled>Mixed fonts</SelectItem>}
               {FONT_FAMILIES.map((f) => (
                 <SelectItem key={f.value} value={f.value || "default"} className="text-xs" style={{ fontFamily: f.value || "inherit" }}>
                   {f.label}
@@ -237,13 +267,14 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
 
           {/* Font Size */}
           <Select
-            value={editor.getAttributes("textStyle").fontSize || "default"}
+            value={toolbarState?.fontSize || "default"}
             onValueChange={setFontSize}
           >
             <SelectTrigger onPointerDown={rememberSelection} onKeyDown={rememberSelection} className="h-7 w-[80px] text-xs border-border/60">
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent onCloseAutoFocus={(e) => e.preventDefault()}>
+              {toolbarState?.fontSize === "mixed" && <SelectItem value="mixed" disabled>Mixed sizes</SelectItem>}
               <SelectItem value="default" className="text-xs">Default</SelectItem>
               {FONT_SIZES.map((s) => (
                 <SelectItem key={s.value} value={s.value} className="text-xs">
@@ -252,6 +283,67 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
               ))}
             </SelectContent>
           </Select>
+
+          <Popover>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onPointerDown={rememberSelection}
+                      className="h-7 gap-1.5 border-border/60 px-2 text-xs"
+                      aria-label="Text colour"
+                    >
+                      <Palette className="h-3.5 w-3.5" />
+                      <span
+                        className="h-2.5 w-5 rounded-sm border border-border"
+                        style={{ backgroundColor: toolbarState?.color === "mixed" || toolbarState?.color === "default" ? "currentColor" : toolbarState?.color }}
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Text colour</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <PopoverContent align="start" className="w-64 p-3" onOpenAutoFocus={(event) => event.preventDefault()}>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">Text colour</p>
+                <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => setTextColor("default")}>
+                  <RotateCcw className="h-3.5 w-3.5" /> Reset
+                </Button>
+              </div>
+              <div className="grid grid-cols-8 gap-1.5">
+                {TEXT_COLORS.map((color) => (
+                  <Button
+                    key={color.value}
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={cn("h-6 w-6 p-0", toolbarState?.color?.toLowerCase() === color.value ? "ring-2 ring-primary ring-offset-1" : "")}
+                    onClick={() => setTextColor(color.value)}
+                    aria-label={color.label}
+                    title={color.label}
+                  >
+                    <span className="h-4 w-4 rounded-sm" style={{ backgroundColor: color.value }} />
+                  </Button>
+                ))}
+              </div>
+              <label className="mt-3 flex items-center justify-between gap-3 border-t pt-3 text-sm">
+                Custom colour
+                <input
+                  type="color"
+                  value={toolbarState?.color !== "mixed" && toolbarState?.color !== "default" ? toolbarState?.color : "#111827"}
+                  onPointerDown={rememberSelection}
+                  onChange={(event) => setTextColor(event.target.value)}
+                  className="h-8 w-12 cursor-pointer rounded border bg-background p-0.5"
+                  aria-label="Choose a custom text colour"
+                />
+              </label>
+            </PopoverContent>
+          </Popover>
 
           <Divider />
 
