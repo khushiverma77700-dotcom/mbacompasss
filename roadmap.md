@@ -80,4 +80,4 @@
 - [x] Add field-level review, manual edits, guarded publishing, refresh, and bulk research
 - [x] Verify preview compilation health
 - [x] Ads: campaign controls, preview studio, analytics/alerts/A-B
-- [x] Admin rich text editor: font size changes must apply everywhere
+- [x] Admin rich text editor: detect mixed font sizes correctly and support text colours everywhere
