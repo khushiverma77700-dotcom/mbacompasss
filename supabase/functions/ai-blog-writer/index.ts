@@ -297,9 +297,16 @@ async function callStructuredAI(args: {
 
 function writerSystemPrompt(brief: BlogBrief, facts?: VerifiedFacts | null) {
   const { currentYear, todayIso, targetWords } = getTargets(brief);
-  const allowed = Array.isArray(brief.allowedInternalUrls) ? brief.allowedInternalUrls.filter(u => u && u.url && u.url.startsWith("/")) : [];
+  const allowed = Array.isArray(brief.allowedInternalUrls) ? brief.allowedInternalUrls.filter(u => u && u.url && u.url.startsWith("/")).slice(0, 80) : [];
   const linkBlock = allowed.length
-    ? `INTERNAL LINKS: you may link ONLY to these relative URLs, and only where the sentence genuinely concerns that page (use each at most once):\n${allowed.map(u => `- ${u.url}${u.label ? ` (${u.label})` : ""}`).join("\n")}`
+    ? `INTERNAL LINKS (editorial style): you may link ONLY to these relative URLs (use each at most once):
+${allowed.map(u => `- ${u.url}${u.label ? ` (${u.label})` : ""}`).join("\n")}
+How to link:
+- Entity links: the FIRST time a college, exam, coaching institute or tool from this list is named in prose or in a table cell, wrap that name in <a href="URL">exact name</a>. Do not link later mentions.
+- Anchor text must be the descriptive page name or a natural phrase (never "click here", "read more", or a bare URL).
+- Max 3 links in any single paragraph; never link inside headings.
+- After 2-4 substantive H2 sections (not after FAQs, not consecutively), add one editorial cross-reference line: <p><strong>Also Read:</strong> <a href="URL">descriptive title</a></p> pointing to a closely related blog/exam/college page from the list that has not been linked yet. Use at most 3 such lines in the whole article.
+- Prefer links that answer the reader's next question. Skip any URL that does not genuinely fit.`
     : `INTERNAL LINKS: only use these tool URLs when genuinely relevant: /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks. Never invent other URLs; further link suggestions are made later by the editor.`;
   return `You are a professional education writer, researcher and editor for MBA Compass, an Indian MBA guidance publisher. You write like an experienced human journalist: precise, plain, factual and calm. You are not a chatbot and not a mentor chatting over coffee.
 

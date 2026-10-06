@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/fetchAllRows";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +60,41 @@ const TOOL_URLS: { url: string; label: string }[] = [
   { url: "/courses", label: "Courses" },
 ];
 
-type LinkOption = { url: string; label: string };
+type LinkOption = { url: string; label: string; aliases?: string[]; auto?: boolean };
+
+const LINK_STOP = new Set(["the","and","for","of","in","to","a","an","on","with","by","at","from","is","are","how","what","why","best","top","guide","india","indian","institute","management","school","business","college","university","mba","pgdm","exam","2024","2025","2026","2027","2028","complete","list","all","new","vs"]);
+const tokens = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length >= 3 && !LINK_STOP.has(w));
+const LINK_CAPS = { colleges: 15, exams: 6, articles: 8, coachings: 4, tools: 3 } as const;
+
+/** Rank pages by how strongly the brief/outline mentions them: exact name > alias/acronym > distinctive-word overlap. */
+function rankLinks(text: string, pools: Record<keyof typeof LINK_CAPS, LinkOption[]>) {
+  if (text.trim().length < 4) return [] as (LinkOption & { score: number })[];
+  const padded = ` ${text.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ")} `;
+  const textTokens = new Set(tokens(text));
+  const out: (LinkOption & { score: number })[] = [];
+  (Object.keys(LINK_CAPS) as (keyof typeof LINK_CAPS)[]).forEach(kind => {
+    const scored: (LinkOption & { score: number })[] = [];
+    for (const o of pools[kind] || []) {
+      const label = o.label.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+      let score = 0;
+      if (label.length >= 4 && padded.includes(` ${label} `)) score = 100;
+      else if ((o.aliases || []).some(a => a && a.length >= 3 && kind === "colleges" && a === (o.aliases || [])[0] && padded.includes(` ${a.toLowerCase()} `))) score = 70;
+      else {
+        const lt = tokens(o.label);
+        if (lt.length) {
+          const hit = lt.filter(t => textTokens.has(t)).length;
+          const ratio = hit / lt.length;
+          if (hit >= 2 && ratio >= 0.5) score = Math.round(40 + ratio * 40);
+          else if (kind !== "colleges" && hit >= 1 && ratio >= 0.5) score = Math.round(25 + ratio * 30);
+        }
+      }
+      if (score > 0) scored.push({ ...o, score });
+    }
+    scored.sort((a, b) => b.score - a.score);
+    out.push(...scored.slice(0, LINK_CAPS[kind]));
+  });
+  return out;
+}
 type FactCheckReportItem = {
   field?: string;
   severity?: "warn" | "error";
@@ -218,20 +254,22 @@ const AdminWriteBlog = () => {
     const load = async () => {
       setLoadingLinks(true);
       try {
-        const [collRes, examRes, artRes, coachRes] = await Promise.all([
-          supabase.from("colleges").select("name,slug").not("slug", "is", null).order("name").limit(300),
-          supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").limit(80),
-          supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).limit(60),
-          supabase.from("institutes").select("name,slug,institute_type").not("slug", "is", null).order("name").limit(200),
+        // Page through every table — the API caps single responses at 1000 rows.
+        const [collRows, examRows, artRows, coachRows] = await Promise.all([
+          fetchAllRows<any>((f, t) => supabase.from("colleges").select("name,slug,city").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
+          fetchAllRows<any>((f, t) => supabase.from("exams").select("name,slug").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
+          fetchAllRows<any>((f, t) => supabase.from("articles").select("title,slug").eq("published", true).order("created_at", { ascending: false }).range(f, t)).catch(() => []),
+          fetchAllRows<any>((f, t) => supabase.from("institutes").select("name,slug,institute_type").not("slug", "is", null).order("name").range(f, t)).catch(() => []),
         ]);
-        setColleges((collRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name })));
-        setExams((examRes.data || []).filter((r: any) => r.slug && r.name).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name })));
-        setArticles((artRes.data || []).filter((r: any) => r.slug && r.title).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title })));
-        setCoachings(
-          (coachRes.data || [])
-            .filter((r: any) => r.slug && r.name && (r.institute_type === "coaching" || /coaching/i.test(r.slug)))
+        const uniq = (list: LinkOption[]) => Array.from(new Map(list.map(o => [o.url, o])).values());
+        setColleges(uniq(collRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/college/${r.slug}`, label: r.name }))));
+        setExams(uniq(examRows.filter((r: any) => r.slug && r.name?.trim()).map((r: any) => ({ url: `/exams/${r.slug}`, label: r.name }))));
+        setArticles(uniq(artRows.filter((r: any) => r.slug && r.title?.trim()).map((r: any) => ({ url: `/article/${r.slug}`, label: r.title }))));
+        setCoachings(uniq(
+          coachRows
+            .filter((r: any) => r.slug && r.name?.trim() && (r.institute_type === "coaching" || /coaching/i.test(r.slug)))
             .map((r: any) => ({ url: `/coaching/${r.slug}`, label: r.name }))
-        );
+        ));
       } catch (e) {
         console.warn("Could not load link pool", e);
       } finally {
@@ -240,6 +278,31 @@ const AdminWriteBlog = () => {
     };
     load();
   }, []);
+
+  // ---- Auto-pick: score every page against the title, keywords, brief and outline ----
+  const [autoPicked, setAutoPicked] = useState<Record<string, LinkOption & { score: number }>>({});
+  const [autoLink, setAutoLink] = useState(true);
+  const autoText = useMemo(() => [
+    title, targetKeyword, secondaryKws.join(" "), instructions,
+    outline ? JSON.stringify(outline.sections) + " " + outline.faqs.join(" ") : "",
+  ].join(" ").toLowerCase(), [title, targetKeyword, secondaryKws, instructions, outline]);
+
+  useEffect(() => {
+    if (!autoLink) return;
+    const h = setTimeout(() => {
+      const picks = rankLinks(autoText, { colleges, exams, articles, coachings, tools: TOOL_URLS });
+      const nextAuto = Object.fromEntries(picks.map(p => [p.url, p]));
+      setSelectedUrls(prev => {
+        const next = { ...prev };
+        Object.keys(autoPicked).forEach(u => { if (!nextAuto[u] && (next[u] as any)?.auto) delete next[u]; });
+        picks.forEach(p => { if (!next[p.url]) next[p.url] = { ...p, auto: true } as any; });
+        return next;
+      });
+      setAutoPicked(nextAuto);
+    }, 700);
+    return () => clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoText, colleges, exams, articles, coachings, autoLink]);
 
   const setStep = (key: string, status: ProgressStep["status"], error?: string) =>
     setProgressSteps(prev => prev.map(s => s.key === key ? { ...s, status, error } : s));
@@ -454,7 +517,8 @@ const AdminWriteBlog = () => {
         <ScrollArea className="h-64 rounded-md border bg-background">
           <div className="p-2 space-y-1">
             {filtered.length === 0 && <p className="text-xs text-muted-foreground p-3">{emptyMsg}</p>}
-            {filtered.map(opt => (
+            {filtered.length > 300 && <p className="text-xs text-muted-foreground px-2 pb-1">Showing first 300 of {filtered.length.toLocaleString()} — search to narrow.</p>}
+            {filtered.slice(0, 300).map(opt => (
               <label key={opt.url} className="flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer text-sm">
                 <Checkbox checked={!!selectedUrls[opt.url]} onCheckedChange={() => toggleUrl(opt)} className="mt-0.5" />
                 <div className="min-w-0 flex-1">
@@ -707,13 +771,47 @@ const AdminWriteBlog = () => {
                 <Link2 className="h-4 w-4 text-primary" /> Internal Linking Pool
               </CardTitle>
               <CardDescription>
-                Pick the URLs the AI is allowed to link to. Links are inserted automatically in the right positions.
+                Every published college, exam, blog and coaching page is searchable here. Related pages are picked automatically from the title, keywords and outline, then woven in as editorial in-text links and “Also Read” blocks.
               </CardDescription>
             </div>
             <Badge variant="secondary" className="text-xs">{selectedCount} selected</Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {[
+              ["Colleges", colleges.length], ["Exams", exams.length], ["Blogs", articles.length],
+              ["Coaching", coachings.length], ["Auto-picked", Object.keys(autoPicked).length],
+            ].map(([k, v]) => (
+              <div key={k as string} className="rounded-lg border bg-muted/30 px-3 py-2">
+                <p className="text-xs text-muted-foreground">{k}</p>
+                <p className="text-base font-semibold">{loadingLinks && k !== "Auto-picked" ? "…" : (v as number).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">Auto-pick related pages</p>
+              </div>
+              <Switch checked={autoLink} onCheckedChange={setAutoLink} aria-label="Auto-pick related pages" />
+            </div>
+            {Object.keys(autoPicked).length === 0 ? (
+              <p className="text-xs text-muted-foreground">{autoLink ? "Type a title or keyword — matching colleges, exams and guides appear here." : "Auto-pick is off. Choose links manually below."}</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                {Object.values(autoPicked).sort((a, b) => b.score - a.score).map(p => (
+                  <Badge key={p.url} variant={selectedUrls[p.url] ? "default" : "outline"} className="gap-1 text-xs font-normal cursor-pointer" onClick={() => toggleUrl(p)}>
+                    {p.label}
+                    <span className="opacity-70">{p.score >= 100 ? "exact" : p.score >= 70 ? "strong" : "related"}</span>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -724,7 +822,7 @@ const AdminWriteBlog = () => {
             />
           </div>
 
-          <Tabs defaultValue="tools" className="w-full">
+          <Tabs defaultValue="colleges" className="w-full">
             <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="tools">Tools</TabsTrigger>
               <TabsTrigger value="colleges">Colleges ({colleges.length})</TabsTrigger>
