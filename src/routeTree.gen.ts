@@ -54,6 +54,7 @@ import { Route as PublicReviewPolicyRouteImport } from './routes/_public.review-
 import { Route as PublicRoiCalculatorRouteImport } from './routes/_public.roi-calculator'
 import { Route as PublicTermsRouteImport } from './routes/_public.terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAdvertisementsRouteImport } from './routes/admin.advertisements'
 import { Route as AdminAiUsageRouteImport } from './routes/admin.ai-usage'
 import { Route as AdminAllLeadsUnifiedRouteImport } from './routes/admin.all-leads-unified'
 import { Route as AdminAllLinksRouteImport } from './routes/admin.all-links'
@@ -306,6 +307,7 @@ import { Route as PublicMocksLeaderboardSlugRouteImport } from './routes/_public
 import { Route as PublicMocksResultAttemptIdRouteImport } from './routes/_public.mocks.result.$attemptId'
 import { Route as PublicMocksReviewAttemptIdRouteImport } from './routes/_public.mocks.review.$attemptId'
 import { Route as AdminMockTestsTestIdBuilderRouteImport } from './routes/admin.mock-tests_.$testId.builder'
+import { Route as ApiPublicAdClickIdRouteImport } from './routes/api/public/ad-click.$id'
 import { Route as ApiPublicWhatsappDispatchRouteImport } from './routes/api/public/whatsapp/dispatch'
 import { Route as CollegeSlugProgrammeProgrammeSlugRouteImport } from './routes/college.$slug.programme.$programmeSlug'
 import { Route as DemoDailyTestReportAttemptIdRouteImport } from './routes/demo.daily-test.report.$attemptId'
@@ -555,6 +557,11 @@ const PublicTermsRoute = PublicTermsRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdvertisementsRoute = AdminAdvertisementsRouteImport.update({
+  id: '/advertisements',
+  path: '/advertisements',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAiUsageRoute = AdminAiUsageRouteImport.update({
@@ -1851,6 +1858,11 @@ const AdminMockTestsTestIdBuilderRoute =
     path: '/mock-tests/$testId/builder',
     getParentRoute: () => AdminRoute,
   } as any)
+const ApiPublicAdClickIdRoute = ApiPublicAdClickIdRouteImport.update({
+  id: '/api/public/ad-click/$id',
+  path: '/api/public/ad-click/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWhatsappDispatchRoute =
   ApiPublicWhatsappDispatchRouteImport.update({
     id: '/api/public/whatsapp/dispatch',
@@ -2030,6 +2042,7 @@ export interface FileRoutesByFullPath {
   '/review-policy': typeof PublicReviewPolicyRoute
   '/roi-calculator': typeof PublicRoiCalculatorRoute
   '/terms': typeof PublicTermsRoute
+  '/admin/advertisements': typeof AdminAdvertisementsRoute
   '/admin/ai-usage': typeof AdminAiUsageRoute
   '/admin/all-leads-unified': typeof AdminAllLeadsUnifiedRoute
   '/admin/all-links': typeof AdminAllLinksRoute
@@ -2283,6 +2296,7 @@ export interface FileRoutesByFullPath {
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
   '/admin/mock-tests/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
+  '/api/public/ad-click/$id': typeof ApiPublicAdClickIdRoute
   '/api/public/whatsapp/dispatch': typeof ApiPublicWhatsappDispatchRoute
   '/college/$slug/programme/$programmeSlug': typeof CollegeSlugProgrammeProgrammeSlugRoute
   '/demo/daily-test/report/$attemptId': typeof DemoDailyTestReportAttemptIdRoute
@@ -2344,6 +2358,7 @@ export interface FileRoutesByTo {
   '/review-policy': typeof PublicReviewPolicyRoute
   '/roi-calculator': typeof PublicRoiCalculatorRoute
   '/terms': typeof PublicTermsRoute
+  '/admin/advertisements': typeof AdminAdvertisementsRoute
   '/admin/ai-usage': typeof AdminAiUsageRoute
   '/admin/all-leads-unified': typeof AdminAllLeadsUnifiedRoute
   '/admin/all-links': typeof AdminAllLinksRoute
@@ -2586,6 +2601,7 @@ export interface FileRoutesByTo {
   '/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
   '/admin/mock-tests/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
+  '/api/public/ad-click/$id': typeof ApiPublicAdClickIdRoute
   '/api/public/whatsapp/dispatch': typeof ApiPublicWhatsappDispatchRoute
   '/college/$slug/programme/$programmeSlug': typeof CollegeSlugProgrammeProgrammeSlugRoute
   '/demo/daily-test/report/$attemptId': typeof DemoDailyTestReportAttemptIdRoute
@@ -2655,6 +2671,7 @@ export interface FileRoutesById {
   '/_public/review-policy': typeof PublicReviewPolicyRoute
   '/_public/roi-calculator': typeof PublicRoiCalculatorRoute
   '/_public/terms': typeof PublicTermsRoute
+  '/admin/advertisements': typeof AdminAdvertisementsRoute
   '/admin/ai-usage': typeof AdminAiUsageRoute
   '/admin/all-leads-unified': typeof AdminAllLeadsUnifiedRoute
   '/admin/all-links': typeof AdminAllLinksRoute
@@ -2909,6 +2926,7 @@ export interface FileRoutesById {
   '/_public/mocks/result/$attemptId': typeof PublicMocksResultAttemptIdRoute
   '/_public/mocks/review/$attemptId': typeof PublicMocksReviewAttemptIdRoute
   '/admin/mock-tests_/$testId/builder': typeof AdminMockTestsTestIdBuilderRoute
+  '/api/public/ad-click/$id': typeof ApiPublicAdClickIdRoute
   '/api/public/whatsapp/dispatch': typeof ApiPublicWhatsappDispatchRoute
   '/college/$slug/programme/$programmeSlug': typeof CollegeSlugProgrammeProgrammeSlugRoute
   '/demo/daily-test/report/$attemptId': typeof DemoDailyTestReportAttemptIdRoute
@@ -2979,6 +2997,7 @@ export interface FileRouteTypes {
     | '/review-policy'
     | '/roi-calculator'
     | '/terms'
+    | '/admin/advertisements'
     | '/admin/ai-usage'
     | '/admin/all-leads-unified'
     | '/admin/all-links'
@@ -3232,6 +3251,7 @@ export interface FileRouteTypes {
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
     | '/admin/mock-tests/$testId/builder'
+    | '/api/public/ad-click/$id'
     | '/api/public/whatsapp/dispatch'
     | '/college/$slug/programme/$programmeSlug'
     | '/demo/daily-test/report/$attemptId'
@@ -3293,6 +3313,7 @@ export interface FileRouteTypes {
     | '/review-policy'
     | '/roi-calculator'
     | '/terms'
+    | '/admin/advertisements'
     | '/admin/ai-usage'
     | '/admin/all-leads-unified'
     | '/admin/all-links'
@@ -3535,6 +3556,7 @@ export interface FileRouteTypes {
     | '/mocks/result/$attemptId'
     | '/mocks/review/$attemptId'
     | '/admin/mock-tests/$testId/builder'
+    | '/api/public/ad-click/$id'
     | '/api/public/whatsapp/dispatch'
     | '/college/$slug/programme/$programmeSlug'
     | '/demo/daily-test/report/$attemptId'
@@ -3603,6 +3625,7 @@ export interface FileRouteTypes {
     | '/_public/review-policy'
     | '/_public/roi-calculator'
     | '/_public/terms'
+    | '/admin/advertisements'
     | '/admin/ai-usage'
     | '/admin/all-leads-unified'
     | '/admin/all-links'
@@ -3857,6 +3880,7 @@ export interface FileRouteTypes {
     | '/_public/mocks/result/$attemptId'
     | '/_public/mocks/review/$attemptId'
     | '/admin/mock-tests_/$testId/builder'
+    | '/api/public/ad-click/$id'
     | '/api/public/whatsapp/dispatch'
     | '/college/$slug/programme/$programmeSlug'
     | '/demo/daily-test/report/$attemptId'
@@ -3897,6 +3921,7 @@ export interface RootRouteChildren {
   CollegeSlugProgrammeRoute: typeof CollegeSlugProgrammeRouteWithChildren
   MocksAttemptAttemptIdRoute: typeof MocksAttemptAttemptIdRoute
   MocksCheckoutReturnRoute: typeof MocksCheckoutReturnRoute
+  ApiPublicAdClickIdRoute: typeof ApiPublicAdClickIdRoute
   ApiPublicWhatsappDispatchRoute: typeof ApiPublicWhatsappDispatchRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicEmailClickTokenRoute: typeof ApiPublicEmailClickTokenRoute
@@ -4218,6 +4243,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/advertisements': {
+      id: '/admin/advertisements'
+      path: '/advertisements'
+      fullPath: '/admin/advertisements'
+      preLoaderRoute: typeof AdminAdvertisementsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ai-usage': {
@@ -5984,6 +6016,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMockTestsTestIdBuilderRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/ad-click/$id': {
+      id: '/api/public/ad-click/$id'
+      path: '/api/public/ad-click/$id'
+      fullPath: '/api/public/ad-click/$id'
+      preLoaderRoute: typeof ApiPublicAdClickIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/whatsapp/dispatch': {
       id: '/api/public/whatsapp/dispatch'
       path: '/api/public/whatsapp/dispatch'
@@ -6412,6 +6451,7 @@ const PublicRouteWithChildren =
   PublicRoute._addFileChildren(PublicRouteChildren)
 
 interface AdminRouteChildren {
+  AdminAdvertisementsRoute: typeof AdminAdvertisementsRoute
   AdminAiUsageRoute: typeof AdminAiUsageRoute
   AdminAllLeadsUnifiedRoute: typeof AdminAllLeadsUnifiedRoute
   AdminAllLinksRoute: typeof AdminAllLinksRoute
@@ -6532,6 +6572,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdvertisementsRoute: AdminAdvertisementsRoute,
   AdminAiUsageRoute: AdminAiUsageRoute,
   AdminAllLeadsUnifiedRoute: AdminAllLeadsUnifiedRoute,
   AdminAllLinksRoute: AdminAllLinksRoute,
@@ -7054,6 +7095,7 @@ const rootRouteChildren: RootRouteChildren = {
   CollegeSlugProgrammeRoute: CollegeSlugProgrammeRouteWithChildren,
   MocksAttemptAttemptIdRoute: MocksAttemptAttemptIdRoute,
   MocksCheckoutReturnRoute: MocksCheckoutReturnRoute,
+  ApiPublicAdClickIdRoute: ApiPublicAdClickIdRoute,
   ApiPublicWhatsappDispatchRoute: ApiPublicWhatsappDispatchRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicEmailClickTokenRoute: ApiPublicEmailClickTokenRoute,
