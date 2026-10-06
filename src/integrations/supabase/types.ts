@@ -14,6 +14,176 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_campaigns: {
+        Row: {
+          ad_code: string
+          ad_type: string
+          alt_text: string | null
+          body: string | null
+          cap_per_day: number
+          cap_per_session: number
+          conversion_path: string | null
+          created_at: string
+          cta_text: string | null
+          desktop_image_url: string | null
+          destination_url: string
+          devices: string
+          end_at: string | null
+          exclude_paths: string[]
+          headline: string | null
+          html_content: string | null
+          id: string
+          include_paths: string[]
+          is_fallback: boolean
+          keywords: string[]
+          max_per_page: number
+          min_paragraph_gap: number
+          mobile_image_url: string | null
+          name: string
+          page_types: string[]
+          placements: string[]
+          priority: number
+          start_at: string | null
+          status: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          ad_code?: string
+          ad_type?: string
+          alt_text?: string | null
+          body?: string | null
+          cap_per_day?: number
+          cap_per_session?: number
+          conversion_path?: string | null
+          created_at?: string
+          cta_text?: string | null
+          desktop_image_url?: string | null
+          destination_url: string
+          devices?: string
+          end_at?: string | null
+          exclude_paths?: string[]
+          headline?: string | null
+          html_content?: string | null
+          id?: string
+          include_paths?: string[]
+          is_fallback?: boolean
+          keywords?: string[]
+          max_per_page?: number
+          min_paragraph_gap?: number
+          mobile_image_url?: string | null
+          name: string
+          page_types?: string[]
+          placements?: string[]
+          priority?: number
+          start_at?: string | null
+          status?: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          ad_code?: string
+          ad_type?: string
+          alt_text?: string | null
+          body?: string | null
+          cap_per_day?: number
+          cap_per_session?: number
+          conversion_path?: string | null
+          created_at?: string
+          cta_text?: string | null
+          desktop_image_url?: string | null
+          destination_url?: string
+          devices?: string
+          end_at?: string | null
+          exclude_paths?: string[]
+          headline?: string | null
+          html_content?: string | null
+          id?: string
+          include_paths?: string[]
+          is_fallback?: boolean
+          keywords?: string[]
+          max_per_page?: number
+          min_paragraph_gap?: number
+          mobile_image_url?: string | null
+          name?: string
+          page_types?: string[]
+          placements?: string[]
+          priority?: number
+          start_at?: string | null
+          status?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      ad_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          device: string | null
+          event_type: string
+          id: number
+          page_path: string | null
+          placement: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          device?: string | null
+          event_type: string
+          id?: number
+          page_path?: string | null
+          placement?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          device?: string | null
+          event_type?: string
+          id?: number
+          page_path?: string | null
+          placement?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_settings: {
+        Row: {
+          allow_popup: boolean
+          enabled: boolean
+          excluded_paths: string[]
+          id: number
+          label_text: string
+          max_ads_per_page: number
+          updated_at: string
+        }
+        Insert: {
+          allow_popup?: boolean
+          enabled?: boolean
+          excluded_paths?: string[]
+          id?: number
+          label_text?: string
+          max_ads_per_page?: number
+          updated_at?: string
+        }
+        Update: {
+          allow_popup?: boolean
+          enabled?: boolean
+          excluded_paths?: string[]
+          id?: number
+          label_text?: string
+          max_ads_per_page?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_permissions: {
         Row: {
           allowed_sections: string[]
@@ -15902,6 +16072,17 @@ export type Database = {
       _indexing_url_for: {
         Args: { _slug: string; _table: string }
         Returns: string
+      }
+      ad_stats: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          campaign_id: string
+          day: string
+          device: string
+          event_type: string
+          n: number
+          placement: string
+        }[]
       }
       admin_college_filter_options: { Args: never; Returns: Json }
       admin_delete_bundle: { Args: { _bundle_id: string }; Returns: Json }

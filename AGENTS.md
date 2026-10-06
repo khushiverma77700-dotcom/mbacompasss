@@ -10,3 +10,4 @@
 - Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
 - AI blog articles are generated as drafts through a scope-first pipeline (intent, topic boundary, sources, style) and are published only from the editor workspace after its checklist passes, because unscoped or unverified articles must never go live automatically.
 - AI blog references remain editor-visible evidence rather than repetitive public attribution, and full keyword banks stay in SEO data while readers see only curated terms, because process commentary and keyword dumps reduce readability.
+- First-party ads are chosen client-side by one engine (src/lib/ads/engine.ts) mounted in the shared public layout, and clicks redirect only to the campaign's saved URL, so every page gets ads automatically without open redirects.

@@ -1,0 +1,339 @@
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import FileUpload from "@/components/admin/FileUpload";
+import { AdCreative } from "@/components/ads/AdSlots";
+import { PAGE_TYPES, PLACEMENTS, type AdCampaign } from "@/lib/ads/engine";
+import { Copy, Download, Eye, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+const AD_TYPES = [
+  { v: "image", l: "Static image banner" }, { v: "gif", l: "GIF" }, { v: "poster", l: "Promotional poster" },
+  { v: "html", l: "HTML / responsive creative" }, { v: "text_cta", l: "Text + CTA" }, { v: "image_cta", l: "Image + CTA" },
+];
+
+const blank = (): Partial<AdCampaign> => ({
+  name: "", ad_type: "image_cta", status: "draft", headline: "", body: "", cta_text: "Learn more",
+  desktop_image_url: "", mobile_image_url: "", html_content: "", alt_text: "", destination_url: "",
+  start_at: null, end_at: null, priority: 5, weight: 1, page_types: [], include_paths: [], exclude_paths: [],
+  keywords: [], devices: "all", placements: ["end"], max_per_page: 1, min_paragraph_gap: 4,
+  cap_per_day: 3, cap_per_session: 0, is_fallback: false, conversion_path: "",
+});
+
+const effectiveStatus = (a: AdCampaign) => {
+  const now = Date.now();
+  if (a.status === "active" && a.end_at && Date.parse(a.end_at) < now) return "ended";
+  if (a.status === "active" && a.start_at && Date.parse(a.start_at) > now) return "scheduled";
+  return a.status;
+};
+const toLines = (v: string) => v.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
+const toLocal = (iso: string | null | undefined) => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
+
+type Stat = { campaign_id: string; day: string; event_type: string; device: string; placement: string; n: number };
+
+export default function AdminAdvertisements() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<Partial<AdCampaign> | null>(null);
+  const [preview, setPreview] = useState<AdCampaign | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [days, setDays] = useState(30);
+  const [search, setSearch] = useState("");
+
+  const { data: ads = [] } = useQuery({
+    queryKey: ["admin-ads"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("ad_campaigns").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as unknown as AdCampaign[];
+    },
+  });
+  const { data: stats = [] } = useQuery({
+    queryKey: ["admin-ad-stats", days],
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const from = new Date(Date.now() - days * 86400_000).toISOString();
+      const { data, error } = await supabase.rpc("ad_stats" as any, { _from: from, _to: new Date(Date.now() + 86400_000).toISOString() });
+      if (error) throw error;
+      return (data ?? []) as Stat[];
+    },
+  });
+  const { data: settings } = useQuery({
+    queryKey: ["admin-ad-settings"],
+    queryFn: async () => (await supabase.from("ad_settings").select("*").eq("id", 1).maybeSingle()).data,
+  });
+
+  const totals = useMemo(() => {
+    const m: Record<string, { imp: number; clk: number; conv: number }> = {};
+    for (const s of stats) {
+      const t = (m[s.campaign_id] ??= { imp: 0, clk: 0, conv: 0 });
+      if (s.event_type === "impression") t.imp += Number(s.n);
+      if (s.event_type === "click") t.clk += Number(s.n);
+      if (s.event_type === "conversion") t.conv += Number(s.n);
+    }
+    return m;
+  }, [stats]);
+
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-ads"] }); qc.invalidateQueries({ queryKey: ["first-party-ads"] }); };
+
+  const save = async () => {
+    const e = editing!;
+    if (!e.name?.trim() || !e.destination_url?.trim()) return toast({ title: "Name and destination URL are required", variant: "destructive" });
+    if (!/^(https?:\/\/|\/)/.test(e.destination_url)) return toast({ title: "Destination must start with https:// or /", variant: "destructive" });
+    const { id, ad_code, ...rest } = e as AdCampaign & { created_at?: string };
+    delete (rest as any).created_at;
+    const row = { ...rest, updated_at: new Date().toISOString(), conversion_path: rest.conversion_path || null };
+    const { error } = id ? await supabase.from("ad_campaigns").update(row as any).eq("id", id) : await supabase.from("ad_campaigns").insert(row as any);
+    if (error) return toast({ title: "Could not save", description: error.message, variant: "destructive" });
+    toast({ title: "Advertisement saved" }); setEditing(null); refresh();
+  };
+
+  const setStatus = async (ids: string[], status: string) => {
+    const { error } = await supabase.from("ad_campaigns").update({ status }).in("id", ids);
+    if (error) toast({ title: "Update failed", description: error.message, variant: "destructive" }); else refresh();
+  };
+  const remove = async (ids: string[]) => {
+    if (!confirm(`Delete ${ids.length} advertisement(s)? Their analytics will also be removed.`)) return;
+    const { error } = await supabase.from("ad_campaigns").delete().in("id", ids);
+    if (error) toast({ title: "Delete failed", description: error.message, variant: "destructive" }); else { setSelected(new Set()); refresh(); }
+  };
+  const duplicate = (a: AdCampaign) => { const { id, ad_code, ...rest } = a; setEditing({ ...rest, name: `${a.name} (copy)`, status: "draft" }); };
+
+  const saveSettings = async (patch: Record<string, unknown>) => {
+    const { error } = await supabase.from("ad_settings").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
+    if (error) toast({ title: "Could not save settings", description: error.message, variant: "destructive" });
+    else { qc.invalidateQueries({ queryKey: ["admin-ad-settings"] }); qc.invalidateQueries({ queryKey: ["first-party-ads"] }); toast({ title: "Settings saved" }); }
+  };
+
+  const filtered = ads.filter((a) => !search || `${a.name} ${a.ad_code}`.toLowerCase().includes(search.toLowerCase()));
+  const sum = Object.values(totals).reduce((s, t) => ({ imp: s.imp + t.imp, clk: s.clk + t.clk, conv: s.conv + t.conv }), { imp: 0, clk: 0, conv: 0 });
+  const activeCount = ads.filter((a) => effectiveStatus(a) === "active").length;
+
+  const daily = useMemo(() => {
+    const m: Record<string, { day: string; impressions: number; clicks: number }> = {};
+    for (const s of stats) {
+      const d = (m[s.day] ??= { day: s.day, impressions: 0, clicks: 0 });
+      if (s.event_type === "impression") d.impressions += Number(s.n);
+      if (s.event_type === "click") d.clicks += Number(s.n);
+    }
+    let ci = 0, cc = 0;
+    return Object.values(m).sort((a, b) => a.day.localeCompare(b.day)).map((d) => ({ ...d, cumImpressions: (ci += d.impressions), cumClicks: (cc += d.clicks) }));
+  }, [stats]);
+  const byGroup = (key: "placement" | "device") => {
+    const m: Record<string, { name: string; impressions: number; clicks: number }> = {};
+    for (const s of stats) {
+      const d = (m[s[key]] ??= { name: s[key], impressions: 0, clicks: 0 });
+      if (s.event_type === "impression") d.impressions += Number(s.n);
+      if (s.event_type === "click") d.clicks += Number(s.n);
+    }
+    return Object.values(m);
+  };
+  const score = (t?: { imp: number; clk: number; conv: number }) => {
+    if (!t || t.imp < 50) return null;
+    const ctr = t.clk / t.imp;
+    return Math.min(100, Math.round(ctr * 100 * 25 + (t.clk ? (t.conv / t.clk) * 30 : 0)));
+  };
+  const tip = (a: AdCampaign, t?: { imp: number; clk: number }) => {
+    if (!t || t.imp < 50) return "Collecting data";
+    const ctr = t.clk / t.imp;
+    if (ctr < 0.003) return a.ad_type === "image" ? "Low CTR: try Image + CTA with a clear button" : "Low CTR: test a sharper headline or new creative";
+    if (ctr > 0.02) return "Strong performer: consider higher priority";
+    return "Performing normally";
+  };
+
+  const exportCsv = () => {
+    const rows = [["Ad ID", "Name", "Status", "Impressions", "Clicks", "CTR %", "Conversions"]];
+    for (const a of ads) { const t = totals[a.id] ?? { imp: 0, clk: 0, conv: 0 }; rows.push([a.ad_code, a.name, effectiveStatus(a), String(t.imp), String(t.clk), t.imp ? ((t.clk / t.imp) * 100).toFixed(2) : "0", String(t.conv)]); }
+    const blob = new Blob([rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n")], { type: "text/csv" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `ad-report-${days}d.csv`; a.click();
+  };
+
+  const e = editing;
+  const set = (patch: Partial<AdCampaign>) => setEditing((p) => ({ ...p!, ...patch }));
+  const toggleArr = (key: "page_types" | "placements", v: string) => set({ [key]: (e?.[key] ?? []).includes(v) ? (e![key] as string[]).filter((x) => x !== v) : [...((e?.[key] as string[]) ?? []), v] } as any);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Advertisement Manager</h1>
+          <p className="text-sm text-muted-foreground">Create a promotion once; the site places it on matching pages automatically.</p>
+        </div>
+        <Button onClick={() => setEditing(blank())} className="gap-1.5"><Plus className="h-4 w-4" /> New advertisement</Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        {[["Active ads", activeCount], ["Impressions", sum.imp], ["Clicks", sum.clk], ["CTR", sum.imp ? `${((sum.clk / sum.imp) * 100).toFixed(2)}%` : "0%"], ["Conversions", sum.conv]].map(([l, v]) => (
+          <div key={l as string} className="rounded-lg border border-border bg-card p-4"><div className="text-sm text-muted-foreground">{l}</div><div className="text-xl font-bold text-foreground">{v as any}</div></div>
+        ))}
+      </div>
+
+      <Tabs defaultValue="ads">
+        <TabsList><TabsTrigger value="ads">Advertisements</TabsTrigger><TabsTrigger value="analytics">Analytics</TabsTrigger><TabsTrigger value="settings">Global settings</TabsTrigger></TabsList>
+
+        <TabsContent value="ads" className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input placeholder="Search by name or ID" value={search} onChange={(ev) => setSearch(ev.target.value)} className="max-w-xs" />
+            {selected.size > 0 && (<>
+              <Button size="sm" variant="outline" onClick={() => setStatus([...selected], "paused")}>Pause selected</Button>
+              <Button size="sm" variant="outline" onClick={() => setStatus([...selected], "active")}>Activate selected</Button>
+              <Button size="sm" variant="outline" onClick={() => remove([...selected])}>Delete selected</Button>
+            </>)}
+          </div>
+          {filtered.length === 0 && <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">No advertisements yet. Create your first one.</div>}
+          <div className="space-y-2">
+            {filtered.map((a) => {
+              const t = totals[a.id]; const st = effectiveStatus(a);
+              return (
+                <div key={a.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+                  <Checkbox checked={selected.has(a.id)} onCheckedChange={(c) => setSelected((s) => { const n = new Set(s); c ? n.add(a.id) : n.delete(a.id); return n; })} />
+                  {a.desktop_image_url || a.mobile_image_url ? <img src={a.desktop_image_url || a.mobile_image_url!} alt="" className="h-10 w-20 rounded object-cover" loading="lazy" /> : <div className="h-10 w-20 rounded bg-muted" />}
+                  <div className="min-w-[180px] flex-1">
+                    <div className="font-semibold text-foreground">{a.name} {a.is_fallback && <Badge variant="outline">Fallback</Badge>}</div>
+                    <div className="text-sm text-muted-foreground">{a.ad_code} · Priority {a.priority} · {a.placements.join(", ")}</div>
+                  </div>
+                  <Badge variant={st === "active" ? "default" : "secondary"} className="capitalize">{st}</Badge>
+                  <div className="text-sm text-muted-foreground">{t?.imp ?? 0} views · {t?.clk ?? 0} clicks · {t?.imp ? ((t.clk / t.imp) * 100).toFixed(2) : "0"}%</div>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" aria-label="Preview" onClick={() => setPreview(a)}><Eye className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => setEditing(a)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Duplicate" onClick={() => duplicate(a)}><Copy className="h-4 w-4" /></Button>
+                    {a.status === "active" ? <Button size="icon" variant="ghost" aria-label="Pause" onClick={() => setStatus([a.id], "paused")}><Pause className="h-4 w-4" /></Button>
+                      : <Button size="icon" variant="ghost" aria-label="Activate" onClick={() => setStatus([a.id], "active")}><Play className="h-4 w-4" /></Button>}
+                    <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => remove([a.id])}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>{[1, 7, 30, 90].map((d) => <SelectItem key={d} value={String(d)}>Last {d} day{d > 1 ? "s" : ""}</SelectItem>)}</SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={exportCsv} className="gap-1.5"><Download className="h-4 w-4" /> Export CSV</Button>
+            <span className="text-sm text-muted-foreground">Updates every 30 seconds</span>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-lg border border-border bg-card p-4"><div className="mb-2 font-semibold">Day-wise</div>
+              <ResponsiveContainer width="100%" height={240}><BarChart data={daily}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" /><YAxis /><Tooltip /><Legend /><Bar dataKey="impressions" fill="hsl(var(--primary))" /><Bar dataKey="clicks" fill="hsl(var(--accent-foreground))" /></BarChart></ResponsiveContainer></div>
+            <div className="rounded-lg border border-border bg-card p-4"><div className="mb-2 font-semibold">Cumulative</div>
+              <ResponsiveContainer width="100%" height={240}><LineChart data={daily}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" /><YAxis /><Tooltip /><Legend /><Line dataKey="cumImpressions" name="impressions" stroke="hsl(var(--primary))" /><Line dataKey="cumClicks" name="clicks" stroke="hsl(var(--accent-foreground))" /></LineChart></ResponsiveContainer></div>
+            {(["placement", "device"] as const).map((k) => (
+              <div key={k} className="rounded-lg border border-border bg-card p-4"><div className="mb-2 font-semibold capitalize">By {k}</div>
+                <ResponsiveContainer width="100%" height={220}><BarChart data={byGroup(k)}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Legend /><Bar dataKey="impressions" fill="hsl(var(--primary))" /><Bar dataKey="clicks" fill="hsl(var(--accent-foreground))" /></BarChart></ResponsiveContainer></div>
+            ))}
+          </div>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="mb-2 font-semibold">Performance by advertisement</div>
+            <div className="space-y-2">
+              {ads.map((a) => { const t = totals[a.id]; const sc = score(t); return (
+                <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2 text-sm">
+                  <span className="font-medium text-foreground">{a.name} <span className="text-muted-foreground">({a.ad_code})</span></span>
+                  <span className="text-muted-foreground">{t?.imp ?? 0} views · {t?.clk ?? 0} clicks · {t?.conv ?? 0} conversions · Score {sc ?? "–"} · {tip(a, t)}</span>
+                </div>); })}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          {settings && (
+            <div className="max-w-xl space-y-4 rounded-lg border border-border bg-card p-4">
+              <div className="flex items-center justify-between"><Label>Show advertisements site-wide</Label><Switch checked={settings.enabled} onCheckedChange={(v) => saveSettings({ enabled: v })} /></div>
+              <div className="flex items-center justify-between"><Label>Allow pop-up advertisements</Label><Switch checked={settings.allow_popup} onCheckedChange={(v) => saveSettings({ allow_popup: v })} /></div>
+              <div><Label>Maximum ads per page</Label><Input type="number" min={1} max={8} defaultValue={settings.max_ads_per_page} onBlur={(ev) => saveSettings({ max_ads_per_page: Number(ev.target.value) || 3 })} /></div>
+              <div><Label>Label shown above ads</Label><Input defaultValue={settings.label_text} onBlur={(ev) => saveSettings({ label_text: ev.target.value || "Sponsored" })} /></div>
+              <div><Label>Never show ads on these pages (one per line, * = anything)</Label><Textarea rows={6} defaultValue={settings.excluded_paths.join("\n")} onBlur={(ev) => saveSettings({ excluded_paths: toLines(ev.target.value) })} /></div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-3xl"><DialogHeader><DialogTitle>Preview: {preview?.name}</DialogTitle></DialogHeader>
+          {preview && <AdCreative ad={preview} placement="preview" label={settings?.label_text || "Sponsored"} preview />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!e} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader><DialogTitle>{e?.id ? `Edit ${e.ad_code}` : "New advertisement"}</DialogTitle></DialogHeader>
+          {e && (
+            <div className="space-y-5">
+              <section className="grid gap-3 md:grid-cols-2">
+                <div className="md:col-span-2"><Label>Advertisement name</Label><Input value={e.name ?? ""} onChange={(ev) => set({ name: ev.target.value })} placeholder="CAT 2027 Crash Course" /></div>
+                <div><Label>Type</Label><Select value={e.ad_type} onValueChange={(v) => set({ ad_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{AD_TYPES.map((t) => <SelectItem key={t.v} value={t.v}>{t.l}</SelectItem>)}</SelectContent></Select></div>
+                <div><Label>Status</Label><Select value={e.status} onValueChange={(v) => set({ status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["draft", "active", "paused"].map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent></Select></div>
+                <div className="md:col-span-2"><Label>Destination URL</Label><Input value={e.destination_url ?? ""} onChange={(ev) => set({ destination_url: ev.target.value })} placeholder="https://mbacompass.in/mba-compass/... or /mocks" /></div>
+              </section>
+
+              <section className="grid gap-3 md:grid-cols-2">
+                <div className="md:col-span-2 font-semibold">Creative</div>
+                {e.ad_type === "html" ? (
+                  <div className="md:col-span-2"><Label>HTML creative</Label><Textarea rows={6} value={e.html_content ?? ""} onChange={(ev) => set({ html_content: ev.target.value })} /></div>
+                ) : (<>
+                  <FileUpload bucket="uploads" folder="ads" value={e.desktop_image_url ?? ""} onChange={(u) => set({ desktop_image_url: u })} accept="image/*" label="Desktop creative" sizeHint="728x90, 970x250, 300x250 or 336x280" />
+                  <FileUpload bucket="uploads" folder="ads" value={e.mobile_image_url ?? ""} onChange={(u) => set({ mobile_image_url: u })} accept="image/*" label="Mobile creative (optional)" sizeHint="320x100, 320x250 or 300x250" />
+                  <div className="md:col-span-2"><Label>Image description (for accessibility)</Label><Input value={e.alt_text ?? ""} onChange={(ev) => set({ alt_text: ev.target.value })} /></div>
+                </>)}
+                <div><Label>Headline</Label><Input value={e.headline ?? ""} onChange={(ev) => set({ headline: ev.target.value })} /></div>
+                <div><Label>Button text</Label><Input value={e.cta_text ?? ""} onChange={(ev) => set({ cta_text: ev.target.value })} /></div>
+                <div className="md:col-span-2"><Label>Short description</Label><Textarea rows={2} value={e.body ?? ""} onChange={(ev) => set({ body: ev.target.value })} /></div>
+              </section>
+
+              <section className="grid gap-3 md:grid-cols-4">
+                <div className="md:col-span-4 font-semibold">Schedule and priority</div>
+                <div className="md:col-span-2"><Label>Start</Label><Input type="datetime-local" value={toLocal(e.start_at)} onChange={(ev) => set({ start_at: ev.target.value ? new Date(ev.target.value).toISOString() : null })} /></div>
+                <div className="md:col-span-2"><Label>End</Label><Input type="datetime-local" value={toLocal(e.end_at)} onChange={(ev) => set({ end_at: ev.target.value ? new Date(ev.target.value).toISOString() : null })} /></div>
+                <div><Label>Priority (1–10)</Label><Input type="number" min={1} max={10} value={e.priority} onChange={(ev) => set({ priority: Number(ev.target.value) })} /></div>
+                <div><Label>Rotation weight</Label><Input type="number" min={1} max={100} value={e.weight} onChange={(ev) => set({ weight: Number(ev.target.value) })} /></div>
+                <div><Label>Max per visitor / day</Label><Input type="number" min={0} value={e.cap_per_day} onChange={(ev) => set({ cap_per_day: Number(ev.target.value) })} /></div>
+                <div><Label>Max per visit</Label><Input type="number" min={0} value={e.cap_per_session} onChange={(ev) => set({ cap_per_session: Number(ev.target.value) })} /></div>
+                <p className="md:col-span-4 text-sm text-muted-foreground">0 means no limit.</p>
+              </section>
+
+              <section className="space-y-3">
+                <div className="font-semibold">Where it shows</div>
+                <div><Label>Page types (leave empty for all)</Label>
+                  <div className="mt-1 flex flex-wrap gap-3">{PAGE_TYPES.map((p) => <label key={p} className="flex items-center gap-1.5 text-sm capitalize"><Checkbox checked={e.page_types?.includes(p)} onCheckedChange={() => toggleArr("page_types", p)} />{p}</label>)}</div></div>
+                <div><Label>Placements</Label>
+                  <div className="mt-1 grid gap-2 sm:grid-cols-2">{PLACEMENTS.map((p) => <label key={p.key} className="flex items-center gap-1.5 text-sm"><Checkbox checked={e.placements?.includes(p.key)} onCheckedChange={() => toggleArr("placements", p.key)} />{p.label}</label>)}</div></div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Only these URLs (one per line, e.g. /blog/*)</Label><Textarea rows={3} value={(e.include_paths ?? []).join("\n")} onChange={(ev) => set({ include_paths: toLines(ev.target.value) })} /></div>
+                  <div><Label>Never on these URLs</Label><Textarea rows={3} value={(e.exclude_paths ?? []).join("\n")} onChange={(ev) => set({ exclude_paths: toLines(ev.target.value) })} /></div>
+                  <div><Label>Keywords (page must mention one)</Label><Textarea rows={2} value={(e.keywords ?? []).join(", ")} onChange={(ev) => set({ keywords: toLines(ev.target.value) })} placeholder="CAT, percentile, IIM" /></div>
+                  <div className="space-y-3">
+                    <div><Label>Device</Label><Select value={e.devices} onValueChange={(v) => set({ devices: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Desktop and mobile</SelectItem><SelectItem value="desktop">Desktop only</SelectItem><SelectItem value="mobile">Mobile only</SelectItem></SelectContent></Select></div>
+                  </div>
+                  <div><Label>Max times on one page</Label><Input type="number" min={1} max={4} value={e.max_per_page} onChange={(ev) => set({ max_per_page: Number(ev.target.value) })} /></div>
+                  <div><Label>Min. paragraphs before in-article ads</Label><Input type="number" min={1} value={e.min_paragraph_gap} onChange={(ev) => set({ min_paragraph_gap: Number(ev.target.value) })} /></div>
+                  <div><Label>Conversion page (optional, e.g. /thank-you)</Label><Input value={e.conversion_path ?? ""} onChange={(ev) => set({ conversion_path: ev.target.value })} /></div>
+                  <label className="flex items-center gap-2 pt-6 text-sm"><Switch checked={!!e.is_fallback} onCheckedChange={(v) => set({ is_fallback: v })} /> Use as default ad when nothing else matches</label>
+                </div>
+              </section>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+                <Button onClick={save}>Save advertisement</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

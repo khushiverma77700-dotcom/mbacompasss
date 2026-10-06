@@ -92,6 +92,13 @@
       "when": 1791136973881,
       "tag": "0012_protect_attempted_mock_question_content",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791271255030,
+      "tag": "0013_ad_manager",
+      "breakpoints": true
     }
   ]
 }
