@@ -93,6 +93,7 @@ import { Route as AdminCtrOptimizerRouteImport } from './routes/admin.ctr-optimi
 import { Route as AdminDailyTestsRouteImport } from './routes/admin.daily-tests'
 import { Route as AdminDatabaseBackupRouteImport } from './routes/admin.database-backup'
 import { Route as AdminDemoLeadsRouteImport } from './routes/admin.demo-leads'
+import { Route as AdminEditorialBacklinksRouteImport } from './routes/admin.editorial-backlinks'
 import { Route as AdminEmailCampaignsRouteImport } from './routes/admin.email-campaigns'
 import { Route as AdminExamCountdownsRouteImport } from './routes/admin.exam-countdowns'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
@@ -244,6 +245,7 @@ import { Route as AdminCollegesBulkCreateRouteImport } from './routes/admin.coll
 import { Route as AdminCollegesGenerateAiRouteImport } from './routes/admin.colleges_.generate-ai'
 import { Route as AdminCoursesBulkGenerateRouteImport } from './routes/admin.courses_.bulk-generate'
 import { Route as AdminCoursesGenerateAiRouteImport } from './routes/admin.courses_.generate-ai'
+import { Route as AdminEditorialBacklinksArticleIdRouteImport } from './routes/admin.editorial-backlinks_.$articleId'
 import { Route as AdminExamsBulkCreateRouteImport } from './routes/admin.exams_.bulk-create'
 import { Route as AdminExamsCompletenessRouteImport } from './routes/admin.exams_.completeness'
 import { Route as AdminFreebiesDownloadsRouteImport } from './routes/admin.freebies_.downloads'
@@ -753,6 +755,11 @@ const AdminDatabaseBackupRoute = AdminDatabaseBackupRouteImport.update({
 const AdminDemoLeadsRoute = AdminDemoLeadsRouteImport.update({
   id: '/demo-leads',
   path: '/demo-leads',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEditorialBacklinksRoute = AdminEditorialBacklinksRouteImport.update({
+  id: '/editorial-backlinks',
+  path: '/editorial-backlinks',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminEmailCampaignsRoute = AdminEmailCampaignsRouteImport.update({
@@ -1523,6 +1530,12 @@ const AdminCoursesGenerateAiRoute = AdminCoursesGenerateAiRouteImport.update({
   path: '/courses/generate-ai',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEditorialBacklinksArticleIdRoute =
+  AdminEditorialBacklinksArticleIdRouteImport.update({
+    id: '/editorial-backlinks_/$articleId',
+    path: '/editorial-backlinks/$articleId',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminExamsBulkCreateRoute = AdminExamsBulkCreateRouteImport.update({
   id: '/exams_/bulk-create',
   path: '/exams/bulk-create',
@@ -2081,6 +2094,7 @@ export interface FileRoutesByFullPath {
   '/admin/daily-tests': typeof AdminDailyTestsRoute
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
+  '/admin/editorial-backlinks': typeof AdminEditorialBacklinksRoute
   '/admin/email-campaigns': typeof AdminEmailCampaignsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
   '/admin/exams': typeof AdminExamsRoute
@@ -2230,6 +2244,7 @@ export interface FileRoutesByFullPath {
   '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
   '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
+  '/admin/editorial-backlinks/$articleId': typeof AdminEditorialBacklinksArticleIdRoute
   '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
   '/admin/exams/completeness': typeof AdminExamsCompletenessRoute
   '/admin/freebies/downloads': typeof AdminFreebiesDownloadsRoute
@@ -2397,6 +2412,7 @@ export interface FileRoutesByTo {
   '/admin/daily-tests': typeof AdminDailyTestsRoute
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
+  '/admin/editorial-backlinks': typeof AdminEditorialBacklinksRoute
   '/admin/email-campaigns': typeof AdminEmailCampaignsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
   '/admin/exams': typeof AdminExamsRoute
@@ -2535,6 +2551,7 @@ export interface FileRoutesByTo {
   '/admin/colleges/generate-ai': typeof AdminCollegesGenerateAiRoute
   '/admin/courses/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses/generate-ai': typeof AdminCoursesGenerateAiRoute
+  '/admin/editorial-backlinks/$articleId': typeof AdminEditorialBacklinksArticleIdRoute
   '/admin/exams/bulk-create': typeof AdminExamsBulkCreateRoute
   '/admin/exams/completeness': typeof AdminExamsCompletenessRoute
   '/admin/freebies/downloads': typeof AdminFreebiesDownloadsRoute
@@ -2710,6 +2727,7 @@ export interface FileRoutesById {
   '/admin/daily-tests': typeof AdminDailyTestsRoute
   '/admin/database-backup': typeof AdminDatabaseBackupRoute
   '/admin/demo-leads': typeof AdminDemoLeadsRoute
+  '/admin/editorial-backlinks': typeof AdminEditorialBacklinksRoute
   '/admin/email-campaigns': typeof AdminEmailCampaignsRoute
   '/admin/exam-countdowns': typeof AdminExamCountdownsRoute
   '/admin/exams': typeof AdminExamsRoute
@@ -2860,6 +2878,7 @@ export interface FileRoutesById {
   '/admin/colleges_/generate-ai': typeof AdminCollegesGenerateAiRoute
   '/admin/courses_/bulk-generate': typeof AdminCoursesBulkGenerateRoute
   '/admin/courses_/generate-ai': typeof AdminCoursesGenerateAiRoute
+  '/admin/editorial-backlinks_/$articleId': typeof AdminEditorialBacklinksArticleIdRoute
   '/admin/exams_/bulk-create': typeof AdminExamsBulkCreateRoute
   '/admin/exams_/completeness': typeof AdminExamsCompletenessRoute
   '/admin/freebies_/downloads': typeof AdminFreebiesDownloadsRoute
@@ -3036,6 +3055,7 @@ export interface FileRouteTypes {
     | '/admin/daily-tests'
     | '/admin/database-backup'
     | '/admin/demo-leads'
+    | '/admin/editorial-backlinks'
     | '/admin/email-campaigns'
     | '/admin/exam-countdowns'
     | '/admin/exams'
@@ -3185,6 +3205,7 @@ export interface FileRouteTypes {
     | '/admin/colleges/generate-ai'
     | '/admin/courses/bulk-generate'
     | '/admin/courses/generate-ai'
+    | '/admin/editorial-backlinks/$articleId'
     | '/admin/exams/bulk-create'
     | '/admin/exams/completeness'
     | '/admin/freebies/downloads'
@@ -3352,6 +3373,7 @@ export interface FileRouteTypes {
     | '/admin/daily-tests'
     | '/admin/database-backup'
     | '/admin/demo-leads'
+    | '/admin/editorial-backlinks'
     | '/admin/email-campaigns'
     | '/admin/exam-countdowns'
     | '/admin/exams'
@@ -3490,6 +3512,7 @@ export interface FileRouteTypes {
     | '/admin/colleges/generate-ai'
     | '/admin/courses/bulk-generate'
     | '/admin/courses/generate-ai'
+    | '/admin/editorial-backlinks/$articleId'
     | '/admin/exams/bulk-create'
     | '/admin/exams/completeness'
     | '/admin/freebies/downloads'
@@ -3664,6 +3687,7 @@ export interface FileRouteTypes {
     | '/admin/daily-tests'
     | '/admin/database-backup'
     | '/admin/demo-leads'
+    | '/admin/editorial-backlinks'
     | '/admin/email-campaigns'
     | '/admin/exam-countdowns'
     | '/admin/exams'
@@ -3814,6 +3838,7 @@ export interface FileRouteTypes {
     | '/admin/colleges_/generate-ai'
     | '/admin/courses_/bulk-generate'
     | '/admin/courses_/generate-ai'
+    | '/admin/editorial-backlinks_/$articleId'
     | '/admin/exams_/bulk-create'
     | '/admin/exams_/completeness'
     | '/admin/freebies_/downloads'
@@ -4516,6 +4541,13 @@ declare module '@tanstack/react-router' {
       path: '/demo-leads'
       fullPath: '/admin/demo-leads'
       preLoaderRoute: typeof AdminDemoLeadsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/editorial-backlinks': {
+      id: '/admin/editorial-backlinks'
+      path: '/editorial-backlinks'
+      fullPath: '/admin/editorial-backlinks'
+      preLoaderRoute: typeof AdminEditorialBacklinksRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/email-campaigns': {
@@ -5575,6 +5607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCoursesGenerateAiRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/editorial-backlinks_/$articleId': {
+      id: '/admin/editorial-backlinks_/$articleId'
+      path: '/editorial-backlinks/$articleId'
+      fullPath: '/admin/editorial-backlinks/$articleId'
+      preLoaderRoute: typeof AdminEditorialBacklinksArticleIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/exams_/bulk-create': {
       id: '/admin/exams_/bulk-create'
       path: '/exams/bulk-create'
@@ -6490,6 +6529,7 @@ interface AdminRouteChildren {
   AdminDailyTestsRoute: typeof AdminDailyTestsRoute
   AdminDatabaseBackupRoute: typeof AdminDatabaseBackupRoute
   AdminDemoLeadsRoute: typeof AdminDemoLeadsRoute
+  AdminEditorialBacklinksRoute: typeof AdminEditorialBacklinksRoute
   AdminEmailCampaignsRoute: typeof AdminEmailCampaignsRoute
   AdminExamCountdownsRoute: typeof AdminExamCountdownsRoute
   AdminExamsRoute: typeof AdminExamsRoute
@@ -6561,6 +6601,7 @@ interface AdminRouteChildren {
   AdminCollegesGenerateAiRoute: typeof AdminCollegesGenerateAiRoute
   AdminCoursesBulkGenerateRoute: typeof AdminCoursesBulkGenerateRoute
   AdminCoursesGenerateAiRoute: typeof AdminCoursesGenerateAiRoute
+  AdminEditorialBacklinksArticleIdRoute: typeof AdminEditorialBacklinksArticleIdRoute
   AdminExamsBulkCreateRoute: typeof AdminExamsBulkCreateRoute
   AdminExamsCompletenessRoute: typeof AdminExamsCompletenessRoute
   AdminFreebiesDownloadsRoute: typeof AdminFreebiesDownloadsRoute
@@ -6611,6 +6652,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDailyTestsRoute: AdminDailyTestsRoute,
   AdminDatabaseBackupRoute: AdminDatabaseBackupRoute,
   AdminDemoLeadsRoute: AdminDemoLeadsRoute,
+  AdminEditorialBacklinksRoute: AdminEditorialBacklinksRoute,
   AdminEmailCampaignsRoute: AdminEmailCampaignsRoute,
   AdminExamCountdownsRoute: AdminExamCountdownsRoute,
   AdminExamsRoute: AdminExamsRoute,
@@ -6683,6 +6725,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCollegesGenerateAiRoute: AdminCollegesGenerateAiRoute,
   AdminCoursesBulkGenerateRoute: AdminCoursesBulkGenerateRoute,
   AdminCoursesGenerateAiRoute: AdminCoursesGenerateAiRoute,
+  AdminEditorialBacklinksArticleIdRoute: AdminEditorialBacklinksArticleIdRoute,
   AdminExamsBulkCreateRoute: AdminExamsBulkCreateRoute,
   AdminExamsCompletenessRoute: AdminExamsCompletenessRoute,
   AdminFreebiesDownloadsRoute: AdminFreebiesDownloadsRoute,
