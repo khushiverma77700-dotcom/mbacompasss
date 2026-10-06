@@ -10,7 +10,7 @@ export interface BoundaryInput {
 export const BANNED_PHRASES = [
   "in today's competitive landscape", "in today's fast-paced world", "it is important to note",
   "it's important to note", "it is worth noting", "let's dive in", "dive into", "deep dive", "delve",
-  "in conclusion", "to sum up", "key summary", "quick snapshot", "snapshot", "key takeaways",
+  "in conclusion", "to sum up", "summary", "key", "quick snapshot", "snapshot", "key takeaways",
   "key highlights", "unlock", "comprehensive guide", "whether you are", "whether you're",
   "landscape", "navigate the", "game-changer", "cutting-edge", "world-class", "robust", "leverage",
   "seamless", "tapestry", "plays a pivotal role", "plays a crucial role", "a myriad of", "plethora",
@@ -51,6 +51,8 @@ export function analyzeBlogDeterministic(a: {
   const internalLinks = (html.match(/<a\s[^>]*href="\/[^"]*"/gi) || []).length;
   const tables = (html.match(/<table\b/gi) || []).length;
   const hasFaq = /<h2[^>]*>[^<]*(faq|frequently asked)/i.test(html);
+  const lists = (html.match(/<(?:ul|ol)\b/gi) || []).length;
+  const hasImportantPoints = /<h2[^>]*>[^<]*important\s+(?:points?|things?|facts?|details?)/i.test(html);
   const imgs = html.match(/<img\b[^>]*>/gi) || [];
   const imgsNoAlt = imgs.filter((i) => !/\balt="[^"]+"/i.test(i)).length;
   const sourceMentions = (text.match(/\b(official|as per|according to|notification|placement report|NIRF)\b/gi) || []).length;
@@ -112,6 +114,10 @@ export function analyzeBlogDeterministic(a: {
   if (mt > 60 || mt < 30) add("meta-title", `Meta title is ${mt} characters`, "Rewrite the meta title to 30-60 characters with the primary keyword near the start.");
   if (md > 160 || md < 140) add("meta-desc", `Meta description is ${md} characters`, "Rewrite the meta description to 140-160 characters with the primary keyword in the first 120 characters.");
   if (h2 < 3) add("headings", "Too few H2 sections", "Split the main content into clear H2 sections that follow the search intent.", "seo", "medium", false);
+  if (tables < 1) add("table", "No useful table found", "Turn comparable facts into a concise table using only verified data.", "quality", "medium", false);
+  if (lists < 1) add("pointers", "No pointer list found", "Add a focused bullet or numbered list where it improves scanning.", "quality", "medium", false);
+  if (!hasImportantPoints) add("important-points", "Important Points section missing", "Add an Important Points section with concrete, source-supported decisions or facts.", "quality", "medium", false);
+  if (!hasFaq) add("faq", "FAQ section missing", "Add genuine questions and direct answers for this exact topic.", "quality", "medium", false);
   if (internalLinks < 2) add("links", "Few internal links", "Use Internal Links to add relevant MBA Compass pages.", "seo", "low", false);
   if (imgsNoAlt) add("alt", `${imgsNoAlt} image(s) without alt text`, "Add a short description to every image.", "seo", "low");
   if (bannedFound.length) add("banned", "AI-sounding phrases found", `Remove or rephrase: ${bannedFound.slice(0, 10).join(", ")}.`, "humanization", "medium");
@@ -131,7 +137,10 @@ export function analyzeBlogDeterministic(a: {
     noKeywordStuffing: densityStatus !== "Too High",
     noPlaceholders: !/\b(xx|tbd|\[insert)/i.test(text) && !/could not be written automatically/i.test(text),
     noAiPhrases: bannedFound.length === 0,
-    faq: true,
+    faq: hasFaq,
+    table: tables >= 1,
+    pointers: lists >= 1,
+    importantPoints: hasImportantPoints,
   };
 
   return {
@@ -144,6 +153,6 @@ export function analyzeBlogDeterministic(a: {
     humanizationCap: bannedFound.length ? Math.max(40, 95 - bannedFound.length * 8) : 100,
     repetitionCap: repeated ? Math.max(40, 95 - repeated * 10) : 100,
     checklist: checklistBase,
-    stats: { h2, h3, internalLinks, tables, hasFaq },
+    stats: { h2, h3, internalLinks, tables, lists, hasFaq, hasImportantPoints },
   };
 }
