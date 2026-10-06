@@ -8,6 +8,7 @@ import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck,
 import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
 import { researchReferences, referenceGroundingRules, referenceReport, type ReferenceResearch } from "../_shared/referenceResearch.ts";
 import { structureArticle } from "../_shared/blogStructure.ts";
+import { cleanBlogProse } from "../_shared/blogEvidence.ts";
 import { seoMasterRules, detectTopicDomain, buildQualityAudit } from "../_shared/seoMasterRules.ts";
 import { getKeywordMetrics, metricsFactBlock, opportunityScore, semrushExpand } from "../_shared/keywordMetrics.ts";
 import { analyzeBlogBrief, analysisPromptBlock, BANNED_PHRASES, type BlogAnalysis } from "../_shared/blogPlanning.ts";
@@ -126,7 +127,7 @@ const deAiify = (html: string): string => {
   out = out.replace(/\s+([,.;:!?])/g, "$1");
   out = out.replace(/<strong>\s*[:\-\u2013\u2014]\s*/gi, "<strong>");
   out = out.replace(/<strong>\s*<\/strong>/gi, "");
-  return out;
+  return cleanBlogProse(out);
 };
 
 const stripExternalLinks = (html: string) => {
@@ -318,7 +319,8 @@ WRITING RULES
 - Include at least one useful table when the verified material contains comparable facts. Include at least one concise bullet or numbered list for practical pointers.
 - Use the primary keyword naturally. Never repeat it just to hit a density figure.
 - Banned phrases and labels (never use): ${BANNED_PHRASES.map((b) => `"${b}"`).join(", ")}, "Quick Summary", "TL;DR".
-- Never invent fees, dates, rankings, percentiles, placement figures, admission rules or college names. If a figure is not in the supplied sources or verified facts, say it should be confirmed on the official website. No placeholders such as "XX".
+- Never invent fees, dates, rankings, percentiles, placement figures, admission rules or college names. Use supplied-link evidence first, then credible public-source evidence; current changing figures need explicit publication/update evidence within 60 days and the correct reporting period. Omit unsupported claims or columns instead of inserting verification disclaimers. No placeholders such as "XX".
+- Open paragraphs and FAQ answers with the subject and substantive answer, never "Yes", "Short answer:" or chatbot-style lead-ins. Never write "not officially published — verify on the official website". Keep research gaps in the editor report only.
 - Use supplied sources as silent research inputs. Do not repeatedly name the page, publisher, document, or website in public prose. Mention an authority only when essential to explain an official rule or source conflict. Never describe the research process.
 - Return clean HTML only: h2,h3,h4,p,ul,ol,li,strong,em,a,table,thead,tbody,tr,th,td,blockquote. No h1, no markdown, no class/style attributes, no images.
 - Use <strong> on every meaningful fee, date, percentage, percentile, rank, package, count, score, quantity, and short decision-critical phrase. Never bold whole sentences.
@@ -480,7 +482,7 @@ All planned headings: ${(draft.sections || []).map((s: any) => s.heading).join("
 Requirements:
 - Output exactly one <h2>${section.heading}</h2> block of roughly ${Math.round(targets.targetWords / Math.max(1, totalSections + 1))} words (shorter if the facts run out — never pad).
 - Stay inside the ARTICLE SCOPE. Name only allowed entities. Do not mention colleges or exams outside it.
-- Every figure must come from the supplied sources or verified facts. If a needed figure is missing, write that it should be confirmed on the official website instead of estimating.
+- Every figure must come from eligible supplied or supplemental evidence. Current changing figures require explicit source publication/update dates within 60 days. Omit unsupported claims or columns; no missing-data boilerplate, estimated figures, "Yes" openers or "Short answer:" labels.
 - Use the planned table only when every row and cell is supported by supplied evidence. Use no more than six columns. Introduce it briefly and follow it with a practical interpretation.
 - If a planned alert exists, write one <blockquote data-callout="TYPE"><strong>TYPE:</strong> concise verified information</blockquote>, where TYPE is deadline, update, important, caution, eligibility or action. Never repeat an alert used by another section.
 - Use an <h3>, table or list only when it genuinely helps this section. Keep paragraphs under three sentences.
@@ -679,7 +681,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   }
   const finalPlain = toPlainText(`${intro} ${content}`);
   const { occurrences: finalOccurrences, words: finalWords, density: finalDensity } = computeDensity(finalPlain, targetKw);
-  const extractedFaqs = Array.isArray(draft.faqs) && draft.faqs.length ? draft.faqs.slice(0, 10) : extractFaqs(content);
+  const extractedFaqs = extractFaqs(content);
 
   // 25-rule validators (logged for visibility; non-blocking)
   const fullHtml = `${intro}\n${content}`;
