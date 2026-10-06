@@ -58,7 +58,41 @@ const TOOL_URLS: { url: string; label: string }[] = [
   { url: "/courses", label: "Courses" },
 ];
 
-type LinkOption = { url: string; label: string };
+type LinkOption = { url: string; label: string; aliases?: string[]; auto?: boolean };
+
+const LINK_STOP = new Set(["the","and","for","of","in","to","a","an","on","with","by","at","from","is","are","how","what","why","best","top","guide","india","indian","institute","management","school","business","college","university","mba","pgdm","exam","2024","2025","2026","2027","2028","complete","list","all","new","vs"]);
+const tokens = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length >= 3 && !LINK_STOP.has(w));
+const LINK_CAPS = { colleges: 15, exams: 6, articles: 8, coachings: 4, tools: 3 } as const;
+
+/** Rank pages by how strongly the brief/outline mentions them: exact name > alias/acronym > distinctive-word overlap. */
+function rankLinks(text: string, pools: Record<keyof typeof LINK_CAPS, LinkOption[]>) {
+  if (text.trim().length < 4) return [] as (LinkOption & { score: number })[];
+  const padded = ` ${text.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ")} `;
+  const textTokens = new Set(tokens(text));
+  const out: (LinkOption & { score: number })[] = [];
+  (Object.keys(LINK_CAPS) as (keyof typeof LINK_CAPS)[]).forEach(kind => {
+    const scored: (LinkOption & { score: number })[] = [];
+    for (const o of pools[kind] || []) {
+      const label = o.label.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+      let score = 0;
+      if (label.length >= 4 && padded.includes(` ${label} `)) score = 100;
+      else if ((o.aliases || []).some(a => a && a.length >= 3 && kind === "colleges" && a === (o.aliases || [])[0] && padded.includes(` ${a.toLowerCase()} `))) score = 70;
+      else {
+        const lt = tokens(o.label);
+        if (lt.length) {
+          const hit = lt.filter(t => textTokens.has(t)).length;
+          const ratio = hit / lt.length;
+          if (hit >= 2 && ratio >= 0.5) score = Math.round(40 + ratio * 40);
+          else if (kind !== "colleges" && hit >= 1 && ratio >= 0.5) score = Math.round(25 + ratio * 30);
+        }
+      }
+      if (score > 0) scored.push({ ...o, score });
+    }
+    scored.sort((a, b) => b.score - a.score);
+    out.push(...scored.slice(0, LINK_CAPS[kind]));
+  });
+  return out;
+}
 type FactCheckReportItem = {
   field?: string;
   severity?: "warn" | "error";
