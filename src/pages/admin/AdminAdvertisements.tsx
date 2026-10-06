@@ -258,7 +258,7 @@ export default function AdminAdvertisements() {
               <div><Label>Maximum ads per page (main content, not counting sidebar)</Label><Input type="number" min={1} max={10} defaultValue={settings.max_ads_per_page} onBlur={(ev) => saveSettings({ max_ads_per_page: Number(ev.target.value) || 3 })} /></div>
               <div><Label>Inside-article ads per 1,000 words</Label><Input type="number" step="0.1" min={0.2} max={5} defaultValue={settings.ads_per_1000_words ?? 1.2} onBlur={(ev) => saveSettings({ ads_per_1000_words: Number(ev.target.value) || 1.2 })} /></div>
               <div><Label>Article length limits (one per line: up to words = max ads)</Label>
-                <Textarea rows={5} defaultValue={(Array.isArray(settings.length_tiers) ? settings.length_tiers : []).map((t: { max_words: number; ads: number }) => `${t.max_words} = ${t.ads}`).join("\n")}
+                <Textarea rows={5} defaultValue={((Array.isArray(settings.length_tiers) ? settings.length_tiers : []) as unknown as { max_words: number; ads: number }[]).map((t: { max_words: number; ads: number }) => `${t.max_words} = ${t.ads}`).join("\n")}
                   onBlur={(ev) => saveSettings({ length_tiers: toLines(ev.target.value).map((l) => l.split("=").map((x) => Number(x.trim()))).filter(([w, n]) => w > 0 && n >= 0).map(([max_words, ads]) => ({ max_words, ads })) })} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Sidebar ads stacked</Label><Input type="number" min={0} max={5} defaultValue={settings.sidebar_stack_size ?? 3} onBlur={(ev) => saveSettings({ sidebar_stack_size: Number(ev.target.value) })} /></div>
