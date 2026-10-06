@@ -163,8 +163,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     if (!editor) return;
     const { from, to } = savedSel.current ?? editor.state.selection;
     // No text selected: apply to the whole current paragraph/heading so the change is visible.
-    let chain = restored();
-    if (from === to) chain = chain.selectParentNode ? editor.chain().focus().setTextSelection({ from: editor.state.doc.resolve(from).start(), to: editor.state.doc.resolve(from).end() }) : chain;
+    const chain = from === to
+      ? editor.chain().focus().setTextSelection({ from: editor.state.doc.resolve(from).start(), to: editor.state.doc.resolve(from).end() })
+      : restored();
     chain.setMark("textStyle", attrs).removeEmptyTextStyle().run();
   }, [editor, restored]);
   const setFontSize = useCallback((size: string) => {
