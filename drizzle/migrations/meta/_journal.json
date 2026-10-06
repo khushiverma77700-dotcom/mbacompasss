@@ -106,6 +106,13 @@
       "when": 1791278406687,
       "tag": "0014_ad_smart_placement_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791278947267,
+      "tag": "0015_ad_campaign_controls_and_fill",
+      "breakpoints": true
     }
   ]
 }

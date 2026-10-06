@@ -8,7 +8,55 @@ export type AdCampaign = {
   page_types: string[]; include_paths: string[]; exclude_paths: string[]; keywords: string[];
   devices: string; placements: string[]; max_per_page: number; min_paragraph_gap: number;
   cap_per_day: number; cap_per_session: number; is_fallback: boolean; conversion_path: string | null;
+  impression_budget?: number; daily_impression_budget?: number; pacing?: string; schedule_days?: number[];
+  schedule_start_hour?: number | null; schedule_end_hour?: number | null; is_exclusive?: boolean; is_house?: boolean; ab_test?: string | null;
 };
+export type Delivery = Record<string, { total: number; today: number }>;
+
+/** India-time day of week (0=Sun) and fractional hour. */
+export function indiaClock(now: number) {
+  const d = new Date(now + 5.5 * 3600_000);
+  return { dow: d.getUTCDay(), hour: d.getUTCHours() + d.getUTCMinutes() / 60 };
+}
+
+/** Day/time schedule, impression budgets and even pacing. */
+export function deliveryAllowed(ad: AdCampaign, now: number, delivery: Delivery = {}): boolean {
+  const { dow, hour } = indiaClock(now);
+  if (ad.schedule_days?.length && !ad.schedule_days.includes(dow)) return false;
+  const sh = ad.schedule_start_hour, eh = ad.schedule_end_hour;
+  if (sh != null && eh != null && sh !== eh) {
+    const inside = sh < eh ? hour >= sh && hour < eh : hour >= sh || hour < eh;
+    if (!inside) return false;
+  }
+  const d = delivery[ad.id] ?? { total: 0, today: 0 };
+  if ((ad.impression_budget ?? 0) > 0 && d.total >= ad.impression_budget!) return false;
+  const daily = ad.daily_impression_budget ?? 0;
+  if (daily > 0 && d.today >= daily) return false;
+  if (ad.pacing === "even") {
+    if (daily > 0) {
+      const frac = Math.max(0.04, hour / 24);
+      if (d.today >= Math.ceil(daily * frac)) return false;
+    } else if ((ad.impression_budget ?? 0) > 0 && ad.start_at && ad.end_at) {
+      const s = Date.parse(ad.start_at), e = Date.parse(ad.end_at);
+      const frac = Math.min(1, Math.max(0.02, (now - s) / Math.max(1, e - s)));
+      if (d.total >= Math.ceil(ad.impression_budget! * frac)) return false;
+    }
+  }
+  return true;
+}
+
+/** A/B tests: ads sharing a test name split visitors; each visitor always sees the same variant. */
+export function applyAbTests(ads: AdCampaign[], visitor: string): AdCampaign[] {
+  const groups: Record<string, AdCampaign[]> = {};
+  for (const a of ads) if (a.ab_test?.trim()) (groups[a.ab_test.trim().toLowerCase()] ??= []).push(a);
+  const keep = new Set<string>();
+  for (const [name, g] of Object.entries(groups)) {
+    g.sort((x, y) => x.id.localeCompare(y.id));
+    let h = 0; for (const c of visitor + name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    keep.add(g[h % g.length].id);
+  }
+  return ads.filter((a) => !a.ab_test?.trim() || keep.has(a.id));
+}
 export type LengthTier = { max_words: number; ads: number };
 export type AdSettings = {
   enabled: boolean; max_ads_per_page: number; excluded_paths: string[]; allow_popup: boolean; label_text: string;
@@ -67,10 +115,11 @@ export function pathMatches(path: string, pattern: string): boolean {
 
 export type Caps = Record<string, { day: string; dayCount: number; session: number }>;
 
-export function eligible(ad: AdCampaign, ctx: { path: string; pageType: string; device: "mobile" | "desktop"; text: string; caps: Caps; today: string; now: number }): boolean {
+export function eligible(ad: AdCampaign, ctx: { path: string; pageType: string; device: "mobile" | "desktop"; text: string; caps: Caps; today: string; now: number; delivery?: Delivery }): boolean {
   if (ad.status !== "active") return false;
   if (ad.start_at && Date.parse(ad.start_at) > ctx.now) return false;
   if (ad.end_at && Date.parse(ad.end_at) < ctx.now) return false;
+  if (!deliveryAllowed(ad, ctx.now, ctx.delivery)) return false;
   if (ad.devices !== "all" && ad.devices !== ctx.device) return false;
   if (ad.exclude_paths?.some((p) => pathMatches(ctx.path, p))) return false;
   const inc = ad.include_paths?.filter(Boolean) ?? [];
@@ -111,7 +160,12 @@ function accepts(a: AdCampaign, placement: string) {
 export function planPage(ads: AdCampaign[], settings: AdSettings, slots: SlotSpec[], ctx: Parameters<typeof eligible>[1], paragraphs: number) {
   const result: Record<string, AdCampaign> = {};
   if (!settings.enabled || settings.excluded_paths.some((p) => pathMatches(ctx.path, p))) return result;
-  const pool = ads.filter((a) => !a.is_fallback && eligible(a, ctx));
+  const paid = ads.filter((a) => !a.is_fallback && !a.is_house && eligible(a, ctx));
+  // Exclusive campaigns take over every slot they accept on pages they match.
+  const exclusive = paid.filter((a) => a.is_exclusive);
+  // House ads (own promotions) fill only when no paid campaign is eligible for the slot.
+  const house = ads.filter((a) => a.is_house && !a.is_fallback && eligible(a, ctx));
+  const pool = exclusive.length ? exclusive : paid;
   const fallback = ads.filter((a) => a.is_fallback && eligible({ ...a, page_types: [], include_paths: [], keywords: [] }, ctx));
   const max = settings.max_ads_per_page;
   const used = new Set<string>();
@@ -123,6 +177,7 @@ export function planPage(ads: AdCampaign[], settings: AdSettings, slots: SlotSpe
     let ad = pickAd(candidates, used);
     // Different ads first; only reuse a campaign when nothing fresh remains and its own per-page limit allows.
     if (!ad && allowReuse) ad = pickAd(candidates, new Set());
+    if (!ad && !exclusive.length) ad = pickAd(house.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < Math.max(1, a.max_per_page)), used);
     if (!ad && (slot.placement === "end" || slot.placement === "sidebar")) ad = pickAd(fallback, used);
     if (!ad) return false;
     result[slot.key] = ad; used.add(ad.id); perAd[ad.id] = (perAd[ad.id] ?? 0) + 1;

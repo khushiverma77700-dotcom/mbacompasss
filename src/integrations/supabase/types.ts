@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ad_campaigns: {
         Row: {
+          ab_test: string | null
           ad_code: string
           ad_type: string
           alt_text: string | null
@@ -25,6 +26,7 @@ export type Database = {
           conversion_path: string | null
           created_at: string
           cta_text: string | null
+          daily_impression_budget: number
           desktop_image_url: string | null
           destination_url: string
           devices: string
@@ -33,22 +35,30 @@ export type Database = {
           headline: string | null
           html_content: string | null
           id: string
+          impression_budget: number
           include_paths: string[]
+          is_exclusive: boolean
           is_fallback: boolean
+          is_house: boolean
           keywords: string[]
           max_per_page: number
           min_paragraph_gap: number
           mobile_image_url: string | null
           name: string
+          pacing: string
           page_types: string[]
           placements: string[]
           priority: number
+          schedule_days: number[]
+          schedule_end_hour: number | null
+          schedule_start_hour: number | null
           start_at: string | null
           status: string
           updated_at: string
           weight: number
         }
         Insert: {
+          ab_test?: string | null
           ad_code?: string
           ad_type?: string
           alt_text?: string | null
@@ -58,6 +68,7 @@ export type Database = {
           conversion_path?: string | null
           created_at?: string
           cta_text?: string | null
+          daily_impression_budget?: number
           desktop_image_url?: string | null
           destination_url: string
           devices?: string
@@ -66,22 +77,30 @@ export type Database = {
           headline?: string | null
           html_content?: string | null
           id?: string
+          impression_budget?: number
           include_paths?: string[]
+          is_exclusive?: boolean
           is_fallback?: boolean
+          is_house?: boolean
           keywords?: string[]
           max_per_page?: number
           min_paragraph_gap?: number
           mobile_image_url?: string | null
           name: string
+          pacing?: string
           page_types?: string[]
           placements?: string[]
           priority?: number
+          schedule_days?: number[]
+          schedule_end_hour?: number | null
+          schedule_start_hour?: number | null
           start_at?: string | null
           status?: string
           updated_at?: string
           weight?: number
         }
         Update: {
+          ab_test?: string | null
           ad_code?: string
           ad_type?: string
           alt_text?: string | null
@@ -91,6 +110,7 @@ export type Database = {
           conversion_path?: string | null
           created_at?: string
           cta_text?: string | null
+          daily_impression_budget?: number
           desktop_image_url?: string | null
           destination_url?: string
           devices?: string
@@ -99,16 +119,23 @@ export type Database = {
           headline?: string | null
           html_content?: string | null
           id?: string
+          impression_budget?: number
           include_paths?: string[]
+          is_exclusive?: boolean
           is_fallback?: boolean
+          is_house?: boolean
           keywords?: string[]
           max_per_page?: number
           min_paragraph_gap?: number
           mobile_image_url?: string | null
           name?: string
+          pacing?: string
           page_types?: string[]
           placements?: string[]
           priority?: number
+          schedule_days?: number[]
+          schedule_end_hour?: number | null
+          schedule_start_hour?: number | null
           start_at?: string | null
           status?: string
           updated_at?: string
@@ -199,6 +226,33 @@ export type Database = {
           sidebar_stack_size?: number
           sidebar_sticky?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ad_slot_requests: {
+        Row: {
+          created_at: string
+          device: string | null
+          filled: boolean
+          id: number
+          page_path: string | null
+          placement: string
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          filled: boolean
+          id?: number
+          page_path?: string | null
+          placement: string
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          filled?: boolean
+          id?: number
+          page_path?: string | null
+          placement?: string
         }
         Relationships: []
       }
@@ -16090,6 +16144,23 @@ export type Database = {
       _indexing_url_for: {
         Args: { _slug: string; _table: string }
         Returns: string
+      }
+      ad_delivery: {
+        Args: never
+        Returns: {
+          campaign_id: string
+          today: number
+          total: number
+        }[]
+      }
+      ad_fill_stats: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          device: string
+          filled: number
+          placement: string
+          requests: number
+        }[]
       }
       ad_stats: {
         Args: { _from: string; _to: string }

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "@/lib/router-compat";
-import { detectPageType, inContentBudget, planPage, type AdCampaign, type AdSettings, type Caps, type SlotSpec } from "@/lib/ads/engine";
+import { applyAbTests, detectPageType, inContentBudget, pathMatches, type Delivery, planPage, type AdCampaign, type AdSettings, type Caps, type SlotSpec } from "@/lib/ads/engine";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const CAP_KEY = "mbc_ad_caps";
@@ -30,6 +30,10 @@ function bumpCap(id: string) {
     ses[id] = (ses[id] ?? 0) + 1;
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(ses));
   } catch { /* ignore */ }
+}
+
+function visitorId() {
+  try { let v = localStorage.getItem("mbc_ad_vid"); if (!v) { v = Math.random().toString(36).slice(2); localStorage.setItem("mbc_ad_vid", v); } return v; } catch { return "anon"; }
 }
 
 const isMobile = () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
@@ -196,15 +200,42 @@ export function useAdSlots() {
     queryKey: ["first-party-ads"],
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const [{ data: ads }, { data: settings }] = await Promise.all([
+      const [{ data: ads }, { data: settings }, { data: del }] = await Promise.all([
         supabase.from("ad_campaigns").select("*").eq("status", "active"),
         supabase.from("ad_settings").select("*").eq("id", 1).maybeSingle(),
+        supabase.rpc("ad_delivery" as any),
       ]);
-      return { ads: (ads ?? []) as unknown as AdCampaign[], settings: settings as unknown as AdSettings | null };
+      const delivery: Delivery = {};
+      for (const r of (del ?? []) as { campaign_id: string; total: number; today: number }[]) delivery[r.campaign_id] = { total: Number(r.total), today: Number(r.today) };
+      return { ads: (ads ?? []) as unknown as AdCampaign[], settings: settings as unknown as AdSettings | null, delivery };
     },
   });
 
+  // Preview studio: ?ad_preview=<id>&ad_spot=<placement|all> forces one ad (any status; admins only can read drafts) into real slots.
+  const previewParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const previewId = previewParams?.get("ad_preview") ?? null;
+  const previewSpot = previewParams?.get("ad_spot") ?? "all";
+  const { data: previewAd } = useQuery({
+    queryKey: ["ad-preview", previewId],
+    enabled: !!previewId,
+    queryFn: async () => (await supabase.from("ad_campaigns").select("*").eq("id", previewId!).maybeSingle()).data as unknown as AdCampaign | null,
+  });
   useEffect(() => {
+    if (!previewId || !previewAd || !data?.settings) return;
+    const t = window.setTimeout(() => {
+      document.querySelectorAll("[data-ad-slot]").forEach((n) => n.remove());
+      const { targets: found, slots } = findContentTargets({ ...data.settings!, max_ads_per_page: 10 }, detectPageType(pathname));
+      setTargets(found);
+      const all = [{ key: "top", placement: "top" }, ...slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }];
+      const p: Record<string, AdCampaign> = {};
+      for (const s of all) if (previewSpot === "all" || s.placement === previewSpot || (previewSpot === "in_content" && ["after_intro", "mid"].includes(s.placement))) p[s.key] = previewAd;
+      setPlan(p);
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [previewId, previewAd, previewSpot, data, pathname]);
+
+  useEffect(() => {
+    if (previewId) return;
     if (!data?.settings || !data.ads.length) { setPlan({}); return; }
     setStickyClosed(false);
     const t = window.setTimeout(() => {
@@ -214,13 +245,18 @@ export function useAdSlots() {
       setTargets(found);
       const available: SlotSpec[] = [{ key: "top", placement: "top" }, ...slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }, { key: "popup", placement: "popup" }];
       const text = `${document.title} ${document.querySelector("#main-content")?.textContent?.slice(0, 20000) ?? ""}`.toLowerCase();
-      const ctx = { path: pathname, pageType, device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now() };
-      const p = planPage(data.ads, data.settings!, available, ctx, paragraphs);
+      const ctx = { path: pathname, pageType, device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now(), delivery: data.delivery };
+      const p = planPage(applyAbTests(data.ads, visitorId()), data.settings!, available, ctx, paragraphs);
       if (p.popup) {
         const k = `mbc_ad_popup_${todayStr()}`;
         if (localStorage.getItem(k)) delete p.popup; else { localStorage.setItem(k, "1"); window.setTimeout(() => setPopupOpen(true), 8000); }
       }
       setPlan(p);
+      // Fill-rate reporting: one row per slot this page offered, filled or not.
+      const dev = isMobile() ? "mobile" : "desktop";
+      const rows = available.filter((s) => s.placement !== "popup" || data.settings!.allow_popup)
+        .map((s) => ({ placement: s.placement, device: dev, filled: !!p[s.key], page_path: pathname.slice(0, 400) }));
+      if (rows.length && data.settings!.enabled && !data.settings!.excluded_paths.some((x) => pathMatches(pathname, x))) supabase.from("ad_slot_requests").insert(rows).then(() => {});
       // Conversion: visitor reached a campaign's thank-you path after a click.
       for (const ad of data.ads) {
         if (ad.conversion_path && pathname.startsWith(ad.conversion_path) && sessionStorage.getItem(`mbc_ad_clicked_${ad.id}`)) {
@@ -230,10 +266,10 @@ export function useAdSlots() {
       }
     }, 1200);
     return () => clearTimeout(t);
-  }, [data, pathname]);
+  }, [data, pathname, previewId]);
 
   const label = data?.settings?.label_text || "Sponsored";
-  const nodes = useMemo(() => Object.entries(targets).filter(([k]) => plan[k]).map(([k, el]) => createPortal(<AdCreative key={k + pathname} ad={plan[k]} placement={k.replace(/_\d+$/, "")} label={label} />, el)), [targets, plan, label, pathname]);
+  const nodes = useMemo(() => Object.entries(targets).filter(([k]) => plan[k]).map(([k, el]) => createPortal(<AdCreative key={k + pathname} preview={!!previewId} ad={plan[k]} placement={k.replace(/_\d+$/, "")} label={label} />, el)), [targets, plan, label, pathname, previewId]);
 
   // Remember clicks for conversion tracking.
   useEffect(() => {
@@ -247,15 +283,15 @@ export function useAdSlots() {
   }, []);
 
   return {
-    top: plan.top ? <div className="container mx-auto px-4"><AdCreative key={"top" + pathname} ad={plan.top} placement="top" label={label} /></div> : null,
-    end: plan.end ? <div className="container mx-auto px-4"><AdCreative key={"end" + pathname} ad={plan.end} placement="end" label={label} /></div> : null,
+    top: plan.top ? <div className="container mx-auto px-4"><AdCreative key={"top" + pathname} preview={!!previewId} ad={plan.top} placement="top" label={label} /></div> : null,
+    end: plan.end ? <div className="container mx-auto px-4"><AdCreative key={"end" + pathname} preview={!!previewId} ad={plan.end} placement="end" label={label} /></div> : null,
     portals: (
       <>
         {nodes}
         {plan.sticky && !stickyClosed && (
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 shadow-lg backdrop-blur">
             <div className="relative mx-auto max-w-3xl pr-8">
-              <AdCreative key={"sticky" + pathname} ad={plan.sticky} placement="sticky" label={label} compact />
+              <AdCreative key={"sticky" + pathname} preview={!!previewId} ad={plan.sticky} placement="sticky" label={label} compact />
               <button aria-label="Close advertisement" onClick={() => setStickyClosed(true)} className="absolute right-0 top-2 p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
             </div>
           </div>
