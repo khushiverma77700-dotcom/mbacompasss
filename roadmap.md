@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Editorial interlinking
-- [ ] Add restrained database-backed entity linking to public editorial content
-- [ ] Add admin blog directory and per-blog editorial link dossiers with live links
-- [ ] Verify matching safeguards and page behavior
+- [x] Add restrained database-backed entity linking to public editorial content
+- [x] Add admin blog directory and per-blog editorial link dossiers with live links
+- [x] Verify matching safeguards and public article behavior (five tests; six automatic links on a live article; no runtime errors)
+- [ ] Verify authenticated admin dossier and draft-save flow — requesting account could not be signed in; needs preview sign-in
 
 ## Course refund disclosure
 - [x] Show no-refund terms on course listings, course details, and beside enrollment actions
