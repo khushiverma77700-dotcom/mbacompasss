@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/admin/FileUpload";
 import { AdCreative } from "@/components/ads/AdSlots";
 import { PAGE_TYPES, PLACEMENTS, type AdCampaign } from "@/lib/ads/engine";
-import { Copy, Download, Eye, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, CalendarPlus, Copy, Download, Eye, Monitor, Pause, Pencil, Play, Plus, Smartphone, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const AD_TYPES = [
@@ -50,6 +50,9 @@ export default function AdminAdvertisements() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [days, setDays] = useState(30);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [previewCompact, setPreviewCompact] = useState(false);
 
   const { data: ads = [] } = useQuery({
     queryKey: ["admin-ads"],
@@ -110,13 +113,36 @@ export default function AdminAdvertisements() {
   };
   const duplicate = (a: AdCampaign) => { const { id, ad_code, ...rest } = a; setEditing({ ...rest, name: `${a.name} (copy)`, status: "draft" }); };
 
+  const extend = async (a: AdCampaign, extraDays = 7) => {
+    const base = a.end_at && Date.parse(a.end_at) > Date.now() ? Date.parse(a.end_at) : Date.now();
+    const { error } = await supabase.from("ad_campaigns").update({ end_at: new Date(base + extraDays * 86400_000).toISOString() }).eq("id", a.id);
+    if (error) toast({ title: "Could not extend", description: error.message, variant: "destructive" });
+    else { toast({ title: `Extended ${extraDays} days` }); refresh(); }
+  };
+
+  const endsSoon = (a: AdCampaign) => a.status === "active" && !!a.end_at && Date.parse(a.end_at) > Date.now() && Date.parse(a.end_at) - Date.now() < 3 * 86400_000;
+
+  const alerts = useMemo(() => {
+    const out: { id: string; level: "warn" | "info"; text: string }[] = [];
+    for (const a of ads) {
+      const st = effectiveStatus(a);
+      const t = totals[a.id] ?? { imp: 0, clk: 0, conv: 0 };
+      if (st === "active" && t.imp === 0) out.push({ id: `${a.id}-zero`, level: "warn", text: `"${a.name}" is live but had no views in the last ${days} day${days > 1 ? "s" : ""} — check its targeting, schedule or placements.` });
+      if (st === "active" && t.imp >= 500 && t.clk / t.imp < 0.002) out.push({ id: `${a.id}-ctr`, level: "warn", text: `"${a.name}" has ${t.imp.toLocaleString()} views but only a ${((t.clk / t.imp) * 100).toFixed(2)}% click rate — try a sharper headline or new creative.` });
+      if (endsSoon(a)) out.push({ id: `${a.id}-end`, level: "info", text: `"${a.name}" ends within 3 days — extend it if it should keep running.` });
+      if (st === "ended") out.push({ id: `${a.id}-ended`, level: "info", text: `"${a.name}" has ended. Extend it to put it back live.` });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ads, totals, days]);
+
   const saveSettings = async (patch: Record<string, unknown>) => {
     const { error } = await supabase.from("ad_settings").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
     if (error) toast({ title: "Could not save settings", description: error.message, variant: "destructive" });
     else { qc.invalidateQueries({ queryKey: ["admin-ad-settings"] }); qc.invalidateQueries({ queryKey: ["first-party-ads"] }); toast({ title: "Settings saved" }); }
   };
 
-  const filtered = ads.filter((a) => !search || `${a.name} ${a.ad_code}`.toLowerCase().includes(search.toLowerCase()));
+  const filtered = ads.filter((a) => (statusFilter === "all" || effectiveStatus(a) === statusFilter) && (!search || `${a.name} ${a.ad_code}`.toLowerCase().includes(search.toLowerCase())));
   const sum = Object.values(totals).reduce((s, t) => ({ imp: s.imp + t.imp, clk: s.clk + t.clk, conv: s.conv + t.conv }), { imp: 0, clk: 0, conv: 0 });
   const activeCount = ads.filter((a) => effectiveStatus(a) === "active").length;
 
