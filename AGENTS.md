@@ -14,3 +14,4 @@
 - AI blog outlines use intent-led chapters with editor-approved table, alert, and link plans, because long articles must remain distinct, scannable, evidence-led, and mobile-readable.
 - First-party ads are chosen client-side by one engine (src/lib/ads/engine.ts) mounted in the shared public layout, and clicks redirect only to the campaign's saved URL, so every page gets ads automatically without open redirects.
 - In-content ad slots are discovered from page structure at runtime (section boundaries, length-tier and per-1,000-word budgets) in src/components/ads/AdSlots.tsx, with selection in src/lib/ads/engine.ts, because 10,000+ pages must get well-placed ads without per-page wiring.
+- Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
