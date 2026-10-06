@@ -79,3 +79,5 @@
 - [x] Disable bulk college and exam auto-publishing and expose review states
 - [x] Add field-level review, manual edits, guarded publishing, refresh, and bulk research
 - [x] Verify preview compilation health
+- [x] Ads: campaign controls, preview studio, analytics/alerts/A-B
+- [ ] Admin rich text editor: font size changes must apply everywhere
