@@ -62,13 +62,14 @@ export type AdSettings = {
   enabled: boolean; max_ads_per_page: number; excluded_paths: string[]; allow_popup: boolean; label_text: string;
   ads_per_1000_words?: number; length_tiers?: LengthTier[]; sidebar_stack_size?: number; sidebar_gap_px?: number;
   sidebar_sticky?: boolean; homepage_section_ads?: number;
+  popup_per_session?: number; popup_per_day?: number; popup_delay_seconds?: number; page_section_ads?: number;
 };
 
 export const PLACEMENTS = [
   { key: "top", label: "Top of page" },
   { key: "after_intro", label: "After introduction (articles)" },
   { key: "in_content", label: "Inside content — auto-spaced by length" },
-  { key: "mid", label: "Mid-content (articles)" },
+  { key: "mid", label: "Mid-page (between page sections)" },
   { key: "before_faq", label: "Before FAQ (articles)" },
   { key: "home_section", label: "Between homepage sections" },
   { key: "end", label: "End of content" },
@@ -115,7 +116,7 @@ export function pathMatches(path: string, pattern: string): boolean {
 
 export type Caps = Record<string, { day: string; dayCount: number; session: number }>;
 
-export function eligible(ad: AdCampaign, ctx: { path: string; pageType: string; device: "mobile" | "desktop"; text: string; caps: Caps; today: string; now: number; delivery?: Delivery }): boolean {
+export function eligible(ad: AdCampaign, ctx: { recent?: string[]; path: string; pageType: string; device: "mobile" | "desktop"; text: string; caps: Caps; today: string; now: number; delivery?: Delivery }): boolean {
   if (ad.status !== "active") return false;
   if (ad.start_at && Date.parse(ad.start_at) > ctx.now) return false;
   if (ad.end_at && Date.parse(ad.end_at) < ctx.now) return false;
@@ -148,7 +149,7 @@ export function pickAd(pool: AdCampaign[], used: Set<string>, rand = Math.random
 }
 
 export type SlotSpec = { key: string; placement: string };
-const IN_CONTENT = ["after_intro", "in_content", "mid"];
+const IN_CONTENT = ["after_intro", "in_content", "mid", "home_section"];
 
 /** Does this campaign accept this placement? In-content slots accept any in-content campaign. */
 function accepts(a: AdCampaign, placement: string) {
@@ -174,7 +175,9 @@ export function planPage(ads: AdCampaign[], settings: AdSettings, slots: SlotSpe
   const assign = (slot: SlotSpec, allowReuse: boolean) => {
     const candidates = pool.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < Math.max(1, a.max_per_page)
       && (!IN_CONTENT.includes(slot.placement) && slot.placement !== "before_faq" || paragraphs >= a.min_paragraph_gap));
-    let ad = pickAd(candidates, used);
+    // Rotation: prefer ads this visitor did not just see on the previous pages.
+    const recent = new Set(ctx.recent ?? []);
+    let ad = pickAd(candidates.filter((a) => !recent.has(a.id)), used) ?? pickAd(candidates, used);
     // Different ads first; only reuse a campaign when nothing fresh remains and its own per-page limit allows.
     if (!ad && allowReuse) ad = pickAd(candidates, new Set());
     if (!ad && !exclusive.length) ad = pickAd(house.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < Math.max(1, a.max_per_page)), used);

@@ -572,7 +572,7 @@ const CollegeDetailPage = () => {
           onScrollToContent={() => sectionRefs.current["overview"]?.scrollIntoView({ behavior: "smooth" })}
         />
         <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-          <div className="space-y-6 min-w-0 overflow-hidden">
+          <div data-ad-content className="space-y-6 min-w-0 overflow-hidden">
 
             {/* Answer-first block — powers the page's speakable + QA schema. */}
             {(answerText || answerFacts.length > 0) && (
