@@ -118,6 +118,10 @@ const deAiify = (html: string): string => {
     out = out.replace(re, "");
   }
 
+  // Remove research-process commentary while preserving the verified fact itself.
+  out = out.replace(/(?:this\s+article|this\s+blog|the\s+content)\s+(?:is\s+)?(?:uses?|takes?|draws?|sources?|references?)\s+(?:its\s+)?(?:information|data|figures?|facts?)?\s*(?:from|using)\s+[^.<]{1,160}[.]/gi, "");
+  out = out.replace(/(?:according\s+to|as\s+stated\s+in|taken\s+from)\s+(?:the\s+)?(?:supplied|provided|reference)\s+(?:link|page|document|source)[^,.;:]{0,120}[,;:]?/gi, "");
+
   // Collapse any double spaces / orphan punctuation left by the strips
   out = out.replace(/\s+([,.;:!?])/g, "$1");
   out = out.replace(/<strong>\s*[:\-\u2013\u2014]\s*/gi, "<strong>");
@@ -169,6 +173,35 @@ const escapeHtml = (s: string) =>
 
 const toPlainText = (html: string) => String(html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 const countWords = (html: string) => toPlainText(html).split(/\s+/).filter(Boolean).length;
+
+const normalizeKeywordBank = (values: unknown[], brief: BlogBrief): string[] => {
+  const primary = String(brief.targetKeyword || brief.title || "").trim();
+  const title = String(brief.title || primary).trim();
+  const seeds = [primary, title, ...(brief.secondaryKeywords || []), ...values.map(String)]
+    .map((v) => v.replace(/\s+/g, " ").trim())
+    .filter((v) => v.length >= 2 && v.length <= 120);
+  const modifiers = [
+    "guide", "meaning", "eligibility", "fees", "admission process", "application process", "requirements",
+    "dates", "deadline", "cutoff", "selection process", "exam pattern", "syllabus", "preparation",
+    "strategy", "tips", "questions", "results", "score", "percentile", "colleges", "programmes",
+    "placements", "salary", "career options", "ROI", "scholarships", "comparison", "advantages",
+    "disadvantages", "documents required", "latest updates", "for beginners", "in India",
+  ];
+  const questions = ["what is", "how does", "who is eligible for", "when to apply for", "how to prepare for", "is it worth", "which colleges accept", "what are the fees for", "what is the cutoff for", "what comes after"];
+  const candidates = [...seeds];
+  for (const modifier of modifiers) candidates.push(`${primary} ${modifier}`);
+  for (const prefix of questions) candidates.push(`${prefix} ${primary}`);
+  for (const seed of seeds.slice(0, 25)) {
+    candidates.push(`${seed} ${new Date().getFullYear()}`, `${seed} explained`, `${seed} comparison`, `${seed} questions`);
+  }
+  const seen = new Set<string>();
+  return candidates.filter((value) => {
+    const key = value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 200);
+};
 
 function getTargets(brief: BlogBrief) {
   const tw = Number(brief.targetWords) > 0 ? Math.max(300, Number(brief.targetWords)) : 0;
@@ -338,7 +371,7 @@ Category: ${brief.category || "news"}.`,
       excerpt: String(outline.excerpt || ""),
       intro: stripExternalLinks(outline.intro || `<p><strong>Overview:</strong> ${escapeHtml(brief.title)} is explained below with current facts and practical decision points.</p>`),
       h1Tag: String(outline.h1Tag || brief.title).slice(0, 65),
-      keywords: Array.isArray(outline.keywords) ? outline.keywords.slice(0, 200) : [targetKw],
+      keywords: normalizeKeywordBank(Array.isArray(outline.keywords) ? outline.keywords : [], brief),
       primaryKeyword: targetKw,
       author: outline.author || "MBA Compass Editorial",
       sections: sections.slice(0, targets.sectionCount).map((s: any, i: number) => ({ heading: String(s.heading || fallback[i]?.heading || `Section ${i + 1}`), angle: String(s.angle || fallback[i]?.angle || "Detailed MBA analysis") })),
@@ -354,7 +387,7 @@ Category: ${brief.category || "news"}.`,
       excerpt: `${targetKw} guide with current MBA admissions, fees, cutoffs, placements, ROI and decision pointers.`,
       intro: `<p><strong>Overview:</strong> ${escapeHtml(targetKw)} is explained through verified facts, comparisons and practical decision points.</p>`,
       h1Tag: brief.title,
-      keywords: [targetKw, ...(brief.secondaryKeywords || [])].slice(0, 200),
+      keywords: normalizeKeywordBank([], brief),
       primaryKeyword: targetKw,
       author: "MBA Compass Editorial",
       sections: fallback,
@@ -660,7 +693,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     content,
     meta_title: metaTitleFinal,
     meta_description: metaDescFinal,
-    keywords: Array.isArray(draft.keywords) ? draft.keywords : [targetKw],
+    keywords: normalizeKeywordBank(Array.isArray(draft.keywords) ? draft.keywords : [], brief),
     primary_keyword: targetKw,
     h1_tag: String(draft.h1Tag || draft.title || brief.title).slice(0, 65),
     author: draft.author || "MBA Compass Editorial",
