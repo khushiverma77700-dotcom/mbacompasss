@@ -1140,7 +1140,7 @@ Deno.serve(async (req) => {
 
 # FRESHNESS & MACHINE-READABLE CITATIONS
 - Today is ${todayIso}. Active admission cycle: ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.
-- For key stats (cutoff, fee, package, percentile band, ranking), mention source names only when they are genuinely known from official context. Do not add fake machine-readable [src:...] markers; safer expected bands/windows are better than invented citations.
+- Use verified facts naturally without repeatedly naming sources. Mention an authority only when essential to explain an official rule or source conflict. Do not add fake machine-readable [src:...] markers.
 - End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
 
 # OUTPUT FORMAT
@@ -1599,8 +1599,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       h1_tag: article.h1Tag || article.title || brief.title,
       author: article.author || "MBA Compass Editorial",
       category: brief.category || "news",
-      status: singleShotDataViolations.length ? "draft" : "published",
-      published: singleShotDataViolations.length === 0,
+      status: "draft",
+      published: false,
       featured: false,
       priority: 0,
       faqs: extractedFaqs,
