@@ -45,7 +45,7 @@ export const BANNED_PHRASES = [
   "in today's competitive landscape", "in today's fast-paced world", "in today's digital age",
   "it is important to note", "it's important to note", "it is worth noting", "it's worth noting",
   "let's dive in", "let's dive into", "dive into", "deep dive", "delve", "delves", "delving",
-  "in conclusion", "to sum up", "in summary", "key summary", "quick snapshot", "snapshot",
+  "in conclusion", "to sum up", "in summary", "summary", "key", "quick snapshot", "snapshot",
   "key takeaways", "key highlights", "unlock", "unlocking", "comprehensive guide", "whether you are",
   "whether you're", "navigate the", "navigating", "landscape", "elevate", "game-changer",
   "cutting-edge", "world-class", "robust", "leverage", "seamless", "holistic", "tapestry",

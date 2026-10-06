@@ -220,7 +220,7 @@ export function referenceGroundingRules(research?: ReferenceResearch | null): st
 ## SOURCE ACCURACY (no reference links supplied)
 - Do NOT invent, estimate or "recall" any statistic, fee, date, cutoff, ranking, percentile or package.
 - Use only figures present in the verified database facts above. If a number is not supplied, describe the point qualitatively instead — never guess and never write placeholders such as "XX".
-- Name authoritative sources as plain text only when genuinely applicable (official notification, official placement report, NIRF).`;
+- Use verified facts naturally without naming, linking, or discussing the research source in public prose. Source details remain available to the editor for verification.`;
   }
 
   const primary = research.sources.filter((s) => s.kind === "primary" && s.status === "read");
@@ -245,7 +245,7 @@ ${s.excerpt}
 1. PRIMARY SOURCES below (supplied by the editor) outrank everything else. Every fact, statistic, date, fee, deadline, ranking, cutoff, percentile, package and definition you write must come from these primary sources first, or from the verified database facts above.
 2. SUPPLEMENTAL SOURCES (only present when the primary sources were insufficient) may be used to fill gaps, and only when the primary sources are silent on that point.
 3. If neither carries a number, write the point qualitatively. NEVER invent, average, round up or "remember" a figure. No placeholders such as "XX" or "approximately (estimate)".
-4. Where a specific figure, date or ranking comes from a source, mention the source by plain-text name (e.g. "as per the official admission notification") — never fabricate URLs or citation markers.
+4. Use verified facts naturally without repeatedly naming the supplied page, publisher, document, or website. Mention an authority only when attribution is essential to explain an official rule or a genuine conflict between sources. Never write process commentary such as "this article uses", "taken from", "according to the supplied link", or "the source says".
 5. If a primary source contradicts your own recollection, the primary source wins.
 
 ${primary.length ? `## PRIMARY SOURCES (highest priority)\n\n${block("PRIMARY SOURCE", primary)}` : "## PRIMARY SOURCES\nNone of the supplied links could be read — rely strictly on verified database facts."}

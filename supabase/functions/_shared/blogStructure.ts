@@ -1,5 +1,5 @@
 // Final article structure for AI-written blogs:
-//   Summary  →  Table of Contents  →  full article body
+//   Overview  →  Table of Contents  →  full article body
 //
 // Also adds stable heading anchor ids (so the contents links actually jump) and
 // bolds important data points (dates, ₹ amounts, percentages, percentiles,
@@ -88,6 +88,10 @@ const DATA_PATTERNS: RegExp[] = [
   /\b#\d{1,3}\b/g,
   // packages in LPA
   /\b\d+(?:\.\d+)?\s?LPA\b/gi,
+  // counts and measurable values with common units
+  /\b\d[\d,.]*\+?\s?(?:students?|candidates?|applicants?|seats?|questions?|marks?|hours?|minutes?|days?|weeks?|months?|years?|institutes?|colleges?|programmes?|programs?|courses?|centres?|centers?)\b/gi,
+  // ratios and multipliers
+  /\b\d+(?:\.\d+)?\s?(?::\s?\d+(?:\.\d+)?|x\b)/gi,
 ];
 
 const highlightTextRun = (text: string): string => {
@@ -128,28 +132,43 @@ export function highlightKeyData(html: string): string {
   });
 }
 
-const SUMMARY_HEADING_RE = /<h2[^>]*>\s*summary\s*<\/h2>/i;
+const OVERVIEW_HEADING_RE = /<h2[^>]*>\s*overview\s*<\/h2>/i;
+
+/** Remove prohibited standalone editorial labels from visible text, not attributes. */
+export function cleanEditorialLabels(html: string): string {
+  return String(html || "")
+    .split(/(<[^>]+>)/g)
+    .map((part) => {
+      if (part.startsWith("<")) return part;
+      return part
+        .replace(/\b(?:quick\s+)?summary\b/gi, "Overview")
+        .replace(/\bsnapshot\b/gi, "overview")
+        .replace(/\bkey\b/gi, "important");
+    })
+    .join("");
+}
 
 /**
- * Compose the final article: a standalone Summary block, then the clickable
+ * Compose the final article: a standalone Overview block, then the clickable
  * table of contents, then the full body with highlighted key data.
  *
- * `intro` is rendered above `content` by the article page, so the Summary stays
+ * `intro` is rendered above `content` by the article page, so the Overview stays
  * in the intro and the contents box is prepended to the content.
  */
 export function structureArticle(intro: string, content: string): { intro: string; content: string; tocCount: number } {
-  let introHtml = String(intro || "").trim();
+  let introHtml = cleanEditorialLabels(String(intro || "")).trim();
+  const contentHtml = cleanEditorialLabels(String(content || ""));
 
-  // Promote the inline "Summary:" lead into a labelled Summary block.
-  if (!SUMMARY_HEADING_RE.test(introHtml)) {
-    const m = /<p[^>]*>\s*<strong>\s*Summary\s*:?\s*<\/strong>\s*([\s\S]*?)<\/p>/i.exec(introHtml);
+  // Promote an inline overview lead into a labelled opening block.
+  if (!OVERVIEW_HEADING_RE.test(introHtml)) {
+    const m = /<p[^>]*>\s*<strong>\s*Overview\s*:?\s*<\/strong>\s*([\s\S]*?)<\/p>/i.exec(introHtml);
     if (m) {
       const rest = introHtml.replace(m[0], "").trim();
-      introHtml = `<h2 id="summary">Summary</h2><p>${m[1].trim()}</p>${rest}`;
+      introHtml = `<h2 id="overview">Overview</h2><p>${m[1].trim()}</p>${rest}`;
     }
   }
 
-  const { html: bodyWithIds, toc } = injectHeadingIds(String(content || ""));
+  const { html: bodyWithIds, toc } = injectHeadingIds(contentHtml);
   const { html: introWithIds, toc: introToc } = injectHeadingIds(introHtml);
   const fullToc = [...introToc, ...toc];
   const tocHtml = buildTableOfContents(fullToc);
