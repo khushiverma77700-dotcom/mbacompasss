@@ -26,9 +26,9 @@
 - [x] Recompose the report summary into formal score, strategy, strength, risk, and verdict sections
 
 ## AI Blog Writer output
-- [ ] Keep reference attribution in admin while using source facts silently in public prose
-- [ ] Enforce overview, paragraphs, tables, pointers, FAQs, important points, and bold data
-- [ ] Generate a 100–200-term admin keyword bank with a smaller public related-search set
+- [x] Keep reference attribution in admin while using source facts silently in public prose
+- [x] Enforce overview, paragraphs, tables, pointers, FAQs, important points, and bold data
+- [x] Generate a 100–200-term admin keyword bank with a smaller public related-search set
 
 ## Student dashboard redesign
 - [x] Apply the selected Institutional Executive composition in the Academic Blue system

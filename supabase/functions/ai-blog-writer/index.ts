@@ -191,6 +191,9 @@ const normalizeKeywordBank = (values: unknown[], brief: BlogBrief): string[] => 
   const candidates = [...seeds];
   for (const modifier of modifiers) candidates.push(`${primary} ${modifier}`);
   for (const prefix of questions) candidates.push(`${prefix} ${primary}`);
+  for (const prefix of questions) {
+    for (const modifier of modifiers.slice(0, 8)) candidates.push(`${prefix} ${primary} ${modifier}`);
+  }
   for (const seed of seeds.slice(0, 25)) {
     candidates.push(`${seed} ${new Date().getFullYear()}`, `${seed} explained`, `${seed} comparison`, `${seed} questions`);
   }
@@ -1213,7 +1216,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 3. **Keyword usage**: ${densitySpecified
       ? `the editor set a target of ~${density}% exact-match density, so aim for roughly ${targetOccurrences} natural uses of "${targetKw}" across ${targetWords} words — never at the cost of readability.`
       : `use "${targetKw}" only where it reads naturally — no density target. Cover the topic with variations, entities and semantic phrasing instead of repeating the exact phrase.`} Place the exact phrase in the title, H1, slug, meta title, meta description, the first 100 words, at least one H2 and the conclusion. Weave 20-30 LSI/semantic variants throughout. Never cluster repetitions in one paragraph and never force a keyword into an awkward sentence.
-4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
+4. **MANDATORY OPENING OVERVIEW**: First element of "intro" MUST be <p><strong>Overview:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMAN MENTOR VOICE — 8th-grade English, conversational, NOT AI**. Write like a real senior advising a junior over coffee. Use contractions (you're, don't, it's, you'll). Vary sentence length and structure — never start 3 sentences in a row the same way. Use natural mentor openers like "Here's the thing —", "Quick reality check:", "If you're in this boat,", "Most students get this wrong because…", "A simple way to think about it —". Address the reader as "you". Drop a personal aside or worked mini-example every 2-3 sections.
    BANNED phrases (zero tolerance, will trigger rejection): "delve", "delve into", "navigate", "navigating", "landscape", "unlock", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further", "furthermore", "moreover", "dive into", "stay tuned", "unleash", "harness the power", "game-changer", "cutting-edge", "world-class", "robust", "leverage", "synergy", "paradigm", "seamless", "holistic", "in conclusion", "to sum up", "as we all know", "needless to say", "tapestry", "testament", "in essence", "at the end of the day", "when it comes to", "plays a pivotal role", "plays a crucial role", "in the world of", "a myriad of", "plethora", "first and foremost", "it is important to note", "it is worth mentioning", "in summary", "to conclude", "remember that", "rest assured".
@@ -1222,10 +1225,10 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
    - Convert it into a <ul>, <ol>, or <table>.
    Walls of text (4+ sentence paragraphs, 70+ word paragraphs) are STRICTLY FORBIDDEN and will be rejected. Whenever you'd list 3+ items, comparisons, steps, factors, pros/cons, features, or examples → use a list or table instead of prose. **At least 5 HTML <table> blocks** (each 5+ rows of safe ${currentYear} data/ranges specific to this topic — fees, packages, cutoff bands, year-on-year trends, recruiter-wise hiring, sectoral splits, comparison vs peers, etc.). **At least 6 bullet/numbered lists** across the article. The finished article must be fully scannable on a phone — H2 → H3 → bold lead → list/table, with prose only as connective tissue.
 8. **STRUCTURE — REQUIRED ORDER**:
-   a. Summary <p>
+   a. Overview <p>
    b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
    c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-700 words, 1-2 <h3> subsections). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — NO shallow stubs, NO one-line answers.
-   d. <h2>Takeaways</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:", or the heading "Key Takeaways".
+   d. <h2>Important Points</h2> — 8-10 bullets, each starting with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>, <strong>Median CTC</strong>) followed by 1-2 full sentences (15-30 words each). Never use the standalone words "Summary", "Key" or "Snapshot".
     e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A pairs**. Question in <h3> ending with "?"; Answer in ${minWordsPerFaq}-220 words across 2-3 <p> blocks PLUS at least one of {bullet list (4+ items), mini <table>, or numbered steps}. ONE-LINE FAQ ANSWERS ARE FORBIDDEN. Each answer should give safe figures/ranges/windows, named entities and a contextual internal link where relevant. Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
    f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
@@ -1248,8 +1251,8 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
 - metaTitle: ≤ 60 chars, primary keyword near front, ends with "| MBA Compass" if it fits, no "?".
 - metaDescription: 145-160 chars, primary keyword in first 120 chars, declarative.
 - excerpt: 1-2 sentences, plain text, 160-220 chars, declarative, contains primary keyword.
-- intro: opening HTML — Summary <p> first, then 2-3 hook paragraphs. No headings inside intro.
-- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, a "Takeaways" H2 (never "Key Takeaways"), FAQ, final CTA. NEVER use AI-flavoured words: "Key", "Highlights", "At a Glance", "delve", "leverage", "seamless", "robust", "cutting-edge", "game-changer", "pivotal", "tapestry", "in the realm of", "moreover", "furthermore", "in conclusion".
+- intro: opening HTML — Overview <p> first, then 2-3 hook paragraphs. No headings inside intro.
+- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including ${targetH2}+ deep H2 sections, an "Important Points" H2, FAQ, final CTA. Include paragraphs, at least one verified-data table and practical bullet or numbered pointers. Bold every meaningful number and short decision-critical fact. Never use the standalone words "Summary", "Key" or "Snapshot".
 - h1Tag: on-page H1 (declarative, ≤ 70 chars, contains primary keyword, no "?").
 - keywords: array of **15-20 keywords** UNIQUE to this topic — primary keyword first, then 6-8 short-tail (2-3 words), then 8-12 long-tail (4+ words, question/intent-driven). NEVER generic MBA terms unrelated to "${targetKw}".
 - primaryKeyword: echo "${targetKw}".
@@ -1537,7 +1540,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       }
     }
 
-    // Final shape: Summary → Table of Contents → full body, with key data bolded.
+    // Final shape: Overview → Table of Contents → full body, with important data bolded.
     const singleShotStructured = structureArticle(article.intro || "", article.content || "");
     article.intro = singleShotStructured.intro;
     article.content = singleShotStructured.content;
@@ -1591,7 +1594,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       content: article.content || "",
       meta_title: article.metaTitle || brief.metaTitle || String(article.title || brief.title).slice(0, 60),
       meta_description: article.metaDescription || brief.metaDescription || String(article.excerpt || "").slice(0, 160),
-      keywords: Array.isArray(article.keywords) ? article.keywords : [],
+      keywords: normalizeKeywordBank(Array.isArray(article.keywords) ? article.keywords : [], brief),
       primary_keyword: targetKw,
       h1_tag: article.h1Tag || article.title || brief.title,
       author: article.author || "MBA Compass Editorial",
