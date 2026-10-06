@@ -242,7 +242,14 @@ function fallbackSections(brief: BlogBrief, count: number) {
     `Final shortlist strategy`,
     `Action plan for applicants`,
   ];
-  return base.slice(0, count).map((heading) => ({ heading, angle: `Explain ${heading.toLowerCase()} with current Indian MBA data, examples, tables and decision pointers.` }));
+  return base.slice(0, count).map((heading, index) => ({
+    heading,
+    angle: `Explain ${heading.toLowerCase()} with current Indian MBA data, examples, tables and decision pointers.`,
+    chapter: index < 3 ? "Understand" : index < 7 ? "Compare" : "Decide",
+    tablePlan: index % 3 === 1 ? "Add a concise comparison table only when every cell is supported by the supplied evidence." : "",
+    calloutPlan: index === 0 ? "Update: highlight the most time-sensitive confirmed fact." : "",
+    linkPlan: "Add no more than two genuinely relevant links from the approved internal-link pool.",
+  }));
 }
 
 async function callStructuredAI(args: {
@@ -340,7 +347,22 @@ async function createOutlineDraft(brief: BlogBrief, facts?: VerifiedFacts | null
           h1Tag: { type: "string" },
           keywords: { type: "array", minItems: 100, maxItems: 200, items: { type: "string" } },
           author: { type: "string" },
-          sections: { type: "array", items: { type: "object", properties: { heading: { type: "string" }, angle: { type: "string" } }, required: ["heading", "angle"], additionalProperties: false } },
+          sections: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                heading: { type: "string" },
+                angle: { type: "string" },
+                chapter: { type: "string" },
+                tablePlan: { type: "string" },
+                calloutPlan: { type: "string" },
+                linkPlan: { type: "string" },
+              },
+              required: ["heading", "angle", "chapter", "tablePlan", "calloutPlan", "linkPlan"],
+              additionalProperties: false,
+            },
+          },
           faqs: { type: "array", items: { type: "string" } },
         },
         required: ["title", "slug", "metaTitle", "metaDescription", "excerpt", "intro", "h1Tag", "keywords", "author", "sections", "faqs"],
@@ -357,7 +379,8 @@ Return:
 - excerpt: 1-2 sentences (≤ 200 chars).
 - intro: 120-220 word HTML block. The FIRST <p> directly answers the reader question in 50-80 words and includes "${targetKw}" naturally. No label prefix, no hype.
 - keywords: 100-200 unique, strongly related search terms: short-tail phrases, specific long-tail phrases, comparisons, and real question-style queries. Stay strictly inside the topic boundary; do not attach search-volume claims.
-- sections: up to ${targets.sectionCount} H2 section plans (heading + angle) chosen for THIS search intent and the suggested structure in ARTICLE SCOPE. Every heading must stay inside MUST INCLUDE / CAN INCLUDE. Include a topic-specific table, practical pointers, an "Important Points" section and FAQs. Never use the standalone labels "Summary", "Key" or "Snapshot". In each angle, note which source facts it will use.
+- sections: up to ${targets.sectionCount} distinct H2 plans arranged as a reader decision journey. Use 5-8 short chapter names to group related sections. Never repeat the same claim under two headings.
+  For every section return heading, angle, chapter, tablePlan, calloutPlan and linkPlan. tablePlan must name the useful columns when verified comparable evidence exists, otherwise be empty. calloutPlan may use only Deadline, Update, Important, Caution, Eligibility or Action Required and must be empty unless the information changes a reader decision. linkPlan may name at most two URLs from the approved pool and must explain the anchor intent. Include practical pointers and an "Important Points" section. FAQs are returned separately. Never use the standalone labels "Summary", "Key" or "Snapshot".
 - faqs: 4-8 real questions searchers ask about exactly this topic (fewer if the topic is narrow).
 
 Secondary keywords to weave naturally: ${(brief.secondaryKeywords || []).join(", ") || "derive naturally from topic"}.
@@ -377,7 +400,14 @@ Category: ${brief.category || "news"}.`,
       keywords: normalizeKeywordBank(Array.isArray(outline.keywords) ? outline.keywords : [], brief),
       primaryKeyword: targetKw,
       author: outline.author || "MBA Compass Editorial",
-      sections: sections.slice(0, targets.sectionCount).map((s: any, i: number) => ({ heading: String(s.heading || fallback[i]?.heading || `Section ${i + 1}`), angle: String(s.angle || fallback[i]?.angle || "Detailed MBA analysis") })),
+      sections: sections.slice(0, targets.sectionCount).map((s: any, i: number) => ({
+        heading: String(s.heading || fallback[i]?.heading || `Section ${i + 1}`),
+        angle: String(s.angle || fallback[i]?.angle || "Detailed analysis"),
+        chapter: String(s.chapter || fallback[i]?.chapter || "Article"),
+        tablePlan: String(s.tablePlan || fallback[i]?.tablePlan || ""),
+        calloutPlan: String(s.calloutPlan || fallback[i]?.calloutPlan || ""),
+        linkPlan: String(s.linkPlan || fallback[i]?.linkPlan || ""),
+      })),
       faqQuestions: Array.isArray(outline.faqs) ? outline.faqs.slice(0, 10) : [],
     };
   } catch (e) {
@@ -434,15 +464,21 @@ async function createSectionHtml(brief: BlogBrief, draft: any, section: any, ind
 
 Section heading: ${section.heading}
 Section angle: ${section.angle}
+Chapter: ${section.chapter || "Article"}
+Planned table: ${section.tablePlan || "None — do not force a table"}
+Planned alert: ${section.calloutPlan || "None — do not force an alert"}
+Planned internal links: ${section.linkPlan || "None"}
 All planned headings: ${(draft.sections || []).map((s: any) => s.heading).join(" | ")}
 
 Requirements:
 - Output exactly one <h2>${section.heading}</h2> block of roughly ${Math.round(targets.targetWords / Math.max(1, totalSections + 1))} words (shorter if the facts run out — never pad).
 - Stay inside the ARTICLE SCOPE. Name only allowed entities. Do not mention colleges or exams outside it.
 - Every figure must come from the supplied sources or verified facts. If a needed figure is missing, write that it should be confirmed on the official website instead of estimating.
-- Use an <h3>, table or list only when it genuinely helps this section.
+- Use the planned table only when every row and cell is supported by supplied evidence. Use no more than six columns. Introduce it briefly and follow it with a practical interpretation.
+- If a planned alert exists, write one <blockquote data-callout="TYPE"><strong>TYPE:</strong> concise verified information</blockquote>, where TYPE is deadline, update, important, caution, eligibility or action. Never repeat an alert used by another section.
+- Use an <h3>, table or list only when it genuinely helps this section. Keep paragraphs under three sentences.
 - If the heading implies a question, open with a direct 1-2 sentence answer.
-- Do NOT repeat content from other planned sections. No CTA paragraphs.
+- Do NOT repeat content, claims, tables, alerts or links from other planned sections. No CTA paragraphs.
 ${imgNote}${isFirst || isMiddle || isLast ? "" : ""}${ctaNote ? "" : ""}`;
       })(),
     });
@@ -964,7 +1000,14 @@ Deno.serve(async (req) => {
       const s = (job.stats || {}) as any;
       const clean = (v: unknown, n: number) => String(v ?? "").replace(/<[^>]*>/g, "").trim().slice(0, n);
       const sections = (Array.isArray(o.sections) ? o.sections : [])
-        .map((x: any) => ({ heading: clean(x?.heading, 140), angle: clean(x?.angle, 600) || "Cover this point using the source facts." }))
+        .map((x: any) => ({
+          heading: clean(x?.heading, 140),
+          angle: clean(x?.angle, 600) || "Cover this point using the source facts.",
+          chapter: clean(x?.chapter, 80) || "Article",
+          tablePlan: clean(x?.tablePlan, 500),
+          calloutPlan: clean(x?.calloutPlan, 300),
+          linkPlan: clean(x?.linkPlan, 500),
+        }))
         .filter((x: any) => x.heading)
         .slice(0, 14);
       if (!sections.length) return json(400, { error: "Add at least one section heading." });
