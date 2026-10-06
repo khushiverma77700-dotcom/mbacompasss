@@ -796,7 +796,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     analysis: brief.analysis || null,
     sourceExcerpts: (brief.research?.sources || [])
       .filter((s) => s.status === "read")
-      .map((s) => ({ url: s.url, title: s.title, kind: s.kind, excerpt: s.excerpt.slice(0, 20000) })),
+      .map((s) => ({ url: s.url, title: s.title, kind: s.kind, excerpt: s.excerpt.slice(0, 20000), publishedAt: s.publishedAt || null, updatedAt: s.updatedAt || null, freshness: s.freshness || "undated" })),
     qualityAudit: buildQualityAudit({
       title: draft.title || brief.title,
       metaTitle: draft.metaTitle,
