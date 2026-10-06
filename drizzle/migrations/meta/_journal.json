@@ -99,6 +99,13 @@
       "when": 1791271255030,
       "tag": "0013_ad_manager",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791278406687,
+      "tag": "0014_ad_smart_placement_settings",
+      "breakpoints": true
     }
   ]
 }

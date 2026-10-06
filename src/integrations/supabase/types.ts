@@ -156,30 +156,48 @@ export type Database = {
       }
       ad_settings: {
         Row: {
+          ads_per_1000_words: number
           allow_popup: boolean
           enabled: boolean
           excluded_paths: string[]
+          homepage_section_ads: number
           id: number
           label_text: string
+          length_tiers: Json
           max_ads_per_page: number
+          sidebar_gap_px: number
+          sidebar_stack_size: number
+          sidebar_sticky: boolean
           updated_at: string
         }
         Insert: {
+          ads_per_1000_words?: number
           allow_popup?: boolean
           enabled?: boolean
           excluded_paths?: string[]
+          homepage_section_ads?: number
           id?: number
           label_text?: string
+          length_tiers?: Json
           max_ads_per_page?: number
+          sidebar_gap_px?: number
+          sidebar_stack_size?: number
+          sidebar_sticky?: boolean
           updated_at?: string
         }
         Update: {
+          ads_per_1000_words?: number
           allow_popup?: boolean
           enabled?: boolean
           excluded_paths?: string[]
+          homepage_section_ads?: number
           id?: number
           label_text?: string
+          length_tiers?: Json
           max_ads_per_page?: number
+          sidebar_gap_px?: number
+          sidebar_stack_size?: number
+          sidebar_sticky?: boolean
           updated_at?: string
         }
         Relationships: []

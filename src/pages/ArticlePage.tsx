@@ -403,6 +403,9 @@ const ArticlePage = () => {
                 </Link>
               </div>
             </div>
+
+            {/* Sponsored stack — filled by the shared ad engine on desktop */}
+            <div data-ad-sidebar className="hidden lg:block lg:sticky lg:top-24" />
           </aside>
         </div>
 
