@@ -421,7 +421,7 @@ ${imgNote}${isFirst || isMiddle || isLast ? "" : ""}${ctaNote ? "" : ""}`;
 function fallbackClosingHtml(brief: BlogBrief) {
   const kw = escapeHtml(brief.targetKeyword || brief.title);
   return {
-    keyTakeawaysHtml: `<h2>Takeaways</h2><ul><li><strong>Fit first:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>ROI lens:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
+    keyTakeawaysHtml: `<h2>Important Points</h2><ul><li><strong>Fit first:</strong> Match ${kw} against your percentile, budget, preferred city and target roles before shortlisting.</li><li><strong>Current data:</strong> Use the latest admission notice, fee sheet and placement report before trusting any claim.</li><li><strong>ROI lens:</strong> Median package, total fees and role quality matter more than one headline average salary.</li><li><strong>Backups:</strong> Keep reach, match and safe options so one cutoff surprise does not damage the cycle.</li><li><strong>Deadlines:</strong> Application windows, interview dates and fee-payment milestones can change every admission year.</li><li><strong>Tools:</strong> Compare options with <a href="/college-shortlister">the MBA college shortlister</a> and ROI calculator.</li></ul>`,
     faqHtml: `<h2>Frequently Asked Questions</h2><h3>How should students evaluate ${kw}?</h3><p>Students should evaluate ${kw} through eligibility, entrance scores, fees, placement reports, recruiter mix, location and personal fit. The strongest shortlist balances brand value with realistic admission probability and return on investment.</p><h3>Is ${kw} worth it for MBA aspirants?</h3><p>${kw} can be worth it when the programme, city, fee level and placement outcomes align with your career target. Check current salary data, median outcomes and role quality before making the final call.</p>`,
     aboutCompassHtml: `<h2>About MBA Compass</h2><p><strong>MBA Compass</strong> is an MBA discovery and decision platform by B School Buzz, built for Indian aspirants and working professionals. It brings colleges, entrance exams, coaching options, full-length mocks and AI-driven tools into one place so you can plan your MBA journey end-to-end.</p><p>The platform helps you shortlist the right colleges, analyze your profile honestly, compare programmes side-by-side, and prepare with realistic mocks. Because an MBA is one of the biggest financial decisions you'll make, MBA Compass also helps you weigh fees, expected packages, ROI and long-term wealth outcomes before you commit — so the choice is grounded in numbers, not just brand pull. Explore <a href="/mba-compass">MBA Compass</a>, the <a href="/college-shortlister">college shortlister</a> and the <a href="/mba-roi-calculator">MBA ROI calculator</a> to get started.</p>`,
     ctaHtml: `<p><strong>Take the next step:</strong> Start your MBA journey by exploring top colleges and admission opportunities — use <a href="/college-shortlister">the college shortlister</a>, <a href="/profile-analyzer">profile analyzer</a> and <a href="/mba-roi-calculator">MBA ROI calculator</a> to turn this ${kw} research into a practical shortlist.</p>`,
@@ -440,7 +440,7 @@ async function createClosingHtml(brief: BlogBrief, draft: any, facts?: VerifiedF
       system: writerSystemPrompt(brief, facts),
       maxTokens: 8000,
       toolName: "write_blog_closing",
-      description: "Write key takeaways, detailed FAQs and final CTA.",
+      description: "Write important points, detailed FAQs and final CTA.",
       parameters: {
         type: "object",
         properties: {
@@ -463,7 +463,7 @@ Return EXACTLY these blocks, in this order, each as standalone HTML strings:
 
 1) aboutCompassHtml — <h2>About MBA Compass</h2> + 120-180 words: what MBA Compass is (MBA discovery + decision platform by B School Buzz), how it helps Indian students and working professionals (shortlist colleges, analyze profile, compare programmes, full mocks), the financial-decision angle (fees, ROI, expected packages, long-term wealth). Educational, not promotional. End with 2-3 contextual internal links chosen from /mba-compass, /college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks.
 
-2) keyTakeawaysHtml — <h2>Takeaways</h2> + a <ul> of 4-6 bullets. Each bullet starts with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>) followed by one concrete data point or decision rule. NEVER use generic labels like "Key:", "Highlight:", "Important:", "Note:", "Pro Tip:", "Bold lead:".
+2) keyTakeawaysHtml — <h2>Important Points</h2> + a <ul> of 4-6 bullets. Each bullet starts with a SHORT topic-noun <strong>lead</strong> (e.g. <strong>Fee gap</strong>, <strong>Cutoff trend</strong>) followed by one concrete data point or decision rule. Never use the standalone words "Summary", "Key" or "Snapshot".
 
 3) ctaHtml — CTA #3 (before conclusion). One <p><strong>Take the next step:</strong> …</p> paragraph in the tone "Start your MBA journey today by exploring top colleges and admission opportunities." with 2-3 contextual internal links (/college-shortlister, /profile-analyzer, /mba-roi-calculator, /compare, /mocks).
 
@@ -567,7 +567,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const targets = getTargets(brief);
   const targetKw = brief.targetKeyword.trim();
   const sectionsHtml = (draft.sections || []).map((s: any) => stripExternalLinks(s.html || fallbackSectionHtml(brief, s.heading))).join("\n");
-  // Fixed structural order: sections → Key Takeaways → CTA #3 → FAQs → Conclusion → About MBA Compass (LAST) → updated stamp
+  // Fixed structural order: sections → Important Points → CTA #3 → FAQs → Conclusion → About MBA Compass (LAST) → updated stamp
   const closingHtml = [
     draft.keyTakeawaysHtml || "",
     draft.ctaHtml || "",
@@ -591,7 +591,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (dataViolations.length || introAudit.removedBlocks || contentAudit.removedBlocks) {
     console.warn(`[ai-blog-writer] verified-data audit for "${targetKw}": removed ${introAudit.removedBlocks + contentAudit.removedBlocks} unverified block(s), ${dataViolations.length} unresolved violation(s)`);
   }
-  // Final shape: Summary → Table of Contents → full body, with key data bolded.
+  // Final shape: Overview → Table of Contents → full body, with important data bolded.
   const structured = structureArticle(introAudit.html, contentAudit.html);
   const intro = structured.intro;
   const content = structured.content;
@@ -628,7 +628,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     conclusionWords,
     keywordOccurrences: finalOccurrences,
     keywordDensityPct: finalDensity,
-    hasKeyTakeaways: /<h2[^>]*>\s*(?:Key\s+)?Takeaways/i.test(content),
+    hasImportantPoints: /<h2[^>]*>\s*Important\s+Points/i.test(content),
     hasAboutCompass: /<h2[^>]*>\s*About MBA Compass/i.test(content),
     hasConclusion: /<h2[^>]*>\s*(Conclusion|Final Word|Bottom Line)/i.test(content),
   };
@@ -642,7 +642,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   if (validation.internalLinkCount < 12) warnings.push(`internal_links=${validation.internalLinkCount}`);
   if (validation.faqCount < 5 || validation.faqCount > 10) warnings.push(`faqs=${validation.faqCount}`);
   if (conclusionWords && (conclusionWords < 100 || conclusionWords > 150)) warnings.push(`conclusion_words=${conclusionWords}`);
-  if (!validation.hasKeyTakeaways) warnings.push("missing_key_takeaways");
+  if (!validation.hasImportantPoints) warnings.push("missing_important_points");
   if (!validation.hasAboutCompass) warnings.push("missing_about_mba_compass");
   if (!validation.hasConclusion) warnings.push("missing_conclusion");
   if (warnings.length) console.log(`[ai-blog-writer] 25-rule warnings for "${targetKw}":`, warnings.join(" | "));
