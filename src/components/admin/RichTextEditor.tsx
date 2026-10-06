@@ -104,6 +104,8 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
       TableCell,
     ],
     content,
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -144,23 +146,34 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   }, [editor]);
 
-  const setFontSize = useCallback((size: string) => {
+  // Dropdowns take focus away from the editor; remember the text selection so the change lands on it.
+  const savedSel = useRef<{ from: number; to: number } | null>(null);
+  const rememberSelection = useCallback(() => {
     if (!editor) return;
-    if (size === "") {
-      editor.chain().focus().unsetMark("textStyle").run();
-    } else {
-      editor.chain().focus().setMark("textStyle", { fontSize: size }).run();
-    }
+    const { from, to } = editor.state.selection;
+    savedSel.current = { from, to };
   }, [editor]);
+  const restored = useCallback(() => {
+    const c = editor!.chain().focus();
+    const sel = savedSel.current;
+    const max = editor!.state.doc.content.size;
+    return sel ? c.setTextSelection({ from: Math.min(sel.from, max), to: Math.min(sel.to, max) }) : c;
+  }, [editor]);
+  const applyToSelection = useCallback((attrs: Record<string, string | null>) => {
+    if (!editor) return;
+    const { from, to } = savedSel.current ?? editor.state.selection;
+    // No text selected: apply to the whole current paragraph/heading so the change is visible.
+    let chain = restored();
+    if (from === to) chain = chain.selectParentNode ? editor.chain().focus().setTextSelection({ from: editor.state.doc.resolve(from).start(), to: editor.state.doc.resolve(from).end() }) : chain;
+    chain.setMark("textStyle", attrs).removeEmptyTextStyle().run();
+  }, [editor, restored]);
+  const setFontSize = useCallback((size: string) => {
+    applyToSelection({ fontSize: size === "default" || size === "" ? null : size });
+  }, [applyToSelection]);
 
   const setFontFamily = useCallback((family: string) => {
-    if (!editor) return;
-    if (family === "") {
-      editor.chain().focus().unsetFontFamily().run();
-    } else {
-      editor.chain().focus().setFontFamily(family).run();
-    }
-  }, [editor]);
+    applyToSelection({ fontFamily: family === "default" || family === "" ? null : family });
+  }, [applyToSelection]);
 
   const clearFormatting = useCallback(() => {
     if (!editor) return;
@@ -205,14 +218,14 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
         <div className="flex flex-wrap items-center gap-1.5 px-2 py-1.5 border-b border-border/50">
           {/* Font Family */}
           <Select
-            value={editor.getAttributes("textStyle").fontFamily || ""}
+            value={editor.getAttributes("textStyle").fontFamily || "default"}
             onValueChange={setFontFamily}
           >
-            <SelectTrigger className="h-7 w-[130px] text-xs border-border/60">
+            <SelectTrigger onPointerDown={rememberSelection} onKeyDown={rememberSelection} className="h-7 w-[130px] text-xs border-border/60">
               <Type className="w-3 h-3 mr-1 shrink-0" />
               <SelectValue placeholder="Font" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent onCloseAutoFocus={(e) => e.preventDefault()}>
               {FONT_FAMILIES.map((f) => (
                 <SelectItem key={f.value} value={f.value || "default"} className="text-xs" style={{ fontFamily: f.value || "inherit" }}>
                   {f.label}
@@ -223,13 +236,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
 
           {/* Font Size */}
           <Select
-            value={editor.getAttributes("textStyle").fontSize || ""}
+            value={editor.getAttributes("textStyle").fontSize || "default"}
             onValueChange={setFontSize}
           >
-            <SelectTrigger className="h-7 w-[80px] text-xs border-border/60">
+            <SelectTrigger onPointerDown={rememberSelection} onKeyDown={rememberSelection} className="h-7 w-[80px] text-xs border-border/60">
               <SelectValue placeholder="Size" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent onCloseAutoFocus={(e) => e.preventDefault()}>
               <SelectItem value="default" className="text-xs">Default</SelectItem>
               {FONT_SIZES.map((s) => (
                 <SelectItem key={s.value} value={s.value} className="text-xs">
