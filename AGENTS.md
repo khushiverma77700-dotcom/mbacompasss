@@ -20,6 +20,6 @@
 - Ad discovery observes loaded editorial content and screen changes; relevance uses current-tab memory only and never bypasses targeting or caps, because reading placements must adapt without cross-site profiling or unexpected campaign delivery.
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
 - AI blog drafts get deterministic internal-link enrichment (first-mention entity links plus Similar Colleges/Related Reads tables) from the editor-approved link pool only, via supabase/functions/_shared/relatedLinks.ts, so links never point outside the site's real pages.
-- Pin @lovable.dev/vite-tanstack-config at 2.25.3; 2.26.0 crashes published requests.
+- Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 
 - Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
