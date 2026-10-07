@@ -35,7 +35,7 @@ export default function AdLivePreview({ ad, label }: { ad: Partial<AdCampaign>; 
     return (
       <div className="rounded-lg border-2 border-dashed border-primary/50 bg-primary/5 p-2">
         <div className="text-sm font-semibold text-primary">{labelOf(k)}</div>
-        <AdCreative ad={shown} placement="preview" label={label} preview compact={k === "sticky"} />
+        <AdCreative ad={shown} placement={k} label={label} preview compact={k === "sticky"} />
       </div>
     );
   };
@@ -58,7 +58,7 @@ export default function AdLivePreview({ ad, label }: { ad: Partial<AdCampaign>; 
       {(!deviceOk || !typeOk) && <p className="rounded-md bg-muted p-2 text-sm text-muted-foreground">This ad won't show here — {!deviceOk ? `it is set to ${ad.devices} only` : "this page type isn't ticked"}.</p>}
       {pl.size === 0 && <p className="text-sm text-muted-foreground">Tick at least one placement below to see it here.</p>}
 
-      <div className={`relative max-h-[70vh] overflow-y-auto rounded-lg border border-border bg-background p-3 ${mobile ? "mx-auto w-[360px]" : ""}`}>
+      <div className={`relative max-h-[70vh] overflow-y-auto rounded-lg border border-border bg-background p-3 ${mobile ? "mx-auto w-full max-w-[360px]" : ""}`}>
         <Block h="h-8" label="Navigation" />
         <div className="mt-3 space-y-3"><Spot k="top" /></div>
         <div className={`mt-3 grid gap-4 ${hasSidebar ? "grid-cols-[minmax(0,1fr)_200px]" : ""}`}>
