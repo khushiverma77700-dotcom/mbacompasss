@@ -178,24 +178,12 @@ const ArticlePage = () => {
     return <NotFound />;
   }
 
-  const renderContent = (content: string) => {
-    const isHtml = /<\/?[a-z][\s\S]*>/i.test(content);
-    if (isHtml) {
-      return (
-        <div
-          className="ai-content max-w-none text-foreground"
-          dangerouslySetInnerHTML={{ __html: enhanceAIContent(content) }}
-        />
-      );
-    }
-    return (
-      <div className="prose prose-lg max-w-none dark:prose-invert space-y-4">
-        {content.split("\n\n").map((para, i) => (
-          <p key={i} className="text-muted-foreground leading-relaxed">{para}</p>
-        ))}
-      </div>
-    );
-  };
+  const renderContent = (content: string) => (
+    <div
+      className="ai-content max-w-none text-foreground"
+      dangerouslySetInnerHTML={{ __html: enhanceAIContent(content, undefined, { editorial: true }) }}
+    />
+  );
 
   const readTime = article.content ? `${Math.max(1, Math.ceil(article.content.replace(/<[^>]*>/g, "").split(/\s+/).length / 200))} min` : "3 min";
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
@@ -323,13 +311,6 @@ const ArticlePage = () => {
               <div className="flex items-center justify-end mb-4 -mt-1">
                 <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
               </div>
-
-              {/* Mobile / inline auto Table of Contents */}
-              <AutoTOC
-                contentRef={contentRef}
-                className="mb-6 lg:hidden"
-                deps={[article.id, article.content]}
-              />
 
               <div ref={contentRef}>
                 {article.content ? renderContent(article.content) : (

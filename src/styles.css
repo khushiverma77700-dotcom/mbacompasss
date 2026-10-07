@@ -1901,14 +1901,14 @@ html, body, #root {
 .prose th,
 .prose td { font-size: var(--fs-detail); }
 
-/* Auto-generated article table of contents (Summary → Contents → Body) */
+/* Shared styled editorial contents */
 .prose .blog-toc,
 .ai-content .blog-toc {
   margin: 1.5rem 0 2rem;
   padding: 1rem 1.25rem;
   border: 1px solid hsl(var(--border));
-  border-radius: 0.75rem;
-  background: hsl(var(--muted) / 0.4);
+  border-radius: 0.5rem;
+  background: hsl(var(--primary) / 0.04);
 }
 .prose .blog-toc .blog-toc-title , .ai-content .blog-toc .blog-toc-title {
   margin: 0 0 0.5rem;
@@ -1928,6 +1928,10 @@ html, body, #root {
   margin-left: 1rem;
 }
 .prose .blog-toc a , .ai-content .blog-toc a {
+  display: block;
+  padding: 0.375rem 0.25rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
   color: hsl(var(--primary));
   text-decoration: none;
 }
@@ -1940,3 +1944,5 @@ html, body, #root {
 .ai-content h3 {
   scroll-margin-top: 6rem;
 }
+
+.article-content-shell .ai-content p { margin-block: 1.125rem; }
