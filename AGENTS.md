@@ -1,8 +1,9 @@
 - Keep MBA Compass course refund disclosure in one shared presentation component and apply its offer-schema rule only to MBA Compass course detail markup, because third-party institutes may have different policies.
 - Present the public MBA application directory as category-grouped dossiers rather than a wide data table, because students need section-led scanning on every screen size.
 - Keep the College Applications module limited to its core field set (name, slug, category, tier, programs, fees, application link, deadline, exams, logo, rich-text details, publish state) and edit all of it in the admin form, with recommendations and SEO managed in their dedicated admin tools.
-- Keep College Applications list views summary-first and route all field editing through the full record dialog, because spreadsheet-style inline editing is too complex for routine administration.
-- Structure the student home as an institutional executive dashboard with applications, score overview, study priorities, and analytics in that order, because students need a clear action hierarchy.- Admin email campaigns record per-recipient tracking tokens and redirect click links only to URLs saved in that campaign, so tracking can never become an open redirect.
+- Keep College Applications lists summary-first; edit all fields in the full-record dialog, because inline spreadsheet editing complicates administration.
+- Structure student home as an institutional executive dashboard: applications, score overview, study priorities, then analytics, for a clear action hierarchy.
+- Admin email campaigns record per-recipient tracking tokens and redirect clicks only to saved campaign URLs to prevent open redirects.
 - Parse saved profile-analysis narratives through one defensive normalizer before rendering, because AI output may be JSON, fenced JSON, or double-encoded JSON.
 - Admin email campaigns stage personalised emails as waiting recipients and release them in batches through a database tick that re-reads each campaign's speed settings every run, so speed changes apply to running campaigns; the tick timer arms on start/resume and removes itself when nothing is running.
 - Mock competition metrics use each student's earliest completed attempt and verified unique-student cohorts, because retakes and synthetic aspirants must not inflate ranks or participation.
