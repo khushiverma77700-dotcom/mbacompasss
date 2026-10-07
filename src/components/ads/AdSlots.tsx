@@ -311,11 +311,20 @@ export function useAdSlots() {
     let signature = "";
     const reported = new Set<string>();
     const owned = new Set<HTMLElement>();
+    let rebuilds = 0;
     const rebuild = () => {
       const body = editorialBody(main);
       const blocks = body ? articleBlocks(body) : blocksOf(main);
-      const next = `${body?.className ?? "page"}:${isMobile()}:${window.innerWidth >= 1024}:${blocks.map((b) => b.textContent).join("|")}`;
+      // Signature ignores ad slots so inserted ads never trigger another layout pass.
+      const plain = (b: Element) => {
+        if (b.closest("[data-ad-slot]")) return "";
+        let t = b.textContent || "";
+        b.querySelectorAll("[data-ad-slot]").forEach((s) => { t = t.replace(s.textContent || "", ""); });
+        return t.length;
+      };
+      const next = `${body?.className ?? "page"}:${isMobile()}:${window.innerWidth >= 1024}:${blocks.length}:${blocks.map(plain).join("|")}`;
       if (next === signature) return;
+      if (++rebuilds > 12) { observer.disconnect(); return; }
       signature = next;
       if (popupTimer) { clearTimeout(popupTimer); popupTimer = undefined; }
       owned.forEach((node) => node.remove()); owned.clear();
