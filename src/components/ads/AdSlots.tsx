@@ -306,7 +306,7 @@ export function useAdSlots() {
     const rebuild = () => {
       const body = editorialBody(main);
       const blocks = body ? articleBlocks(body) : blocksOf(main);
-      const next = `${isMobile()}:${window.innerWidth >= 1024}:${blocks.map((b) => b.textContent).join("|")}`;
+      const next = `${body?.className ?? "page"}:${isMobile()}:${window.innerWidth >= 1024}:${blocks.map((b) => b.textContent).join("|")}`;
       if (next === signature) return;
       signature = next;
       if (popupTimer) { clearTimeout(popupTimer); popupTimer = undefined; }
@@ -340,6 +340,9 @@ export function useAdSlots() {
       setPlan(chosen);
     };
     const schedule = () => { if (timer) return; timer = window.setTimeout(() => { timer = undefined; rebuild(); }, 250); };
+    // Slow queries or transformed article markup can land after the first discovery pass.
+    const settle = window.setInterval(rebuild, 2000);
+    const stopSettle = window.setTimeout(() => clearInterval(settle), 15000);
     const observer = new MutationObserver((records) => {
       if (records.some((r) => {
         const target = r.target instanceof Element ? r.target : r.target.parentElement;
@@ -353,6 +356,7 @@ export function useAdSlots() {
     schedule();
     return () => {
       observer.disconnect(); window.removeEventListener("resize", schedule);
+      clearInterval(settle); clearTimeout(stopSettle);
       if (timer) clearTimeout(timer); if (popupTimer) clearTimeout(popupTimer);
       owned.forEach((node) => node.remove());
     };
