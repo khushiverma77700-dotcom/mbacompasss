@@ -365,6 +365,8 @@ const ArticlePage = () => {
               className="hidden lg:block sticky top-20"
               deps={[article.id, article.content]}
             />
+            {/* Shared engine occupies existing right-column space, before related cards. */}
+            <div data-ad-sidebar className="hidden lg:block lg:sticky lg:top-24" />
             <div className="bg-card rounded-2xl p-6 border border-border shadow-md">
               <h3 className="font-heading font-bold text-foreground mb-5 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-primary" /> Related Articles
@@ -404,8 +406,6 @@ const ArticlePage = () => {
               </div>
             </div>
 
-            {/* Sponsored stack — filled by the shared ad engine on desktop */}
-            <div data-ad-sidebar className="hidden lg:block lg:sticky lg:top-24" />
           </aside>
         </div>
 
