@@ -35,7 +35,7 @@ export function splitLongParagraphs(html: string): string {
 }
 
 export function formatEditorialReadability(html: string): string {
-  let out = html.replace(/<nav\b[^>]*class=["'][^"']*\bblog-toc\b[^"']*["'][^>]*>[\s\S]*?<\/nav>/gi, '');
+  let out = html.replace(/<nav\b[^>]*class=["'][^"']*\bblog-toc\b[^"']*["'][^>]*>[\s\S]*?<\/nav>\s*/gi, '');
   out = out.replace(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi, (original, attrs: string, inner: string) => {
     const lines = inner.split(/<br\s*\/?\s*>|\n/gi).map((line) => line.trim()).filter(Boolean);
     if (lines.length < 2 || !lines.every((line) => /^(?:[•▪*-]|\d+[.)])\s+/.test(line))) return original;
