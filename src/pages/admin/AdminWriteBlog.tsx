@@ -135,11 +135,14 @@ const AdminWriteBlog = () => {
   const [secInput, setSecInput] = useState("");
   const [referenceUrls, setReferenceUrls] = useState<string[]>(seed.referenceUrls || []);
   const [refInput, setRefInput] = useState("");
-  const buildLatestDateContext = () => {
-    const y = new Date().getFullYear();
-    return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.`;
-  };
-  const [contentDateContext, setContentDateContext] = useState<string>(buildLatestDateContext());
+  const [targetYear, setTargetYear] = useState<number>(seed.targetYear || new Date().getFullYear() + 1);
+  const [yearTouched, setYearTouched] = useState<boolean>(!!seed.targetYear);
+  useEffect(() => {
+    if (yearTouched) return;
+    const m = title.match(/\b(20[2-9]\d)\b/);
+    if (m) setTargetYear(Number(m[1]));
+  }, [title, yearTouched]);
+  const contentDateContext = `Target year selected by the editor: ${targetYear} (${targetYear}-${String(targetYear + 1).slice(-2)} cycle). Write every target-cycle year as ${targetYear}, never today's calendar year. Use the latest verified data; where ${targetYear} figures are not yet published, call them expected and label older figures with their real year.`;
   const [wordTarget, setWordTarget] = useState<number>(seed.wordTarget || 1500);
   const wordMin = Math.round(wordTarget * 0.9);
   const wordMax = Math.round(wordTarget * 1.1);
@@ -665,26 +668,16 @@ const AdminWriteBlog = () => {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <Label className="text-xs font-semibold block">Date / Freshness Context</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs gap-1"
-                onClick={() => {
-                  setContentDateContext(buildLatestDateContext());
-                  toast({ title: "Reset to latest dates" });
-                }}
-              >
-                <Sparkles className="h-3 w-3" /> Refresh
-              </Button>
-            </div>
-            <Textarea
-              value={contentDateContext}
-              onChange={(e) => setContentDateContext(e.target.value)}
-              rows={2}
-            />
+            <Label className="text-xs font-semibold mb-1.5 block">Target Year</Label>
+            <Select value={String(targetYear)} onValueChange={(v) => { setTargetYear(Number(v)); setYearTouched(true); }}>
+              <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() - 1 + i).map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y} ({y}-{String(y + 1).slice(-2)} cycle)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground mt-1">The article, headings, meta title and description will all be written for this year. Picked from your title automatically.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4 pt-2 border-t">
