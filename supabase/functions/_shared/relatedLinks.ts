@@ -38,47 +38,36 @@ export function linkFirstMentions(html: string, allowed: AllowedLink[], maxLinks
   }
   const entries = [...owner.entries()].filter(([, u]) => u).sort((a, b) => b[0].length - a[0].length) as [string, string][];
   let added = 0;
-  // Split into tags/text; track whether we're inside a/heading/table header/code.
+  const anchors: string[] = [];
   const parts = html.split(/(<[^>]+>)/g);
   let skipDepth = 0;
   let paraLinks = 0;
-  for (let i = 0; i < parts.length && added < maxLinks; i++) {
+  for (let i = 0; i < parts.length; i++) {
     const p = parts[i];
     if (p.startsWith("<")) {
-      const m = p.match(/^<\/?\s*([a-z0-9]+)/i);
-      const tag = m?.[1]?.toLowerCase() || "";
-      if (["a", "h1", "h2", "h3", "h4", "h5", "h6", "code", "pre", "th", "button"].includes(tag)) skipDepth += p.startsWith("</") ? -1 : 1;
+      const tag = p.match(/^<\/?\s*([a-z0-9]+)/i)?.[1]?.toLowerCase() || "";
+      if (["a", "h1", "h2", "h3", "h4", "h5", "h6", "code", "pre", "th", "button"].includes(tag)) skipDepth = Math.max(0, skipDepth + (p.startsWith("</") ? -1 : 1));
       if (["p", "li", "td"].includes(tag) && !p.startsWith("</")) paraLinks = 0;
-      if (skipDepth < 0) skipDepth = 0;
       continue;
     }
-    if (skipDepth > 0 || !p.trim()) continue;
+    if (skipDepth > 0 || !p.trim() || added >= maxLinks) continue;
     let text = p;
     for (const [name, url] of entries) {
-      if (linked.has(url) || paraLinks >= 3) continue;
-      const isAcronym = /^[A-Z0-9-]{2,6}$/.test(name.toUpperCase()) && name.length <= 6;
-      const re = new RegExp(`(^|[^A-Za-z0-9])(${reEsc(name)})(?=[^A-Za-z0-9]|$)`, isAcronym ? "" : "i");
-      const target = isAcronym ? name.toUpperCase() : name;
-      const r = isAcronym ? new RegExp(`(^|[^A-Za-z0-9])(${reEsc(target)})(?=[^A-Za-z0-9]|$)`) : re;
-      const mm = text.match(r);
+      if (linked.has(url) || paraLinks >= 3 || added >= maxLinks) continue;
+      const acronym = name.length <= 6 && !/\s/.test(name);
+      const re = acronym
+        ? new RegExp(`(^|[^A-Za-z0-9\\u0001])(${reEsc(name.toUpperCase())})(?=[^A-Za-z0-9]|$)`)
+        : new RegExp(`(^|[^A-Za-z0-9\\u0001])(${reEsc(name)})(?=[^A-Za-z0-9]|$)`, "i");
+      const mm = text.match(re);
       if (!mm || mm.index === undefined) continue;
       const start = mm.index + mm[1].length;
-      const word = mm[2];
-      // Placeholder avoids re-matching inside the inserted anchor.
-      text = `${text.slice(0, start)}\u0000${linked.size}\u0000${text.slice(start + word.length)}`;
-      parts.push(`<a href="${esc(url)}">${word}</a>`);
-      text = text.replace(`\u0000${linked.size}\u0000`, `\u0001${parts.length - 1}\u0001`);
+      anchors.push(`<a href="${esc(url)}">${mm[2]}</a>`);
+      text = `${text.slice(0, start)}\u0001${anchors.length - 1}\u0001${text.slice(start + mm[2].length)}`;
       linked.add(url); added++; paraLinks++;
     }
     parts[i] = text;
   }
-  // Resolve placeholders
-  const anchors = parts;
-  const body = parts.slice(0, parts.length).join("");
-  return body
-    .replace(/\u0001(\d+)\u0001/g, (_m, idx) => anchors[Number(idx)])
-    // remove appended anchor copies at tail (they were pushed past original length)
-    ;
+  return parts.join("").replace(/\u0001(\d+)\u0001/g, (_m, idx) => anchors[Number(idx)]);
 }
 
 export function buildRelatedTables(html: string, allowed: AllowedLink[], title: string): string {
