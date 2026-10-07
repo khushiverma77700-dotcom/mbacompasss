@@ -4,8 +4,23 @@ import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "@/lib/router-compat";
-import { applyAbTests, detectPageType, inContentBudget, pathMatches, type Delivery, planPage, type AdCampaign, type AdSettings, type Caps, type SlotSpec } from "@/lib/ads/engine";
+import { applyAbTests, detectPageType, inContentBudget, pathMatches, type Delivery, planPage, type AdCampaign, type AdSettings, type Caps, type SlotSpec, type ReadingJourney } from "@/lib/ads/engine";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { Button } from "@/components/ui/button";
+import { articleBlocks, editorialBody } from "@/lib/ads/structure";
+
+// Current-tab memory only: no identifiers, URLs with query strings or profile uploads.
+let journey: ReadingJourney = { entryPath: "", previousPath: "", interests: [] };
+let lastJourneyPath = "";
+function readingJourney(path: string): ReadingJourney {
+  if (lastJourneyPath !== path) {
+    journey = { entryPath: journey.entryPath || path, previousPath: lastJourneyPath, interests: journey.interests };
+    lastJourneyPath = path;
+  }
+  const title = document.querySelector("#main-content h1")?.textContent?.toLowerCase().slice(0, 250) || "";
+  if (title && !journey.interests.includes(title)) journey.interests = [title, ...journey.interests].slice(0, 8);
+  return journey;
+}
 
 const CAP_KEY = "mbc_ad_caps";
 const SESSION_KEY = "mbc_ad_session";
@@ -39,47 +54,61 @@ function visitorId() {
 const isMobile = () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
 
 function logEvent(ad: AdCampaign, type: "impression" | "conversion", placement: string) {
+  if (type === "impression") pushRecent([ad.id]);
   supabase.from("ad_events").insert({ campaign_id: ad.id, event_type: type, placement, page_path: location.pathname.slice(0, 400), device: isMobile() ? "mobile" : "desktop" }).then(() => {});
 }
 
 export function AdCreative({ ad, placement, label, preview, compact }: { ad: AdCampaign; placement: string; label: string; preview?: boolean; compact?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(!!preview);
   useEffect(() => {
     if (preview || !ref.current) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setNear(true); observer.disconnect(); }
+    }, { rootMargin: "400px" });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [preview]);
+  useEffect(() => {
+    if (preview || !near || !ref.current) return;
     let timer: number | undefined; let done = false;
     const obs = new IntersectionObserver(([e]) => {
       if (done) return;
+      if (timer) { clearTimeout(timer); timer = undefined; }
       if (e.intersectionRatio >= 0.5) timer = window.setTimeout(() => { done = true; logEvent(ad, "impression", placement); bumpCap(ad.id); obs.disconnect(); }, 1000);
       else if (timer) clearTimeout(timer);
     }, { threshold: [0, 0.5] });
     obs.observe(ref.current);
     return () => { obs.disconnect(); if (timer) clearTimeout(timer); };
-  }, [ad, placement, preview]);
+  }, [ad, placement, preview, near]);
 
   const href = preview ? ad.destination_url : `/api/public/ad-click/${ad.id}?p=${encodeURIComponent(placement)}`;
   const img = (isMobile() ? ad.mobile_image_url || ad.desktop_image_url : ad.desktop_image_url || ad.mobile_image_url) || "";
   const showImage = ["image", "gif", "poster", "image_cta"].includes(ad.ad_type) && img;
   const showText = ["text_cta", "image_cta"].includes(ad.ad_type) || !showImage;
+  const vertical = placement === "sidebar" || placement === "popup";
 
   return (
-    <aside ref={ref} data-nosnippet aria-label={label} className="not-prose my-6 w-full">
+    <aside ref={ref} data-nosnippet aria-label={label} className="not-prose my-4 w-full min-w-0 @container">
+      {!near ? <div aria-hidden className="min-h-40 rounded-lg bg-muted/30" /> : <>
       <div className="mb-1 text-sm text-muted-foreground">{label}</div>
       {ad.ad_type === "html" && ad.html_content ? (
         <div className="overflow-hidden rounded-lg border border-border bg-card" dangerouslySetInnerHTML={{ __html: sanitizeHtml(ad.html_content) }} />
       ) : (
-        <a href={href} target="_blank" rel="sponsored noopener" className={`flex ${compact ? "flex-row items-center" : "flex-col sm:flex-row sm:items-center"} gap-4 overflow-hidden rounded-lg border border-border bg-secondary/40 p-3 transition-colors hover:bg-secondary`}>
-          {showImage && <img src={img} alt={ad.alt_text || ad.name} loading="lazy" decoding="async" className={`${showText ? "w-full sm:w-48" : "w-full"} h-auto max-w-full rounded-md object-contain`} />}
+        <a href={href} target="_blank" rel="sponsored noopener" className={`flex ${compact ? "flex-row items-center" : vertical ? "flex-col" : "flex-col @min-[480px]:flex-row @min-[480px]:items-center"} gap-4 overflow-hidden rounded-lg border border-border bg-secondary/40 p-3 transition-colors hover:bg-secondary`}>
+          {showImage && <img src={img} alt={ad.alt_text || ad.name} loading="lazy" decoding="async" className={`${compact ? "w-16 shrink-0" : showText && !vertical ? "w-full @min-[480px]:w-40" : "w-full"} h-auto max-w-full rounded-md object-contain`} />}
           {showText && (
-            <div className="flex flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className={`flex min-w-0 flex-1 flex-col gap-2 ${!vertical ? "@min-[480px]:flex-row @min-[480px]:items-center @min-[480px]:justify-between" : ""}`}>
               <div>
-                <div className="font-semibold text-foreground">{ad.headline || ad.name}</div>
+                <div className={`${compact ? "line-clamp-1 text-sm" : "break-words"} font-semibold text-foreground`}>{ad.headline || ad.name}</div>
                 {ad.body && !compact && <p className="text-sm text-muted-foreground">{ad.body}</p>}
               </div>
-              <span className="inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{ad.cta_text || "Learn more"}</span>
+              <span className={`inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground ${compact ? "self-start" : "shrink-0"}`}>{ad.cta_text || "Learn more"}</span>
             </div>
           )}
         </a>
       )}
+      </>}
     </aside>
   );
 }
@@ -113,7 +142,7 @@ function blocksOf(body: HTMLElement): Element[] {
  * heading, never inside the FAQ), then spreads the length-based budget evenly by word position.
  */
 function findArticleSlots(body: HTMLElement, settings: AdSettings, found: Found) {
-  const blocks = blocksOf(body);
+  const blocks = articleBlocks(body);
   const counts = blocks.map((b) => words(b.textContent));
   const total = counts.reduce((x, y) => x + y, 0);
   found.paragraphs = blocks.filter((b) => b.tagName === "P").length;
@@ -126,7 +155,8 @@ function findArticleSlots(body: HTMLElement, settings: AdSettings, found: Found)
     acc += counts[i];
     const cur = blocks[i], next = blocks[i + 1];
     if (cur.tagName !== "P" || counts[i] < 15) continue; // only after a real paragraph
-    if (isHeading(cur) || BLOCKY.test(next.tagName)) continue; // don't split a heading from its text or crowd a table/list/image
+    const sibling = cur.nextElementSibling;
+    if (isHeading(cur) || BLOCKY.test(next.tagName) || (sibling && (BLOCKY.test(sibling.tagName) || sibling.querySelector('table,figure,video')))) continue;
     if (acc < 120) continue; // let the intro breathe
     if (total - acc < 80 && faqIdx < 0) continue; // not right at the end
     cands.push({ i, at: acc, score: /^H[23]$/.test(next.tagName) ? 3 : 1 });
@@ -135,7 +165,7 @@ function findArticleSlots(body: HTMLElement, settings: AdSettings, found: Found)
   const picked: Cand[] = [];
   const minGap = Math.max(150, total / (budget + 1) / 2);
   for (let n = 1; n <= budget; n++) {
-    const target = (total * n) / (budget + 1);
+    const target = n === 1 ? Math.min(250, total / (budget + 1)) : (total * n) / (budget + 1);
     const best = cands
       .filter((c) => picked.every((p) => Math.abs(p.at - c.at) >= minGap))
       .sort((x, y) => Math.abs(x.at - target) / (x.score) - Math.abs(y.at - target) / (y.score))[0];
@@ -200,7 +230,7 @@ function popupAllowed(settings: AdSettings) {
 function findContentTargets(settings: AdSettings, pageType: string): Found {
   const found: Found = { targets: {}, slots: [], paragraphs: 0 };
   const main = document.querySelector<HTMLElement>("#main-content");
-  const body = document.querySelector<HTMLElement>("#main-content .prose") || document.querySelector<HTMLElement>("#main-content article");
+  const body = main ? editorialBody(main) : null;
   if (pageType === "home" && main) findHomeSlots(main, settings, found);
   else if (body) findArticleSlots(body, settings, found);
   else {
@@ -209,10 +239,12 @@ function findContentTargets(settings: AdSettings, pageType: string): Found {
     else if (main) findHomeSlots(main, { ...settings, homepage_section_ads: settings.page_section_ads ?? 2 }, found);
   }
   const side = document.querySelector<HTMLElement>("[data-ad-sidebar]");
-  if (side && !isMobile()) {
+  if (side && window.matchMedia("(min-width: 1024px)").matches) {
     const gap = settings.sidebar_gap_px ?? 16;
     side.style.display = "flex"; side.style.flexDirection = "column"; side.style.gap = `${gap}px`;
-    if (settings.sidebar_sticky === false) side.style.position = "static";
+    side.style.position = settings.sidebar_sticky === false ? "static" : "sticky";
+    side.style.top = "96px";
+    side.style.alignSelf = "start";
     side.querySelectorAll("[data-ad-slot]").forEach((n) => n.remove());
     for (let k = 1; k <= Math.max(0, Math.min(5, settings.sidebar_stack_size ?? 3)); k++) {
       const el = document.createElement("div");
@@ -231,6 +263,8 @@ export function useAdSlots() {
   const [plan, setPlan] = useState<Record<string, AdCampaign>>({});
   const [stickyClosed, setStickyClosed] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
+  const [reading, setReading] = useState(false);
+  useEffect(() => { readingJourney(pathname); }, [pathname]);
 
   const { data } = useQuery({
     queryKey: ["first-party-ads"],
@@ -254,55 +288,99 @@ export function useAdSlots() {
   const { data: previewAd } = useQuery({
     queryKey: ["ad-preview", previewId],
     enabled: !!previewId,
-    queryFn: async () => (await supabase.from("ad_campaigns").select("*").eq("id", previewId!).maybeSingle()).data as unknown as AdCampaign | null,
+    queryFn: async () => {
+      if (!previewId) return null;
+      return (await supabase.from("ad_campaigns").select("*").eq("id", previewId).maybeSingle()).data as unknown as AdCampaign | null;
+    },
   });
   useEffect(() => {
-    if (!previewId || !previewAd || !data?.settings) return;
-    const t = window.setTimeout(() => {
-      document.querySelectorAll("[data-ad-slot]").forEach((n) => n.remove());
-      const { targets: found, slots } = findContentTargets({ ...data.settings!, max_ads_per_page: 10 }, detectPageType(pathname));
-      setTargets(found);
-      const all = [{ key: "top", placement: "top" }, ...slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }];
-      const p: Record<string, AdCampaign> = {};
-      for (const s of all) if (previewSpot === "all" || s.placement === previewSpot || (previewSpot === "in_content" && ["after_intro", "mid"].includes(s.placement))) p[s.key] = previewAd;
-      setPlan(p);
-    }, 1200);
-    return () => clearTimeout(t);
-  }, [previewId, previewAd, previewSpot, data, pathname]);
+    const settings = data?.settings;
+    const main = document.querySelector<HTMLElement>("#main-content");
+    setPlan({}); setTargets({}); setStickyClosed(false); setPopupOpen(false);
+    if (!settings || !main || (previewId ? !previewAd : !data.ads.length)) return;
+    let timer: number | undefined;
+    let popupTimer: number | undefined;
+    let signature = "";
+    const reported = new Set<string>();
+    const owned = new Set<HTMLElement>();
+    const rebuild = () => {
+      const body = editorialBody(main);
+      const blocks = body ? articleBlocks(body) : blocksOf(main);
+      const next = `${body?.className ?? "page"}:${isMobile()}:${window.innerWidth >= 1024}:${blocks.map((b) => b.textContent).join("|")}`;
+      if (next === signature) return;
+      signature = next;
+      if (popupTimer) { clearTimeout(popupTimer); popupTimer = undefined; }
+      owned.forEach((node) => node.remove()); owned.clear();
+      const found = findContentTargets(previewId ? { ...settings, max_ads_per_page: 10 } : settings, detectPageType(pathname));
+      Object.values(found.targets).forEach((node) => owned.add(node));
+      setTargets(found.targets);
+      const available: SlotSpec[] = [{ key: "top", placement: "top" }, ...found.slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }, { key: "popup", placement: "popup" }];
+      let chosen: Record<string, AdCampaign> = {};
+      if (previewId && previewAd) {
+        for (const slot of available) {
+          const selected = previewSpot === "all" || slot.placement === previewSpot || (previewSpot === "in_content" && ["after_intro", "mid"].includes(slot.placement));
+          // Preview uses the same campaign placement permissions, but bypasses delivery caps.
+          const accepts = previewAd.placements.includes(slot.placement) || (["after_intro", "in_content", "mid", "home_section"].includes(slot.placement) && previewAd.placements.some((p) => ["after_intro", "in_content", "mid", "home_section"].includes(p)));
+          if (selected && accepts && slot.placement !== "popup") chosen[slot.key] = previewAd;
+        }
+      } else {
+        const text = `${document.title} ${blocks.map((b) => b.textContent).join(" ").slice(0, 20000)}`.toLowerCase();
+        const ctx = { path: pathname, pageType: detectPageType(pathname), device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now(), delivery: data.delivery, recent: readRecent(), journey: readingJourney(pathname) };
+        chosen = planPage(applyAbTests(data.ads, visitorId()), settings, available, ctx, found.paragraphs);
+        if (chosen.popup) {
+          if (!popupAllowed(settings)) delete chosen.popup;
+          else popupTimer = window.setTimeout(() => setPopupOpen(true), Math.max(0, settings.popup_delay_seconds ?? 8) * 1000);
+        }
+        const rows = available.filter((slot) => !reported.has(slot.key) && (slot.placement !== "popup" || settings.allow_popup)).map((slot) => {
+          reported.add(slot.key);
+          return { placement: slot.placement, device: ctx.device, filled: !!chosen[slot.key], page_path: pathname.slice(0, 400) };
+        });
+        if (rows.length && settings.enabled && !settings.excluded_paths.some((p) => pathMatches(pathname, p))) supabase.from("ad_slot_requests").insert(rows).then(() => {});
+      }
+      setPlan(chosen);
+    };
+    const schedule = () => { if (timer) return; timer = window.setTimeout(() => { timer = undefined; rebuild(); }, 250); };
+    // Slow queries or transformed article markup can land after the first discovery pass.
+    const settle = window.setInterval(rebuild, 2000);
+    const stopSettle = window.setTimeout(() => clearInterval(settle), 15000);
+    const observer = new MutationObserver((records) => {
+      if (records.some((r) => {
+        const target = r.target instanceof Element ? r.target : r.target.parentElement;
+        if (target?.closest("[data-ad-slot],.not-prose")) return false;
+        if (r.type === "characterData") return true;
+        return [...r.addedNodes, ...r.removedNodes].some((n) => !(n instanceof HTMLElement && n.dataset.adSlot));
+      })) schedule();
+    });
+    observer.observe(main, { childList: true, subtree: true, characterData: true });
+    window.addEventListener("resize", schedule);
+    schedule();
+    return () => {
+      observer.disconnect(); window.removeEventListener("resize", schedule);
+      clearInterval(settle); clearTimeout(stopSettle);
+      if (timer) clearTimeout(timer); if (popupTimer) clearTimeout(popupTimer);
+      owned.forEach((node) => node.remove());
+    };
+  }, [data, pathname, previewId, previewAd, previewSpot]);
 
   useEffect(() => {
-    if (previewId) return;
-    if (!data?.settings || !data.ads.length) { setPlan({}); return; }
-    setStickyClosed(false);
-    const t = window.setTimeout(() => {
-      document.querySelectorAll("[data-ad-slot]").forEach((n) => n.remove());
-      const pageType = detectPageType(pathname);
-      const { targets: found, slots, paragraphs } = findContentTargets(data.settings!, pageType);
-      setTargets(found);
-      const available: SlotSpec[] = [{ key: "top", placement: "top" }, ...slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }, { key: "popup", placement: "popup" }];
-      const text = `${document.title} ${document.querySelector("#main-content")?.textContent?.slice(0, 20000) ?? ""}`.toLowerCase();
-      const ctx = { path: pathname, pageType, device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now(), delivery: data.delivery, recent: readRecent() };
-      const p = planPage(applyAbTests(data.ads, visitorId()), data.settings!, available, ctx, paragraphs);
-      if (p.popup) {
-        if (!popupAllowed(data.settings!)) delete p.popup; else window.setTimeout(() => setPopupOpen(true), Math.max(0, data.settings!.popup_delay_seconds ?? 8) * 1000);
-      }
-      setPlan(p);
-      pushRecent([...new Set(Object.values(p).map((a) => a.id))]);
-      // Fill-rate reporting: one row per slot this page offered, filled or not.
-      const dev = isMobile() ? "mobile" : "desktop";
-      const rows = available.filter((s) => s.placement !== "popup" || data.settings!.allow_popup)
-        .map((s) => ({ placement: s.placement, device: dev, filled: !!p[s.key], page_path: pathname.slice(0, 400) }));
-      if (rows.length && data.settings!.enabled && !data.settings!.excluded_paths.some((x) => pathMatches(pathname, x))) supabase.from("ad_slot_requests").insert(rows).then(() => {});
-      // Conversion: visitor reached a campaign's thank-you path after a click.
-      for (const ad of data.ads) {
-        if (ad.conversion_path && pathname.startsWith(ad.conversion_path) && sessionStorage.getItem(`mbc_ad_clicked_${ad.id}`)) {
-          sessionStorage.removeItem(`mbc_ad_clicked_${ad.id}`);
-          logEvent(ad, "conversion", "conversion");
+    if (previewId || !data) return;
+    for (const ad of data.ads) {
+      try {
+        if (ad.conversion_path && pathMatches(pathname, ad.conversion_path) && sessionStorage.getItem(`mbc_ad_clicked_${ad.id}`)) {
+          sessionStorage.removeItem(`mbc_ad_clicked_${ad.id}`); logEvent(ad, "conversion", "conversion");
         }
-      }
-    }, 1200);
-    return () => clearTimeout(t);
-  }, [data, pathname, previewId]);
+      } catch { /* storage can be unavailable */ }
+    }
+  }, [pathname, data, previewId]);
+
+  useEffect(() => {
+    setReading(false);
+    const scroll = () => {
+      if (window.scrollY > Math.min(500, window.innerHeight * 0.5)) setReading(true);
+    };
+    window.addEventListener("scroll", scroll, { passive: true }); scroll();
+    return () => window.removeEventListener("scroll", scroll);
+  }, [pathname]);
 
   const label = data?.settings?.label_text || "Sponsored";
   const nodes = useMemo(() => Object.entries(targets).filter(([k]) => plan[k]).map(([k, el]) => createPortal(<AdCreative key={k + pathname} preview={!!previewId} ad={plan[k]} placement={k.replace(/_\d+$/, "")} label={label} />, el)), [targets, plan, label, pathname, previewId]);
@@ -312,7 +390,7 @@ export function useAdSlots() {
     const h = (e: MouseEvent) => {
       const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="/api/public/ad-click/"]');
       const id = a?.getAttribute("href")?.split("/")[4]?.split("?")[0];
-      if (id) sessionStorage.setItem(`mbc_ad_clicked_${id}`, "1");
+      if (id) { try { sessionStorage.setItem(`mbc_ad_clicked_${id}`, "1"); pushRecent([id]); } catch { /* storage unavailable */ } }
     };
     document.addEventListener("click", h);
     return () => document.removeEventListener("click", h);
@@ -324,18 +402,18 @@ export function useAdSlots() {
     portals: (
       <>
         {nodes}
-        {plan.sticky && !stickyClosed && (
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 shadow-lg backdrop-blur">
+        {plan.sticky && !stickyClosed && (reading || !!previewId) && (
+          <div className="fixed inset-x-0 bottom-16 md:bottom-0 z-40 border-t border-border bg-background/95 px-3 shadow-lg backdrop-blur">
             <div className="relative mx-auto max-w-3xl pr-8">
               <AdCreative key={"sticky" + pathname} preview={!!previewId} ad={plan.sticky} placement="sticky" label={label} compact />
-              <button aria-label="Close advertisement" onClick={() => setStickyClosed(true)} className="absolute right-0 top-2 p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+              <Button type="button" size="icon" variant="ghost" aria-label="Close advertisement" onClick={() => setStickyClosed(true)} className="absolute right-0 top-2"><X className="h-4 w-4" /></Button>
             </div>
           </div>
         )}
         {plan.popup && popupOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={() => setPopupOpen(false)}>
             <div className="relative w-full max-w-md rounded-xl bg-background p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-              <button aria-label="Close advertisement" onClick={() => setPopupOpen(false)} className="absolute right-2 top-2 p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+              <Button type="button" size="icon" variant="ghost" aria-label="Close advertisement" onClick={() => setPopupOpen(false)} className="absolute right-2 top-2"><X className="h-4 w-4" /></Button>
               <AdCreative ad={plan.popup} placement="popup" label={label} />
             </div>
           </div>

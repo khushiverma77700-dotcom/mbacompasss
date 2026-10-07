@@ -1,5 +1,12 @@
 # Roadmap
 
+## Dynamic advertisement delivery
+- [x] Discover nested article content and late-loaded sections; place ads within reading flow
+- [x] Use existing desktop sidebar space with scroll-following, responsive creatives
+- [x] Rank eligible ads using current-tab entry page and reading interests without cross-site profiling
+- [x] Improve admin real-page preview and verify placement, resizing, and selection safeguards (six tests; public article and campaign preview checked)
+- [ ] Verify signed-in admin gallery and draft previews — requesting account session is unavailable
+
 ## Editorial interlinking
 - [x] Add restrained database-backed entity linking to public editorial content
 - [x] Add admin blog directory and per-blog editorial link dossiers with live links

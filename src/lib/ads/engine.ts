@@ -97,6 +97,7 @@ export const PAGE_TYPES = ["home", "article", "college", "exam", "tool", "listin
 export function detectPageType(path: string): string {
   const p = path.toLowerCase();
   if (p === "/" || p === "") return "home";
+  if (/^\/(colleges|exams|blog|articles|courses|coaching|mba-application)\/?$/.test(p)) return "listing";
   if (/^\/(blog|articles?|news|newsroom)\b/.test(p)) return "article";
   if (/^\/(colleges?|college|mba-colleges|mba-application)\//.test(p)) return "college";
   if (/^\/(exams?)\//.test(p)) return "exam";
@@ -115,8 +116,20 @@ export function pathMatches(path: string, pattern: string): boolean {
 }
 
 export type Caps = Record<string, { day: string; dayCount: number; session: number }>;
+export type ReadingJourney = { entryPath: string; previousPath: string; interests: string[] };
 
-export function eligible(ad: AdCampaign, ctx: { recent?: string[]; path: string; pageType: string; device: "mobile" | "desktop"; text: string; caps: Caps; today: string; now: number; delivery?: Delivery }): boolean {
+/** Tab-memory relevance only. Explicit page targeting and delivery limits always win. */
+export function relevanceScore(ad: AdCampaign, journey?: ReadingJourney): number {
+  if (!journey) return 1;
+  let score = 1;
+  if (ad.include_paths?.some((p) => pathMatches(journey.entryPath, p))) score += 0.6;
+  if (ad.page_types?.includes(detectPageType(journey.entryPath))) score += 0.3;
+  const keywords = (ad.keywords ?? []).map((k) => k.trim().toLowerCase()).filter(Boolean);
+  score += Math.min(1, keywords.filter((k) => journey.interests.some((t) => t.includes(k))).length * 0.25);
+  return score;
+}
+
+export function eligible(ad: AdCampaign, ctx: { journey?: ReadingJourney; recent?: string[]; path: string; pageType: string; device: "mobile" | "desktop"; text: string; caps: Caps; today: string; now: number; delivery?: Delivery }): boolean {
   if (ad.status !== "active") return false;
   if (ad.start_at && Date.parse(ad.start_at) > ctx.now) return false;
   if (ad.end_at && Date.parse(ad.end_at) < ctx.now) return false;
@@ -138,10 +151,10 @@ export function eligible(ad: AdCampaign, ctx: { recent?: string[]; path: string;
 }
 
 /** Weighted pick favouring priority; never returns an ad already used. */
-export function pickAd(pool: AdCampaign[], used: Set<string>, rand = Math.random): AdCampaign | null {
+export function pickAd(pool: AdCampaign[], used: Set<string>, rand = Math.random, journey?: ReadingJourney): AdCampaign | null {
   const avail = pool.filter((a) => !used.has(a.id));
   if (!avail.length) return null;
-  const score = (a: AdCampaign) => Math.max(1, a.priority) * Math.max(1, a.weight);
+  const score = (a: AdCampaign) => Math.max(1, a.priority) * Math.max(1, a.weight) * relevanceScore(a, journey);
   const total = avail.reduce((s, a) => s + score(a), 0);
   let r = rand() * total;
   for (const a of avail) { r -= score(a); if (r <= 0) return a; }
@@ -172,26 +185,45 @@ export function planPage(ads: AdCampaign[], settings: AdSettings, slots: SlotSpe
   const used = new Set<string>();
   const perAd: Record<string, number> = {};
   let mainCount = 0;
+  const remaining = (a: AdCampaign) => {
+    const c = ctx.caps[a.id];
+    return Math.min(Math.max(1, a.max_per_page),
+      a.cap_per_day > 0 ? Math.max(0, a.cap_per_day - (c?.day === ctx.today ? c.dayCount : 0)) : Infinity,
+      a.cap_per_session > 0 ? Math.max(0, a.cap_per_session - (c?.session ?? 0)) : Infinity);
+  };
   const assign = (slot: SlotSpec, allowReuse: boolean) => {
-    const candidates = pool.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < Math.max(1, a.max_per_page)
+    const candidates = pool.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < remaining(a)
       && (!IN_CONTENT.includes(slot.placement) && slot.placement !== "before_faq" || paragraphs >= a.min_paragraph_gap));
     // Rotation: prefer ads this visitor did not just see on the previous pages.
     const recent = new Set(ctx.recent ?? []);
-    let ad = pickAd(candidates.filter((a) => !recent.has(a.id)), used) ?? pickAd(candidates, used);
+    const choose = (rows: AdCampaign[], taken = used) => pickAd(rows, taken, Math.random, ctx.journey);
+    let ad = choose(candidates.filter((a) => !recent.has(a.id))) ?? choose(candidates);
     // Different ads first; only reuse a campaign when nothing fresh remains and its own per-page limit allows.
-    if (!ad && allowReuse) ad = pickAd(candidates, new Set());
-    if (!ad && !exclusive.length) ad = pickAd(house.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < Math.max(1, a.max_per_page)), used);
-    if (!ad && (slot.placement === "end" || slot.placement === "sidebar")) ad = pickAd(fallback, used);
+    if (!ad && allowReuse) ad = choose(candidates, new Set());
+    if (!ad && !exclusive.length) {
+      const own = house.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < remaining(a));
+      ad = choose(own) ?? (allowReuse ? choose(own, new Set()) : null);
+    }
+    if (!ad && !exclusive.length) {
+      const backups = fallback.filter((a) => accepts(a, slot.placement) && (perAd[a.id] ?? 0) < remaining(a));
+      ad = choose(backups) ?? (allowReuse ? choose(backups, new Set()) : null);
+    }
     if (!ad) return false;
     result[slot.key] = ad; used.add(ad.id); perAd[ad.id] = (perAd[ad.id] ?? 0) + 1;
     return true;
   };
-  for (const slot of slots) {
+  // Reading placements and available side space precede the footer.
+  for (const slot of slots.filter((s) => !["end", "sticky", "popup", "sidebar"].includes(s.placement))) {
     if (slot.placement === "sidebar") continue;
     if (mainCount >= max) break;
     if (slot.placement === "popup" && !settings.allow_popup) continue;
     if (assign(slot, true)) mainCount++;
   }
-  for (const slot of slots.filter((s) => s.placement === "sidebar")) assign(slot, false);
+  for (const slot of slots.filter((s) => s.placement === "sidebar")) assign(slot, true);
+  for (const slot of slots.filter((s) => ["end", "sticky", "popup"].includes(s.placement))) {
+    if (mainCount >= max) break;
+    if (slot.placement === "popup" && !settings.allow_popup) continue;
+    if (assign(slot, true)) mainCount++;
+  }
   return result;
 }
