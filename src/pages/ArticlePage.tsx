@@ -362,7 +362,7 @@ const ArticlePage = () => {
           <aside className="min-w-0 space-y-6">
             <AutoTOC
               contentRef={contentRef}
-              className="hidden lg:block sticky top-20"
+              className="hidden lg:block"
               deps={[article.id, article.content]}
             />
             {/* Shared engine occupies existing right-column space, before related cards. */}

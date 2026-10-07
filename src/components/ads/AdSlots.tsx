@@ -264,6 +264,7 @@ export function useAdSlots() {
   const [stickyClosed, setStickyClosed] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [reading, setReading] = useState(false);
+  useEffect(() => { readingJourney(pathname); }, [pathname]);
 
   const { data } = useQuery({
     queryKey: ["first-party-ads"],
@@ -305,9 +306,10 @@ export function useAdSlots() {
     const rebuild = () => {
       const body = editorialBody(main);
       const blocks = body ? articleBlocks(body) : blocksOf(main);
-      const next = `${window.innerWidth}:${blocks.map((b) => b.textContent).join("|")}`;
+      const next = `${isMobile()}:${window.innerWidth >= 1024}:${blocks.map((b) => b.textContent).join("|")}`;
       if (next === signature) return;
       signature = next;
+      if (popupTimer) { clearTimeout(popupTimer); popupTimer = undefined; }
       owned.forEach((node) => node.remove()); owned.clear();
       const found = findContentTargets(previewId ? { ...settings, max_ads_per_page: 10 } : settings, detectPageType(pathname));
       Object.values(found.targets).forEach((node) => owned.add(node));
@@ -339,7 +341,12 @@ export function useAdSlots() {
     };
     const schedule = () => { if (timer) clearTimeout(timer); timer = window.setTimeout(rebuild, 250); };
     const observer = new MutationObserver((records) => {
-      if (records.some((r) => !(r.target as Element).closest?.("[data-ad-slot],.not-prose") && Array.from(r.addedNodes).some((n) => !(n instanceof HTMLElement && n.dataset.adSlot)))) schedule();
+      if (records.some((r) => {
+        const target = r.target instanceof Element ? r.target : r.target.parentElement;
+        if (target?.closest("[data-ad-slot],.not-prose")) return false;
+        if (r.type === "characterData") return true;
+        return [...r.addedNodes, ...r.removedNodes].some((n) => !(n instanceof HTMLElement && n.dataset.adSlot));
+      })) schedule();
     });
     observer.observe(main, { childList: true, subtree: true, characterData: true });
     window.addEventListener("resize", schedule);
