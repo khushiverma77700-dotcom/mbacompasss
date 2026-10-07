@@ -24,6 +24,22 @@ const emitVersionJson = (): Plugin => ({
   },
 });
 
+// Workers have no import.meta.url for bundled server chunks, so a bare
+// createRequire(import.meta.url) crashes every published request. Nitro's own
+// guard runs after minification and misses renamed code, so patch each chunk
+// before minify, independent of the builder package version.
+const guardCreateRequire = (): Plugin => ({
+  name: "mbacompass-guard-create-require",
+  apply: "build",
+  renderChunk(code) {
+    if (!code.includes("createRequire(import.meta.url)")) return null;
+    return {
+      code: code.replace(/createRequire\(import\.meta\.url\)/g, 'createRequire(import.meta.url || "file:///")'),
+      map: null,
+    };
+  },
+});
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -37,6 +53,6 @@ export default defineConfig({
     define: {
       __BUILD_ID__: JSON.stringify(BUILD_ID),
     },
-    plugins: [emitVersionJson()],
+    plugins: [emitVersionJson(), guardCreateRequire()],
   },
 });
