@@ -103,7 +103,7 @@ export function AdCreative({ ad, placement, label, preview, compact, format, dev
       {ad.ad_type === "html" && ad.html_content ? (
         <div className="overflow-hidden rounded-lg border border-border bg-card" dangerouslySetInnerHTML={{ __html: sanitizeHtml(ad.html_content) }} />
       ) : (
-        <a href={href} target="_blank" rel="sponsored noopener" className={`mx-auto flex max-w-full ${showText ? "max-w-[336px] flex-col gap-3 border border-border bg-card p-3" : "w-fit flex-col"} overflow-hidden transition-opacity hover:opacity-90`}>
+        <a href={href} target="_blank" rel="sponsored noopener" style={{ width: showText ? Math.min(slotWidth, 336) : selected?.width, maxWidth: "100%" }} className={`mx-auto flex max-w-full ${showText ? "max-w-[336px] flex-col gap-3 border border-border bg-card p-3" : "w-fit flex-col"} overflow-hidden transition-opacity hover:opacity-90`}>
           {showImage && <img src={img} alt={ad.alt_text || ad.name} loading="lazy" decoding="async" width={selected?.width} height={selected?.height} style={{ maxWidth: selected?.width ?? (vertical ? 336 : 728) }} className="h-auto w-auto max-w-full object-contain" />}
           {showText && (
             <div className={`flex min-w-0 flex-1 flex-col gap-2 ${compact ? "gap-1" : ""}`}>
