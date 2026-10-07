@@ -96,14 +96,14 @@ export function AdCreative({ ad, placement, label, preview, compact }: { ad: AdC
         <div className="overflow-hidden rounded-lg border border-border bg-card" dangerouslySetInnerHTML={{ __html: sanitizeHtml(ad.html_content) }} />
       ) : (
         <a href={href} target="_blank" rel="sponsored noopener" className={`flex ${compact ? "flex-row items-center" : vertical ? "flex-col" : "flex-col @min-[480px]:flex-row @min-[480px]:items-center"} gap-4 overflow-hidden rounded-lg border border-border bg-secondary/40 p-3 transition-colors hover:bg-secondary`}>
-          {showImage && <img src={img} alt={ad.alt_text || ad.name} loading="lazy" decoding="async" className={`${showText && !vertical ? "w-full @min-[480px]:w-40" : "w-full"} h-auto max-w-full rounded-md object-contain`} />}
+          {showImage && <img src={img} alt={ad.alt_text || ad.name} loading="lazy" decoding="async" className={`${compact ? "w-16 shrink-0" : showText && !vertical ? "w-full @min-[480px]:w-40" : "w-full"} h-auto max-w-full rounded-md object-contain`} />}
           {showText && (
             <div className={`flex min-w-0 flex-1 flex-col gap-2 ${!vertical ? "@min-[480px]:flex-row @min-[480px]:items-center @min-[480px]:justify-between" : ""}`}>
               <div>
-                <div className="break-words font-semibold text-foreground">{ad.headline || ad.name}</div>
+                <div className={`${compact ? "line-clamp-1 text-sm" : "break-words"} font-semibold text-foreground`}>{ad.headline || ad.name}</div>
                 {ad.body && !compact && <p className="text-sm text-muted-foreground">{ad.body}</p>}
               </div>
-              <span className="inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{ad.cta_text || "Learn more"}</span>
+              <span className={`inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground ${compact ? "self-start" : "shrink-0"}`}>{ad.cta_text || "Learn more"}</span>
             </div>
           )}
         </a>
@@ -339,7 +339,7 @@ export function useAdSlots() {
       }
       setPlan(chosen);
     };
-    const schedule = () => { if (timer) clearTimeout(timer); timer = window.setTimeout(rebuild, 250); };
+    const schedule = () => { if (timer) return; timer = window.setTimeout(() => { timer = undefined; rebuild(); }, 250); };
     const observer = new MutationObserver((records) => {
       if (records.some((r) => {
         const target = r.target instanceof Element ? r.target : r.target.parentElement;
@@ -399,7 +399,7 @@ export function useAdSlots() {
       <>
         {nodes}
         {plan.sticky && !stickyClosed && (reading || !!previewId) && (
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 shadow-lg backdrop-blur">
+          <div className="fixed inset-x-0 bottom-16 md:bottom-0 z-40 border-t border-border bg-background/95 px-3 shadow-lg backdrop-blur">
             <div className="relative mx-auto max-w-3xl pr-8">
               <AdCreative key={"sticky" + pathname} preview={!!previewId} ad={plan.sticky} placement="sticky" label={label} compact />
               <Button type="button" size="icon" variant="ghost" aria-label="Close advertisement" onClick={() => setStickyClosed(true)} className="absolute right-0 top-2"><X className="h-4 w-4" /></Button>
