@@ -1,8 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { cleanBlogProse, sourceDates, evidenceFreshness } from "./blogEvidence.ts";
+import { cleanBlogProse, sourceDates, evidenceFreshness, BLOG_COMPLETENESS_RULES } from "./blogEvidence.ts";
 import { structureArticle } from "./blogStructure.ts";
 
 describe("blog editorial safeguards", () => {
+  it("removes competitor attribution while retaining facts and official entities", () => {
+    expect(cleanBlogProse('<p>As per Careers360, tuition is INR 10 lakh.</p>')).toBe('<p>tuition is INR 10 lakh.</p>');
+    expect(cleanBlogProse('<p>According to <strong>Shiksha</strong>, tuition is INR 10 lakh.</p>')).toBe('<p>tuition is INR 10 lakh.</p>');
+    expect(cleanBlogProse('<p>As per carrer360 fees are INR 10 lakh.</p>')).not.toMatch(/carrer360/i);
+    expect(cleanBlogProse('<p>Fees are INR 10 lakh (Source: MBAUniverse).</p>')).toBe('<p>Fees are INR 10 lakh.</p>');
+    expect(cleanBlogProse('<p>According to IIM Ahmedabad, eligibility requires graduation.</p>')).toContain('IIM Ahmedabad');
+  });
+  it("omits incomplete comparison rows without manufacturing estimates", () => {
+    const table = '<table><tr><th>Programme</th><th>Fees</th></tr><tr><td>MBA</td><td>—</td></tr><tr><td>PGDM</td><td>Estimated INR 8–10 lakh (annual budget)</td></tr><tr><td>Other</td><td><p>&nbsp;</p></td></tr></table>';
+    const out = cleanBlogProse(table);
+    expect(out).not.toContain('<td>—</td>');
+    expect(out).not.toContain('<td>MBA</td>');
+    expect(out).not.toContain('<td>Other</td>');
+    expect(out).toContain('Estimated INR 8–10 lakh');
+    expect(cleanBlogProse('<table><tr><th>Fees</th></tr><tr><td>N/A</td></tr></table>')).toBe('');
+    expect(BLOG_COMPLETENESS_RULES).toContain('calculated from evidenced inputs');
+  });
   it("removes plain and formatted robotic openers without breaking emphasis", () => {
     expect(cleanBlogProse('<p>Yes, CAT scores are accepted.</p>')).toBe('<p>CAT scores are accepted.</p>');
     expect(cleanBlogProse('<p><strong>Short answer:</strong> CAT scores are accepted.</p>')).toBe('<p>CAT scores are accepted.</p>');
