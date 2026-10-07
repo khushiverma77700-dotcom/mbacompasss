@@ -1,5 +1,10 @@
 # Roadmap
 
+## Article and blog readability
+- [x] Replace raw contents with styled section links across public articles and blogs
+- [x] Split long passages safely, preserve facts and links, and format genuine lists/subheads
+- [x] Verify anchor navigation and content preservation (five tests; real article has 22 valid contents links, no horizontal overflow or runtime errors)
+
 ## Advertisement format improvements
 - [x] Remove all header delivery and replace stretched promotion strips with size-aware display creatives
 - [x] Add multiple-size uploads per campaign and accurate format previews

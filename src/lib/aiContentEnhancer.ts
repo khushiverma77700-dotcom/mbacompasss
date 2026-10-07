@@ -1,5 +1,6 @@
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { normalizeContentStructure } from "@/lib/contentStructure";
+import { formatEditorialReadability } from "@/lib/editorialReadability";
 // Post-processor for AI-generated HTML.
 //
 // 1. Converts inline citation markers — both "[src:NIRF 2025]" (machine-readable)
@@ -174,7 +175,7 @@ const plainOrMarkdownToHtml = (value: string) => {
  * (e.g. "Placement Report 2024-25") link straight to that college's
  * official page instead of a generic Google search.
  */
-export function enhanceAIContent(html: string, ctx?: CitationContext): string {
+export function enhanceAIContent(html: string, ctx?: CitationContext, options?: { editorial?: boolean }): string {
   if (!html) return "";
 
   let out = html;
@@ -269,6 +270,7 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
   //     levels, header-scoped tables, lazy images with alt, and a marked
   //     lead answer paragraph. See src/lib/contentStructure.ts.
   out = normalizeContentStructure(out);
+  if (options?.editorial) out = formatEditorialReadability(out);
 
   // 5. Sanitize to prevent stored XSS — strip <script>, on* handlers, javascript: URLs, etc.
   return sanitizeHtml(out, { ADD_ATTR: ["target", "rel", "scope", "data-answer", "loading", "decoding"] });
