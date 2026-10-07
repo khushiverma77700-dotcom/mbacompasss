@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -283,7 +284,7 @@ const AdminInstitutes = () => {
               <TabsContent value="basic" className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Institute Name *</Label><Input placeholder="e.g. IMS Learning Resources" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">URL Slug</Label><Input placeholder="auto-generated from name" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">URL Slug</Label><Input placeholder="auto-generated from name" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /><SlugUniqueHint table="institutes" slug={form.slug} excludeId={editId} onApply={(s) => setForm({ ...form, slug: s })} /></div>
                 </div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Category</Label>
                   <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}>

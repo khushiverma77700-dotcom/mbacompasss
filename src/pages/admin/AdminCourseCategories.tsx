@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ const AdminCourseCategories = () => {
             </div>
             <div>
               <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Slug</Label>
-              <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" />
+              <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" /><SlugUniqueHint table="course_categories" slug={form.slug} excludeId={editId} onApply={(s) => setForm({ ...form, slug: s })} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

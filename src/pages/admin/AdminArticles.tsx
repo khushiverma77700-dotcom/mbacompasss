@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -259,7 +260,7 @@ const AdminArticles = () => {
 
               <TabsContent value="content" className="space-y-4">
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Title *</Label><Input placeholder="Article title" value={form.title} onChange={(e) => handleTitleChange(e.target.value)} /></div>
-                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Slug (auto-generated, editable)</Label><Input placeholder="url-slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" /></div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Slug (auto-generated, editable)</Label><Input placeholder="url-slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" /><SlugUniqueHint table="articles" slug={form.slug} excludeId={editId} onApply={(s) => setForm({ ...form, slug: s })} /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Author</Label><Input placeholder="Author name" value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} /></div>
                   <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Category</Label>

@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,7 @@ const AdminSpecializations = () => {
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
                 className="font-mono text-sm"
               />
+              <SlugUniqueHint table="specializations" slug={form.slug} excludeId={editId} onApply={(v) => setForm({ ...form, slug: v })} />
               <p className="text-xs text-muted-foreground mt-1">Used in filter URLs e.g. /colleges?specialization={form.slug || "your-slug"}</p>
             </div>
             <div className="grid grid-cols-2 gap-3">

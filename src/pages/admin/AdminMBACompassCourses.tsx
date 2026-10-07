@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -377,7 +378,7 @@ export default function AdminMBACompassCourses() {
                 <TabsContent value="basic" className="space-y-3 mt-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>Title *</Label><Input value={edit.title ?? ""} onChange={(e) => setEdit({ ...edit, title: e.target.value })} /></div>
-                    <div><Label>Slug</Label><Input value={edit.slug ?? ""} placeholder="auto from title" onChange={(e) => setEdit({ ...edit, slug: e.target.value })} /></div>
+                    <div><Label>Slug</Label><Input value={edit.slug ?? ""} placeholder="auto from title" onChange={(e) => setEdit({ ...edit, slug: e.target.value })} /><SlugUniqueHint table="mba_compass_courses" slug={edit.slug} excludeId={edit.id} onApply={(s) => setEdit({ ...edit, slug: s })} /></div>
                   </div>
                   <div><Label>Subtitle</Label><Input value={edit.subtitle ?? ""} onChange={(e) => setEdit({ ...edit, subtitle: e.target.value })} /></div>
                   <div><Label>Full description</Label><Textarea rows={4} value={edit.description ?? ""} onChange={(e) => setEdit({ ...edit, description: e.target.value })} /></div>

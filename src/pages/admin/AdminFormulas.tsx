@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -304,7 +305,7 @@ export default function AdminFormulas() {
             <CardContent className="space-y-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Name"><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></Field>
-                <Field label="Slug (auto if blank)"><Input value={editing.slug || ""} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} /></Field>
+                <Field label="Slug (auto if blank)"><Input value={editing.slug || ""} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} /><SlugUniqueHint table="quant_formulas" slug={editing.slug} excludeId={editing.id} onApply={(s) => setEditing({ ...editing, slug: s })} /></Field>
               </div>
               <Field label="Topic">
                 <Select value={editing.topic_slug} onValueChange={(v) => setEditing({ ...editing, topic_slug: v })}>

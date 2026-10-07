@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
@@ -232,7 +233,7 @@ const AdminExams = () => {
               <TabsContent value="basic" className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Short Name *</Label><Input placeholder="e.g. CAT" value={form.name} onChange={(e) => { const name = e.target.value; setForm({ ...form, name, slug: editId ? form.slug : generateSlug(name) }); }} /></div>
-                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Slug</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Slug</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" /><SlugUniqueHint table="exams" slug={form.slug} excludeId={editId} onApply={(s) => setForm({ ...form, slug: s })} /></div>
                 </div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Full Name</Label><Input placeholder="e.g. Common Admission Test" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label><RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Exam description..." /></div>
