@@ -120,6 +120,13 @@
       "when": 1791279841571,
       "tag": "0016_ad_popup_frequency",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791361012160,
+      "tag": "0017_auto_unique_slugs",
+      "breakpoints": true
     }
   ]
 }
