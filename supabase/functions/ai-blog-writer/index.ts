@@ -27,6 +27,7 @@ interface BlogBrief {
   metaTitle?: string;
   metaDescription?: string;
   category?: string;
+  targetYear?: number;
   contentDateContext?: string; // e.g. "Use latest 2025-2026 dates and figures"
   wordCountMin?: number;
   wordCountMax?: number;
@@ -207,6 +208,17 @@ const normalizeKeywordBank = (values: unknown[], brief: BlogBrief): string[] => 
   }).slice(0, 200);
 };
 
+function resolveTargetYear(brief: BlogBrief): number {
+  const y = Number(brief.targetYear);
+  if (y >= 2020 && y <= 2100) return y;
+  const m = String(brief.title || "").match(/\b(20[2-9]\d)\b/);
+  return m ? Number(m[1]) : new Date().getFullYear();
+}
+
+function targetYearRule(year: number): string {
+  return `\n## TARGET YEAR (editor-selected, mandatory)\nThis article targets ${year} (cycle ${year}-${String(year + 1).slice(-2)}). Every target-cycle year in the title, H1, meta title, meta description, headings, tables, FAQs and body must be ${year}. Never replace ${year} with today's calendar year. Where ${year} figures are not yet published, say they are expected and show the latest published figures labelled with their real year.\n`;
+}
+
 function getTargets(brief: BlogBrief) {
   const tw = Number(brief.targetWords) > 0 ? Math.max(300, Number(brief.targetWords)) : 0;
   const wmin = tw ? Math.round(tw * 0.9) : Math.max(300, brief.wordCountMin ?? 1500);
@@ -219,7 +231,7 @@ function getTargets(brief: BlogBrief) {
     sectionCount: Math.max(3, Math.min(14, Math.round(targetWords / 380))),
     density: Math.max(0.5, Math.min(brief.keywordDensityPct ?? 1, 8)),
     todayIso: new Date().toISOString().slice(0, 10),
-    currentYear: new Date().getFullYear(),
+    currentYear: resolveTargetYear(brief),
   };
 }
 
@@ -326,7 +338,7 @@ WRITING RULES
 - Use <strong> on every meaningful fee, date, percentage, percentile, rank, package, count, score, quantity, and short decision-critical phrase. Never bold whole sentences.
 - Include a topic-specific opening overview, substantive paragraphs, at least one useful table, practical pointers, an <h2>Important Points</h2> section, and 4-8 genuine FAQs.
 - The whole article should be about ${targetWords} words. Reach it with useful content only; shorter and accurate beats longer and padded.
-- Today is ${todayIso}. The current admission cycle is ${currentYear}-${currentYear + 1}.
+- Today is ${todayIso}. The editor-selected target admission cycle is ${currentYear}-${currentYear + 1}.${targetYearRule(currentYear)}
 
 ${linkBlock}
 ${analysisPromptBlock(brief.analysis || null, { audience: brief.audience, instructions: brief.instructions })}
@@ -1125,7 +1137,7 @@ Deno.serve(async (req) => {
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
-    const _yr = _now.getFullYear();
+    const _yr = resolveTargetYear(brief);
     const dateCtx = brief.contentDateContext?.trim() ||
       `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-${_yr - 2} figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
 
@@ -1139,7 +1151,7 @@ Deno.serve(async (req) => {
 
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
-    const currentYear = today.getFullYear();
+    const currentYear = resolveTargetYear(brief);
 
     // ── REAL search data grounding (Semrush / Google Keyword Planner / our GSC) ──
     let metricsBlock = "";
@@ -1191,7 +1203,7 @@ Deno.serve(async (req) => {
 - Recruiters, salaries, fees, specializations and example colleges referenced must all be management-program-specific.
 
 # FRESHNESS & MACHINE-READABLE CITATIONS
-- Today is ${todayIso}. Active admission cycle: ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.
+- Today is ${todayIso}. Target admission cycle (editor-selected): ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.${targetYearRule(currentYear)}
 - Use verified facts naturally without repeatedly naming sources. Mention an authority only when essential to explain an official rule or source conflict. Do not add fake machine-readable [src:...] markers.
 - End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
 
