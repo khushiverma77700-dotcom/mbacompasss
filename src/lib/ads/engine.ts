@@ -97,6 +97,7 @@ export const PAGE_TYPES = ["home", "article", "college", "exam", "tool", "listin
 export function detectPageType(path: string): string {
   const p = path.toLowerCase();
   if (p === "/" || p === "") return "home";
+  if (/^\/(colleges|exams|blog|articles|courses|coaching|mba-application)\/?$/.test(p)) return "listing";
   if (/^\/(blog|articles?|news|newsroom)\b/.test(p)) return "article";
   if (/^\/(colleges?|college|mba-colleges|mba-application)\//.test(p)) return "college";
   if (/^\/(exams?)\//.test(p)) return "exam";

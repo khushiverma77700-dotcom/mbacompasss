@@ -54,6 +54,7 @@ function visitorId() {
 const isMobile = () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
 
 function logEvent(ad: AdCampaign, type: "impression" | "conversion", placement: string) {
+  if (type === "impression") pushRecent([ad.id]);
   supabase.from("ad_events").insert({ campaign_id: ad.id, event_type: type, placement, page_path: location.pathname.slice(0, 400), device: isMobile() ? "mobile" : "desktop" }).then(() => {});
 }
 
@@ -154,7 +155,8 @@ function findArticleSlots(body: HTMLElement, settings: AdSettings, found: Found)
     acc += counts[i];
     const cur = blocks[i], next = blocks[i + 1];
     if (cur.tagName !== "P" || counts[i] < 15) continue; // only after a real paragraph
-    if (isHeading(cur) || BLOCKY.test(next.tagName)) continue; // don't split a heading from its text or crowd a table/list/image
+    const sibling = cur.nextElementSibling;
+    if (isHeading(cur) || BLOCKY.test(next.tagName) || (sibling && (BLOCKY.test(sibling.tagName) || sibling.querySelector('table,figure,video')))) continue;
     if (acc < 120) continue; // let the intro breathe
     if (total - acc < 80 && faqIdx < 0) continue; // not right at the end
     cands.push({ i, at: acc, score: /^H[23]$/.test(next.tagName) ? 3 : 1 });
@@ -163,7 +165,7 @@ function findArticleSlots(body: HTMLElement, settings: AdSettings, found: Found)
   const picked: Cand[] = [];
   const minGap = Math.max(150, total / (budget + 1) / 2);
   for (let n = 1; n <= budget; n++) {
-    const target = (total * n) / (budget + 1);
+    const target = n === 1 ? Math.min(250, total / (budget + 1)) : (total * n) / (budget + 1);
     const best = cands
       .filter((c) => picked.every((p) => Math.abs(p.at - c.at) >= minGap))
       .sort((x, y) => Math.abs(x.at - target) / (x.score) - Math.abs(y.at - target) / (y.score))[0];
