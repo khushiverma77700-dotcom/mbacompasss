@@ -8,6 +8,8 @@ export function articleBlocks(body: HTMLElement): Element[] {
 }
 
 export function editorialBody(main: HTMLElement): HTMLElement | null {
-  return main.querySelector<HTMLElement>('#article-content .ai-content,#article-content .prose,[data-editorial-content],.ai-content,.prose')
+  // Query in priority order: a combined selector returns DOM order and may select a summary first.
+  return main.querySelector<HTMLElement>('#article-content .ai-content,#article-content .prose')
+    ?? main.querySelector<HTMLElement>('[data-editorial-content],.ai-content,.prose')
     ?? main.querySelector<HTMLElement>('article');
 }
