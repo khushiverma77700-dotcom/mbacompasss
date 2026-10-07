@@ -1,5 +1,10 @@
 # Roadmap
 
+## Advertisement format improvements
+- [ ] Remove all header delivery and replace stretched promotion strips with size-aware display creatives
+- [ ] Add multiple-size uploads per campaign and accurate format previews
+- [ ] Verify display formats, placement rules, and preview resizing
+
 ## Dynamic advertisement delivery
 - [x] Discover nested article content and late-loaded sections; place ads within reading flow
 - [x] Use existing desktop sidebar space with scroll-following, responsive creatives

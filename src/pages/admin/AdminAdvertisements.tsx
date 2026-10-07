@@ -16,6 +16,8 @@ import FileUpload from "@/components/admin/FileUpload";
 import { AdCreative } from "@/components/ads/AdSlots";
 import AdLivePreview from "@/components/ads/AdLivePreview";
 import AdPageFrame from "@/components/ads/AdPageFrame";
+import AdSizeUploads from "@/components/ads/AdSizeUploads";
+import { AD_FORMATS } from "@/lib/ads/formats";
 import { PAGE_TYPES, PLACEMENTS, type AdCampaign } from "@/lib/ads/engine";
 import { AlertTriangle, CalendarPlus, Copy, Download, Eye, Monitor, Pause, Pencil, Play, Plus, Smartphone, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -29,13 +31,13 @@ const blank = (): Partial<AdCampaign> => ({
   name: "", ad_type: "image_cta", status: "draft", headline: "", body: "", cta_text: "Learn more",
   desktop_image_url: "", mobile_image_url: "", html_content: "", alt_text: "", destination_url: "",
   start_at: null, end_at: null, priority: 5, weight: 1, page_types: [], include_paths: [], exclude_paths: [],
-  keywords: [], devices: "all", placements: ["top", "after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end"], max_per_page: 2, min_paragraph_gap: 4,
+  keywords: [], devices: "all", creative_variants: {}, placements: [ "after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end"], max_per_page: 2, min_paragraph_gap: 4,
   cap_per_day: 3, cap_per_session: 0, is_fallback: false, conversion_path: "",
   impression_budget: 0, daily_impression_budget: 0, pacing: "asap", schedule_days: [], schedule_start_hour: null, schedule_end_hour: null,
   is_exclusive: false, is_house: false, ab_test: "",
 });
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const SPOTS = [{ k: "all", l: "All spots at once" }, { k: "top", l: "Top of page" }, { k: "in_content", l: "Inside content" }, { k: "before_faq", l: "Before FAQ" }, { k: "home_section", l: "Between homepage sections" }, { k: "sidebar", l: "Sidebar" }, { k: "end", l: "End of content" }, { k: "sticky", l: "Sticky bar" }];
+const SPOTS = [{ k: "all", l: "All spots at once" }, { k: "in_content", l: "Inside content" }, { k: "before_faq", l: "Before FAQ" }, { k: "home_section", l: "Between homepage sections" }, { k: "sidebar", l: "Sidebar" }, { k: "end", l: "End of content" }, { k: "sticky", l: "Sticky bar" }];
 const SAMPLE_PAGES = [{ v: "/", l: "Homepage" }, { v: "/blog", l: "Blog listing" }, { v: "/mba-application", l: "MBA applications" }, { v: "/mba-compass", l: "Courses" }];
 type Fill = { placement: string; device: string; requests: number; filled: number };
 
@@ -61,7 +63,8 @@ export default function AdminAdvertisements() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [previewCompact, setPreviewCompact] = useState(false);
-  const [previewMode, setPreviewMode] = useState<"creative" | "page">("page");
+  const [previewFormat, setPreviewFormat] = useState("auto");
+  const [previewMode, setPreviewMode] = useState<"creative" | "page">("creative");
   const [previewPath, setPreviewPath] = useState("/");
   const [previewSpot, setPreviewSpot] = useState("all");
 
@@ -123,7 +126,7 @@ export default function AdminAdvertisements() {
     const { id, ad_code, ...rest } = e as AdCampaign & { created_at?: string };
     delete (rest as any).created_at;
     (rest as any).ab_test = (rest as any).ab_test?.trim() || null;
-    const row = { ...rest, updated_at: new Date().toISOString(), conversion_path: rest.conversion_path || null };
+    const row = { ...rest, placements: (rest.placements ?? []).filter((p) => p !== "top"), updated_at: new Date().toISOString(), conversion_path: rest.conversion_path || null };
     const { error } = id ? await supabase.from("ad_campaigns").update(row as any).eq("id", id) : await supabase.from("ad_campaigns").insert(row as any);
     if (error) return toast({ title: "Could not save", description: error.message, variant: "destructive" });
     toast({ title: "Advertisement saved" }); setEditing(null); refresh();
@@ -414,7 +417,7 @@ export default function AdminAdvertisements() {
       </Tabs>
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>Preview studio: {preview?.name}</DialogTitle></DialogHeader>
+        <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto"><DialogHeader><DialogTitle>Preview studio: {preview?.name}</DialogTitle></DialogHeader>
           {preview && (
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -430,6 +433,7 @@ export default function AdminAdvertisements() {
                   <div className="flex gap-1">
                     <Button size="sm" variant={!previewCompact ? "default" : "outline"} onClick={() => setPreviewCompact(false)}>Standard</Button>
                     <Button size="sm" variant={previewCompact ? "default" : "outline"} onClick={() => setPreviewCompact(true)}>Sticky bar</Button>
+                    <Select value={previewFormat} onValueChange={setPreviewFormat}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="auto">Auto size</SelectItem>{AD_FORMATS.filter((f) => preview.creative_variants?.[f.key]).map((f) => <SelectItem key={f.key} value={f.key}>{f.key}</SelectItem>)}</SelectContent></Select>
                   </div>
                 ) : (<>
                   <Select value={SAMPLE_PAGES.some((p) => p.v === previewPath) ? previewPath : "custom"} onValueChange={(v) => v !== "custom" && setPreviewPath(v)}>
@@ -447,15 +451,15 @@ export default function AdminAdvertisements() {
                 <AdPageFrame key={`${preview.id}-${previewPath}-${previewSpot}-${previewDevice}`} mobile={previewDevice === "mobile"}
                   src={`${previewPath}${previewPath.includes("?") ? "&" : "?"}ad_preview=${preview.id}&ad_spot=${previewSpot}`} />
               ) : (
-              <div className={`rounded-lg border border-dashed border-border bg-muted/30 p-4 ${previewDevice === "mobile" ? "mx-auto max-w-sm" : ""}`}>
+              <div className={`min-h-64 border-y border-border bg-background p-4 ${previewDevice === "mobile" ? "mx-auto max-w-sm" : ""}`}>
                 <AdCreative
                   key={`${preview.id}-${previewDevice}-${previewCompact}`}
                   ad={previewDevice === "mobile" ? { ...preview, desktop_image_url: preview.mobile_image_url || preview.desktop_image_url } : preview}
-                  placement={previewCompact ? "sticky" : "sidebar"} label={settings?.label_text || "Sponsored"} preview compact={previewCompact}
+                  device={previewDevice} format={previewFormat === "auto" ? undefined : previewFormat} placement={previewCompact ? "sticky" : "in_content"} label={settings?.label_text || "Sponsored"} preview compact={previewCompact}
                 />
               </div>
               )}
-              <p className="text-sm text-muted-foreground">Previews never count as views or clicks. Pages show the ad only in spots that exist there (e.g. inside-content spots appear on articles). This is how the creative will look to visitors. The site picks the mobile image automatically on phones.</p>
+
             </div>
           )}
         </DialogContent>
@@ -480,8 +484,9 @@ export default function AdminAdvertisements() {
                 {e.ad_type === "html" ? (
                   <div className="md:col-span-2"><Label>HTML creative</Label><Textarea rows={6} value={e.html_content ?? ""} onChange={(ev) => set({ html_content: ev.target.value })} /></div>
                 ) : (<>
-                  <FileUpload bucket="uploads" folder="ads" value={e.desktop_image_url ?? ""} onChange={(u) => set({ desktop_image_url: u })} accept="image/*" label="Desktop creative" sizeHint="728x90, 970x250, 300x250 or 336x280" />
-                  <FileUpload bucket="uploads" folder="ads" value={e.mobile_image_url ?? ""} onChange={(u) => set({ mobile_image_url: u })} accept="image/*" label="Mobile creative (optional)" sizeHint="320x100, 320x250 or 300x250" />
+                  <div className="md:col-span-2"><AdSizeUploads value={e.creative_variants ?? {}} onChange={(creative_variants) => set({ creative_variants })} /></div>
+                  <FileUpload bucket="uploads" folder="ads" value={e.desktop_image_url ?? ""} onChange={(u) => set({ desktop_image_url: u })} accept="image/*" label="Responsive fallback image" sizeHint="728x90, 970x250, 300x250 or 336x280" />
+                  <FileUpload bucket="uploads" folder="ads" value={e.mobile_image_url ?? ""} onChange={(u) => set({ mobile_image_url: u })} accept="image/*" label="Mobile fallback (optional)" sizeHint="320x100, 320x250 or 300x250" />
                   <div className="md:col-span-2"><Label>Image description (for accessibility)</Label><Input value={e.alt_text ?? ""} onChange={(ev) => set({ alt_text: ev.target.value })} /></div>
                 </>)}
                 <div><Label>Headline</Label><Input value={e.headline ?? ""} onChange={(ev) => set({ headline: ev.target.value })} /></div>
@@ -506,7 +511,7 @@ export default function AdminAdvertisements() {
                 <div><Label>Daily view budget</Label><Input type="number" min={0} value={e.daily_impression_budget ?? 0} onChange={(ev) => set({ daily_impression_budget: Number(ev.target.value) })} /></div>
                 <div className="md:col-span-2"><Label>Delivery speed</Label><Select value={e.pacing ?? "asap"} onValueChange={(v) => set({ pacing: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="asap">As fast as possible</SelectItem><SelectItem value="even">Spread evenly (through the day, or across start–end dates)</SelectItem></SelectContent></Select></div>
                 <div className="md:col-span-4"><Label>Show on these days (India time; none ticked = every day)</Label>
-                  <div className="mt-1 flex flex-wrap gap-3">{DAYS.map((d, i) => <label key={d} className="flex items-center gap-1.5 text-sm"><Checkbox checked={(e.schedule_days ?? []).includes(i)} onCheckedChange={() => set({ schedule_days: (e.schedule_days ?? []).includes(i) ? e.schedule_days!.filter((x) => x !== i) : [...(e.schedule_days ?? []), i] })} />{d}</label>)}</div></div>
+                  <div className="mt-1 flex flex-wrap gap-3">{DAYS.map((d, i) => <label key={d} className="flex items-center gap-1.5 text-sm"><Checkbox checked={(e.schedule_days ?? []).includes(i)} onCheckedChange={() => set({ schedule_days: (e.schedule_days ?? []).includes(i) ? (e.schedule_days ?? []).filter((x) => x !== i) : [...(e.schedule_days ?? []), i] })} />{d}</label>)}</div></div>
                 <div><Label>From hour (0–23)</Label><Input type="number" min={0} max={23} value={e.schedule_start_hour ?? ""} onChange={(ev) => set({ schedule_start_hour: ev.target.value === "" ? null : Number(ev.target.value) })} placeholder="Any" /></div>
                 <div><Label>Until hour (0–24)</Label><Input type="number" min={0} max={24} value={e.schedule_end_hour ?? ""} onChange={(ev) => set({ schedule_end_hour: ev.target.value === "" ? null : Number(ev.target.value) })} placeholder="Any" /></div>
                 <div className="md:col-span-2"><Label>A/B test name (optional)</Label><Input value={e.ab_test ?? ""} onChange={(ev) => set({ ab_test: ev.target.value })} placeholder="e.g. CAT crash course headline" /></div>

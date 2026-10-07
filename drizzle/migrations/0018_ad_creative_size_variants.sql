@@ -1,0 +1,2 @@
+ALTER TABLE public.ad_campaigns ADD COLUMN IF NOT EXISTS creative_variants jsonb NOT NULL DEFAULT '{}'::jsonb;
+COMMENT ON COLUMN public.ad_campaigns.creative_variants IS 'Image URLs keyed by display size, selected by available slot width. Existing campaign RLS and grants apply.';

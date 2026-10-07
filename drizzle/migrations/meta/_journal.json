@@ -127,6 +127,13 @@
       "when": 1791361012160,
       "tag": "0017_auto_unique_slugs",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791382360372,
+      "tag": "0018_ad_creative_size_variants",
+      "breakpoints": true
     }
   ]
 }

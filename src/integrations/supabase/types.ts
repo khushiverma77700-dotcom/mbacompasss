@@ -25,6 +25,7 @@ export type Database = {
           cap_per_session: number
           conversion_path: string | null
           created_at: string
+          creative_variants: Json
           cta_text: string | null
           daily_impression_budget: number
           desktop_image_url: string | null
@@ -67,6 +68,7 @@ export type Database = {
           cap_per_session?: number
           conversion_path?: string | null
           created_at?: string
+          creative_variants?: Json
           cta_text?: string | null
           daily_impression_budget?: number
           desktop_image_url?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           cap_per_session?: number
           conversion_path?: string | null
           created_at?: string
+          creative_variants?: Json
           cta_text?: string | null
           daily_impression_budget?: number
           desktop_image_url?: string | null
