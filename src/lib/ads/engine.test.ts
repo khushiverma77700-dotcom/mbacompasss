@@ -9,6 +9,10 @@ const ad = (patch: Partial<AdCampaign> = {}): AdCampaign => ({
 const ctx = {path:'/article/fees',pageType:'article',device:'desktop' as const,text:'cat mba fees',caps:{},today:'2026-10-07',now:Date.now()};
 const settings={enabled:true,max_ads_per_page:2,excluded_paths:[],allow_popup:false,label_text:'Sponsored'};
 describe('dynamic ad selection',()=>{
+  it('never delivers a header ad, including legacy campaigns',()=>{
+    const plan=planPage([ad({placements:['top','in_content']})],settings,[{key:'top',placement:'top'},{key:'middle',placement:'in_content'}],ctx,20);
+    expect(plan.top).toBeUndefined();expect(plan.middle?.id).toBe('a');
+  });
   it('classifies directories separately from articles',()=>{expect(detectPageType('/blog')).toBe('listing');expect(detectPageType('/article/fees')).toBe('article');});
   it('fills reading and sidebar slots before footer',()=>{
     const plan=planPage([ad()],settings,[{key:'end',placement:'end'},{key:'middle',placement:'in_content'},{key:'side',placement:'sidebar'}],ctx,20);

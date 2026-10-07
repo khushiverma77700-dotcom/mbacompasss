@@ -3,6 +3,7 @@ export type AdCampaign = {
   id: string; ad_code: string; name: string; ad_type: string; status: string;
   headline: string | null; body: string | null; cta_text: string | null;
   desktop_image_url: string | null; mobile_image_url: string | null;
+  creative_variants?: Record<string, string>;
   html_content: string | null; alt_text: string | null; destination_url: string;
   start_at: string | null; end_at: string | null; priority: number; weight: number;
   page_types: string[]; include_paths: string[]; exclude_paths: string[]; keywords: string[];
@@ -66,7 +67,6 @@ export type AdSettings = {
 };
 
 export const PLACEMENTS = [
-  { key: "top", label: "Top of page" },
   { key: "after_intro", label: "After introduction (articles)" },
   { key: "in_content", label: "Inside content — auto-spaced by length" },
   { key: "mid", label: "Mid-page (between page sections)" },
@@ -166,6 +166,7 @@ const IN_CONTENT = ["after_intro", "in_content", "mid", "home_section"];
 
 /** Does this campaign accept this placement? In-content slots accept any in-content campaign. */
 function accepts(a: AdCampaign, placement: string) {
+  if (placement === "top") return false;
   if (a.placements.includes(placement)) return true;
   return IN_CONTENT.includes(placement) && a.placements.some((p) => IN_CONTENT.includes(p));
 }

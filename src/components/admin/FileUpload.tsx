@@ -17,9 +17,10 @@ interface FileUploadProps {
   label?: string;
   showUrlInput?: boolean;
   sizeHint?: string;
+  expectedSize?: { width: number; height: number };
 }
 
-const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label = "Upload File", showUrlInput = true, sizeHint }: FileUploadProps) => {
+const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label = "Upload File", showUrlInput = true, sizeHint, expectedSize }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -32,6 +33,16 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
 
     setUploading(true);
     try {
+      if (expectedSize) {
+        const objectUrl = URL.createObjectURL(file);
+        try {
+          const image = new Image(); image.src = objectUrl;
+          await image.decode();
+          if (image.naturalWidth !== expectedSize.width || image.naturalHeight !== expectedSize.height) {
+            throw new Error(`This format needs ${expectedSize.width} × ${expectedSize.height}px. Your image is ${image.naturalWidth} × ${image.naturalHeight}px.`);
+          }
+        } finally { URL.revokeObjectURL(objectUrl); }
+      }
       const ext = file.name.split(".").pop();
       let prefix = folder ? `${folder}/` : "";
 

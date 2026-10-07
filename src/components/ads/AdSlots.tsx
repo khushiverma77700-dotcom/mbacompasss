@@ -8,6 +8,7 @@ import { applyAbTests, detectPageType, inContentBudget, pathMatches, type Delive
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Button } from "@/components/ui/button";
 import { articleBlocks, editorialBody } from "@/lib/ads/structure";
+import { selectCreative } from "@/lib/ads/formats";
 
 // Current-tab memory only: no identifiers, URLs with query strings or profile uploads.
 let journey: ReadingJourney = { entryPath: "", previousPath: "", interests: [] };
@@ -58,9 +59,15 @@ function logEvent(ad: AdCampaign, type: "impression" | "conversion", placement: 
   supabase.from("ad_events").insert({ campaign_id: ad.id, event_type: type, placement, page_path: location.pathname.slice(0, 400), device: isMobile() ? "mobile" : "desktop" }).then(() => {});
 }
 
-export function AdCreative({ ad, placement, label, preview, compact }: { ad: AdCampaign; placement: string; label: string; preview?: boolean; compact?: boolean }) {
+export function AdCreative({ ad, placement, label, preview, compact, format, device }: { ad: AdCampaign; placement: string; label: string; preview?: boolean; compact?: boolean; format?: string; device?: "mobile" | "desktop" }) {
   const ref = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(!!preview);
+  const [slotWidth, setSlotWidth] = useState(300);
+  useEffect(() => {
+    const node = ref.current; if (!node) return;
+    const observer = new ResizeObserver(([entry]) => setSlotWidth(entry.contentRect.width));
+    observer.observe(node); return () => observer.disconnect();
+  }, []);
   useEffect(() => {
     if (preview || !ref.current) return;
     const observer = new IntersectionObserver(([entry]) => {
@@ -83,22 +90,23 @@ export function AdCreative({ ad, placement, label, preview, compact }: { ad: AdC
   }, [ad, placement, preview, near]);
 
   const href = preview ? ad.destination_url : `/api/public/ad-click/${ad.id}?p=${encodeURIComponent(placement)}`;
-  const img = (isMobile() ? ad.mobile_image_url || ad.desktop_image_url : ad.desktop_image_url || ad.mobile_image_url) || "";
+  const selected = selectCreative(ad.creative_variants, slotWidth, placement, format);
+  const img = (selected ? ad.creative_variants?.[selected.key] : (device === "mobile" || (!device && isMobile()) ? ad.mobile_image_url || ad.desktop_image_url : ad.desktop_image_url || ad.mobile_image_url)) || "";
   const showImage = ["image", "gif", "poster", "image_cta"].includes(ad.ad_type) && img;
-  const showText = ["text_cta", "image_cta"].includes(ad.ad_type) || !showImage;
+  const showText = !selected && (["text_cta", "image_cta"].includes(ad.ad_type) || !showImage);
   const vertical = placement === "sidebar" || placement === "popup";
 
   return (
-    <aside ref={ref} data-nosnippet aria-label={label} className="not-prose my-4 w-full min-w-0 @container">
+    <aside ref={ref} data-nosnippet aria-label={label} className="not-prose my-6 w-full min-w-0 @container">
       {!near ? <div aria-hidden className="min-h-40 rounded-lg bg-muted/30" /> : <>
-      <div className="mb-1 text-sm text-muted-foreground">{label}</div>
+      <div className="mb-2 text-center text-sm text-muted-foreground">{label}</div>
       {ad.ad_type === "html" && ad.html_content ? (
         <div className="overflow-hidden rounded-lg border border-border bg-card" dangerouslySetInnerHTML={{ __html: sanitizeHtml(ad.html_content) }} />
       ) : (
-        <a href={href} target="_blank" rel="sponsored noopener" className={`flex ${compact ? "flex-row items-center" : vertical ? "flex-col" : "flex-col @min-[480px]:flex-row @min-[480px]:items-center"} gap-4 overflow-hidden rounded-lg border border-border bg-secondary/40 p-3 transition-colors hover:bg-secondary`}>
-          {showImage && <img src={img} alt={ad.alt_text || ad.name} loading="lazy" decoding="async" className={`${compact ? "w-16 shrink-0" : showText && !vertical ? "w-full @min-[480px]:w-40" : "w-full"} h-auto max-w-full rounded-md object-contain`} />}
+        <a href={href} target="_blank" rel="sponsored noopener" style={{ width: showText ? Math.min(slotWidth, 336) : selected?.width, maxWidth: "100%" }} className={`mx-auto flex max-w-full ${showText ? "max-w-[336px] flex-col gap-3 border border-border bg-card p-3" : "w-fit flex-col"} overflow-hidden transition-opacity hover:opacity-90`}>
+          {showImage && <img src={img} alt={ad.alt_text || ad.name} loading="lazy" decoding="async" width={selected?.width} height={selected?.height} style={{ maxWidth: selected?.width ?? (vertical ? 336 : 728) }} className="h-auto w-auto max-w-full object-contain" />}
           {showText && (
-            <div className={`flex min-w-0 flex-1 flex-col gap-2 ${!vertical ? "@min-[480px]:flex-row @min-[480px]:items-center @min-[480px]:justify-between" : ""}`}>
+            <div className={`flex min-w-0 flex-1 flex-col gap-2 ${compact ? "gap-1" : ""}`}>
               <div>
                 <div className={`${compact ? "line-clamp-1 text-sm" : "break-words"} font-semibold text-foreground`}>{ad.headline || ad.name}</div>
                 {ad.body && !compact && <p className="text-sm text-muted-foreground">{ad.body}</p>}
@@ -314,7 +322,7 @@ export function useAdSlots() {
       const found = findContentTargets(previewId ? { ...settings, max_ads_per_page: 10 } : settings, detectPageType(pathname));
       Object.values(found.targets).forEach((node) => owned.add(node));
       setTargets(found.targets);
-      const available: SlotSpec[] = [{ key: "top", placement: "top" }, ...found.slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }, { key: "popup", placement: "popup" }];
+      const available: SlotSpec[] = [...found.slots, { key: "end", placement: "end" }, { key: "sticky", placement: "sticky" }, { key: "popup", placement: "popup" }];
       let chosen: Record<string, AdCampaign> = {};
       if (previewId && previewAd) {
         for (const slot of available) {
@@ -397,7 +405,7 @@ export function useAdSlots() {
   }, []);
 
   return {
-    top: plan.top ? <div className="container mx-auto px-4"><AdCreative key={"top" + pathname} preview={!!previewId} ad={plan.top} placement="top" label={label} /></div> : null,
+    top: null,
     end: plan.end ? <div className="container mx-auto px-4"><AdCreative key={"end" + pathname} preview={!!previewId} ad={plan.end} placement="end" label={label} /></div> : null,
     portals: (
       <>
