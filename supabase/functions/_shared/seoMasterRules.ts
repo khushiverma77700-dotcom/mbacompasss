@@ -6,6 +6,8 @@
 // data, FAQs, links, schema, freshness) and a deterministic post-write audit so
 // the admin can see what was satisfied before publishing.
 
+import { BLOG_COMPLETENESS_RULES } from "./blogEvidence.ts";
+
 export type TopicDomain = "mba" | "general";
 
 const MBA_HINTS = [
