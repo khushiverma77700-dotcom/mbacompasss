@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -292,6 +293,7 @@ const AdminWriteInstitute = () => {
                 placeholder="time-hyderabad"
                 className="font-mono text-sm"
               />
+              <SlugUniqueHint table="institutes" slug={slug} onApply={(s) => { setSlugTouched(true); setSlug(s); }} />
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Target Keyword (primary)</Label>

@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -738,7 +739,7 @@ const AdminMockTests = () => {
               </div>
               <div>
                 <Label className="text-xs">Slug <span className="text-muted-foreground">(auto)</span></Label>
-                <Input value={form.slug || slugify(form.name)} readOnly className="bg-muted/40 cursor-not-allowed" />
+                <Input value={form.slug || slugify(form.name)} readOnly className="bg-muted/40 cursor-not-allowed" /><SlugUniqueHint table="mock_tests" slug={form.slug || slugify(form.name)} excludeId={editId} />
               </div>
             </div>
             <div>

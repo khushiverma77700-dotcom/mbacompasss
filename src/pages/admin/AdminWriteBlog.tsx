@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -597,6 +598,7 @@ const AdminWriteBlog = () => {
                 placeholder="url-slug"
                 className="font-mono text-sm"
               />
+              <SlugUniqueHint table="articles" slug={slug} onApply={(s) => { setSlugTouched(true); setSlug(s); }} />
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Category</Label>

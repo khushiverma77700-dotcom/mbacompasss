@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -198,6 +199,7 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
                 onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value, slugTouched: true }))}
                 placeholder="iim-ahmedabad"
               />
+              <SlugUniqueHint table="application_trackers" slug={form.slug} excludeId={row?.id} onApply={(v) => setForm((f) => ({ ...f, slug: v, slugTouched: true }))} />
             </div>
             <div className="space-y-1.5">
               <Label>Category</Label>

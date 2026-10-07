@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -730,7 +731,7 @@ export default function AdminMockBundles() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <Label>Slug</Label>
-                        <Input value={editing.slug ?? ""} onChange={(e) => setEditing({ ...editing, slug: slugify(e.target.value) })} />
+                        <Input value={editing.slug ?? ""} onChange={(e) => setEditing({ ...editing, slug: slugify(e.target.value) })} /><SlugUniqueHint table="mock_bundles" slug={editing.slug} excludeId={editing.id} onApply={(s) => setEditing({ ...editing, slug: s })} />
                       </div>
                       <div>
                         <Label>Price (INR)</Label>

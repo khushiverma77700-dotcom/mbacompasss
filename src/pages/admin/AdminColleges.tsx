@@ -1,3 +1,4 @@
+import { SlugUniqueHint } from "@/components/admin/SlugUniqueHint";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -479,7 +480,7 @@ const AdminColleges = () => {
                   const name = e.target.value;
                   setForm({ ...form, name, slug: editId ? form.slug : generateSlug(name) });
                 }} />
-                <Input placeholder="Slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" />
+                <Input placeholder="Slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" /><SlugUniqueHint table="colleges" slug={form.slug} excludeId={editId} onApply={(s) => setForm({ ...form, slug: s })} />
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
                   <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="College description..." />
