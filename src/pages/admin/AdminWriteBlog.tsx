@@ -668,26 +668,16 @@ const AdminWriteBlog = () => {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <Label className="text-xs font-semibold block">Date / Freshness Context</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs gap-1"
-                onClick={() => {
-                  setContentDateContext(buildLatestDateContext());
-                  toast({ title: "Reset to latest dates" });
-                }}
-              >
-                <Sparkles className="h-3 w-3" /> Refresh
-              </Button>
-            </div>
-            <Textarea
-              value={contentDateContext}
-              onChange={(e) => setContentDateContext(e.target.value)}
-              rows={2}
-            />
+            <Label className="text-xs font-semibold mb-1.5 block">Target Year</Label>
+            <Select value={String(targetYear)} onValueChange={(v) => { setTargetYear(Number(v)); setYearTouched(true); }}>
+              <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() - 1 + i).map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y} ({y}-{String(y + 1).slice(-2)} cycle)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground mt-1">The article, headings, meta title and description will all be written for this year. Picked from your title automatically.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4 pt-2 border-t">
