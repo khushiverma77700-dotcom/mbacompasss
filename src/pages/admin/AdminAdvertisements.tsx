@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/admin/FileUpload";
 import { AdCreative } from "@/components/ads/AdSlots";
 import AdLivePreview from "@/components/ads/AdLivePreview";
+import AdPageFrame from "@/components/ads/AdPageFrame";
 import { PAGE_TYPES, PLACEMENTS, type AdCampaign } from "@/lib/ads/engine";
 import { AlertTriangle, CalendarPlus, Copy, Download, Eye, Monitor, Pause, Pencil, Play, Plus, Smartphone, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -115,7 +116,8 @@ export default function AdminAdvertisements() {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-ads"] }); qc.invalidateQueries({ queryKey: ["first-party-ads"] }); };
 
   const save = async () => {
-    const e = editing!;
+    const e = editing;
+    if (!e) return;
     if (!e.name?.trim() || !e.destination_url?.trim()) return toast({ title: "Name and destination URL are required", variant: "destructive" });
     if (!/^(https?:\/\/|\/)/.test(e.destination_url)) return toast({ title: "Destination must start with https:// or /", variant: "destructive" });
     const { id, ad_code, ...rest } = e as AdCampaign & { created_at?: string };
@@ -161,7 +163,7 @@ export default function AdminAdvertisements() {
       if (f.requests >= 100 && f.filled / f.requests < 0.3) out.push({ id: `fill-${f.placement}-${f.device}`, level: "warn", text: `The "${f.placement}" spot on ${f.device} is empty ${Math.round((1 - f.filled / f.requests) * 100)}% of the time — add a campaign or a house ad for it.` });
     }
     for (const a of ads) {
-      if ((a.impression_budget ?? 0) > 0) { const t = totals[a.id]?.imp ?? 0; if (t >= a.impression_budget! * 0.9) out.push({ id: `${a.id}-budget`, level: "info", text: `"${a.name}" has used ${Math.min(100, Math.round((t / a.impression_budget!) * 100))}% of its view budget in this period.` }); }
+      if ((a.impression_budget ?? 0) > 0) { const t = totals[a.id]?.imp ?? 0; if (t >= (a.impression_budget ?? 0) * 0.9) out.push({ id: `${a.id}-budget`, level: "info", text: `"${a.name}" has used ${Math.min(100, Math.round((t / (a.impression_budget ?? 0)) * 100))}% of its view budget in this period.` }); }
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -228,8 +230,8 @@ export default function AdminAdvertisements() {
   };
 
   const e = editing;
-  const set = (patch: Partial<AdCampaign>) => setEditing((p) => ({ ...p!, ...patch }));
-  const toggleArr = (key: "page_types" | "placements", v: string) => set({ [key]: (e?.[key] ?? []).includes(v) ? (e![key] as string[]).filter((x) => x !== v) : [...((e?.[key] as string[]) ?? []), v] } as any);
+  const set = (patch: Partial<AdCampaign>) => setEditing((p) => (p ? { ...p, ...patch } : null));
+  const toggleArr = (key: "page_types" | "placements", v: string) => set({ [key]: (e?.[key] ?? []).includes(v) ? ((e?.[key] ?? []) as string[]).filter((x) => x !== v) : [...((e?.[key] as string[]) ?? []), v] } as any);
 
   return (
     <div className="space-y-6">
@@ -267,13 +269,13 @@ export default function AdminAdvertisements() {
             </>)}
           </div>
           {filtered.length === 0 && <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">No advertisements yet. Create your first one.</div>}
-          <div className="space-y-2">
+          <div className="grid gap-4 xl:grid-cols-2">
             {filtered.map((a) => {
               const t = totals[a.id]; const st = effectiveStatus(a);
               return (
-                <div key={a.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+                <div key={a.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-4">
                   <Checkbox checked={selected.has(a.id)} onCheckedChange={(c) => setSelected((s) => { const n = new Set(s); c ? n.add(a.id) : n.delete(a.id); return n; })} />
-                  {a.desktop_image_url || a.mobile_image_url ? <img src={a.desktop_image_url || a.mobile_image_url!} alt="" className="h-10 w-20 rounded object-cover" loading="lazy" /> : <div className="h-10 w-20 rounded bg-muted" />}
+                  {a.desktop_image_url || a.mobile_image_url ? <img src={a.desktop_image_url || a.mobile_image_url || ""} alt="" className="h-10 w-20 rounded object-cover" loading="lazy" /> : <div className="h-10 w-20 rounded bg-muted" />}
                   <div className="min-w-[180px] flex-1">
                     <div className="font-semibold text-foreground">{a.name} {a.is_fallback && <Badge variant="outline">Fallback</Badge>}</div>
                     <div className="text-sm text-muted-foreground">{a.ad_code} · Priority {a.priority} · {a.placements.join(", ")}</div>
@@ -289,6 +291,9 @@ export default function AdminAdvertisements() {
                     {a.status === "active" ? <Button size="icon" variant="ghost" aria-label="Pause" onClick={() => setStatus([a.id], "paused")}><Pause className="h-4 w-4" /></Button>
                       : <Button size="icon" variant="ghost" aria-label="Activate" onClick={() => setStatus([a.id], "active")}><Play className="h-4 w-4" /></Button>}
                     <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => remove([a.id])}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                  <div className="w-full border-t border-border pt-2">
+                    <AdCreative ad={a} placement="sidebar" label={settings?.label_text || "Sponsored"} preview />
                   </div>
                 </div>
               );
@@ -439,16 +444,14 @@ export default function AdminAdvertisements() {
                 </>)}
               </div>
               {previewMode === "page" ? (
-                <div className={`overflow-hidden rounded-lg border border-border ${previewDevice === "mobile" ? "mx-auto w-[390px]" : "w-full"}`}>
-                  <iframe key={`${preview.id}-${previewPath}-${previewSpot}-${previewDevice}`} title="Ad preview on a real page" className="h-[70vh] w-full bg-background"
-                    src={`${previewPath}${previewPath.includes("?") ? "&" : "?"}ad_preview=${preview.id}&ad_spot=${previewSpot}`} />
-                </div>
+                <AdPageFrame key={`${preview.id}-${previewPath}-${previewSpot}-${previewDevice}`} mobile={previewDevice === "mobile"}
+                  src={`${previewPath}${previewPath.includes("?") ? "&" : "?"}ad_preview=${preview.id}&ad_spot=${previewSpot}`} />
               ) : (
               <div className={`rounded-lg border border-dashed border-border bg-muted/30 p-4 ${previewDevice === "mobile" ? "mx-auto max-w-sm" : ""}`}>
                 <AdCreative
                   key={`${preview.id}-${previewDevice}-${previewCompact}`}
                   ad={previewDevice === "mobile" ? { ...preview, desktop_image_url: preview.mobile_image_url || preview.desktop_image_url } : preview}
-                  placement="preview" label={settings?.label_text || "Sponsored"} preview compact={previewCompact}
+                  placement={previewCompact ? "sticky" : "sidebar"} label={settings?.label_text || "Sponsored"} preview compact={previewCompact}
                 />
               </div>
               )}
