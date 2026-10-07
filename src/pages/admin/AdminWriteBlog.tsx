@@ -64,28 +64,43 @@ type LinkOption = { url: string; label: string; aliases?: string[]; auto?: boole
 
 const LINK_STOP = new Set(["the","and","for","of","in","to","a","an","on","with","by","at","from","is","are","how","what","why","best","top","guide","india","indian","institute","management","school","business","college","university","mba","pgdm","exam","2024","2025","2026","2027","2028","complete","list","all","new","vs"]);
 const tokens = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length >= 3 && !LINK_STOP.has(w));
-const LINK_CAPS = { colleges: 15, exams: 6, articles: 8, coachings: 4, tools: 3 } as const;
+const LINK_CAPS = { colleges: 25, exams: 10, articles: 12, coachings: 6, tools: 3 } as const;
+const normLabel = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+/** Alternate names: "CAT (Common Admission Test)" -> "cat", "common admission test". */
+const labelNames = (label: string) => {
+  const names = [normLabel(label)];
+  const m = label.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if (m) names.push(normLabel(m[1]), normLabel(m[2]));
+  return names.filter(n => n.length >= 3);
+};
 
-/** Rank pages by how strongly the brief/outline mentions them: exact name > alias/acronym > distinctive-word overlap. */
+/** Rank pages by how strongly the brief/outline mentions them: exact name > short name/acronym > distinctive brand word > word overlap. */
 function rankLinks(text: string, pools: Record<keyof typeof LINK_CAPS, LinkOption[]>) {
   if (text.trim().length < 4) return [] as (LinkOption & { score: number })[];
   const padded = ` ${text.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ")} `;
   const textTokens = new Set(tokens(text));
   const out: (LinkOption & { score: number })[] = [];
   (Object.keys(LINK_CAPS) as (keyof typeof LINK_CAPS)[]).forEach(kind => {
+    const pool = pools[kind] || [];
+    // How many pages in this pool share each word: rare words ("gitam", "symbiosis") identify a brand.
+    const df = new Map<string, number>();
+    pool.forEach(o => new Set(tokens(o.label)).forEach(t => df.set(t, (df.get(t) || 0) + 1)));
     const scored: (LinkOption & { score: number })[] = [];
-    for (const o of pools[kind] || []) {
-      const label = o.label.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+    for (const o of pool) {
+      const names = labelNames(o.label);
       let score = 0;
-      if (label.length >= 4 && padded.includes(` ${label} `)) score = 100;
-      else if ((o.aliases || []).some(a => a && a.length >= 3 && kind === "colleges" && a === (o.aliases || [])[0] && padded.includes(` ${a.toLowerCase()} `))) score = 70;
+      if (names[0] && names[0].length >= 4 && padded.includes(` ${names[0]} `)) score = 100;
+      else if (names.slice(1).some(n => padded.includes(` ${n} `))) score = 85;
       else {
         const lt = tokens(o.label);
         if (lt.length) {
-          const hit = lt.filter(t => textTokens.has(t)).length;
-          const ratio = hit / lt.length;
-          if (hit >= 2 && ratio >= 0.5) score = Math.round(40 + ratio * 40);
-          else if (kind !== "colleges" && hit >= 1 && ratio >= 0.5) score = Math.round(25 + ratio * 30);
+          const hits = lt.filter(t => textTokens.has(t));
+          const ratio = hits.length / lt.length;
+          const brand = hits.find(t => t.length >= 4 && (df.get(t) || 0) <= 40);
+          if (hits.length >= 2 && ratio >= 0.5) score = Math.round(40 + ratio * 40);
+          else if (brand && lt[0] === brand) score = 65; // label starts with the brand word, e.g. "GITAM Hyderabad Business School"
+          else if (brand) score = 50;
+          else if (kind !== "colleges" && hits.length >= 1 && ratio >= 0.5) score = Math.round(25 + ratio * 30);
         }
       }
       if (score > 0) scored.push({ ...o, score });
