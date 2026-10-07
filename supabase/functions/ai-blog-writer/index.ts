@@ -9,6 +9,7 @@ import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type Verifi
 import { researchReferences, referenceGroundingRules, referenceReport, type ReferenceResearch } from "../_shared/referenceResearch.ts";
 import { structureArticle } from "../_shared/blogStructure.ts";
 import { cleanBlogProse, BLOG_COMPLETENESS_RULES } from "../_shared/blogEvidence.ts";
+import { enrichInternalLinks } from "../_shared/relatedLinks.ts";
 import { seoMasterRules, detectTopicDomain, buildQualityAudit } from "../_shared/seoMasterRules.ts";
 import { getKeywordMetrics, metricsFactBlock, opportunityScore, semrushExpand } from "../_shared/keywordMetrics.ts";
 import { analyzeBlogBrief, analysisPromptBlock, BANNED_PHRASES, type BlogAnalysis } from "../_shared/blogPlanning.ts";
@@ -671,7 +672,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
     `<p><em>Last updated: ${targets.todayIso}</em></p>`,
   ].filter(Boolean).join("\n");
   const introRaw = stripExternalLinks(draft.intro || "");
-  const contentRaw = stripExternalLinks(`${sectionsHtml}\n${closingHtml}`);
+  const contentRaw = enrichInternalLinks(stripExternalLinks(`${sectionsHtml}\n${closingHtml}`), brief.allowedInternalUrls, brief.title);
   const introQC = runFinalQualityCheck(introRaw, { requireMbaCompass: false, minInternalLinks: 0 });
   const contentQC = runFinalQualityCheck(contentRaw, { requireMbaCompass: true, requireFaq: false, requireTable: false, minInternalLinks: 2 });
   const factCheckReport = buildFactCheckReport(introQC.issues, contentQC.issues);
@@ -1534,7 +1535,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       return out;
     };
     article.intro = stripExternalLinks(article.intro || "");
-    article.content = stripExternalLinks(article.content || "");
+    article.content = enrichInternalLinks(stripExternalLinks(article.content || ""), brief.allowedInternalUrls, brief.title);
     // ── DENSITY BOOST: if keyword count is well below target, ask the model to weave more in.
     {
       const postPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
