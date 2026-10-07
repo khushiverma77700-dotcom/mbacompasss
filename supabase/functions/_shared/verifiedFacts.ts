@@ -7,6 +7,8 @@
 // the filters implied by the topic (e.g. a "under ₹5 lakh fees" listicle must
 // not contain IIM Ahmedabad / IIM Bangalore / XLRI).
 
+import { BLOG_COMPLETENESS_RULES } from "./blogEvidence.ts";
+
 export interface FactConstraints {
   feeMaxLakhs: number | null;
   feeMinLakhs: number | null;
@@ -260,7 +262,8 @@ export function factGroundingRules(facts: VerifiedFacts | null): string {
 MANDATORY DATA-ACCURACY RULES (non-negotiable):
 - Never state a fee, ranking, cutoff, placement package, seat count, eligibility rule or exam date that you are not certain is officially published. No invented, remembered, assumed or "typical" numbers.
 - Use supplied reference evidence first, then credible public-source evidence to fill missing facts. Changing figures need evidence published or updated within 60 days. Omit unsupported claims or use qualitative guidance without repetitive verification disclaimers; record gaps for the editor. Do not fabricate a table value.
-- Never present estimates as confirmed facts.`;
+- Never present estimates as confirmed facts.
+${BLOG_COMPLETENESS_RULES}`;
   }
 
   const c = facts.constraints;
@@ -280,7 +283,8 @@ MANDATORY DATA-ACCURACY RULES (non-negotiable — a violation makes the article 
 - The VERIFIED DATA SHEET defines eligible colleges and database evidence. Supplied reference excerpts take priority for facts; credible supplemental excerpts may fill missing fields. Changing figures require source publication/update evidence within 60 days; a database row update or retrieval date alone is not proof of freshness.
 - You may NOT name any college, university or B-school that is not in the sheet — not even as a comparison, example, "honourable mention" or in a table. Do NOT name IIM Ahmedabad, IIM Bangalore, XLRI or any other institute unless it appears in the sheet.
 - Reproduce supported figures exactly, with their programme, reporting period and fee basis. Replace a database figure only with explicit recent source evidence, never inference or recollection.
-- If a field is missing, use the supplied links first and credible recent supplemental evidence second. If still unsupported, omit that claim/column or use an em dash in its cell. Never write missing-data or verify-on-website boilerplate in prose; leave gaps in the editor report.
+- If a field is missing, research supplied links first and recent supplemental evidence second. Use justified, locally labelled calculations for estimates; otherwise redesign comparisons around supported fields. No blank/dash cells or verification boilerplate.
+${BLOG_COMPLETENESS_RULES}
 - Never invent expected dates, cutoffs or seat counts. State them only when eligible source evidence explicitly confirms them.
 ${filterText ? `- Every college you mention must satisfy the topic filter: ${filterText}. Colleges failing this filter are excluded on purpose${excludedSample.length ? ` (e.g. ${excludedSample.slice(0, 8).join(", ")})` : ""} — mentioning them is a hard error.` : ""}
 - Statistics, trends and "industry" claims must be either derived from the sheet or written without a fabricated number.

@@ -6,6 +6,8 @@
 // data, FAQs, links, schema, freshness) and a deterministic post-write audit so
 // the admin can see what was satisfied before publishing.
 
+import { BLOG_COMPLETENESS_RULES } from "./blogEvidence.ts";
+
 export type TopicDomain = "mba" | "general";
 
 const MBA_HINTS = [
@@ -53,12 +55,13 @@ TOPIC OVERRIDE (HIGHEST PRIORITY — read before anything above):
   return `${generalOverride}
 
 UNIVERSAL SEO STRATEGIST RULES (apply to every topic, every industry):
+${BLOG_COMPLETENESS_RULES}
 
 1. Search intent first. Before drafting, settle in your own head: the reader's literal question, the intent type (informational / commercial investigation / transactional / navigational / mixed), the audience, and what they must walk away knowing. Every section must serve that intent; anything else is filler and must be cut.
 
 2. Source priority. ${opts.hasReferences ? "The editor's reference links are the first and highest source of truth — facts, figures, dates, fees, rankings, eligibility, definitions and processes come from them before anything else. Additional research is a supplement only, used when the reference pages do not cover a required point." : "Use only facts supplied in this prompt, the verified project data, and supplemental research explicitly provided. Nothing else may be presented as fact."} Prefer official sites, government sources, official reports and original data over secondary commentary. When sources disagree, prefer the most authoritative and current one and say plainly that figures differ where it affects the reader's decision.
 
-3. Never fabricate. No invented statistics, dates, prices, fees, rankings, percentages, quotes, policies, eligibility rules, specifications or company facts. Research supplied links first, then credible public sources for missing evidence. Use a range only if the evidence explicitly supports that range. Otherwise omit the unsupported claim or table column, or use an em dash in a cell; never add repetitive verification boilerplate. Current changing facts require source publication/update evidence within 60 days, not merely a retrieval date. Never use placeholders like "XX" or "TBA-value". Never claim personal or hands-on experience you do not have.
+3. Never fabricate. Research supplied links first, then recent credible public evidence. Use supported figures or clearly labelled calculations from documented inputs and stated budgeting assumptions. Never invent official statistics, rules, dates, rankings or company facts. Redesign unsupported comparisons rather than leaving empty/dash cells or adding boilerplate. Changing facts require source publication/update evidence within 60 days, not retrieval dates. Never claim personal experience you do not have.
 
 4. Keyword use is natural, never mechanical. Primary keyword: "${opts.keyword}".${secondary.length ? ` Supporting keywords available: ${secondary.slice(0, 15).join(", ")}.` : ""} Place the primary keyword where it reads naturally — SEO title, H1, slug, first paragraph, Overview, at least one H2, meta description, conclusion, image alt — and use variations rather than repeating the exact phrase. Ignore any fixed keyword-density figure: there is no density target. If a keyword makes a sentence awkward, rewrite the sentence or drop the keyword. Self-check the draft for stuffing, near-duplicate sentences and over-optimisation, and rewrite anything that reads forced.
 

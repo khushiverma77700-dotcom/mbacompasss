@@ -11,6 +11,7 @@
 - Auth: Google OAuth requires mobile OTP onboarding. Auto-confirm email is ON for instant post-purchase login.
 
 ## Memories
+- [Blog estimates and silent sources](mem://features/blog-estimates) — Research missing details, label justified approximations, no competitor attribution or blank cells
 - [Type Scale](mem://style/type-scale) — The four allowed font sizes, Tailwind mapping and CSS vars
 - [Brand Vision](mem://project/vision) — "MBAHub by B School Buzz" branding, organic academic look, advisor persona
 - [Color Palette](mem://style/color-palette) — White and light blue theme, strictly no dark blue/navy

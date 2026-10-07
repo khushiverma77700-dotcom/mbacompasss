@@ -32,6 +32,7 @@
 - [x] Recompose the report summary into formal score, strategy, strength, risk, and verdict sections
 
 ## AI Blog Writer output
+- [x] Research missing details from full supplemental pages, allow evidence-based labelled estimates, and remove competitor attribution/incomplete table rows (8 safeguard tests pass; writer deployed)
 - [x] Replace missing-data boilerplate with supplied-link-first, recent public-source research and editor-only gaps
 - [x] Remove robotic Yes/Short answer paragraph openers and test shared output cleanup
 - [x] Connect Firecrawl and verify the recent-source search request returns page evidence

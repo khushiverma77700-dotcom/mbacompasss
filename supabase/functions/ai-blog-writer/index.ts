@@ -8,7 +8,7 @@ import { MBA_COMPASS_SECTION_RULES, getBlockingFactIssues, runFinalQualityCheck,
 import { fetchVerifiedFacts, factGroundingRules, auditVerifiedFacts, type VerifiedFacts } from "../_shared/verifiedFacts.ts";
 import { researchReferences, referenceGroundingRules, referenceReport, type ReferenceResearch } from "../_shared/referenceResearch.ts";
 import { structureArticle } from "../_shared/blogStructure.ts";
-import { cleanBlogProse } from "../_shared/blogEvidence.ts";
+import { cleanBlogProse, BLOG_COMPLETENESS_RULES } from "../_shared/blogEvidence.ts";
 import { seoMasterRules, detectTopicDomain, buildQualityAudit } from "../_shared/seoMasterRules.ts";
 import { getKeywordMetrics, metricsFactBlock, opportunityScore, semrushExpand } from "../_shared/keywordMetrics.ts";
 import { analyzeBlogBrief, analysisPromptBlock, BANNED_PHRASES, type BlogAnalysis } from "../_shared/blogPlanning.ts";
@@ -324,6 +324,7 @@ How to link:
   return `You are a professional education writer, researcher and editor for MBA Compass, an Indian MBA guidance publisher. You write like an experienced human journalist: precise, plain, factual and calm. You are not a chatbot and not a mentor chatting over coffee.
 
 WRITING RULES
+${BLOG_COMPLETENESS_RULES}
 - Answer exactly the topic in the title. Every paragraph must serve the reader question. No filler, no padding, no generic MBA advice unless the topic asks for it.
 - Never introduce colleges, exams, universities or statistics outside the ARTICLE SCOPE below. Do not add "other options" or "alternatives" unless asked.
 - Vary sentence and paragraph length naturally. Do not start consecutive sentences the same way. Use transitions only where they help.
@@ -1192,8 +1193,9 @@ Deno.serve(async (req) => {
 - No hype, no corporate jargon, no filler. Every sentence must carry a fact, a number, a name, or actionable advice.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
+${BLOG_COMPLETENESS_RULES}
 - Every claim, table, list and stat must use safe, latest ${currentYear} data where confirmed. Never recycle 2020-${currentYear - 2} cutoffs, dates, fees, rankings or placement numbers as current data.
-- For high-risk items (cutoffs, exact exam/admission dates, fees, rankings, seats and placements), never invent a precise number/date. If the current official figure is not confirmed in the prompt/context, write an expected band/window and clearly label it expected/TBA/verify with official notice (e.g. "expected 92-96 percentile band", "official date TBA", "latest-public INR 23-25 lakh fee range").
+- Never invent official cutoffs, dates, eligibility, rankings, seats or actual placements. For planning amounts only, calculate locally labelled estimates from documented inputs and explicit assumptions. Redesign unsupported comparisons; no guesses or TBA.
 - Tables MUST have real rows with real numbers — never empty cells, never "—", never "N/A".
 - Recruiter lists, college lists, exam-pattern facts MUST be real and named — never placeholder.
 
