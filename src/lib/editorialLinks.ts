@@ -45,8 +45,11 @@ export function createEditorialMatcher(targets: EditorialTarget[]) {
 const SKIP = "a,button,input,textarea,select,code,pre,script,style,nav,header,footer,h1,h2,h3,h4,[role=button],[contenteditable],[data-no-interlink],.not-prose,[data-ad-slot],aside";
 
 /** Only link editorial sentences; preserve existing links, headings and interactive UI. */
+// Building the matcher compiles one very large pattern; reuse it per pool.
+const matcherCache = new WeakMap<EditorialTarget[], ReturnType<typeof createEditorialMatcher>>();
 export function linkEditorialContent(root: HTMLElement, targets: EditorialTarget[], pathname: string) {
-  const match = createEditorialMatcher(targets);
+  let match = matcherCache.get(targets);
+  if (!match) { match = createEditorialMatcher(targets); matcherCache.set(targets, match); }
   const seen = new Set<string>([pathname.replace(/\/$/, "")]);
   root.querySelectorAll<HTMLAnchorElement>("a[href]").forEach(a => {
     try { if ([window.location.hostname, "mbacompass.in", "www.mbacompass.in"].includes(a.hostname)) seen.add(a.pathname.replace(/\/$/, "")); } catch { /* invalid existing link */ }
