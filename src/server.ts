@@ -2,6 +2,17 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import {
+  HTML_FRESH_MS,
+  HTML_MAX_STALE_MS,
+  cacheKeyFor,
+  cachedResponse,
+  entryAge,
+  isCacheableRequest,
+  isCacheableResponse,
+  readCached,
+  storeCached,
+} from "./lib/htmlEdgeCache";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -44,18 +55,60 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+async function render(request: Request, env: unknown, ctx: unknown): Promise<Response> {
+  try {
+    const handler = await getServerEntry();
+    const response = await handler.fetch(request, env, ctx);
+    return await normalizeCatastrophicSsrResponse(response);
+  } catch (error) {
+    console.error(error);
+    return new Response(renderErrorPage(), {
+      status: 500,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
+  }
+}
+
+type WaitCtx = { waitUntil?: (p: Promise<unknown>) => void };
+const refreshing = new Set<string>();
+
+function background(ctx: unknown, task: Promise<unknown>) {
+  const safe = task.catch(() => undefined);
+  const w = (ctx as WaitCtx | undefined)?.waitUntil;
+  if (typeof w === "function") w.call(ctx, safe);
+}
+
+async function renderAndStore(key: string, request: Request, env: unknown, ctx: unknown) {
+  const response = await render(request, env, ctx);
+  if (isCacheableResponse(response)) {
+    background(ctx, storeCached(key, response.clone()));
+  }
+  return response;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    try {
-      const handler = await getServerEntry();
-      const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
-    } catch (error) {
-      console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
+    // Shared public pages are served from the HTML cache (dev renders live).
+    if (import.meta.env.DEV || !isCacheableRequest(request)) return render(request, env, ctx);
+
+    const key = cacheKeyFor(request);
+    const entry = await readCached(key);
+    if (entry) {
+      const age = entryAge(entry);
+      if (age < HTML_FRESH_MS) return cachedResponse(entry, "fresh");
+      if (age < HTML_MAX_STALE_MS) {
+        if (!refreshing.has(key)) {
+          refreshing.add(key);
+          background(
+            ctx,
+            renderAndStore(key, request.clone(), env, ctx)
+              .then((r) => r.body?.cancel())
+              .finally(() => refreshing.delete(key)),
+          );
+        }
+        return cachedResponse(entry, "stale");
+      }
     }
+    return renderAndStore(key, request, env, ctx);
   },
 };
