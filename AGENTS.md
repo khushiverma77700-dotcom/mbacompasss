@@ -1,11 +1,11 @@
 - Keep MBA Compass course refund disclosure in one shared presentation component and apply its offer-schema rule only to MBA Compass course detail markup, because third-party institutes may have different policies.
 - Present the public MBA application directory as category-grouped dossiers rather than a wide data table, because students need section-led scanning on every screen size.
-- Keep the College Applications module limited to its core field set (name, slug, category, tier, programs, fees, application link, deadline, exams, logo, rich-text details, publish state) and edit all of it in the admin form, with recommendations and SEO managed in their dedicated admin tools.
+- Keep College Applications to its core fields (name, slug, category, tier, programs, fees, apply link, deadline, exams, logo, details, publish state), all edited in the admin form; recommendations and SEO live in their own tools.
 - Keep College Applications lists summary-first; edit all fields in the full-record dialog, because inline spreadsheet editing complicates administration.
 - Structure student home as an institutional executive dashboard: applications, score overview, study priorities, then analytics, for a clear action hierarchy.
 - Admin email campaigns record per-recipient tracking tokens and redirect clicks only to saved campaign URLs to prevent open redirects.
 - Parse saved profile-analysis narratives through one defensive normalizer before rendering, because AI output may be JSON, fenced JSON, or double-encoded JSON.
-- Admin email campaigns stage personalised emails as waiting recipients and release them in batches through a database tick that re-reads each campaign's speed settings every run, so speed changes apply to running campaigns; the tick timer arms on start/resume and removes itself when nothing is running.
+- Email campaigns stage recipients as waiting and release batches via a database tick that re-reads speed settings each run, so changes apply live; the tick arms on start/resume and removes itself when idle.
 - Mock competition metrics use each student's earliest completed attempt and verified unique-student cohorts, because retakes and synthetic aspirants must not inflate ranks or participation.
 - Mock generation uses exam-normalized CAT/XAT-style difficulty plus deterministic editorial validation, because malformed, trivial, ambiguous, or incorrectly keyed questions must never enter a test.
 - Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
@@ -21,5 +21,5 @@
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
 - AI blog drafts get deterministic internal-link enrichment (first-mention entity links plus Similar Colleges/Related Reads tables) from the editor-approved link pool only, via supabase/functions/_shared/relatedLinks.ts, so links never point outside the site's real pages.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
-
 - Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
+- Serve anonymous public page HTML from the build-keyed shared cache in src/server.ts (src/lib/htmlEdgeCache.ts), never admin, student, auth or per-user paths, because per-visit rendering made first loads slow.
