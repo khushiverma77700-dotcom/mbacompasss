@@ -72,16 +72,27 @@ async function render(request: Request, env: unknown, ctx: unknown): Promise<Res
 type WaitCtx = { waitUntil?: (p: Promise<unknown>) => void };
 const refreshing = new Set<string>();
 
+function canWait(ctx: unknown) {
+  return typeof (ctx as WaitCtx | undefined)?.waitUntil === "function";
+}
+
 function background(ctx: unknown, task: Promise<unknown>) {
   const safe = task.catch(() => undefined);
-  const w = (ctx as WaitCtx | undefined)?.waitUntil;
-  if (typeof w === "function") w.call(ctx, safe);
+  if (canWait(ctx)) (ctx as Required<WaitCtx>).waitUntil(safe);
 }
 
 async function renderAndStore(key: string, request: Request, env: unknown, ctx: unknown) {
   const response = await render(request, env, ctx);
-  if (isCacheableResponse(response)) {
+  if (!isCacheableResponse(response)) return response;
+  if (canWait(ctx)) {
     background(ctx, storeCached(key, response.clone()));
+    return response;
+  }
+  // No background hook: finish storing before replying so the copy is kept.
+  try {
+    await storeCached(key, response.clone());
+  } catch {
+    /* serve the render regardless */
   }
   return response;
 }
