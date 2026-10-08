@@ -69,31 +69,25 @@ async function render(request: Request, env: unknown, ctx: unknown): Promise<Res
   }
 }
 
-type WaitCtx = { waitUntil?: (p: Promise<unknown>) => void };
+type Waiter = ((p: Promise<unknown>) => void) | null;
 const refreshing = new Set<string>();
 
-function canWait(ctx: unknown) {
-  return typeof (ctx as WaitCtx | undefined)?.waitUntil === "function";
+// The host passes its background hook either as ctx or on the request itself.
+function resolveWaiter(request: Request, ctx: unknown): Waiter {
+  const fromCtx = (ctx as { waitUntil?: (p: Promise<unknown>) => void } | undefined)?.waitUntil;
+  if (typeof fromCtx === "function") return (p) => fromCtx.call(ctx, p);
+  const fromReq = (request as Request & { waitUntil?: (p: Promise<unknown>) => void }).waitUntil;
+  if (typeof fromReq === "function") return (p) => fromReq(p);
+  return null;
 }
 
-function background(ctx: unknown, task: Promise<unknown>) {
-  const safe = task.catch(() => undefined);
-  if (canWait(ctx)) (ctx as Required<WaitCtx>).waitUntil(safe);
-}
-
-async function renderAndStore(key: string, request: Request, env: unknown, ctx: unknown) {
+async function renderAndStore(key: string, request: Request, env: unknown, ctx: unknown, wait: Waiter) {
   const response = await render(request, env, ctx);
   if (!isCacheableResponse(response)) return response;
-  if (canWait(ctx)) {
-    background(ctx, storeCached(key, response.clone()));
-    return response;
-  }
-  // No background hook: finish storing before replying so the copy is kept.
-  try {
-    await storeCached(key, response.clone());
-  } catch {
-    /* serve the render regardless */
-  }
+  const store = storeCached(key, response.clone()).catch(() => undefined);
+  // Without a background hook, finish storing before replying so the copy is kept.
+  if (wait) wait(store);
+  else await store;
   return response;
 }
 
@@ -102,24 +96,25 @@ export default {
     // Shared public pages are served from the HTML cache (dev renders live).
     if (import.meta.env.DEV || !isCacheableRequest(request)) return render(request, env, ctx);
 
+    const wait = resolveWaiter(request, ctx);
     const key = cacheKeyFor(request);
     const entry = await readCached(key);
     if (entry) {
       const age = entryAge(entry);
       if (age < HTML_FRESH_MS) return cachedResponse(entry, "fresh");
-      if (age < HTML_MAX_STALE_MS) {
+      if (age < HTML_MAX_STALE_MS && wait) {
         if (!refreshing.has(key)) {
           refreshing.add(key);
-          background(
-            ctx,
-            renderAndStore(key, request.clone(), env, ctx)
+          wait(
+            renderAndStore(key, request.clone(), env, ctx, wait)
               .then((r) => r.body?.cancel())
+              .catch(() => undefined)
               .finally(() => refreshing.delete(key)),
           );
         }
         return cachedResponse(entry, "stale");
       }
     }
-    return renderAndStore(key, request, env, ctx);
+    return renderAndStore(key, request, env, ctx, wait);
   },
 };
