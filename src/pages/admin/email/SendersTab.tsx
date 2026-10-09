@@ -12,7 +12,7 @@ import { getSenderIdentities, getGlobalDailyCap, setGlobalDailyCap, getDeliverab
 import { Switch } from "@/components/ui/switch";
 
 const db = supabase as any;
-const DOMAIN = "notify.aleart.mbacompass.in";
+const DOMAIN = "notify.bschoolbuzz.in";
 
 function SenderCard({ s, onSaved }: { s: any; onSaved: () => void }) {
   const [f, setF] = useState({ ...s, match_keywords: (s.match_keywords ?? []).join(", ") });

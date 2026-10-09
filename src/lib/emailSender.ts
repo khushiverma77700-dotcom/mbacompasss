@@ -1,6 +1,6 @@
 // The verified sending domain for every app email (campaigns, purchase
 // confirmations, sender identities).
-export const CURRENT_SENDER_DOMAIN = "notify.aleart.mbacompass.in";
+export const CURRENT_SENDER_DOMAIN = "notify.bschoolbuzz.in";
 
 const DEFAULT_FROM = `MBA Compass <no-reply@${CURRENT_SENDER_DOMAIN}>`;
 
