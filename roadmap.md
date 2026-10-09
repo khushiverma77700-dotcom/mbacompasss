@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Application directory refinement
-- [ ] Fix shared deadline calculations and live countdowns
-- [ ] Make advisor recommendations reliable, readable and navigable
-- [ ] Improve approved information sections and detail pages
-- [ ] Verify countdowns, recommendation controls and narrow-screen layouts
+- [x] Fix shared IST deadline calculations and live countdowns (six deadline/order tests passed)
+- [x] Make advisor recommendations reliable, readable and navigable (saved picks only, clear closed states, shared ordering)
+- [x] Improve approved information sections and detail pages (expandable information, facts, placements, linked contents)
+- [x] Verify clocks ticking, recommendation arrows/filter, expanded details and narrow-screen layouts without overflow or runtime errors
 
 ## Article and blog readability
 - [x] Replace raw contents with styled section links across public articles and blogs
