@@ -34,3 +34,13 @@ export function compareRecommendations(
 ) {
   return (a.recommendation_priority ?? 0) - (b.recommendation_priority ?? 0) || a.name.localeCompare(b.name);
 }
+
+export function reorderRecommendations<T>(rows: T[], index: number, direction: -1 | 1): T[] {
+  const next = [...rows];
+  const row = next[index];
+  const target = next[index + direction];
+  if (!row || !target) return next;
+  next[index] = target;
+  next[index + direction] = row;
+  return next;
+}

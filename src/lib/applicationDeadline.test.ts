@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countdownParts, deadlineDays, deadlineTimestamp, compareRecommendations } from "./applicationDeadline";
+import { countdownParts, deadlineDays, deadlineTimestamp, compareRecommendations, reorderRecommendations } from "./applicationDeadline";
 
 describe("application deadlines", () => {
   it("keeps a date-only deadline open through the end of its IST day", () => {
@@ -24,5 +24,11 @@ describe("application deadlines", () => {
   it("orders recommendations by saved priority with a consistent name tie-break", () => {
     const rows = [{ name: "Z", recommendation_priority: 2 }, { name: "B", recommendation_priority: 1 }, { name: "A", recommendation_priority: 1 }];
     expect(rows.sort(compareRecommendations).map((row) => row.name)).toEqual(["A", "B", "Z"]);
+  });
+  it("moves only adjacent picks even with duplicate or nonsequential priorities", () => {
+    const rows = [{ id: "a", recommendation_priority: 0 }, { id: "b", recommendation_priority: 0 }, { id: "c", recommendation_priority: 99 }];
+    expect(reorderRecommendations(rows, 2, -1).map((row) => row.id)).toEqual(["a", "c", "b"]);
+    expect(reorderRecommendations(rows, 0, -1)).toEqual(rows);
+    expect(rows.map((row) => row.id)).toEqual(["a", "b", "c"]);
   });
 });

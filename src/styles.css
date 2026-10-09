@@ -97,6 +97,45 @@
   height: auto;
 }
 
+.application-countdown {
+  min-height: 74px;
+  border: 1px solid var(--application-line);
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--application-panel);
+  color: var(--application-blue);
+}
+.application-countdown-urgent {
+  background: var(--application-warning-soft);
+  border-color: color-mix(in oklab, var(--application-warning) 30%, transparent);
+  color: var(--application-warning);
+}
+.application-editorial {
+  color: var(--application-copy);
+  overflow-wrap: anywhere;
+  font-size: var(--text-base);
+  line-height: 1.75;
+}
+.application-editorial :is(h2, h3, h4) {
+  color: var(--application-ink);
+  font-size: var(--text-xl);
+  scroll-margin-top: 100px;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+.application-editorial :is(p, li, td, th) { font-size: var(--text-base); }
+.application-editorial a { color: var(--application-blue); }
+.application-editorial strong { color: var(--application-ink); }
+.application-editorial table { display: block; max-width: 100%; overflow-x: auto; }
+.application-editorial :is(td, th) { padding: 12px; border-bottom: 1px solid var(--application-line); }
+.application-editorial th { background: var(--application-blue-soft); color: var(--application-ink); }
+.application-editorial .blog-toc {
+  border-left: 3px solid var(--application-blue);
+  padding: 16px;
+  background: var(--application-blue-soft);
+  margin-bottom: 24px;
+}
+
 @theme {
   /* v3 ring compatibility: bare `ring` was 3px wide and blue-500-tinted when
      no explicit ring color utility was present. */

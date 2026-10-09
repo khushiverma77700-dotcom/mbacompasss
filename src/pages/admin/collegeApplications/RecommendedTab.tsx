@@ -17,6 +17,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { TrackerRow } from "@/lib/applicationTracker";
+import { compareRecommendations, reorderRecommendations } from "@/lib/applicationDeadline";
 
 type Draft = {
   recommendation_label: string;
@@ -42,11 +43,7 @@ export default function RecommendedTab({ trackers }: Props) {
     () =>
       trackers
         .filter((r) => r.is_recommended)
-        .sort(
-          (a, b) =>
-            (a.recommendation_priority ?? 0) - (b.recommendation_priority ?? 0) ||
-            a.name.localeCompare(b.name),
-        ),
+        .sort(compareRecommendations),
     [trackers],
   );
 
@@ -92,13 +89,23 @@ export default function RecommendedTab({ trackers }: Props) {
       }),
   });
 
-  const move = (index: number, direction: -1 | 1) => {
-    const target = recommended[index + direction];
-    const row = recommended[index];
-    if (!row || !target) return;
-    update.mutate({ id: row.id, patch: { recommendation_priority: index + direction + 1 } });
-    update.mutate({ id: target.id, patch: { recommendation_priority: index + 1 } });
-  };
+  const reorder = useMutation({
+    mutationFn: async ({ index, direction }: { index: number; direction: -1 | 1 }) => {
+      const next = reorderRecommendations(recommended, index, direction);
+      for (const [position, row] of next.entries()) {
+        const { error } = await supabase.from("application_trackers").update({ recommendation_priority: position + 1 }).eq("id", row.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => toast({ title: "Recommendation order saved" }),
+    onError: () => toast({ title: "Order could not be fully saved", description: "The list has been refreshed. Please try again.", variant: "destructive" }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-application-trackers"] });
+      queryClient.invalidateQueries({ queryKey: ["application-trackers"] });
+    },
+  });
+
+  const move = (index: number, direction: -1 | 1) => reorder.mutate({ index, direction });
 
   return (
     <div className="space-y-4">
@@ -124,7 +131,7 @@ export default function RecommendedTab({ trackers }: Props) {
                     id: row.id,
                     patch: {
                       is_recommended: true,
-                      recommendation_priority: recommended.length + 1,
+                       recommendation_priority: Math.max(0, ...recommended.map((item) => item.recommendation_priority)) + 1,
                     },
                   })
                 }
@@ -169,7 +176,8 @@ export default function RecommendedTab({ trackers }: Props) {
                             size="icon"
                             variant="ghost"
                             className="h-6 w-6"
-                            disabled={index === 0}
+                            disabled={index === 0 || reorder.isPending || update.isPending}
+                            aria-label={`Move ${row.name} up`}
                             onClick={() => move(index, -1)}
                           >
                             <ArrowUp className="h-3.5 w-3.5" />
@@ -178,7 +186,8 @@ export default function RecommendedTab({ trackers }: Props) {
                             size="icon"
                             variant="ghost"
                             className="h-6 w-6"
-                            disabled={index === recommended.length - 1}
+                            disabled={index === recommended.length - 1 || reorder.isPending || update.isPending}
+                            aria-label={`Move ${row.name} down`}
                             onClick={() => move(index, 1)}
                           >
                             <ArrowDown className="h-3.5 w-3.5" />
