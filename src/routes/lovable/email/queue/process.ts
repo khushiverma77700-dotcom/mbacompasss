@@ -1,4 +1,5 @@
 import { sendLovableEmail } from '@lovable.dev/email-js'
+import { normalizeSender } from '@/lib/emailSender'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
 
@@ -7,6 +8,9 @@ const DEFAULT_BATCH_SIZE = 10
 const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
+
+// Emails queued earlier (or by an older published build) may still carry a
+// retired domain; rewrite them so they are not rejected with "no_matching_sender".
 
 // Check if an error is a rate-limit (429) response.
 // Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
@@ -222,12 +226,13 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             }
 
             try {
+              const sender = normalizeSender(payload.from, payload.sender_domain)
               await sendLovableEmail(
                 {
                   run_id: payload.run_id,
                   to: payload.to,
-                  from: payload.from,
-                  sender_domain: payload.sender_domain,
+                  from: sender.from,
+                  sender_domain: sender.sender_domain,
                   subject: payload.subject,
                   html: payload.html,
                   text: payload.text,
