@@ -1,5 +1,11 @@
 # Roadmap
 
+## Application directory refinement
+- [ ] Fix shared deadline calculations and live countdowns
+- [ ] Make advisor recommendations reliable, readable and navigable
+- [ ] Improve approved information sections and detail pages
+- [ ] Verify countdowns, recommendation controls and narrow-screen layouts
+
 ## Article and blog readability
 - [x] Replace raw contents with styled section links across public articles and blogs
 - [x] Split long passages safely, preserve facts and links, and format genuine lists/subheads
