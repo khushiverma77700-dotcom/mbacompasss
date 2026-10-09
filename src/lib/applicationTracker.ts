@@ -1,3 +1,4 @@
+import { deadlineDays, deadlineTimestamp } from "@/lib/applicationDeadline";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -190,23 +191,17 @@ export type DeadlineInfo = {
   isOpen: boolean;
 };
 
-const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-/** Days between today and the deadline, both clamped to local midnight. */
-export const daysUntil = (deadline: string | null | undefined): number | null => {
-  if (!deadline) return null;
-  const d = new Date(deadline);
-  if (Number.isNaN(d.getTime())) return null;
-  const diff = startOfDay(d).getTime() - startOfDay(new Date()).getTime();
-  return Math.round(diff / 86_400_000);
-};
+export const daysUntil = deadlineDays;
 
 /** Live status derived from the stored deadline — never stored, always computed. */
-export const deadlineInfo = (row: Pick<TrackerRow, "application_deadline" | "status">): DeadlineInfo => {
+export const deadlineInfo = (row: Pick<TrackerRow, "application_deadline" | "status">, now = Date.now()): DeadlineInfo => {
   if (row.status === "closed") {
     return { label: "Applications Closed", tone: "closed", daysLeft: null, isOpen: false };
   }
-  const days = daysUntil(row.application_deadline);
+  const days = daysUntil(row.application_deadline, now);
+  const target = deadlineTimestamp(row.application_deadline);
+  if (row.status === "upcoming") return { label: "Opening Soon", tone: "soon", daysLeft: days, isOpen: false };
+  if (target !== null && target <= now) return { label: "Applications Closed", tone: "closed", daysLeft: days, isOpen: false };
   if (days === null) {
     return {
       label: row.status === "upcoming" ? "Opening Soon" : "Currently Open",
@@ -217,7 +212,7 @@ export const deadlineInfo = (row: Pick<TrackerRow, "application_deadline" | "sta
   }
   if (days < 0) return { label: "Applications Closed", tone: "closed", daysLeft: days, isOpen: false };
   if (days === 0) return { label: "Deadline Today", tone: "today", daysLeft: 0, isOpen: true };
-  if (days <= 3) return { label: `${days} Day${days > 1 ? "s" : ""} Left`, tone: "urgent", daysLeft: days, isOpen: true };
+  if (days <= 5) return { label: `${days} Day${days > 1 ? "s" : ""} Left`, tone: "urgent", daysLeft: days, isOpen: true };
   if (days <= 15) return { label: `${days} Days Left`, tone: "soon", daysLeft: days, isOpen: true };
   return { label: "Currently Open", tone: "open", daysLeft: days, isOpen: true };
 };
@@ -388,7 +383,9 @@ export const publicTrackersQuery = queryOptions({
       .filter((r) => !!r.name?.trim() && !!r.slug?.trim())
       .map(normalizeTracker);
   },
-  staleTime: 5 * 60 * 1000,
+  staleTime: 60 * 1000,
+  refetchOnMount: "always",
+  refetchInterval: 60 * 1000,
 });
 
 /** Fills in the nullable/JSON columns so components never guard for undefined. */

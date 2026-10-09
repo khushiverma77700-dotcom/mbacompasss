@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/accordion";
 import { ArrowUpRight, ExternalLink, Timer } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import ApplicationCountdown from "@/components/application/ApplicationCountdown";
+import ApplicationInformation from "@/components/application/ApplicationInformation";
 import {
   CATEGORY_LABEL,
   type TrackerRow,
@@ -33,7 +34,6 @@ import {
   APPLICATION_BASE,
   APPLICATION_YEAR,
   collegeFaqs,
-  collegeKeywords,
   collegePageMeta,
   collegeSchema,
   collegeUrl,
@@ -41,9 +41,9 @@ import {
 } from "@/lib/applicationSeo";
 
 const Fact = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-xl border border-slate-200 bg-white p-3">
-    <dt className="text-sm text-slate-500">{label}</dt>
-    <dd className="pt-0.5 text-base font-medium text-slate-900">{value}</dd>
+  <div className="rounded-lg border border-application-line bg-application-panel p-3">
+    <dt className="text-sm text-application-copy">{label}</dt>
+    <dd className="pt-0.5 text-base font-medium text-application-ink">{value}</dd>
   </div>
 );
 
@@ -63,8 +63,8 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-5xl space-y-4 p-4 md:p-6">
-        <Skeleton className="h-40 w-full rounded-2xl" />
-        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-40 w-full rounded-lg" />
+        <Skeleton className="h-64 w-full rounded-lg" />
       </div>
     );
   }
@@ -74,8 +74,8 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
       <div className="mx-auto max-w-3xl p-6">
         <Card>
           <CardContent className="space-y-3 p-10 text-center">
-            <h1 className="text-[1.375rem] font-semibold text-slate-900">Application not found</h1>
-            <p className="text-sm text-slate-600">
+            <h1 className="text-xl font-semibold text-application-ink">Application not found</h1>
+            <p className="text-sm text-application-copy">
               This application is no longer listed. Browse every open MBA application form instead.
             </p>
             <Button asChild>
@@ -90,7 +90,6 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
   const meta = collegePageMeta(row);
   const info = deadlineInfo(row);
   const faqs = collegeFaqs(row);
-  const keywords = collegeKeywords(row);
   const isExam = row.category === "exam";
 
   const handleApply = async () => {
@@ -121,7 +120,7 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
 
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 pb-20 md:p-6">
+    <div className="application-directory mx-auto max-w-5xl space-y-8 p-4 pb-20 md:p-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collegeSchema(row)) }} />
       {faqs.length > 0 && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
@@ -133,17 +132,17 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
         ]}
       />
 
-      <header className="space-y-4 rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-6 md:p-8">
+      <header className="space-y-5 border-b border-application-line pb-8 pt-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="border-sky-200 bg-white/80 text-sky-700">
+          <Badge variant="outline" className="border-application-line bg-application-panel/80 text-application-blue">
             {CATEGORY_LABEL[row.category] ?? row.category}
           </Badge>
           {row.is_recommended && (
-            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+            <Badge variant="outline" className="border-application-warning/20 bg-application-warning-soft text-application-warning">
               {row.recommendation_label || "Recommended by MBA Compass"}
             </Badge>
           )}
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm text-slate-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-application-line bg-application-panel px-2.5 py-1 text-sm text-application-copy">
             <Timer className="h-3.5 w-3.5" /> {info.label}
           </span>
         </div>
@@ -156,17 +155,18 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
               decoding="async"
               width={64}
               height={64}
-              className="h-16 w-16 shrink-0 rounded-2xl border border-sky-100 bg-white object-contain p-1.5"
+              className="h-16 w-16 shrink-0 rounded-lg border border-application-line bg-application-panel object-contain p-1.5"
             />
           )}
           <div className="min-w-0">
-            <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">{meta.h1}</h1>
-            <p className="pt-1 text-sm text-slate-500">
+            <h1 className="text-3xl font-semibold leading-tight text-application-ink md:text-4xl">{meta.h1}</h1>
+            <p className="pt-1 text-sm text-application-copy">
               {[rowPrograms(row).join(" / "), row.tier].filter(Boolean).join(" • ") || row.name}
             </p>
           </div>
         </div>
-        <p className="max-w-3xl text-base text-slate-600">{row.seo_intro?.trim() || meta.description}</p>
+        <p className="max-w-3xl text-base text-application-copy">{row.seo_intro?.trim() || meta.description}</p>
+        <div className="max-w-md"><ApplicationCountdown row={row} /></div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button size="lg" className="gap-1.5" disabled={applying || !info.isOpen} onClick={() => void handleApply()}>
             {info.isOpen ? "Apply Now" : "Applications Closed"}
@@ -183,7 +183,7 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
       </header>
 
       <section aria-label={`${row.name} application dates and fees`}>
-        <h2 className="pb-3 text-[1.375rem] font-semibold text-slate-900">
+        <h2 className="pb-3 text-xl font-semibold text-application-ink">
           {row.name} application dates, fees &amp; {isExam ? "registration" : "admission"} details
         </h2>
         <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -198,41 +198,28 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
         </dl>
       </section>
 
-      {row.details_html && (
-        <section aria-label={`${row.name} college details`} className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="pb-2 text-[1.375rem] font-semibold text-slate-900">{row.name} college details</h2>
-          <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(row.details_html) }} />
-        </section>
-      )}
+      <section aria-label={`${row.name} application information`} className="border-t border-application-line pt-6">
+        <h2 className="pb-5 text-xl font-semibold text-application-ink">{isExam ? "Exam information & registration" : "College highlights & admission details"}</h2>
+        <ApplicationInformation row={row} />
+      </section>
 
       {faqs.length > 0 && (
-        <section aria-label={`${row.name} application FAQs`} className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-[1.375rem] font-semibold text-slate-900">{row.name} application FAQs</h2>
+        <section aria-label={`${row.name} application FAQs`} className="border-t border-application-line pt-6">
+          <h2 className="text-xl font-semibold text-application-ink">{row.name} application FAQs</h2>
           <Accordion type="single" collapsible className="pt-2">
             {faqs.map((faq, i) => (
               <AccordionItem key={faq.question} value={`faq-${i}`}>
                 <AccordionTrigger className="text-left text-base">{faq.question}</AccordionTrigger>
-                <AccordionContent className="text-sm text-slate-600">{faq.answer}</AccordionContent>
+                <AccordionContent className="text-sm text-application-copy">{faq.answer}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         </section>
       )}
 
-      <section aria-label="Related searches" className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-[1.375rem] font-semibold text-slate-900">What students look for</h2>
-        <ul className="flex flex-wrap gap-2 pt-3">
-          {keywords.map((k) => (
-            <li key={k} className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600">
-              {k}
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {related.length > 0 && (
-        <section aria-label="Other applications in this category" className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-[1.375rem] font-semibold text-slate-900">
+        <section aria-label="Other applications in this category" className="border-t border-application-line pt-6">
+          <h2 className="text-xl font-semibold text-application-ink">
             Other {CATEGORY_LABEL[row.category] ?? "MBA"} application forms {APPLICATION_YEAR}
           </h2>
           <div className="grid gap-2 pt-3 sm:grid-cols-2">
@@ -240,7 +227,7 @@ export default function ApplicationDetailPage({ slug }: { slug: string }) {
               <Link
                 key={r.id}
                 to={collegeUrl(r)}
-                className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 hover:border-sky-200 hover:bg-sky-50/60"
+                className="rounded-lg border border-application-line px-4 py-3 text-sm text-application-copy hover:border-application-line hover:bg-application-blue-soft"
               >
                 {r.name} application form — last date {formatDate(r.application_deadline)}
               </Link>
