@@ -8,6 +8,20 @@ const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
+// The verified sending domain. Emails queued earlier (or by an older published
+// build) may still carry a retired domain; rewrite them so they are not rejected
+// with "no_matching_sender".
+export const CURRENT_SENDER_DOMAIN = 'notify.aleart.mbacompass.in'
+
+export function normalizeSender(from: unknown, senderDomain: unknown): { from: string; sender_domain: string } {
+  const raw = typeof from === 'string' && from.trim() ? from.trim() : `MBA Compass <no-reply@${CURRENT_SENDER_DOMAIN}>`
+  if (senderDomain === CURRENT_SENDER_DOMAIN && raw.includes(`@${CURRENT_SENDER_DOMAIN}`)) {
+    return { from: raw, sender_domain: CURRENT_SENDER_DOMAIN }
+  }
+  const fixed = raw.replace(/@[^\s>]+/, (m) => `@${CURRENT_SENDER_DOMAIN}${m.endsWith('>') ? '>' : ''}`)
+  return { from: fixed.includes('@') ? fixed : `MBA Compass <no-reply@${CURRENT_SENDER_DOMAIN}>`, sender_domain: CURRENT_SENDER_DOMAIN }
+}
+
 // Check if an error is a rate-limit (429) response.
 // Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
 // falls back to parsing the error message for older versions.
@@ -222,12 +236,13 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             }
 
             try {
+              const sender = normalizeSender(payload.from, payload.sender_domain)
               await sendLovableEmail(
                 {
                   run_id: payload.run_id,
                   to: payload.to,
-                  from: payload.from,
-                  sender_domain: payload.sender_domain,
+                  from: sender.from,
+                  sender_domain: sender.sender_domain,
                   subject: payload.subject,
                   html: payload.html,
                   text: payload.text,
