@@ -69,6 +69,9 @@ import {
   listingFaqs,
   mainPageMeta,
 } from "@/lib/applicationSeo";
+import ApplicationCountdown from "@/components/application/ApplicationCountdown";
+import ApplicationInformation from "@/components/application/ApplicationInformation";
+import { compareRecommendations } from "@/lib/applicationDeadline";
 import RecommendedRail from "@/components/application/RecommendedRail";
 import NotificationOptIn from "@/components/NotificationOptIn";
 
@@ -82,25 +85,6 @@ const TONE_CLASS: Record<DeadlineTone, string> = {
   unknown: "bg-muted text-muted-foreground border-border",
 };
 
-const deadlineTimestamp = (value: string | null): number | null => {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) date.setHours(23, 59, 59, 999);
-  return date.getTime();
-};
-
-const countdownLabel = (deadline: string | null, now: number): string | null => {
-  const target = deadlineTimestamp(deadline);
-  if (target === null) return null;
-  const remaining = Math.max(0, target - now);
-  const days = Math.floor(remaining / 86_400_000);
-  const hours = Math.floor((remaining % 86_400_000) / 3_600_000);
-  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
-  const seconds = Math.floor((remaining % 60_000) / 1_000);
-  return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-};
-
 const LogoBadge = ({ row }: { row: TrackerRow }) => {
   if (row.logo_url) {
     return (
@@ -111,14 +95,14 @@ const LogoBadge = ({ row }: { row: TrackerRow }) => {
         decoding="async"
         width={44}
         height={44}
-        className="h-12 w-12 shrink-0 rounded-xl border border-application-blue/10 bg-application-blue-soft object-contain p-1 shadow-sm"
+        className="h-12 w-12 shrink-0 rounded-lg border border-application-blue/10 bg-application-blue-soft object-contain p-1 shadow-sm"
       />
     );
   }
   return (
     <span
       aria-hidden
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-application-blue/10 bg-application-blue-soft text-lg font-bold text-application-blue shadow-sm"
+      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-application-blue/10 bg-application-blue-soft text-lg font-bold text-application-blue shadow-sm"
     >
       {row.name.slice(0, 2).toUpperCase()}
     </span>
@@ -154,7 +138,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
   useEffect(() => {
     setNow(Date.now());
-    const interval = window.setInterval(() => setNow(Date.now()), 1_000);
+    const interval = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(interval);
   }, []);
 
@@ -217,43 +201,27 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       return haystack.toLowerCase().includes(q);
     });
     if (category === "recommended") {
-      return [...list].sort((a, b) => a.recommendation_priority - b.recommendation_priority);
+      return [...list].sort(compareRecommendations);
     }
     return list;
-  }, [scoped, deadlineFilter, category, exam, search, tierFilter, programFilter, feeFilter]);
+  }, [scoped, deadlineFilter, category, exam, search, tierFilter, programFilter, feeFilter, now]);
 
   const stats = useMemo(() => {
     let open = 0;
     let today = 0;
     let week = 0;
     for (const row of scoped) {
-      const info = deadlineInfo(row);
+      const info = deadlineInfo(row, now ?? undefined);
       if (info.isOpen) open += 1;
       if (info.daysLeft === 0) today += 1;
       if (info.daysLeft !== null && info.daysLeft >= 0 && info.daysLeft <= 7) week += 1;
     }
     return { total: scoped.length, open, today, week };
-  }, [scoped]);
+  }, [scoped, now]);
 
   const faqs = useMemo(() => listingFaqs(scoped), [scoped]);
 
-  /* Today's picks: advisor-recommended and still open, position 1 first.
-     If nothing is marked recommended, fall back to whatever closes soonest. */
-  const todaysPicks = useMemo(() => {
-    const open = scoped.filter((row) => deadlineInfo(row).isOpen);
-    const picked = open
-      .filter((row) => row.is_recommended)
-      .sort((a, b) => {
-        if (a.recommendation_priority !== b.recommendation_priority) {
-          return a.recommendation_priority - b.recommendation_priority;
-        }
-        return (a.application_deadline ?? "9999").localeCompare(b.application_deadline ?? "9999");
-      });
-    if (picked.length > 0) return picked.slice(0, 12);
-    return [...open]
-      .sort((a, b) => (a.application_deadline ?? "9999").localeCompare(b.application_deadline ?? "9999"))
-      .slice(0, 10);
-  }, [scoped]);
+  const todaysPicks = useMemo(() => scoped.filter((row) => row.is_recommended).sort(compareRecommendations), [scoped]);
 
   const filtersDirty = deadlineFilter !== DEFAULT_PREFS.deadline_filter || exam !== null || !!search || !!tierFilter || !!programFilter || !!feeFilter ||
     (!presetCategory && category !== "all");
@@ -331,9 +299,9 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
       <header className="border-b border-application-line pb-8 pt-2 md:pb-10">
         <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-          <div className="max-w-4xl space-y-4">
+          <div className="min-w-0 max-w-4xl space-y-4">
             <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
-              <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Verified daily by the MBA Compass research desk
+              <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> MBA Compass application desk
             </Badge>
             <h1 className="text-3xl font-semibold leading-tight text-application-ink md:text-4xl">{meta.h1}</h1>
             <p className="max-w-3xl text-base text-application-copy">
@@ -347,7 +315,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
               </Link>
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line sm:grid-cols-4 lg:min-w-[470px]">
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line sm:grid-cols-4 lg:min-w-0 lg:w-[420px] lg:shrink-0">
             {[
               { label: "Applications listed", value: stats.total, icon: LayoutDashboard },
               { label: "Currently open", value: stats.open, icon: ShieldCheck },
@@ -375,7 +343,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       {/* Filters */}
       <section
         aria-label="Filter MBA applications"
-        className="sticky top-16 z-20 space-y-4 rounded-lg border border-application-line bg-application-panel/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-application-panel/90"
+        className="space-y-4 border-y border-application-line bg-application-panel p-4"
       >
 
         <div>
@@ -527,12 +495,9 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
               <div className="space-y-3">
                 {group.rows.map((row) => {
-                  const info = deadlineInfo(row);
-                  const finalFiveDays = info.isOpen && info.daysLeft !== null && info.daysLeft >= 0 && info.daysLeft <= 5;
-                  const closingSoon = info.isOpen && info.daysLeft !== null && info.daysLeft > 5 && info.daysLeft <= 15;
-                  const liveCountdown = finalFiveDays && now !== null ? countdownLabel(row.application_deadline, now) : "Calculating…";
+                  const info = deadlineInfo(row, now ?? undefined);
                   return (
-                    <article key={row.id} className="group overflow-hidden rounded-2xl border border-application-line bg-application-panel shadow-[0_8px_30px_rgb(19,36,58,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-application-blue/30 hover:shadow-[0_16px_40px_rgb(19,36,58,0.10)]">
+                    <article key={row.id} className="group overflow-hidden rounded-lg border border-application-line bg-application-panel transition-colors hover:border-application-blue/30">
                       <div className="grid lg:grid-cols-12">
                         <div className="border-b border-application-line bg-application-blue-soft/50 p-5 lg:col-span-4 lg:border-b-0 lg:border-r md:p-6">
                           <div className="flex items-start gap-4">
@@ -542,38 +507,21 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                                 <Link to={collegeUrl(row)}>{row.name}</Link>
                               </h3>
                               <div className="mt-2.5 flex flex-wrap gap-2">
-                                <Badge variant="outline" className="rounded-md border-application-blue/10 bg-application-blue-soft text-[11px] font-bold uppercase tracking-wide text-application-blue">
+                                <Badge variant="outline" className="rounded-md border-application-blue/10 bg-application-blue-soft text-sm font-bold uppercase tracking-wide text-application-blue">
                                   {CATEGORY_LABEL[row.category] ?? row.category}
                                 </Badge>
                                 {row.is_recommended && (
-                                  <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-[11px] font-bold uppercase tracking-wide text-application-warning">
+                                  <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-sm font-bold uppercase tracking-wide text-application-warning">
                                     {row.recommendation_label || "Recommended"}
                                   </Badge>
                                 )}
                               </div>
                             </div>
                           </div>
-                          <div className="mt-4 flex items-center gap-2 rounded-lg border border-application-line bg-application-panel px-3 py-2">
-                            {finalFiveDays ? (
-                              <>
-                                <span className="relative flex h-2 w-2 shrink-0">
-                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-application-warning opacity-60 motion-reduce:animate-none" />
-                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-application-warning" />
-                                </span>
-                                <span className="text-xs font-semibold text-application-warning">Closing in</span>
-                                <span className="ml-auto font-mono text-xs font-semibold tabular-nums text-application-ink" aria-live="polite">{liveCountdown}</span>
-                              </>
-                            ) : (
-                              <>
-                                <span className={`h-2 w-2 shrink-0 rounded-full ${info.isOpen ? (closingSoon ? "bg-application-warning" : "bg-emerald-500") : "bg-slate-400"}`} />
-                                <span className="text-xs font-semibold text-application-ink">{closingSoon ? "Closing Soon" : info.label}</span>
-                                <span className="ml-auto text-[11px] text-application-copy">Deadline: {formatDate(row.application_deadline)}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                          <div className="mt-4"><ApplicationCountdown row={row} /></div>
+                         </div>
 
-                        <div className="grid grid-cols-2 gap-px bg-application-line lg:col-span-5">
+                         <div className="grid grid-cols-2 gap-px bg-application-line lg:col-span-5">
                           {[
                             { label: "Program", value: rowPrograms(row).join(", ") || "—" },
                             { label: "Tier", value: row.tier || "—" },
@@ -581,7 +529,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                             { label: "Application fees", value: formatFee(row.application_fee) },
                           ].map((item) => (
                             <div key={item.label} className="bg-application-panel p-4 md:p-5">
-                              <dt className="text-[10px] font-bold uppercase tracking-wider text-application-copy/70">{item.label}</dt>
+                              <dt className="text-sm font-bold uppercase tracking-wider text-application-copy/70">{item.label}</dt>
                               <dd className="mt-1 text-sm font-semibold text-application-ink">{item.value}</dd>
                             </div>
                           ))}
@@ -601,19 +549,27 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                             <Button
                               disabled={applying === row.id || !info.isOpen}
                               onClick={() => void handleApply(row)}
-                              className="w-full gap-1.5 rounded-xl shadow-[0_4px_12px_rgb(22,119,184,0.25)]"
+                              className="w-full gap-1.5 rounded-lg shadow-sm"
                             >
                               {info.isOpen ? "Apply Now" : "Applications Closed"}
                               {info.isOpen && <ArrowUpRight className="h-4 w-4" />}
                             </Button>
-                            <Button asChild variant="outline" className="w-full gap-1.5 rounded-xl">
+                            <Button asChild variant="outline" className="w-full gap-1.5 rounded-lg">
                               <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, "view")}>
-                                View College Details <ChevronRight className="h-4 w-4" />
+                                {row.category === "exam" ? "View Exam Details" : "View College Details"} <ChevronRight className="h-4 w-4" />
                               </Link>
                             </Button>
                           </div>
                         </div>
                       </div>
+                      {(row.details_html || row.eligibility || row.selection_process || row.short_description || row.recommendation_note || row.inside_info_notes || row.cutoff_note || row.average_package != null) && (
+                        <Accordion type="single" collapsible className="border-t border-application-line px-5">
+                          <AccordionItem value="highlights" className="border-0">
+                            <AccordionTrigger className="text-base text-application-blue">{row.category === "exam" ? "Exam information & registration" : "College highlights & admission details"}</AccordionTrigger>
+                            <AccordionContent className="pb-6"><ApplicationInformation row={row} /></AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      )}
                     </article>
                   );
                 })}
