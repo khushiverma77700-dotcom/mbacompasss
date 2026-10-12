@@ -324,7 +324,9 @@ export function useAdSlots() {
       };
       const next = `${body?.className ?? "page"}:${isMobile()}:${window.innerWidth >= 1024}:${blocks.length}:${blocks.map(plain).join("|")}`;
       if (next === signature) return;
-      if (++rebuilds > 12) { observer.disconnect(); return; }
+      // After 12 rapid rebuilds, stop reacting to mutations (loop protection) but
+      // keep the 2s settle pass alive forever so wiped slots always recover.
+      if (++rebuilds > 12) observer.disconnect();
       signature = next;
       if (popupTimer) { clearTimeout(popupTimer); popupTimer = undefined; }
       owned.forEach((node) => node.remove()); owned.clear();
@@ -360,9 +362,10 @@ export function useAdSlots() {
       setPlan(chosen);
     };
     const schedule = () => { if (timer) return; timer = window.setTimeout(() => { timer = undefined; rebuild(); }, 250); };
-    // Slow queries or transformed article markup can land after the first discovery pass.
+    // Slow queries or transformed article markup can land after the first discovery
+    // pass, and later content passes (links, readability) can wipe inserted slots.
+    // Keep a cheap 2s signature check running for the life of the page.
     const settle = window.setInterval(rebuild, 2000);
-    const stopSettle = window.setTimeout(() => clearInterval(settle), 15000);
     const observer = new MutationObserver((records) => {
       if (records.some((r) => {
         const target = r.target instanceof Element ? r.target : r.target.parentElement;
