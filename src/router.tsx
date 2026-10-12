@@ -3,9 +3,11 @@ import type { DehydratedState } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { packRows, unpackRows } from "./lib/queries/rowTransport";
 import { routeTree } from "./routeTree.gen";
+import { installUploadCompression } from "./lib/imageCompression";
 
 
 export const getRouter = () => {
+  installUploadCompression();
   // Ported from the pre-migration App.tsx QueryClient — public content
   // (colleges, exams, articles) rarely changes intra-session, so repeat
   // navigations become instant cache hits.
