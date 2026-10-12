@@ -23,3 +23,4 @@
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
 - Serve anonymous public page HTML from the build-keyed shared cache in src/server.ts (src/lib/htmlEdgeCache.ts), never admin, student, auth or per-user paths, because per-visit rendering made first loads slow.
+- Compress image uploads app-wide by patching storage upload/update in src/lib/imageCompression.ts (installed from src/router.tsx), so every upload path is covered without per-form wiring.
