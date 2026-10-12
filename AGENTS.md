@@ -10,7 +10,7 @@
 - Mock generation uses exam-normalized CAT/XAT-style difficulty plus deterministic editorial validation, because malformed, trivial, ambiguous, or incorrectly keyed questions must never enter a test.
 - Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
 - AI blog articles are generated as drafts through a scope-first pipeline (intent, topic boundary, sources, style) and are published only from the editor workspace after its checklist passes, because unscoped or unverified articles must never go live automatically.
-- AI blog references remain editor-visible evidence rather than repetitive public attribution, and full keyword banks stay in SEO data while readers see only curated terms, because process commentary and keyword dumps reduce readability.
+- AI blog references stay editor-visible evidence and keyword banks stay in SEO data; readers see only curated terms, for readability.
 - The blog research pipeline records explicit source dates separately from retrieval dates and applies shared deterministic prose cleanup before saving, because freshness and unsupported-data removal must not rely only on model instructions.
 - Share blog completeness and estimate rules across generation paths, and remove incomplete table rows rather than inventing fallback numbers, because labelled calculations need real evidence.
 - AI blog outlines use intent-led chapters with editor-approved table, alert, and link plans, because long articles must remain distinct, scannable, evidence-led, and mobile-readable.
@@ -19,7 +19,7 @@
 - In-content ad slots are discovered from page structure at runtime (section boundaries, length-tier and per-1,000-word budgets) in src/components/ads/AdSlots.tsx, with selection in src/lib/ads/engine.ts, because 10,000+ pages must get well-placed ads without per-page wiring.
 - Ad discovery observes loaded editorial content and screen changes; relevance uses current-tab memory only and never bypasses targeting or caps, because reading placements must adapt without cross-site profiling or unexpected campaign delivery.
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
-- AI blog drafts get deterministic internal-link enrichment (first-mention entity links plus Similar Colleges/Related Reads tables) from the editor-approved link pool only, via supabase/functions/_shared/relatedLinks.ts, so links never point outside the site's real pages.
+- AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
 - Serve anonymous public page HTML from the build-keyed shared cache in src/server.ts (src/lib/htmlEdgeCache.ts), never admin, student, auth or per-user paths, because per-visit rendering made first loads slow.
