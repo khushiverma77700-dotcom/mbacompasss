@@ -289,10 +289,12 @@ const AdminLayout = () => {
         </div>
       </main>
 
-      {/* Floating AI mock generation dock (right side) */}
-      <Suspense fallback={null}>
-        <MockGenDock />
-      </Suspense>
+      {/* Floating AI mock generation dock (right side) — only inside the Mocks section */}
+      {/^\/admin\/(mock-tests|mock-bundles|bulk-mock-generation|student-mocks|mock-orders|mocks-landing)(\/|$)/.test(location.pathname) && (
+        <Suspense fallback={null}>
+          <MockGenDock />
+        </Suspense>
+      )}
     </div>
     </MockGenDockProvider>
   );
