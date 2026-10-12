@@ -323,7 +323,10 @@ export function useAdSlots() {
         return t.length;
       };
       const next = `${body?.className ?? "page"}:${isMobile()}:${window.innerWidth >= 1024}:${blocks.length}:${blocks.map(plain).join("|")}`;
-      if (next === signature) return;
+      // A later content pass can wipe inserted slots without changing the
+      // signature — detect detached slot elements and force a rebuild.
+      const slotsWiped = owned.size > 0 && [...owned].some((node) => !node.isConnected);
+      if (next === signature && !slotsWiped) return;
       // After 12 rapid rebuilds, stop reacting to mutations (loop protection) but
       // keep the 2s settle pass alive forever so wiped slots always recover.
       if (++rebuilds > 12) observer.disconnect();
