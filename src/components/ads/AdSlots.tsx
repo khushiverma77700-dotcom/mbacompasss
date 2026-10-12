@@ -344,6 +344,9 @@ export function useAdSlots() {
         const text = `${document.title} ${blocks.map((b) => b.textContent).join(" ").slice(0, 20000)}`.toLowerCase();
         const ctx = { path: pathname, pageType: detectPageType(pathname), device: (isMobile() ? "mobile" : "desktop") as "mobile" | "desktop", text, caps: readCaps(), today: todayStr(), now: Date.now(), delivery: data.delivery, recent: readRecent(), journey: readingJourney(pathname) };
         chosen = planPage(applyAbTests(data.ads, visitorId()), settings, available, ctx, found.paragraphs);
+        if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("ad_debug")) {
+          console.log("[ad-debug]", JSON.stringify({ slots: available, chosen: Object.keys(chosen), ads: data.ads.map((a) => ({ id: a.id, name: a.name, status: a.status, placements: a.placements, page_types: a.page_types, start_at: a.start_at })), settings: { enabled: settings.enabled, excluded: settings.excluded_paths }, paragraphs: found.paragraphs, pageType: ctx.pageType }));
+        }
         if (chosen.popup) {
           if (!popupAllowed(settings)) delete chosen.popup;
           else popupTimer = window.setTimeout(() => setPopupOpen(true), Math.max(0, settings.popup_delay_seconds ?? 8) * 1000);
