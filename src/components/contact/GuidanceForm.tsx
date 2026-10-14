@@ -76,9 +76,19 @@ const GuidanceForm = ({
     setLoading(true);
 
     const { data: session } = await supabase.auth.getSession();
+    const uid = session.session?.user?.id;
+    if (!uid) {
+      setLoading(false);
+      toast({
+        title: "Please sign in",
+        description: "Sign in or create a free account to request guidance.",
+      });
+      window.location.href = "/auth";
+      return;
+    }
     const { error } = await (supabase.from("guidance_requests" as any) as any).insert({
       ...parsed.data,
-      user_id: session.session?.user?.id ?? null,
+      user_id: uid,
       source: "contact_page",
     });
     setLoading(false);
