@@ -16188,6 +16188,7 @@ export type Database = {
       }
       ad_page_type: { Args: { _path: string }; Returns: string }
       ad_smart_refresh: { Args: never; Returns: number }
+      ad_smart_refresh_now: { Args: never; Returns: number }
       ad_stats: {
         Args: { _from: string; _to: string }
         Returns: {

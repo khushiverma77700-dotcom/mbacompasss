@@ -141,6 +141,13 @@
       "when": 1792001125287,
       "tag": "0019_ad_smart_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792001149390,
+      "tag": "0020_ad_smart_refresh_admin",
+      "breakpoints": true
     }
   ]
 }
