@@ -134,6 +134,13 @@
       "when": 1791382360372,
       "tag": "0018_ad_creative_size_variants",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792001125287,
+      "tag": "0019_ad_smart_delivery",
+      "breakpoints": true
     }
   ]
 }
