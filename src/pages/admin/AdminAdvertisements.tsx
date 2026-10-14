@@ -34,7 +34,7 @@ const blank = (): Partial<AdCampaign> => ({
   keywords: [], devices: "all", creative_variants: {}, placements: [ "after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end"], max_per_page: 2, min_paragraph_gap: 4,
   cap_per_day: 3, cap_per_session: 0, is_fallback: false, conversion_path: "",
   impression_budget: 0, daily_impression_budget: 0, pacing: "asap", schedule_days: [], schedule_start_hour: null, schedule_end_hour: null,
-  is_exclusive: false, is_house: false, ab_test: "",
+  is_exclusive: false, is_house: false, ab_test: "", smart_mode: true, goal_end_at: null,
 });
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const SPOTS = [{ k: "all", l: "All spots at once" }, { k: "in_content", l: "Inside content" }, { k: "before_faq", l: "Before FAQ" }, { k: "home_section", l: "Between homepage sections" }, { k: "sidebar", l: "Sidebar" }, { k: "end", l: "End of content" }, { k: "sticky", l: "Sticky bar" }];
@@ -126,6 +126,12 @@ export default function AdminAdvertisements() {
     const { id, ad_code, ...rest } = e as AdCampaign & { created_at?: string };
     delete (rest as any).created_at;
     (rest as any).ab_test = (rest as any).ab_test?.trim() || null;
+    delete (rest as any).smart_plan;
+    if (rest.smart_mode) {
+      if (!(rest.impression_budget! > 0)) return toast({ title: "Enter how many views you want", variant: "destructive" });
+      Object.assign(rest, { pacing: rest.goal_end_at ? "even" : "asap", end_at: rest.goal_end_at ?? null, start_at: rest.start_at ?? (rest.goal_end_at ? new Date().toISOString() : null), daily_impression_budget: 0, page_types: [], include_paths: [], keywords: [], devices: "all",
+        placements: ["after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end", "sticky"], max_per_page: Math.max(2, rest.max_per_page ?? 2) });
+    }
     const row = { ...rest, placements: (rest.placements ?? []).filter((p) => p !== "top"), updated_at: new Date().toISOString(), conversion_path: rest.conversion_path || null };
     const { error } = id ? await supabase.from("ad_campaigns").update(row as any).eq("id", id) : await supabase.from("ad_campaigns").insert(row as any);
     if (error) return toast({ title: "Could not save", description: error.message, variant: "destructive" });
@@ -494,6 +500,16 @@ export default function AdminAdvertisements() {
                 <div className="md:col-span-2"><Label>Short description</Label><Textarea rows={2} value={e.body ?? ""} onChange={(ev) => set({ body: ev.target.value })} /></div>
               </section>
 
+              <section className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <label className="flex items-center gap-2 font-semibold"><Switch checked={!!e.smart_mode} onCheckedChange={(v) => set({ smart_mode: v })} /> Smart mode — just enter the views you want</label>
+                <p className="text-sm text-muted-foreground">The system shows this ad wherever visitors are right now, favours spots people click, speeds up when it falls behind and stops itself when the goal is reached. Visitor limits below still apply.</p>
+                {e.smart_mode && (<div className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Target views</Label><Input type="number" min={0} value={e.impression_budget ?? 0} onChange={(ev) => set({ impression_budget: Number(ev.target.value) })} placeholder="50000" /></div>
+                  <div><Label>Reach the goal by (optional)</Label><Input type="datetime-local" value={toLocal(e.goal_end_at ?? null)} onChange={(ev) => set({ goal_end_at: ev.target.value ? new Date(ev.target.value).toISOString() : null })} /></div>
+                  {e.id && <div className="md:col-span-2"><SmartProgress ad={e as AdCampaign} /></div>}
+                </div>)}
+              </section>
+
               <section className="grid gap-3 md:grid-cols-4">
                 <div className="md:col-span-4 font-semibold">Schedule and priority</div>
                 <div className="md:col-span-2"><Label>Start</Label><Input type="datetime-local" value={toLocal(e.start_at)} onChange={(ev) => set({ start_at: ev.target.value ? new Date(ev.target.value).toISOString() : null })} /></div>
@@ -505,7 +521,7 @@ export default function AdminAdvertisements() {
                 <p className="md:col-span-4 text-sm text-muted-foreground">0 means no limit.</p>
               </section>
 
-              <section className="grid gap-3 md:grid-cols-4">
+              {!e.smart_mode && <section className="grid gap-3 md:grid-cols-4">
                 <div className="md:col-span-4 font-semibold">Campaign controls</div>
                 <div><Label>Total view budget</Label><Input type="number" min={0} value={e.impression_budget ?? 0} onChange={(ev) => set({ impression_budget: Number(ev.target.value) })} /></div>
                 <div><Label>Daily view budget</Label><Input type="number" min={0} value={e.daily_impression_budget ?? 0} onChange={(ev) => set({ daily_impression_budget: Number(ev.target.value) })} /></div>
@@ -518,21 +534,21 @@ export default function AdminAdvertisements() {
                 <label className="md:col-span-2 flex items-center gap-2 text-sm"><Switch checked={!!e.is_exclusive} onCheckedChange={(v) => set({ is_exclusive: v, is_house: v ? false : e.is_house })} /> Exclusive — only this ad shows on pages it matches</label>
                 <label className="md:col-span-2 flex items-center gap-2 text-sm"><Switch checked={!!e.is_house} onCheckedChange={(v) => set({ is_house: v, is_exclusive: v ? false : e.is_exclusive })} /> House ad — fills spots only when no other ad is available</label>
                 <p className="md:col-span-4 text-sm text-muted-foreground">Budgets count views; 0 means unlimited. Overnight hours work (e.g. 22 to 6).</p>
-              </section>
+              </section>}
 
               <section className="space-y-3">
                 <div className="font-semibold">Where it shows</div>
-                <div><Label>Page types (leave empty for all)</Label>
+                {!e.smart_mode && <><div><Label>Page types (leave empty for all)</Label>
                   <div className="mt-1 flex flex-wrap gap-3">{PAGE_TYPES.map((p) => <label key={p} className="flex items-center gap-1.5 text-sm capitalize"><Checkbox checked={e.page_types?.includes(p)} onCheckedChange={() => toggleArr("page_types", p)} />{p}</label>)}</div></div>
                 <div><Label>Placements</Label>
-                  <div className="mt-1 grid gap-2 sm:grid-cols-2">{PLACEMENTS.map((p) => <label key={p.key} className="flex items-center gap-1.5 text-sm"><Checkbox checked={e.placements?.includes(p.key)} onCheckedChange={() => toggleArr("placements", p.key)} />{p.label}</label>)}</div></div>
+                  <div className="mt-1 grid gap-2 sm:grid-cols-2">{PLACEMENTS.map((p) => <label key={p.key} className="flex items-center gap-1.5 text-sm"><Checkbox checked={e.placements?.includes(p.key)} onCheckedChange={() => toggleArr("placements", p.key)} />{p.label}</label>)}</div></div></>}
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div><Label>Only these URLs (one per line, e.g. /blog/*)</Label><Textarea rows={3} value={(e.include_paths ?? []).join("\n")} onChange={(ev) => set({ include_paths: toLines(ev.target.value) })} /></div>
+                  {!e.smart_mode && <div><Label>Only these URLs (one per line, e.g. /blog/*)</Label><Textarea rows={3} value={(e.include_paths ?? []).join("\n")} onChange={(ev) => set({ include_paths: toLines(ev.target.value) })} /></div>}
                   <div><Label>Never on these URLs</Label><Textarea rows={3} value={(e.exclude_paths ?? []).join("\n")} onChange={(ev) => set({ exclude_paths: toLines(ev.target.value) })} /></div>
-                  <div><Label>Keywords (page must mention one)</Label><Textarea rows={2} value={(e.keywords ?? []).join(", ")} onChange={(ev) => set({ keywords: toLines(ev.target.value) })} placeholder="CAT, percentile, IIM" /></div>
+                  {!e.smart_mode && <><div><Label>Keywords (page must mention one)</Label><Textarea rows={2} value={(e.keywords ?? []).join(", ")} onChange={(ev) => set({ keywords: toLines(ev.target.value) })} placeholder="CAT, percentile, IIM" /></div>
                   <div className="space-y-3">
                     <div><Label>Device</Label><Select value={e.devices} onValueChange={(v) => set({ devices: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Desktop and mobile</SelectItem><SelectItem value="desktop">Desktop only</SelectItem><SelectItem value="mobile">Mobile only</SelectItem></SelectContent></Select></div>
-                  </div>
+                  </div></>}
                   <div><Label>Max times on one page</Label><Input type="number" min={1} max={4} value={e.max_per_page} onChange={(ev) => set({ max_per_page: Number(ev.target.value) })} /></div>
                   <div><Label>Min. paragraphs before in-article ads</Label><Input type="number" min={1} value={e.min_paragraph_gap} onChange={(ev) => set({ min_paragraph_gap: Number(ev.target.value) })} /></div>
                   <div><Label>Conversion page (optional, e.g. /thank-you)</Label><Input value={e.conversion_path ?? ""} onChange={(ev) => set({ conversion_path: ev.target.value })} /></div>
@@ -549,6 +565,52 @@ export default function AdminAdvertisements() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+const SMART_STATUS: Record<string, { l: string; c: string }> = {
+  on_track: { l: "On track", c: "text-primary" }, behind: { l: "Behind — boosting", c: "text-destructive" },
+  ahead: { l: "Ahead — easing off", c: "text-muted-foreground" }, reached: { l: "Goal reached", c: "text-primary" },
+};
+
+function SmartProgress({ ad }: { ad: AdCampaign }) {
+  const [busy, setBusy] = useState(false);
+  const [plan, setPlan] = useState(ad.smart_plan ?? null);
+  const target = ad.impression_budget ?? 0;
+  const done = plan?.delivered ?? 0;
+  const pct = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
+  const perDay = plan?.last_24h ?? 0;
+  const eta = perDay > 0 && target > done ? new Date(Date.now() + ((target - done) / perDay) * 86400_000).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : null;
+  const st = SMART_STATUS[plan?.status ?? ""];
+  const w = plan?.weights ?? {};
+  const group = (prefix: string) => Object.entries(w).filter(([k]) => k.startsWith(prefix)).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const refreshNow = async () => {
+    setBusy(true);
+    await supabase.rpc("ad_smart_refresh_now" as any);
+    const { data } = await supabase.from("ad_campaigns").select("smart_plan").eq("id", ad.id).maybeSingle();
+    setPlan(((data as any)?.smart_plan ?? null)); setBusy(false);
+  };
+  return (
+    <div className="space-y-3 rounded-md border border-border bg-background p-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-semibold">{done.toLocaleString("en-IN")} of {target.toLocaleString("en-IN")} views ({pct}%)</span>
+        <span className={st?.c ?? "text-muted-foreground"}>{st?.l ?? "Waiting for first plan"}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${pct}%` }} /></div>
+      <div className="grid gap-2 sm:grid-cols-3 text-muted-foreground">
+        <span>Last 24h: {perDay.toLocaleString("en-IN")}</span>
+        <span>Needed per day: {(plan?.needed_per_day ?? 0).toLocaleString("en-IN")}</span>
+        <span>Expected finish: {eta ?? "—"}</span>
+      </div>
+      {plan?.note && <p>{plan.note}</p>}
+      {Object.keys(w).length > 0 && <div className="grid gap-2 sm:grid-cols-3">
+        {[["pt:", "Page types"], ["pl:", "Spots"], ["dv:", "Devices"]].map(([p, l]) => (
+          <div key={p}><div className="font-medium">{l}</div>{group(p).map(([k, v]) => <div key={k} className="flex justify-between capitalize text-muted-foreground"><span>{k.slice(3).replace(/_/g, " ")}</span><span>×{v.toFixed(2)}</span></div>)}</div>
+        ))}
+      </div>}
+      {!!plan?.top_pages?.length && <div><div className="font-medium">Top pages for this ad</div>{plan.top_pages.map((t) => <div key={t.path} className="flex justify-between text-muted-foreground"><span className="truncate">{t.path || "/"}</span><span>{t.views}</span></div>)}</div>}
+      <Button size="sm" variant="outline" disabled={busy} onClick={refreshNow}>{busy ? "Updating…" : "Update plan now"}</Button>
     </div>
   );
 }

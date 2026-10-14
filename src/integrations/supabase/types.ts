@@ -33,6 +33,7 @@ export type Database = {
           devices: string
           end_at: string | null
           exclude_paths: string[]
+          goal_end_at: string | null
           headline: string | null
           html_content: string | null
           id: string
@@ -53,6 +54,8 @@ export type Database = {
           schedule_days: number[]
           schedule_end_hour: number | null
           schedule_start_hour: number | null
+          smart_mode: boolean
+          smart_plan: Json
           start_at: string | null
           status: string
           updated_at: string
@@ -76,6 +79,7 @@ export type Database = {
           devices?: string
           end_at?: string | null
           exclude_paths?: string[]
+          goal_end_at?: string | null
           headline?: string | null
           html_content?: string | null
           id?: string
@@ -96,6 +100,8 @@ export type Database = {
           schedule_days?: number[]
           schedule_end_hour?: number | null
           schedule_start_hour?: number | null
+          smart_mode?: boolean
+          smart_plan?: Json
           start_at?: string | null
           status?: string
           updated_at?: string
@@ -119,6 +125,7 @@ export type Database = {
           devices?: string
           end_at?: string | null
           exclude_paths?: string[]
+          goal_end_at?: string | null
           headline?: string | null
           html_content?: string | null
           id?: string
@@ -139,6 +146,8 @@ export type Database = {
           schedule_days?: number[]
           schedule_end_hour?: number | null
           schedule_start_hour?: number | null
+          smart_mode?: boolean
+          smart_plan?: Json
           start_at?: string | null
           status?: string
           updated_at?: string
@@ -16177,6 +16186,9 @@ export type Database = {
           requests: number
         }[]
       }
+      ad_page_type: { Args: { _path: string }; Returns: string }
+      ad_smart_refresh: { Args: never; Returns: number }
+      ad_smart_refresh_now: { Args: never; Returns: number }
       ad_stats: {
         Args: { _from: string; _to: string }
         Returns: {

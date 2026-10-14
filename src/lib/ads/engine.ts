@@ -11,7 +11,19 @@ export type AdCampaign = {
   cap_per_day: number; cap_per_session: number; is_fallback: boolean; conversion_path: string | null;
   impression_budget?: number; daily_impression_budget?: number; pacing?: string; schedule_days?: number[];
   schedule_start_hour?: number | null; schedule_end_hour?: number | null; is_exclusive?: boolean; is_house?: boolean; ab_test?: string | null;
+  smart_mode?: boolean; goal_end_at?: string | null; smart_plan?: SmartPlan | null;
 };
+export type SmartPlan = { weights?: Record<string, number>; boost?: number; status?: string; note?: string; needed_per_day?: number; last_24h?: number; delivered?: number; top_pages?: { path: string; views: number }[]; updated_at?: string };
+
+/** Smart-mode multiplier: where visitors are (page type, placement, device) times goal-pacing boost. */
+export function smartScore(ad: AdCampaign, pageType?: string, placement?: string, device?: string): number {
+  if (!ad.smart_mode) return 1;
+  const p = ad.smart_plan ?? {};
+  const w = p.weights ?? {};
+  const f = (k?: string) => (k && typeof w[k] === "number" ? Math.max(0.1, w[k]) : 1);
+  const boost = typeof p.boost === "number" && p.boost > 0 ? p.boost : 1.5; // new goals start eager
+  return f(pageType && `pt:${pageType}`) * f(placement && `pl:${placement}`) * f(device && `dv:${device}`) * boost;
+}
 export type Delivery = Record<string, { total: number; today: number }>;
 
 /** India-time day of week (0=Sun) and fractional hour. */
@@ -134,14 +146,19 @@ export function eligible(ad: AdCampaign, ctx: { journey?: ReadingJourney; recent
   if (ad.start_at && Date.parse(ad.start_at) > ctx.now) return false;
   if (ad.end_at && Date.parse(ad.end_at) < ctx.now) return false;
   if (!deliveryAllowed(ad, ctx.now, ctx.delivery)) return false;
-  if (ad.devices !== "all" && ad.devices !== ctx.device) return false;
   if (ad.exclude_paths?.some((p) => pathMatches(ctx.path, p))) return false;
+  if (ad.smart_mode) return capsOk(ad, ctx);
+  if (ad.devices !== "all" && ad.devices !== ctx.device) return false;
   const inc = ad.include_paths?.filter(Boolean) ?? [];
   const types = ad.page_types ?? [];
   if (inc.length && !inc.some((p) => pathMatches(ctx.path, p))) return false;
   if (!inc.length && types.length && !types.includes(ctx.pageType)) return false;
   const kws = (ad.keywords ?? []).filter(Boolean);
   if (kws.length && !kws.some((k) => ctx.text.includes(k.toLowerCase()))) return false;
+  return capsOk(ad, ctx);
+}
+
+function capsOk(ad: AdCampaign, ctx: { caps: Caps; today: string }) {
   const c = ctx.caps[ad.id];
   if (c) {
     if (ad.cap_per_day > 0 && c.day === ctx.today && c.dayCount >= ad.cap_per_day) return false;
@@ -151,10 +168,10 @@ export function eligible(ad: AdCampaign, ctx: { journey?: ReadingJourney; recent
 }
 
 /** Weighted pick favouring priority; never returns an ad already used. */
-export function pickAd(pool: AdCampaign[], used: Set<string>, rand = Math.random, journey?: ReadingJourney): AdCampaign | null {
+export function pickAd(pool: AdCampaign[], used: Set<string>, rand = Math.random, journey?: ReadingJourney, where?: { pageType?: string; placement?: string; device?: string }): AdCampaign | null {
   const avail = pool.filter((a) => !used.has(a.id));
   if (!avail.length) return null;
-  const score = (a: AdCampaign) => Math.max(1, a.priority) * Math.max(1, a.weight) * relevanceScore(a, journey);
+  const score = (a: AdCampaign) => Math.max(1, a.priority) * Math.max(1, a.weight) * relevanceScore(a, journey) * smartScore(a, where?.pageType, where?.placement, where?.device);
   const total = avail.reduce((s, a) => s + score(a), 0);
   let r = rand() * total;
   for (const a of avail) { r -= score(a); if (r <= 0) return a; }
@@ -167,6 +184,7 @@ const IN_CONTENT = ["after_intro", "in_content", "mid", "home_section"];
 /** Does this campaign accept this placement? In-content slots accept any in-content campaign. */
 function accepts(a: AdCampaign, placement: string) {
   if (placement === "top") return false;
+  if (a.smart_mode) return placement !== "popup";
   if (a.placements.includes(placement)) return true;
   return IN_CONTENT.includes(placement) && a.placements.some((p) => IN_CONTENT.includes(p));
 }
@@ -197,7 +215,7 @@ export function planPage(ads: AdCampaign[], settings: AdSettings, slots: SlotSpe
       && (!IN_CONTENT.includes(slot.placement) && slot.placement !== "before_faq" || paragraphs >= a.min_paragraph_gap));
     // Rotation: prefer ads this visitor did not just see on the previous pages.
     const recent = new Set(ctx.recent ?? []);
-    const choose = (rows: AdCampaign[], taken = used) => pickAd(rows, taken, Math.random, ctx.journey);
+    const choose = (rows: AdCampaign[], taken = used) => pickAd(rows, taken, Math.random, ctx.journey, { pageType: ctx.pageType, placement: slot.placement, device: ctx.device });
     let ad = choose(candidates.filter((a) => !recent.has(a.id))) ?? choose(candidates);
     // Different ads first; only reuse a campaign when nothing fresh remains and its own per-page limit allows.
     if (!ad && allowReuse) ad = choose(candidates, new Set());

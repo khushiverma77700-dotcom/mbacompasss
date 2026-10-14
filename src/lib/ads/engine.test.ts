@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectPageType, eligible, planPage, relevanceScore, type AdCampaign } from './engine';
+import { detectPageType, eligible, planPage, relevanceScore, smartScore, type AdCampaign } from './engine';
 const ad = (patch: Partial<AdCampaign> = {}): AdCampaign => ({
   id:'a',ad_code:'a',name:'Course',ad_type:'text_cta',status:'active',headline:null,body:null,cta_text:null,
   desktop_image_url:null,mobile_image_url:null,html_content:null,alt_text:null,destination_url:'/courses',
@@ -30,5 +30,24 @@ describe('dynamic ad selection',()=>{
   });
   it('house ads can fill middle slots while preserving placement permissions',()=>{
     const plan=planPage([ad({is_house:true})],settings,[{key:'middle',placement:'after_intro'}],ctx,20);expect(plan.middle?.id).toBe('a');
+  });
+});describe('smart delivery',()=>{
+  const smart=(patch:Partial<AdCampaign>={})=>ad({smart_mode:true,placements:[],page_types:['home'],keywords:['zzz'],devices:'mobile',impression_budget:1000,...patch});
+  it('ignores manual targeting but keeps exclusions',()=>{
+    expect(eligible(smart(),ctx)).toBe(true);
+    expect(eligible(smart({exclude_paths:['/article/*']}),ctx)).toBe(false);
+  });
+  it('stops when the view goal is reached',()=>{
+    expect(eligible(smart({id:'s'}),{...ctx,delivery:{s:{total:1000,today:5}}})).toBe(false);
+  });
+  it('keeps visitor caps',()=>{
+    expect(eligible(smart({cap_per_day:2}),{...ctx,caps:{a:{day:ctx.today,dayCount:2,session:0}}})).toBe(false);
+  });
+  it('behind-goal ad scores higher than ahead-of-goal ad',()=>{
+    expect(smartScore(smart({smart_plan:{boost:3}}),'article','in_content','desktop')).toBeGreaterThan(smartScore(smart({smart_plan:{boost:0.5}}),'article','in_content','desktop'));
+  });
+  it('never takes header or popup slots',()=>{
+    const plan=planPage([smart()],settings,[{key:'top',placement:'top'},{key:'middle',placement:'in_content'}],ctx,20);
+    expect(plan.top).toBeUndefined();expect(plan.middle?.id).toBe('a');
   });
 });
