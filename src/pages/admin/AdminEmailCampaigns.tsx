@@ -610,8 +610,8 @@ export default function AdminEmailCampaigns() {
               <Select value={senderId} onValueChange={(v) => { setSenderId(v); setSenderTouched(true); }}>
                 <SelectTrigger className="max-w-md"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">Default — {draft.fromName || "MBA Compass"} &lt;no-reply@notify.bschoolbuzz.in&gt;</SelectItem>
-                  {senders.map((x) => <SelectItem key={x.id} value={x.id} disabled={x.status === "paused"}>{x.label} — {x.from_name} &lt;{x.local_part}@notify.bschoolbuzz.in&gt;{x.status === "paused" ? " (paused)" : ""}</SelectItem>)}
+                  <SelectItem value="default">Default — {draft.fromName || "MBA Compass"} &lt;no-reply@notify.mbacompass.in&gt;</SelectItem>
+                  {senders.map((x) => <SelectItem key={x.id} value={x.id} disabled={x.status === "paused"}>{x.label} — {x.from_name} &lt;{x.local_part}@notify.mbacompass.in&gt;{x.status === "paused" ? " (paused)" : ""}</SelectItem>)}
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">{senderTouched ? "Chosen by you." : "Picked automatically from the campaign name and subject."} Every email in this campaign uses this sender, its daily cap and its auto-pause rules.</p>
