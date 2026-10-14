@@ -1,6 +1,7 @@
 import { sendLovableEmail } from '@lovable.dev/email-js'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
+import { normalizeSender } from '@/lib/emailSender'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -226,8 +227,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 {
                   run_id: payload.run_id,
                   to: payload.to,
-                  from: payload.from,
-                  sender_domain: payload.sender_domain,
+                  ...normalizeSender(payload.from, payload.sender_domain),
                   subject: payload.subject,
                   html: payload.html,
                   text: payload.text,
