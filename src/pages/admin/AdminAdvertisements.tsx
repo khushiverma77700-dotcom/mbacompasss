@@ -34,7 +34,7 @@ const blank = (): Partial<AdCampaign> => ({
   keywords: [], devices: "all", creative_variants: {}, placements: [ "after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end"], max_per_page: 2, min_paragraph_gap: 4,
   cap_per_day: 3, cap_per_session: 0, is_fallback: false, conversion_path: "",
   impression_budget: 0, daily_impression_budget: 0, pacing: "asap", schedule_days: [], schedule_start_hour: null, schedule_end_hour: null,
-  is_exclusive: false, is_house: false, ab_test: "",
+  is_exclusive: false, is_house: false, ab_test: "", smart_mode: true, goal_end_at: null,
 });
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const SPOTS = [{ k: "all", l: "All spots at once" }, { k: "in_content", l: "Inside content" }, { k: "before_faq", l: "Before FAQ" }, { k: "home_section", l: "Between homepage sections" }, { k: "sidebar", l: "Sidebar" }, { k: "end", l: "End of content" }, { k: "sticky", l: "Sticky bar" }];
@@ -126,6 +126,12 @@ export default function AdminAdvertisements() {
     const { id, ad_code, ...rest } = e as AdCampaign & { created_at?: string };
     delete (rest as any).created_at;
     (rest as any).ab_test = (rest as any).ab_test?.trim() || null;
+    delete (rest as any).smart_plan;
+    if (rest.smart_mode) {
+      if (!(rest.impression_budget! > 0)) return toast({ title: "Enter how many views you want", variant: "destructive" });
+      Object.assign(rest, { pacing: rest.goal_end_at ? "even" : "asap", end_at: rest.goal_end_at ?? null, start_at: rest.start_at ?? (rest.goal_end_at ? new Date().toISOString() : null), daily_impression_budget: 0, page_types: [], include_paths: [], keywords: [], devices: "all",
+        placements: ["after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end", "sticky"], max_per_page: Math.max(2, rest.max_per_page ?? 2) });
+    }
     const row = { ...rest, placements: (rest.placements ?? []).filter((p) => p !== "top"), updated_at: new Date().toISOString(), conversion_path: rest.conversion_path || null };
     const { error } = id ? await supabase.from("ad_campaigns").update(row as any).eq("id", id) : await supabase.from("ad_campaigns").insert(row as any);
     if (error) return toast({ title: "Could not save", description: error.message, variant: "destructive" });
@@ -494,6 +500,17 @@ export default function AdminAdvertisements() {
                 <div className="md:col-span-2"><Label>Short description</Label><Textarea rows={2} value={e.body ?? ""} onChange={(ev) => set({ body: ev.target.value })} /></div>
               </section>
 
+              <section className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <label className="flex items-center gap-2 font-semibold"><Switch checked={!!e.smart_mode} onCheckedChange={(v) => set({ smart_mode: v })} /> Smart mode — just enter the views you want</label>
+                <p className="text-sm text-muted-foreground">The system shows this ad wherever visitors are right now, favours spots people click, speeds up when it falls behind and stops itself when the goal is reached. Visitor limits below still apply.</p>
+                {e.smart_mode && (<div className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Target views</Label><Input type="number" min={0} value={e.impression_budget ?? 0} onChange={(ev) => set({ impression_budget: Number(ev.target.value) })} placeholder="50000" /></div>
+                  <div><Label>Reach the goal by (optional)</Label><Input type="datetime-local" value={toLocal(e.goal_end_at ?? null)} onChange={(ev) => set({ goal_end_at: ev.target.value ? new Date(ev.target.value).toISOString() : null })} /></div>
+                  {e.id && <div className="md:col-span-2"><SmartProgress ad={e as AdCampaign} /></div>}
+                </div>)}
+              </section>
+
+              {!e.smart_mode && <>
               <section className="grid gap-3 md:grid-cols-4">
                 <div className="md:col-span-4 font-semibold">Schedule and priority</div>
                 <div className="md:col-span-2"><Label>Start</Label><Input type="datetime-local" value={toLocal(e.start_at)} onChange={(ev) => set({ start_at: ev.target.value ? new Date(ev.target.value).toISOString() : null })} /></div>
