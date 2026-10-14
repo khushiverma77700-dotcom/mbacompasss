@@ -32,3 +32,8 @@ describe("application deadlines", () => {
     expect(rows.map((row) => row.id)).toEqual(["a", "b", "c"]);
   });
 });
+describe("midnight UTC deadlines", () => {
+  it("stay open for the whole IST deadline day", () => {
+    expect(deadlineTimestamp("2026-10-09T00:00:00+00:00")).toBe(Date.parse("2026-10-09T18:29:59.999Z"));
+  });
+});
