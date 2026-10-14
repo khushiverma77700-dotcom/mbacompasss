@@ -297,9 +297,9 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
       <SiteBreadcrumbs items={breadcrumbItems} />
 
-      <header className="border-b border-application-line pb-8 pt-2 md:pb-10">
-        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-          <div className="min-w-0 max-w-4xl space-y-4">
+      <header className="application-hero p-5 sm:p-8 md:p-10">
+        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
+          <div className="min-w-0 max-w-3xl space-y-4">
             <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
               <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> MBA Compass application desk
             </Badge>
@@ -315,19 +315,19 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
               </Link>
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line sm:grid-cols-4 lg:min-w-0 lg:w-[420px] lg:shrink-0">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:w-96 lg:shrink-0 lg:grid-cols-2">
             {[
               { label: "Applications listed", value: stats.total, icon: LayoutDashboard },
               { label: "Currently open", value: stats.open, icon: ShieldCheck },
               { label: "Deadline today", value: stats.today, icon: Timer },
               { label: "Closing this week", value: stats.week, icon: CalendarClock },
             ].map((s) => (
-              <div key={s.label} className="bg-application-panel p-4">
-                <div className="flex items-center gap-2 text-sm text-application-copy">
-                  <s.icon className="h-4 w-4 text-application-blue" />
+              <div key={s.label} className="application-card p-4">
+                <div className="flex items-start gap-2 text-sm leading-tight text-application-copy">
+                  <s.icon className="mt-0.5 h-4 w-4 shrink-0 text-application-blue" />
                   {s.label}
                 </div>
-                <div className="pt-2 text-xl font-semibold text-application-ink">{s.value}</div>
+                <div className="pt-3 text-3xl font-semibold leading-none text-application-ink">{s.value}</div>
               </div>
             ))}
           </div>
@@ -343,7 +343,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       {/* Filters */}
       <section
         aria-label="Filter MBA applications"
-        className="space-y-4 border-y border-application-line bg-application-panel p-4"
+        className="application-card space-y-4 p-4 sm:p-6"
       >
 
         <div>
@@ -497,7 +497,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                 {group.rows.map((row) => {
                   const info = deadlineInfo(row, now ?? undefined);
                   return (
-                    <article key={row.id} className="group overflow-hidden rounded-lg border border-application-line bg-application-panel transition-colors hover:border-application-blue/30">
+                    <article key={row.id} className="application-card group overflow-hidden">
                       <div className="grid lg:grid-cols-12">
                         <div className="border-b border-application-line bg-application-blue-soft/50 p-5 lg:col-span-4 lg:border-b-0 lg:border-r md:p-6">
                           <div className="flex items-start gap-4">
@@ -581,7 +581,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
       {/* Internal links to the category landing pages */}
       {!presetCategory && (
-        <section aria-label="Browse MBA applications by category" className="rounded-lg border border-application-line bg-application-panel p-5">
+        <section aria-label="Browse MBA applications by category" className="application-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold text-application-ink">Browse MBA application forms by category</h2>
           <div className="grid gap-2 pt-3 sm:grid-cols-2 lg:grid-cols-3">
             {CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
@@ -599,7 +599,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       )}
 
       {/* FAQs (also emitted as FAQPage schema above) */}
-      <section aria-label="MBA application FAQs" className="rounded-lg border border-application-line bg-application-panel p-5">
+      <section aria-label="MBA application FAQs" className="application-card p-5 sm:p-6">
         <h2 className="text-xl font-semibold text-application-ink">MBA application FAQs</h2>
         <Accordion type="single" collapsible className="pt-2">
           {faqs.map((faq, i) => (
