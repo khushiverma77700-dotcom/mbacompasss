@@ -5,6 +5,9 @@ const IST = 19_800_000;
 export function deadlineTimestamp(value: string | null | undefined): number | null {
   if (!value?.trim()) return null;
   const raw = value.trim();
+  // Admin saves date-only deadlines as midnight UTC; treat those as the whole IST day.
+  const midnightUtc = raw.match(/^(\d{4}-\d{2}-\d{2})[T ]00:00:00(?:\.0+)?(?:Z|\+00(?::?00)?)$/);
+  if (midnightUtc) return Date.parse(`${midnightUtc[1]}T23:59:59.999+05:30`);
   const time = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(raw) ? `${raw}T23:59:59.999+05:30` : raw);
   return Number.isFinite(time) ? time : null;
 }

@@ -197,11 +197,14 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       let resp: Response | null = null;
       let usedSlot = slots[0].label;
 
-      for (const slot of slots) {
+      for (const [slotIndex, slot] of slots.entries()) {
         usedSlot = slot.label;
+        // Fail over immediately from a rate-limited key; only the last key gets the
+        // backoff budget, so one call no longer multiplies into many upstream requests.
+        const isLastSlot = slotIndex === slots.length - 1;
         let attempt = await withRetry(
           () => callUpstream(OPENAI_CHAT_URL, slot.key, payload(openaiModel), signal),
-          { maxRetries: Math.max(maxRetries, 2), label: `${provider}/${slot.label}[${feature}]` },
+          { maxRetries: isLastSlot ? Math.max(maxRetries, 2) : 0, label: `${provider}/${slot.label}[${feature}]` },
         );
 
         // Model not available on this account → try known-good models, same key.
