@@ -48,7 +48,7 @@ export default function RecommendedRail({ rows, onApply }: Props) {
   return (
     <section
       aria-label="Today's recommended MBA applications"
-      className="min-w-0 overflow-hidden border-y border-application-line py-5"
+      className="application-card min-w-0 overflow-hidden p-4 sm:p-6"
     >
       <div className="flex items-center justify-between gap-3 border-b border-application-line pb-3">
         <div className="flex items-center gap-2">
@@ -99,14 +99,14 @@ export default function RecommendedRail({ rows, onApply }: Props) {
         onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => setPaused(false)}
-        className="flex gap-3 overflow-x-auto pt-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x gap-4 overflow-x-auto pt-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {rows.map((row) => {
           const info = deadlineInfo(row);
           return (
             <article
               key={row.id}
-              className="group flex w-[19rem] max-w-full shrink-0 flex-col gap-3 rounded-lg border border-application-line bg-application-panel p-4 transition-colors hover:border-application-blue/30"
+              className="application-card group flex w-72 max-w-full shrink-0 snap-start flex-col gap-3 p-4"
             >
               <div className="flex items-start gap-3">
                 {row.logo_url ? (
@@ -127,8 +127,8 @@ export default function RecommendedRail({ rows, onApply }: Props) {
                     {row.name.slice(0, 2).toUpperCase()}
                   </span>
                 )}
-                <div className="min-w-0">
-                  <h3 className="line-clamp-2 min-h-12 text-base font-semibold text-application-ink">
+                <div className="min-w-0 flex-1">
+                  <h3 className="line-clamp-1 text-base font-semibold text-application-ink">
                     <Link to={collegeUrl(row)} className="transition-colors group-hover:text-application-blue">
                       {row.short_name || row.name}
                     </Link>
@@ -149,8 +149,8 @@ export default function RecommendedRail({ rows, onApply }: Props) {
 
               <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line text-sm">
                 <div className="bg-application-canvas p-2.5">
-                  <dt className="text-sm font-bold uppercase tracking-wider text-application-copy/70">Last date</dt>
-                  <dd className="mt-0.5 text-sm font-semibold text-application-ink">{formatDate(row.application_deadline)}</dd>
+                  <dt className="text-sm font-bold uppercase tracking-wider text-application-copy/70">Tier</dt>
+                  <dd className="mt-0.5 truncate text-sm font-semibold text-application-ink">{(row as any).tier || "—"}</dd>
                 </div>
                 <div className="bg-application-canvas p-2.5">
                   <dt className="text-sm font-bold uppercase tracking-wider text-application-copy/70">Form fee</dt>

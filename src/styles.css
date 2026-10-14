@@ -98,17 +98,51 @@
 }
 
 .application-countdown {
-  min-height: 74px;
-  border: 1px solid var(--application-line);
-  border-radius: 6px;
-  padding: 10px;
-  background: var(--application-panel);
-  color: var(--application-blue);
+  --cd-accent: var(--application-blue);
+  --cd-soft: var(--application-blue-soft);
+  border: 1px solid color-mix(in oklab, var(--cd-accent) 18%, transparent);
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--cd-soft), var(--application-panel) 70%);
+  color: var(--cd-accent);
 }
-.application-countdown-urgent {
-  background: var(--application-warning-soft);
-  border-color: color-mix(in oklab, var(--application-warning) 30%, transparent);
-  color: var(--application-warning);
+.application-countdown-open { --cd-accent: var(--application-green); --cd-soft: var(--application-green-soft); }
+.application-countdown-urgent { --cd-accent: var(--application-warning); --cd-soft: var(--application-warning-soft); }
+.application-countdown-soon { --cd-accent: var(--application-blue); --cd-soft: var(--application-blue-soft); }
+.application-countdown-closed { --cd-accent: var(--application-copy); --cd-soft: #f1f5f9; }
+.application-countdown-icon {
+  display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--application-panel);
+  border: 1px solid color-mix(in oklab, var(--cd-accent) 20%, transparent);
+}
+.application-countdown-cell {
+  min-width: 0; text-align: center; padding: 8px 2px;
+  border-radius: 8px; background: var(--application-panel);
+  border: 1px solid color-mix(in oklab, var(--cd-accent) 16%, transparent);
+  color: var(--application-ink);
+}
+.application-countdown-pulse {
+  width: 8px; height: 8px; border-radius: 9999px; background: var(--cd-accent);
+  animation: application-pulse 1.6s ease-out infinite;
+}
+@keyframes application-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--cd-accent) 50%, transparent); }
+  100% { box-shadow: 0 0 0 8px transparent; }
+}
+.application-hero {
+  position: relative; overflow: hidden; border-radius: 20px;
+  border: 1px solid var(--application-line);
+  background: radial-gradient(120% 140% at 100% 0%, var(--application-blue-soft) 0%, var(--application-panel) 55%);
+}
+.application-card {
+  border-radius: 16px; border: 1px solid var(--application-line); background: var(--application-panel);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--application-blue) 6%, transparent);
+  transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+}
+.application-card:hover {
+  border-color: color-mix(in oklab, var(--application-blue) 30%, transparent);
+  box-shadow: 0 12px 28px -14px color-mix(in oklab, var(--application-blue) 35%, transparent);
 }
 .application-editorial {
   color: var(--application-copy);
