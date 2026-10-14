@@ -570,8 +570,8 @@ export default function AdminAdvertisements() {
 }
 
 const SMART_STATUS: Record<string, { l: string; c: string }> = {
-  on_track: { l: "On track", c: "text-primary" }, behind: { l: "Behind — boosting", c: "text-amber-600" },
-  ahead: { l: "Ahead — easing off", c: "text-muted-foreground" }, reached: { l: "Goal reached", c: "text-emerald-600" },
+  on_track: { l: "On track", c: "text-primary" }, behind: { l: "Behind — boosting", c: "text-destructive" },
+  ahead: { l: "Ahead — easing off", c: "text-muted-foreground" }, reached: { l: "Goal reached", c: "text-primary" },
 };
 
 function SmartProgress({ ad }: { ad: AdCampaign }) {
