@@ -3,7 +3,7 @@ import { normalizeSender } from "./emailSender";
 
 describe("normalizeSender", () => {
   it("rewrites a retired sender domain to notify.mbacompass.in", () => {
-    expect(normalizeSender("MBA Compass <no-reply@notify.mbacompass.in>", "notify.mbacompass.in")).toEqual({
+    expect(normalizeSender("MBA Compass <no-reply@notify.bschoolbuzz.in>", "notify.bschoolbuzz.in")).toEqual({
       from: "MBA Compass <no-reply@notify.mbacompass.in>",
       sender_domain: "notify.mbacompass.in",
     });
