@@ -1,8 +1,8 @@
 // Shared helper: enqueue a purchase confirmation email with account credentials
 // and a dashboard access link. Non-blocking — never throws to the caller.
 
-const SENDER_DOMAIN = "notify.bschoolbuzz.in";
-const SENDER_FROM = "MBA Compass <no-reply@notify.bschoolbuzz.in>";
+const SENDER_DOMAIN = "notify.mbacompass.in";
+const SENDER_FROM = "MBA Compass <no-reply@notify.mbacompass.in>";
 const DASHBOARD_URL = "https://dashboard.mbacompass.in";
 
 interface Args {
