@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@/lib/router-compat";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -84,6 +84,19 @@ const TONE_CLASS: Record<DeadlineTone, string> = {
   closed: "bg-muted text-muted-foreground border-border",
   unknown: "bg-muted text-muted-foreground border-border",
 };
+
+/** Compact filter chip: smaller than Button size="sm" so filter rows stay short. */
+const CHIP_CLASS = "min-h-8 rounded-md px-2.5 py-1";
+
+/** One filter row: a narrow inline label beside its chips, so the row is a single line tall. */
+function FilterChipRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[68px_minmax(0,1fr)] items-start gap-2">
+      <span className="pt-1.5 text-sm font-semibold text-application-copy">{label}</span>
+      <div className="flex min-w-0 flex-wrap gap-1.5">{children}</div>
+    </div>
+  );
+}
 
 const LogoBadge = ({ row }: { row: TrackerRow }) => {
   if (row.logo_url) {
@@ -341,31 +354,87 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       {/* Filters */}
       <section
         aria-label="Filter MBA applications"
-        className="space-y-4 border-y border-application-line py-5"
+        className="space-y-2 border-y border-application-line py-3"
       >
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="mr-auto min-w-0 text-xl font-semibold leading-none text-application-ink">
+            Find applications
+          </h2>
+          <div className="order-last w-full min-w-0 sm:order-none sm:w-auto sm:max-w-xs sm:flex-1">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-application-copy" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search college, exam or programme…"
+                aria-label="Search MBA applications"
+                className="h-9 pl-9"
+              />
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            onClick={resetFilters}
+            disabled={!filtersDirty}
+            className="h-9 shrink-0 gap-1.5 px-3"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Reset
+          </Button>
+        </div>
 
-        <h2 className="text-xl font-semibold text-application-ink">Find applications</h2>
-        <div className="grid grid-cols-2 gap-3 sm:hidden">
-          <label className="min-w-0 text-sm font-medium text-application-copy">Deadline
-            <select aria-label="Filter by deadline" value={deadlineFilter} onChange={(e) => setDeadlineFilter(e.target.value as DeadlineFilterKey)} className="mt-1 block h-11 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground">
+        {/* Phones: compact selects replace the chip rows. */}
+        <div className="grid grid-cols-2 gap-2 sm:hidden">
+          <label className="min-w-0 text-xs font-medium text-application-copy">Deadline
+            <select aria-label="Filter by deadline" value={deadlineFilter} onChange={(e) => setDeadlineFilter(e.target.value as DeadlineFilterKey)} className="mt-1 block h-9 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground">
               {DEADLINE_FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
             </select>
           </label>
-          {!presetCategory && <label className="min-w-0 text-sm font-medium text-application-copy">Category
-            <select aria-label="Filter by category" value={category} onChange={(e) => setCategory(e.target.value as CategoryKey)} className="mt-1 block h-11 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground">
+          {!presetCategory && <label className="min-w-0 text-xs font-medium text-application-copy">Category
+            <select aria-label="Filter by category" value={category} onChange={(e) => setCategory(e.target.value as CategoryKey)} className="mt-1 block h-9 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground">
               {CATEGORY_FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
             </select>
           </label>}
-          {exams.length > 0 && <label className="col-span-2 text-sm font-medium text-application-copy">Entrance exam
-            <select aria-label="Filter by entrance exam" value={exam ?? ""} onChange={(e) => setExam(e.target.value || null)} className="mt-1 block h-11 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground">
+          {exams.length > 0 && <label className="col-span-2 text-xs font-medium text-application-copy">Entrance exam
+            <select aria-label="Filter by entrance exam" value={exam ?? ""} onChange={(e) => setExam(e.target.value || null)} className="mt-1 block h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground">
               <option value="">All exams</option>
               {exams.map((e) => <option key={e} value={e}>{e}</option>)}
             </select>
           </label>}
         </div>
-        <div className="hidden sm:block">
-          <p className="pb-2 text-sm font-semibold text-application-copy">Application deadline</p>
-          <div className="flex flex-wrap gap-2">
+
+        <div className="grid grid-cols-2 gap-2 sm:max-w-3xl sm:grid-cols-3">
+          <select
+            aria-label="Filter by tier"
+            value={tierFilter}
+            onChange={(e) => setTierFilter(e.target.value)}
+            className="h-9 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">All tiers</option>
+            {TIER_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select
+            aria-label="Filter by program"
+            value={programFilter}
+            onChange={(e) => setProgramFilter(e.target.value)}
+            className="h-9 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">All programs</option>
+            {PROGRAM_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <select
+            aria-label="Filter by program fees"
+            value={feeFilter}
+            onChange={(e) => setFeeFilter(e.target.value)}
+            className="col-span-2 h-9 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground sm:col-span-1"
+          >
+            <option value="">All program fees</option>
+            {FEE_BANDS.map((b) => <option key={b.key} value={b.key}>{b.label}</option>)}
+          </select>
+        </div>
+
+        {/* Wider screens: one line per filter group, label inline with its chips. */}
+        <div className="hidden space-y-1.5 sm:block">
+          <FilterChipRow label="Deadline">
             {DEADLINE_FILTERS.map((f) => (
               <Button
                 key={f.key}
@@ -373,17 +442,14 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                 size="sm"
                 variant={deadlineFilter === f.key ? "default" : "outline"}
                 onClick={() => setDeadlineFilter(f.key)}
-                className="rounded-md"
+                className={CHIP_CLASS}
               >
                 {f.label}
               </Button>
             ))}
-          </div>
-        </div>
-        {!presetCategory && (
-          <div className="hidden sm:block">
-            <p className="pb-2 text-sm font-semibold text-application-copy">Category</p>
-            <div className="flex flex-wrap gap-2">
+          </FilterChipRow>
+          {!presetCategory && (
+            <FilterChipRow label="Category">
               {CATEGORY_FILTERS.map((f) => (
                 <Button
                   key={f.key}
@@ -391,25 +457,22 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                   size="sm"
                   variant={category === f.key ? "default" : "outline"}
                   onClick={() => setCategory(f.key)}
-                  className="rounded-md"
+                  className={CHIP_CLASS}
                 >
-                  {f.key === "recommended" && <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
+                  {f.key === "recommended" && <Sparkles className="h-3.5 w-3.5" />}
                   {f.label}
                 </Button>
               ))}
-            </div>
-          </div>
-        )}
-        {exams.length > 0 && (
-          <div className="hidden sm:block">
-            <p className="pb-2 text-sm font-semibold text-application-copy">Entrance exam</p>
-            <div className="flex flex-wrap gap-2">
+            </FilterChipRow>
+          )}
+          {exams.length > 0 && (
+            <FilterChipRow label="Exam">
               <Button
                 type="button"
                 size="sm"
                 variant={exam === null ? "default" : "outline"}
                 onClick={() => setExam(null)}
-                className="rounded-md"
+                className={CHIP_CLASS}
               >
                 All exams
               </Button>
@@ -420,47 +483,13 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                   size="sm"
                   variant={exam === e ? "default" : "outline"}
                   onClick={() => setExam(exam === e ? null : e)}
-                  className="rounded-md"
+                  className={CHIP_CLASS}
                 >
                   {e}
                 </Button>
               ))}
-            </div>
-          </div>
-        )}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {[
-            { label: "Tier", value: tierFilter, set: setTierFilter, options: TIER_OPTIONS.map((t) => [t, t]) },
-            { label: "Program", value: programFilter, set: setProgramFilter, options: PROGRAM_OPTIONS.map((t) => [t, t]) },
-            { label: "Program fees", value: feeFilter, set: setFeeFilter, options: FEE_BANDS.map((b) => [b.key, b.label]) },
-          ].map((f) => (
-            <label key={f.label} className="min-w-0 text-sm font-medium text-application-copy last:col-span-2 sm:last:col-span-1">
-              {f.label}
-              <select
-                value={f.value}
-                onChange={(e) => f.set(e.target.value)}
-                className="mt-1 block h-11 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-              >
-                <option value="">All</option>
-                {f.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-            </label>
-          ))}
-        </div>
-        <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-application-copy" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search college, B-school, exam or programme…"
-              aria-label="Search MBA applications"
-              className="h-11 pl-9"
-            />
-          </div>
-          <Button variant="outline" onClick={resetFilters} disabled={!filtersDirty} className="h-11 gap-1.5">
-            <RotateCcw className="h-4 w-4" /> Reset filters
-          </Button>
+            </FilterChipRow>
+          )}
         </div>
       </section>
 

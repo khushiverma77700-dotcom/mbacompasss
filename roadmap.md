@@ -120,3 +120,7 @@
 - [x] Verify preview compilation health
 - [x] Ads: campaign controls, preview studio, analytics/alerts/A-B
 - [x] Admin rich text editor: detect mixed font sizes correctly and support text colours everywhere
+
+## Compact application filter bar
+- [x] Fold search, reset and dropdowns into short toolbar rows and slim deadline/category/exam chips
+- [x] Verify every filter applies and resets at 390/820/1280px and on category landing pages
