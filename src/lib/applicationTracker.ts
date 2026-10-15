@@ -31,6 +31,8 @@ export type TrackerRow = {
   location: string | null;
   application_open_date: string | null;
   application_deadline: string | null;
+  /** True when applications are open but the deadline is not disclosed. */
+  deadline_tbd: boolean | null;
   application_fee: number | null;
   program_fee: number | null;
   accepted_exams: string[];
@@ -60,6 +62,8 @@ export type TrackerRow = {
   is_active: boolean;
   is_archived: boolean;
   display_order: number;
+  /** Admin-controlled visibility order; lower numbers appear first. */
+  sort_order: number | null;
   is_homepage_featured: boolean;
   homepage_order: number;
   view_count: number;
