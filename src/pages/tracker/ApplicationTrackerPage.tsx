@@ -289,7 +289,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
   return (
     <div className="application-directory min-h-screen">
-    <div className="mx-auto max-w-7xl space-y-8 p-4 pb-20 md:p-8">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-4 pb-20 md:space-y-8 md:p-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema(meta, scoped)) }}
@@ -297,37 +297,35 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
       <SiteBreadcrumbs items={breadcrumbItems} />
 
-      <header className="application-hero p-5 sm:p-8 md:p-10">
-        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
+      <header className="application-hero px-0 pb-5 pt-2 sm:p-6">
+        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div className="min-w-0 max-w-3xl space-y-4">
             <Badge variant="outline" className="rounded-md border-application-line bg-application-panel text-application-blue">
               <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> MBA Compass application desk
             </Badge>
             <h1 className="text-3xl font-semibold leading-tight text-application-ink md:text-4xl">{meta.h1}</h1>
             <p className="max-w-3xl text-base text-application-copy">
-            Every MBA application form in one place — college-wise last dates, application fees, programme fees,
-            accepted entrance exams (CAT, XAT, GMAT, NMAT, SNAP, CMAT) and official
-            apply-online links for IIMs, Tier 1 and Tier 2 B-schools.
+            College and exam applications, official deadlines, fees and admission details for your MBA journey.
             </p>
-            <Button asChild className="gap-2 shadow-sm">
+            <Button asChild className="h-11 w-full gap-2 sm:w-auto">
               <Link to="/mba-application/my-applications">
                 <ClipboardList className="h-4 w-4" /> My Applications <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:w-96 lg:shrink-0 lg:grid-cols-2">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-application-line pt-4 sm:grid-cols-4 lg:w-96 lg:shrink-0 lg:grid-cols-2">
             {[
               { label: "Applications listed", value: stats.total, icon: LayoutDashboard },
               { label: "Currently open", value: stats.open, icon: ShieldCheck },
               { label: "Deadline today", value: stats.today, icon: Timer },
               { label: "Closing this week", value: stats.week, icon: CalendarClock },
             ].map((s) => (
-              <div key={s.label} className="application-card p-4">
+              <div key={s.label} className="min-w-0">
                 <div className="flex items-start gap-2 text-sm leading-tight text-application-copy">
                   <s.icon className="mt-0.5 h-4 w-4 shrink-0 text-application-blue" />
                   {s.label}
                 </div>
-                <div className="pt-3 text-3xl font-semibold leading-none text-application-ink">{s.value}</div>
+                <div className="pt-2 text-xl font-semibold leading-none text-application-ink">{s.value}</div>
               </div>
             ))}
           </div>
@@ -343,10 +341,29 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       {/* Filters */}
       <section
         aria-label="Filter MBA applications"
-        className="application-card space-y-4 p-4 sm:p-6"
+        className="space-y-4 border-y border-application-line py-5"
       >
 
-        <div>
+        <h2 className="text-xl font-semibold text-application-ink">Find applications</h2>
+        <div className="grid grid-cols-2 gap-3 sm:hidden">
+          <label className="min-w-0 text-sm font-medium text-application-copy">Deadline
+            <select aria-label="Filter by deadline" value={deadlineFilter} onChange={(e) => setDeadlineFilter(e.target.value as DeadlineFilterKey)} className="mt-1 block h-11 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground">
+              {DEADLINE_FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+            </select>
+          </label>
+          {!presetCategory && <label className="min-w-0 text-sm font-medium text-application-copy">Category
+            <select aria-label="Filter by category" value={category} onChange={(e) => setCategory(e.target.value as CategoryKey)} className="mt-1 block h-11 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground">
+              {CATEGORY_FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+            </select>
+          </label>}
+          {exams.length > 0 && <label className="col-span-2 text-sm font-medium text-application-copy">Entrance exam
+            <select aria-label="Filter by entrance exam" value={exam ?? ""} onChange={(e) => setExam(e.target.value || null)} className="mt-1 block h-11 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground">
+              <option value="">All exams</option>
+              {exams.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </label>}
+        </div>
+        <div className="hidden sm:block">
           <p className="pb-2 text-sm font-semibold text-application-copy">Application deadline</p>
           <div className="flex flex-wrap gap-2">
             {DEADLINE_FILTERS.map((f) => (
@@ -364,7 +381,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
           </div>
         </div>
         {!presetCategory && (
-          <div>
+          <div className="hidden sm:block">
             <p className="pb-2 text-sm font-semibold text-application-copy">Category</p>
             <div className="flex flex-wrap gap-2">
               {CATEGORY_FILTERS.map((f) => (
@@ -384,7 +401,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
           </div>
         )}
         {exams.length > 0 && (
-          <div>
+          <div className="hidden sm:block">
             <p className="pb-2 text-sm font-semibold text-application-copy">Entrance exam</p>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -411,18 +428,18 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
             </div>
           </div>
         )}
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {[
             { label: "Tier", value: tierFilter, set: setTierFilter, options: TIER_OPTIONS.map((t) => [t, t]) },
             { label: "Program", value: programFilter, set: setProgramFilter, options: PROGRAM_OPTIONS.map((t) => [t, t]) },
             { label: "Program fees", value: feeFilter, set: setFeeFilter, options: FEE_BANDS.map((b) => [b.key, b.label]) },
           ].map((f) => (
-            <label key={f.label} className="text-sm font-semibold text-application-copy">
+            <label key={f.label} className="min-w-0 text-sm font-medium text-application-copy last:col-span-2 sm:last:col-span-1">
               {f.label}
               <select
                 value={f.value}
                 onChange={(e) => f.set(e.target.value)}
-                className="mt-1 block h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                className="mt-1 block h-11 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm text-foreground"
               >
                 <option value="">All</option>
                 {f.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -438,10 +455,10 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search college, B-school, exam or programme…"
               aria-label="Search MBA applications"
-              className="pl-9"
+              className="h-11 pl-9"
             />
           </div>
-          <Button variant="outline" onClick={resetFilters} disabled={!filtersDirty} className="gap-1.5">
+          <Button variant="outline" onClick={resetFilters} disabled={!filtersDirty} className="h-11 gap-1.5">
             <RotateCcw className="h-4 w-4" /> Reset filters
           </Button>
         </div>
@@ -499,19 +516,19 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                   return (
                     <article key={row.id} className="application-card group overflow-hidden">
                       <div className="grid lg:grid-cols-12">
-                        <div className="border-b border-application-line bg-application-blue-soft/50 p-5 lg:col-span-4 lg:border-b-0 lg:border-r md:p-6">
-                          <div className="flex items-start gap-4">
+                        <div className="min-w-0 border-b border-application-line bg-application-panel p-4 lg:col-span-4 lg:border-b-0 lg:border-r md:p-6">
+                          <div className="flex min-w-0 items-start gap-3">
                             <LogoBadge row={row} />
                             <div className="min-w-0 flex-1">
                               <h3 className="text-base font-semibold leading-snug text-application-ink transition-colors group-hover:text-application-blue">
                                 <Link to={collegeUrl(row)}>{row.name}</Link>
                               </h3>
                               <div className="mt-2.5 flex flex-wrap gap-2">
-                                <Badge variant="outline" className="rounded-md border-application-blue/10 bg-application-blue-soft text-sm font-bold uppercase tracking-wide text-application-blue">
+                                <Badge variant="outline" className="rounded-md border-application-blue/10 bg-application-blue-soft text-sm font-medium text-application-blue">
                                   {CATEGORY_LABEL[row.category] ?? row.category}
                                 </Badge>
                                 {row.is_recommended && (
-                                  <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-sm font-bold uppercase tracking-wide text-application-warning">
+                                  <Badge variant="outline" className="max-w-full whitespace-normal rounded-md border-application-warning/20 bg-application-warning-soft text-sm font-medium text-application-warning">
                                     {row.recommendation_label || "Recommended"}
                                   </Badge>
                                 )}
@@ -528,14 +545,14 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                             { label: "Program fees", value: formatFee(row.program_fee) },
                             { label: "Application fees", value: formatFee(row.application_fee) },
                           ].map((item) => (
-                            <div key={item.label} className="bg-application-panel p-4 md:p-5">
-                              <dt className="text-sm font-bold uppercase tracking-wider text-application-copy/70">{item.label}</dt>
-                              <dd className="mt-1 text-sm font-semibold text-application-ink">{item.value}</dd>
+                            <div key={item.label} className="min-w-0 bg-application-panel px-4 py-3 md:p-5">
+                              <dt className="text-sm font-mediumr text-application-copy/70">{item.label}</dt>
+                              <dd className="mt-1 break-words text-base font-semibold text-application-ink">{item.value}</dd>
                             </div>
                           ))}
                         </div>
 
-                        <div className="flex flex-col justify-between gap-4 border-t border-application-line bg-application-canvas p-5 lg:col-span-3 lg:border-l lg:border-t-0 md:p-6">
+                        <div className="flex flex-col justify-between gap-4 border-t border-application-line bg-application-panel p-4 lg:col-span-3 lg:border-l lg:border-t-0 md:p-6">
                           <div>
                             {(row.accepted_exams ?? []).length > 0 && (
                               <div className="flex flex-wrap gap-1.5">
@@ -549,12 +566,12 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                             <Button
                               disabled={applying === row.id || !info.isOpen}
                               onClick={() => void handleApply(row)}
-                              className="w-full gap-1.5 rounded-lg shadow-sm"
+                              className="h-11 w-full gap-1.5 rounded-md"
                             >
                               {info.isOpen ? "Apply Now" : "Applications Closed"}
                               {info.isOpen && <ArrowUpRight className="h-4 w-4" />}
                             </Button>
-                            <Button asChild variant="outline" className="w-full gap-1.5 rounded-lg">
+                            <Button asChild variant="outline" className="h-11 w-full gap-1.5 rounded-md">
                               <Link to={collegeUrl(row)} onClick={() => void trackTrackerView(row, user ?? null, "view")}>
                                 {row.category === "exam" ? "View Exam Details" : "View College Details"} <ChevronRight className="h-4 w-4" />
                               </Link>
@@ -563,9 +580,9 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
                         </div>
                       </div>
                       {(row.details_html || row.eligibility || row.selection_process || row.short_description || row.recommendation_note || row.inside_info_notes || row.cutoff_note || row.average_package != null) && (
-                        <Accordion type="single" collapsible className="border-t border-application-line px-5">
+                        <Accordion type="single" collapsible className="border-t border-application-line px-4 md:px-6">
                           <AccordionItem value="highlights" className="border-0">
-                            <AccordionTrigger className="text-base text-application-blue">{row.category === "exam" ? "Exam information & registration" : "College highlights & admission details"}</AccordionTrigger>
+                            <AccordionTrigger className="text-left text-base leading-snug text-application-blue">{row.category === "exam" ? "Exam information" : "College highlights & admissions"}</AccordionTrigger>
                             <AccordionContent className="pb-6"><ApplicationInformation row={row} /></AccordionContent>
                           </AccordionItem>
                         </Accordion>
@@ -581,7 +598,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
 
       {/* Internal links to the category landing pages */}
       {!presetCategory && (
-        <section aria-label="Browse MBA applications by category" className="application-card p-5 sm:p-6">
+        <section aria-label="Browse MBA applications by category" className="border-t border-application-line pt-5">
           <h2 className="text-xl font-semibold text-application-ink">Browse MBA application forms by category</h2>
           <div className="grid gap-2 pt-3 sm:grid-cols-2 lg:grid-cols-3">
             {CATEGORY_FILTERS.filter((c) => c.key !== "all").map((c) => (
@@ -599,7 +616,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
       )}
 
       {/* FAQs (also emitted as FAQPage schema above) */}
-      <section aria-label="MBA application FAQs" className="application-card p-5 sm:p-6">
+      <section aria-label="MBA application FAQs" className="border-t border-application-line pt-5">
         <h2 className="text-xl font-semibold text-application-ink">MBA application FAQs</h2>
         <Accordion type="single" collapsible className="pt-2">
           {faqs.map((faq, i) => (

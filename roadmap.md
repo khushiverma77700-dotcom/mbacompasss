@@ -1,5 +1,10 @@
 # Roadmap
 
+## Formal mobile application UI
+- [x] Simplify page spacing, mobile filters and application dossiers
+- [x] Recompose recommended colleges with readable names and aligned actions
+- [x] Verify real records, countdowns and interactions at 320/390/766/1280px; nine deadline tests pass
+
 ## Application directory refinement
 - [x] Fix shared IST deadline calculations and live countdowns (six deadline/order tests passed)
 - [x] Make advisor recommendations reliable, readable and navigable (saved picks only, clear closed states, shared ordering)

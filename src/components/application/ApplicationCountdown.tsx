@@ -43,12 +43,12 @@ export default function ApplicationCountdown({ row, compact = false }: { row: Pi
             {running && <span className="application-countdown-pulse" aria-hidden />}
             {title}
           </p>
-          <p className="truncate text-sm leading-tight text-application-copy">{note}</p>
+          <p className="mt-1 text-sm leading-snug text-application-copy">{note}</p>
         </div>
       </div>
       {running && (
         <div className="mt-3 grid grid-cols-4 gap-1.5" aria-label={`${parts.days} days ${parts.hours} hours ${parts.minutes} minutes ${parts.seconds} seconds remaining`}>
-          {[[parts.days, compact ? "D" : "Days"], [parts.hours, compact ? "H" : "Hrs"], [parts.minutes, compact ? "M" : "Min"], [parts.seconds, compact ? "S" : "Sec"]].map(([value, label]) => (
+          {[[parts.days, "Days"], [parts.hours, "Hrs"], [parts.minutes, "Min"], [parts.seconds, "Sec"]].map(([value, label]) => (
             <div key={label} className="application-countdown-cell">
               <span className={`${compact ? "text-base" : "text-xl"} block font-semibold leading-none tabular-nums`}>{String(value).padStart(2, "0")}</span>
               <span className="mt-1 block text-sm leading-none text-application-copy">{label}</span>
