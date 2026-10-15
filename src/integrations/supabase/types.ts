@@ -688,6 +688,7 @@ export type Database = {
           college_website: string | null
           created_at: string
           cutoff_note: string | null
+          deadline_tbd: boolean
           details_html: string | null
           display_order: number
           eligibility: string | null
@@ -721,6 +722,7 @@ export type Database = {
           short_description: string | null
           short_name: string | null
           slug: string
+          sort_order: number
           status: string
           tier: string | null
           updated_at: string
@@ -738,6 +740,7 @@ export type Database = {
           college_website?: string | null
           created_at?: string
           cutoff_note?: string | null
+          deadline_tbd?: boolean
           details_html?: string | null
           display_order?: number
           eligibility?: string | null
@@ -771,6 +774,7 @@ export type Database = {
           short_description?: string | null
           short_name?: string | null
           slug: string
+          sort_order?: number
           status?: string
           tier?: string | null
           updated_at?: string
@@ -788,6 +792,7 @@ export type Database = {
           college_website?: string | null
           created_at?: string
           cutoff_note?: string | null
+          deadline_tbd?: boolean
           details_html?: string | null
           display_order?: number
           eligibility?: string | null
@@ -821,6 +826,7 @@ export type Database = {
           short_description?: string | null
           short_name?: string | null
           slug?: string
+          sort_order?: number
           status?: string
           tier?: string | null
           updated_at?: string
