@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Formal mobile application UI
-- [ ] Simplify page spacing, mobile filters and application dossiers
-- [ ] Recompose recommended colleges with readable names and aligned actions
-- [ ] Verify real records, countdowns and interactions on phone and desktop
+- [x] Simplify page spacing, mobile filters and application dossiers
+- [x] Recompose recommended colleges with readable names and aligned actions
+- [x] Verify real records, countdowns and interactions at 320/390/766/1280px; nine deadline tests pass
 
 ## Application directory refinement
 - [x] Fix shared IST deadline calculations and live countdowns (six deadline/order tests passed)
