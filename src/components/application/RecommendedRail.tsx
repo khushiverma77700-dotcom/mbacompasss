@@ -6,10 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpRight, ChevronLeft, ChevronRight, Sparkles, Timer } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   deadlineInfo,
-  formatDate,
   formatFee,
   type TrackerRow,
 } from "@/lib/applicationTracker";
@@ -28,11 +27,12 @@ export default function RecommendedRail({ rows, onApply }: Props) {
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el || rows.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce), (max-width: 639px)").matches) return;
     const id = window.setInterval(() => {
       if (paused) return;
       const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
-      el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + 312, behavior: "smooth" });
+      const card = el.querySelector("article");
+      el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + (card?.getBoundingClientRect().width ?? 320) + 16, behavior: "smooth" });
     }, 6000);
     return () => window.clearInterval(id);
   }, [paused, rows.length]);
@@ -42,31 +42,24 @@ export default function RecommendedRail({ rows, onApply }: Props) {
   const nudge = (dir: 1 | -1) => {
     const el = scrollerRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * Math.max(280, el.clientWidth * 0.8), behavior: "smooth" });
+    const card = el.querySelector("article");
+    el.scrollBy({ left: dir * ((card?.getBoundingClientRect().width ?? el.clientWidth) + 16), behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
 
   return (
     <section
       aria-label="Today's recommended MBA applications"
-      className="application-card min-w-0 overflow-hidden p-4 sm:p-6"
+      className="min-w-0 overflow-hidden"
     >
-      <div className="flex items-center justify-between gap-3 border-b border-application-line pb-3">
-        <div className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-application-blue/10 bg-application-blue-soft text-application-blue"
-          >
-            <Sparkles className="h-5 w-5" />
-          </span>
-          <div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-application-line pb-3">
+          <div className="min-w-0">
             <h2 className="text-xl font-semibold leading-tight text-application-ink">
-              Today&rsquo;s recommended applications
+              Recommended colleges
             </h2>
             <p className="text-sm text-application-copy">
               Advisor picks · {rows.length} applications
             </p>
           </div>
-        </div>
         <div className="flex shrink-0 gap-1.5">
           <Button
             type="button"
@@ -74,7 +67,7 @@ export default function RecommendedRail({ rows, onApply }: Props) {
             variant="outline"
             aria-label="Scroll recommendations left"
             onClick={() => nudge(-1)}
-            className="h-9 w-9 rounded-full bg-application-panel"
+            className="h-10 w-10 rounded-md bg-application-panel"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -84,7 +77,7 @@ export default function RecommendedRail({ rows, onApply }: Props) {
             variant="outline"
             aria-label="Scroll recommendations right"
             onClick={() => nudge(1)}
-            className="h-9 w-9 rounded-full bg-application-panel"
+            className="h-10 w-10 rounded-md bg-application-panel"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -99,14 +92,14 @@ export default function RecommendedRail({ rows, onApply }: Props) {
         onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => setPaused(false)}
-        className="flex snap-x gap-4 overflow-x-auto pt-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="application-recommendations flex gap-4 overflow-x-auto pt-4 pb-3"
       >
         {rows.map((row) => {
           const info = deadlineInfo(row);
           return (
             <article
               key={row.id}
-              className="application-card group flex w-72 max-w-full shrink-0 snap-start flex-col gap-3 p-4"
+              className="application-card application-recommendation group flex min-w-0 flex-col gap-4 p-4"
             >
               <div className="flex items-start gap-3">
                 {row.logo_url ? (
@@ -117,58 +110,57 @@ export default function RecommendedRail({ rows, onApply }: Props) {
                     decoding="async"
                     width={40}
                     height={40}
-                    className="h-11 w-11 shrink-0 rounded-lg border border-application-blue/10 bg-application-blue-soft object-contain p-1 shadow-sm"
+                    className="h-11 w-11 shrink-0 rounded-md border border-application-line bg-application-panel object-contain p-1"
                   />
                 ) : (
                   <span
                     aria-hidden
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-application-blue/10 bg-application-blue-soft text-base font-bold text-application-blue shadow-sm"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-application-line bg-application-blue-soft text-base font-semibold text-application-blue"
                   >
                     {row.name.slice(0, 2).toUpperCase()}
                   </span>
                 )}
                 <div className="min-w-0 flex-1">
-                  <h3 className="line-clamp-1 text-base font-semibold text-application-ink">
+                  <h3 className="text-base font-semibold leading-snug text-application-ink">
                     <Link to={collegeUrl(row)} className="transition-colors group-hover:text-application-blue">
                       {row.short_name || row.name}
                     </Link>
                   </h3>
-                  <p className="truncate text-sm text-application-copy">
+                  <p className="mt-1 line-clamp-2 text-sm leading-snug text-application-copy">
                     {row.program || row.location || "MBA / PGDM"}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                <Badge variant="outline" className="rounded-md border-application-warning/20 bg-application-warning-soft text-sm font-bold uppercase tracking-wide text-application-warning">
+                <Badge variant="outline" className="max-w-full whitespace-normal rounded border-application-line bg-application-blue-soft text-sm font-medium text-application-blue">
                   {row.recommendation_label || "Advisor pick"}
                 </Badge>
               </div>
-              {row.recommendation_note?.trim() && <p className="line-clamp-3 text-sm leading-relaxed text-application-copy">{row.recommendation_note}</p>}
-              <ApplicationCountdown row={row} compact />
+              {row.recommendation_note?.trim() && <p className="line-clamp-2 text-sm leading-relaxed text-application-copy">{row.recommendation_note}</p>}
+              <div className="mt-auto"><ApplicationCountdown row={row} compact /></div>
 
-              <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-application-line bg-application-line text-sm">
-                <div className="bg-application-canvas p-2.5">
-                  <dt className="text-sm font-bold uppercase tracking-wider text-application-copy/70">Tier</dt>
-                  <dd className="mt-0.5 truncate text-sm font-semibold text-application-ink">{(row as any).tier || "—"}</dd>
+              <dl className="grid grid-cols-2 gap-3 border-b border-application-line pb-3 text-sm">
+                <div className="min-w-0">
+                  <dt className="text-sm text-application-copy">Tier</dt>
+                  <dd className="mt-1 text-sm font-semibold text-application-ink">{row.tier || "—"}</dd>
                 </div>
-                <div className="bg-application-canvas p-2.5">
-                  <dt className="text-sm font-bold uppercase tracking-wider text-application-copy/70">Form fee</dt>
-                  <dd className="mt-0.5 text-sm font-semibold text-application-ink">{formatFee(row.application_fee)}</dd>
+                <div className="min-w-0">
+                  <dt className="text-sm text-application-copy">Application fee</dt>
+                  <dd className="mt-1 text-sm font-semibold text-application-ink">{formatFee(row.application_fee)}</dd>
                 </div>
               </dl>
 
-              <div className="mt-auto flex gap-2">
-                <Button asChild variant="outline" size="sm" className="flex-1 rounded-lg">
-                  <Link to={collegeUrl(row)}>Details</Link>
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant="outline" className="h-11 min-w-0 rounded-md">
+                  <Link to={collegeUrl(row)}>View Details</Link>
                 </Button>
                 <Button
-                  size="sm"
-                  className="flex-1 gap-1 rounded-lg shadow-sm"
+                  className="h-11 min-w-0 gap-1 rounded-md"
                   disabled={!info.isOpen || !row.apply_url}
                   onClick={() => onApply(row)}
                 >
-                  {info.isOpen ? "Apply" : "Closed"}
+                  {info.isOpen ? "Apply Now" : "Closed"}
                   {info.isOpen && <ArrowUpRight className="h-3.5 w-3.5" />}
                 </Button>
               </div>

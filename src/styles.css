@@ -101,9 +101,9 @@
   --cd-accent: var(--application-blue);
   --cd-soft: var(--application-blue-soft);
   border: 1px solid color-mix(in oklab, var(--cd-accent) 18%, transparent);
-  border-radius: 12px;
+  border-radius: 6px;
   padding: 12px;
-  background: linear-gradient(135deg, var(--cd-soft), var(--application-panel) 70%);
+  background: var(--cd-soft);
   color: var(--cd-accent);
 }
 .application-countdown-open { --cd-accent: var(--application-green); --cd-soft: var(--application-green-soft); }
@@ -112,13 +112,13 @@
 .application-countdown-closed { --cd-accent: var(--application-copy); --cd-soft: #f1f5f9; }
 .application-countdown-icon {
   display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: 9px;
+  width: 32px; height: 32px; border-radius: 6px;
   background: var(--application-panel);
   border: 1px solid color-mix(in oklab, var(--cd-accent) 20%, transparent);
 }
 .application-countdown-cell {
   min-width: 0; text-align: center; padding: 8px 2px;
-  border-radius: 8px; background: var(--application-panel);
+  border-radius: 4px; background: var(--application-panel);
   border: 1px solid color-mix(in oklab, var(--cd-accent) 16%, transparent);
   color: var(--application-ink);
 }
@@ -131,18 +131,27 @@
   100% { box-shadow: 0 0 0 8px transparent; }
 }
 .application-hero {
-  position: relative; overflow: hidden; border-radius: 20px;
-  border: 1px solid var(--application-line);
-  background: radial-gradient(120% 140% at 100% 0%, var(--application-blue-soft) 0%, var(--application-panel) 55%);
+  position: relative; overflow: hidden;
+  border-bottom: 1px solid var(--application-line);
+  background: var(--application-panel);
 }
 .application-card {
-  border-radius: 16px; border: 1px solid var(--application-line); background: var(--application-panel);
+  border-radius: 8px; border: 1px solid var(--application-line); background: var(--application-panel);
   box-shadow: 0 1px 2px color-mix(in oklab, var(--application-blue) 6%, transparent);
   transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
 }
 .application-card:hover {
   border-color: color-mix(in oklab, var(--application-blue) 30%, transparent);
-  box-shadow: 0 12px 28px -14px color-mix(in oklab, var(--application-blue) 35%, transparent);
+  box-shadow: 0 2px 6px color-mix(in oklab, var(--application-blue) 8%, transparent);
+}
+.application-recommendations { scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--application-line) transparent; }
+.application-recommendation { flex: 0 0 100%; scroll-snap-align: start; }
+@media (min-width: 640px) {
+  .application-recommendation { flex-basis: 320px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .application-countdown-pulse { animation: none; }
+  .application-card { transition: none; }
 }
 .application-editorial {
   color: var(--application-copy);
