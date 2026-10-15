@@ -111,6 +111,7 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
       const { data, error } = await supabase
         .from("application_trackers")
         .select(TRACKER_SELECT)
+        .order("sort_order", { ascending: true })
         .order("display_order", { ascending: true })
         .order("application_deadline", { ascending: true, nullsFirst: false });
       if (error) throw error;
@@ -452,7 +453,7 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
                       <div className="grid grid-cols-2 gap-px border-y border-border bg-border sm:grid-cols-4">
                         <div className="bg-card p-3">
                           <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Deadline</p>
-                          <p className="mt-1 font-medium text-foreground">{formatDate(row.application_deadline)}</p>
+                          <p className="mt-1 font-medium text-foreground">{row.deadline_tbd && !row.application_deadline ? "Application Open" : formatDate(row.application_deadline)}</p>
                           <p className="text-sm text-muted-foreground">{deadline.label}</p>
                         </div>
                         <div className="bg-card p-3">
@@ -467,7 +468,7 @@ export default function AdminCollegeApplications({ initialTab, initialAction }: 
                         <div className="bg-card p-3">
                           <p className="text-sm text-muted-foreground">Students</p>
                           <p className="mt-1 font-medium text-foreground">{trackedCount[row.id] ?? 0} tracking</p>
-                          <p className="text-sm text-muted-foreground">Order {row.display_order}</p>
+                          <p className="text-sm text-muted-foreground">Sort order {row.sort_order ?? 0}</p>
                         </div>
                       </div>
 

@@ -47,6 +47,8 @@ type FormState = {
   apply_url: string;
   accepted_exams: string[];
   application_deadline: string;
+  deadline_tbd: boolean;
+  sort_order: string;
   details_html: string;
   is_active: boolean;
 };
@@ -64,6 +66,8 @@ const EMPTY: FormState = {
   apply_url: "",
   accepted_exams: [],
   application_deadline: "",
+  deadline_tbd: false,
+  sort_order: "0",
   details_html: "",
   is_active: true,
 };
@@ -123,6 +127,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
         apply_url: row.apply_url ?? "",
         accepted_exams: row.accepted_exams ?? [],
         application_deadline: toDateInput(row.application_deadline),
+        deadline_tbd: !!row.deadline_tbd,
+        sort_order: (row.sort_order ?? 0).toString(),
         details_html: row.details_html ?? "",
         is_active: row.is_active,
       });
@@ -157,6 +163,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
       apply_url: form.apply_url || null,
       accepted_exams: form.accepted_exams,
       application_deadline: form.application_deadline ? new Date(form.application_deadline).toISOString() : null,
+      deadline_tbd: form.deadline_tbd,
+      sort_order: Number.isFinite(Number(form.sort_order)) ? Number(form.sort_order) : 0,
       details_html: form.details_html || null,
       is_active: form.is_active,
     };
@@ -257,7 +265,28 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
             </div>
             <div className="space-y-1.5">
               <Label>Application deadline</Label>
-              <Input type="date" value={form.application_deadline} onChange={(e) => set("application_deadline", e.target.value)} />
+              <div className="flex items-center gap-2">
+                <Input
+                  type="date"
+                  value={form.application_deadline}
+                  onChange={(e) => setForm((f) => ({ ...f, application_deadline: e.target.value, deadline_tbd: e.target.value ? false : f.deadline_tbd }))}
+                  disabled={form.deadline_tbd}
+                />
+                <Button
+                  type="button"
+                  variant={form.deadline_tbd ? "default" : "outline"}
+                  className="shrink-0"
+                  aria-pressed={form.deadline_tbd}
+                  onClick={() => setForm((f) => ({ ...f, deadline_tbd: !f.deadline_tbd, application_deadline: f.deadline_tbd ? f.application_deadline : "" }))}
+                >
+                  Application Open
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {form.deadline_tbd
+                  ? "Deadline not disclosed — the website will show “Application Open”."
+                  : "Pick a date, or click “Application Open” when the deadline is not disclosed."}
+              </p>
             </div>
             <div className="space-y-1.5 md:col-span-2">
               <Label>Exams accepted</Label>
@@ -284,6 +313,11 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
                   <SelectItem value="draft">Draft</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Sort order</Label>
+              <Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} placeholder="0" />
+              <p className="text-sm text-muted-foreground">Lower numbers appear first on the website.</p>
             </div>
           </Section>
         </div>

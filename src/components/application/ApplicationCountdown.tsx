@@ -21,7 +21,7 @@ function subscribe(listener: () => void) {
 const snapshot = () => current;
 const serverSnapshot = () => null;
 
-export default function ApplicationCountdown({ row, compact = false }: { row: Pick<TrackerRow, "application_deadline" | "status">; compact?: boolean }) {
+export default function ApplicationCountdown({ row, compact = false }: { row: Pick<TrackerRow, "application_deadline" | "status" | "deadline_tbd">; compact?: boolean }) {
   const now = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const info = deadlineInfo(row, now ?? undefined);
   const parts = now === null ? null : countdownParts(row.application_deadline, now);
@@ -31,7 +31,7 @@ export default function ApplicationCountdown({ row, compact = false }: { row: Pi
   const Icon = tone === "closed" ? CalendarX2 : tone === "soon" ? Hourglass : running ? Timer : CalendarCheck2;
   const title = urgent ? "Closing Soon" : info.label;
   const note = info.isOpen
-    ? row.application_deadline ? `Last date ${formatDate(row.application_deadline)}` : "Deadline not announced"
+    ? row.application_deadline ? `Last date ${formatDate(row.application_deadline)}` : row.deadline_tbd ? "Deadline to be announced" : "Deadline not announced"
     : tone === "soon" ? "Registration has not opened" : row.application_deadline ? `Closed on ${formatDate(row.application_deadline)}` : "Applications closed";
 
   return (

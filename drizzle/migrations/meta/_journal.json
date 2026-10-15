@@ -162,6 +162,13 @@
       "when": 1792006082235,
       "tag": "0022_freebies_and_guidance_signed_in",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792047369400,
+      "tag": "0023_application_trackers_open_flag_sort_order",
+      "breakpoints": true
     }
   ]
 }

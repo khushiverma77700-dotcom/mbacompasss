@@ -37,3 +37,18 @@ describe("midnight UTC deadlines", () => {
     expect(deadlineTimestamp("2026-10-09T00:00:00+00:00")).toBe(Date.parse("2026-10-09T18:29:59.999Z"));
   });
 });
+
+import { deadlineInfo } from "@/lib/applicationTracker";
+
+describe("deadlineInfo deadline_tbd", () => {
+  it("shows Application Open when the deadline is undisclosed", () => {
+    const info = deadlineInfo({ application_deadline: null, status: "open", deadline_tbd: true });
+    expect(info.label).toBe("Application Open");
+    expect(info.isOpen).toBe(true);
+  });
+
+  it("ignores the flag when a real deadline exists", () => {
+    const info = deadlineInfo({ application_deadline: "2099-01-10", status: "open", deadline_tbd: true });
+    expect(info.label).not.toBe("Application Open");
+  });
+});
