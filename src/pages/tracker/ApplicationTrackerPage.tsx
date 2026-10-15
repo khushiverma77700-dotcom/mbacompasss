@@ -280,7 +280,7 @@ export default function ApplicationTrackerPage({ presetCategory }: Props) {
   const groupedVisible = useMemo(() => {
     const definitions = [
       { key: "exam", title: "MBA entrance examinations", note: "Registration windows, test fees and official exam applications." },
-      { key: "iim", title: "IIM applications", note: "Application dossiers for Indian Institutes of Management." },
+      { key: "iim", title: "Open applications", note: "Application dossiers for Indian Institutes of Management." },
       { key: "tier1", title: "Tier 1 non-IIM institutions", note: "Priority applications for leading independent business schools." },
       { key: "tier2", title: "Tier 2 non-IIM institutions", note: "Additional programmes to strengthen a balanced application portfolio." },
     ];
