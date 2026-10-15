@@ -403,6 +403,8 @@ export const normalizeTracker = (row: TrackerRow): TrackerRow => ({
   seo_keywords: Array.isArray(row.seo_keywords) ? row.seo_keywords : [],
   seo_faqs: Array.isArray(row.seo_faqs) ? row.seo_faqs : [],
   is_recommended: !!row.is_recommended,
+  deadline_tbd: !!row.deadline_tbd,
+  sort_order: row.sort_order ?? 0,
   recommendation_priority: row.recommendation_priority ?? 0,
   is_homepage_featured: !!row.is_homepage_featured,
   homepage_order: row.homepage_order ?? 0,

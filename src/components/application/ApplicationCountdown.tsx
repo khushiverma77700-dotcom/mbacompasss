@@ -21,7 +21,7 @@ function subscribe(listener: () => void) {
 const snapshot = () => current;
 const serverSnapshot = () => null;
 
-export default function ApplicationCountdown({ row, compact = false }: { row: Pick<TrackerRow, "application_deadline" | "status">; compact?: boolean }) {
+export default function ApplicationCountdown({ row, compact = false }: { row: Pick<TrackerRow, "application_deadline" | "status" | "deadline_tbd">; compact?: boolean }) {
   const now = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const info = deadlineInfo(row, now ?? undefined);
   const parts = now === null ? null : countdownParts(row.application_deadline, now);
