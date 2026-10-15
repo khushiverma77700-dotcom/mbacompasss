@@ -198,9 +198,12 @@ export type DeadlineInfo = {
 export const daysUntil = deadlineDays;
 
 /** Live status derived from the stored deadline — never stored, always computed. */
-export const deadlineInfo = (row: Pick<TrackerRow, "application_deadline" | "status">, now = Date.now()): DeadlineInfo => {
+export const deadlineInfo = (row: Pick<TrackerRow, "application_deadline" | "status" | "deadline_tbd">, now = Date.now()): DeadlineInfo => {
   if (row.status === "closed") {
     return { label: "Applications Closed", tone: "closed", daysLeft: null, isOpen: false };
+  }
+  if (row.deadline_tbd && !row.application_deadline) {
+    return { label: "Application Open", tone: "open", daysLeft: null, isOpen: true };
   }
   const days = daysUntil(row.application_deadline, now);
   const target = deadlineTimestamp(row.application_deadline);
@@ -369,7 +372,7 @@ export const formatDate = (value: string | null | undefined): string => {
 /* ------------------------------------------------------------- queries */
 
 export const TRACKER_SELECT =
-  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, is_homepage_featured, homepage_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt, programs, details_html";
+  "id, name, short_name, slug, logo_url, category, tier, program, location, application_open_date, application_deadline, deadline_tbd, sort_order, application_fee, program_fee, accepted_exams, apply_url, inside_info_url, inside_info_notes, short_description, status, is_active, is_archived, display_order, is_homepage_featured, homepage_order, view_count, apply_click_count, created_at, updated_at, college_website, eligibility, selection_process, cutoff_note, average_package, highest_package, median_package, is_recommended, recommendation_label, recommendation_note, recommendation_priority, seo_title, seo_description, seo_h1, seo_intro, seo_keywords, seo_faqs, seo_image_alt, programs, details_html";
 
 /** Public catalogue (RLS already limits this to active, non-archived rows). */
 export const publicTrackersQuery = queryOptions({
@@ -380,6 +383,7 @@ export const publicTrackersQuery = queryOptions({
       .select(TRACKER_SELECT)
       .eq("is_active", true)
       .eq("is_archived", false)
+      .order("sort_order", { ascending: true })
       .order("display_order", { ascending: true })
       .order("application_deadline", { ascending: true, nullsFirst: false });
     if (error) throw error;
