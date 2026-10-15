@@ -47,6 +47,8 @@ type FormState = {
   apply_url: string;
   accepted_exams: string[];
   application_deadline: string;
+  deadline_tbd: boolean;
+  sort_order: string;
   details_html: string;
   is_active: boolean;
 };
@@ -64,6 +66,8 @@ const EMPTY: FormState = {
   apply_url: "",
   accepted_exams: [],
   application_deadline: "",
+  deadline_tbd: false,
+  sort_order: "0",
   details_html: "",
   is_active: true,
 };
@@ -123,6 +127,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
         apply_url: row.apply_url ?? "",
         accepted_exams: row.accepted_exams ?? [],
         application_deadline: toDateInput(row.application_deadline),
+        deadline_tbd: !!row.deadline_tbd,
+        sort_order: (row.sort_order ?? 0).toString(),
         details_html: row.details_html ?? "",
         is_active: row.is_active,
       });
@@ -157,6 +163,8 @@ export default function ApplicationFormDialog({ open, onOpenChange, row, onSaved
       apply_url: form.apply_url || null,
       accepted_exams: form.accepted_exams,
       application_deadline: form.application_deadline ? new Date(form.application_deadline).toISOString() : null,
+      deadline_tbd: form.deadline_tbd,
+      sort_order: Number.isFinite(Number(form.sort_order)) ? Number(form.sort_order) : 0,
       details_html: form.details_html || null,
       is_active: form.is_active,
     };
