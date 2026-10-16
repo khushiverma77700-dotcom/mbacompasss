@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Public crawlability and static HTML
-- [ ] Enumerate requested public routes and published dynamic records for capped native prerendering
-- [ ] Prefetch public content and supply unique route metadata; remove meta keywords
-- [ ] Verify crawler-visible HTML, generated output checks, and IIM Ahmedabad source
+- [x] Enumerate requested public routes and published dynamic records for capped native prerendering (5,174 selected; redirect aliases excluded)
+- [x] Prefetch requested public content and supply unique route metadata; remove meta keywords
+- [x] Verify crawler-visible HTML and IIM Ahmedabad source (14 source responses, five hydrated pages, nine tests)
+- [ ] Confirm all 5,174 generated static files in the publication output — publication build has not run; preview checks do not establish this
 
 ## Formal mobile application UI
 - [x] Simplify page spacing, mobile filters and application dossiers

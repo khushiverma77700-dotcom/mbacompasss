@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import InstitutePage from "@/pages/InstitutePage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_public/institute/$slug")({
         direct_courses:courses!courses_institute_id_fkey(id, name, fees, duration, mode, description, course_category_id, curriculum, highlights, eligibility, batch_info, start_date, brochure_url, discount_text, total_seats, rating)
       `).eq("slug", params.slug).maybeSingle();
       if (error) throw error;
+      if (!data) throw notFound();
       return data;
     },
   }) }),
