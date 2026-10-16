@@ -1,0 +1,1 @@
+UPDATE public.mocks_landing_settings SET hero_headline = replace(hero_headline, 'CAT 2025', 'CAT 2026') WHERE hero_headline LIKE '%CAT 2025%';
