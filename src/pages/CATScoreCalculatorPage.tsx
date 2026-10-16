@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CAT_SCORE_VS_PERCENTILE, CAT_CALCULATOR_FAQS } from "@/lib/catScorePercentile";
+import { CAT_SCORE_VS_PERCENTILE, CAT_CALCULATOR_FAQS, CAT_SECTIONAL_VS_PERCENTILE, CAT_INDICATIVE_TARGETS, CAT_SCORE_EXTRA_FAQS } from "@/lib/catScorePercentile";
 import {
   SectionRadarChart, AttemptBreakdownPie, SectionScoreBar,
   AccuracyBySection, QuestionTypeAnalysis, NegativeMarksCard,
@@ -839,7 +839,7 @@ const CATScoreCalculatorPage: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4">
           <SectionInView>
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">CAT 2025 Score Analysis & Trends</h2>
+              <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">CAT Score Analysis & Trends</h2>
               <p className="text-muted-foreground">Aggregated insights from thousands of response sheets analyzed on our platform</p>
             </div>
           </SectionInView>
@@ -863,7 +863,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           <div>
             <h2 className="text-2xl md:text-3xl font-black text-foreground mb-4">What is CAT Exam?</h2>
             <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-              The Common Admission Test (CAT) is India's premier MBA entrance exam conducted by the Indian Institutes of Management (IIMs). CAT 2025 is expected to be held in November 2025, testing candidates on Verbal Ability & Reading Comprehension (VARC), Data Interpretation & Logical Reasoning (DILR), and Quantitative Ability (QA).
+              The Common Admission Test (CAT) is India's premier MBA entrance exam conducted by the Indian Institutes of Management (IIMs). CAT is usually held in late November, testing candidates on Verbal Ability & Reading Comprehension (VARC), Data Interpretation & Logical Reasoning (DILR), and Quantitative Ability (QA).
             </p>
             <p className="text-muted-foreground text-sm leading-relaxed mb-4">
               Over 2.5 lakh students appear for CAT every year, competing for approximately 5,000 seats across 20 IIMs and 1,000+ other B-schools that accept CAT scores. The exam follows a computer-based test format with a duration of 120 minutes divided equally across three sections.
@@ -902,7 +902,7 @@ const CATScoreCalculatorPage: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4">
           <SectionInView>
             <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">CAT 2025 Marking Scheme</h2>
+              <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">CAT 2026 Marking Scheme</h2>
               <p className="text-muted-foreground">Understanding how your CAT score is calculated</p>
             </div>
           </SectionInView>
@@ -925,7 +925,7 @@ const CATScoreCalculatorPage: React.FC = () => {
 
           <SectionInView delay={0.2}>
             <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
-              <h3 className="font-bold text-foreground mb-4">CAT 2025 Exam Pattern</h3>
+              <h3 className="font-bold text-foreground mb-4">CAT 2026 Exam Pattern (Expected)</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -969,46 +969,82 @@ const CATScoreCalculatorPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ═══════ CAT SCORE TO PERCENTILE TABLE ═══════ */}
-      <SectionInView className="max-w-5xl mx-auto px-4 py-14">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">CAT Score to Percentile Mapping 2025</h2>
-          <p className="text-muted-foreground">Based on analysis of previous year data and current trends</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
+      {/* ═══════ HOW TO CALCULATE + SECTIONAL + TARGETS ═══════ */}
+      <section id="how-to-calculate-cat-score" className="max-w-5xl mx-auto px-4 py-14 space-y-10">
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">How to Calculate Your CAT Score</h2>
+          <p className="text-muted-foreground mb-4">Your CAT raw score follows one simple formula, applied separately to VARC, DILR and QA and then added up:</p>
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 mb-4">
+            <p className="font-bold text-foreground">CAT score = (Correct answers × 3) − (Wrong MCQs × 1)</p>
+            <p className="text-sm text-muted-foreground mt-1">Wrong TITA answers and unattempted questions score 0.</p>
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-2">Worked example</h3>
+          <div className="overflow-x-auto bg-card border border-border rounded-2xl">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-primary/5 border-b border-border">
-                  <th className="text-left px-5 py-3 text-foreground font-bold">Score Range</th>
-                  <th className="text-center px-3 py-3 text-foreground font-bold">Est. Percentile</th>
-                  <th className="text-left px-5 py-3 text-foreground font-bold">Expected IIM Calls</th>
-                  <th className="text-center px-3 py-3 text-foreground font-bold">Approx. Rank</th>
-                </tr>
-              </thead>
+              <thead><tr className="border-b border-border bg-primary/5">
+                <th className="text-left py-3 px-4">Section</th><th className="text-center py-3 px-2">Correct</th><th className="text-center py-3 px-2">Wrong MCQ</th><th className="text-center py-3 px-2">Wrong TITA</th><th className="text-center py-3 px-4">Score</th>
+              </tr></thead>
               <tbody>
-                {[
-                  { score: "170+", pct: "99.95+", calls: "IIM A, B, C (All)", rank: "Top 100" },
-                  { score: "150-170", pct: "99.5-99.95", calls: "IIM A, B, C, L, K, I", rank: "100-1,250" },
-                  { score: "130-150", pct: "99-99.5", calls: "All Old IIMs + Top New IIMs", rank: "1,250-2,500" },
-                  { score: "110-130", pct: "97-99", calls: "New IIMs, XLRI, MDI, SPJIMR", rank: "2,500-7,500" },
-                  { score: "90-110", pct: "93-97", calls: "NMIMS, SIBM, IMT, GIM", rank: "7,500-17,500" },
-                  { score: "70-90", pct: "85-93", calls: "TAPMI, LBSIM, FORE, KJ Somaiya", rank: "17,500-37,500" },
-                  { score: "50-70", pct: "70-85", calls: "Tier 2 B-Schools", rank: "37,500-75,000" },
-                  { score: "<50", pct: "<70", calls: "Tier 3 B-Schools / Other Exams", rank: "75,000+" },
-                ].map((row, i) => (
-                  <tr key={i} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                    <td className="px-5 py-3 font-bold text-primary">{row.score}</td>
-                    <td className="text-center px-3 py-3 text-foreground font-semibold">{row.pct}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{row.calls}</td>
-                    <td className="text-center px-3 py-3 text-muted-foreground">{row.rank}</td>
+                {[["VARC",12,4,1,32],["DILR",7,3,1,18],["QA",9,4,2,23]].map(([s,c,w,t,sc]) => (
+                  <tr key={s as string} className="border-b border-border last:border-0">
+                    <td className="py-2.5 px-4 font-semibold">{s}</td><td className="text-center">{c}</td><td className="text-center">{w}</td><td className="text-center">{t}</td><td className="text-center font-bold">{sc}</td>
+                  </tr>
+                ))}
+                <tr className="bg-primary/5 font-bold"><td className="py-2.5 px-4">Total</td><td className="text-center">28</td><td className="text-center">11</td><td className="text-center">4</td><td className="text-center text-primary">73</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">A total of 73 would sit around the 95th percentile on the approximate bands below. Paste your response sheet above to get your exact figure in seconds.</p>
+        </div>
+
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">Sectional CAT Score vs Percentile</h2>
+          <p className="text-muted-foreground mb-4">Most IIMs apply sectional cut-offs, so check each section separately. Approximate raw scores needed for each percentile in recent years:</p>
+          <div className="overflow-x-auto bg-card border border-border rounded-2xl">
+            <table className="w-full text-sm">
+              <thead><tr className="border-b border-border bg-primary/5">
+                <th className="text-left py-3 px-4">Percentile</th><th className="text-center py-3 px-2">VARC (/72)</th><th className="text-center py-3 px-2">DILR (/66)</th><th className="text-center py-3 px-2">QA (/66)</th>
+              </tr></thead>
+              <tbody>
+                {CAT_SECTIONAL_VS_PERCENTILE.map((r) => (
+                  <tr key={r.percentile} className="border-b border-border last:border-0">
+                    <td className="py-2.5 px-4 font-semibold">{r.percentile}</td><td className="text-center">{r.varc}</td><td className="text-center">{r.dilr}</td><td className="text-center">{r.qa}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="text-sm text-muted-foreground mt-3">DILR usually needs the lowest raw score for a given percentile because it tends to be the toughest section. Bands shift every year.</p>
         </div>
-      </SectionInView>
+
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">Which Percentile Do You Need? Indicative B-School Targets</h2>
+          <p className="text-muted-foreground mb-4">Overall percentiles that have typically been competitive for an interview shortlist (General category). These are not official cut-offs; academics, work experience and diversity also count.</p>
+          <div className="overflow-x-auto bg-card border border-border rounded-2xl">
+            <table className="w-full text-sm">
+              <thead><tr className="border-b border-border bg-primary/5"><th className="text-left py-3 px-4">B-schools</th><th className="text-left py-3 px-4">Indicative percentile</th></tr></thead>
+              <tbody>
+                {CAT_INDICATIVE_TARGETS.map((r) => (
+                  <tr key={r.group} className="border-b border-border last:border-0"><td className="py-2.5 px-4">{r.group}</td><td className="py-2.5 px-4 font-semibold">{r.target}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">
+            Always check each institute's official admission policy. Explore <Link to="/mba-application" className="text-primary underline">open MBA applications</Link> to see current deadlines.
+          </p>
+        </div>
+
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">What Decides Your Final CAT Percentile?</h2>
+          <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+            <li><span className="font-semibold text-foreground">Slot normalisation:</span> CAT runs in multiple slots, so raw scores are converted into scaled scores before percentiles are computed.</li>
+            <li><span className="font-semibold text-foreground">Paper difficulty:</span> a tougher paper lowers the score needed for the same percentile.</li>
+            <li><span className="font-semibold text-foreground">Accuracy:</span> each wrong MCQ costs one mark, so accuracy often matters more than the number of attempts.</li>
+            <li><span className="font-semibold text-foreground">Sectional balance:</span> a weak section can block shortlists even with a strong overall percentile.</li>
+          </ul>
+        </div>
+      </section>
 
       {/* ═══════ CAT SCORE VS PERCENTILE ═══════ */}
       <section id="cat-score-vs-percentile" className="py-14">
@@ -1052,7 +1088,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           </SectionInView>
 
           <div className="space-y-4">
-            {[...CAT_CALCULATOR_FAQS, 
+            {[...CAT_CALCULATOR_FAQS, ...CAT_SCORE_EXTRA_FAQS, 
               { q: "How accurate is this CAT Score Calculator?", a: "Our calculator uses the exact official CAT marking scheme (+3 for correct MCQ, -1 for incorrect MCQ, 0 for TITA). The score calculation is 100% accurate. Percentile estimates are based on historical data and may vary slightly from actual results." },
               { q: "Is my data safe and private?", a: "Yes, your response sheet data is processed securely. We only store aggregate scores for analysis purposes. Your personal response details are kept confidential." },
               { q: "What is a TITA question?", a: "TITA stands for 'Type In The Answer'. These are non-MCQ questions where you type your answer directly. There is no negative marking for incorrect TITA answers." },
