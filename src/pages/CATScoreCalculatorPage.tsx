@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import SEOHead from "@/components/SEOHead";
+import { CAT_SCORE_VS_PERCENTILE, CAT_CALCULATOR_FAQS } from "@/lib/catScorePercentile";
 import {
   SectionRadarChart, AttemptBreakdownPie, SectionScoreBar,
   AccuracyBySection, QuestionTypeAnalysis, NegativeMarksCard,
@@ -286,43 +286,8 @@ const CATScoreCalculatorPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead
-        title="CAT Score Calculator 2026 — Free Instant Percentile & Score Analysis | MBA Compass"
-        description="Free CAT 2026 Score Calculator. Paste your response sheet for instant score, section-wise VARC DILR QA analysis, accuracy metrics, percentile prediction, AI insights. Trusted by 17,000+ MBA aspirants."
-        keywords={[
-          "CAT score calculator", "percentile predictor", "CAT 2026 score", "exam score tool", "CAT marks vs percentile",
-          "expected CAT percentile for 90 marks", "CAT score to percentile converter",
-          "how to calculate CAT score from response sheet", "IIM call predictor based on CAT score",
-          "CAT score vs percentile analysis last 5 years", "predict your IIM calls after CAT",
-          "calculate sectional percentile for CAT exam",
-        ]}
-        canonical="https://mbacompass.in/cat-score-calculator"
-      />
       <LoginRequiredDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}
         message="Sign in to calculate your CAT score. Your name, email, and phone number are required." />
-
-      {/* JSON-LD Structured Data */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "CAT Score Calculator 2025",
-        "url": "https://mbacompass.in/cat-score-calculator",
-        "description": "Free CAT 2025 score calculator. Paste response sheet for instant score, percentile, accuracy, AI insights.",
-        "applicationCategory": "EducationalApplication",
-        "operatingSystem": "Web",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock", "itemCondition": "https://schema.org/NewCondition", "shippingDetails": { "@type": "OfferShippingDetails", "shippingRate": { "@type": "MonetaryAmount", "value": "0", "currency": "INR" }, "shippingDestination": { "@type": "DefinedRegion", "addressCountry": "IN" }, "deliveryTime": { "@type": "ShippingDeliveryTime", "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }, "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" } } }, "hasMerchantReturnPolicy": { "@type": "MerchantReturnPolicy", "applicableCountry": "IN", "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted" } },
-        "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "2450", "bestRating": "5" }
-      })}} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          { "@type": "Question", "name": "How accurate is this CAT Score Calculator?", "acceptedAnswer": { "@type": "Answer", "text": "Our calculator uses the exact official CAT marking scheme (+3 correct MCQ, -1 incorrect MCQ, 0 TITA). Score is 100% accurate. Percentile estimates are based on historical data." }},
-          { "@type": "Question", "name": "How do I get my CAT response sheet?", "acceptedAnswer": { "@type": "Answer", "text": "Login to iimcat.ac.in → Dashboard → Candidate Response → View Page Source → Copy all HTML." }},
-          { "@type": "Question", "name": "How many marks are needed for 99 percentile in CAT?", "acceptedAnswer": { "@type": "Answer", "text": "Typically 100-110+ marks out of 204 in CAT 2025 are needed for 99 percentile based on historical trends." }},
-          { "@type": "Question", "name": "What is TITA in CAT exam?", "acceptedAnswer": { "@type": "Answer", "text": "TITA means Type In The Answer — non-MCQ questions where you type the answer. No negative marking for TITA." }},
-        ]
-      })}} />
 
       {/* ═══════ HERO ═══════ */}
       <section className="relative overflow-hidden pt-8 pb-14" style={{ background: "var(--hero-gradient)" }}>
@@ -339,7 +304,7 @@ const CATScoreCalculatorPage: React.FC = () => {
               <span className="text-sm text-white font-semibold">AI-Powered • Instant Analysis • Free</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight leading-tight">
-              CAT Score Calculator <span className="text-white/80">2025</span>
+              CAT Score Calculator <span className="text-white/80">2026</span>
             </h1>
             <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-2 font-medium">
               Get Your CAT Percentile Prediction Instantly!
@@ -1045,26 +1010,55 @@ const CATScoreCalculatorPage: React.FC = () => {
         </div>
       </SectionInView>
 
+      {/* ═══════ CAT SCORE VS PERCENTILE ═══════ */}
+      <section id="cat-score-vs-percentile" className="py-14">
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">CAT Score vs Percentile</h2>
+          <p className="text-muted-foreground mb-6">
+            Once the calculator gives your score, use this table to see roughly which percentile it corresponds to. The bands are approximate, compiled from publicly reported CAT 2024 results (scaled scores out of 204), and shift every year with slot difficulty and normalisation.
+          </p>
+          <div className="overflow-x-auto bg-card border border-border rounded-2xl">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-primary/5">
+                  <th className="text-left py-3 px-4 text-foreground">CAT percentile</th>
+                  <th className="text-left py-3 px-4 text-foreground">Approx. scaled score (out of 204)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CAT_SCORE_VS_PERCENTILE.map((r) => (
+                  <tr key={r.percentile} className="border-b border-border last:border-0">
+                    <td className="py-2.5 px-4 font-semibold text-foreground">{r.percentile}</td>
+                    <td className="py-2.5 px-4 text-foreground">{r.score}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Your raw score from the calculator is exact. Your final percentile is published by the IIMs after normalising scores across slots, and most IIMs also apply sectional cut-offs.
+          </p>
+        </div>
+      </section>
+
       {/* ═══════ FAQ SECTION ═══════ */}
       <section className="bg-muted/30 py-14">
         <div className="max-w-3xl mx-auto px-4">
           <SectionInView>
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">Frequently Asked Questions</h2>
-              <p className="text-muted-foreground">Common questions about CAT Score Calculator 2025</p>
+              <p className="text-muted-foreground">Common questions about the CAT score calculator and CAT score vs percentile</p>
             </div>
           </SectionInView>
 
           <div className="space-y-4">
-            {[
+            {[...CAT_CALCULATOR_FAQS, 
               { q: "How accurate is this CAT Score Calculator?", a: "Our calculator uses the exact official CAT marking scheme (+3 for correct MCQ, -1 for incorrect MCQ, 0 for TITA). The score calculation is 100% accurate. Percentile estimates are based on historical data and may vary slightly from actual results." },
-              { q: "How do I get my CAT response sheet?", a: "Login to iimcat.ac.in → Go to your dashboard → Click on 'Candidate Response' → A new page will open with your complete response sheet. Right-click → View Page Source → Copy all the HTML code." },
               { q: "Is my data safe and private?", a: "Yes, your response sheet data is processed securely. We only store aggregate scores for analysis purposes. Your personal response details are kept confidential." },
               { q: "What is a TITA question?", a: "TITA stands for 'Type In The Answer'. These are non-MCQ questions where you type your answer directly. There is no negative marking for incorrect TITA answers." },
               { q: "How is the percentile estimated?", a: "Percentile estimation is based on historical CAT data from previous years and the current score distribution of all students who have used our calculator. Actual percentiles will be released by IIMs." },
               { q: "Can I calculate scores for multiple slots?", a: "Yes! You can calculate scores for any slot by pasting the respective response sheet HTML. Each slot's difficulty may vary, which is factored into the percentile estimation." },
               { q: "What if my response sheet URL is not working?", a: "The CAT response sheet CDN blocks direct fetching. You need to open it in your browser, view the page source (Ctrl+U), copy all the HTML code, and paste it in our calculator." },
-              { q: "How many marks are needed for 99 percentile in CAT 2025?", a: "Based on historical trends, you typically need 100-110+ marks out of 204 for a 99 percentile in CAT. The exact cutoff varies by year and slot difficulty. Use our calculator to get a precise estimate for your score." },
               { q: "What is the difference between MCQ and TITA in CAT?", a: "MCQs (Multiple Choice Questions) have 4 options with +3 for correct and -1 for wrong answers. TITA (Type In The Answer) questions require typing numeric/text answers with +3 for correct and 0 for wrong — no negative marking." },
               { q: "Can I use this calculator for XAT, SNAP, or other MBA exams?", a: "Currently, this tool is specifically designed for CAT response sheets. We plan to add support for XAT, SNAP, NMAT, and other MBA entrance exams soon." },
             ].map((faq, i) => (
