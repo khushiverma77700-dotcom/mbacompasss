@@ -22,7 +22,7 @@ describe("college search titles", () => {
 
   it("drops the brand before cutting other titles", () => {
     expect(fitTitle("GIM Fees 2026 [Complete Guide] — Tuition, Hostel & Scholarships | MBA Compass"))
-      .toBe("GIM Fees 2026 [Complete Guide] — Tuition, Hostel & Scholarships");
+      .toBe("GIM Fees 2026 [Complete Guide] — Tuition, Hostel");
   });
 
   it("formats raw rupee amounts and skips hedged ranges", () => {

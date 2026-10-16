@@ -29,7 +29,7 @@ function cutWords(s: string, max: number): string {
   if (s.length <= max) return s;
   const cut = s.slice(0, max + 1);
   const i = cut.lastIndexOf(" ");
-  return cut.slice(0, i > 20 ? i : max).replace(/[\s,:–—-]+$/, "");
+  return cut.slice(0, i > 20 ? i : max).replace(/[\s,:&|–—-]+$/, "");
 }
 
 export function collegeTitle(row: { name?: string; meta_title?: string | null }, now = new Date()): string {
