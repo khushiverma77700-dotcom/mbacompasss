@@ -10,16 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CAT_SCORE_VS_PERCENTILE, CAT_CALCULATOR_FAQS, CAT_SECTIONAL_VS_PERCENTILE, CAT_INDICATIVE_TARGETS, CAT_SCORE_EXTRA_FAQS } from "@/lib/catScorePercentile";
 import {
-  SectionRadarChart, AttemptBreakdownPie, SectionScoreBar,
-  AccuracyBySection, QuestionTypeAnalysis, NegativeMarksCard,
-  StrengthWeaknessChart, ScoreVsPercentileCurve,
-  ScoreDistributionHistogram, DailySubmissionTrend,
-  SectionAvgComparison, AccuracyDistributionPie,
-  DifficultyPerformanceChart, ScoreVsAttemptsScatter,
-  SectionDifficultyHeatmap, PercentilePredictorPanel,
-  MistakeAnalysisChart, TopperComparisonBar,
-} from "@/components/CATScoreCharts";
-import {
   Calculator, Upload, FileText, Target, TrendingUp, Award,
   BarChart3, CheckCircle2, XCircle, MinusCircle, Zap, BookOpen,
   BrainCircuit, ArrowRight, ClipboardPaste, ChevronDown,
@@ -31,6 +21,34 @@ import {
 import { Link } from "@/lib/router-compat";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+const loadCharts = () => import("@/components/CATScoreCharts");
+// Charts load after first paint so the page opens fast.
+function lazyChart(name: string): React.ComponentType<any> {
+  const L = React.lazy(() => loadCharts().then((m: any) => ({ default: m[name] })));
+  return (props: any) => (
+    <React.Suspense fallback={<div className="h-64 rounded-2xl bg-muted/30" />}>
+      <L {...props} />
+    </React.Suspense>
+  );
+}
+const SectionRadarChart = lazyChart("SectionRadarChart");
+const AttemptBreakdownPie = lazyChart("AttemptBreakdownPie");
+const SectionScoreBar = lazyChart("SectionScoreBar");
+const AccuracyBySection = lazyChart("AccuracyBySection");
+const QuestionTypeAnalysis = lazyChart("QuestionTypeAnalysis");
+const NegativeMarksCard = lazyChart("NegativeMarksCard");
+const StrengthWeaknessChart = lazyChart("StrengthWeaknessChart");
+const ScoreVsPercentileCurve = lazyChart("ScoreVsPercentileCurve");
+const ScoreDistributionHistogram = lazyChart("ScoreDistributionHistogram");
+const DailySubmissionTrend = lazyChart("DailySubmissionTrend");
+const SectionAvgComparison = lazyChart("SectionAvgComparison");
+const AccuracyDistributionPie = lazyChart("AccuracyDistributionPie");
+const DifficultyPerformanceChart = lazyChart("DifficultyPerformanceChart");
+const ScoreVsAttemptsScatter = lazyChart("ScoreVsAttemptsScatter");
+const SectionDifficultyHeatmap = lazyChart("SectionDifficultyHeatmap");
+const PercentilePredictorPanel = lazyChart("PercentilePredictorPanel");
+const MistakeAnalysisChart = lazyChart("MistakeAnalysisChart");
+const TopperComparisonBar = lazyChart("TopperComparisonBar");
 
 /* ═══════ CONSTANTS ═══════ */
 const SECTION_COLORS: Record<string, { bg: string; text: string; accent: string; border: string }> = {
