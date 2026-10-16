@@ -26,20 +26,27 @@ export async function prefetchDetail(qc: QueryClient, table: Table, slug: string
   }
 }
 
-/** Active admin/duplicate redirect target for a path, or null. Never throws. */
+/** Final active redirect target for a path (follows up to 4 hops), or null. Never throws. */
 export async function findSeoRedirect(path: string): Promise<string | null> {
+  const seen = new Set([path]);
+  let current = path;
   try {
-    const { data } = await (supabase as any)
-      .from("seo_redirects")
-      .select("to_path")
-      .eq("from_path", path)
-      .eq("is_active", true)
-      .maybeSingle();
-    const to = data?.to_path as string | undefined;
-    return to && to.startsWith("/") && to !== path ? to : null;
+    for (let hop = 0; hop < 4; hop++) {
+      const { data } = await (supabase as any)
+        .from("seo_redirects")
+        .select("to_path")
+        .eq("from_path", current)
+        .eq("is_active", true)
+        .maybeSingle();
+      const to = data?.to_path as string | undefined;
+      if (!to || !to.startsWith("/") || seen.has(to)) break;
+      seen.add(to);
+      current = to;
+    }
   } catch {
-    return null;
+    /* fall through with whatever was resolved */
   }
+  return current !== path ? current : null;
 }
 
 const clip = (s: unknown, n = 160) => {
