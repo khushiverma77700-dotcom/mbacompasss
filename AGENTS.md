@@ -24,3 +24,4 @@
 - Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
 - Serve anonymous public page HTML from the build-keyed shared cache in src/server.ts (src/lib/htmlEdgeCache.ts), never admin, student, auth or per-user paths, because per-visit rendering made first loads slow.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
+- College titles/descriptions come from src/lib/collegeSeo.ts in both the route head and the page, and duplicate pages 301 through seo_redirects resolved in route loaders, so Google never sees conflicting titles or client-only redirects.
