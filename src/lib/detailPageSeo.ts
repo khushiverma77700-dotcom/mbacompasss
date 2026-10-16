@@ -5,6 +5,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { canonicalUrl } from "@/lib/canonical";
+import { fitTitle } from "@/lib/collegeSeo";
 
 type Table = "articles" | "colleges" | "exams";
 const KEYS: Record<Table, string> = { articles: "article", colleges: "college", exams: "exam-page" };
@@ -22,6 +23,22 @@ export async function prefetchDetail(qc: QueryClient, table: Table, slug: string
     });
   } catch {
     return null; // never break the page; the component refetches client-side
+  }
+}
+
+/** Active admin/duplicate redirect target for a path, or null. Never throws. */
+export async function findSeoRedirect(path: string): Promise<string | null> {
+  try {
+    const { data } = await (supabase as any)
+      .from("seo_redirects")
+      .select("to_path")
+      .eq("from_path", path)
+      .eq("is_active", true)
+      .maybeSingle();
+    const to = data?.to_path as string | undefined;
+    return to && to.startsWith("/") && to !== path ? to : null;
+  } catch {
+    return null;
   }
 }
 
@@ -53,7 +70,7 @@ export function detailHead(opts: {
       ],
     };
   }
-  const title = clip(row.meta_title || opts.titleFrom(row), 70);
+  const title = fitTitle(clip(row.meta_title || opts.titleFrom(row), 200));
   const description = clip(row.meta_description || opts.descriptionFrom(row) || opts.fallbackDescription);
   const image = [row.image_url, row.logo_url].find((v) => typeof v === "string" && /^https:\/\//.test(v));
   return {

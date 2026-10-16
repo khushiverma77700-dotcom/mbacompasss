@@ -1,8 +1,30 @@
-import { createFileRoute } from "@tanstack/react-router";
-import LegacyCollegeSlugRedirect from "@/pages/LegacyCollegeSlugRedirect";
-import PublicPageSkeleton from "@/components/PublicPageSkeleton";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import NotFound from "@/pages/NotFound";
+import { supabase } from "@/integrations/supabase/client";
+import { findSeoRedirect } from "@/lib/detailPageSeo";
 
+// Old indexed URLs like /nirma-university-ahmedabad-mba resolve on the server
+// with a real 301 (or a real 404), so Google never sees a homepage-titled page.
 export const Route = createFileRoute("/_public/$slug")({
-  component: () => <LegacyCollegeSlugRedirect />,
-  pendingComponent: PublicPageSkeleton,
+  loader: async ({ params }) => {
+    const slug = params.slug;
+    const admin = await findSeoRedirect(`/${slug}`);
+    if (admin) throw redirect({ href: admin, statusCode: 301 });
+    const candidates = Array.from(
+      new Set([slug, slug.replace(/-mba-admission$/, ""), slug.replace(/-admission$/, ""), slug.replace(/-mba$/, "")]),
+    );
+    let target: string | null = null;
+    try {
+      const { data } = await supabase.from("colleges").select("slug").in("slug", candidates).limit(1).maybeSingle();
+      target = data?.slug ?? null;
+    } catch {
+      target = null;
+    }
+    if (!target) throw notFound();
+    const dest = (await findSeoRedirect(`/college/${target}`)) ?? `/college/${target}`;
+    throw redirect({ href: dest, statusCode: 301 });
+  },
+  head: () => ({ meta: [{ title: "Page not found | MBA Compass" }, { name: "robots", content: "noindex" }] }),
+  component: () => <NotFound />,
+  notFoundComponent: () => <NotFound />,
 });
