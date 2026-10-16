@@ -12,7 +12,7 @@ import {
   GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket, Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { freebiesQuery } from "@/lib/queries/listingQueries";
 
 
@@ -76,6 +76,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 const FreebiesPage = () => {
   const { data: items = [], isLoading: loading } = useQuery(freebiesQuery);
+  const queryClient = useQueryClient();
   const [q, setQ] = useState("");
   const [activeCat, setActiveCat] = useState<string>("All");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -257,7 +258,8 @@ const FreebiesPage = () => {
       })();
 
       // optimistic UI bump
-      setItems((prev) => prev.map((p) => (p.id === f.id ? { ...p, download_count: (p.download_count || 0) + 1 } : p)));
+      queryClient.setQueryData(freebiesQuery.queryKey, (prev) => (prev || []).map((p) =>
+        p.id === f.id ? { ...p, download_count: (p.download_count || 0) + 1 } : p));
       window.open(url, "_blank");
     } catch (e: any) {
       toast({ title: "Download failed", description: e.message, variant: "destructive" });

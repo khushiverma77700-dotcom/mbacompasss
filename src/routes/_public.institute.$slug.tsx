@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_public/institute/$slug")({
   head: ({ loaderData, params }) => publicPageHead(`/institute/${params.slug}`,
     loaderData?.row?.meta_title || `${loaderData?.row?.name || params.slug}: Courses & Fees`,
     loaderData?.row?.meta_description || loaderData?.row?.description || "Compare coaching courses, fees, faculty and preparation options on MBA Compass.",
-    loaderData?.row?.banner_url || loaderData?.row?.logo_url),
+    loaderData?.row?.banner_url || loaderData?.row?.logo_url || undefined),
   component: () => <InstitutePage />,
   pendingComponent: PublicPageSkeleton,
 });

@@ -1,5 +1,5 @@
 import { publicPageHead } from "@/lib/publicPageHead";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useHydrated } from "@tanstack/react-router";
 import { useEffect } from "react";
 import Index from "@/pages/Index";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
@@ -7,8 +7,9 @@ import StudentShellFallback from "@/components/student/StudentShellFallback";
 
 function HomeRoute() {
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const onDashHost =
-    typeof window !== "undefined" && window.location.hostname === "dashboard.mbacompass.in";
+    hydrated && window.location.hostname === "dashboard.mbacompass.in";
 
   // dashboard.mbacompass.in serves the student LMS: its "/" is the student
   // dashboard, not the marketing homepage (ported from the pre-migration
