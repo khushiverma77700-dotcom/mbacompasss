@@ -4,7 +4,11 @@
  * so users never see a blank white area — they see a layout-matching
  * placeholder that fades into the real content.
  */
+import { useHydrated } from "@tanstack/react-router";
+
 export default function PublicPageSkeleton() {
+  const hydrated = useHydrated();
+  if (!hydrated) return null;
   return (
     <div
       className="container mx-auto px-4 py-8 space-y-6 animate-in fade-in duration-200"
