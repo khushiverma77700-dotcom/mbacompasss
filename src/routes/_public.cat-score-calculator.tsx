@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CATScoreCalculatorPage from "@/pages/CATScoreCalculatorPage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
-import { CAT_CALCULATOR_FAQS, CAT_SCORE_EXTRA_FAQS, CAT_SCORE_VS_PERCENTILE, CAT_SECTIONAL_VS_PERCENTILE } from "@/lib/catScorePercentile";
+import { CAT_CALCULATOR_FAQS, CAT_SCORE_EXTRA_FAQS, CAT_SCORE_VS_PERCENTILE, CAT_SECTIONAL_VS_PERCENTILE, CAT_INDICATIVE_TARGETS } from "@/lib/catScorePercentile";
 
 const URL = "https://mbacompass.in/cat-score-calculator";
 const TITLE = "CAT Score Calculator 2026 & CAT Score vs Percentile | MBA Compass";
@@ -59,6 +59,55 @@ export const Route = createFileRoute("/_public/cat-score-calculator")({
               ],
               speakable: { "@type": "SpeakableSpecification", cssSelector: ["h1", "#cat-score-vs-percentile p"] },
               mainEntity: { "@id": `${URL}#app` },
+            },
+            {
+              "@type": "Article",
+              "@id": `${URL}#article`,
+              headline: "CAT Score Calculator 2026 and CAT Score vs Percentile Guide",
+              description: DESC,
+              inLanguage: "en-IN",
+              dateModified: "2026-10-17",
+              author: { "@id": "https://mbacompass.in/#org" },
+              publisher: { "@id": "https://mbacompass.in/#org" },
+              mainEntityOfPage: { "@id": `${URL}#webpage` },
+              articleSection: ["How to calculate CAT score", "CAT score vs percentile", "Sectional percentile", "B-school targets"],
+            },
+            {
+              "@type": "LearningResource",
+              name: "CAT score and percentile guide",
+              url: URL,
+              learningResourceType: ["Calculator", "Reference table", "Guide"],
+              educationalLevel: "Postgraduate entrance",
+              teaches: ["CAT marking scheme", "CAT score calculation", "CAT percentile estimation"],
+              audience: { "@type": "EducationalAudience", educationalRole: "student", audienceType: "CAT aspirants" },
+              isAccessibleForFree: true,
+              provider: { "@id": "https://mbacompass.in/#org" },
+            },
+            {
+              "@type": "ItemList",
+              name: "Indicative CAT percentile targets by B-school group",
+              itemListElement: CAT_INDICATIVE_TARGETS.map((r, i) => ({ "@type": "ListItem", position: i + 1, name: `${r.group}: ${r.target} percentile (indicative)` })),
+            },
+            {
+              "@type": "ItemList",
+              name: "CAT score vs percentile bands",
+              itemListElement: CAT_SCORE_VS_PERCENTILE.map((r, i) => ({ "@type": "ListItem", position: i + 1, name: `${r.percentile} percentile: approx. ${r.score} out of 204` })),
+            },
+            {
+              "@type": "DefinedTermSet",
+              name: "CAT scoring terms",
+              hasDefinedTerm: [
+                { "@type": "DefinedTerm", name: "Raw score", description: "Marks earned in CAT: +3 per correct answer, -1 per wrong MCQ, 0 for wrong TITA or unattempted." },
+                { "@type": "DefinedTerm", name: "Scaled score", description: "Raw score normalised across CAT slots to adjust for difficulty." },
+                { "@type": "DefinedTerm", name: "CAT percentile", description: "Share of candidates who scored below you after normalisation." },
+                { "@type": "DefinedTerm", name: "TITA", description: "Type In The Answer question with no negative marking." },
+                { "@type": "DefinedTerm", name: "Sectional cut-off", description: "Minimum percentile required in VARC, DILR or QA by a B-school." },
+              ],
+            },
+            {
+              "@type": "SiteNavigationElement",
+              name: ["How to calculate CAT score", "CAT score vs percentile", "Profile Analyzer", "MBA applications"],
+              url: [`${URL}#how-to-calculate-cat-score`, `${URL}#cat-score-vs-percentile`, "https://mbacompass.in/profile-analyzer", "https://mbacompass.in/mba-application"],
             },
             {
               "@type": "HowTo",
