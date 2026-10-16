@@ -24,4 +24,4 @@
 - Native TanStack prerenders capped public-record manifests with content validation; other anonymous pages use the build-keyed HTML cache. Never snapshot admin, student, auth or per-user data.
 - Marked route heads own metadata; legacy SEOHead only adds schemas there, preventing title flips.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
-- College SEO text comes only from src/lib/collegeSeo.ts; duplicates 301 via seo_redirects in loaders, avoiding title flips.
+- College SEO uses collegeSeo.ts and loader 301s; normalize legacy section lists through collegeSectionData.ts so malformed optional facts cannot blank public HTML.
