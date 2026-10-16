@@ -39,6 +39,7 @@ import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
 import { collegeTitle, collegeDescription } from "@/lib/collegeSeo";
+import { normalizeCollegeSectionData } from "@/lib/collegeSectionData";
 import { useProgrammeCourses } from "@/hooks/useProgrammeCourses";
 import { Share2, Phone, Sparkles } from "lucide-react";
 import AIExtensionBlock from "@/components/college/AIExtensionBlock";
@@ -99,7 +100,7 @@ const CollegeDetailPage = () => {
   const getSection = (type: string) => getOriginalSection(type) || getAISection(type);
   const getSectionData = (type: string) => {
     const sec = getSection(type);
-    return (sec?.data as any) || {};
+    return normalizeCollegeSectionData(sec?.data);
   };
   const getSectionContent = (type: string) => getSection(type)?.content || "";
   const getAIExtension = (type: string) => {

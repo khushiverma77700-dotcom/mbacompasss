@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Public crawlability and static HTML
+- [ ] Audit all 5,223 live college URLs; correct malformed section data rendering and verify affected pages
 - [x] Enumerate requested public routes and published dynamic records for capped native prerendering (5,174 selected; redirect aliases excluded)
 - [x] Prefetch requested public content and supply unique route metadata; remove meta keywords
 - [x] Verify crawler-visible HTML and IIM Ahmedabad source (real article, exam, coaching and college responses; 16 tests passed)
