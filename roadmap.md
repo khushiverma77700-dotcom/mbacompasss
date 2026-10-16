@@ -3,7 +3,8 @@
 ## Public crawlability and static HTML
 - [x] Enumerate requested public routes and published dynamic records for capped native prerendering (5,174 selected; redirect aliases excluded)
 - [x] Prefetch requested public content and supply unique route metadata; remove meta keywords
-- [x] Verify crawler-visible HTML and IIM Ahmedabad source (14 source responses, five hydrated pages, nine tests)
+- [x] Verify crawler-visible HTML and IIM Ahmedabad source (real article, exam, coaching and college responses; 15 tests passed)
+- [ ] Align editorial sanitization and defer ad discovery until route hydration completes — browser reports hydration warnings despite correct source content
 - [ ] Confirm all 5,174 generated static files in the publication output — publication build has not run; preview checks do not establish this
 
 ## Formal mobile application UI
