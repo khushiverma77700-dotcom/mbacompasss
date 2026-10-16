@@ -153,9 +153,7 @@ const CollegeDetailPage = () => {
     college
       ? {
           title: collegeTitle(college as any),
-          description:
-            (college as any).meta_description ||
-            `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
+          description: collegeDescription(college),
           keywords: ((college as any).keywords || [college.name, college.city || "", "MBA"]).filter(Boolean),
           canonical: canonicalUrl(`/college/${college.slug}`),
           jsonLd: collegeJsonLd,
