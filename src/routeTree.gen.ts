@@ -219,7 +219,6 @@ import { Route as PublicAuthorsSlugRouteImport } from './routes/_public.authors.
 import { Route as PublicBundlesSlugRouteImport } from './routes/_public.bundles.$slug'
 import { Route as PublicCategorySlugRouteImport } from './routes/_public.category.$slug'
 import { Route as PublicCoachingRegionRouteImport } from './routes/_public.coaching.$region'
-import { Route as PublicCoachingSlugRouteImport } from './routes/_public.coaching.$slug'
 import { Route as PublicCollegeSlugRouteImport } from './routes/_public.college.$slug'
 import { Route as PublicCollegesRegionRouteImport } from './routes/_public.colleges.$region'
 import { Route as PublicCoursesSlugRouteImport } from './routes/_public.courses.$slug'
@@ -1392,11 +1391,6 @@ const PublicCoachingRegionRoute = PublicCoachingRegionRouteImport.update({
   path: '/$region',
   getParentRoute: () => PublicCoachingRoute,
 } as any)
-const PublicCoachingSlugRoute = PublicCoachingSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => PublicCoachingRoute,
-} as any)
 const PublicCollegeSlugRoute = PublicCollegeSlugRouteImport.update({
   id: '/college/$slug',
   path: '/college/$slug',
@@ -2227,7 +2221,6 @@ export interface FileRoutesByFullPath {
   '/bundles/$slug': typeof PublicBundlesSlugRoute
   '/category/$slug': typeof PublicCategorySlugRoute
   '/coaching/$region': typeof PublicCoachingRegionRoute
-  '/coaching/$slug': typeof PublicCoachingSlugRoute
   '/college/$slug': typeof PublicCollegeSlugRoute
   '/colleges/$region': typeof PublicCollegesRegionRoute
   '/courses/$slug': typeof PublicCoursesSlugRoute
@@ -2535,7 +2528,6 @@ export interface FileRoutesByTo {
   '/bundles/$slug': typeof PublicBundlesSlugRoute
   '/category/$slug': typeof PublicCategorySlugRoute
   '/coaching/$region': typeof PublicCoachingRegionRoute
-  '/coaching/$slug': typeof PublicCoachingSlugRoute
   '/college/$slug': typeof PublicCollegeSlugRoute
   '/colleges/$region': typeof PublicCollegesRegionRoute
   '/courses/$slug': typeof PublicCoursesSlugRoute
@@ -2863,7 +2855,6 @@ export interface FileRoutesById {
   '/_public/bundles/$slug': typeof PublicBundlesSlugRoute
   '/_public/category/$slug': typeof PublicCategorySlugRoute
   '/_public/coaching/$region': typeof PublicCoachingRegionRoute
-  '/_public/coaching/$slug': typeof PublicCoachingSlugRoute
   '/_public/college/$slug': typeof PublicCollegeSlugRoute
   '/_public/colleges/$region': typeof PublicCollegesRegionRoute
   '/_public/courses/$slug': typeof PublicCoursesSlugRoute
@@ -3191,7 +3182,6 @@ export interface FileRouteTypes {
     | '/bundles/$slug'
     | '/category/$slug'
     | '/coaching/$region'
-    | '/coaching/$slug'
     | '/college/$slug'
     | '/colleges/$region'
     | '/courses/$slug'
@@ -3499,7 +3489,6 @@ export interface FileRouteTypes {
     | '/bundles/$slug'
     | '/category/$slug'
     | '/coaching/$region'
-    | '/coaching/$slug'
     | '/college/$slug'
     | '/colleges/$region'
     | '/courses/$slug'
@@ -3826,7 +3815,6 @@ export interface FileRouteTypes {
     | '/_public/bundles/$slug'
     | '/_public/category/$slug'
     | '/_public/coaching/$region'
-    | '/_public/coaching/$slug'
     | '/_public/college/$slug'
     | '/_public/colleges/$region'
     | '/_public/courses/$slug'
@@ -5437,13 +5425,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicCoachingRegionRouteImport
       parentRoute: typeof PublicCoachingRoute
     }
-    '/_public/coaching/$slug': {
-      id: '/_public/coaching/$slug'
-      path: '/$slug'
-      fullPath: '/coaching/$slug'
-      preLoaderRoute: typeof PublicCoachingSlugRouteImport
-      parentRoute: typeof PublicCoachingRoute
-    }
     '/_public/college/$slug': {
       id: '/_public/college/$slug'
       path: '/college/$slug'
@@ -6271,14 +6252,12 @@ const PublicBundlesRouteWithChildren = PublicBundlesRoute._addFileChildren(
 
 interface PublicCoachingRouteChildren {
   PublicCoachingRegionRoute: typeof PublicCoachingRegionRoute
-  PublicCoachingSlugRoute: typeof PublicCoachingSlugRoute
   PublicCoachingExamSlugRoute: typeof PublicCoachingExamSlugRoute
   PublicCoachingModeSlugRoute: typeof PublicCoachingModeSlugRoute
 }
 
 const PublicCoachingRouteChildren: PublicCoachingRouteChildren = {
   PublicCoachingRegionRoute: PublicCoachingRegionRoute,
-  PublicCoachingSlugRoute: PublicCoachingSlugRoute,
   PublicCoachingExamSlugRoute: PublicCoachingExamSlugRoute,
   PublicCoachingModeSlugRoute: PublicCoachingModeSlugRoute,
 }

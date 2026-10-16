@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Index from "@/pages/Index";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import StudentShellFallback from "@/components/student/StudentShellFallback";
+import { prefetchHomepage } from "@/lib/queries/homepageQueries";
 
 function HomeRoute() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ function HomeRoute() {
 }
 
 export const Route = createFileRoute("/_public/")({
+  loader: ({ context }) => prefetchHomepage(context.queryClient),
   head: () => publicPageHead('/', 'MBA Compass — MBA Colleges, Coaching & Exams India 2026', 'Compare MBA colleges, coaching and entrance exams. Explore fees, placements, admission information and preparation resources on MBA Compass.'),
 
   component: HomeRoute,

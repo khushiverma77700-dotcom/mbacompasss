@@ -1,4 +1,4 @@
-import { QueryClient, dehydrate, hydrate } from "@tanstack/react-query";
+import { QueryClient, dehydrate, hydrate, timeoutManager } from "@tanstack/react-query";
 import type { DehydratedState } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { packRows, unpackRows } from "./lib/queries/rowTransport";
@@ -7,6 +7,24 @@ import { installUploadCompression } from "./lib/imageCompression";
 
 
 export const getRouter = () => {
+  // All server query GC timers must release the build process, including
+  // per-component overrides that would otherwise hold prerendering open.
+  if (typeof window === "undefined") {
+    timeoutManager.setTimeoutProvider({
+      setTimeout: (cb, ms) => {
+        const id = setTimeout(cb, ms);
+        (id as unknown as { unref?: () => void }).unref?.();
+        return id;
+      },
+      clearTimeout: (id) => clearTimeout(id),
+      setInterval: (cb, ms) => {
+        const id = setInterval(cb, ms);
+        (id as unknown as { unref?: () => void }).unref?.();
+        return id;
+      },
+      clearInterval: (id) => clearInterval(id),
+    });
+  }
   installUploadCompression();
   // Ported from the pre-migration App.tsx QueryClient — public content
   // (colleges, exams, articles) rarely changes intra-session, so repeat
