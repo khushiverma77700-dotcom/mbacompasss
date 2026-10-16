@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CATScoreCalculatorPage from "@/pages/CATScoreCalculatorPage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
-import { CAT_CALCULATOR_FAQS } from "@/lib/catScorePercentile";
+import { CAT_CALCULATOR_FAQS, CAT_SCORE_EXTRA_FAQS } from "@/lib/catScorePercentile";
 
 const URL = "https://mbacompass.in/cat-score-calculator";
 const TITLE = "CAT Score Calculator 2026 & CAT Score vs Percentile | MBA Compass";
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_public/cat-score-calculator")({
             },
             {
               "@type": "FAQPage",
-              mainEntity: CAT_CALCULATOR_FAQS.map((f) => ({
+              mainEntity: [...CAT_CALCULATOR_FAQS, ...CAT_SCORE_EXTRA_FAQS].map((f) => ({
                 "@type": "Question",
                 name: f.q,
                 acceptedAnswer: { "@type": "Answer", text: f.a },
