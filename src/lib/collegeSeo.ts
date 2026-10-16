@@ -32,15 +32,21 @@ function cutWords(s: string, max: number): string {
   return cut.slice(0, i > 20 ? i : max).replace(/[\s,:&|–—-]+$/, "");
 }
 
-export function collegeTitle(row: { name?: string; meta_title?: string | null }, now = new Date()): string {
+export function collegeTitle(row: { name?: string; meta_title?: string | null; city?: string | null }, now = new Date()): string {
   const name = clean(row.name);
   const mt = clean(row.meta_title);
   if (mt && mt.length <= TITLE_MAX) return mt;
   const year = admissionYear(now);
+  // Long official names: also try the short form before a dash or comma ("MICA – Mudra…" → "MICA").
+  const short = name.split(/\s+[–—-]\s+|,\s*/)[0].trim();
+  const city = clean((row as any).city);
+  const shortName = short && short !== name ? (city && !short.includes(city) ? `${short} ${city}` : short) : name;
   for (const t of [
     `${name}: Fees, Placements, Cut-off ${year}`,
     `${name}: Fees & Placements ${year}`,
     `${name} Fees & Placements`,
+    `${shortName}: Fees, Placements, Cut-off ${year}`,
+    `${shortName}: Fees & Placements ${year}`,
   ]) {
     if (t.length <= TITLE_MAX) return t;
   }
@@ -55,7 +61,7 @@ export function collegeDescription(row: any): string {
   const avg = shortMoney(row.placement_avg, "LPA");
   const exams: string[] = (row.exams_accepted || []).filter(Boolean).slice(0, 3);
   const parts = [
-    `${name}${row.city ? `, ${clean(row.city)}` : ""} MBA ${admissionYear()}:`,
+    `${name}${row.city && !name.includes(clean(row.city)) ? `, ${clean(row.city)}` : ""} MBA ${admissionYear()}:`,
     fees ? `fees ${fees},` : "fees,",
     avg ? `average package ${avg},` : "placements,",
     exams.length ? `cut-offs for ${exams.join(", ")},` : "cut-offs,",

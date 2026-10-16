@@ -30,3 +30,10 @@ describe("college search titles", () => {
     expect(shortMoney("official latest-public INR 14-18 lakh range")).toBeNull();
   });
 });
+
+describe("long college names", () => {
+  it("uses the short name plus city when the full name is too long", () => {
+    expect(collegeTitle({ name: "MICA – Mudra Institute of Communications, Ahmedabad", city: "Ahmedabad" }, new Date("2026-10-16T00:00:00Z")))
+      .toBe("MICA Ahmedabad: Fees, Placements, Cut-off 2027");
+  });
+});
