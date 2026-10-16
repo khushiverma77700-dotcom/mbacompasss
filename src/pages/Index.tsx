@@ -213,9 +213,9 @@ const Index = () => {
         canonical="https://mbacompass.in"
         ogType="website"
         ogTitle="MBA Compass — Top MBA Colleges, Coaching & Entrance Exams India 2026"
-        ogDescription="Compare 500+ MBA coaching institutes & 2000+ colleges. Find the best CAT, GMAT, XAT coaching with verified reviews, fees & success rates."
+        ogDescription="Compare 500+ MBA coaching institutes & 5,000+ colleges. Find the best CAT, GMAT, XAT coaching with verified reviews, fees & success rates."
         twitterTitle="MBA Compass — MBA Colleges, Coaching & Exams India 2026"
-        twitterDescription="India's most trusted MBA coaching & college comparison. Compare fees, reviews, placements of 2000+ institutes."
+        twitterDescription="India's most trusted MBA coaching & college comparison. Compare fees, reviews, placements of 5,000+ institutes."
         jsonLd={jsonLdSchemas}
       />
 

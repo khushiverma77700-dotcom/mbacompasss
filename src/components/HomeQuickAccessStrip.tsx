@@ -15,7 +15,7 @@ type Item = {
 };
 
 const ITEMS: Item[] = [
-  { icon: Building2, label: "Explore Colleges", sub: "2000+ B-Schools", to: "/colleges", tone: "from-sky-100 to-sky-50" },
+  { icon: Building2, label: "Explore Colleges", sub: "5,000+ B-Schools", to: "/colleges", tone: "from-sky-100 to-sky-50" },
   { icon: Scale, label: "Compare Colleges", sub: "Side-by-side", to: "/compare", tone: "from-violet-100 to-violet-50" },
   { icon: GraduationCap, label: "Coaching Finder", sub: "Top coachings", to: "/coaching", tone: "from-teal-100 to-teal-50" },
   { icon: Compass, label: "MBA Compass", sub: "Paid courses", to: "/mba-compass", tone: "from-cyan-100 to-cyan-50" },

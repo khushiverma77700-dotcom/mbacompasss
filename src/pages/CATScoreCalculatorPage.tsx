@@ -335,7 +335,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           {/* Live Stats from DB */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
             className="flex flex-wrap justify-center gap-4 mt-8">
-            {statsData.map((stat) => (
+            {(liveStats?.total ?? 0) >= 100 && statsData.map((stat) => (
               <div key={stat.label} className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-5 py-3 text-center min-w-[140px]">
                 <stat.icon className="w-5 h-5 text-white/70 mx-auto mb-1" />
                 <p className="text-2xl font-black text-white"><AnimatedCounter end={stat.value} suffix={stat.suffix} /></p>
@@ -815,42 +815,6 @@ const CATScoreCalculatorPage: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ═══════ TESTIMONIALS / REVIEWS ═══════ */}
-      <section className="bg-muted/20 py-14">
-        <div className="max-w-5xl mx-auto px-4">
-          <SectionInView>
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-semibold px-4 py-1.5 rounded-full mb-3">
-                <ThumbsUp className="w-4 h-4" /> Student Reviews
-              </div>
-              <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">What Students Say About Our Calculator</h2>
-              <p className="text-muted-foreground max-w-lg mx-auto">Trusted by thousands of CAT aspirants for accurate score analysis</p>
-            </div>
-          </SectionInView>
-
-          <div className="grid md:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t, i) => (
-              <SectionInView key={t.name} delay={i * 0.08}>
-                <div className="bg-card border border-border rounded-2xl p-5 shadow-xs hover:shadow-md transition-all h-full flex flex-col">
-                  <div className="flex items-center gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
-                  </div>
-                  <Quote className="w-5 h-5 text-primary/30 mb-2" />
-                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">"{t.review}"</p>
-                  <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">{t.avatar}</div>
-                    <div>
-                      <p className="text-foreground font-semibold text-sm">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.college} • {t.score}</p>
-                    </div>
-                  </div>
-                </div>
-              </SectionInView>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ═══════ AGGREGATED TREND CHARTS ═══════ */}
       <section className="bg-muted/30 py-14">

@@ -179,7 +179,7 @@ const MBALandscapeSection = () => {
             to="/colleges"
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
           >
-            View complete list of 2000+ B-Schools <ArrowRight className="w-4 h-4" />
+            View complete list of 5,000+ B-Schools <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
