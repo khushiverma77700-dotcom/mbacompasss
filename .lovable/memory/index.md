@@ -67,3 +67,4 @@
 - [MBA Application Module](mem://features/mba-application-module) — /mba-application hub + category + college pages, /my-mba-2027 301s here, admin tabs via ?tab=, AI SEO server function
 - [WhatsApp Automation](mem://features/whatsapp-automation) — /admin/whatsapp-automation bulk campaigns, daily limit, 3-attempt retry queue, hourly cron dispatch through SmartPing partner API
 - [Course Refund Policy](mem://features/course-refund-policy) — All course purchases are final and non-refundable; disclose clearly before payment
+- [Marketing research](mem://reference/marketing-research) — Research and plan saved in Project Files 2026-10-17
