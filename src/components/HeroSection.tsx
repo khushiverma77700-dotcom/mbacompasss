@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { Search, BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target, ChevronRight, MapPin, Tag, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 type HeroSuggestion = {
   type: "institute" | "exam" | "city" | "category" | "college" | "article";
@@ -39,8 +40,8 @@ const HeroSection = () => {
   // Mobile-perf: settings hydration is deferred 8s so it can never race the
   // initial paint or the CLS measurement window (which extends ~5s past last
   // input). Heading/subheading/stats render from constant fallbacks first.
-  const [heroSettings, setHeroSettings] = useState<any>(null);
-  const [statsSettings, setStatsSettings] = useState<any>(null);
+  const { data: heroSettings } = useSiteSettings("hero");
+  const { data: statsSettings } = useSiteSettings("stats");
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
@@ -51,44 +52,6 @@ const HeroSection = () => {
   const popularSearches = heroSettings?.popular_searches || fallbackSearches;
   const stats = statsSettings?.items || fallbackStats;
 
-  useEffect(() => {
-    // Mobile-perf: wait until well after LCP + CLS window before fetching
-    // optional site-settings overrides. Use rIC so we never compete with
-    // user interaction either.
-    const w = window as any;
-    let idleHandle: number | undefined;
-    let cancelled = false;
-    const hydrate = async () => {
-      try {
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data } = await supabase
-          .from("site_settings")
-          .select("key,value")
-          .in("key", ["hero", "stats"]);
-        if (cancelled) return;
-        const map: Record<string, any> = {};
-        data?.forEach((row: any) => { map[row.key] = row.value; });
-        setHeroSettings(map.hero ?? null);
-        setStatsSettings(map.stats ?? null);
-      } catch {
-        // Keep constant fallbacks on network/data errors.
-      }
-    };
-    const timer = window.setTimeout(() => {
-      if (typeof w.requestIdleCallback === "function") {
-        idleHandle = w.requestIdleCallback(hydrate, { timeout: 3000 });
-      } else {
-        hydrate();
-      }
-    }, 8000);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-      if (idleHandle !== undefined) {
-        try { w.cancelIdleCallback?.(idleHandle); } catch {}
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (deferredQuery.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }

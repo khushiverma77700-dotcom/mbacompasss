@@ -1,27 +1,19 @@
+import { publicPageHead } from "@/lib/publicPageHead";
 import { createFileRoute } from "@tanstack/react-router";
 import CATScoreCalculatorPage from "@/pages/CATScoreCalculatorPage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import { CAT_CALCULATOR_FAQS, CAT_SCORE_EXTRA_FAQS, CAT_SCORE_VS_PERCENTILE, CAT_SECTIONAL_VS_PERCENTILE, CAT_INDICATIVE_TARGETS } from "@/lib/catScorePercentile";
 
 const URL = "https://mbacompass.in/cat-score-calculator";
-const TITLE = "CAT Score Calculator 2026 & CAT Score vs Percentile | MBA Compass";
+const TITLE = "CAT Score Calculator 2026 & CAT Score vs Percentile";
 const DESC =
-  "Free CAT score calculator: paste your response sheet for an exact VARC, DILR and QA score, then check the CAT score vs percentile table to estimate your percentile.";
+  "Calculate CAT marks from your response sheet. Check VARC, DILR and QA scores and compare indicative CAT score vs percentile bands.";
 
 export const Route = createFileRoute("/_public/cat-score-calculator")({
   component: () => <CATScoreCalculatorPage />,
   pendingComponent: PublicPageSkeleton,
   head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESC },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESC },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: URL },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: URL }],
+    ...publicPageHead("/cat-score-calculator", TITLE, DESC),
     scripts: [
       {
         type: "application/ld+json",

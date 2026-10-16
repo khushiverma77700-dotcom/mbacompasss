@@ -1,4 +1,4 @@
-import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { sanitizeEditorialHtml } from "@/lib/sanitizeHtml";
 import { normalizeContentStructure } from "@/lib/contentStructure";
 import { formatEditorialReadability } from "@/lib/editorialReadability";
 // Post-processor for AI-generated HTML.
@@ -273,6 +273,6 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
   if (options?.editorial) out = formatEditorialReadability(out);
 
   // 5. Sanitize to prevent stored XSS — strip <script>, on* handlers, javascript: URLs, etc.
-  return sanitizeHtml(out, { ADD_ATTR: ["target", "rel", "scope", "data-answer", "loading", "decoding"] });
+  return sanitizeEditorialHtml(out);
 }
 

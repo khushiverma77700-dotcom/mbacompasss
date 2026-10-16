@@ -48,13 +48,14 @@ const ArticlePage = () => {
         .from("articles")
         .select("*")
         .eq("slug", slug!)
+        .eq("published", true)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    gcTime: typeof window === "undefined" ? Infinity : 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     placeholderData: () => {
       // Seed from blog list / suggested lists so the page paints instantly
@@ -145,7 +146,7 @@ const ArticlePage = () => {
 
 
   useEffect(() => {
-    if (article) {
+    if (article && !document.querySelector('meta[name="mba-route-seo"]')) {
       document.title = `${(article as any).meta_title || article.title} | MBA Compass`;
     }
   }, [article]);

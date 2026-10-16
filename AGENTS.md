@@ -1,12 +1,12 @@
 - Keep MBA Compass course refund disclosure in one shared presentation component and apply its offer-schema rule only to MBA Compass course detail markup, because third-party institutes may have different policies.
 - Group public MBA applications into responsive dossiers, not wide tables; keep recommendations in an unframed responsive rail. Share IST deadline math, one countdown timer and approved information presentation for consistent views.
-- Keep College Applications to its core fields (name, slug, category, tier, programs, fees, apply link, deadline, exams, logo, details, publish state) with summary-first lists edited in the full-record dialog, because inline editing complicates administration; recommendations and SEO live in their own tools.
+- College Applications use core fields, summary lists and full-record dialogs; recommendations and SEO stay separate to keep administration simple.
 - Structure student home as an institutional executive dashboard: applications, score overview, study priorities, then analytics, for a clear action hierarchy.
 - Admin email campaigns record per-recipient tracking tokens and redirect clicks only to saved campaign URLs to prevent open redirects.
 - Parse saved profile-analysis narratives through one defensive normalizer before rendering, because AI output may be JSON, fenced JSON, or double-encoded JSON.
 - Email campaigns stage recipients as waiting and release batches via a database tick that re-reads speed settings each run, so changes apply live; the tick arms on start/resume and removes itself when idle.
 - Mock competition metrics use each student's earliest completed attempt and verified unique-student cohorts, because retakes and synthetic aspirants must not inflate ranks or participation.
-- Mock generation uses exam-normalized CAT/XAT-style difficulty plus deterministic editorial validation, because malformed, trivial, ambiguous, or incorrectly keyed questions must never enter a test.
+- Mock generation uses exam-normalized CAT/XAT difficulty and deterministic validation to reject malformed, trivial, ambiguous or incorrectly keyed questions.
 - Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
 - AI blog articles are generated as drafts through a scope-first pipeline (intent, topic boundary, sources, style) and are published only from the editor workspace after its checklist passes, because unscoped or unverified articles must never go live automatically.
 - AI blog references stay editor-visible evidence and keyword banks stay in SEO data; readers see only curated terms, for readability.
@@ -20,7 +20,8 @@
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
-- Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
-- Serve anonymous public page HTML from the build-keyed shared cache in src/server.ts (src/lib/htmlEdgeCache.ts), never admin, student, auth or per-user paths; per-visit rendering was slow.
+- Editorial readability uses a pure linear block scan and identical allowlisted server/browser sanitization to prevent hangs, fact mutation and hydration mismatches.
+- Native TanStack prerenders capped public-record manifests with content validation; other anonymous pages use the build-keyed HTML cache. Never snapshot admin, student, auth or per-user data.
+- Marked route heads own metadata; legacy SEOHead only adds schemas there, preventing title flips.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
 - College SEO text comes only from src/lib/collegeSeo.ts; duplicates 301 via seo_redirects in loaders, avoiding title flips.

@@ -40,7 +40,6 @@ export const Route = createFileRoute("/_public/mba-application/")({
       meta: [
         { title: meta.title },
         { name: "description", content: meta.description },
-        { name: "keywords", content: KEYWORDS.join(", ") },
         { property: "og:title", content: meta.title },
         { property: "og:description", content: meta.description },
         { property: "og:type", content: "website" },

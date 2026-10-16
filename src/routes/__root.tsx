@@ -216,18 +216,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5",
       },
-      { title: "MBA Compass — Compare Top MBA Colleges & Coaching" },
-      {
-        name: "description",
-        content:
-          "India's trusted platform to find, compare and review the best MBA colleges and coaching institutes for CAT, GMAT, XAT, and SNAP.",
-      },
       { name: "author", content: "MBA Compass" },
-      {
-        name: "keywords",
-        content:
-          "best MBA coaching, MBA coaching institutes, CAT preparation, GMAT coaching, XAT coaching, MBA entrance exam, IIM preparation, MBA coaching comparison, CAT coaching fees, MBA coaching reviews",
-      },
       { name: "theme-color", content: "#3b82f6", media: "(prefers-color-scheme: light)" },
       { name: "theme-color", content: "#0f172a", media: "(prefers-color-scheme: dark)" },
       { name: "mobile-web-app-capable", content: "yes" },
@@ -254,20 +243,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "google-site-verification",
         content: "r3SY9WIcZzdFg6MqQuaBq2OwA_YuTodCZfe0t5X4nrY",
       },
-      { property: "og:title", content: "MBA Compass — Compare Top MBA Colleges & Coaching" },
-      { name: "twitter:title", content: "MBA Compass — Compare Top MBA Colleges & Coaching" },
-      {
-        property: "og:description",
-        content:
-          "India's trusted platform to find, compare and review the best MBA colleges and coaching institutes for CAT, GMAT, XAT, and SNAP.",
-      },
-      {
-        name: "twitter:description",
-        content:
-          "India's trusted platform to find, compare and review the best MBA colleges and coaching institutes for CAT, GMAT, XAT, and SNAP.",
-      },
-      { property: "og:image", content: "https://mbacompass.in/og-image.png" },
-      { name: "twitter:image", content: "https://mbacompass.in/og-image.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

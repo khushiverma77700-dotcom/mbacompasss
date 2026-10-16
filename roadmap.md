@@ -1,5 +1,12 @@
 # Roadmap
 
+## Public crawlability and static HTML
+- [x] Enumerate requested public routes and published dynamic records for capped native prerendering (5,174 selected; redirect aliases excluded)
+- [x] Prefetch requested public content and supply unique route metadata; remove meta keywords
+- [x] Verify crawler-visible HTML and IIM Ahmedabad source (real article, exam, coaching and college responses; 16 tests passed)
+- [x] Align editorial sanitization; repeated article, exam and college browser checks report no page errors and contents navigation works
+- [ ] Confirm all 5,174 generated static files in the publication output — publication build has not run; preview checks do not establish this
+
 ## Formal mobile application UI
 - [x] Simplify page spacing, mobile filters and application dossiers
 - [x] Recompose recommended colleges with readable names and aligned actions

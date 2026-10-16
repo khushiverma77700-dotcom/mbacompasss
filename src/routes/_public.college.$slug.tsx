@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, notFound } from "@tanstack/react-router";
 import CollegeDetailPage from "@/pages/CollegeDetailPage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import { detailHead, prefetchDetail, findSeoRedirect } from "@/lib/detailPageSeo";
@@ -11,7 +11,9 @@ export const Route = createFileRoute("/_public/college/$slug")({
     // Duplicate college pages permanently point to the strongest copy.
     const to = await findSeoRedirect(`/college/${params.slug}`);
     if (to) throw redirect({ href: to, statusCode: 301 });
-    return { row: await prefetchDetail(context.queryClient, "colleges", params.slug) };
+    const row = await prefetchDetail(context.queryClient, "colleges", params.slug);
+    if (!row) throw notFound();
+    return { row };
   },
   head: ({ loaderData, params }) => {
     const row = loaderData?.row;

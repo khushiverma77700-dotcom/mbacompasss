@@ -8,11 +8,12 @@
 // Soft 404 / Crawled — currently not indexed. Wired into the `build` npm
 // script so a regression can never reach production.
 
-import { readdirSync, readFileSync, statSync } from "fs";
+import { readdirSync, readFileSync, statSync, existsSync } from "fs";
 import { resolve, join } from "path";
 
-const DIST = resolve("dist");
-const SAMPLE_LIMIT = Number(process.env.PRERENDER_VERIFY_LIMIT ?? 500); // scan up to N files
+const DIST = ["dist/client", ".output/public", "dist"].map((p) => resolve(p)).find((p) => existsSync(p));
+if (!DIST) throw new Error("No generated public output exists yet; run after the publication build");
+const SAMPLE_LIMIT = Number(process.env.PRERENDER_VERIFY_LIMIT ?? 8000);
 
 type Problem = { file: string; reasons: string[] };
 
@@ -29,7 +30,7 @@ function walk(dir: string, out: string[] = []): string[] {
 function check(html: string): string[] {
   const reasons: string[] = [];
   if (!/<h1[\s>]/i.test(html)) reasons.push("missing <h1>");
-  const desc = html.match(/<meta\s+name="description"\s+content="([^"]*)"/i);
+  const desc = html.match(/<meta[^>]+name="description"[^>]+content="([^"]*)"/i);
   if (!desc || !desc[1].trim()) reasons.push("empty meta description");
   if (/<div id="root">\s*<\/div>/i.test(html)) reasons.push("empty #root");
   return reasons;
@@ -57,7 +58,7 @@ if (problems.length) {
   }
   if (problems.length > 25) console.error(`  … and ${problems.length - 25} more`);
   console.error(
-    "\nFix scripts/prerender-seo.ts so buildHtml() injects <h1> + meta description + non-empty #root for every route.\n",
+    "\nFix the affected public route loader or head() before publishing.\n",
   );
   process.exit(1);
 }

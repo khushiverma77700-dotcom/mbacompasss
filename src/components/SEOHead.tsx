@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { normalizeReviewSchemas } from "@/lib/normalizeReviewSchema";
 import { withMerchantOfferFields } from "@/lib/offerSchema";
+import { cleanSeoText } from "@/lib/publicPageHead";
+import { fitTitle } from "@/lib/collegeSeo";
 
 // The ONLY canonical host for this site. All canonical / og:url / JSON-LD
 // URLs we emit always point at this host, regardless of which alias is
@@ -64,9 +66,13 @@ const SEOHead = ({
 }: SEOHeadProps) => {
   const resolvedOgImage = ogImage || DEFAULT_OG_IMAGE;
   useEffect(() => {
-    if (title) document.title = title;
+    const routeOwnsMetadata = !!document.querySelector('meta[name="mba-route-seo"]');
+    if (title && !routeOwnsMetadata) document.title = fitTitle(title, 59);
 
     const syncMeta = (name: string, content?: string, attr = "name") => {
+      if (routeOwnsMetadata && !["robots", "googlebot", "keywords"].includes(name)) return;
+      if (content && /title$/.test(name)) content = fitTitle(content, 59);
+      if (content && /description$/.test(name)) content = cleanSeoText(content, 154);
       const selector = `meta[${attr}="${name}"]`;
       let el = document.querySelector(selector) as HTMLMetaElement | null;
 
@@ -85,13 +91,7 @@ const SEOHead = ({
     };
 
     syncMeta("description", description);
-    // M5: keywords meta — cap at 10 terms; drop if empty. Google itself ignores
-    // this tag, but bloated values look low-quality to other crawlers.
-    const cappedKeywords = (keywords || [])
-      .map((k) => (k || "").trim())
-      .filter(Boolean)
-      .slice(0, 10);
-    syncMeta("keywords", cappedKeywords.length ? cappedKeywords.join(", ") : undefined);
+    document.querySelectorAll('meta[name="keywords"]').forEach((el) => el.remove());
 
     // Always force the non-www apex on canonical / og:url, regardless of
     // whether the page is currently being viewed on www.mbacompass.in.
@@ -141,14 +141,14 @@ const SEOHead = ({
 
     // Canonical — always non-www
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (canonicalHref) {
+    if (canonicalHref && !routeOwnsMetadata) {
       if (!link) {
         link = document.createElement("link");
         link.setAttribute("rel", "canonical");
         document.head.appendChild(link);
       }
       link.setAttribute("href", canonicalHref);
-    } else {
+    } else if (!routeOwnsMetadata) {
       link?.remove();
     }
 

@@ -49,7 +49,7 @@ export const collegesListingQuery = queryOptions({
     return all;
   },
   staleTime: 10 * 60 * 1000,
-  gcTime: 30 * 60 * 1000,
+  gcTime: typeof window === "undefined" ? Infinity : 30 * 60 * 1000,
 });
 
 
@@ -122,7 +122,7 @@ export const blogArticlesQuery = queryOptions({
     return data || [];
   },
   staleTime: 5 * 60 * 1000,
-  gcTime: 30 * 60 * 1000,
+  gcTime: typeof window === "undefined" ? Infinity : 30 * 60 * 1000,
   refetchOnWindowFocus: false,
 });
 
@@ -156,5 +156,33 @@ export const collegesListingPreviewQuery = queryOptions({
     return data || [];
   },
   staleTime: 10 * 60 * 1000,
-  gcTime: 30 * 60 * 1000,
+  gcTime: typeof window === "undefined" ? Infinity : 30 * 60 * 1000,
+});
+
+export const examsListingQuery = queryOptions({
+  queryKey: ["exams-listing"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("exams")
+      .select("id, name, slug, full_name, conducting_body, frequency, exam_date, registration_deadline, description, official_website, logo_url, exam_year, exam_category, exam_level, exam_mode, duration, pattern, listing_sort_order").order("name");
+    if (error) throw error;
+    return (data || []).filter((row) => row.name?.trim() && row.slug?.trim());
+  }, staleTime: 10 * 60 * 1000,
+});
+export const freebiesQuery = queryOptions({
+  queryKey: ["public-freebies"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("freebies").select("*").eq("is_published", true)
+      .order("sort_order", { ascending: false }).order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+});
+export const comparisonCoursesQuery = queryOptions({
+  queryKey: ["comparison-courses"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("courses")
+      .select("*, institutes(id, name, slug, city, state, rating, total_reviews, students_count, success_rate, mode, discount, offer, logo_url, features)").order("name");
+    if (error) throw error;
+    return data || [];
+  },
 });

@@ -3,6 +3,7 @@ import { useLocation } from "@/lib/router-compat";
 import BackButton from "@/components/BackButton";
 import { useAdSlots } from "@/components/ads/AdSlots";
 import EditorialInterlinks from "@/components/editorial/EditorialInterlinks";
+import { useHydrated } from "@tanstack/react-router";
 
 const Navbar = lazy(() => import("@/components/Navbar"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -12,6 +13,8 @@ const Footer = lazy(() => import("@/components/Footer"));
 // App.tsx DeferredChrome.
 const DeferredChrome = () => {
   const [show, setShow] = useState(false);
+  const hydrated = useHydrated();
+  const [serverRendered] = useState(() => !hydrated);
   const location = useLocation();
 
   useEffect(() => {
@@ -39,7 +42,7 @@ const DeferredChrome = () => {
     };
   }, [location.pathname]);
 
-  if (!show) return null;
+  if (!show && !serverRendered) return null;
 
   return (
     <Suspense fallback={null}>

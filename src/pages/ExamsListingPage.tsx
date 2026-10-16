@@ -19,6 +19,7 @@ import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import PageKeywords from "@/components/PageKeywords";
 import { canonicalUrl } from "@/lib/canonical";
 import { examDetails } from "@/data/mockData";
+import { examsListingQuery } from "@/lib/queries/listingQueries";
 
 /* ------------------------------------------------------------------ */
 /* Normalised exam shape used by the listing                           */
@@ -323,18 +324,7 @@ const ExamsListingPage = () => {
 
   const resetFilters = () => setSearchParams(new URLSearchParams(), { replace: true });
 
-  const { data: dbExams, isLoading } = useQuery({
-    queryKey: ["exams-listing"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exams")
-        .select("id, name, slug, full_name, conducting_body, frequency, exam_date, registration_deadline, description, official_website, logo_url, exam_year, exam_category, exam_level, exam_mode, duration, pattern, listing_sort_order")
-        .order("name");
-      if (error) throw error;
-      return (data || []).filter((r: any) => clean(r.name) && clean(r.slug));
-    },
-    staleTime: 10 * 60 * 1000,
-  });
+  const { data: dbExams, isLoading } = useQuery(examsListingQuery);
 
   const exams = useMemo(() => {
     const map = new Map<string, ExamCard>();

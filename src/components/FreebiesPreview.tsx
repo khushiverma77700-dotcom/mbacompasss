@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { homeFreebiesQuery } from "@/lib/queries/homepageQueries";
 import { Link } from "@/lib/router-compat";
 import { Download, FileText, Gift, ArrowRight } from "lucide-react";
 import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
@@ -13,21 +14,7 @@ type Freebie = {
 };
 
 const FreebiesPreview = () => {
-  const [items, setItems] = useState<Freebie[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data } = await supabase
-        .from("freebies")
-        .select("id,title,category,cover_image_url,download_count,is_featured,featured_order,created_at")
-        .eq("is_published", true)
-        .order("is_featured", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(4);
-      setItems(data || []);
-    })();
-  }, []);
+  const { data: items = [] } = useQuery(homeFreebiesQuery);
 
   if (!items.length) return null;
 
