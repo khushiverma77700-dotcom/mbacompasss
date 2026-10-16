@@ -38,6 +38,7 @@ import { numericStat, rankOnly, stripTBA } from "@/lib/textClip";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
+import { collegeTitle, collegeDescription } from "@/lib/collegeSeo";
 import { useProgrammeCourses } from "@/hooks/useProgrammeCourses";
 import { Share2, Phone, Sparkles } from "lucide-react";
 import AIExtensionBlock from "@/components/college/AIExtensionBlock";
@@ -130,7 +131,7 @@ const CollegeDetailPage = () => {
 
   useEffect(() => {
     if (college) {
-      document.title = `${college.name} — Fees & Placements | MBA Compass`;
+      document.title = collegeTitle(college as any);
     }
   }, [college]);
 
@@ -151,7 +152,7 @@ const CollegeDetailPage = () => {
     college?.id,
     college
       ? {
-          title: `${college.name} — Fees & Placements | MBA Compass`,
+          title: collegeTitle(college as any),
           description:
             (college as any).meta_description ||
             `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
