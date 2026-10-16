@@ -6,6 +6,8 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import type { Plugin } from "vite";
+import { loadEnv } from "vite";
+import { enumeratePublicPages, validateRenderedPage } from "./scripts/publicPrerender";
 
 // Carried over from the pre-migration config: a stable build ID emitted to
 // /version.json so already-open tabs can detect a new deploy and self-heal
@@ -40,11 +42,16 @@ const guardCreateRequire = (): Plugin => ({
   },
 });
 
-export default defineConfig({
+export default async (env: { command: "build" | "serve"; mode: string }) => {
+  const publicEnv = loadEnv(env.mode, process.cwd(), "VITE_");
+  const pages = env.command === "build" ? await enumeratePublicPages(publicEnv.VITE_SUPABASE_URL, publicEnv.VITE_SUPABASE_PUBLISHABLE_KEY) : [];
+  return defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    pages,
+    prerender: { enabled: env.command === "build", autoStaticPathsDiscovery: false, crawlLinks: false, concurrency: 4, failOnError: true, retryCount: 0, onSuccess: validateRenderedPage },
   },
   vite: {
     server: {
@@ -55,4 +62,5 @@ export default defineConfig({
     },
     plugins: [emitVersionJson(), guardCreateRequire()],
   },
-});
+  })(env);
+};

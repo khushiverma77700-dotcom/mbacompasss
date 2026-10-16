@@ -1,5 +1,10 @@
 # Roadmap
 
+## Public crawlability and static HTML
+- [ ] Enumerate requested public routes and published dynamic records for capped native prerendering
+- [ ] Prefetch public content and supply unique route metadata; remove meta keywords
+- [ ] Verify crawler-visible HTML, generated output checks, and IIM Ahmedabad source
+
 ## Formal mobile application UI
 - [x] Simplify page spacing, mobile filters and application dossiers
 - [x] Recompose recommended colleges with readable names and aligned actions

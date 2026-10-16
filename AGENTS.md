@@ -1,6 +1,6 @@
 - Keep MBA Compass course refund disclosure in one shared presentation component and apply its offer-schema rule only to MBA Compass course detail markup, because third-party institutes may have different policies.
 - Group public MBA applications into responsive dossiers, not wide tables; keep recommendations in an unframed responsive rail. Share IST deadline math, one countdown timer and approved information presentation for consistent views.
-- Keep College Applications to its core fields (name, slug, category, tier, programs, fees, apply link, deadline, exams, logo, details, publish state) with summary-first lists edited in the full-record dialog, because inline editing complicates administration; recommendations and SEO live in their own tools.
+- College Applications use core fields, summary lists and full-record dialogs; recommendations and SEO stay separate to keep administration simple.
 - Structure student home as an institutional executive dashboard: applications, score overview, study priorities, then analytics, for a clear action hierarchy.
 - Admin email campaigns record per-recipient tracking tokens and redirect clicks only to saved campaign URLs to prevent open redirects.
 - Parse saved profile-analysis narratives through one defensive normalizer before rendering, because AI output may be JSON, fenced JSON, or double-encoded JSON.
@@ -21,6 +21,7 @@
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
-- Serve anonymous public page HTML from the build-keyed shared cache in src/server.ts (src/lib/htmlEdgeCache.ts), never admin, student, auth or per-user paths; per-visit rendering was slow.
+- Native TanStack prerenders capped public-record manifests with content validation; other anonymous pages use the build-keyed HTML cache. Never snapshot admin, student, auth or per-user data.
+- Marked route heads own metadata; legacy SEOHead only adds schemas there, preventing title flips.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
 - College SEO text comes only from src/lib/collegeSeo.ts; duplicates 301 via seo_redirects in loaders, avoiding title flips.

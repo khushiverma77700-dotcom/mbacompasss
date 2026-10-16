@@ -12,6 +12,8 @@ import {
   GraduationCap, Target, Zap, CheckCircle2, Quote, Layers, Rocket, Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { freebiesQuery } from "@/lib/queries/listingQueries";
 
 
 import {
@@ -73,8 +75,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 const FreebiesPage = () => {
-  const [items, setItems] = useState<Freebie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: items = [], isLoading: loading } = useQuery(freebiesQuery);
   const [q, setQ] = useState("");
   const [activeCat, setActiveCat] = useState<string>("All");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -92,9 +93,11 @@ const FreebiesPage = () => {
     const KEYWORDS =
       "free MBA study material, CAT 2025 PDF, XAT preparation free, NMAT free notes, SNAP free material, quant formula sheet PDF, VARC cheatsheet, LRDI question bank, MBA free download, IIM interview kit, WAT PI questions, GK for CAT, MBA preparation PDF, free CAT notes";
 
-    document.title = TITLE;
+    const routeOwnsMetadata = !!document.querySelector('meta[name="mba-route-seo"]');
+    if (!routeOwnsMetadata) document.title = TITLE;
 
     const upsertMeta = (attr: "name" | "property", key: string, content: string) => {
+      if (routeOwnsMetadata) return;
       let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
       if (!el) {
         el = document.createElement("meta");
@@ -104,6 +107,7 @@ const FreebiesPage = () => {
       el.setAttribute("content", content);
     };
     const upsertLink = (rel: string, href: string) => {
+      if (routeOwnsMetadata) return;
       let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
       if (!el) {
         el = document.createElement("link");
@@ -114,7 +118,7 @@ const FreebiesPage = () => {
     };
 
     upsertMeta("name", "description", DESC);
-    upsertMeta("name", "keywords", KEYWORDS);
+    document.querySelectorAll('meta[name="keywords"]').forEach((el) => el.remove());
     upsertMeta("name", "robots", "index,follow,max-image-preview:large,max-snippet:-1");
     upsertMeta("name", "author", "MBA Compass");
     upsertLink("canonical", URL);
@@ -165,18 +169,6 @@ const FreebiesPage = () => {
     };
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from("freebies")
-        .select("*")
-        .eq("is_published", true)
-        .order("sort_order", { ascending: false })
-        .order("created_at", { ascending: false });
-      if (!error) setItems((data || []) as Freebie[]);
-      setLoading(false);
-    })();
-  }, []);
 
   const categories = useMemo(() => {
     const set = new Set<string>();

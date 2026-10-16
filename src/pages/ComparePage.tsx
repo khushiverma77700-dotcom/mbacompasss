@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import SEOHead, { generateComparisonSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 import AICoachingFinder from "@/components/AICoachingFinder";
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { comparisonCoursesQuery } from "@/lib/queries/listingQueries";
 
 type DBCourse = {
   id: string; name: string; duration: string | null; fees: number | null;
@@ -39,21 +41,12 @@ const staggerItem = {
 };
 
 const ComparePage = () => {
-  const [courses, setCourses] = useState<DBCourse[]>([]);
+  const { data: courses = [], isLoading: loading } = useQuery(comparisonCoursesQuery);
   const [courseSelections, setCourseSelections] = useState<[DBCourse | null, DBCourse | null, DBCourse | null]>([null, null, null]);
-  const [loading, setLoading] = useState(true);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("comparison");
   const manualCompareRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      const { data } = await supabase.from("courses").select("*, institutes(id, name, slug, city, state, rating, total_reviews, students_count, success_rate, mode, discount, offer, logo_url, features)").order("name");
-      if (data) setCourses(data as any);
-      setLoading(false);
-    };
-    fetchAll();
-  }, []);
 
   const handleCourseSelect = (index: number, value: string) => {
     const found = courses.find(c => c.id === value);

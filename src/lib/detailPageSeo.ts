@@ -6,6 +6,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { canonicalUrl } from "@/lib/canonical";
 import { fitTitle } from "@/lib/collegeSeo";
+import { publicPageHead } from "./publicPageHead";
 
 type Table = "articles" | "colleges" | "exams";
 const KEYS: Record<Table, string> = { articles: "article", colleges: "college", exams: "exam-page" };
@@ -15,14 +16,32 @@ export async function prefetchDetail(qc: QueryClient, table: Table, slug: string
     return await qc.ensureQueryData({
       queryKey: [KEYS[table], slug],
       queryFn: async () => {
-        const { data, error } = await (supabase as any).from(table).select("*").eq("slug", slug).maybeSingle();
+        let query = (supabase as any).from(table).select("*").eq("slug", slug);
+        if (table === "articles") query = query.eq("published", true);
+        const { data, error } = await query.maybeSingle();
         if (error) throw error;
         return data;
       },
       staleTime: 5 * 60 * 1000,
+    }).then(async (row) => {
+      if (table === "colleges" && row?.id) {
+        await Promise.all([
+          qc.ensureQueryData({ queryKey: ["college-sections", row.id], queryFn: async () => {
+            const { data, error } = await supabase.from("college_sections").select("*").eq("college_id", row.id).eq("is_active", true).order("sort_order");
+            if (error) throw error;
+            return data || [];
+          }}),
+          qc.ensureQueryData({ queryKey: ["programme-courses", row.id], queryFn: async () => {
+            const { data, error } = await supabase.from("programme_courses").select("*").eq("college_id", row.id).eq("active", true).order("sort_order");
+            if (error) throw error;
+            return data || [];
+          }}),
+        ]);
+      }
+      return row;
     });
   } catch {
-    return null; // never break the page; the component refetches client-side
+    throw new Error(`Unable to load public ${table} content for ${slug}`);
   }
 }
 
@@ -79,18 +98,6 @@ export function detailHead(opts: {
   }
   const title = fitTitle(clip(row.meta_title || opts.titleFrom(row), 200));
   const description = clip(row.meta_description || opts.descriptionFrom(row) || opts.fallbackDescription);
-  const image = [row.image_url, row.logo_url].find((v) => typeof v === "string" && /^https:\/\//.test(v));
-  return {
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: opts.type },
-      { property: "og:url", content: url },
-      { name: "twitter:card", content: "summary_large_image" },
-      ...(image ? [{ property: "og:image", content: image }, { name: "twitter:image", content: image }] : []),
-    ],
-    links: [{ rel: "canonical", href: url }],
-  };
+  const image = [row.banner_url, row.image_url, row.logo_url].find((v) => typeof v === "string" && /^https:\/\//.test(v));
+  return publicPageHead(path, title, description, image, opts.type);
 }

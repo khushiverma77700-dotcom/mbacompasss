@@ -10,6 +10,7 @@ import SEOHead, {
 import { LazyMount } from "@/hooks/useInView";
 import BackToTop from "@/components/BackToTop";
 import JumpToMenu from "@/components/JumpToMenu";
+import { useHydrated } from "@tanstack/react-router";
 
 // Everything below the hero is code-split + mount-on-scroll so the initial
 // bundle stays tiny. Blank-screen on slow networks was caused by too much
@@ -102,6 +103,7 @@ const jsonLdSchemas = [
  *   - height >  400  → title + card grid
  */
 const SectionPlaceholder = ({ height = 320 }: { height?: number }) => {
+  const hydrated = useHydrated();
   const shimmer = "bg-gradient-to-r from-slate-100 via-slate-200/70 to-slate-100 bg-[length:200%_100%] animate-[shimmer_1.6s_linear_infinite] rounded-md";
 
   let variant: "bar" | "small" | "row" | "grid" = "grid";
@@ -109,6 +111,7 @@ const SectionPlaceholder = ({ height = 320 }: { height?: number }) => {
   else if (height <= 240) variant = "small";
   else if (height <= 400) variant = "row";
 
+  if (!hydrated) return null;
   return (
     <div
       role="status"
