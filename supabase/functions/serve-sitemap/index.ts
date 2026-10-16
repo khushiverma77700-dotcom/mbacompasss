@@ -217,7 +217,11 @@ Deno.serve(async (req) => {
 
     const cats: Entry[] = (categories ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/category/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.8 }] : []);
-    const collegeEntries: Entry[] = (colleges ?? []).flatMap((c: any) => c.slug
+    // Redirected (merged duplicate) pages must not be listed.
+    const redirected = new Set(
+      ((await fetchAll("seo_redirects", "from_path", (q: any) => q.eq("is_active", true))) ?? []).map((r: any) => r.from_path),
+    );
+    const collegeEntries: Entry[] = (colleges ?? []).flatMap((c: any) => c.slug && !redirected.has(`/college/${c.slug}`)
       ? [{ loc: `/college/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
     // Institutes in this project == coaching institutes (routed under /institute/:slug)
     const coachingInstituteEntries: Entry[] = (institutes ?? []).flatMap((i: any) => i.slug

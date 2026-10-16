@@ -5,6 +5,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { canonicalUrl } from "@/lib/canonical";
+import { fitTitle } from "@/lib/collegeSeo";
 
 type Table = "articles" | "colleges" | "exams";
 const KEYS: Record<Table, string> = { articles: "article", colleges: "college", exams: "exam-page" };
@@ -23,6 +24,29 @@ export async function prefetchDetail(qc: QueryClient, table: Table, slug: string
   } catch {
     return null; // never break the page; the component refetches client-side
   }
+}
+
+/** Final active redirect target for a path (follows up to 4 hops), or null. Never throws. */
+export async function findSeoRedirect(path: string): Promise<string | null> {
+  const seen = new Set([path]);
+  let current = path;
+  try {
+    for (let hop = 0; hop < 4; hop++) {
+      const { data } = await (supabase as any)
+        .from("seo_redirects")
+        .select("to_path")
+        .eq("from_path", current)
+        .eq("is_active", true)
+        .maybeSingle();
+      const to = data?.to_path as string | undefined;
+      if (!to || !to.startsWith("/") || seen.has(to)) break;
+      seen.add(to);
+      current = to;
+    }
+  } catch {
+    /* fall through with whatever was resolved */
+  }
+  return current !== path ? current : null;
 }
 
 const clip = (s: unknown, n = 160) => {
@@ -53,7 +77,7 @@ export function detailHead(opts: {
       ],
     };
   }
-  const title = clip(row.meta_title || opts.titleFrom(row), 70);
+  const title = fitTitle(clip(row.meta_title || opts.titleFrom(row), 200));
   const description = clip(row.meta_description || opts.descriptionFrom(row) || opts.fallbackDescription);
   const image = [row.image_url, row.logo_url].find((v) => typeof v === "string" && /^https:\/\//.test(v));
   return {
