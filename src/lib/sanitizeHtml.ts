@@ -7,7 +7,29 @@
 // fallback that removes the dangerous constructs (scripts, styles, inline event
 // handlers, javascript: URLs) while keeping the markup intact.
 
+import sanitize from "sanitize-html";
 type SanitizeConfig = Record<string, unknown>;
+
+export function sanitizeEditorialHtml(html: string): string {
+  return sanitize(html, {
+    allowedTags: [...sanitize.defaults.allowedTags, "img", "nav", "section", "article", "figure", "figcaption"],
+    allowedAttributes: {
+      "*": ["id", "class", "title", "style", "role", "aria-*", "data-*"],
+      a: ["href", "target", "rel"], img: ["src", "alt", "width", "height", "loading", "decoding"],
+      th: ["scope", "colspan", "rowspan"], td: ["colspan", "rowspan"], ol: ["start", "type"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedStyles: { "*": {
+      color: [/^(?:#[0-9a-f]{3,8}|[a-z]+|rgba?\([\d.,%\s]+\))$/i],
+      "background-color": [/^(?:#[0-9a-f]{3,8}|[a-z]+|rgba?\([\d.,%\s]+\))$/i],
+      "text-align": [/^(left|right|center|justify)$/],
+      "font-size": [/^\d+(?:\.\d+)?(?:px|em|rem|%)$/],
+      "font-weight": [/^(bold|normal|[1-9]00)$/],
+      "font-style": [/^(italic|normal)$/],
+      "text-decoration": [/^(underline|line-through|none)$/],
+    } },
+  });
+}
 
 const isBrowser = typeof window !== "undefined" && typeof document !== "undefined";
 

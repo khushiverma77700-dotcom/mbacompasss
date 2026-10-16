@@ -6,7 +6,7 @@
 - Parse saved profile-analysis narratives through one defensive normalizer before rendering, because AI output may be JSON, fenced JSON, or double-encoded JSON.
 - Email campaigns stage recipients as waiting and release batches via a database tick that re-reads speed settings each run, so changes apply live; the tick arms on start/resume and removes itself when idle.
 - Mock competition metrics use each student's earliest completed attempt and verified unique-student cohorts, because retakes and synthetic aspirants must not inflate ranks or participation.
-- Mock generation uses exam-normalized CAT/XAT-style difficulty plus deterministic editorial validation, because malformed, trivial, ambiguous, or incorrectly keyed questions must never enter a test.
+- Mock generation uses exam-normalized CAT/XAT difficulty and deterministic validation to reject malformed, trivial, ambiguous or incorrectly keyed questions.
 - Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
 - AI blog articles are generated as drafts through a scope-first pipeline (intent, topic boundary, sources, style) and are published only from the editor workspace after its checklist passes, because unscoped or unverified articles must never go live automatically.
 - AI blog references stay editor-visible evidence and keyword banks stay in SEO data; readers see only curated terms, for readability.
@@ -20,7 +20,7 @@
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
-- Format article readability in a shared pure linear block scan, not nested repeated-wildcard regexes, database edits or observers, to preserve facts without hangs or mutation loops.
+- Editorial readability uses a pure linear block scan and identical allowlisted server/browser sanitization to prevent hangs, fact mutation and hydration mismatches.
 - Native TanStack prerenders capped public-record manifests with content validation; other anonymous pages use the build-keyed HTML cache. Never snapshot admin, student, auth or per-user data.
 - Marked route heads own metadata; legacy SEOHead only adds schemas there, preventing title flips.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
