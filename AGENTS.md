@@ -1,7 +1,6 @@
 - Keep MBA Compass course refund disclosure in one shared presentation component and apply its offer-schema rule only to MBA Compass course detail markup, because third-party institutes may have different policies.
 - Group public MBA applications into responsive dossiers, not wide tables; keep recommendations in an unframed responsive rail. Share IST deadline math, one countdown timer and approved information presentation for consistent views.
-- Keep College Applications to its core fields (name, slug, category, tier, programs, fees, apply link, deadline, exams, logo, details, publish state), all edited in the admin form; recommendations and SEO live in their own tools.
-- Keep College Applications lists summary-first; edit all fields in the full-record dialog, because inline spreadsheet editing complicates administration.
+- Keep College Applications to its core fields (name, slug, category, tier, programs, fees, apply link, deadline, exams, logo, details, publish state) with summary-first lists edited in the full-record dialog, because inline editing complicates administration; recommendations and SEO live in their own tools.
 - Structure student home as an institutional executive dashboard: applications, score overview, study priorities, then analytics, for a clear action hierarchy.
 - Admin email campaigns record per-recipient tracking tokens and redirect clicks only to saved campaign URLs to prevent open redirects.
 - Parse saved profile-analysis narratives through one defensive normalizer before rendering, because AI output may be JSON, fenced JSON, or double-encoded JSON.
