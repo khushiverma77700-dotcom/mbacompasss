@@ -20,3 +20,32 @@ export const CAT_CALCULATOR_FAQS = [
   { q: "Is the raw score the same as the CAT scaled score?", a: "No. IIMs normalise raw scores across slots to produce scaled scores, and percentiles are calculated from scaled scores. Your raw score from the calculator is exact; the percentile shown is an estimate." },
   { q: "How do I get my CAT response sheet?", a: "Log in at iimcat.ac.in, open Candidate Response, then view the page source (Ctrl+U), select all and copy. Paste the copied code into the calculator." },
 ];
+
+// Approximate sectional raw-score bands per percentile, compiled from publicly
+// reported recent CAT results. Indicative only.
+export const CAT_SECTIONAL_VS_PERCENTILE = [
+  { percentile: "99.5", varc: "45+", dilr: "34+", qa: "38+" },
+  { percentile: "99", varc: "40+", dilr: "26+", qa: "31+" },
+  { percentile: "95", varc: "31+", dilr: "20+", qa: "24+" },
+  { percentile: "90", varc: "25+", dilr: "15+", qa: "18+" },
+  { percentile: "85", varc: "22+", dilr: "13+", qa: "15+" },
+  { percentile: "80", varc: "19+", dilr: "11+", qa: "12+" },
+];
+
+// Indicative overall-percentile targets for an interview shortlist
+// (General category). Not official cut-offs; IIMs publish their own
+// admission policies with minimum sectional requirements.
+export const CAT_INDICATIVE_TARGETS = [
+  { group: "IIM Ahmedabad, Bangalore, Calcutta", target: "99+" },
+  { group: "FMS Delhi, IIM Lucknow, Kozhikode, Indore, Mumbai", target: "97 – 99" },
+  { group: "IIM Shillong, Rohtak, MDI Gurgaon, SPJIMR, IIT B-schools", target: "95 – 98" },
+  { group: "Newer IIMs (Trichy, Udaipur, Ranchi, Raipur, Kashipur, Nagpur)", target: "90 – 96" },
+  { group: "IMT, TAPMI, Great Lakes, FORE, BIMTECH, LBSIM", target: "80 – 92" },
+];
+
+export const CAT_SCORE_EXTRA_FAQS = [
+  { q: "How do I calculate my CAT score manually?", a: "Multiply your correct answers by 3, then subtract one mark for every wrong MCQ. Wrong TITA answers and unattempted questions carry no penalty. For example, 20 correct answers with 6 wrong MCQs and 2 wrong TITAs gives 20 × 3 − 6 = 54." },
+  { q: "What is a good CAT score?", a: "A score that places you above the 95th percentile is generally competitive for older IIMs and top non-IIM B-schools, but you also need to clear sectional cut-offs. In recent years that has meant roughly 65 to 70 out of 204, though the figure shifts every year." },
+  { q: "What is the difference between CAT score and CAT percentile?", a: "Your score measures marks earned (out of 204). Your percentile shows the share of candidates who scored below you after slot normalisation. B-school shortlists are based on percentiles, along with academics and work experience." },
+  { q: "Do sectional percentiles matter?", a: "Yes. Most IIMs set a minimum percentile in each of VARC, DILR and QA. A high overall percentile with a weak section can still miss a shortlist." },
+];
