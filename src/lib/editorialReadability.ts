@@ -46,17 +46,17 @@ export function formatEditorialReadability(html: string): string {
     (original, label: string) => labelRE.test(label.trim()) || /[.!?]$/.test(label.trim()) ? original : `<h3>${label}</h3>`);
   const headingKeys = new Set(Array.from(out.matchAll(/<h[23]\b[^>]*>([\s\S]*?)<\/h[23]>/gi), (match) => keyOf(match[1])));
   // Consume only a labelled contents block, stopping at the first real prose block.
-  out = out.replace(/<(p|h[2-6])\b[^>]*>([\s\S]*?)<\/\1>((?:\s*<(?:p|ul|ol)\b[^>]*>[\s\S]*?<\/(?:p|ul|ol)>)*?)(?=\s*<h[2-6]\b|$)/gi,
-    (original, _tag: string, label: string, blocks: string) => {
-      if (!labelRE.test(textOf(label))) return original;
-      let stopped = false;
-      return blocks.replace(/<(p|ul|ol)\b[^>]*>([\s\S]*?)<\/\1>/gi, (block: string, tag: string, inner: string) => {
-        if (stopped) return block;
-        const names = tag === 'p' ? [keyOf(inner)] : Array.from(inner.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi), (match) => keyOf(match[1]));
-        if (names.length && names.every((name) => headingKeys.has(name))) return '';
-        stopped = true;
-        return block;
-      });
+  // Scan blocks once; nested wildcard repetitions can hang on long articles.
+  let inContents = false;
+  out = out.replace(/<(p|ul|ol|h[2-6])\b[^>]*>([\s\S]*?)<\/\1>/gi,
+    (block: string, tag: string, inner: string) => {
+      if (labelRE.test(textOf(inner))) { inContents = true; return ''; }
+      if (!inContents) return block;
+      if (tag.startsWith('h')) { inContents = false; return block; }
+      const names = tag === 'p' ? [keyOf(inner)] : Array.from(inner.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi), (match) => keyOf(match[1]));
+      if (names.length && names.every((name) => headingKeys.has(name))) return '';
+      inContents = false;
+      return block;
     });
   out = splitLongParagraphs(out);
   const used = new Set(Array.from(out.matchAll(/\bid\s*=\s*["']([^"']+)["']/gi), (match) => match[1]));

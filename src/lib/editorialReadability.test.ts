@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { formatEditorialReadability, splitLongParagraphs } from './editorialReadability';
 
 describe('editorial readability', () => {
+  it('handles a long article with hundreds of consecutive prose blocks', () => {
+    const paragraph = '<p>Compare verified admissions information and official course requirements.</p>';
+    const content = '<h2>Fees</h2>' + paragraph.repeat(600) + '<h2>Admissions</h2>';
+    const out = formatEditorialReadability(content);
+    expect(out.match(/<p>Compare verified/g)).toHaveLength(600);
+    expect(out).toContain('href="#admissions"');
+  });
   it('replaces raw contents with working section anchors', () => {
     const out = formatEditorialReadability('<p>Table of Contents</p><ol><li>Fees</li><li>Admissions</li></ol><h2>Fees</h2><p>Costs are explained here.</p><h2>Admissions</h2><p>Apply online.</p>');
     expect(out).toContain('href="#fees"');

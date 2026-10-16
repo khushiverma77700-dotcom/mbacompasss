@@ -3,7 +3,7 @@ import ExamDetailPage from "@/pages/ExamDetailPage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import { detailHead, prefetchDetail } from "@/lib/detailPageSeo";
 
-export const Route = createFileRoute("/_public/exam/$slug")({
+export const Route = createFileRoute("/_public/exam_/$slug")({
   loader: async ({ context, params }) => {
     const row = await prefetchDetail(context.queryClient, "exams", params.slug);
     if (!row) throw notFound();

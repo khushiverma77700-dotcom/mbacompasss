@@ -6,10 +6,12 @@ import { routeTree } from "./routeTree.gen";
 import { installUploadCompression } from "./lib/imageCompression";
 
 
+let serverTimeoutsInstalled = false;
 export const getRouter = () => {
   // All server query GC timers must release the build process, including
   // per-component overrides that would otherwise hold prerendering open.
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" && !serverTimeoutsInstalled) {
+    serverTimeoutsInstalled = true;
     timeoutManager.setTimeoutProvider({
       setTimeout: (cb, ms) => {
         const id = setTimeout(cb, ms);

@@ -146,7 +146,7 @@ const ArticlePage = () => {
 
 
   useEffect(() => {
-    if (article) {
+    if (article && !document.querySelector('meta[name="mba-route-seo"]')) {
       document.title = `${(article as any).meta_title || article.title} | MBA Compass`;
     }
   }, [article]);

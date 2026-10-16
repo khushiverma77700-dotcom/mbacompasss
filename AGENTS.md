@@ -20,7 +20,7 @@
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
-- Format article readability in a shared pure display pass, not database edits or observers, to preserve facts and prevent mutation loops.
+- Format article readability in a shared pure linear block scan, not nested repeated-wildcard regexes, database edits or observers, to preserve facts without hangs or mutation loops.
 - Native TanStack prerenders capped public-record manifests with content validation; other anonymous pages use the build-keyed HTML cache. Never snapshot admin, student, auth or per-user data.
 - Marked route heads own metadata; legacy SEOHead only adds schemas there, preventing title flips.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
