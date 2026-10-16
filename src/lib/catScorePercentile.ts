@@ -49,3 +49,8 @@ export const CAT_SCORE_EXTRA_FAQS = [
   { q: "What is the difference between CAT score and CAT percentile?", a: "Your score measures marks earned (out of 204). Your percentile shows the share of candidates who scored below you after slot normalisation. B-school shortlists are based on percentiles, along with academics and work experience." },
   { q: "Do sectional percentiles matter?", a: "Yes. Most IIMs set a minimum percentile in each of VARC, DILR and QA. A high overall percentile with a weak section can still miss a shortlist." },
 ];
+CAT_SCORE_EXTRA_FAQS.push(
+  { q: "Is there negative marking for TITA questions in CAT?", a: "No. Type-in-the-answer questions carry +3 for a correct answer and 0 for a wrong or skipped one. Only wrong MCQs lose one mark." },
+  { q: "Can my CAT score change after the final answer key?", a: "Yes. If the IIMs revise an answer after objections, your raw score can move. Recalculate using the final answer key." },
+  { q: "What should I do if my CAT score is below my target?", a: "Apply to colleges whose indicative percentile matches your result, and consider other exams such as XAT, SNAP, NMAT or CMAT, which run on different schedules." },
+);
