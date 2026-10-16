@@ -1044,6 +1044,46 @@ const CATScoreCalculatorPage: React.FC = () => {
             <li><span className="font-semibold text-foreground">Sectional balance:</span> a weak section can block shortlists even with a strong overall percentile.</li>
           </ul>
         </div>
+
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">CAT Score vs Percentile: Why the Two Differ</h2>
+          <p className="text-muted-foreground mb-3">Your CAT score is an absolute number: the marks you earned out of 204. Your percentile is relative: it tells you what share of test-takers scored below you. Two candidates with the same raw score in different slots can end up with slightly different percentiles because the IIMs first convert raw scores into scaled scores to even out slot difficulty.</p>
+          <p className="text-muted-foreground">That is why this calculator gives an exact raw score but only an estimated percentile. Use the estimate to plan, and wait for the official scorecard before final decisions.</p>
+        </div>
+
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">How to Use This CAT Score Calculator</h2>
+          <ol className="list-decimal pl-5 space-y-2 text-muted-foreground">
+            <li>Log in to the official CAT portal once the response sheet is released.</li>
+            <li>Open the candidate response page for your slot.</li>
+            <li>View the page source, select all and copy it.</li>
+            <li>Paste it into the calculator at the top of this page and submit.</li>
+            <li>Review your section-wise score, accuracy and estimated percentile, then compare it with the tables above.</li>
+          </ol>
+          <p className="text-sm text-muted-foreground mt-3">Wait for the official answer key before treating your score as final. If the IIMs change a key after objections, recalculate.</p>
+        </div>
+
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">What to Do After Calculating Your CAT Score</h2>
+          <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+            <li><span className="font-semibold text-foreground">Shortlist realistically:</span> match your estimated percentile and sectional scores with the target table above.</li>
+            <li><span className="font-semibold text-foreground">Check your profile fit:</span> IIM shortlists also weigh 10th, 12th and graduation marks, work experience and diversity. Try the <Link to="/profile-analyzer" className="text-primary underline">Profile Analyzer</Link>.</li>
+            <li><span className="font-semibold text-foreground">Track deadlines:</span> many non-IIM colleges accept CAT scores with their own forms. See <Link to="/mba-application" className="text-primary underline">open MBA applications</Link>.</li>
+            <li><span className="font-semibold text-foreground">Start interview prep early:</span> written ability tests, group discussions and personal interviews usually begin between February and April.</li>
+            <li><span className="font-semibold text-foreground">Keep a backup:</span> if your score is below target, exams such as XAT, SNAP, NMAT and CMAT run on different schedules.</li>
+          </ul>
+        </div>
+
+        <div className="max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">Tips to Raise Your CAT Score Next Attempt</h2>
+          <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+            <li><span className="font-semibold text-foreground">Protect accuracy:</span> skip MCQs where you can't eliminate at least two options, since every wrong answer costs a mark.</li>
+            <li><span className="font-semibold text-foreground">Attempt every TITA you can:</span> wrong TITA answers carry no penalty.</li>
+            <li><span className="font-semibold text-foreground">Choose sets wisely in DILR:</span> spend the first few minutes scanning all sets and pick the two or three most solvable.</li>
+            <li><span className="font-semibold text-foreground">Read daily for VARC:</span> regular reading of editorials and long-form essays builds RC speed.</li>
+            <li><span className="font-semibold text-foreground">Analyse every mock:</span> run each mock response sheet through this calculator and track accuracy by section over time.</li>
+          </ul>
+        </div>
       </section>
 
       {/* ═══════ CAT SCORE VS PERCENTILE ═══════ */}
