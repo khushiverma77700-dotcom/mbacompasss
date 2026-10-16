@@ -223,7 +223,7 @@ import { Route as PublicCollegeSlugRouteImport } from './routes/_public.college.
 import { Route as PublicCollegesRegionRouteImport } from './routes/_public.colleges.$region'
 import { Route as PublicCoursesSlugRouteImport } from './routes/_public.courses.$slug'
 import { Route as PublicDashboardMocksRouteImport } from './routes/_public.dashboard.mocks'
-import { Route as PublicExamSlugRouteImport } from './routes/_public.exam.$slug'
+import { Route as PublicExamSlugRouteImport } from './routes/_public.exam_.$slug'
 import { Route as PublicFormulaSlugRouteImport } from './routes/_public.formula.$slug'
 import { Route as PublicGuidesIpmatPreparationRouteImport } from './routes/_public.guides.ipmat-preparation'
 import { Route as PublicInstituteSlugRouteImport } from './routes/_public.institute.$slug'
@@ -1412,9 +1412,9 @@ const PublicDashboardMocksRoute = PublicDashboardMocksRouteImport.update({
   getParentRoute: () => PublicDashboardRoute,
 } as any)
 const PublicExamSlugRoute = PublicExamSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => PublicExamRoute,
+  id: '/exam_/$slug',
+  path: '/exam/$slug',
+  getParentRoute: () => PublicRoute,
 } as any)
 const PublicFormulaSlugRoute = PublicFormulaSlugRouteImport.update({
   id: '/formula/$slug',
@@ -2038,7 +2038,7 @@ export interface FileRoutesByFullPath {
   '/courses': typeof PublicCoursesRouteWithChildren
   '/dashboard': typeof PublicDashboardRouteWithChildren
   '/editorial-policy': typeof PublicEditorialPolicyRoute
-  '/exam': typeof PublicExamRouteWithChildren
+  '/exam': typeof PublicExamRoute
   '/fact-check-policy': typeof PublicFactCheckPolicyRoute
   '/forgot-password': typeof PublicForgotPasswordRoute
   '/formulas': typeof PublicFormulasRoute
@@ -2358,7 +2358,7 @@ export interface FileRoutesByTo {
   '/courses': typeof PublicCoursesRouteWithChildren
   '/dashboard': typeof PublicDashboardRouteWithChildren
   '/editorial-policy': typeof PublicEditorialPolicyRoute
-  '/exam': typeof PublicExamRouteWithChildren
+  '/exam': typeof PublicExamRoute
   '/fact-check-policy': typeof PublicFactCheckPolicyRoute
   '/forgot-password': typeof PublicForgotPasswordRoute
   '/formulas': typeof PublicFormulasRoute
@@ -2671,7 +2671,7 @@ export interface FileRoutesById {
   '/_public/courses': typeof PublicCoursesRouteWithChildren
   '/_public/dashboard': typeof PublicDashboardRouteWithChildren
   '/_public/editorial-policy': typeof PublicEditorialPolicyRoute
-  '/_public/exam': typeof PublicExamRouteWithChildren
+  '/_public/exam': typeof PublicExamRoute
   '/_public/fact-check-policy': typeof PublicFactCheckPolicyRoute
   '/_public/forgot-password': typeof PublicForgotPasswordRoute
   '/_public/formulas': typeof PublicFormulasRoute
@@ -2859,7 +2859,7 @@ export interface FileRoutesById {
   '/_public/colleges/$region': typeof PublicCollegesRegionRoute
   '/_public/courses/$slug': typeof PublicCoursesSlugRoute
   '/_public/dashboard/mocks': typeof PublicDashboardMocksRoute
-  '/_public/exam/$slug': typeof PublicExamSlugRoute
+  '/_public/exam_/$slug': typeof PublicExamSlugRoute
   '/_public/formula/$slug': typeof PublicFormulaSlugRoute
   '/_public/guides/ipmat-preparation': typeof PublicGuidesIpmatPreparationRoute
   '/_public/institute/$slug': typeof PublicInstituteSlugRouteWithChildren
@@ -3819,7 +3819,7 @@ export interface FileRouteTypes {
     | '/_public/colleges/$region'
     | '/_public/courses/$slug'
     | '/_public/dashboard/mocks'
-    | '/_public/exam/$slug'
+    | '/_public/exam_/$slug'
     | '/_public/formula/$slug'
     | '/_public/guides/ipmat-preparation'
     | '/_public/institute/$slug'
@@ -5453,12 +5453,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDashboardMocksRouteImport
       parentRoute: typeof PublicDashboardRoute
     }
-    '/_public/exam/$slug': {
-      id: '/_public/exam/$slug'
-      path: '/$slug'
+    '/_public/exam_/$slug': {
+      id: '/_public/exam_/$slug'
+      path: '/exam/$slug'
       fullPath: '/exam/$slug'
       preLoaderRoute: typeof PublicExamSlugRouteImport
-      parentRoute: typeof PublicExamRoute
+      parentRoute: typeof PublicRoute
     }
     '/_public/formula/$slug': {
       id: '/_public/formula/$slug'
@@ -6308,18 +6308,6 @@ const PublicDashboardRouteWithChildren = PublicDashboardRoute._addFileChildren(
   PublicDashboardRouteChildren,
 )
 
-interface PublicExamRouteChildren {
-  PublicExamSlugRoute: typeof PublicExamSlugRoute
-}
-
-const PublicExamRouteChildren: PublicExamRouteChildren = {
-  PublicExamSlugRoute: PublicExamSlugRoute,
-}
-
-const PublicExamRouteWithChildren = PublicExamRoute._addFileChildren(
-  PublicExamRouteChildren,
-)
-
 interface PublicListYourBusinessRouteChildren {
   PublicListYourBusinessPocRoute: typeof PublicListYourBusinessPocRoute
   PublicListYourBusinessTypeIdRoute: typeof PublicListYourBusinessTypeIdRoute
@@ -6404,7 +6392,7 @@ interface PublicRouteChildren {
   PublicCoursesRoute: typeof PublicCoursesRouteWithChildren
   PublicDashboardRoute: typeof PublicDashboardRouteWithChildren
   PublicEditorialPolicyRoute: typeof PublicEditorialPolicyRoute
-  PublicExamRoute: typeof PublicExamRouteWithChildren
+  PublicExamRoute: typeof PublicExamRoute
   PublicFactCheckPolicyRoute: typeof PublicFactCheckPolicyRoute
   PublicForgotPasswordRoute: typeof PublicForgotPasswordRoute
   PublicFormulasRoute: typeof PublicFormulasRoute
@@ -6425,6 +6413,7 @@ interface PublicRouteChildren {
   PublicArticleSlugRoute: typeof PublicArticleSlugRoute
   PublicCategorySlugRoute: typeof PublicCategorySlugRoute
   PublicCollegeSlugRoute: typeof PublicCollegeSlugRoute
+  PublicExamSlugRoute: typeof PublicExamSlugRoute
   PublicFormulaSlugRoute: typeof PublicFormulaSlugRoute
   PublicGuidesIpmatPreparationRoute: typeof PublicGuidesIpmatPreparationRoute
   PublicInstituteSlugRoute: typeof PublicInstituteSlugRouteWithChildren
@@ -6454,7 +6443,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicCoursesRoute: PublicCoursesRouteWithChildren,
   PublicDashboardRoute: PublicDashboardRouteWithChildren,
   PublicEditorialPolicyRoute: PublicEditorialPolicyRoute,
-  PublicExamRoute: PublicExamRouteWithChildren,
+  PublicExamRoute: PublicExamRoute,
   PublicFactCheckPolicyRoute: PublicFactCheckPolicyRoute,
   PublicForgotPasswordRoute: PublicForgotPasswordRoute,
   PublicFormulasRoute: PublicFormulasRoute,
@@ -6475,6 +6464,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicArticleSlugRoute: PublicArticleSlugRoute,
   PublicCategorySlugRoute: PublicCategorySlugRoute,
   PublicCollegeSlugRoute: PublicCollegeSlugRoute,
+  PublicExamSlugRoute: PublicExamSlugRoute,
   PublicFormulaSlugRoute: PublicFormulaSlugRoute,
   PublicGuidesIpmatPreparationRoute: PublicGuidesIpmatPreparationRoute,
   PublicInstituteSlugRoute: PublicInstituteSlugRouteWithChildren,
