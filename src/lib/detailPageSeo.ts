@@ -93,6 +93,7 @@ export function detailHead(opts: {
         { property: "og:description", content: opts.fallbackDescription },
         { property: "og:type", content: opts.type },
         { name: "twitter:card", content: "summary_large_image" },
+        { name: "robots", content: "noindex" },
       ],
     };
   }

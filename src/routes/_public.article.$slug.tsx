@@ -1,12 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import ArticlePage from "@/pages/ArticlePage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import { detailHead, prefetchDetail } from "@/lib/detailPageSeo";
 
 export const Route = createFileRoute("/_public/article/$slug")({
-  loader: async ({ context, params }) => ({
-    row: await prefetchDetail(context.queryClient, "articles", params.slug),
-  }),
+  loader: async ({ context, params }) => {
+    const row = await prefetchDetail(context.queryClient, "articles", params.slug);
+    if (!row) throw notFound();
+    return { row };
+  },
   head: ({ loaderData, params }) =>
     detailHead({
       row: loaderData?.row,
