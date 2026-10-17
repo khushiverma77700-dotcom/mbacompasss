@@ -40,6 +40,7 @@ import FloatingTOC from "@/components/mobile/FloatingTOC";
 import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
 import { collegeTitle, collegeDescription } from "@/lib/collegeSeo";
 import { normalizeCollegeSectionData } from "@/lib/collegeSectionData";
+import { cdnImage } from "@/lib/imageTransform";
 import { useProgrammeCourses } from "@/hooks/useProgrammeCourses";
 import { Share2, Phone, Sparkles } from "lucide-react";
 import AIExtensionBlock from "@/components/college/AIExtensionBlock";
@@ -375,7 +376,7 @@ const CollegeDetailPage = () => {
         {/* Layered background */}
         <div className="absolute inset-0 pointer-events-none">
           {college.banner_url && (
-            <img src={college.banner_url} alt="" width={1920} height={600} className="absolute inset-0 w-full h-full object-cover opacity-40 md:scale-105" loading="eager" {...({fetchpriority:"high"} as any)} decoding="async" />
+            <img src={cdnImage(college.banner_url, { width: 1280 })} alt="" width={1920} height={600} className="absolute inset-0 w-full h-full object-cover opacity-40 md:scale-105" loading="eager" fetchPriority="high" decoding="async" />
           )}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-primary/70 to-primary/90" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(0_0%_100%/0.18),transparent_55%)]" />
@@ -405,7 +406,7 @@ const CollegeDetailPage = () => {
               <div className="relative shrink-0">
                 <div className="absolute -inset-1.5 bg-gradient-to-br from-amber-300 via-white/60 to-amber-200 rounded-3xl blur-md opacity-70" />
                 {college.logo_url ? (
-                  <img src={college.logo_url} alt={college.name} width={96} height={96} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50" loading="eager" decoding="async" />
+                  <img src={cdnImage(college.logo_url, { width: 192 })} alt={college.name} width={96} height={96} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50" loading="eager" decoding="async" />
                 ) : (
                   <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white shadow-2xl ring-2 ring-white/50 flex items-center justify-center text-primary font-extrabold text-3xl">
                     {Number(college.ranking) > 0 ? `#${college.ranking}` : college.name.charAt(0)}

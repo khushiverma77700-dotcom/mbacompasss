@@ -25,8 +25,6 @@ import PublicLayoutShell from "@/components/layout/PublicLayoutShell";
 import appCss from "../styles.css?url";
 
 // ported from main.tsx
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/instrument-serif/400-italic.css";
 
 // ── Client boot side-effects ported from the pre-migration src/main.tsx ──
 function runClientBoot() {
@@ -204,9 +202,9 @@ const NOINDEX_SCRIPT = `(function(){try{var h=window.location.hostname;if(h==="m
 // Font-loading race — add .fonts-loaded whichever finishes first.
 const FONTS_LOADED_SCRIPT = `(function(){var done=false;function ready(){if(done)return;done=true;document.documentElement.classList.add('fonts-loaded');}if(document.fonts&&document.fonts.ready&&typeof document.fonts.ready.then==='function'){document.fonts.ready.then(ready).catch(ready);}setTimeout(ready,1500);})();`;
 
-// Deferred GA4: injected on first interaction (or after 10s) so the
+// Deferred GA4: injected on first interaction so the
 // third-party script never lands in the critical path.
-const GA_DEFERRED_SCRIPT = `(function(){var loaded=false;function injectGA(){if(loaded)return;loaded=true;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-QV79FTE0XN';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','G-QV79FTE0XN',{transport_type:'beacon'});}function loadGA(){var idle=window.requestIdleCallback||function(cb){return setTimeout(cb,1);};idle(injectGA,{timeout:2000});}var events=['pointerdown','touchstart','keydown','scroll'];function once(){events.forEach(function(e){window.removeEventListener(e,once,{passive:true,capture:true});});loadGA();}events.forEach(function(e){window.addEventListener(e,once,{passive:true,capture:true});});setTimeout(loadGA,10000);})();`;
+const GA_DEFERRED_SCRIPT = `(function(){var loaded=false;function injectGA(){if(loaded)return;loaded=true;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-QV79FTE0XN';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','G-QV79FTE0XN',{transport_type:'beacon'});}function loadGA(){var idle=window.requestIdleCallback||function(cb){return setTimeout(cb,1);};idle(injectGA,{timeout:2000});}var events=['pointerdown','touchstart','keydown','wheel'];function once(){events.forEach(function(e){window.removeEventListener(e,once,{passive:true,capture:true});});loadGA();}events.forEach(function(e){window.addEventListener(e,once,{passive:true,capture:true});});})();`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

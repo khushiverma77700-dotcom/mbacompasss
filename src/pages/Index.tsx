@@ -19,7 +19,6 @@ const HomeQuickAccessStrip = lazy(() => import("@/components/HomeQuickAccessStri
 const MBANewsBar = lazy(() => import("@/components/MBANewsBar"));
 const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
 const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedCollegesSection"));
-const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
 const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
 const CategoryCards = lazy(() => import("@/components/CategoryCards"));
 const TopCitiesSection = lazy(() => import("@/components/TopCitiesSection"));
@@ -35,14 +34,12 @@ const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
-const ExamCutoffsTable = lazy(() => import("@/components/ExamCutoffsTable"));
+const HomeCollegeFacts = lazy(() => import("@/components/HomeCollegeFacts"));
 const PlacementsBySectorSection = lazy(() => import("@/components/PlacementsBySectorSection"));
 const MBAJourneyStrip = lazy(() => import("@/components/MBAJourneyStrip"));
 const FreeToolsShowcase = lazy(() => import("@/components/FreeToolsShowcase"));
 const CollegeApplicationDeadlines = lazy(() => import("@/components/CollegeApplicationDeadlines"));
-const ROIComparisonTable = lazy(() => import("@/components/ROIComparisonTable"));
 const FreebiesPreview = lazy(() => import("@/components/FreebiesPreview"));
-const TopperWall = lazy(() => import("@/components/TopperWall"));
 const HomeAdmissionTimeline = lazy(() => import("@/components/HomeAdmissionTimeline"));
 const HomePersonaPaths = lazy(() => import("@/components/HomePersonaPaths"));
 const HomeSalaryInsights = lazy(() => import("@/components/HomeSalaryInsights"));
@@ -63,7 +60,6 @@ const prefetchNextChunks = () => {
     import("@/components/HomePersonaPaths");
     import("@/components/HomeAdmissionTimeline");
     import("@/components/TopRankedCollegesSection");
-    import("@/components/StatsCounterSection");
     import("@/components/PopularExamsSection");
   };
   const ric = (window as any).requestIdleCallback;
@@ -238,20 +234,18 @@ const Index = () => {
         <Deferred height={620} rootMargin="240px" id="home-paths"><HomePersonaPaths /></Deferred>
 
         {/* Below-the-fold: code-split + mount on scroll */}
-        <Deferred height={200}><StatsCounterSection /></Deferred>
         <Deferred height={520}><MBALandscapeSection /></Deferred>
         <Deferred height={360}><PopularExamsSection /></Deferred>
         <Deferred height={700} id="home-timeline"><HomeAdmissionTimeline /></Deferred>
-        <Deferred height={640}><ExamCutoffsTable /></Deferred>
+        <Deferred height={640}><HomeCollegeFacts cutoffs /></Deferred>
         <Deferred height={640} id="home-salary"><HomeSalaryInsights /></Deferred>
-        <Deferred height={520}><ROIComparisonTable /></Deferred>
+        <Deferred height={520}><HomeCollegeFacts /></Deferred>
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={520}><PlacementsBySectorSection /></Deferred>
         <Deferred height={560} id="home-specializations"><HomeSpecializations /></Deferred>
         <Deferred height={320}><CategoryCards /></Deferred>
         <Deferred height={320} id="home-cities"><TopCitiesSection /></Deferred>
         <Deferred height={420} id="home-comparisons"><TopExamComparisonSection /></Deferred>
-        <Deferred height={520}><TopperWall /></Deferred>
 
         <Deferred height={420}><WhyChooseUs /></Deferred>
         <Deferred height={160}><AICoachingFinder /></Deferred>

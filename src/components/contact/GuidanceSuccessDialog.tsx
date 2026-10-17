@@ -3,7 +3,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Sparkles, Calculator, ArrowRight } from "lucide-react";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp";
-import whatsappLogo from "@/assets/whatsapp-logo.png";
+import whatsappLogoAsset from "@/assets/whatsapp-logo.webp.asset.json";
+const whatsappLogo = whatsappLogoAsset.url;
 
 const tools = [
   {

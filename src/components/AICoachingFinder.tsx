@@ -404,7 +404,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
         <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
           <div className="relative shrink-0">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex items-center justify-center shadow-xs overflow-hidden">
-              <img src={mbahubLogo} alt="MBA Compass AI" className="w-8 h-8 sm:w-9 sm:h-9 object-contain" loading="eager" />
+              <img src={mbahubLogo} alt="MBA Compass AI" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9 object-contain" loading="lazy" decoding="async" />
             </div>
             <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />

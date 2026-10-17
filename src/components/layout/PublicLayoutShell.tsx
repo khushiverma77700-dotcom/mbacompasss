@@ -1,8 +1,7 @@
 import React, { Suspense, useEffect, useState, lazy } from "react";
 import { useLocation } from "@/lib/router-compat";
 import BackButton from "@/components/BackButton";
-import { useAdSlots } from "@/components/ads/AdSlots";
-import EditorialInterlinks from "@/components/editorial/EditorialInterlinks";
+import { useFirstInteraction } from "@/hooks/useFirstInteraction";
 import { useHydrated, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { refreshPublicSnapshot } from "@/lib/queries/publicSnapshot";
@@ -10,6 +9,8 @@ import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 
 const Navbar = lazy(() => import("@/components/Navbar"));
 const Footer = lazy(() => import("@/components/Footer"));
+const PublicAds = lazy(() => import("@/components/ads/DeferredPublicAds"));
+const EditorialInterlinks = lazy(() => import("@/components/editorial/EditorialInterlinks"));
 
 // Mount heavy non-critical chrome (Footer) only after first paint + idle so it
 // doesn't block initial JS execution / FCP. Ported from the pre-migration
@@ -55,7 +56,7 @@ const DeferredChrome = () => {
 };
 
 const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
-  const ads = useAdSlots();
+  const interacted = useFirstInteraction();
   const client = useQueryClient();
   const router = useRouter();
   const location = useLocation();
@@ -93,7 +94,6 @@ const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
       <Navbar />
     </Suspense>
     <BackButton />
-    {ads.top}
     <main id="main-content">
       {location.pathname !== "/" && !hasPageBreadcrumbs && <div className="container mx-auto px-4 pt-4"><SiteBreadcrumbs items={[
         ...(location.pathname.startsWith("/college/") ? [{ name: "Colleges", url: "/colleges" }] : []),
@@ -102,9 +102,7 @@ const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
       ]} /></div>}
       {children}
     </main>
-    <EditorialInterlinks />
-    {ads.end}
-    {ads.portals}
+    {interacted && <Suspense fallback={null}><EditorialInterlinks /><PublicAds /></Suspense>}
     <DeferredChrome />
   </>
   );

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, type ImgHTMLAttributes } from "react";
+import { useEffect, useRef, useState, type ImgHTMLAttributes } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cdnImage, cdnImageSrcSet } from "@/lib/imageTransform";
 
 // In-memory cache keyed by source URL — one lookup per URL per session, not per render.
 const cache = new Map<string, ImageAssetRow | null>();
@@ -51,26 +52,33 @@ interface SmartImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "loa
  * - Never changes visual size — layout is still governed by the parent CSS.
  */
 export const SmartImage = ({ src, alt, eager, width, height, ...rest }: SmartImageProps) => {
-  const [meta, setMeta] = useState<ImageAssetRow | null>(() => cache.get(src) ?? null);
+  const [meta, setMeta] = useState<ImageAssetRow | null>(null);
+  const ref = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     let alive = true;
-    if (!cache.has(src)) {
-      lookup(src).then((row) => { if (alive) setMeta(row); });
-    } else {
-      setMeta(cache.get(src) ?? null);
-    }
-    return () => { alive = false; };
-  }, [src]);
+    const load = () => { void lookup(src).then(row => { if (alive) setMeta(row); }); };
+    setMeta(null);
+    if (eager || !ref.current || typeof IntersectionObserver === "undefined") { load(); return () => { alive = false; }; }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { load(); observer.disconnect(); }
+    }, { rootMargin: "200px" });
+    observer.observe(ref.current);
+    return () => { alive = false; observer.disconnect(); };
+  }, [src, eager]);
 
   const resolvedAlt = meta?.alt || alt;
   const resolvedWidth = width ?? meta?.width ?? undefined;
   const resolvedHeight = height ?? meta?.height ?? undefined;
   const webp = meta?.variants?.webp;
+  const avif = meta?.variants?.avif;
+  const options = { width: Number(width) || meta?.width || 640, quality: 75 };
 
   const commonImg = (
     <img
-      src={src}
+      ref={ref}
+      src={cdnImage(src, options)}
+      srcSet={cdnImageSrcSet(src, options) || undefined}
       alt={resolvedAlt}
       title={meta?.title ?? undefined}
       width={resolvedWidth as any}
@@ -82,10 +90,11 @@ export const SmartImage = ({ src, alt, eager, width, height, ...rest }: SmartIma
     />
   );
 
-  if (!webp) return commonImg;
+  if (!webp && !avif) return commonImg;
   return (
     <picture>
-      <source type="image/webp" srcSet={webp} />
+      {avif && <source type="image/avif" srcSet={avif} />}
+      {webp && <source type="image/webp" srcSet={webp} />}
       {commonImg}
     </picture>
   );
