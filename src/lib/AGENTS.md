@@ -2,3 +2,6 @@
 - Database content-change triggers enqueue and wake preparation for every writer, including imports and AI drafts; completion checks the locked job token and original content so concurrent edits win.
 - Prepared HTML uses the same allowlisted sanitizer as reader fallback; never accept prepared HTML supplied by ordinary article editors.
 - Article preparation preserves draft visibility and editorial timestamps; reading statistics are prepared once to avoid repeated full-body processing.
+- Public URL aliases normalise through publicPaths and use permanent route redirects; keep regional college listings distinct and valid student LMS navigation intact.
+- Page sitemaps are written by the build from the same validated public prerender manifest; never replace them with a separately fetched legacy sitemap or add generation-time lastmod.
+- Route heads own search metadata and primary schemas; visible breadcrumbs and legacy SEO injection omit schemas already emitted by route heads.

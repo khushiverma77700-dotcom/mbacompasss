@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_public/$slug")({
     const dest = (await findSeoRedirect(`/college/${target}`)) ?? `/college/${target}`;
     throw redirect({ href: dest, statusCode: 301 });
   },
-  head: () => ({ meta: [{ title: "Page not found | MBA Compass" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Page not found | MBA Compass" }, { name: "description", content: "This page is unavailable. Explore MBA colleges, exams and tools on MBA Compass." }, { property: "og:title", content: "Page not found | MBA Compass" }, { property: "og:description", content: "This page is unavailable. Explore MBA colleges, exams and tools on MBA Compass." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: () => <NotFound />,
   notFoundComponent: () => <NotFound />,
 });

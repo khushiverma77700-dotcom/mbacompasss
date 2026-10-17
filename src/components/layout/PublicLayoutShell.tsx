@@ -6,6 +6,7 @@ import EditorialInterlinks from "@/components/editorial/EditorialInterlinks";
 import { useHydrated, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { refreshPublicSnapshot } from "@/lib/queries/publicSnapshot";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 
 const Navbar = lazy(() => import("@/components/Navbar"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -18,6 +19,8 @@ const DeferredChrome = () => {
   const hydrated = useHydrated();
   const [serverRendered] = useState(() => !hydrated);
   const location = useLocation();
+  const hasPageBreadcrumbs = /^\/(article|exam|blog|category|mba-application|courses|mocks|formulas)(\/|$)/.test(location.pathname);
+  const pageLabel = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "";
 
   useEffect(() => {
     setShow(false);
@@ -91,7 +94,14 @@ const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
     </Suspense>
     <BackButton />
     {ads.top}
-    <main id="main-content">{children}</main>
+    <main id="main-content">
+      {location.pathname !== "/" && !hasPageBreadcrumbs && <div className="container mx-auto px-4 pt-4"><SiteBreadcrumbs items={[
+        ...(location.pathname.startsWith("/college/") ? [{ name: "Colleges", url: "/colleges" }] : []),
+        ...(location.pathname.startsWith("/tools/") ? [{ name: "Tools", url: "/tools" }] : []),
+        { name: pageLabel, url: location.pathname },
+      ]} /></div>}
+      {children}
+    </main>
     <EditorialInterlinks />
     {ads.end}
     {ads.portals}
