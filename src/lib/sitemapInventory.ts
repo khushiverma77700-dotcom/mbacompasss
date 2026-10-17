@@ -6,6 +6,7 @@ export async function readSitemapInventory(rootUrl: string, fetcher: typeof fetc
   let imageCount = 0;
   let bytes = 0;
   let rootXml = "";
+  const files: { url: string; urlCount: number }[] = [];
   const decode = (text: string) => text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
   async function visit(url: string) {
     const parsed = new URL(url);
@@ -27,10 +28,11 @@ export async function readSitemapInventory(rootUrl: string, fetcher: typeof fetc
       // Small batches avoid overwhelming the host for larger indexes.
       for (let i = 0; i < children.length; i += 4) await Promise.all(children.slice(i, i + 4).map(visit));
     } else if (/<urlset[\s>]/.test(xml) && /<\/urlset>/.test(xml)) {
+      files.push({ url: `https://mbacompass.in${parsed.pathname}`, urlCount: (xml.match(/<url>/g) || []).length });
       for (const match of xml.matchAll(/<url>\s*<loc>([^<]+)<\/loc>/g)) urls.add(decode(match[1]));
       imageCount += (xml.match(/<image:image>/g) || []).length;
     } else throw new Error("Invalid sitemap XML");
   }
   await visit(rootUrl);
-  return { xml: rootXml, urlCount: urls.size, imageCount, fileCount: seen.size, bytes, urls: [...urls] };
+  return { xml: rootXml, urlCount: urls.size, imageCount, fileCount: seen.size, bytes, urls: [...urls], files: files.sort((a, b) => a.url.localeCompare(b.url, undefined, { numeric: true })) };
 }
