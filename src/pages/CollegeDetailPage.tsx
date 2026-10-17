@@ -294,7 +294,7 @@ const CollegeDetailPage = () => {
   // Placement sectors from DB or fallback
   const placementSectors = placementData.sectors?.length > 0
     ? placementData.sectors.map((s: any) => ({ sector: stripText(s.sector), pct: toPctNum(s.percentage) }))
-    : [{ sector: "Consulting", pct: 35 }, { sector: "Finance", pct: 28 }, { sector: "IT", pct: 18 }, { sector: "FMCG", pct: 12 }, { sector: "Others", pct: 7 }];
+    : [];
 
   const placementRecruiters = placementData.recruiters?.length > 0
     ? placementData.recruiters.map((r: any) => stripText(r.name)).filter(Boolean)
