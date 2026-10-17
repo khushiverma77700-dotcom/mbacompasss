@@ -24,10 +24,10 @@ const suggestionIcons = {
 const iconMap: Record<string, any> = { BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target };
 
 const fallbackStats = [
-  { icon: "BookOpen", value: "500+", label: "Coaching Institutes" },
-  { icon: "Users", value: "10,000+", label: "Student Reviews" },
-  { icon: "GraduationCap", value: "50+", label: "Cities Covered" },
-  { icon: "TrendingUp", value: "95%", label: "Satisfaction Rate" },
+  { icon: "BookOpen", value: "Coaching", label: "Compare preparation options" },
+  { icon: "Users", value: "Reviews", label: "Read student feedback" },
+  { icon: "GraduationCap", value: "Colleges", label: "Explore MBA programmes" },
+  { icon: "TrendingUp", value: "Tools", label: "Plan your next step" },
 ];
 
 const fallbackSearches = ["CAT Coaching Delhi", "Best GMAT Prep", "Online MBA Coaching", "IIM Coaching"];
@@ -41,7 +41,6 @@ const HeroSection = () => {
   // initial paint or the CLS measurement window (which extends ~5s past last
   // input). Heading/subheading/stats render from constant fallbacks first.
   const { data: heroSettings } = useSiteSettings("hero");
-  const { data: statsSettings } = useSiteSettings("stats");
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
@@ -50,7 +49,7 @@ const HeroSection = () => {
   const heading = heroSettings?.heading || "Find the Best MBA Coaching";
   const subheading = heroSettings?.subheading || "Compare top MBA coaching institutes, read reviews, and make informed decisions";
   const popularSearches = heroSettings?.popular_searches || fallbackSearches;
-  const stats = statsSettings?.items || fallbackStats;
+  const stats = fallbackStats;
 
 
   useEffect(() => {
@@ -149,10 +148,7 @@ const HeroSection = () => {
               <Award className="w-3 h-3 text-amber-900" />
             </span>
             <span className="text-xs md:text-xs font-semibold text-primary-foreground tracking-wide">
-              India's #1 MBA Discovery Platform
-            </span>
-            <span className="hidden sm:inline-flex items-center gap-1 pl-2 ml-1 border-l border-white/25 text-xs md:text-xs text-primary-foreground/80">
-              <Star className="w-3 h-3 fill-yellow-300 text-yellow-300" /> 4.8/5
+              MBA Compass · MBA Discovery
             </span>
           </div>
 

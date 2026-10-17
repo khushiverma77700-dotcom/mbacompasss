@@ -1,6 +1,5 @@
 import { Link } from "@/lib/router-compat";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRef } from "react";
@@ -90,25 +89,18 @@ const TopExamComparisonSection = () => {
             className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-5 -mx-4 px-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/30 hover:[&::-webkit-scrollbar-thumb]:bg-primary/50"
           >
             {items.map((item: any, i: number) => (
-              <motion.div
+              <div
                 key={item.title}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
                 className="snap-start shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
               >
                 <Link to={item.link} className="block h-full p-5 bg-card border border-border rounded-xl hover:border-primary/40 hover:shadow-md transition-all group">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center justify-center rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-primary ring-1 ring-primary/20">
-                      VS
-                    </span>
                     <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">{item.title}</h3>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
                   <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 px-2.5 py-1 text-xs font-semibold text-primary group-hover:bg-primary/10 transition-colors">Read Comparison <ArrowRight className="w-3 h-3" /></span>
                 </Link>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

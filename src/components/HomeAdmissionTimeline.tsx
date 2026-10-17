@@ -1,5 +1,7 @@
 import { Link } from "@/lib/router-compat";
 import { CalendarDays, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { activeAdmissionPhases } from "@/lib/homepageCalendar";
 
 type Phase = {
   window: string;
@@ -29,14 +31,14 @@ const PHASES: Phase[] = [
     month: "Registration",
     title: "Forms & mocks",
     points: ["CAT / NMAT / SNAP forms open", "Full-length mocks begin", "Fix percentile leaks weekly"],
-    link: "/exams",
+    link: "/exam",
   },
   {
     window: "Oct – Dec",
     month: "Exam Season",
     title: "Peak performance",
-    points: ["CAT, XAT, IIFT, SNAP attempts", "Mock analysis over new content", "Score & call predictors"],
-    link: "/tools/predictor",
+    points: ["Entrance exam preparation and attempts", "Mock analysis over new content", "Score & call predictors"],
+    link: "/tools/college-shortlister",
   },
   {
     window: "Jan – Mar",
@@ -54,15 +56,21 @@ const PHASES: Phase[] = [
   },
 ];
 
-const monthIndex = new Date().getMonth();
-const activePhase = monthIndex <= 3 ? 0 : monthIndex <= 6 ? 1 : monthIndex <= 8 ? 2 : monthIndex <= 11 ? 3 : 0;
 
 /**
  * Admission-year roadmap rendered as a horizontal rail on desktop and a
  * vertical stepper on mobile. Pure static content — no fetches, so it adds
  * no network cost to the homepage.
  */
-const HomeAdmissionTimeline = () => (
+const HomeAdmissionTimeline = () => {
+  const [active, setActive] = useState(() => activeAdmissionPhases());
+  useEffect(() => {
+    const update = () => setActive(activeAdmissionPhases());
+    update();
+    const timer = setInterval(update, 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
   <section className="py-16 md:py-24 bg-gradient-to-b from-sky-50/70 via-white to-white" id="home-timeline">
     <div className="container mx-auto px-4">
       <div className="max-w-2xl mx-auto text-center mb-10 md:mb-14">
@@ -81,7 +89,7 @@ const HomeAdmissionTimeline = () => (
         <div className="hidden md:block absolute left-0 right-0 top-[3.25rem] h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
         <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {PHASES.map((p, i) => {
-            const isActive = i === activePhase;
+            const isActive = active.includes(i);
             return (
               <li key={p.window} className="relative">
                 <Link
@@ -129,6 +137,7 @@ const HomeAdmissionTimeline = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default HomeAdmissionTimeline;

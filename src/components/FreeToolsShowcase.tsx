@@ -5,8 +5,8 @@ const TOOLS = [
   {
     icon: UserSearch,
     title: "AI Profile Analyzer",
-    desc: "Upload your academics, work-ex & CAT score. Get an IIM/FMS/SPJain call probability report in 60 seconds.",
-    stat: "12,400+ analyzed",
+    desc: "Review your academics, work experience and CAT score to explore potential MBA admission options.",
+    stat: "Personalised profile insights",
     to: "/tools/profile-analyzer",
     accent: "from-sky-500/10 to-cyan-500/5",
     ring: "ring-sky-400/30",
@@ -14,8 +14,8 @@ const TOOLS = [
   {
     icon: ListChecks,
     title: "College Shortlister",
-    desc: "Answer 6 questions on budget, location & goals — get a personalized shortlist across 500+ B-schools.",
-    stat: "500+ colleges scored",
+    desc: "Share your budget, location and goals to build a personalised college shortlist.",
+    stat: "Explore your college options",
     to: "/tools/college-shortlister",
     accent: "from-blue-500/10 to-sky-500/5",
     ring: "ring-blue-400/30",
@@ -32,8 +32,8 @@ const TOOLS = [
   {
     icon: Sigma,
     title: "CAT Score → Percentile",
-    desc: "Convert your raw CAT score to sectional & overall percentile using the last 5 years of official normalisation data.",
-    stat: "5-year data",
+    desc: "Calculate your CAT marks and explore approximate sectional and overall percentile bands. Final percentiles depend on official normalisation.",
+    stat: "Indicative percentile bands",
     to: "/tools/cat-score-calculator",
     accent: "from-sky-500/10 to-blue-500/5",
     ring: "ring-sky-400/30",

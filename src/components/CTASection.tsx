@@ -1,7 +1,6 @@
 import { Link } from "@/lib/router-compat";
 import { ArrowRight, PhoneCall, GraduationCap, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 
 const CTASection = () => (
   <section className="py-20 md:py-24 relative overflow-hidden">
@@ -11,10 +10,7 @@ const CTASection = () => (
       <div className="absolute bottom-10 right-10 hidden w-96 h-96 bg-white/10 rounded-full blur-3xl md:block" />
     </div>
     <div className="container mx-auto px-4 relative z-10">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
+      <div
         className="text-center max-w-3xl mx-auto"
       >
         <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6">
@@ -27,15 +23,9 @@ const CTASection = () => (
           Dream B-School?
         </h2>
         <p className="text-primary-foreground/80 text-lg mb-8 leading-relaxed max-w-2xl mx-auto">
-          Get personalized guidance, exclusive coaching discounts, and connect with top institutes across India. Join thousands of students who found their perfect MBA match.
+          Get personalized guidance, compare coaching options, and explore MBA institutes across India.
         </p>
 
-        <div className="flex items-center justify-center gap-3 mb-8">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-          ))}
-          <span className="text-primary-foreground/80 text-sm ml-1">Trusted by 50,000+ students</span>
-        </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/colleges">
@@ -49,7 +39,7 @@ const CTASection = () => (
             </Button>
           </Link>
         </div>
-      </motion.div>
+      </div>
     </div>
   </section>
 );
