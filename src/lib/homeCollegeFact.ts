@@ -5,7 +5,6 @@ export function projectHomeCollegeFact<T extends { fees: string | null; placemen
     const matched = sections.filter(section => section.section_type === type);
     return normalizeCollegeSectionData((matched.find(section => !section.version || section.version === "original") || matched[0])?.data);
   };
-  const placement = get("placements");
   const cutoff = get("cutoff");
   const cutoffs: { category: string; exam: string; year: string; percentile: string }[] = [];
   if (Array.isArray(cutoff.cutoffs) && cutoff.cutoffs.length) {
@@ -19,5 +18,5 @@ export function projectHomeCollegeFact<T extends { fees: string | null; placemen
       if (typeof value === "string" || typeof value === "number") cutoffs.push({ category, exam: "", year: "", percentile: String(value) });
     }
   }
-  return { ...college, placement_avg: String(placement.avg_package || college.placement_avg || ""), cutoffs };
+  return { ...college, placement_avg: String(college.placement_avg || ""), cutoffs };
 }

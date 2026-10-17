@@ -72,53 +72,6 @@ const extractDomain = (website?: string): string | undefined => {
   }
 };
 
-const buildUrl = (source: string, year?: string, ctx?: CitationContext): string => {
-  const key = source.toLowerCase().trim();
-
-  // 1. Always-global sources (NIRF, AICTE, NAAC, CAT, etc.) — official portals only.
-  if (GLOBAL_SOURCE_URLS[key]) return GLOBAL_SOURCE_URLS[key];
-
-  const domain = extractDomain(ctx?.entityWebsite);
-
-  // 2. If we know the official college website AND the citation matches a known
-  //    "lives on the college's own site" hint (Placement Report, Brochure, Fees…),
-  //    deep-link via a site:domain Google query so users land on the SPECIFIC
-  //    page instead of the homepage.
-  const collegeHint = COLLEGE_SITE_HINTS[key];
-  if (domain && collegeHint) {
-    const q = `site:${domain} ${collegeHint} ${year || ""}`.trim();
-    return `https://www.google.com/search?q=${encodeURIComponent(q)}&btnI=1`;
-  }
-
-  // 3. Known college site hint but no domain on file — still deep-link via name.
-  if (collegeHint && ctx?.entityName) {
-    const q = `${ctx.entityName} official ${collegeHint} ${year || ""}`.trim();
-    return `https://www.google.com/search?q=${encodeURIComponent(q)}&btnI=1`;
-  }
-
-  // 4. Generic citation with a known college website — fall back to homepage.
-  if (ctx?.entityWebsite) {
-    try {
-      const u = ctx.entityWebsite.startsWith("http")
-        ? ctx.entityWebsite
-        : `https://${ctx.entityWebsite}`;
-      new URL(u);
-      return u;
-    } catch {
-      /* fall through */
-    }
-  }
-
-  // 5. No website on file — last resort: Google query restricted to the official name.
-  if (ctx?.entityName) {
-    const hint = collegeHint || source;
-    return `https://www.google.com/search?q=${encodeURIComponent(`${ctx.entityName} official site ${hint} ${year || ""}`.trim())}`;
-  }
-
-  // 6. Last resort — generic official-source query (no entity context).
-  return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
-};
-
 const buildPill = (source: string, year?: string, _ctx?: CitationContext) => {
   // Per site-wide policy (Google scaled-content + spam-link guidance): we do
   // NOT emit external links from generated content. Citations render as plain
@@ -217,6 +170,10 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
     (_m, src: string, year?: string) =>
       buildPill(src.trim().replace(/[,;:]+$/, ""), year, ctx),
   );
+
+  // Any leftover [src:…] marker the pill pattern did not match, and escaped anchor code shown as text.
+  out = out.replace(/\[\s*src\s*:[^\]]*\]/gi, "");
+  out = out.replace(/&lt;\/?a\b[^&]*?&gt;/gi, "");
 
   // 1b. Legacy "(source: NIRF 2025)" / "(source: Placement Report 2024-25)"
   out = out.replace(

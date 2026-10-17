@@ -3,6 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { upcomingHomepageExams } from "@/lib/homepageCalendar";
 import { homeCollegeFactsQuery } from "./homeCollegeFacts";
+import { landscapeCollegesQuery } from "./landscapeColleges";
 
 export const homeFreebiesQuery = queryOptions({
   queryKey: ["home-freebies"],
@@ -19,6 +20,7 @@ export const homeFreebiesQuery = queryOptions({
 export async function prefetchHomepage(qc: QueryClient) {
   await Promise.all([
     qc.ensureQueryData(homeCollegeFactsQuery),
+    qc.ensureQueryData(landscapeCollegesQuery),
     qc.ensureQueryData({ queryKey: ["popular-exams-countdown"], queryFn: async () => {
       const { data, error } = await supabase.from("exams").select("name, slug, full_name, exam_date, registration_deadline, conducting_body");
       if (error) throw error;
@@ -79,7 +81,7 @@ export async function prefetchHomepage(qc: QueryClient) {
       return (data || []).filter((row) => row.name?.trim() && row.slug?.trim());
     }}),
   ]);
-  const keys = ["hero", "stats", "faqs", "how_it_works", "why_choose_us", "footer", "header"];
+  const keys = ["hero", "faqs", "how_it_works", "why_choose_us", "footer", "header"];
   const { data, error } = await supabase.from("site_settings").select("key,value").in("key", keys);
   if (error) throw error;
   for (const key of keys) qc.setQueryData(["site_settings", key], data?.find((row) => row.key === key)?.value ?? null);

@@ -1,4 +1,5 @@
 import { useParams, Link } from "@/lib/router-compat";
+import { formatMoney } from "@/lib/collegeMetrics";
 import PageKeywords from "@/components/PageKeywords";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { MapPin, Star, Users, TrendingUp, Award, BookOpen, Globe, GraduationCap, CheckCircle, Building, Calendar, ChevronDown, ChevronUp, Download, ThumbsUp, ThumbsDown, HelpCircle, Home, Image, Medal, Banknote, MessageSquare } from "lucide-react";
@@ -33,7 +34,6 @@ import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import CitationLink from "@/components/CitationLink";
 import { enhanceAIContent } from "@/lib/aiContentEnhancer";
-import { fallbackText } from "@/lib/contentFallback";
 import { numericStat, rankOnly, stripTBA } from "@/lib/textClip";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
@@ -222,9 +222,9 @@ const CollegeDetailPage = () => {
   );
   const answerFacts = [
     { label: "Location", value: [college.city, college.state].filter(Boolean).join(", ") || undefined },
-    { label: "Total fees", value: college.fees || undefined },
-    { label: "Average package", value: college.placement_avg || undefined },
-    { label: "Highest package", value: college.placement_highest || undefined },
+    { label: "Total fees", value: formatMoney(college.fees) || undefined },
+    { label: "Average package", value: formatMoney(college.placement_avg) || undefined },
+    { label: "Highest package", value: formatMoney(college.placement_highest) || undefined },
     { label: "NIRF rank", value: college.ranking ? `#${college.ranking}` : undefined },
     { label: "Exams accepted", value: exams.length ? exams.slice(0, 4).join(", ") : undefined },
   ].filter((f) => f.value) as { label: string; value: string }[];
@@ -293,7 +293,7 @@ const CollegeDetailPage = () => {
   // Placement sectors from DB or fallback
   const placementSectors = placementData.sectors?.length > 0
     ? placementData.sectors.map((s: any) => ({ sector: stripText(s.sector), pct: toPctNum(s.percentage) }))
-    : [{ sector: "Consulting", pct: 35 }, { sector: "Finance", pct: 28 }, { sector: "IT", pct: 18 }, { sector: "FMCG", pct: 12 }, { sector: "Others", pct: 7 }];
+    : [];
 
   const placementRecruiters = placementData.recruiters?.length > 0
     ? placementData.recruiters.map((r: any) => stripText(r.name)).filter(Boolean)
@@ -303,8 +303,7 @@ const CollegeDetailPage = () => {
   const rankingsList = rankingsData.rankings?.length > 0
     ? rankingsData.rankings.map((r: any) => ({ body: stripText(r.body), rank: stripText(r.rank), year: stripText(r.year) }))
     : [
-        { body: "NIRF", rank: college.ranking ? `#${college.ranking}` : "N/A", year: "2025" },
-        { body: "Business Today", rank: college.ranking ? `#${Math.max(1, (college.ranking || 1) - 2)}` : "N/A", year: "2025" },
+        ...(Number(college.ranking) > 0 ? [{ body: "NIRF", rank: `#${college.ranking}`, year: "" }] : []),
       ];
 
   const rankAccreditations = rankingsData.accreditations?.length > 0
@@ -462,10 +461,10 @@ const CollegeDetailPage = () => {
             {/* Premium Stats Strip */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
               {[
-                { label: "NIRF Ranking", value: Number(college.ranking) > 0 ? rankOnly(college.ranking) : numericStat(fallbackText(null, { kind: "ranking", tier: college.tier })), source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
-                { label: "Total Fees", value: numericStat(college.fees, numericStat(fallbackText(null, { kind: "fees_text", tier: college.tier }))), source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
-                { label: "Avg Package", value: numericStat(placementData.avg_package || college.placement_avg, numericStat(fallbackText(null, { kind: "placement_avg", tier: college.tier }))), source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
-                { label: "Highest Package", value: numericStat(placementData.highest_package || college.placement_highest, numericStat(fallbackText(null, { kind: "placement_highest", tier: college.tier }))), source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "NIRF Ranking", value: Number(college.ranking) > 0 ? rankOnly(college.ranking) : "Not ranked", source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
+                { label: "Total Fees", value: formatMoney(college.fees) || "Not disclosed", source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
+                { label: "Avg Package", value: formatMoney(college.placement_avg) || "Not disclosed", source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "Highest Package", value: formatMoney(college.placement_highest) || "Not disclosed", source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
               ].map(s => {
                 const Icon = s.icon;
                 return (
@@ -749,10 +748,10 @@ const CollegeDetailPage = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     {[
-                      { label: "Average Package", value: numericStat(placementData.avg_package || college.placement_avg), icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
-                      { label: "Highest Package", value: numericStat(placementData.highest_package || college.placement_highest), icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
-                      { label: "Median Package", value: numericStat(placementData.median_package || college.placement_median), icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
-                      { label: "Placement Rate", value: numericStat(placementData.placement_rate, "98%"), icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
+                      { label: "Average Package", value: formatMoney(college.placement_avg) || "—", icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
+                      { label: "Highest Package", value: formatMoney(college.placement_highest) || "—", icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
+                      { label: "Median Package", value: formatMoney(college.placement_median) || "—", icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
+                      { label: "Placement Rate", value: numericStat(placementData.placement_rate), icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
                     ].map(s => (
                       <div key={s.label} className={`relative bg-gradient-to-br ${s.color} rounded-xl p-4 text-center border border-border/40 hover:shadow-md hover:-translate-y-0.5 transition-all`}>
                         <s.icon className={`w-5 h-5 ${s.iconColor} mx-auto mb-2`} />

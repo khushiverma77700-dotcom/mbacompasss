@@ -5,12 +5,12 @@ import { Link } from "@/lib/router-compat";
 type NewsItem = { tag: string; text: string; href: string; start_at?: string | null; end_at?: string | null };
 
 const FALLBACK: NewsItem[] = [
-  { tag: "CAT 2026", text: "IIM Kozhikode releases official CAT 2026 notification & exam calendar", href: "/exam/cat" },
+  { tag: "CAT 2026", text: "CAT 2026 is conducted by IIM Indore — check the official notification and exam calendar", href: "/exam/cat" },
   { tag: "XAT 2026", text: "XLRI opens XAT 2026 registrations — key dates and syllabus changes", href: "/exam/xat" },
   { tag: "IIM-A", text: "IIM Ahmedabad PGP 2026-28 shortlist criteria & Academic Rating weightage", href: "/college/iim-ahmedabad" },
   { tag: "Placements", text: "ISB Hyderabad Class of 2025 posts highest median CTC of ₹36.5 LPA", href: "/college/isb-hyderabad" },
   { tag: "SNAP", text: "Symbiosis announces 3-slot SNAP 2026 with revised marking scheme", href: "/exam/snap" },
-  { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat" },
+  { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat-by-gmac" },
 ];
 
 const isActive = (it: NewsItem, now = Date.now()): boolean => {

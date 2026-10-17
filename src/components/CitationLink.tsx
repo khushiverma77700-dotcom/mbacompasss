@@ -62,7 +62,7 @@ const buildBestUrl = (
   year: string | undefined,
   entityName?: string,
   entityWebsite?: string,
-): string => {
+): string | undefined => {
   const key = source.toLowerCase().trim();
   // 1. Recognised national portals — always official.
   if (GLOBAL_SOURCE_URLS[key]) return GLOBAL_SOURCE_URLS[key];
@@ -70,19 +70,9 @@ const buildBestUrl = (
   const domain = extractDomain(entityWebsite);
   const hint = COLLEGE_SITE_HINTS[key] || source;
 
-  // 2. Known official domain → deep-link via site:domain (guarantees the user
-  //    lands on the institution's OWN site, not a partner/listing site).
-  if (domain) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${hint} ${year || ""}`.trim())}`;
-  }
-
-  // 3. Domain unknown → bias the query strongly toward the official site.
-  if (entityName) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`${entityName} official site ${hint} ${year || ""}`.trim())}`;
-  }
-
-  // 4. Last-resort fallback.
-  return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
+  // Only real official URLs — never a search-engine query.
+  void hint; void year; void entityName;
+  return domain ? `https://${domain}` : undefined;
 };
 
 /**
@@ -95,6 +85,7 @@ export const CitationLink = ({ source, year, href, entityName, entityWebsite, cl
   const label = yearStr ? `${source} ${yearStr}` : source;
   const url = href || buildBestUrl(source, yearStr, entityName, entityWebsite);
 
+  if (!url) return <span className={"inline-flex items-center rounded-full border border-border px-1.5 py-0.5 text-xs text-muted-foreground align-middle ml-1 " + (className || "")}>{label}</span>;
   return (
     <a
       href={url}

@@ -313,7 +313,7 @@ const AIToolsSection = () => {
             <span className="w-7 h-7 rounded-lg bg-blue-500/10 grid place-items-center">
               <Users className="w-3.5 h-3.5 text-blue-600" />
             </span>
-            Trusted by 10,000+ Aspirants
+            Free for MBA aspirants
           </span>
           <span className="hidden sm:inline text-border">|</span>
           <span className="flex items-center gap-2">

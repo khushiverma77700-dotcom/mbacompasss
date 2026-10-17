@@ -1,5 +1,5 @@
 import { Link } from "@/lib/router-compat";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import mbahubLogo from "@/assets/brandLogo";
 
@@ -7,10 +7,12 @@ const Footer = () => {
   const { data: footer } = useSiteSettings("footer");
 
   const brandDesc = footer?.brand_description || "India's trusted platform to find and compare the best MBA coaching institutes.";
-  const examLinks = footer?.exam_links || [];
+  const examLinks = [
+    { path: "/exam/cat", label: "CAT" }, { path: "/exam/xat", label: "XAT" }, { path: "/exam/snap", label: "SNAP" },
+    { path: "/exam/nmat-by-gmac", label: "NMAT" }, { path: "/exam/cmat", label: "CMAT" }, { path: "/exam/iift-entrance-mba-admissions", label: "IIFT" },
+  ];
   const quickLinks = footer?.quick_links || [];
-  const email = footer?.contact_email || "info@mbacompass.com";
-  const phone = footer?.contact_phone || "+91 98765 43210";
+  const email = "info@mbacompass.in";
   const address = footer?.contact_address || "New Delhi, India";
   const copyright = footer?.copyright || "2026 MBA Compass. All rights reserved.";
 
@@ -67,8 +69,7 @@ const Footer = () => {
           <div>
             <h2 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">Contact Us</h2>
             <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {email}</li>
-              <li className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> {phone}</li>
+              <li className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> <a href={`mailto:${email}`} className="hover:text-primary-foreground">{email}</a></li>
               <li className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> {address}</li>
             </ul>
           </div>

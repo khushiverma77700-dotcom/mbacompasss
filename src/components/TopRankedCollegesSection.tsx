@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { formatMoney } from "@/lib/collegeMetrics";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, IndianRupee, TrendingUp, ChevronRight, GraduationCap } from "lucide-react";
 import { Link } from "@/lib/router-compat";
@@ -87,14 +88,14 @@ const TopRankedCollegesSection = () => {
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Total Fees</p>
                     <div className="flex items-center gap-1">
                       <IndianRupee className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-                      <p className="text-sm font-bold text-foreground truncate">{college.fees || "N/A"}</p>
+                      <p className="text-sm font-bold text-foreground truncate">{formatMoney(college.fees) || "Not disclosed"}</p>
                     </div>
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Avg Package</p>
                     <div className="flex items-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5 text-emerald-600/70 shrink-0" />
-                      <p className="text-sm font-bold text-emerald-600 truncate">{college.placement_avg || "N/A"}</p>
+                      <p className="text-sm font-bold text-emerald-600 truncate">{formatMoney(college.placement_avg) || "Not disclosed"}</p>
                     </div>
                   </div>
                 </div>

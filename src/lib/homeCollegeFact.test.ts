@@ -13,8 +13,8 @@ describe("homepage and college detail facts", () => {
     ]);
     expect(result.cutoffs).toEqual([{ category: "General", exam: "CAT", year: "2026", percentile: "80" }]);
   });
-  it("uses original placement data ahead of the college summary without inventing missing values", () => {
-    expect(projectHomeCollegeFact(college, [{ section_type: "placements", version: "original", data: { avg_package: "₹36 LPA" } }]).placement_avg).toBe("₹36 LPA");
+  it("reads average CTC only from the college record, never from section copies", () => {
+    expect(projectHomeCollegeFact(college, [{ section_type: "placements", version: "original", data: { avg_package: "₹36 LPA" } }]).placement_avg).toBe("₹35.50 LPA");
     expect(projectHomeCollegeFact({ ...college, placement_avg: null }, []).placement_avg).toBe("");
   });
 });
