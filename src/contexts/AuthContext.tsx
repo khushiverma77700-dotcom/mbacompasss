@@ -33,9 +33,9 @@ const getAdminCacheKey = (userId: string) => `mbc-admin-status:${userId}`;
 
 const shouldResolveAdminForPath = (path: string) =>
   path.startsWith("/admin") ||
-  path.startsWith("/profile-analyzer") ||
-  path.startsWith("/roi-calculator") ||
-  path.startsWith("/iim-waitlist-movement");
+  path.startsWith("/tools/profile-analyzer") ||
+  path.startsWith("/tools/roi-calculator") ||
+  path.startsWith("/tools/iim-waitlist-movement");
 
 const readAdminCache = (userId: string): AdminCacheEntry | null => {
   if (typeof window === "undefined") return null;
@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // or the LMS shell sits in a skeleton state for ~3.5s.
       if (host === "dashboard.mbacompass.in") return true;
       return path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/auth") || path.startsWith("/demo") ||
-        path.startsWith("/dashboard") || path.startsWith("/profile-analyzer") || path.startsWith("/mocks");
+        path.startsWith("/dashboard") || path.startsWith("/tools/profile-analyzer") || path.startsWith("/mocks");
     };
     const startAuth = () => import("@/integrations/supabase/client")
       .then(({ supabase }) => {

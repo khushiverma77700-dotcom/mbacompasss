@@ -1063,9 +1063,9 @@ export default function StudentOverview() {
           <Sparkles className="h-4 w-4 text-sky-600" /> Free AI tools — included with your account
         </h2>
         <div className="grid sm:grid-cols-3 gap-3">
-          <ToolCard title="AI Profile Analyzer" desc="Get an MBA admission probability score." href="/profile-analyzer" />
-          <ToolCard title="College Shortlister" desc="Personalized college list based on your scores." href="/college-shortlister" />
-          <ToolCard title="MBA ROI Calculator" desc="Project your ROI across top B-schools." href="/roi-calculator" />
+          <ToolCard title="AI Profile Analyzer" desc="Get an MBA admission probability score." href="/tools/profile-analyzer" />
+          <ToolCard title="College Shortlister" desc="Personalized college list based on your scores." href="/tools/college-shortlister" />
+          <ToolCard title="MBA ROI Calculator" desc="Project your ROI across top B-schools." href="/tools/roi-calculator" />
         </div>
       </Card>
     </div>
@@ -1408,7 +1408,7 @@ const ExamCountdownStrip = memo(function ExamCountdownStrip({ exams }: { exams: 
           <p className="text-xs text-muted-foreground mt-0.5 ml-9">Track every D-day. Updates live.</p>
           <p className="text-xs italic text-muted-foreground/70 mt-0.5 ml-9">*Dates are tentative and subject to change. Please verify with official exam websites.</p>
         </div>
-        <Link to="/exams" className="text-xs font-medium text-sky-700 dark:text-sky-300 hover:underline">View all →</Link>
+        <Link to="/exam" className="text-xs font-medium text-sky-700 dark:text-sky-300 hover:underline">View all →</Link>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {exams.map((ex: any) => {

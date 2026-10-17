@@ -29,5 +29,18 @@ export function publicPageHead(path: string, rawTitle: string, rawDescription: s
       ...(validImage ? [{ property: "og:image", content: validImage }, { name: "twitter:image", content: validImage }] : []),
     ],
     links: [{ rel: "canonical", href: url }],
+    scripts: path === "/" ? [] : [{ type: "application/ld+json", children: JSON.stringify({
+      "@context": "https://schema.org", "@type": "BreadcrumbList", "@id": `${url}#breadcrumb`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: canonicalUrl("/") },
+        ...(path.startsWith("/tools/") ? [{ "@type": "ListItem", position: 2, name: "Tools", item: canonicalUrl("/tools") }] : []),
+        { "@type": "ListItem", position: path.startsWith("/tools/") ? 3 : 2, name: title.split("|")[0].trim(), item: url },
+      ],
+    }) }],
   };
+}
+
+export function privatePageHead(path: string, title: string, description: string) {
+  const head = publicPageHead(path, title, description);
+  return { ...head, meta: [...head.meta, { name: "robots", content: "noindex, nofollow" }] };
 }

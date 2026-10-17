@@ -18,7 +18,7 @@ const ProfileAnalyzerPopup = () => {
   useEffect(() => {
     if (
       location.pathname === "/" ||
-      location.pathname === "/profile-analyzer" ||
+      location.pathname === "/tools/profile-analyzer" ||
       location.pathname.startsWith("/admin")
     ) return;
     const dismissed = sessionStorage.getItem(POPUP_DISMISSED_KEY);
@@ -53,7 +53,7 @@ const ProfileAnalyzerPopup = () => {
 
   const handleCTA = () => {
     handleDismiss();
-    navigate("/profile-analyzer");
+    navigate("/tools/profile-analyzer");
   };
 
   const features = [

@@ -113,8 +113,8 @@ const FAQS = [
 ];
 
 const AI_TOOLS = [
-  { title: "AI Profile Analyzer", desc: "Get a detailed profile assessment with strengths, weaknesses & college predictions", icon: Brain, path: "/profile-analyzer", color: "from-violet-500 to-purple-600" },
-  { title: "AI College Finder", desc: "Discover colleges based on your preferences with AI-powered matching", icon: SearchIcon, path: "/college-finder", color: "from-blue-500 to-cyan-500" },
+  { title: "AI Profile Analyzer", desc: "Get a detailed profile assessment with strengths, weaknesses & college predictions", icon: Brain, path: "/tools/profile-analyzer", color: "from-violet-500 to-purple-600" },
+  { title: "AI College Finder", desc: "Discover colleges based on your preferences with AI-powered matching", icon: SearchIcon, path: "/tools/college-finder", color: "from-blue-500 to-cyan-500" },
   { title: "AI Coaching Finder", desc: "Find the best coaching institutes matched to your preparation needs", icon: MessageSquare, path: "/ai-coaching-finder", color: "from-emerald-500 to-green-600" },
 ];
 
@@ -511,7 +511,7 @@ const CollegeShortlisterPage = () => {
             "how to shortlist MBA colleges for applications", "shortlist MBA colleges based on budget and location",
             "management institute shortlist for CAT 95 percentile", "tools for MBA college shortlisting and tracking",
           ]}
-          canonical="https://mbacompass.in/college-shortlister"
+          canonical="https://mbacompass.in/tools/college-shortlister"
         />
 
         {/* ══ HERO ══ */}

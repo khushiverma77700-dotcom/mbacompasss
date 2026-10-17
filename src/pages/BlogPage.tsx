@@ -499,7 +499,7 @@ const BlogPage = () => {
                       className="w-full px-5 py-4 bg-white border border-sky-100 rounded-xl text-sm focus:ring-2 focus:ring-sky-300 outline-hidden placeholder:text-slate-500"
                     />
                     <Link
-                      to={email ? `/profile-analyzer?email=${encodeURIComponent(email)}` : "/profile-analyzer"}
+                      to={email ? `/tools/profile-analyzer?email=${encodeURIComponent(email)}` : "/tools/profile-analyzer"}
                       className="block w-full text-center bg-sky-500 text-white font-bold py-4 rounded-xl text-sm hover:bg-sky-600 transition-all shadow-lg shadow-sky-100"
                     >
                       Start My Profile

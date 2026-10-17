@@ -336,7 +336,7 @@ const MBARoiCalculatorPage = () => {
         title="MBA ROI Calculator 2025 | AI-Powered MBA Return on Investment Tool | MBA Compass"
         description="Free AI-powered MBA ROI Calculator. Get personalized payback period, 10-year salary projection, college recommendations across IIMs, ISB, XLRI, FMS & 200+ B-schools. Make data-backed MBA decisions in 3 minutes."
         keywords={["MBA ROI calculator", "MBA payback period calculator", "MBA salary calculator India", "is MBA worth it", "MBA fees vs salary", "IIM ROI", "MBA return on investment", "MBA cost benefit analysis", "best MBA college ROI", "MBA loan EMI calculator"]}
-        canonical="https://mbacompass.in/roi-calculator"
+        canonical="https://mbacompass.in/tools/roi-calculator"
         ogTitle="MBA ROI Calculator — Should You Pursue MBA? Find Out in 3 Minutes"
         ogDescription="AI-powered MBA Return-on-Investment calculator. Personalized college recommendations, payback period, salary projections, lifetime earnings comparison."
         jsonLd={[
@@ -344,7 +344,7 @@ const MBARoiCalculatorPage = () => {
           generateBreadcrumbSchema([
             { name: "Home", url: "/" },
             { name: "AI Tools", url: "/" },
-            { name: "MBA ROI Calculator", url: "/roi-calculator" },
+            { name: "MBA ROI Calculator", url: "/tools/roi-calculator" },
           ]),
           generateFAQSchema(FAQS.map(f => ({ q: f.q, a: f.a }))),
           {
@@ -2578,8 +2578,8 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
         <CardContent className="p-6 text-center">
           <p className="text-sm text-muted-foreground mb-4">Want to take the next step? Explore our other AI tools.</p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Link to="/profile-analyzer"><Button variant="outline" size="sm"><User className="w-4 h-4 mr-1" /> Profile Analyzer</Button></Link>
-            <Link to="/college-shortlister"><Button variant="outline" size="sm"><Building2 className="w-4 h-4 mr-1" /> College Shortlister</Button></Link>
+            <Link to="/tools/profile-analyzer"><Button variant="outline" size="sm"><User className="w-4 h-4 mr-1" /> Profile Analyzer</Button></Link>
+            <Link to="/tools/college-shortlister"><Button variant="outline" size="sm"><Building2 className="w-4 h-4 mr-1" /> College Shortlister</Button></Link>
             <Link to="/colleges"><Button variant="outline" size="sm"><GraduationCap className="w-4 h-4 mr-1" /> Browse Colleges</Button></Link>
           </div>
         </CardContent>

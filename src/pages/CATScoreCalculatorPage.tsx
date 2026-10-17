@@ -637,7 +637,7 @@ const CATScoreCalculatorPage: React.FC = () => {
                   })()}
                 </div>
                 <div className="mt-5 pt-4 border-t border-primary/10 text-center">
-                  <Link to="/profile-analyzer">
+                  <Link to="/tools/profile-analyzer">
                     <Button variant="outline" size="sm" className="text-primary border-primary/20 hover:bg-primary/5">
                       <BrainCircuit className="w-4 h-4 mr-1" /> Get Full AI Profile Analysis <ArrowRight className="w-4 h-4 ml-1" />
                     </Button>
@@ -802,7 +802,7 @@ const CATScoreCalculatorPage: React.FC = () => {
                   <Award className="w-8 h-8 text-primary mb-3" />
                   <h3 className="text-foreground font-bold text-lg mb-2">Want to Improve Your Score?</h3>
                   <p className="text-muted-foreground text-sm mb-4">Get AI-powered profile analysis with college predictions and strategy</p>
-                  <Link to="/profile-analyzer"><Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Analyse My Profile <ArrowRight className="w-4 h-4 ml-1" /></Button></Link>
+                  <Link to="/tools/profile-analyzer"><Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Analyse My Profile <ArrowRight className="w-4 h-4 ml-1" /></Button></Link>
                 </div>
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 shadow-xs hover:shadow-md transition-shadow">
                   <TrendingUp className="w-8 h-8 text-emerald-600 mb-3" />
@@ -1049,7 +1049,7 @@ const CATScoreCalculatorPage: React.FC = () => {
           <h2 className="text-2xl md:text-3xl font-black text-foreground mb-3">What to Do After Calculating Your CAT Score</h2>
           <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
             <li><span className="font-semibold text-foreground">Shortlist realistically:</span> match your estimated percentile and sectional scores with the target table above.</li>
-            <li><span className="font-semibold text-foreground">Check your profile fit:</span> IIM shortlists also weigh 10th, 12th and graduation marks, work experience and diversity. Try the <Link to="/profile-analyzer" className="text-primary underline">Profile Analyzer</Link>.</li>
+            <li><span className="font-semibold text-foreground">Check your profile fit:</span> IIM shortlists also weigh 10th, 12th and graduation marks, work experience and diversity. Try the <Link to="/tools/profile-analyzer" className="text-primary underline">Profile Analyzer</Link>.</li>
             <li><span className="font-semibold text-foreground">Track deadlines:</span> many non-IIM colleges accept CAT scores with their own forms. See <Link to="/mba-application" className="text-primary underline">open MBA applications</Link>.</li>
             <li><span className="font-semibold text-foreground">Start interview prep early:</span> written ability tests, group discussions and personal interviews usually begin between February and April.</li>
             <li><span className="font-semibold text-foreground">Keep a backup:</span> if your score is below target, exams such as XAT, SNAP, NMAT and CMAT run on different schedules.</li>
@@ -1240,7 +1240,7 @@ const CATScoreCalculatorPage: React.FC = () => {
             <Button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all">
               <Calculator className="w-5 h-5 mr-2" /> Calculate Now — It's Free
             </Button>
-            <Link to="/profile-analyzer">
+            <Link to="/tools/profile-analyzer">
               <Button variant="outline" size="lg" className="px-8 py-6 text-lg font-bold">
                 AI Profile Analysis <ArrowRight className="w-5 h-5 ml-1" />
               </Button>

@@ -9,11 +9,11 @@
 // Keep this in sync with the host enforced by the redirect script in
 // index.html and the BASE_URL used by serve-sitemap.
 
+import { publicPath } from "./publicPaths";
 export const CANONICAL_HOST = "https://mbacompass.in";
 
 /** Build a fully-qualified canonical URL for a given path (e.g. "/article/foo"). */
 export const canonicalUrl = (path: string): string => {
-  if (!path) return CANONICAL_HOST;
-  if (/^https?:\/\//i.test(path)) return path; // already absolute
-  return `${CANONICAL_HOST}${path.startsWith("/") ? path : `/${path}`}`;
+  const url = new URL(path || "/", CANONICAL_HOST);
+  return `${CANONICAL_HOST}${publicPath(url.pathname).replace(/\/$/, "")}`;
 };

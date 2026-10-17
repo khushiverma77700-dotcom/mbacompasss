@@ -352,9 +352,9 @@ export const suggestBlogInternalLinks = createServerFn({ method: "POST" })
       ...((arts.data || []) as any[]).filter((r) => r.slug && r.title).map((r) => ({ path: `/article/${r.slug}`, label: r.title })),
       ...((cols.data || []) as any[]).filter((r) => r.slug && r.name).map((r) => ({ path: `/college/${r.slug}`, label: r.name })),
       ...((exams.data || []) as any[]).filter((r) => r.slug && r.name).map((r) => ({ path: `/exams/${r.slug}`, label: r.name })),
-      { path: "/college-shortlister", label: "MBA college shortlister" },
+      { path: "/tools/college-shortlister", label: "MBA college shortlister" },
       { path: "/mba-roi-calculator", label: "MBA ROI calculator" },
-      { path: "/profile-analyzer", label: "MBA profile analyzer" },
+      { path: "/tools/profile-analyzer", label: "MBA profile analyzer" },
       { path: "/mocks", label: "CAT and XAT mock tests" },
       { path: "/mba-application", label: "MBA application tracker" },
     ];

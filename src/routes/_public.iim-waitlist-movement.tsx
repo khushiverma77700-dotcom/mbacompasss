@@ -1,8 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
-import IIMWaitlistPage from "@/pages/IIMWaitlistPage";
-import PublicPageSkeleton from "@/components/PublicPageSkeleton";
-
+import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/_public/iim-waitlist-movement")({
-  component: () => <IIMWaitlistPage />,
-  pendingComponent: PublicPageSkeleton,
+  beforeLoad: ({ location }) => { throw redirect({ href: `/tools/iim-waitlist-movement${location.searchStr}`, statusCode: 301 }); },
 });

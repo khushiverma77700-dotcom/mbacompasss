@@ -91,8 +91,8 @@ const STATIC_SECTION: SectionGroup = {
   description: "Homepage, listing pages, tools",
   samples: [
     "/", "/colleges", "/coaching", "/blog", "/compare",
-    "/profile-analyzer", "/college-shortlister", "/mba-roi-calculator",
-    "/cat-score-calculator", "/about", "/contact",
+    "/tools/profile-analyzer", "/tools/college-shortlister", "/mba-roi-calculator",
+    "/tools/cat-score-calculator", "/about", "/contact",
   ].map((p) => {
     const url = `${SITE_URL}${p}`;
     return { url, expectedCanonical: url, context: { path: p } };

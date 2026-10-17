@@ -527,8 +527,8 @@ export const AdmissionAndCareerSection = () => (
 
 const relatedLinks = [
   { to: "/colleges", label: "MBA College Reviews", desc: "Compare 1600+ MBA colleges on fees, placements and ROI." },
-  { to: "/college-shortlister", label: "MBA College Selection", desc: "Shortlist B-Schools that match your profile and target score." },
-  { to: "/profile-analyzer", label: "MBA Profile Review", desc: "Get an instant read on your MBA profile strengths and gaps." },
+  { to: "/tools/college-shortlister", label: "MBA College Selection", desc: "Shortlist B-Schools that match your profile and target score." },
+  { to: "/tools/profile-analyzer", label: "MBA Profile Review", desc: "Get an instant read on your MBA profile strengths and gaps." },
   { to: "/exam/cat", label: "CAT Guidance", desc: "CAT exam pattern, dates, syllabus and preparation strategy." },
   { to: "/coaching", label: "MBA Mentorship", desc: "Explore MBA coaching and mentorship options across India." },
   { to: "/blog", label: "MBA Admissions", desc: "Guides on MBA admissions, interviews and B-School selection." },

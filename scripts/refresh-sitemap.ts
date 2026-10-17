@@ -1,5 +1,5 @@
-// Fetches the live sitemaps and writes them to public/.
-//   - public/sitemap.xml        page URLs + inline image entries (canonical submission)
+// Fetches the existing image sitemap. Vite independently writes page sitemaps
+// from the validated public prerender manifest.
 //   - public/sitemap-images.xml image-only sitemap
 // Also keeps the `Sitemap:` block in public/robots.txt pointing at both files.
 //
@@ -12,7 +12,6 @@ import { resolve } from "path";
 const FN_BASE = "https://mttoiqruzzxooveooldo.supabase.co/functions/v1";
 const SITE_URL = "https://mbacompass.in";
 
-const SITEMAP_OUT = "public/sitemap.xml";
 const IMAGE_SITEMAP_OUT = "public/sitemap-images.xml";
 const ROBOTS_OUT = "public/robots.txt";
 
@@ -72,7 +71,7 @@ function syncRobots() {
   const original = readFileSync(OUT, "utf8");
   const body = original
     .split(/\r?\n/)
-    .filter((line) => !/^\s*sitemap\s*:/i.test(line))
+    .filter((line) => !/^\s*sitemap\s*:/i.test(line) && !/^# Sitemaps for project domain/.test(line))
     .join("\n")
     .replace(/# Sitemaps for project domain\s*$/i, "")
     .trimEnd();
@@ -90,7 +89,8 @@ function syncRobots() {
 }
 
 async function main() {
-  await writeSitemap("sitemap", "serve-sitemap", SITEMAP_OUT, 50);
+  // The Vite build now writes the page sitemap from the exact public prerender
+  // manifest; do not replace it with a separate legacy server inventory.
   await writeSitemap("sitemap-images", "serve-image-sitemap", IMAGE_SITEMAP_OUT, 1);
   syncRobots();
 }

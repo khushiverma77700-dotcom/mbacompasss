@@ -179,7 +179,7 @@ export const OnboardingGate = () => {
         path.startsWith("/admin") ||
         path.startsWith("/student") ||
         path.startsWith("/mocks/attempt") ||
-        path === "/profile-analyzer"
+        path === "/tools/profile-analyzer"
       )
         return;
     }

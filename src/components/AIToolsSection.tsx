@@ -22,7 +22,7 @@ const tools = [
     description:
       "Get a 5-dimension score breakdown, SWOT analysis, peer comparison & personalized college predictions.",
     icon: Brain,
-    path: "/profile-analyzer",
+    path: "/tools/profile-analyzer",
     accent: "139, 92, 246", // violet
     tag: "Most Popular",
     rating: "4.9",
@@ -37,7 +37,7 @@ const tools = [
     description:
       "8-step smart wizard matches you with best-fit B-schools by budget, location, ROI & career goals.",
     icon: School,
-    path: "/college-finder",
+    path: "/tools/college-finder",
     accent: "59, 130, 246", // blue
     tag: "New",
     rating: "4.8",
@@ -67,7 +67,7 @@ const tools = [
     description:
       "Side-by-side comparison across placements, fees, ROI, campus & admissions with AI verdict.",
     icon: BarChart3,
-    path: "/college-finder#compare",
+    path: "/tools/college-finder#compare",
     accent: "245, 158, 11", // amber
     tag: "Deep Dive",
     rating: "4.7",
@@ -82,7 +82,7 @@ const tools = [
     description:
       "Paste your CAT response sheet and get instant section-wise score, accuracy & percentile estimate.",
     icon: Calculator,
-    path: "/cat-score-calculator",
+    path: "/tools/cat-score-calculator",
     accent: "6, 182, 212", // cyan
     tag: "Viral",
     rating: "4.9",
@@ -97,7 +97,7 @@ const tools = [
     description:
       "Calculate MBA payback period, expected salary jump, and AI-matched college ROI before you invest.",
     icon: TrendingUp,
-    path: "/roi-calculator",
+    path: "/tools/roi-calculator",
     accent: "234, 88, 12", // orange
     tag: "New",
     rating: "4.8",

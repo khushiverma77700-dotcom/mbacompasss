@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ExamSlugRedirect } from "@/components/app-shell/RouteRedirects";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/exams/$slug")({
-  component: () => <ExamSlugRedirect />,
+  beforeLoad: ({ params }) => { throw redirect({ to: "/exam/$slug", params, statusCode: 301 }); },
 });

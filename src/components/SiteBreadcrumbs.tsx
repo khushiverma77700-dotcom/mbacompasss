@@ -11,6 +11,8 @@ interface Props {
   className?: string;
   /** If true, the first "Home" crumb is prepended automatically. */
   withHome?: boolean;
+  /** Public route heads own schema; opt in only outside that route system. */
+  emitSchema?: boolean;
 }
 
 const ABSOLUTE_ORIGIN = "https://mbacompass.in";
@@ -19,10 +21,9 @@ const toAbsolute = (u: string) =>
   u.startsWith("http") ? u : `${ABSOLUTE_ORIGIN}${u.startsWith("/") ? "" : "/"}${u}`;
 
 /**
- * Renders a visible breadcrumb trail AND injects a BreadcrumbList JSON-LD
- * block so Google can show breadcrumb rich results for the page.
+ * Renders a visible breadcrumb trail; route heads own JSON-LD by default.
  */
-const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
+const SiteBreadcrumbs = ({ items, className = "", withHome = true, emitSchema = false }: Props) => {
   const trail: BreadcrumbItem[] = withHome
     ? [{ name: "Home", url: "/" }, ...items]
     : items;
@@ -72,7 +73,7 @@ const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
           })}
         </ol>
       </nav>
-      <script
+      {emitSchema && <script
         type="application/ld+json"
         // Escape closing-tag and JS-line-terminator sequences so a CMS-supplied
         // breadcrumb name can never break out of the inline JSON-LD block.
@@ -84,7 +85,7 @@ const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
             .replace(/\u2028/g, "\\u2028")
             .replace(/\u2029/g, "\\u2029"),
         }}
-      />
+      />}
     </>
   );
 };

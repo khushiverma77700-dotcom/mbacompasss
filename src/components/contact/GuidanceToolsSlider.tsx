@@ -6,19 +6,19 @@ const TOOLS = [
     icon: UserSearch,
     title: "AI Profile Analyzer",
     desc: "Call probability in 60 sec",
-    to: "/profile-analyzer",
+    to: "/tools/profile-analyzer",
   },
   {
     icon: Calculator,
     title: "MBA ROI Calculator",
     desc: "Fees vs CTC payback",
-    to: "/roi-calculator",
+    to: "/tools/roi-calculator",
   },
   {
     icon: Sigma,
     title: "CAT Score Calculator",
     desc: "Score to percentile",
-    to: "/cat-score-calculator",
+    to: "/tools/cat-score-calculator",
   },
   {
     icon: LineChart,

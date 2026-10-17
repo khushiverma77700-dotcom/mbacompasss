@@ -66,7 +66,7 @@ export default function MockThankYouPage() {
                 Get a personalised MBA admission roadmap based on your profile in 60 seconds.
               </p>
               <Button variant="outline" className="mt-4" asChild>
-                <Link to="/profile-analyzer">Analyze my profile <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/tools/profile-analyzer">Analyze my profile <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </Card>
             <Card className="p-6 border-sky-100 hover:shadow-md transition">
@@ -78,7 +78,7 @@ export default function MockThankYouPage() {
                 Discover MBA colleges that match your CAT score, profile and budget.
               </p>
               <Button variant="outline" className="mt-4" asChild>
-                <Link to="/college-shortlister">Shortlist colleges <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/tools/college-shortlister">Shortlist colleges <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </Card>
           </div>

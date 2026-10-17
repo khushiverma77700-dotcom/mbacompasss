@@ -11,6 +11,7 @@
  * (SEOHead strips duplicate Organization/WebSite nodes anyway).
  */
 
+import { articleAttribution } from "./articleAttribution";
 export const SITE_ORIGIN = "https://mbacompass.in";
 export const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
 export const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
@@ -114,12 +115,12 @@ export const buildArticleSchema = (article: {
   preparedWordCount?: number;
 }) => {
   const path = `/article/${article.slug}`;
-  const url = abs(path)!;
+  const url = abs(path) ?? `${SITE_ORIGIN}${path}`;
   const words = article.preparedWordCount ?? (article.content || "").replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
-  const authorName = clean(article.author) || "MBA Compass Editorial";
+  const author = articleAttribution(clean(article.author));
   return stripUndefined({
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
+    "@type": article.category?.toLowerCase() === "news" ? "NewsArticle" : "Article",
     "@id": `${url}#article`,
     mainEntityOfPage: { "@id": `${url}#webpage` },
     headline: (clean(article.meta_title) || clean(article.h1_tag) || clean(article.title) || "").slice(0, 110),
@@ -129,14 +130,15 @@ export const buildArticleSchema = (article: {
     wordCount: words || undefined,
     inLanguage: "en-IN",
     author: {
-      "@type": "Person",
-      name: authorName,
-      url: article.author_slug ? abs(`/author/${article.author_slug}`) : abs("/about"),
+      "@type": author.type,
+      name: author.name,
+      ...(author.type === "Person" ? { jobTitle: author.role } : {}),
+      url: author.url ? abs(author.url) : undefined,
     },
     publisher: { "@id": ORGANIZATION_ID },
     datePublished: article.created_at,
     dateModified: article.updated_at || article.created_at,
-    image: article.banner_url || article.image_url || `${SITE_ORIGIN}/og-image.png`,
+    image: article.banner_url || article.image_url || undefined,
     keywords: (article.keywords || []).filter(Boolean).slice(0, 10).join(", ") || undefined,
     isAccessibleForFree: true,
     speakable: { "@type": "SpeakableSpecification", cssSelector: SPEAKABLE_SELECTOR },

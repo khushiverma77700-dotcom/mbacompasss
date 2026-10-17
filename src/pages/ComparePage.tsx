@@ -782,7 +782,7 @@ const ComparePage = () => {
             {[
               { label: "Top MBA Colleges", path: "/colleges", desc: "Rankings & placements", icon: GraduationCap },
               { label: "MBA Blog", path: "/blog", desc: "Tips & career advice", icon: BookOpen },
-              { label: "Profile Analyzer", path: "/profile-analyzer", desc: "Check your chances", icon: Target },
+              { label: "Profile Analyzer", path: "/tools/profile-analyzer", desc: "Check your chances", icon: Target },
               { label: "Contact Us", path: "/contact", desc: "Get guidance", icon: Phone },
             ].map((link, i) => (
               <motion.div key={i} variants={staggerItem}>

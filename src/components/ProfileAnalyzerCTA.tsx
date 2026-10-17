@@ -77,7 +77,7 @@ const ProfileAnalyzerCTA = () => {
 
             <Button
               size="lg"
-              onClick={() => navigate("/profile-analyzer")}
+              onClick={() => navigate("/tools/profile-analyzer")}
               className="text-lg px-10 py-7 rounded-2xl shadow-2xl group relative overflow-hidden"
             >
               <span className="relative z-10 flex items-center gap-2">

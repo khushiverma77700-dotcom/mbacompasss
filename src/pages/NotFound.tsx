@@ -1,32 +1,10 @@
-import { useLocation } from "@/lib/router-compat";
-import { useEffect } from "react";
+import { Link, useLocation } from "@/lib/router-compat";
 import SEOHead from "@/components/SEOHead";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
 const NotFound = () => {
   const location = useLocation();
 
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-
-    // Fire a real HTTP 404 to the `not-found` edge function so that:
-    //   - Server / edge logs record a genuine 404 for this URL.
-    //   - Any crawler / monitoring tool that follows the beacon sees a real
-    //     404 status instead of the SPA's default 200.
-    //   - GSC URL inspection follow-up fetches can pick up the 404 signal.
-    if (SUPABASE_URL) {
-      const beacon = `${SUPABASE_URL}/functions/v1/not-found?path=${encodeURIComponent(
-        location.pathname + location.search,
-      )}`;
-      // `keepalive` lets it complete even if the user navigates away.
-      fetch(beacon, { method: "HEAD", keepalive: true, cache: "no-store" }).catch(
-        () => {
-          /* network errors here are non-fatal */
-        },
-      );
-    }
-  }, [location.pathname, location.search]);
 
   return (
     <>
@@ -45,9 +23,9 @@ const NotFound = () => {
             The page <code className="bg-background px-1 rounded-[0.25rem]">{location.pathname}</code> doesn't exist or has been moved.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <a href="/" className="text-primary underline hover:text-primary/90">Home</a>
-            <a href="/colleges" className="text-primary underline hover:text-primary/90">Colleges</a>
-            <a href="/blog" className="text-primary underline hover:text-primary/90">Articles</a>
+            <Link to="/" className="text-primary underline hover:text-primary/90">Home</Link>
+            <Link to="/colleges" className="text-primary underline hover:text-primary/90">Colleges</Link>
+            <Link to="/blog" className="text-primary underline hover:text-primary/90">Articles</Link>
           </div>
         </div>
       </div>

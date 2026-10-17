@@ -1188,7 +1188,7 @@ const CatMock1Page = () => {
                 <Link to="/mba-compass" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">MBA Compass Courses</Link>
                 <Link to="/student/day-planner" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">Day Planner</Link>
                 <Link to="/colleges" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">Top B-Schools</Link>
-                <Link to="/exams" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">MBA Entrance Exams</Link>
+                <Link to="/exam" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">MBA Entrance Exams</Link>
                 <Link to="/coaching" className="px-3 py-1.5 rounded-full bg-white border border-sky-200 hover:border-sky-400 text-sky-700">CAT Coaching</Link>
               </div>
             </div>

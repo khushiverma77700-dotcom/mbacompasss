@@ -101,7 +101,7 @@ const CollegeFinderPage = () => {
     manualCompareRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const breadcrumbs = [{ name: "Home", url: "/" }, { name: "College Finder & Compare", url: "/college-finder" }];
+  const breadcrumbs = [{ name: "Home", url: "/" }, { name: "College Finder & Compare", url: "/tools/college-finder" }];
 
   // Color for college index
   const colColors = ["from-primary to-violet-600", "from-emerald-500 to-teal-600", "from-amber-500 to-orange-600"];
@@ -118,7 +118,7 @@ const CollegeFinderPage = () => {
           "best B-school finder with placement filters", "admission chances in MBA colleges calculator",
           "personalized MBA college recommendation engine",
         ]}
-        canonical="https://mbacompass.in/college-finder"
+        canonical="https://mbacompass.in/tools/college-finder"
         jsonLd={[generateBreadcrumbSchema(breadcrumbs), generateFAQSchema(collegeFaqs)]}
       />
 
@@ -629,7 +629,7 @@ const CollegeFinderPage = () => {
             {[
               { label: "All MBA Colleges", path: "/colleges", desc: "Browse full directory", icon: Building2 },
               { label: "Compare Coaching", path: "/compare", desc: "Coaching course comparison", icon: Scale },
-              { label: "Profile Analyzer", path: "/profile-analyzer", desc: "Check your chances", icon: Target },
+              { label: "Profile Analyzer", path: "/tools/profile-analyzer", desc: "Check your chances", icon: Target },
               { label: "MBA Blog", path: "/blog", desc: "Tips & career advice", icon: BookOpen },
             ].map((link, i) => (
               <Link key={i} to={link.path} className="bg-card rounded-xl p-4 border-2 border-border hover:border-primary/30 hover:shadow-md transition-all group">

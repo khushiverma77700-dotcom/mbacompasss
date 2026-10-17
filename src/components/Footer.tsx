@@ -56,9 +56,9 @@ const Footer = () => {
                     <li key={i}><Link to={link.path} className="hover:text-primary-foreground transition-colors">{link.label}</Link></li>
                   ))
                 : null}
-              <li><Link to="/profile-analyzer" className="hover:text-primary-foreground transition-colors">AI Profile Analyser</Link></li>
-              <li><Link to="/cat-score-calculator" className="hover:text-primary-foreground transition-colors">CAT Score Calculator</Link></li>
-              <li><Link to="/roi-calculator" className="hover:text-primary-foreground transition-colors">MBA ROI Calculator</Link></li>
+              <li><Link to="/tools/profile-analyzer" className="hover:text-primary-foreground transition-colors">AI Profile Analyser</Link></li>
+              <li><Link to="/tools/cat-score-calculator" className="hover:text-primary-foreground transition-colors">CAT Score Calculator</Link></li>
+              <li><Link to="/tools/roi-calculator" className="hover:text-primary-foreground transition-colors">MBA ROI Calculator</Link></li>
               <li><Link to="/business-inquiries" className="hover:text-primary-foreground transition-colors">Business Inquiries</Link></li>
               <li><Link to="/list-your-business" className="hover:text-primary-foreground transition-colors">List Your Brand</Link></li>
             </ul>

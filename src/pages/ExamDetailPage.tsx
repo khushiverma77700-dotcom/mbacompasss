@@ -635,7 +635,7 @@ const ExamDetailPage = () => {
 
       {/* MOBILE STICKY CTA */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur px-4 py-3 flex gap-2">
-        <Button asChild size="sm" className="flex-1"><Link to="/college-shortlister">Shortlist colleges</Link></Button>
+        <Button asChild size="sm" className="flex-1"><Link to="/tools/college-shortlister">Shortlist colleges</Link></Button>
         <Button asChild size="sm" variant="outline" className="flex-1"><Link to="/mocks">Take a mock</Link></Button>
       </div>
     </div>
