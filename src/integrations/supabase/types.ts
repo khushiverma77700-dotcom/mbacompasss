@@ -834,6 +834,35 @@ export type Database = {
         }
         Relationships: []
       }
+      article_display_jobs: {
+        Row: {
+          article_id: string
+          requested_at: string
+          source_content: string
+          token: string
+        }
+        Insert: {
+          article_id: string
+          requested_at?: string
+          source_content?: string
+          token?: string
+        }
+        Update: {
+          article_id?: string
+          requested_at?: string
+          source_content?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_display_jobs_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: true
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author: string | null
@@ -860,6 +889,7 @@ export type Database = {
           meta_description: string | null
           meta_title: string | null
           mobile_banner_url: string | null
+          prepared_display: Json | null
           primary_keyword: string | null
           priority: number | null
           published: boolean | null
@@ -893,6 +923,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           mobile_banner_url?: string | null
+          prepared_display?: Json | null
           primary_keyword?: string | null
           priority?: number | null
           published?: boolean | null
@@ -926,6 +957,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           mobile_banner_url?: string | null
+          prepared_display?: Json | null
           primary_keyword?: string | null
           priority?: number | null
           published?: boolean | null
