@@ -218,6 +218,10 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
       buildPill(src.trim().replace(/[,;:]+$/, ""), year, ctx),
   );
 
+  // Any leftover [src:…] marker the pill pattern did not match, and escaped anchor code shown as text.
+  out = out.replace(/\[\s*src\s*:[^\]]*\]/gi, "");
+  out = out.replace(/&lt;\/?a\b[^&]*?&gt;/gi, "");
+
   // 1b. Legacy "(source: NIRF 2025)" / "(source: Placement Report 2024-25)"
   out = out.replace(
     /\(\s*source:\s*([^)\d]+?)\s*(\d{4}(?:[-–]\d{2,4})?)?\s*\)/gi,
