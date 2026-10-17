@@ -2,6 +2,7 @@
  * Router-compat shim — bridges @/lib/router-compat v6 call sites to
  * @tanstack/react-router without hand-rewriting every component.
  */
+import { publicPath } from "./publicPaths";
 import {
   useNavigate as tsNavigate,
   useLocation as tsLocation,
@@ -23,7 +24,7 @@ import {
 // ---------- shared URL parsing ----------
 
 function parseTo(to: string): { pathname: string; search?: Record<string, string>; hash?: string } {
-  const [beforeHash, hashStr] = (to ?? "").split("#");
+  const [beforeHash, hashStr] = publicPath(to ?? "").split("#");
   const [pathname, searchStr] = (beforeHash ?? "").split("?");
   return {
     // react-router keeps the current path for search-only ("?a=1") and
