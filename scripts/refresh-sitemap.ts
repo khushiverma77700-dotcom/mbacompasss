@@ -72,7 +72,7 @@ function syncRobots() {
   const original = readFileSync(OUT, "utf8");
   const body = original
     .split(/\r?\n/)
-    .filter((line) => !/^\s*sitemap\s*:/i.test(line))
+    .filter((line) => !/^\s*sitemap\s*:/i.test(line) && !/^# Sitemaps for project domain/.test(line))
     .join("\n")
     .replace(/# Sitemaps for project domain\s*$/i, "")
     .trimEnd();
@@ -90,7 +90,8 @@ function syncRobots() {
 }
 
 async function main() {
-  await writeSitemap("sitemap", "serve-sitemap", SITEMAP_OUT, 50);
+  // The Vite build now writes the page sitemap from the exact public prerender
+  // manifest; do not replace it with a separate legacy server inventory.
   await writeSitemap("sitemap-images", "serve-image-sitemap", IMAGE_SITEMAP_OUT, 1);
   syncRobots();
 }
