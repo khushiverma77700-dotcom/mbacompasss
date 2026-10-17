@@ -111,10 +111,11 @@ export const buildArticleSchema = (article: {
   category?: string | null;
   keywords?: string[] | null;
   content?: string | null;
+  preparedWordCount?: number;
 }) => {
   const path = `/article/${article.slug}`;
   const url = abs(path)!;
-  const words = (article.content || "").replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  const words = article.preparedWordCount ?? (article.content || "").replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
   const authorName = clean(article.author) || "MBA Compass Editorial";
   return stripUndefined({
     "@context": "https://schema.org",

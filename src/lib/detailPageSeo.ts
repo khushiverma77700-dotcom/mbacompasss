@@ -69,7 +69,7 @@ export async function findSeoRedirect(path: string): Promise<string | null> {
 }
 
 const clip = (s: unknown, n = 160) => {
-  const t = String(s ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const t = String(s ?? "").slice(0, 4096).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   return t.length > n ? `${t.slice(0, n - 1).trimEnd()}…` : t;
 };
 

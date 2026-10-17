@@ -23,7 +23,7 @@ import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
-import { enhanceAIContent } from "@/lib/aiContentEnhancer";
+import { resolveArticleDisplay } from "@/lib/articleDisplay";
 import { canonicalUrl } from "@/lib/canonical";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import ReadingProgress from "@/components/mobile/ReadingProgress";
@@ -89,6 +89,7 @@ const ArticlePage = () => {
   const articleKeywords = ((article as any)?.keywords || []) as string[];
   const heroImage = article?.banner_url || article?.image_url;
   const mobileHeroImage = (article as any)?.mobile_banner_url || heroImage;
+  const display = article ? resolveArticleDisplay(article.content || "", article.prepared_display) : undefined;
 
   // AEO/GEO: answer-first summary derived from stored content (no AI call).
   const answerText = article
@@ -96,14 +97,14 @@ const ArticlePage = () => {
         (article as any).ai_summary,
         (article as any).meta_description,
         article.excerpt,
-        article.content,
+        article.content?.slice(0, 4096),
       )
     : undefined;
   const answerQuestion = article ? `${(article as any).h1_tag || article.title}` : undefined;
 
   const jsonLd = article
     ? buildPageGraph(
-        buildArticleSchema(article as any),
+        buildArticleSchema({ ...article, preparedWordCount: display?.words } as any),
         buildWebPageSchema({
           path: `/article/${article.slug}`,
           name: (article as any).meta_title || article.title,
@@ -182,11 +183,11 @@ const ArticlePage = () => {
   const renderContent = (content: string) => (
     <div
       className="ai-content max-w-none text-foreground"
-      dangerouslySetInnerHTML={{ __html: enhancedArticleHtml(content) }}
+      dangerouslySetInnerHTML={{ __html: display?.html ?? "" }}
     />
   );
 
-  const readTime = article.content ? articleReadTime(article.content) : "3 min";
+  const readTime = article.content ? `${Math.max(1, Math.ceil((display?.words ?? 0) / 200))} min` : "3 min";
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const sameCategory = (suggestedArticles || []).filter((a: any) => a.category === article.category);
   const otherArticles = (suggestedArticles || []).filter((a: any) => a.category !== article.category);
@@ -443,28 +444,3 @@ const ArticlePage = () => {
 export default ArticlePage;
 
 
-// Long articles are expensive to enhance; cache per content so SSR and repeat
-// renders never redo the work (keeps the server under its CPU limit).
-const ENHANCED_CACHE = new Map<string, string>();
-function enhancedArticleHtml(content: string): string {
-  const hit = ENHANCED_CACHE.get(content);
-  if (hit !== undefined) return hit;
-  const html = enhanceAIContent(content, undefined, { editorial: true });
-  if (ENHANCED_CACHE.size >= 40) ENHANCED_CACHE.delete(ENHANCED_CACHE.keys().next().value as string);
-  ENHANCED_CACHE.set(content, html);
-  return html;
-}
-
-function articleReadTime(content: string): string {
-  let words = 0, inTag = false, inWord = false;
-  for (let i = 0; i < content.length; i++) {
-    const c = content.charCodeAt(i);
-    if (c === 60) { inTag = true; inWord = false; continue; }
-    if (c === 62) { inTag = false; continue; }
-    if (inTag) continue;
-    const space = c === 32 || c === 10 || c === 9 || c === 13;
-    if (!space && !inWord) words++;
-    inWord = !space;
-  }
-  return `${Math.max(1, Math.ceil(words / 200))} min`;
-}
