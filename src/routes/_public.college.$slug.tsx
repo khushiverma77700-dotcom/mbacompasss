@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_public/college/$slug")({
     };
     return {
       ...base,
-      links: [...base.links, ...(row.banner_url ? [{ rel: "preload", as: "image", href: cdnImage(row.banner_url, { width: 1280 }) }] : [])],
+      links: [...("links" in base ? base.links : []), ...(row.banner_url ? [{ rel: "preload", as: "image", href: cdnImage(row.banner_url, { width: 1280 }) }] : [])],
       scripts: [
         ...(school ? [{ type: "application/ld+json", children: JSON.stringify(school) }] : []),
         { type: "application/ld+json", children: JSON.stringify(crumbs) },
