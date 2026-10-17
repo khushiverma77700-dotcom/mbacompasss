@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import SitemapDailyTracker from "./SitemapDailyTracker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +24,10 @@ const AdminSitemap = () => {
   const [fileCount, setFileCount] = useState(0);
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [files, setFiles] = useState<{ url: string; urlCount: number }[]>([]);
+  const [allUrls, setAllUrls] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
+  const shown = useMemo(() => { const q = query.trim().toLowerCase(); return (q ? allUrls.filter(u => u.toLowerCase().includes(q)) : allUrls).slice(0, 500); }, [allUrls, query]);
   const { toast } = useToast();
 
 
@@ -35,6 +41,8 @@ const AdminSitemap = () => {
       setUrlCount(totalUrls);
       setImageCount(totalImages);
       setFileCount(inventory.fileCount);
+      setFiles(inventory.files);
+      setAllUrls(inventory.urls);
       setCheckedAt(new Date().toISOString());
 
       // Google Indexing API integration removed to reduce backend load.
@@ -48,6 +56,8 @@ const AdminSitemap = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => { generateSitemap(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopy = () => {
     navigator.clipboard.writeText(sitemapXml);
@@ -195,6 +205,27 @@ const AdminSitemap = () => {
           </CardContent>
         </Card>
       </div>
+
+      {files.length > 0 && <SitemapDailyTracker files={files} indexUrl={SITEMAP_URL} totalUrls={urlCount} />}
+
+      {allUrls.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">All links ({allUrls.length})</CardTitle>
+            <CardDescription>Every page currently listed in the sitemap. Search to filter; showing up to 500 at a time.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-2 flex-wrap">
+              <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search links, e.g. iim or delhi" className="max-w-sm" />
+              <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(allUrls.join("\n")); toast({ title: `${allUrls.length} links copied` }); }}><Copy className="w-4 h-4 mr-1" /> Copy all links</Button>
+            </div>
+            <div className="max-h-96 overflow-auto rounded-lg border border-border divide-y divide-border text-sm">
+              {shown.map(u => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="block px-3 py-1.5 text-primary hover:underline break-all">{u}</a>)}
+            </div>
+            {query && <p className="text-xs text-muted-foreground">{allUrls.filter(u => u.toLowerCase().includes(query.trim().toLowerCase())).length} matches</p>}
+          </CardContent>
+        </Card>
+      )}
 
       {sitemapXml && (
         <Card>
