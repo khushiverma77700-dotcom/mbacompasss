@@ -14,17 +14,19 @@ function trimNum(n: number, digits: number) {
 export function formatMoney(raw: unknown): string {
   if (raw === null || raw === undefined) return "";
   if (typeof raw === "number") return raw > 0 ? lakhsLabel(raw >= 1000 ? raw / 1e5 : raw) : "";
-  const s = String(raw).trim();
-  if (!s) return "";
+  const full = String(raw).trim();
+  if (!full) return "";
+  // Qualifiers such as "(two-year tuition, 2026-27)" are notes, not the amount.
+  const s = full.replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim() || full;
   const nums = s.match(NUM);
-  if (!nums || nums.length !== 1) return s;
+  if (!nums || nums.length !== 1) return full;
   const n = Number(nums[0].replace(/,/g, ""));
-  if (!Number.isFinite(n) || n <= 0) return s;
+  if (!Number.isFinite(n) || n <= 0) return full;
   if (/\b(cr|crore)s?\b/i.test(s)) return lakhsLabel(n * 100);
   if (/(lpa|lakh|lac|\bl\b|\d\s*l\b)/i.test(s)) return lakhsLabel(n);
-  if (/(usd|\$)/i.test(s)) return s;
+  if (/(usd|\$)/i.test(s)) return full;
   if (n >= 1000) return lakhsLabel(n / 1e5);
-  return s;
+  return full;
 }
 
 function lakhsLabel(lakhs: number) {
