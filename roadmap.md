@@ -1,5 +1,12 @@
 # Roadmap
 
+## Public structure and structured data — October 17
+- [ ] Standardise college/exam/tool URLs with permanent legacy redirects; audit public internal links
+- [ ] Verify real missing-page HTTP 404 responses
+- [ ] Generate build sitemaps from the public prerender manifest, index above 1,000 entries, authoritative dates only; update robots exclusions
+- [ ] Align Organization/WebSite, article/college/FAQ and breadcrumb markup; visible article attribution and breadcrumbs
+- [ ] Verify clean canonical URLs, public navigation and search markup
+
 ## Requested monitoring corrections — October 17
 - [x] Prepare long articles before requests — 188 prepared, 170 remain published; trigger covers every writer, source/token checks protect concurrent edits; 17 tests and draft lifecycle verification pass. Preview returns full largest-article HTML in 0.67–0.74s; published runtime needs deployment.
 - [x] Restore fresh public content after static-page hydration (background refresh and route revalidation; browser confirms updated college heading)
