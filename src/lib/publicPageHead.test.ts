@@ -9,3 +9,6 @@ it("keeps public search titles under 60 and descriptions under 155 characters", 
   expect(description && "content" in description ? description.content.length : 1000).toBeLessThan(155);
   expect(result.links[0].href).toBe("https://mbacompass.in/exam/cat");
 });
+it("canonicalises filtered and paginated URLs to the clean tool page", () => {
+  expect(publicPageHead("/cat-score-calculator?q=cat&page=2", "CAT Calculator", "CAT scores").links[0].href).toBe("https://mbacompass.in/tools/cat-score-calculator");
+});

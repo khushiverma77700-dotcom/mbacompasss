@@ -412,9 +412,9 @@ const AuthPage = () => {
               Secure sign-in by <span className="font-semibold text-foreground">MBA Compass</span>
             </p>
             <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <Link to="/page/privacy-policy" className="hover:text-primary hover:underline">Privacy</Link>
+              <Link to="/privacy-policy" className="hover:text-primary hover:underline">Privacy</Link>
               <span>•</span>
-              <Link to="/page/terms-and-conditions" className="hover:text-primary hover:underline">Terms</Link>
+              <Link to="/terms" className="hover:text-primary hover:underline">Terms</Link>
               <span>•</span>
               <Link to="/contact" className="hover:text-primary hover:underline">Contact</Link>
             </div>
