@@ -60,10 +60,23 @@ const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   useEffect(() => {
     let disposed = false;
-    void refreshPublicSnapshot(client).then((refreshed) => {
-      if (refreshed && !disposed) void router.invalidate();
+    let running = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      if (disposed || running) return;
+      running = true;
+      void refreshPublicSnapshot(client).then((refreshed) => {
+        if (refreshed && !disposed) void router.invalidate();
+      }).finally(() => { running = false; });
+    };
+    // Split route components can subscribe after the shared shell's effect.
+    const unsubscribe = client.getQueryCache().subscribe((event) => {
+      if (event.type !== "observerAdded") return;
+      if (timer !== undefined) clearTimeout(timer);
+      timer = setTimeout(refresh, 0);
     });
-    return () => { disposed = true; };
+    timer = setTimeout(refresh, 0);
+    return () => { disposed = true; unsubscribe(); if (timer !== undefined) clearTimeout(timer); };
   }, [client, router, location.pathname]);
   return (
   <>
