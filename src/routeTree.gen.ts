@@ -238,6 +238,13 @@ import { Route as PublicMocksIndexRouteImport } from './routes/_public.mocks.ind
 import { Route as PublicMocksSlugRouteImport } from './routes/_public.mocks.$slug'
 import { Route as PublicMocksThankYouRouteImport } from './routes/_public.mocks.thank-you'
 import { Route as PublicReportIdRouteImport } from './routes/_public.report.$id'
+import { Route as PublicToolsCatScoreCalculatorRouteImport } from './routes/_public.tools.cat-score-calculator'
+import { Route as PublicToolsCollegeFinderRouteImport } from './routes/_public.tools.college-finder'
+import { Route as PublicToolsCollegeShortlisterRouteImport } from './routes/_public.tools.college-shortlister'
+import { Route as PublicToolsIimWaitlistMovementRouteImport } from './routes/_public.tools.iim-waitlist-movement'
+import { Route as PublicToolsPredictorRouteImport } from './routes/_public.tools.predictor'
+import { Route as PublicToolsProfileAnalyzerRouteImport } from './routes/_public.tools.profile-analyzer'
+import { Route as PublicToolsRoiCalculatorRouteImport } from './routes/_public.tools.roi-calculator'
 import { Route as AdminCoachingInstitutesIdRouteImport } from './routes/admin.coaching-institutes_.$id'
 import { Route as AdminCoachingInstitutesBulkCreateRouteImport } from './routes/admin.coaching-institutes_.bulk-create'
 import { Route as AdminCollegeSectionsBulkGenerateRouteImport } from './routes/admin.college-sections_.bulk-generate'
@@ -1492,6 +1499,47 @@ const PublicReportIdRoute = PublicReportIdRouteImport.update({
   path: '/report/$id',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicToolsCatScoreCalculatorRoute =
+  PublicToolsCatScoreCalculatorRouteImport.update({
+    id: '/tools/cat-score-calculator',
+    path: '/tools/cat-score-calculator',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicToolsCollegeFinderRoute =
+  PublicToolsCollegeFinderRouteImport.update({
+    id: '/tools/college-finder',
+    path: '/tools/college-finder',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicToolsCollegeShortlisterRoute =
+  PublicToolsCollegeShortlisterRouteImport.update({
+    id: '/tools/college-shortlister',
+    path: '/tools/college-shortlister',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicToolsIimWaitlistMovementRoute =
+  PublicToolsIimWaitlistMovementRouteImport.update({
+    id: '/tools/iim-waitlist-movement',
+    path: '/tools/iim-waitlist-movement',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicToolsPredictorRoute = PublicToolsPredictorRouteImport.update({
+  id: '/tools/predictor',
+  path: '/tools/predictor',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicToolsProfileAnalyzerRoute =
+  PublicToolsProfileAnalyzerRouteImport.update({
+    id: '/tools/profile-analyzer',
+    path: '/tools/profile-analyzer',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicToolsRoiCalculatorRoute =
+  PublicToolsRoiCalculatorRouteImport.update({
+    id: '/tools/roi-calculator',
+    path: '/tools/roi-calculator',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const AdminCoachingInstitutesIdRoute =
   AdminCoachingInstitutesIdRouteImport.update({
     id: '/coaching-institutes_/$id',
@@ -2244,6 +2292,13 @@ export interface FileRoutesByFullPath {
   '/mocks/$slug': typeof PublicMocksSlugRoute
   '/mocks/thank-you': typeof PublicMocksThankYouRoute
   '/report/$id': typeof PublicReportIdRoute
+  '/tools/cat-score-calculator': typeof PublicToolsCatScoreCalculatorRoute
+  '/tools/college-finder': typeof PublicToolsCollegeFinderRoute
+  '/tools/college-shortlister': typeof PublicToolsCollegeShortlisterRoute
+  '/tools/iim-waitlist-movement': typeof PublicToolsIimWaitlistMovementRoute
+  '/tools/predictor': typeof PublicToolsPredictorRoute
+  '/tools/profile-analyzer': typeof PublicToolsProfileAnalyzerRoute
+  '/tools/roi-calculator': typeof PublicToolsRoiCalculatorRoute
   '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
@@ -2552,6 +2607,13 @@ export interface FileRoutesByTo {
   '/mocks/$slug': typeof PublicMocksSlugRoute
   '/mocks/thank-you': typeof PublicMocksThankYouRoute
   '/report/$id': typeof PublicReportIdRoute
+  '/tools/cat-score-calculator': typeof PublicToolsCatScoreCalculatorRoute
+  '/tools/college-finder': typeof PublicToolsCollegeFinderRoute
+  '/tools/college-shortlister': typeof PublicToolsCollegeShortlisterRoute
+  '/tools/iim-waitlist-movement': typeof PublicToolsIimWaitlistMovementRoute
+  '/tools/predictor': typeof PublicToolsPredictorRoute
+  '/tools/profile-analyzer': typeof PublicToolsProfileAnalyzerRoute
+  '/tools/roi-calculator': typeof PublicToolsRoiCalculatorRoute
   '/admin/coaching-institutes/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
@@ -2880,6 +2942,13 @@ export interface FileRoutesById {
   '/_public/mocks/$slug': typeof PublicMocksSlugRoute
   '/_public/mocks/thank-you': typeof PublicMocksThankYouRoute
   '/_public/report/$id': typeof PublicReportIdRoute
+  '/_public/tools/cat-score-calculator': typeof PublicToolsCatScoreCalculatorRoute
+  '/_public/tools/college-finder': typeof PublicToolsCollegeFinderRoute
+  '/_public/tools/college-shortlister': typeof PublicToolsCollegeShortlisterRoute
+  '/_public/tools/iim-waitlist-movement': typeof PublicToolsIimWaitlistMovementRoute
+  '/_public/tools/predictor': typeof PublicToolsPredictorRoute
+  '/_public/tools/profile-analyzer': typeof PublicToolsProfileAnalyzerRoute
+  '/_public/tools/roi-calculator': typeof PublicToolsRoiCalculatorRoute
   '/admin/coaching-institutes_/$id': typeof AdminCoachingInstitutesIdRoute
   '/admin/coaching-institutes_/bulk-create': typeof AdminCoachingInstitutesBulkCreateRoute
   '/admin/college-sections_/bulk-generate': typeof AdminCollegeSectionsBulkGenerateRoute
@@ -3208,6 +3277,13 @@ export interface FileRouteTypes {
     | '/mocks/$slug'
     | '/mocks/thank-you'
     | '/report/$id'
+    | '/tools/cat-score-calculator'
+    | '/tools/college-finder'
+    | '/tools/college-shortlister'
+    | '/tools/iim-waitlist-movement'
+    | '/tools/predictor'
+    | '/tools/profile-analyzer'
+    | '/tools/roi-calculator'
     | '/admin/coaching-institutes/$id'
     | '/admin/coaching-institutes/bulk-create'
     | '/admin/college-sections/bulk-generate'
@@ -3516,6 +3592,13 @@ export interface FileRouteTypes {
     | '/mocks/$slug'
     | '/mocks/thank-you'
     | '/report/$id'
+    | '/tools/cat-score-calculator'
+    | '/tools/college-finder'
+    | '/tools/college-shortlister'
+    | '/tools/iim-waitlist-movement'
+    | '/tools/predictor'
+    | '/tools/profile-analyzer'
+    | '/tools/roi-calculator'
     | '/admin/coaching-institutes/$id'
     | '/admin/coaching-institutes/bulk-create'
     | '/admin/college-sections/bulk-generate'
@@ -3843,6 +3926,13 @@ export interface FileRouteTypes {
     | '/_public/mocks/$slug'
     | '/_public/mocks/thank-you'
     | '/_public/report/$id'
+    | '/_public/tools/cat-score-calculator'
+    | '/_public/tools/college-finder'
+    | '/_public/tools/college-shortlister'
+    | '/_public/tools/iim-waitlist-movement'
+    | '/_public/tools/predictor'
+    | '/_public/tools/profile-analyzer'
+    | '/_public/tools/roi-calculator'
     | '/admin/coaching-institutes_/$id'
     | '/admin/coaching-institutes_/bulk-create'
     | '/admin/college-sections_/bulk-generate'
@@ -5572,6 +5662,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicReportIdRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/tools/cat-score-calculator': {
+      id: '/_public/tools/cat-score-calculator'
+      path: '/tools/cat-score-calculator'
+      fullPath: '/tools/cat-score-calculator'
+      preLoaderRoute: typeof PublicToolsCatScoreCalculatorRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/tools/college-finder': {
+      id: '/_public/tools/college-finder'
+      path: '/tools/college-finder'
+      fullPath: '/tools/college-finder'
+      preLoaderRoute: typeof PublicToolsCollegeFinderRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/tools/college-shortlister': {
+      id: '/_public/tools/college-shortlister'
+      path: '/tools/college-shortlister'
+      fullPath: '/tools/college-shortlister'
+      preLoaderRoute: typeof PublicToolsCollegeShortlisterRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/tools/iim-waitlist-movement': {
+      id: '/_public/tools/iim-waitlist-movement'
+      path: '/tools/iim-waitlist-movement'
+      fullPath: '/tools/iim-waitlist-movement'
+      preLoaderRoute: typeof PublicToolsIimWaitlistMovementRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/tools/predictor': {
+      id: '/_public/tools/predictor'
+      path: '/tools/predictor'
+      fullPath: '/tools/predictor'
+      preLoaderRoute: typeof PublicToolsPredictorRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/tools/profile-analyzer': {
+      id: '/_public/tools/profile-analyzer'
+      path: '/tools/profile-analyzer'
+      fullPath: '/tools/profile-analyzer'
+      preLoaderRoute: typeof PublicToolsProfileAnalyzerRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/tools/roi-calculator': {
+      id: '/_public/tools/roi-calculator'
+      path: '/tools/roi-calculator'
+      fullPath: '/tools/roi-calculator'
+      preLoaderRoute: typeof PublicToolsRoiCalculatorRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/admin/coaching-institutes_/$id': {
       id: '/admin/coaching-institutes_/$id'
       path: '/coaching-institutes/$id'
@@ -6441,6 +6580,13 @@ interface PublicRouteChildren {
   PublicMbaApplicationCategoryRoute: typeof PublicMbaApplicationCategoryRoute
   PublicMbaApplicationMyApplicationsRoute: typeof PublicMbaApplicationMyApplicationsRoute
   PublicReportIdRoute: typeof PublicReportIdRoute
+  PublicToolsCatScoreCalculatorRoute: typeof PublicToolsCatScoreCalculatorRoute
+  PublicToolsCollegeFinderRoute: typeof PublicToolsCollegeFinderRoute
+  PublicToolsCollegeShortlisterRoute: typeof PublicToolsCollegeShortlisterRoute
+  PublicToolsIimWaitlistMovementRoute: typeof PublicToolsIimWaitlistMovementRoute
+  PublicToolsPredictorRoute: typeof PublicToolsPredictorRoute
+  PublicToolsProfileAnalyzerRoute: typeof PublicToolsProfileAnalyzerRoute
+  PublicToolsRoiCalculatorRoute: typeof PublicToolsRoiCalculatorRoute
   PublicMbaApplicationIndexRoute: typeof PublicMbaApplicationIndexRoute
   PublicMbaApplicationCollegeSlugRoute: typeof PublicMbaApplicationCollegeSlugRoute
 }
@@ -6493,6 +6639,13 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicMbaApplicationMyApplicationsRoute:
     PublicMbaApplicationMyApplicationsRoute,
   PublicReportIdRoute: PublicReportIdRoute,
+  PublicToolsCatScoreCalculatorRoute: PublicToolsCatScoreCalculatorRoute,
+  PublicToolsCollegeFinderRoute: PublicToolsCollegeFinderRoute,
+  PublicToolsCollegeShortlisterRoute: PublicToolsCollegeShortlisterRoute,
+  PublicToolsIimWaitlistMovementRoute: PublicToolsIimWaitlistMovementRoute,
+  PublicToolsPredictorRoute: PublicToolsPredictorRoute,
+  PublicToolsProfileAnalyzerRoute: PublicToolsProfileAnalyzerRoute,
+  PublicToolsRoiCalculatorRoute: PublicToolsRoiCalculatorRoute,
   PublicMbaApplicationIndexRoute: PublicMbaApplicationIndexRoute,
   PublicMbaApplicationCollegeSlugRoute: PublicMbaApplicationCollegeSlugRoute,
 }
