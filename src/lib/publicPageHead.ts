@@ -1,6 +1,5 @@
 import { canonicalUrl } from "./canonical";
 import { fitTitle } from "./collegeSeo";
-import { cdnImage } from "./imageTransform";
 
 export const cleanSeoText = (value: unknown, max: number): string => {
   const text = String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -13,7 +12,7 @@ export function publicPageHead(path: string, rawTitle: string, rawDescription: s
   const title = fitTitle(rawTitle, 59);
   const description = cleanSeoText(rawDescription, 154);
   const url = canonicalUrl(path);
-  const validImage = image?.startsWith("https://") ? cdnImage(image, { width: 1200, height: 630, quality: 75 }) : undefined;
+  const validImage = image?.startsWith("https://") ? image : undefined;
   return {
     meta: [
       { title },

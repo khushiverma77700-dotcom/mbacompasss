@@ -64,7 +64,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
       <div className="container mx-auto flex items-center justify-between h-16 px-4 gap-3">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={mbahubLogo} alt="MBA Compass Logo" width={36} height={36} className="w-9 h-9 rounded-lg object-contain"  loading="eager" decoding="async" />
+          <img src={mbahubLogo} alt="MBA Compass Logo" width={36} height={36} className="w-9 h-9 rounded-lg object-contain" loading="eager" fetchPriority="low" decoding="async" />
           <div className="flex flex-col leading-tight">
             <span className="font-heading font-bold text-xl text-foreground">
               {brandHasCompass ? (

@@ -1,10 +1,12 @@
 # Roadmap
 
 ## Core Web Vitals and homepage quality — October 17
-- [ ] Measure current delivery/bundle baseline and implement safe image, font and deferred-script improvements
-- [ ] Remove unsupported homepage claims, comparison badge typo and independent college statistics
-- [ ] Share dynamic upcoming-exam filtering and current-month timeline rules, with tests
-- [ ] Verify homepage on mobile/desktop and report bundle/performance measurements honestly
+- [x] Measure live baseline: Lighthouse mobile Performance 37, SEO 100, LCP 8.03s, CLS 0; homepage script/preload inventory 1,254,786 raw / 392,562 gzip bytes
+- [x] Convert 21 local images to CDN WebP; WOFF2 fonts with at most two weights; defer public ads/enrichment and analytics until interaction; reduce unused font/motion/dead homepage code
+- [x] Remove unsupported counts/ratings and comparison badge; share real college fees, placements and original-preferred cutoffs (IIM Ahmedabad fee ₹27,50,000 verified on home/detail)
+- [x] Share IST upcoming-exam filtering and current-month timeline rules; 11 focused regression tests pass; phone/desktop navigation, no overflow/errors, all homepage images dimensioned
+- [ ] Confirm after-publication bundle sizes and Lighthouse targets — production output unavailable in preview; no publish requested. Production bundle-report.json records raw/gzip chunks automatically
+- [ ] Convert remaining legacy database/media images and audit every route — current work covers local city imagery, shared SmartImage and main homepage/blog/article/college image paths, not the entire stored library
 
 ## Public structure and structured data — October 17
 - [x] Standardise college/exam/tool URLs with permanent legacy redirects; audit literal internal navigation, preserve valid student routes
