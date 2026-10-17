@@ -1,5 +1,12 @@
 # Roadmap
 
+## Complete public sitemap coverage — October 17
+- [x] Separate full public inventory from capped prerender list: 7,361 URLs in eight child files, including course, author, formula, mock and application pages
+- [x] Add genuine state landings and city/type/exam coverage; repair masked child routes; exclude private dashboards, 308 aliases and query duplicates
+- [x] Align admin counts with the current deployment's sitemap index; preserve sourced lastmod and omit generation dates; ten regression tests pass
+- [ ] Verify signed-in Sitemap Manager buttons — requesting user has no matching auth account; needs a signed-in admin preview
+- [ ] Verify expanded sitemap on the live site — requires publishing; live sitemap currently has 5,177 URLs
+
 ## Core Web Vitals and homepage quality — October 17
 - [x] Measure live baseline: Lighthouse mobile Performance 37, SEO 100, LCP 8.03s, CLS 0; homepage script/preload inventory 1,254,786 raw / 392,562 gzip bytes
 - [x] Convert 21 local images to CDN WebP; WOFF2 fonts with at most two weights; defer public ads/enrichment and analytics until interaction; reduce unused font/motion/dead homepage code

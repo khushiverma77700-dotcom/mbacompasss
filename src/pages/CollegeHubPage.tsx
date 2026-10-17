@@ -11,13 +11,14 @@
  * Google sees concentrated, topical authority instead of one giant listing.
  */
 import { useMemo } from "react";
-import { Link, useParams, Navigate } from "@/lib/router-compat";
+import { Link, useParams } from "@/lib/router-compat";
+import { collegeLocationSlug, locationColleges } from "@/lib/collegeHub";
 import { Building2, MapPin, GraduationCap, ChevronRight, Award } from "lucide-react";
 import { useColleges } from "@/hooks/useInstitutes";
 import SEOHead from "@/components/SEOHead";
 import CollegeListingCard from "@/components/CollegeListingCard";
 
-type HubKind = "type" | "city" | "exam";
+type HubKind = "type" | "city" | "state" | "exam";
 
 const TYPE_HUBS: Record<string, { label: string; title: string; match: (c: any) => boolean; intro: string }> = {
   iim: {
@@ -124,15 +125,15 @@ const CITY_INTROS: Record<string, string> = {
   chandigarh: "Chandigarh and the surrounding Tricity region (Mohali, Panchkula) host University Business School (UBS) Panjab University, Chitkara Business School, Chandigarh University and PEC. The list below shows fees, entrance exam, intake and recruiter mix for every Tricity MBA programme.",
 };
 
-const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const slugify = collegeLocationSlug;
 
 interface Props {
   kind: HubKind;
 }
 
 const CollegeHubPage = ({ kind }: Props) => {
-  const params = useParams<{ typeSlug?: string; citySlug?: string; examSlug?: string }>();
-  const slug = (params.typeSlug || params.citySlug || params.examSlug || "").toLowerCase();
+  const params = useParams<{ typeSlug?: string; citySlug?: string; stateSlug?: string; examSlug?: string }>();
+  const slug = (params.typeSlug || params.citySlug || params.stateSlug || params.examSlug || "").toLowerCase();
   const { data: colleges = [], isLoading } = useColleges();
 
   const { title, h1, intro, filtered } = useMemo(() => {
@@ -147,11 +148,11 @@ const CollegeHubPage = ({ kind }: Props) => {
         filtered: list,
       };
     }
-    if (kind === "city") {
+    if (kind === "city" || kind === "state") {
       const city = slug.replace(/-/g, " ");
-      const list = colleges.filter((c: any) => slugify(c.city || "") === slug);
-      const label = list[0]?.city || (city.charAt(0).toUpperCase() + city.slice(1));
-      const editorial = CITY_INTROS[slug];
+      const list = locationColleges(colleges, kind, slug);
+      const label = list[0]?.[kind] || (city.charAt(0).toUpperCase() + city.slice(1));
+      const editorial = kind === "city" ? CITY_INTROS[slug] : undefined;
       return {
         title: `MBA Colleges in ${label} 2026 — Rankings, Fees, Cut-offs & Placements | MBA Compass`,
         h1: `MBA Colleges in ${label}`,
@@ -175,12 +176,7 @@ const CollegeHubPage = ({ kind }: Props) => {
     };
   }, [kind, slug, colleges]);
 
-  if (!isLoading && filtered.length === 0 && (kind !== "city")) {
-    // Unknown type/exam slug → real 404 (noindex)
-    return <Navigate to="/not-found" replace />;
-  }
-
-  const canonical = `https://mbacompass.in/colleges/${kind === "type" ? "type" : kind === "city" ? "by-city" : "by-exam"}/${slug}`;
+  const canonical = `https://mbacompass.in/colleges/${kind === "type" ? "type" : kind === "city" ? "by-city" : kind === "state" ? "by-state" : "by-exam"}/${slug}`;
 
   const jsonLd = useMemo(
     () => [
@@ -238,7 +234,7 @@ const CollegeHubPage = ({ kind }: Props) => {
         {isLoading ? (
           <div className="text-muted-foreground">Loading colleges…</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
             {filtered.map((c: any, i: number) => (
               <CollegeListingCard key={c.id} college={c} index={i} rank={i + 1} />
             ))}
@@ -280,6 +276,14 @@ const CollegeHubPage = ({ kind }: Props) => {
                   MBA in {city}
                 </Link>
               ))}
+            </div>
+          </section>
+        )}
+        {kind === "state" && (
+          <section className="mt-12 border-t border-border pt-8">
+            <h2 className="text-2xl font-bold mb-6">Explore cities in {filtered[0]?.state}</h2>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              {[...new Set(filtered.map(college => college.city).filter(Boolean))].map(city => <Link key={city} to={`/colleges/by-city/${slugify(city)}`} className="text-primary hover:underline">MBA colleges in {city}</Link>)}
             </div>
           </section>
         )}

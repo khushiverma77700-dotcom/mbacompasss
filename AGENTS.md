@@ -20,9 +20,9 @@
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Editorial readability uses a linear block scan and shared allowlisted sanitization to prevent hangs and fact mutation. Read src/lib/AGENTS.md for article preparation rules.
-- Native TanStack prerenders validated public manifests; other anonymous pages use build-keyed HTML caching. Never snapshot private data. Refresh hydrated public snapshots once when observers mount, then revalidate route heads, to avoid stale visitor content.
+- Prerender capped public manifests; sitemaps use full canonical inventory. Never snapshot private data. Refresh hydrated snapshots and heads once on mount.
 - Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
-- College SEO uses collegeSeo.ts and loader 301s; collegeSectionData normalizes optional lists to protect public HTML.
+- College SEO uses collegeSeo.ts and loader 301s; collegeSectionData normalizes optional lists. Directory index leaves and un-nested institute course routes prevent parent pages masking children.
 - Homepage facts share college records and original-preferred active sections; no duplicate financial/cutoff fallbacks. Calendar rules use IST.
 - Production builds emit raw/gzip client sizes in bundle-report.json for comparable measurement.

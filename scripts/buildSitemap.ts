@@ -22,5 +22,5 @@ export function writeBuildSitemaps(pages: PublicPage[], directory = "public") {
   const files = buildSitemaps(pages);
   for (const name of readdirSync(output)) if (/^sitemap-\d+\.xml$/.test(name) && !(name in files)) unlinkSync(resolve(output, name));
   for (const [name, xml] of Object.entries(files)) writeFileSync(resolve(output, name), xml);
-  console.info(`[sitemap] ${pages.length} prerendered URLs, ${Object.keys(files).length} files`);
+  console.info(`[sitemap] ${pages.length} canonical public URLs, ${Object.keys(files).length} files`);
 }

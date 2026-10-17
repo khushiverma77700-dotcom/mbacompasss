@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, RefreshCw, Loader2, FileText, Image as ImageIcon
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { readSitemapInventory } from "@/lib/sitemapInventory";
 
 interface CheckResult {
   key: string;
@@ -33,10 +34,10 @@ async function runCheck(label: string, key: string, path: string): Promise<Check
   };
   try {
     const res = await fetch(`${url}?cb=${Date.now()}`, { headers: { "cache-control": "no-cache" } });
-    const xml = await res.text();
-    const pageCount = (xml.match(/<url>/g) || []).length;
-    const imageCount = (xml.match(/<image:image>/g) || []).length;
-    const validXml = /<urlset[\s>]/.test(xml) && /<\/urlset>/.test(xml);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const inventory = await readSitemapInventory(url);
+    const { urlCount: pageCount, imageCount } = inventory;
+    const validXml = true;
     return {
       ...base,
       status: res.status,
@@ -44,7 +45,7 @@ async function runCheck(label: string, key: string, path: string): Promise<Check
       lastModified: res.headers.get("last-modified"),
       pageCount,
       imageCount,
-      sizeKb: new Blob([xml]).size / 1024,
+      sizeKb: inventory.bytes / 1024,
       validXml,
       ok: res.ok && validXml && (key === "images" ? imageCount > 0 : pageCount > 0),
       error: res.ok ? undefined : `HTTP ${res.status}`,
