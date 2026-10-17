@@ -4,7 +4,7 @@ import MockTestIntroPage from "@/pages/mocks/MockTestIntroPage";
 import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 
 export const Route = createFileRoute("/_public/mocks/$slug")({
-  head: ({ params }) => publicPageHead(`/mocks/${params.slug}`, `${params.slug} | MBA Compass`, "Explore slug information, guides and resources on MBA Compass."),
+  head: ({ params }) => publicPageHead(`/mocks/${params.slug}`, `${params.slug} | MBA Compass`, "Explore MBA colleges, entrance exams and preparation resources on MBA Compass."),
   component: () => <MockTestIntroPage />,
   pendingComponent: PublicPageSkeleton,
 });

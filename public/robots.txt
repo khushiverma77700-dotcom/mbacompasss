@@ -168,15 +168,6 @@ Disallow: /*?*search=
 User-agent: CCBot
 Allow: /
 
-
-
-
-
-
-
-
-
-
 Disallow: /auth
 Disallow: /admin
 Disallow: /student

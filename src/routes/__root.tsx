@@ -144,9 +144,9 @@ const ORG_LD = JSON.stringify({
   url: "https://mbacompass.in",
   logo: {
     "@type": "ImageObject",
-    url: "https://mbacompass.in/favicon.png",
+    url: "https://mbacompass.in/brand-logo.webp",
   },
-  image: "https://mbacompass.in/favicon.png",
+  image: "https://mbacompass.in/brand-logo.webp",
   email: "suyash@bschoolbuzz.in",
   telephone: "+91-76681-29226",
   description:
