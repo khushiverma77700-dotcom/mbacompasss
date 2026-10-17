@@ -1,5 +1,11 @@
 # Roadmap
 
+## Core Web Vitals and homepage quality — October 17
+- [ ] Measure current delivery/bundle baseline and implement safe image, font and deferred-script improvements
+- [ ] Remove unsupported homepage claims, comparison badge typo and independent college statistics
+- [ ] Share dynamic upcoming-exam filtering and current-month timeline rules, with tests
+- [ ] Verify homepage on mobile/desktop and report bundle/performance measurements honestly
+
 ## Public structure and structured data — October 17
 - [x] Standardise college/exam/tool URLs with permanent legacy redirects; audit literal internal navigation, preserve valid student routes
 - [x] Verify custom missing-page HTTP 404 responses for unknown pages and unknown college records
