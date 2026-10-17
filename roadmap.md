@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Requested monitoring corrections — October 17
-- [ ] Prepare long articles before requests — approval needed for storage, writer and backfill changes; uncached enhancement measured at 64 ms locally
+- [x] Prepare long articles before requests — 188 prepared, 170 remain published; trigger covers every writer, source/token checks protect concurrent edits; 17 tests and draft lifecycle verification pass. Preview returns full largest-article HTML in 0.67–0.74s; published runtime needs deployment.
 - [x] Restore fresh public content after static-page hydration (background refresh and route revalidation; browser confirms updated college heading)
 - [x] Preserve Smart-mode ad end dates (five schedule tests pass); signed-in save verification awaits a preview account
 

@@ -180,7 +180,7 @@ const ArticlePage = () => {
     return <NotFound />;
   }
 
-  const renderContent = (content: string) => (
+  const renderContent = () => (
     <div
       className="ai-content max-w-none text-foreground"
       dangerouslySetInnerHTML={{ __html: display?.html ?? "" }}
@@ -315,7 +315,7 @@ const ArticlePage = () => {
               </div>
 
               <div ref={contentRef}>
-                {article.content ? renderContent(article.content) : (
+                {article.content ? renderContent() : (
                   <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
                 )}
               </div>
