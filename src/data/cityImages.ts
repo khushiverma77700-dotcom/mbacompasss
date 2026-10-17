@@ -2,26 +2,46 @@
 // Used across the platform for location-based hero backgrounds
 // All images are bundled locally for reliability
 
-import delhiImg from "@/assets/cities/delhi.jpg";
-import hyderabadImg from "@/assets/cities/hyderabad.jpg";
-import bangaloreImg from "@/assets/cities/bangalore.jpg";
-import puneImg from "@/assets/cities/pune.jpg";
-import ahmedabadImg from "@/assets/cities/ahmedabad.jpg";
-import bhopalImg from "@/assets/cities/bhopal.jpg";
-import noidaImg from "@/assets/cities/noida.jpg";
-import gurgaonImg from "@/assets/cities/gurgaon.jpg";
-import nagpurImg from "@/assets/cities/nagpur.jpg";
-import indoreImg from "@/assets/cities/indore.jpg";
-import shimlaImg from "@/assets/cities/shimla.jpg";
-import guwahatiImg from "@/assets/cities/guwahati.jpg";
-import dehradunImg from "@/assets/cities/dehradun.jpg";
-import bhubaneswarImg from "@/assets/cities/bhubaneswar.jpg";
-import suratImg from "@/assets/cities/surat.jpg";
-import vadodaraImg from "@/assets/cities/vadodara.jpg";
-import patnaImg from "@/assets/cities/patna.jpg";
-import ranchiImg from "@/assets/cities/ranchi.jpg";
-import raipurImg from "@/assets/cities/raipur.jpg";
-import defaultCampusImg from "@/assets/cities/default-campus.jpg";
+import delhiImgAsset from "@/assets/cities/delhi.webp.asset.json";
+const delhiImg = delhiImgAsset.url;
+import hyderabadImgAsset from "@/assets/cities/hyderabad.webp.asset.json";
+const hyderabadImg = hyderabadImgAsset.url;
+import bangaloreImgAsset from "@/assets/cities/bangalore.webp.asset.json";
+const bangaloreImg = bangaloreImgAsset.url;
+import puneImgAsset from "@/assets/cities/pune.webp.asset.json";
+const puneImg = puneImgAsset.url;
+import ahmedabadImgAsset from "@/assets/cities/ahmedabad.webp.asset.json";
+const ahmedabadImg = ahmedabadImgAsset.url;
+import bhopalImgAsset from "@/assets/cities/bhopal.webp.asset.json";
+const bhopalImg = bhopalImgAsset.url;
+import noidaImgAsset from "@/assets/cities/noida.webp.asset.json";
+const noidaImg = noidaImgAsset.url;
+import gurgaonImgAsset from "@/assets/cities/gurgaon.webp.asset.json";
+const gurgaonImg = gurgaonImgAsset.url;
+import nagpurImgAsset from "@/assets/cities/nagpur.webp.asset.json";
+const nagpurImg = nagpurImgAsset.url;
+import indoreImgAsset from "@/assets/cities/indore.webp.asset.json";
+const indoreImg = indoreImgAsset.url;
+import shimlaImgAsset from "@/assets/cities/shimla.webp.asset.json";
+const shimlaImg = shimlaImgAsset.url;
+import guwahatiImgAsset from "@/assets/cities/guwahati.webp.asset.json";
+const guwahatiImg = guwahatiImgAsset.url;
+import dehradunImgAsset from "@/assets/cities/dehradun.webp.asset.json";
+const dehradunImg = dehradunImgAsset.url;
+import bhubaneswarImgAsset from "@/assets/cities/bhubaneswar.webp.asset.json";
+const bhubaneswarImg = bhubaneswarImgAsset.url;
+import suratImgAsset from "@/assets/cities/surat.webp.asset.json";
+const suratImg = suratImgAsset.url;
+import vadodaraImgAsset from "@/assets/cities/vadodara.webp.asset.json";
+const vadodaraImg = vadodaraImgAsset.url;
+import patnaImgAsset from "@/assets/cities/patna.webp.asset.json";
+const patnaImg = patnaImgAsset.url;
+import ranchiImgAsset from "@/assets/cities/ranchi.webp.asset.json";
+const ranchiImg = ranchiImgAsset.url;
+import raipurImgAsset from "@/assets/cities/raipur.webp.asset.json";
+const raipurImg = raipurImgAsset.url;
+import defaultCampusImgAsset from "@/assets/cities/default-campus.webp.asset.json";
+const defaultCampusImg = defaultCampusImgAsset.url;
 
 // Working Unsplash URLs (verified 200 OK)
 const UNSPLASH_MUMBAI = "https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?w=1200&h=600&fit=crop&q=80"; // Gateway of India

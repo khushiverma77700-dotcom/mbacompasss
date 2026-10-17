@@ -34,12 +34,11 @@ const NewsSection = lazy(() => import("@/components/NewsSection"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const MBALandscapeSection = lazy(() => import("@/components/MBALandscapeSection"));
-const ExamCutoffsTable = lazy(() => import("@/components/ExamCutoffsTable"));
+const HomeCollegeFacts = lazy(() => import("@/components/HomeCollegeFacts"));
 const PlacementsBySectorSection = lazy(() => import("@/components/PlacementsBySectorSection"));
 const MBAJourneyStrip = lazy(() => import("@/components/MBAJourneyStrip"));
 const FreeToolsShowcase = lazy(() => import("@/components/FreeToolsShowcase"));
 const CollegeApplicationDeadlines = lazy(() => import("@/components/CollegeApplicationDeadlines"));
-const ROIComparisonTable = lazy(() => import("@/components/ROIComparisonTable"));
 const FreebiesPreview = lazy(() => import("@/components/FreebiesPreview"));
 const HomeAdmissionTimeline = lazy(() => import("@/components/HomeAdmissionTimeline"));
 const HomePersonaPaths = lazy(() => import("@/components/HomePersonaPaths"));
@@ -238,9 +237,9 @@ const Index = () => {
         <Deferred height={520}><MBALandscapeSection /></Deferred>
         <Deferred height={360}><PopularExamsSection /></Deferred>
         <Deferred height={700} id="home-timeline"><HomeAdmissionTimeline /></Deferred>
-        <Deferred height={640}><ExamCutoffsTable /></Deferred>
+        <Deferred height={640}><HomeCollegeFacts cutoffs /></Deferred>
         <Deferred height={640} id="home-salary"><HomeSalaryInsights /></Deferred>
-        <Deferred height={520}><ROIComparisonTable /></Deferred>
+        <Deferred height={520}><HomeCollegeFacts /></Deferred>
         <Deferred height={480}><MBAJourneyStrip /></Deferred>
         <Deferred height={520}><PlacementsBySectorSection /></Deferred>
         <Deferred height={560} id="home-specializations"><HomeSpecializations /></Deferred>

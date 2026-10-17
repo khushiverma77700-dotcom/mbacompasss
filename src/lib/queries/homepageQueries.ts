@@ -1,20 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { parse, isValid } from "date-fns";
 import { upcomingHomepageExams } from "@/lib/homepageCalendar";
 import { homeCollegeFactsQuery } from "./homeCollegeFacts";
-
-function parseExamDate(value: string | null): Date | null {
-  if (!value) return null;
-  const direct = new Date(value);
-  if (isValid(direct) && direct.getFullYear() > 2000) return direct;
-  for (const format of ["dd MMM yyyy", "MMM dd, yyyy", "dd MMMM yyyy", "MMMM dd, yyyy", "yyyy-MM-dd"]) {
-    const date = parse(value, format, new Date());
-    if (isValid(date) && date.getFullYear() > 2000) return date;
-  }
-  return null;
-}
 
 export const homeFreebiesQuery = queryOptions({
   queryKey: ["home-freebies"],
