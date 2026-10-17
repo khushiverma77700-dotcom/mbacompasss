@@ -16593,6 +16593,10 @@ export type Database = {
           total: number
         }[]
       }
+      complete_article_display: {
+        Args: { _article_id: string; _display: Json; _token: string }
+        Returns: boolean
+      }
       cta_analytics_export: {
         Args: {
           p_category?: string
