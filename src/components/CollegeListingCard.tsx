@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { shortStat, shortLabel, clipText, numericStat } from "@/lib/textClip";
+import { formatMoney } from "@/lib/collegeMetrics";
 
 interface Props {
   college: any;
@@ -143,13 +144,13 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
                 <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <IndianRupee className="w-2.5 h-2.5" /> Total Fees
                 </div>
-                <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.fees)}</p>
+                <p className="text-sm font-extrabold text-foreground leading-tight">{formatMoney(college.fees) || "—"}</p>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                   <TrendingUp className="w-2.5 h-2.5" /> Avg CTC
                 </div>
-                <p className="text-sm font-extrabold text-foreground leading-tight">{numericStat(college.placement_avg)}</p>
+                <p className="text-sm font-extrabold text-foreground leading-tight">{formatMoney(college.placement_avg) || "—"}</p>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
