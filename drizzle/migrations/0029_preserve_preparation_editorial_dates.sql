@@ -1,0 +1,1 @@
+CREATE OR REPLACE FUNCTION public.preserve_article_display_timestamp() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$ BEGIN IF (to_jsonb(NEW)-'prepared_display'-'updated_at'-'content_chars')=(to_jsonb(OLD)-'prepared_display'-'updated_at'-'content_chars') THEN NEW.updated_at=OLD.updated_at; END IF; RETURN NEW; END $$;
