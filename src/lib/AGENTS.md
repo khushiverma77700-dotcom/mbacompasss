@@ -3,6 +3,6 @@
 - Prepared HTML uses the same allowlisted sanitizer as reader fallback; never accept prepared HTML supplied by ordinary article editors.
 - Article preparation preserves draft visibility and editorial timestamps; reading statistics are prepared once to avoid repeated full-body processing.
 - Public URL aliases normalise through publicPaths and use permanent route redirects; keep regional college listings distinct and valid student LMS navigation intact.
-- Page sitemaps are written by the build from the same validated public prerender manifest; never replace them with a separately fetched legacy sitemap or add generation-time lastmod.
+- Build sitemaps cover the complete canonical public inventory, independently of prerender caps; admin reads the same sitemap index. Exclude aliases/private URLs and never add generation-time lastmod.
 - Route heads own search metadata and primary schemas; visible breadcrumbs and legacy SEO injection omit schemas already emitted by route heads.
 - Visible article FAQ extraction uses the linear editorialFaq parser; never invent missing answers.

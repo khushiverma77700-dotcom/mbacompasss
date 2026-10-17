@@ -253,7 +253,7 @@ export default function MockBundleDetailPage() {
       <SEOHead
         title={`${bundle.name} | MBA Compass`}
         description={bundle.description ?? `${bundle.name} — complete prep course with mocks, AI analysis and 24×7 support.`}
-        canonical={`https://mbacompass.in/courses/${bundle.slug}`}
+        canonical={`https://mbacompass.in/bundles/${bundle.slug}`}
         ogType="product"
         ogImage={bundle.cover_image_url || undefined}
       />
