@@ -2,6 +2,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { parse, isValid } from "date-fns";
+import { upcomingHomepageExams } from "@/lib/homepageCalendar";
+import { homeCollegeFactsQuery } from "./homeCollegeFacts";
 
 function parseExamDate(value: string | null): Date | null {
   if (!value) return null;
@@ -28,19 +30,11 @@ export const homeFreebiesQuery = queryOptions({
 /** Only the public editorial queries displayed on the home page. */
 export async function prefetchHomepage(qc: QueryClient) {
   await Promise.all([
+    qc.ensureQueryData(homeCollegeFactsQuery),
     qc.ensureQueryData({ queryKey: ["popular-exams-countdown"], queryFn: async () => {
       const { data, error } = await supabase.from("exams").select("name, slug, full_name, exam_date, registration_deadline, conducting_body");
       if (error) throw error;
-      const now = Date.now();
-      return (data || []).filter((row) => row.name?.trim()).sort((a, b) => {
-        const da = parseExamDate(a.exam_date), db = parseExamDate(b.exam_date);
-        const af = da && da.getTime() >= now - 86400000, bf = db && db.getTime() >= now - 86400000;
-        if (af && bf && da && db) return da.getTime() - db.getTime();
-        if (af) return -1;
-        if (bf) return 1;
-        if (da && db) return da.getTime() - db.getTime();
-        return da ? -1 : db ? 1 : 0;
-      }).slice(0, 6);
+      return upcomingHomepageExams(data || [], "exam").slice(0, 6);
     }}),
     qc.ensureQueryData({ queryKey: ["testimonials"], queryFn: async () => {
       const { data, error } = await supabase.from("testimonials").select("*").eq("active", true).order("sort_order");
@@ -84,9 +78,9 @@ export async function prefetchHomepage(qc: QueryClient) {
     }})),
     qc.ensureQueryData({ queryKey: ["exam-deadlines-ticker"], queryFn: async () => {
       const { data, error } = await supabase.from("exams").select("name, slug, registration_deadline, exam_date, conducting_body")
-        .order("registration_deadline").limit(6);
+        .order("registration_deadline");
       if (error) throw error;
-      return data || [];
+      return upcomingHomepageExams(data || [], "registration").slice(0, 6);
     }}),
     qc.ensureQueryData({ queryKey: ["homepage-college-application-deadlines"], queryFn: async () => {
       const { data, error } = await supabase.from("application_trackers")
