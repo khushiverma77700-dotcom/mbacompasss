@@ -1,4 +1,6 @@
 import { Link } from "@/lib/router-compat";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles,
@@ -25,6 +27,13 @@ const DELIVERABLES = [
 ];
 
 export default function MocksBannerSection() {
+  const { data: counts } = useQuery({ queryKey: ["mocks-banner-counts"], staleTime: 600_000, queryFn: async () => {
+    const [m, c] = await Promise.all([
+      supabase.from("mock_tests").select("id", { count: "exact", head: true }).eq("is_published", true),
+      supabase.from("colleges").select("id", { count: "exact", head: true }),
+    ]);
+    return { mocks: m.count ?? 0, colleges: c.count ?? 0 };
+  } });
   return (
     <section className="relative py-16 md:py-24 overflow-hidden max-w-full bg-gradient-to-b from-white via-sky-50/40 to-white">
       {/* Decorative background — pointer-events-none so nothing blocks clicks */}
@@ -152,9 +161,9 @@ export default function MocksBannerSection() {
         <div className="mt-10 rounded-2xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 p-1 shadow-xl shadow-sky-200/60">
           <div className="rounded-[14px] bg-white px-5 py-5 md:px-8 md:py-6 flex flex-col md:flex-row items-center gap-5 md:gap-8">
             <div className="flex-1 grid grid-cols-3 gap-4 md:gap-8 w-full">
-              <Trust label="Aspirants" value="50,000+" />
-              <Trust label="Mocks live" value="180+" />
-              <Trust label="AI accuracy" value="97.2%" />
+              <Trust label="Published mocks" value={counts?.mocks ? counts.mocks.toLocaleString("en-IN") : "—"} />
+              <Trust label="Colleges listed" value={counts?.colleges ? counts.colleges.toLocaleString("en-IN") : "—"} />
+              <Trust label="Exams covered" value="CAT · XAT" />
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
               <Button asChild size="lg" className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-lg">

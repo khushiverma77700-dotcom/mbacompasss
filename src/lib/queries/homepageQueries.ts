@@ -81,7 +81,7 @@ export async function prefetchHomepage(qc: QueryClient) {
       return (data || []).filter((row) => row.name?.trim() && row.slug?.trim());
     }}),
   ]);
-  const keys = ["hero", "stats", "faqs", "how_it_works", "why_choose_us", "footer", "header"];
+  const keys = ["hero", "faqs", "how_it_works", "why_choose_us", "footer", "header"];
   const { data, error } = await supabase.from("site_settings").select("key,value").in("key", keys);
   if (error) throw error;
   for (const key of keys) qc.setQueryData(["site_settings", key], data?.find((row) => row.key === key)?.value ?? null);
