@@ -1,0 +1,4 @@
+- Article display preparation uses source fingerprints and a versioned server-managed envelope; stale envelopes fall back safely so edits never show older prepared text.
+- Database content-change triggers enqueue and wake preparation for every writer, including imports and AI drafts; completion checks the locked job token and original content so concurrent edits win.
+- Prepared HTML uses the same allowlisted sanitizer as reader fallback; never accept prepared HTML supplied by ordinary article editors.
+- Article preparation preserves draft visibility and editorial timestamps; reading statistics are prepared once to avoid repeated full-body processing.

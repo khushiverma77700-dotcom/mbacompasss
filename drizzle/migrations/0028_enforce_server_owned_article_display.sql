@@ -1,0 +1,2 @@
+DROP TRIGGER invalidate_article_display ON public.articles;
+CREATE TRIGGER invalidate_article_display BEFORE INSERT OR UPDATE OF content,prepared_display ON public.articles FOR EACH ROW EXECUTE FUNCTION public.invalidate_article_display();
