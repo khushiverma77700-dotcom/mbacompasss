@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { blogArticlesQuery } from "@/lib/queries/listingQueries";
+import { cdnImage } from "@/lib/imageTransform";
 
 import SEOHead from "@/components/SEOHead";
 import { buildWebPageSchema, buildBreadcrumbSchema, buildPageGraph } from "@/lib/aeoSchema";
@@ -222,16 +223,11 @@ const BlogPage = () => {
                       {(featuredArticle.image_url || featuredArticle.banner_url) ? (
                         <>
                           <img
-                            src={(featuredArticle.image_url || featuredArticle.banner_url)!}
-                            alt=""
-                            aria-hidden
-                            className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-40"
-                          />
-                          <img
-                            src={(featuredArticle.image_url || featuredArticle.banner_url)!}
+                            src={cdnImage(featuredArticle.image_url || featuredArticle.banner_url, { width: 960 })}
                             alt={featuredArticle.title}
+                            width={960} height={540} decoding="async"
                             className="relative w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-700"
-                            loading="eager"
+                            loading="eager" fetchPriority="high"
                           />
                         </>
                       ) : (
@@ -304,14 +300,9 @@ const BlogPage = () => {
                         <>
                           {/* Blurred backdrop so uncropped image sits cleanly */}
                           <img
-                            src={(featuredArticle.image_url || featuredArticle.banner_url)!}
-                            alt=""
-                            aria-hidden
-                            className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
-                          />
-                          <img
-                            src={(featuredArticle.image_url || featuredArticle.banner_url)!}
+                            src={cdnImage(featuredArticle.image_url || featuredArticle.banner_url, { width: 960 })}
                             alt={featuredArticle.title}
+                            width={960} height={540} decoding="async"
                             className="relative w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-700"
                             loading="lazy"
                           />
@@ -353,10 +344,10 @@ const BlogPage = () => {
                         <div className="rounded-xl overflow-hidden bg-sky-50 border border-sky-50 aspect-[16/9] relative">
                           {(item.image_url || item.banner_url) ? (
                             <>
-                              <img src={(item.image_url || item.banner_url)!} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40" />
                               <img
-                                src={(item.image_url || item.banner_url)!}
+                                src={cdnImage(item.image_url || item.banner_url, { width: 640 })}
                                 alt={item.title}
+                                width={640} height={360} decoding="async"
                                 className="relative w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-700"
                                 loading="lazy"
                               />
@@ -410,10 +401,10 @@ const BlogPage = () => {
                         <div className="aspect-[16/9] bg-sky-50 rounded-xl overflow-hidden border border-sky-50 relative">
                           {(item.image_url || item.banner_url) ? (
                             <>
-                              <img src={(item.image_url || item.banner_url)!} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40" />
                               <img
-                                src={(item.image_url || item.banner_url)!}
+                                src={cdnImage(item.image_url || item.banner_url, { width: 640 })}
                                 alt={item.title}
+                                width={640} height={360} decoding="async"
                                 className="relative w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-500"
                                 loading="lazy"
                               />
