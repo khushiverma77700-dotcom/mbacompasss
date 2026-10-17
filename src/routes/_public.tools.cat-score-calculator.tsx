@@ -21,20 +21,6 @@ export const Route = createFileRoute("/_public/tools/cat-score-calculator")({
           "@context": "https://schema.org",
           "@graph": [
             {
-              "@type": "Organization",
-              "@id": "https://mbacompass.in/#org",
-              name: "MBA Compass",
-              url: "https://mbacompass.in/",
-              logo: "https://mbacompass.in/favicon.ico",
-            },
-            {
-              "@type": "WebSite",
-              "@id": "https://mbacompass.in/#website",
-              name: "MBA Compass",
-              url: "https://mbacompass.in/",
-              publisher: { "@id": "https://mbacompass.in/#org" },
-            },
-            {
               "@type": "WebPage",
               "@id": `${URL}#webpage`,
               url: URL,

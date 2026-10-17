@@ -19,8 +19,6 @@ const DeferredChrome = () => {
   const hydrated = useHydrated();
   const [serverRendered] = useState(() => !hydrated);
   const location = useLocation();
-  const hasPageBreadcrumbs = /^\/(article|exam|blog|category|mba-application|courses|mocks|formulas)(\/|$)/.test(location.pathname);
-  const pageLabel = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "";
 
   useEffect(() => {
     setShow(false);
@@ -61,6 +59,8 @@ const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
   const client = useQueryClient();
   const router = useRouter();
   const location = useLocation();
+  const hasPageBreadcrumbs = /^\/(article|exam|blog|category|mba-application|courses|mocks|formulas)(\/|$)/.test(location.pathname);
+  const pageLabel = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "";
   useEffect(() => {
     let disposed = false;
     let running = false;
