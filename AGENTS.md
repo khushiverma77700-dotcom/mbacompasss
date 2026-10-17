@@ -22,6 +22,6 @@
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Editorial readability uses a linear block scan and shared allowlisted sanitization to prevent hangs and fact mutation. Read src/lib/AGENTS.md for article preparation rules.
 - Native TanStack prerenders validated public manifests; other anonymous pages use build-keyed HTML caching. Never snapshot private data. Refresh hydrated public snapshots once when observers mount, then revalidate route heads, to avoid stale visitor content.
-- Marked route heads own metadata; legacy SEOHead only adds schemas there, preventing title flips.
+- Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
 - College SEO uses collegeSeo.ts and loader 301s; normalize legacy section lists through collegeSectionData.ts so malformed optional facts cannot blank public HTML.

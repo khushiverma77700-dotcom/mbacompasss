@@ -21,8 +21,7 @@ const toAbsolute = (u: string) =>
   u.startsWith("http") ? u : `${ABSOLUTE_ORIGIN}${u.startsWith("/") ? "" : "/"}${u}`;
 
 /**
- * Renders a visible breadcrumb trail AND injects a BreadcrumbList JSON-LD
- * block so Google can show breadcrumb rich results for the page.
+ * Renders a visible breadcrumb trail; route heads own JSON-LD by default.
  */
 const SiteBreadcrumbs = ({ items, className = "", withHome = true, emitSchema = false }: Props) => {
   const trail: BreadcrumbItem[] = withHome

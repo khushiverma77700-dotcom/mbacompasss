@@ -1,5 +1,5 @@
-// Fetches the live sitemaps and writes them to public/.
-//   - public/sitemap.xml        page URLs + inline image entries (canonical submission)
+// Fetches the existing image sitemap. Vite independently writes page sitemaps
+// from the validated public prerender manifest.
 //   - public/sitemap-images.xml image-only sitemap
 // Also keeps the `Sitemap:` block in public/robots.txt pointing at both files.
 //
@@ -12,7 +12,6 @@ import { resolve } from "path";
 const FN_BASE = "https://mttoiqruzzxooveooldo.supabase.co/functions/v1";
 const SITE_URL = "https://mbacompass.in";
 
-const SITEMAP_OUT = "public/sitemap.xml";
 const IMAGE_SITEMAP_OUT = "public/sitemap-images.xml";
 const ROBOTS_OUT = "public/robots.txt";
 

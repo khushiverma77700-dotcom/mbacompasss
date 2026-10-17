@@ -39,3 +39,8 @@ export function publicPageHead(path: string, rawTitle: string, rawDescription: s
     }) }],
   };
 }
+
+export function privatePageHead(path: string, title: string, description: string) {
+  const head = publicPageHead(path, title, description);
+  return { ...head, meta: [...head.meta, { name: "robots", content: "noindex, nofollow" }] };
+}

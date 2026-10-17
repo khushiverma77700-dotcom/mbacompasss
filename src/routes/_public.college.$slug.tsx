@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_public/college/$slug")({
     const row = await prefetchDetail(context.queryClient, "colleges", params.slug);
     if (!row) throw notFound();
     const sections = context.queryClient.getQueryData<any[]>(["college-sections", row.id]) || [];
-    const section = sections.find((s) => s.section_type === "qa" && (s.version === "original" || !s.version));
+    const section = sections.find((s) => s.section_type === "qa" && (s.version === "original" || !s.version)) || sections.find((s) => s.section_type === "qa");
     const questions = normalizeCollegeSectionData(section?.data).questions || [];
     const faqs = questions.filter((q: any) => q.question?.trim() && q.answer?.trim());
     return { row, faqs };
