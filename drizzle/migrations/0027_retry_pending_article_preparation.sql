@@ -1,0 +1,10 @@
+CREATE OR REPLACE FUNCTION public.preserve_article_display_timestamp() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$ BEGIN IF (to_jsonb(NEW)-'prepared_display'-'updated_at')=(to_jsonb(OLD)-'prepared_display'-'updated_at') THEN NEW.updated_at=OLD.updated_at; END IF; RETURN NEW; END $$;
+REVOKE ALL ON FUNCTION public.preserve_article_display_timestamp() FROM PUBLIC,anon,authenticated;
+CREATE TRIGGER zz_preserve_article_display_timestamp BEFORE UPDATE ON public.articles FOR EACH ROW EXECUTE FUNCTION public.preserve_article_display_timestamp();
+CREATE OR REPLACE FUNCTION public.wake_article_display() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN
+PERFORM net.http_post(url := 'https://mbacompasss.lovable.app/api/public/articles/prepare', headers := jsonb_build_object('Content-Type','application/json'), body := jsonb_build_object('articleId',NEW.article_id,'token',NEW.token), timeout_milliseconds := 30000);
+IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='retry-article-display') THEN PERFORM cron.schedule('retry-article-display','0 * * * *', $job$SELECT net.http_post(url := 'https://mbacompasss.lovable.app/api/public/articles/prepare',headers := jsonb_build_object('Content-Type','application/json'),body := jsonb_build_object('articleId',article_id,'token',token),timeout_milliseconds := 30000) FROM public.article_display_jobs ORDER BY requested_at LIMIT 3$job$); END IF;
+RETURN NEW; END $$;
+CREATE OR REPLACE FUNCTION public.stop_article_display_retry() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN IF NOT EXISTS (SELECT 1 FROM public.article_display_jobs) THEN PERFORM cron.unschedule(jobid) FROM cron.job WHERE jobname='retry-article-display'; END IF; RETURN OLD; END $$;
+REVOKE ALL ON FUNCTION public.stop_article_display_retry() FROM PUBLIC,anon,authenticated;
+CREATE TRIGGER stop_article_display_retry AFTER DELETE ON public.article_display_jobs FOR EACH STATEMENT EXECUTE FUNCTION public.stop_article_display_retry();
