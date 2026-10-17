@@ -1,8 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
-import CollegeFinderPage from "@/pages/CollegeFinderPage";
-import PublicPageSkeleton from "@/components/PublicPageSkeleton";
-
+import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/_public/college-finder")({
-  component: () => <CollegeFinderPage />,
-  pendingComponent: PublicPageSkeleton,
+  beforeLoad: ({ location }) => { throw redirect({ href: `/tools/college-finder${location.searchStr}`, statusCode: 301 }); },
 });
