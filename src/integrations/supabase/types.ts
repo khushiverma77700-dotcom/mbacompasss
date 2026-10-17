@@ -14127,6 +14127,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sitemap_submissions: {
+        Row: {
+          created_at: string
+          id: string
+          sitemap_url: string
+          submitted_by: string | null
+          submitted_on: string
+          url_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sitemap_url: string
+          submitted_by?: string | null
+          submitted_on: string
+          url_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sitemap_url?: string
+          submitted_by?: string | null
+          submitted_on?: string
+          url_count?: number | null
+        }
+        Relationships: []
+      }
       sop_reviews: {
         Row: {
           academic_background: string | null
