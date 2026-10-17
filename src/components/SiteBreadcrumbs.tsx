@@ -1,5 +1,6 @@
 import { Link } from "@/lib/router-compat";
 import { ChevronRight, Home } from "lucide-react";
+import { useRouterState } from "@tanstack/react-router";
 
 export interface BreadcrumbItem {
   name: string;
@@ -23,6 +24,9 @@ const toAbsolute = (u: string) =>
  * block so Google can show breadcrumb rich results for the page.
  */
 const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
+  const headOwnsBreadcrumb = useRouterState({ select: (state) => state.matches.some((match) =>
+    Array.isArray(match.scripts) && match.scripts.some((script: any) => typeof script?.children === "string" && script.children.includes('"@type":"BreadcrumbList"'))
+  ) });
   const trail: BreadcrumbItem[] = withHome
     ? [{ name: "Home", url: "/" }, ...items]
     : items;
@@ -72,7 +76,7 @@ const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
           })}
         </ol>
       </nav>
-      <script
+      {!headOwnsBreadcrumb && <script
         type="application/ld+json"
         // Escape closing-tag and JS-line-terminator sequences so a CMS-supplied
         // breadcrumb name can never break out of the inline JSON-LD block.
@@ -84,7 +88,7 @@ const SiteBreadcrumbs = ({ items, className = "", withHome = true }: Props) => {
             .replace(/\u2028/g, "\\u2028")
             .replace(/\u2029/g, "\\u2029"),
         }}
-      />
+      />}
     </>
   );
 };

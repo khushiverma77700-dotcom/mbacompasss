@@ -39,6 +39,10 @@ const FAQSection = () => {
 
   return (
     <section className="py-16 md:py-20 bg-background">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org", "@type": "FAQPage",
+        mainEntity: faqs.filter((faq) => faq.q?.trim() && faq.a?.trim()).map((faq) => ({ "@type": "Question", name: faq.q, acceptedAnswer: { "@type": "Answer", text: faq.a } })),
+      }).replace(/</g, "\\u003c") }} />
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-5 gap-10">
           {/* Left Info */}

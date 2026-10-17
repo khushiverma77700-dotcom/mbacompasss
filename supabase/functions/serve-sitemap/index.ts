@@ -106,11 +106,11 @@ ${items.map((e) => `  <url>
   };
 };
 
-const buildSitemapIndex = (children: { loc: string; lastmod: string }[]) => `<?xml version="1.0" encoding="UTF-8"?>
+const buildSitemapIndex = (children: { loc: string; lastmod?: string }[]) => `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${children.map((c) => `  <sitemap>
     <loc>${escapeXml(c.loc)}</loc>
-    <lastmod>${c.lastmod}</lastmod>
+    ${c.lastmod ? `<lastmod>${c.lastmod}</lastmod>` : ""}
   </sitemap>`).join("\n")}
 </sitemapindex>`;
 
@@ -208,11 +208,11 @@ Deno.serve(async (req) => {
     };
     const coachingArticles: Entry[] = (articles ?? []).flatMap((a: any) =>
       a.slug && isCoachingArticle(a)
-        ? [{ loc: `/article/${a.slug}`, lastmod: fmtDate(a.updated_at), changefreq: "weekly" as const, priority: 0.7 }]
+        ? [{ loc: `/article/${a.slug}`, changefreq: "weekly" as const, priority: 0.7 }]
         : []);
     const blogs: Entry[] = (articles ?? []).flatMap((a: any) =>
       a.slug && !isCoachingArticle(a)
-        ? [{ loc: `/article/${a.slug}`, lastmod: fmtDate(a.updated_at), changefreq: "weekly" as const, priority: 0.6 }]
+        ? [{ loc: `/article/${a.slug}`, changefreq: "weekly" as const, priority: 0.6 }]
         : []);
 
     const cats: Entry[] = (categories ?? []).flatMap((c: any) => c.slug

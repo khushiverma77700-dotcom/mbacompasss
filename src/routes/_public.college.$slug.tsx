@@ -5,6 +5,7 @@ import { detailHead, prefetchDetail, findSeoRedirect } from "@/lib/detailPageSeo
 import { collegeDescription, collegeTitle } from "@/lib/collegeSeo";
 import { generateCollegeSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
+import { normalizeCollegeSectionData } from "@/lib/collegeSectionData";
 
 export const Route = createFileRoute("/_public/college/$slug")({
   loader: async ({ context, params }) => {
@@ -13,7 +14,11 @@ export const Route = createFileRoute("/_public/college/$slug")({
     if (to) throw redirect({ href: to, statusCode: 301 });
     const row = await prefetchDetail(context.queryClient, "colleges", params.slug);
     if (!row) throw notFound();
-    return { row };
+    const sections = context.queryClient.getQueryData<any[]>(["college-sections", row.id]) || [];
+    const section = sections.find((s) => s.section_type === "qa" && (s.version === "original" || !s.version));
+    const questions = normalizeCollegeSectionData(section?.data).questions || [];
+    const faqs = questions.filter((q: any) => q.question?.trim() && q.answer?.trim());
+    return { row, faqs };
   },
   head: ({ loaderData, params }) => {
     const row = loaderData?.row;
@@ -43,6 +48,7 @@ export const Route = createFileRoute("/_public/college/$slug")({
       scripts: [
         ...(school ? [{ type: "application/ld+json", children: JSON.stringify(school) }] : []),
         { type: "application/ld+json", children: JSON.stringify(crumbs) },
+        ...(loaderData?.faqs?.length ? [{ type: "application/ld+json", children: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: loaderData.faqs.map((q: any) => ({ "@type": "Question", name: q.question, acceptedAnswer: { "@type": "Answer", text: q.answer } })) }) }] : []),
       ],
     };
   },
