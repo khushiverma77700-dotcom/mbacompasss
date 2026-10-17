@@ -6,4 +6,5 @@ it("standardises exam and tool aliases while retaining legitimate LMS and region
   expect(publicPath("/profile-analyzer")).toBe("/tools/profile-analyzer");
   expect(publicPath("/student")).toBe("/student");
   expect(publicPath("/colleges/mumbai")).toBe("/colleges/mumbai");
+  expect(publicPath("/exams?q=cat#dates")).toBe("/exam?q=cat#dates");
 });
