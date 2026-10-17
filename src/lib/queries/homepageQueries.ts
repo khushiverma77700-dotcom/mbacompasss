@@ -3,6 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { upcomingHomepageExams } from "@/lib/homepageCalendar";
 import { homeCollegeFactsQuery } from "./homeCollegeFacts";
+import { landscapeCollegesQuery } from "./landscapeColleges";
 
 export const homeFreebiesQuery = queryOptions({
   queryKey: ["home-freebies"],
@@ -19,6 +20,7 @@ export const homeFreebiesQuery = queryOptions({
 export async function prefetchHomepage(qc: QueryClient) {
   await Promise.all([
     qc.ensureQueryData(homeCollegeFactsQuery),
+    qc.ensureQueryData(landscapeCollegesQuery),
     qc.ensureQueryData({ queryKey: ["popular-exams-countdown"], queryFn: async () => {
       const { data, error } = await supabase.from("exams").select("name, slug, full_name, exam_date, registration_deadline, conducting_body");
       if (error) throw error;
