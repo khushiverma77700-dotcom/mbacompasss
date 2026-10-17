@@ -9,7 +9,7 @@ const Footer = () => {
   const brandDesc = footer?.brand_description || "India's trusted platform to find and compare the best MBA coaching institutes.";
   const examLinks = [
     { path: "/exam/cat", label: "CAT" }, { path: "/exam/xat", label: "XAT" }, { path: "/exam/snap", label: "SNAP" },
-    { path: "/exam/nmat", label: "NMAT" }, { path: "/exam/cmat", label: "CMAT" }, { path: "/exam/iift", label: "IIFT" },
+    { path: "/exam/nmat-by-gmac", label: "NMAT" }, { path: "/exam/cmat", label: "CMAT" }, { path: "/exam/iift-entrance-mba-admissions", label: "IIFT" },
   ];
   const quickLinks = footer?.quick_links || [];
   const email = "info@mbacompass.in";

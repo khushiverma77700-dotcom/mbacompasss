@@ -10,7 +10,7 @@ const FALLBACK: NewsItem[] = [
   { tag: "IIM-A", text: "IIM Ahmedabad PGP 2026-28 shortlist criteria & Academic Rating weightage", href: "/college/iim-ahmedabad" },
   { tag: "Placements", text: "ISB Hyderabad Class of 2025 posts highest median CTC of ₹36.5 LPA", href: "/college/isb-hyderabad" },
   { tag: "SNAP", text: "Symbiosis announces 3-slot SNAP 2026 with revised marking scheme", href: "/exam/snap" },
-  { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat" },
+  { tag: "NMAT", text: "NMIMS opens NMAT by GMAC 2026 registrations — 75-day testing window", href: "/exam/nmat-by-gmac" },
 ];
 
 const isActive = (it: NewsItem, now = Date.now()): boolean => {
