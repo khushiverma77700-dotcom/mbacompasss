@@ -324,7 +324,7 @@ export const CollegeModule = ({
         </div>
         <div className="flex flex-wrap gap-2 mt-5">
           <Link to="/colleges"><Button size="sm" variant="outline" className="gap-1">Browse all colleges <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
-          <Link to="/college-shortlister"><Button size="sm" variant="outline" className="gap-1">Shortlist colleges for my score <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
+          <Link to="/tools/college-shortlister"><Button size="sm" variant="outline" className="gap-1">Shortlist colleges for my score <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
         </div>
       </CardContent>
     </Card>

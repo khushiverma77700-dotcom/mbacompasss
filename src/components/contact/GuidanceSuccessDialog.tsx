@@ -7,13 +7,13 @@ import whatsappLogo from "@/assets/whatsapp-logo.png";
 
 const tools = [
   {
-    to: "/profile-analyzer",
+    to: "/tools/profile-analyzer",
     icon: Sparkles,
     title: "AI Profile Analyzer",
     description: "Get an instant score on your MBA profile with improvement areas.",
   },
   {
-    to: "/roi-calculator",
+    to: "/tools/roi-calculator",
     icon: Calculator,
     title: "AI ROI Calculator",
     description: "Compare fees, salary and payback period before you commit.",

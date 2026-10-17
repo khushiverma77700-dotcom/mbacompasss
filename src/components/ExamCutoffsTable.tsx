@@ -297,7 +297,7 @@ export default function ExamCutoffsTable() {
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             Cut-offs vary each cycle; treat as directional benchmarks, not admission guarantees.
           </div>
-          <Link to="/exams" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
+          <Link to="/exam" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
             Compare all exams & cut-offs <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

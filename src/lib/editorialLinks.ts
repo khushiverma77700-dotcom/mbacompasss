@@ -3,8 +3,8 @@ export type EditorialTarget = { label: string; url: string; kind: EditorialKind;
 export type EditorialMatch = { start: number; end: number; text: string; target: EditorialTarget };
 
 export const EDITORIAL_TOOLS: EditorialTarget[] = [
-  { label: "College Shortlister", url: "/college-shortlister", kind: "tools", aliases: [] },
-  { label: "Profile Analyzer", url: "/profile-analyzer", kind: "tools", aliases: ["Profile Analyser"] },
+  { label: "College Shortlister", url: "/tools/college-shortlister", kind: "tools", aliases: [] },
+  { label: "Profile Analyzer", url: "/tools/profile-analyzer", kind: "tools", aliases: ["Profile Analyser"] },
   { label: "MBA ROI Calculator", url: "/mba-roi-calculator", kind: "tools", aliases: [] },
   { label: "Compare Colleges", url: "/compare", kind: "tools", aliases: [] },
   { label: "Mock Tests", url: "/mocks", kind: "tools", aliases: [] },

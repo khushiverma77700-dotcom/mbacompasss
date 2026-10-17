@@ -52,8 +52,8 @@ const parseSamples = (raw: string): string[] => {
 
 const TOOL_URLS: { url: string; label: string }[] = [
   { url: "/mba-compass", label: "MBA Compass" },
-  { url: "/college-shortlister", label: "College Shortlister" },
-  { url: "/profile-analyzer", label: "Profile Analyzer" },
+  { url: "/tools/college-shortlister", label: "College Shortlister" },
+  { url: "/tools/profile-analyzer", label: "Profile Analyzer" },
   { url: "/mba-roi-calculator", label: "MBA ROI Calculator" },
   { url: "/compare", label: "Compare Colleges" },
   { url: "/mocks", label: "Mock Tests" },

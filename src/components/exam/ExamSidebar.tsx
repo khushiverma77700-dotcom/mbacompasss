@@ -37,13 +37,13 @@ const useActiveSection = (ids: string[]) => {
 
 const PLANNER_LINKS = [
   {
-    to: "/college-shortlister",
+    to: "/tools/college-shortlister",
     label: "College shortlister",
     description: "Map your score to safe, target & reach colleges",
     icon: ListChecks,
   },
   {
-    to: "/profile-analyzer",
+    to: "/tools/profile-analyzer",
     label: "AI profile analyzer",
     description: "Get an instant profile strength report",
     icon: Sparkles,

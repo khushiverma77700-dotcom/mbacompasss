@@ -63,10 +63,10 @@ const TopicClusterLinks = ({
 
 export const DEFAULT_MBA_CLUSTER: ClusterLink[] = [
   { label: "Top MBA Colleges in India", to: "/colleges", description: "Search 1,500+ B-schools by fees, location, exam and ROI." },
-  { label: "AI College Finder", to: "/college-finder", description: "Get a personalised B-school shortlist from your CAT score." },
-  { label: "Profile Analyzer", to: "/profile-analyzer", description: "Free AI evaluation of your MBA candidacy in 60 seconds." },
-  { label: "MBA ROI Calculator", to: "/roi-calculator", description: "Project salary, payback and 5-year returns by B-school." },
-  { label: "CAT Score Calculator", to: "/cat-score-calculator", description: "Convert raw attempts to expected CAT percentile." },
+  { label: "AI College Finder", to: "/tools/college-finder", description: "Get a personalised B-school shortlist from your CAT score." },
+  { label: "Profile Analyzer", to: "/tools/profile-analyzer", description: "Free AI evaluation of your MBA candidacy in 60 seconds." },
+  { label: "MBA ROI Calculator", to: "/tools/roi-calculator", description: "Project salary, payback and 5-year returns by B-school." },
+  { label: "CAT Score Calculator", to: "/tools/cat-score-calculator", description: "Convert raw attempts to expected CAT percentile." },
   { label: "MBA Compass Courses", to: "/courses", description: "Mocks, prep bundles and structured CAT/XAT courses." },
 ];
 

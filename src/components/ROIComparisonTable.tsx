@@ -68,7 +68,7 @@ const ROIComparisonTable = () => {
             </p>
           </div>
           <Link
-            to="/roi-calculator"
+            to="/tools/roi-calculator"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline shrink-0"
           >
             Calculate your ROI <ArrowRight className="w-4 h-4" />

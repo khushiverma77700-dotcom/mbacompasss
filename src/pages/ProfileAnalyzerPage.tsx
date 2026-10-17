@@ -1134,7 +1134,7 @@ const ProfileAnalyzerPage = () => {
     generateWebsiteSchema(),
     generateBreadcrumbSchema([
       { name: "Home", url: "/" },
-      { name: "AI Profile Analyser", url: "/profile-analyzer" },
+      { name: "AI Profile Analyser", url: "/tools/profile-analyzer" },
     ]),
     {
       "@context": "https://schema.org",

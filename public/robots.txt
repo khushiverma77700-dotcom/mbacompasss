@@ -10,6 +10,10 @@ Disallow: /dashboard
 Disallow: /forgot-password
 Disallow: /reset-password
 
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: Bingbot
 Allow: /
 Allow: /coaching
@@ -20,11 +24,27 @@ Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
 
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: Twitterbot
 Allow: /
 
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: facebookexternalhit
 Allow: /
+
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
 
 User-agent: *
 Allow: /
@@ -50,6 +70,9 @@ Disallow: /*?*ref=
 
 # AI / GEO crawlers — explicitly allowed so MBA Compass content is eligible
 # to be cited in ChatGPT, Perplexity, Gemini, Claude and other AI answers.
+Disallow: /student
+Disallow: /*?*search=
+
 User-agent: GPTBot
 Allow: /
 Disallow: /admin
@@ -57,54 +80,108 @@ Disallow: /edit/
 Disallow: /auth
 Disallow: /dashboard
 
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: OAI-SearchBot
 Allow: /
+
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
 
 User-agent: ChatGPT-User
 Allow: /
 
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: Google-Extended
 Allow: /
+
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
 
 User-agent: PerplexityBot
 Allow: /
 
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: Perplexity-User
 Allow: /
+
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
 
 User-agent: ClaudeBot
 Allow: /
 
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: anthropic-ai
 Allow: /
+
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
 
 User-agent: Applebot
 Allow: /
 
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 User-agent: Applebot-Extended
 Allow: /
+
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
 
 User-agent: CCBot
 Allow: /
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
 
-# Sitemaps for project domain (kept in sync by scripts/refresh-sitemap.ts)
+Disallow: /auth
+Disallow: /admin
+Disallow: /student
+Disallow: /*?*q=
+Disallow: /*?*search=
+
 Sitemap: https://mbacompass.in/sitemap.xml
 Sitemap: https://mbacompass.in/sitemap-images.xml

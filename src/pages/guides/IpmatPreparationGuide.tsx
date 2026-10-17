@@ -31,7 +31,7 @@ const IpmatPreparationGuide = () => {
           <nav aria-label="Breadcrumb" className="text-xs text-slate-500 mb-4">
             <Link to="/" className="hover:text-sky-600">Home</Link>
             <span className="mx-2">/</span>
-            <Link to="/exams" className="hover:text-sky-600">Exams</Link>
+            <Link to="/exam" className="hover:text-sky-600">Exams</Link>
             <span className="mx-2">/</span>
             <span className="text-slate-700 font-medium">IPMAT Preparation Guide</span>
           </nav>
@@ -227,7 +227,7 @@ const IpmatPreparationGuide = () => {
             <h2 className="text-xl md:text-2xl font-bold mb-2">Ready to plan your IPMAT prep?</h2>
             <p className="text-sky-50 text-sm md:text-base mb-4">Get a personalised study plan, mock tests and coaching shortlist tailored to your target IIM.</p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/college-shortlister" className="inline-flex items-center gap-2 bg-white text-sky-700 font-semibold px-4 py-2.5 rounded-lg hover:bg-sky-50 transition-colors text-sm">
+              <Link to="/tools/college-shortlister" className="inline-flex items-center gap-2 bg-white text-sky-700 font-semibold px-4 py-2.5 rounded-lg hover:bg-sky-50 transition-colors text-sm">
                 <BookOpen className="w-4 h-4" /> Shortlist IIMs
               </Link>
               <Link to="/coaching" className="inline-flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold px-4 py-2.5 rounded-lg hover:bg-white/20 transition-colors text-sm">

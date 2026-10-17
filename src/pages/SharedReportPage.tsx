@@ -44,7 +44,7 @@ const SharedReportPage = () => {
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
         <FileText className="w-10 h-10 text-muted-foreground" />
         <p className="text-muted-foreground">This report is no longer available.</p>
-        <Link to="/profile-analyzer"><Button>Generate Your Own Report</Button></Link>
+        <Link to="/tools/profile-analyzer"><Button>Generate Your Own Report</Button></Link>
       </div>
     );
   }

@@ -658,8 +658,8 @@ const ExamsListingPage = () => {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { title: "College Shortlister", desc: "Get a data-backed shortlist by score and profile", to: "/college-shortlister" },
-              { title: "AI Profile Analyzer", desc: "Know where your profile stands today", to: "/profile-analyzer" },
+              { title: "College Shortlister", desc: "Get a data-backed shortlist by score and profile", to: "/tools/college-shortlister" },
+              { title: "AI Profile Analyzer", desc: "Know where your profile stands today", to: "/tools/profile-analyzer" },
               { title: "Browse MBA Colleges", desc: "Fees, placements and cutoffs for every B-school", to: "/colleges" },
               { title: "Mock Tests", desc: "Full-length and sectional mocks with analytics", to: "/mocks" },
             ].map((t) => (

@@ -597,7 +597,7 @@ const AICollegeFinder = ({ onTryManually }: AICollegeFinderProps) => {
                   <ArrowDown className="w-4 h-4" /> Compare Manually
                 </Button>
               )}
-              <Link to="/profile-analyzer" className={onTryManually ? "" : "col-span-2"}>
+              <Link to="/tools/profile-analyzer" className={onTryManually ? "" : "col-span-2"}>
                 <Button size="lg" className="w-full gap-2 text-xs rounded-xl h-11">
                   <Target className="w-4 h-4" /> Get Profile Analysis
                 </Button>

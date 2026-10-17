@@ -352,7 +352,7 @@ export default function IIMWaitlistPage() {
     generateOrganizationSchema(),
     generateBreadcrumbSchema([
       { name: "Home", url: "/" },
-      { name: "IIM Waitlist Movement 2026", url: "/iim-waitlist-movement" },
+      { name: "IIM Waitlist Movement 2026", url: "/tools/iim-waitlist-movement" },
     ]),
     generateFAQSchema(FAQS),
     {

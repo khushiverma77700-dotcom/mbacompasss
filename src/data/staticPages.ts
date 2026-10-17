@@ -28,13 +28,13 @@ const STATIC_PAGES: StaticPageDef[] = [
   { key: "blog", label: "Blog Page", path: "/blog" },
   { key: "colleges", label: "Colleges Page", path: "/colleges" },
   { key: "compare", label: "Compare Coaching", path: "/compare" },
-  { key: "college-finder", label: "AI College Finder & Compare", path: "/college-finder" },
-  { key: "profile-analyzer", label: "Profile Analyzer", path: "/profile-analyzer" },
-  { key: "college-shortlister", label: "AI College Shortlister", path: "/college-shortlister" },
+  { key: "college-finder", label: "AI College Finder & Compare", path: "/tools/college-finder" },
+  { key: "profile-analyzer", label: "Profile Analyzer", path: "/tools/profile-analyzer" },
+  { key: "college-shortlister", label: "AI College Shortlister", path: "/tools/college-shortlister" },
   {
     key: "iim-waitlist-movement",
     label: "IIM Waitlist Movement 2026",
-    path: "/iim-waitlist-movement",
+    path: "/tools/iim-waitlist-movement",
     seo: {
       metaTitle: "IIM Waitlist Movement 2026 — Live Tracker, RTI Data & Result Dates | MBA Compass",
       metaDescription:
@@ -54,7 +54,7 @@ const STATIC_PAGES: StaticPageDef[] = [
       approxWordCount: 2400,
     },
   },
-  { key: "cat-score-calculator", label: "CAT Score Calculator", path: "/cat-score-calculator" },
+  { key: "cat-score-calculator", label: "CAT Score Calculator", path: "/tools/cat-score-calculator" },
   { key: "mba-roi-calculator", label: "MBA ROI Calculator", path: "/mba-roi-calculator" },
   
   { key: "list-your-business", label: "List Your Business", path: "/list-your-business" },

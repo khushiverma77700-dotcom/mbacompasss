@@ -4,11 +4,11 @@ import { Sparkles, Target, Calculator, GraduationCap, FileBarChart2, Users, File
 
 const tools = [
   { title: "AI SOP Review", desc: "Upload your SOP and get a structured AI evaluation with section scores, feedback & rewrite suggestions.", href: "/student/sop-review", icon: FileText },
-  { title: "AI Profile Analyzer", desc: "Get an MBA admission probability score with tailored recommendations.", href: "/profile-analyzer", icon: Sparkles },
-  { title: "College Shortlister", desc: "Personalized college list using your CAT %ile, profile and preferences.", href: "/college-shortlister", icon: Target },
-  { title: "MBA ROI Calculator", desc: "Project ROI, payback years and salary upside across top B-schools.", href: "/roi-calculator", icon: Calculator },
-  { title: "CAT Score Calculator", desc: "Estimate percentile from raw CAT score in seconds.", href: "/cat-score-calculator", icon: FileBarChart2 },
-  { title: "College Finder", desc: "Filter & explore 1000+ MBA colleges across India.", href: "/college-finder", icon: GraduationCap },
+  { title: "AI Profile Analyzer", desc: "Get an MBA admission probability score with tailored recommendations.", href: "/tools/profile-analyzer", icon: Sparkles },
+  { title: "College Shortlister", desc: "Personalized college list using your CAT %ile, profile and preferences.", href: "/tools/college-shortlister", icon: Target },
+  { title: "MBA ROI Calculator", desc: "Project ROI, payback years and salary upside across top B-schools.", href: "/tools/roi-calculator", icon: Calculator },
+  { title: "CAT Score Calculator", desc: "Estimate percentile from raw CAT score in seconds.", href: "/tools/cat-score-calculator", icon: FileBarChart2 },
+  { title: "College Finder", desc: "Filter & explore 1000+ MBA colleges across India.", href: "/tools/college-finder", icon: GraduationCap },
   { title: "IIM Waitlist Tracker", desc: "Live waitlist movement and predictions for IIMs.", href: "/iim-waitlist", icon: Users },
 ];
 
