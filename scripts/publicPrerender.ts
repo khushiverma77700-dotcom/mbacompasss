@@ -2,7 +2,8 @@
 export const MAX_PRERENDER_PAGES = 8000;
 export const PUBLIC_STATIC_PATHS = [
   "/", "/colleges", "/coaching", "/exam", "/blog", "/compare", "/mocks", "/freebies",
-  "/roi-calculator", "/cat-score-calculator", "/college-shortlister", "/profile-analyzer", "/contact",
+  "/tools/roi-calculator", "/tools/cat-score-calculator", "/tools/college-shortlister", "/tools/profile-analyzer", "/contact",
+  "/tools", "/tools/college-finder", "/tools/iim-waitlist-movement",
 ];
 
 export function selectPrerenderPaths(paths: string[], limit = MAX_PRERENDER_PAGES): string[] {
@@ -19,7 +20,7 @@ export async function enumeratePublicPages(url: string, key: string) {
   async function rows(table: string, filter = "") {
     const all: Record<string, unknown>[] = [];
     for (let from = 0; ; from += 1000) {
-      const response = await fetch(`${url}/rest/v1/${table}?select=${table === "seo_redirects" ? "from_path" : "slug"}${filter}&order=${table === "seo_redirects" ? "from_path" : "slug"}.asc`, {
+      const response = await fetch(`${url}/rest/v1/${table}?select=${table === "seo_redirects" ? "from_path" : "slug,updated_at"}${filter}&order=${table === "seo_redirects" ? "from_path" : "slug"}.asc`, {
         headers: { apikey: key, Range: `${from}-${from + 999}` },
         signal: AbortSignal.timeout(30000),
       });
@@ -46,7 +47,13 @@ export async function enumeratePublicPages(url: string, key: string) {
   ];
   const selected = selectPrerenderPaths(dynamic);
   console.info(`[public-html] ${selected.length} public pages selected; ${Math.max(0, dynamic.length + PUBLIC_STATIC_PATHS.length - selected.length)} long-tail pages remain server-rendered`);
-  return selected.map((path) => ({ path }));
+  const dates = new Map<string, string>();
+  for (const [records, prefix] of [[colleges, "college"], [institutes, "institute"], [exams, "exam"]] as const) {
+    for (const row of records) if (typeof row.slug === "string" && typeof row.updated_at === "string" && Number.isFinite(Date.parse(row.updated_at))) dates.set(`/${prefix}/${row.slug.trim()}`, row.updated_at);
+  }
+  // Article updated_at was historically bumped by technical preparation.
+  // It cannot establish a significant editorial change, so omit it.
+  return selected.map((path) => ({ path, ...(dates.has(path) ? { lastmod: dates.get(path) } : {}) }));
 }
 
 let renderedBytes = 0;

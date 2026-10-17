@@ -7,8 +7,9 @@ describe("public prerender boundaries", () => {
     expect(paths).toEqual([...PUBLIC_STATIC_PATHS, "/college/iim-ahmedabad"]);
   });
   it("caps generated files while retaining all requested static routes", () => {
-    const paths = selectPrerenderPaths(["/college/a", "/college/b"], 14);
-    expect(paths).toHaveLength(14);
-    expect(paths[13]).toBe("/college/a");
+    const limit = PUBLIC_STATIC_PATHS.length + 1;
+    const paths = selectPrerenderPaths(["/college/a", "/college/b"], limit);
+    expect(paths).toHaveLength(limit);
+    expect(paths[PUBLIC_STATIC_PATHS.length]).toBe("/college/a");
   });
 });

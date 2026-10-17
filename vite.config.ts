@@ -8,6 +8,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import type { Plugin } from "vite";
 import { loadEnv } from "vite";
 import { enumeratePublicPages, validateRenderedPage } from "./scripts/publicPrerender";
+import { writeBuildSitemaps } from "./scripts/buildSitemap";
 
 // Carried over from the pre-migration config: a stable build ID emitted to
 // /version.json so already-open tabs can detect a new deploy and self-heal
@@ -45,6 +46,7 @@ const guardCreateRequire = (): Plugin => ({
 export default async (env: { command: "build" | "serve"; mode: string }) => {
   const publicEnv = loadEnv(env.mode, process.cwd(), "VITE_");
   const pages = env.command === "build" ? await enumeratePublicPages(publicEnv.VITE_SUPABASE_URL, publicEnv.VITE_SUPABASE_PUBLISHABLE_KEY) : [];
+  if (env.command === "build") writeBuildSitemaps(pages);
   return defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
