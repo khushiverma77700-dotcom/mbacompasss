@@ -24,5 +24,5 @@
 - Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
 - College SEO uses collegeSeo.ts and loader 301s; collegeSectionData normalizes optional lists. Directory index leaves and un-nested institute course routes prevent parent pages masking children.
-- Homepage facts share college records and original-preferred active sections; no duplicate financial/cutoff fallbacks. Calendar rules use IST.
+- College fees, CTC and rank read one college column each and display via src/lib/collegeMetrics.ts on every surface; cutoffs use original-preferred active sections; no invented fallbacks, so all pages agree. Calendar rules use IST.
 - Production builds emit raw/gzip client sizes in bundle-report.json for comparable measurement.
