@@ -4,15 +4,6 @@ import { MapPin, IndianRupee, TrendingUp, ChevronRight, GraduationCap } from "lu
 import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 
-const fallbackColleges = [
-  { name: "IIM Ahmedabad", slug: "iim-ahmedabad", city: "Ahmedabad", state: "Gujarat", ranking: 1, fees: "₹23L", placement_avg: "₹35.68 LPA", type: "IIM", logo_url: null },
-  { name: "IIM Bangalore", slug: "iim-bangalore", city: "Bangalore", state: "Karnataka", ranking: 2, fees: "₹24.5L", placement_avg: "₹34.21 LPA", type: "IIM", logo_url: null },
-  { name: "IIM Calcutta", slug: "iim-calcutta", city: "Kolkata", state: "West Bengal", ranking: 3, fees: "₹27L", placement_avg: "₹35 LPA", type: "IIM", logo_url: null },
-  { name: "IIM Lucknow", slug: "iim-lucknow", city: "Lucknow", state: "Uttar Pradesh", ranking: 4, fees: "₹19.25L", placement_avg: "₹30.58 LPA", type: "IIM", logo_url: null },
-  { name: "IIM Kozhikode", slug: "iim-kozhikode", city: "Kozhikode", state: "Kerala", ranking: 5, fees: "₹20L", placement_avg: "₹29.5 LPA", type: "IIM", logo_url: null },
-  { name: "XLRI Jamshedpur", slug: "xlri-jamshedpur", city: "Jamshedpur", state: "Jharkhand", ranking: 6, fees: "₹25.5L", placement_avg: "₹28 LPA", type: "Top Management", logo_url: null },
-];
-
 const getInitials = (name: string) => {
   const words = name.split(/\s+/).filter(Boolean);
   if (words.length <= 2) return words.map((w) => w[0]?.toUpperCase()).join("").slice(0, 3);
@@ -36,11 +27,11 @@ const TopRankedCollegesSection = () => {
         .not("ranking", "is", null)
         .order("ranking", { ascending: true })
         .limit(6);
-      return data && data.length > 0 ? data : fallbackColleges;
+      return data || [];
     },
   });
 
-  const items = useMemo(() => (colleges || fallbackColleges).filter((c) => c.name?.trim() && c.slug?.trim()), [colleges]);
+  const items = useMemo(() => (colleges || []).filter((c) => c.name?.trim() && c.slug?.trim()), [colleges]);
 
   return (
     <section className="py-20 md:py-24 bg-background border-y border-border/60">
@@ -48,14 +39,14 @@ const TopRankedCollegesSection = () => {
         <div className="text-center mb-14 max-w-2xl mx-auto animate-fade-in">
           <div className="inline-flex items-center gap-2 text-xs tracking-[0.18em] uppercase text-primary font-semibold mb-4">
             <span className="h-px w-8 bg-primary/40" />
-            Top Rankings 2025
+            College Rankings
             <span className="h-px w-8 bg-primary/40" />
           </div>
           <h2 className="font-heading text-3xl md:text-5xl font-extrabold text-foreground mb-4 tracking-[-0.02em] leading-[1.1]">
             India's <span className="font-editorial italic font-normal text-primary">top-ranked</span> MBA colleges
           </h2>
           <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-            Hand-picked B-schools curated from NIRF rankings, placement records and verified student feedback.
+            Explore ranked B-schools, programme fees and placement information from their college profiles.
           </p>
         </div>
 
@@ -66,7 +57,7 @@ const TopRankedCollegesSection = () => {
             return (
               <Link
                 key={college.slug || i}
-                to={`/colleges/${college.slug}`}
+                to={`/college/${college.slug}`}
                 className="group relative flex flex-col h-full bg-card rounded-2xl border border-border/70 p-6 card-shadow hover:border-primary/40 card-shadow-hover hover:-translate-y-0.5 transition-all duration-300 overflow-hidden animate-fade-in"
                 style={{ animationDelay: `${Math.min(i * 60, 300)}ms` }}
               >

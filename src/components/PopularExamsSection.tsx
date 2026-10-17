@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/lib/router-compat";
 import { Calendar, Clock, ArrowRight, BookOpen, Award, FileText } from "lucide-react";
-import { differenceInDays, parse, isValid } from "date-fns";
+import { differenceInDays } from "date-fns";
+import { parseHomepageDate as parseExamDate, upcomingHomepageExams } from "@/lib/homepageCalendar";
 
 const ACCENT_COLORS = [
   { bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700", bar: "bg-sky-500", iconBg: "bg-sky-100" },
@@ -12,25 +13,6 @@ const ACCENT_COLORS = [
 ];
 
 
-/** Try multiple date formats to parse exam_date string */
-const parseExamDate = (dateStr: string | null): Date | null => {
-  if (!dateStr) return null;
-
-  // Try ISO / standard formats
-  const d = new Date(dateStr);
-  if (isValid(d) && d.getFullYear() > 2000) return d;
-
-  // Try common formats like "24 Nov 2026", "November 24, 2026"
-  const formats = ["dd MMM yyyy", "MMM dd, yyyy", "dd MMMM yyyy", "MMMM dd, yyyy", "yyyy-MM-dd"];
-  for (const fmt of formats) {
-    try {
-      const parsed = parse(dateStr, fmt, new Date());
-      if (isValid(parsed) && parsed.getFullYear() > 2000) return parsed;
-    } catch { /* skip */ }
-  }
-  return null;
-};
-
 const PopularExamsSection = () => {
   const { data: exams } = useQuery({
     queryKey: ["popular-exams-countdown"],
@@ -39,29 +21,14 @@ const PopularExamsSection = () => {
       const { data } = await supabase
         .from("exams")
         .select("name, slug, full_name, exam_date, registration_deadline, conducting_body");
-      const now = new Date();
-      const all = (data || []).filter((e: any) => e.name?.trim());
-      // Sort by nearest upcoming exam date ascending; past/unknown dates go last
-      const sorted = all.sort((a: any, b: any) => {
-        const da = parseExamDate(a.exam_date);
-        const db = parseExamDate(b.exam_date);
-        const aFuture = da && da.getTime() >= now.getTime() - 86400000;
-        const bFuture = db && db.getTime() >= now.getTime() - 86400000;
-        if (aFuture && bFuture) return da!.getTime() - db!.getTime();
-        if (aFuture) return -1;
-        if (bFuture) return 1;
-        if (da && db) return da.getTime() - db.getTime();
-        if (da) return -1;
-        if (db) return 1;
-        return 0;
-      });
-      return sorted.slice(0, 6);
+      return upcomingHomepageExams(data || [], "exam").slice(0, 6);
     },
   });
 
   const today = useMemo(() => new Date(), []);
 
-  if (!exams?.length) return null;
+  const items = upcomingHomepageExams(exams || [], "exam", today);
+  if (!items.length) return null;
 
   return (
     <section className="py-12 md:py-16 bg-muted/20">
@@ -73,7 +40,7 @@ const PopularExamsSection = () => {
             MBA Entrance Exams
           </span>
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-3">
-            Upcoming MBA Exams 2026
+            Upcoming MBA Exams
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base">
             Key dates, exam patterns, and live countdowns — everything you need at a glance
@@ -85,7 +52,7 @@ const PopularExamsSection = () => {
 
         {/* Exam Cards — 2x2 visual grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 auto-rows-fr max-w-5xl mx-auto">
-          {exams.slice(0, 4).map((exam, i) => {
+          {items.slice(0, 4).map((exam, i) => {
             const examDate = parseExamDate(exam.exam_date);
             const daysLeft = examDate ? differenceInDays(examDate, today) : null;
             const accent = ACCENT_COLORS[i % ACCENT_COLORS.length];

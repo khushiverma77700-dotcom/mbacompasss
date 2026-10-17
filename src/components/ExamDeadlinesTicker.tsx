@@ -3,19 +3,12 @@ import { CalendarDays, AlertTriangle, ChevronRight, Bell, ChevronLeft, ArrowRigh
 import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
-
-const fallbackDeadlines = [
-  { name: "CAT 2025", slug: "cat", registration_deadline: "2025-09-20", exam_date: "2025-11-24", conducting_body: "IIM" },
-  { name: "XAT 2026", slug: "xat", registration_deadline: "2025-11-30", exam_date: "2026-01-05", conducting_body: "XLRI" },
-  { name: "SNAP 2025", slug: "snap", registration_deadline: "2025-11-22", exam_date: "2025-12-15", conducting_body: "SIU" },
-  { name: "NMAT 2025", slug: "nmat", registration_deadline: "2025-10-10", exam_date: "2025-12-18", conducting_body: "GMAC" },
-  { name: "IIFT 2026", slug: "iift", registration_deadline: "2025-09-25", exam_date: "2025-12-01", conducting_body: "NTA" },
-  { name: "CMAT 2026", slug: "cmat", registration_deadline: "2026-01-15", exam_date: "2026-03-20", conducting_body: "NTA" },
-];
+import { parseHomepageDate, upcomingHomepageExams } from "@/lib/homepageCalendar";
 
 const getDaysLeft = (dateStr: string | null) => {
   if (!dateStr) return null;
-  const target = new Date(dateStr);
+  const target = parseHomepageDate(dateStr);
+  if (!target) return null;
   const now = new Date();
   return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 };
@@ -76,12 +69,13 @@ const ExamDeadlinesTicker = () => {
         .from("exams")
         .select("name, slug, registration_deadline, exam_date, conducting_body")
         .order("registration_deadline", { ascending: true })
-        .limit(6);
-      return data && data.length > 0 ? data : fallbackDeadlines;
+        ;
+      return upcomingHomepageExams(data || [], "registration").slice(0, 6);
     },
   });
 
-  const items = exams || fallbackDeadlines;
+  const items = upcomingHomepageExams(exams || [], "registration");
+  if (!items.length) return null;
 
   return (
     <section className="py-16 md:py-20 bg-gradient-to-b from-background via-sky-50/60 to-background relative overflow-hidden">
