@@ -462,7 +462,7 @@ const CollegeDetailPage = () => {
             {/* Premium Stats Strip */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
               {[
-                { label: "NIRF Ranking", value: Number(college.ranking) > 0 ? rankOnly(college.ranking) : numericStat(fallbackText(null, { kind: "ranking", tier: college.tier })), source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
+                { label: "NIRF Ranking", value: Number(college.ranking) > 0 ? rankOnly(college.ranking) : "Not ranked", source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
                 { label: "Total Fees", value: formatMoney(college.fees) || "Not disclosed", source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
                 { label: "Avg Package", value: formatMoney(college.placement_avg) || "Not disclosed", source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
                 { label: "Highest Package", value: formatMoney(college.placement_highest) || "Not disclosed", source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
