@@ -4,6 +4,7 @@ import { createRouter } from "@tanstack/react-router";
 import { packRows, unpackRows } from "./lib/queries/rowTransport";
 import { routeTree } from "./routeTree.gen";
 import { installUploadCompression } from "./lib/imageCompression";
+import { registerPublicSnapshot } from "./lib/queries/publicSnapshot";
 
 
 let serverTimeoutsInstalled = false;
@@ -72,6 +73,7 @@ export const getRouter = () => {
         query.state.data = unpackRows(query.state.data);
       }
       hydrate(queryClient, state);
+      registerPublicSnapshot(queryClient, state);
     },
   });
 

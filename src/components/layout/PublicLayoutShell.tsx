@@ -3,7 +3,9 @@ import { useLocation } from "@/lib/router-compat";
 import BackButton from "@/components/BackButton";
 import { useAdSlots } from "@/components/ads/AdSlots";
 import EditorialInterlinks from "@/components/editorial/EditorialInterlinks";
-import { useHydrated } from "@tanstack/react-router";
+import { useHydrated, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshPublicSnapshot } from "@/lib/queries/publicSnapshot";
 
 const Navbar = lazy(() => import("@/components/Navbar"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -53,6 +55,29 @@ const DeferredChrome = () => {
 
 const PublicLayoutShell = ({ children }: { children: React.ReactNode }) => {
   const ads = useAdSlots();
+  const client = useQueryClient();
+  const router = useRouter();
+  const location = useLocation();
+  useEffect(() => {
+    let disposed = false;
+    let running = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      if (disposed || running) return;
+      running = true;
+      void refreshPublicSnapshot(client).then((refreshed) => {
+        if (refreshed && !disposed) void router.invalidate();
+      }).finally(() => { running = false; });
+    };
+    // Split route components can subscribe after the shared shell's effect.
+    const unsubscribe = client.getQueryCache().subscribe((event) => {
+      if (event.type !== "observerAdded") return;
+      if (timer !== undefined) clearTimeout(timer);
+      timer = setTimeout(refresh, 0);
+    });
+    timer = setTimeout(refresh, 0);
+    return () => { disposed = true; unsubscribe(); if (timer !== undefined) clearTimeout(timer); };
+  }, [client, router, location.pathname]);
   return (
   <>
     <a

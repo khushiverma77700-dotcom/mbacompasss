@@ -18,6 +18,7 @@ import AdLivePreview from "@/components/ads/AdLivePreview";
 import AdPageFrame from "@/components/ads/AdPageFrame";
 import AdSizeUploads from "@/components/ads/AdSizeUploads";
 import { AD_FORMATS } from "@/lib/ads/formats";
+import { smartDeliverySchedule } from "@/lib/ads/schedule";
 import { PAGE_TYPES, PLACEMENTS, type AdCampaign } from "@/lib/ads/engine";
 import { AlertTriangle, CalendarPlus, Copy, Download, Eye, Monitor, Pause, Pencil, Play, Plus, Smartphone, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -128,8 +129,9 @@ export default function AdminAdvertisements() {
     (rest as any).ab_test = (rest as any).ab_test?.trim() || null;
     delete (rest as any).smart_plan;
     if (rest.smart_mode) {
-      if (!(rest.impression_budget! > 0)) return toast({ title: "Enter how many views you want", variant: "destructive" });
-      Object.assign(rest, { pacing: rest.goal_end_at ? "even" : "asap", end_at: rest.goal_end_at ?? null, start_at: rest.start_at ?? (rest.goal_end_at ? new Date().toISOString() : null), daily_impression_budget: 0, page_types: [], include_paths: [], keywords: [], devices: "all",
+      if (!((rest.impression_budget ?? 0) > 0)) return toast({ title: "Enter how many views you want", variant: "destructive" });
+      const schedule = smartDeliverySchedule(rest.end_at, rest.goal_end_at);
+      Object.assign(rest, { ...schedule, start_at: rest.start_at ?? (schedule.end_at ? new Date().toISOString() : null), daily_impression_budget: 0, page_types: [], include_paths: [], keywords: [], devices: "all",
         placements: ["after_intro", "in_content", "mid", "home_section", "before_faq", "sidebar", "end", "sticky"], max_per_page: Math.max(2, rest.max_per_page ?? 2) });
     }
     const row = { ...rest, placements: (rest.placements ?? []).filter((p) => p !== "top"), updated_at: new Date().toISOString(), conversion_path: rest.conversion_path || null };

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Requested monitoring corrections — October 17
+- [ ] Prepare long articles before requests — approval needed for storage, writer and backfill changes; uncached enhancement measured at 64 ms locally
+- [x] Restore fresh public content after static-page hydration (background refresh and route revalidation; browser confirms updated college heading)
+- [x] Preserve Smart-mode ad end dates (five schedule tests pass); signed-in save verification awaits a preview account
+
 ## Public crawlability and static HTML
 - [x] Audit all 5,223 live college URLs: 5,219 return full content; four fail on malformed optional lists. Shared normalization fixes all four in preview; ten tests pass.
 - [ ] Confirm four corrected pages on the live site after publishing — no publish was requested

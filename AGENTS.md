@@ -13,15 +13,15 @@
 - The blog research pipeline records explicit source dates separately from retrieval dates and applies shared deterministic prose cleanup before saving, because freshness and unsupported-data removal must not rely only on model instructions.
 - Share blog completeness and estimate rules across generation paths, and remove incomplete table rows rather than inventing fallback numbers, because labelled calculations need real evidence.
 - AI blog outlines use intent-led chapters with editor-approved table, alert, and link plans, because long articles must remain distinct, scannable, evidence-led, and mobile-readable.
-- First-party ads are chosen client-side by one engine (src/lib/ads/engine.ts) mounted in the shared public layout, and clicks redirect only to the campaign's saved URL, so every page gets ads automatically without open redirects.
+- Public ads share one client engine; clicks use saved campaign URLs to prevent open redirects. Smart scheduling honors the earlier booked or goal deadline so goals never extend bookings.
 - Store campaign artwork variants by display size and resolve them with one shared format selector in both public ads and admin previews, because finished artwork must fit without cropping or stretching.
-- In-content ad slots are discovered from page structure at runtime (section boundaries, length-tier and per-1,000-word budgets) in src/components/ads/AdSlots.tsx, with selection in src/lib/ads/engine.ts, because 10,000+ pages must get well-placed ads without per-page wiring.
+- AdSlots discovers runtime section/word-budget placements; the shared engine selects campaigns so large catalogues need no per-page wiring.
 - Ad discovery observes loaded editorial content and screen changes; relevance uses current-tab memory only and never bypasses targeting or caps, because reading placements must adapt without cross-site profiling or unexpected campaign delivery.
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Editorial readability uses a pure linear block scan and identical allowlisted server/browser sanitization to prevent hangs, fact mutation and hydration mismatches.
-- Native TanStack prerenders capped public-record manifests with content validation; other anonymous pages use the build-keyed HTML cache. Never snapshot admin, student, auth or per-user data.
+- Native TanStack prerenders validated public manifests; other anonymous pages use build-keyed HTML caching. Never snapshot private data. Refresh hydrated public snapshots once when observers mount, then revalidate route heads, to avoid stale visitor content.
 - Marked route heads own metadata; legacy SEOHead only adds schemas there, preventing title flips.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
 - College SEO uses collegeSeo.ts and loader 301s; normalize legacy section lists through collegeSectionData.ts so malformed optional facts cannot blank public HTML.
