@@ -124,29 +124,29 @@ let bootRan = false;
 const WEBSITE_LD = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": "https://mbacompass.in/#website",
   name: "MBA Compass",
   alternateName: ["MBACompass", "MBA Compass India"],
   url: "https://mbacompass.in",
   description:
     "India's trusted platform to find and compare the best MBA colleges and coaching institutes.",
   inLanguage: "en-IN",
-  publisher: { "@type": "Organization", name: "MBA Compass", url: "https://mbacompass.in" },
+  publisher: { "@id": "https://mbacompass.in/#organization" },
 });
 
 const ORG_LD = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": "https://mbacompass.in/#organization",
   name: "MBA Compass",
   legalName: "Akaniya Ventures Private Limited",
   alternateName: "MBA Compass by B School Buzz",
   url: "https://mbacompass.in",
   logo: {
     "@type": "ImageObject",
-    url: "https://mbacompass.in/og-image.png",
-    width: 512,
-    height: 512,
+    url: "https://mbacompass.in/favicon.png",
   },
-  image: "https://mbacompass.in/og-image.png",
+  image: "https://mbacompass.in/favicon.png",
   email: "suyash@bschoolbuzz.in",
   telephone: "+91-76681-29226",
   description:

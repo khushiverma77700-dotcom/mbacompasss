@@ -25,6 +25,7 @@ import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { resolveArticleDisplay } from "@/lib/articleDisplay";
 import { canonicalUrl } from "@/lib/canonical";
+import { articleAttribution } from "@/lib/articleAttribution";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import ReadingProgress from "@/components/mobile/ReadingProgress";
 import { Bookmark } from "lucide-react";
@@ -88,6 +89,7 @@ const ArticlePage = () => {
 
   const articleKeywords = ((article as any)?.keywords || []) as string[];
   const heroImage = article?.banner_url || article?.image_url;
+  const attribution = articleAttribution(article?.author);
   const mobileHeroImage = (article as any)?.mobile_banner_url || heroImage;
   const display = article ? resolveArticleDisplay(article.content || "", article.prepared_display) : undefined;
 
@@ -239,12 +241,12 @@ const ArticlePage = () => {
             )}
 
             <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-              {article.author && (
+              {(
                 <span className="flex min-w-0 items-center gap-2 font-semibold text-foreground/80">
                   <span className="w-7 h-7 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-primary" />
                   </span>
-                  <span className="truncate">{article.author}</span>
+                  <span className="min-w-0"><span className="block">{attribution.name}</span><span className="block font-normal text-muted-foreground">{attribution.role}</span></span>
                 </span>
               )}
               <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatDate(article.created_at)}</span>

@@ -24,7 +24,7 @@ const toCanonicalHost = (url?: string) => {
   try {
     // If it's already a full URL, swap the origin to the canonical apex.
     const u = new URL(url, CANONICAL_ORIGIN);
-    return `${CANONICAL_ORIGIN}${u.pathname}${u.search}${u.hash}`;
+    return `${CANONICAL_ORIGIN}${u.pathname}`;
   } catch {
     return url;
   }
@@ -215,6 +215,9 @@ const SEOHead = ({
         const t = (s as any)["@type"];
         const key = Array.isArray(t) ? t.join("|") : String(t || "");
         if (skipAlways.has(key)) return false;
+        if (key && Array.from(document.querySelectorAll('script[type="application/ld+json"]:not([data-seo-jsonld])')).some((script) => {
+          try { const saved = JSON.parse(script.textContent || "null"); return saved?.["@type"] === key || saved?.["@graph"]?.some((node: any) => node?.["@type"] === key); } catch { return false; }
+        })) return false;
         if (key && singletonTypes.has(key)) {
           if (seen.has(key)) return false;
           seen.add(key);
