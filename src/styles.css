@@ -530,8 +530,6 @@
 @font-face{font-family:"Instrument Serif";font-style:italic;font-weight:400;font-display:swap;src:url("/fonts/instrument-serif-latin-400-italic.woff2") format("woff2")}
 @font-face{font-family:"Plus Jakarta Fallback";src:local("Arial");size-adjust:104%;ascent-override:94%;descent-override:24%;line-gap-override:0%}
 @font-face{font-family:"DM Sans Fallback";src:local("Arial");size-adjust:100%;ascent-override:96%;descent-override:24%;line-gap-override:0%}
-.fonts-loaded body{font-family:'DM Sans',system-ui,-apple-system,sans-serif}
-.fonts-loaded h1,.fonts-loaded h2,.fonts-loaded h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif}
 #root{min-height:100vh}
 /* Reserve hero space so the gradient block paints at the right height (ported from index.html). */
 main>section:first-of-type{min-height:520px}
@@ -600,8 +598,8 @@ main>section:first-of-type{min-height:520px}
     --cat-government: 262 83% 58%;
 
     /* Fonts */
-    --font-heading: 'Plus Jakarta Sans', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
+    --font-heading: 'Plus Jakarta Sans', 'Plus Jakarta Fallback', system-ui, sans-serif;
+    --font-body: 'DM Sans', 'DM Sans Fallback', system-ui, sans-serif;
   }
 
   /* Dark theme — applied via class strategy. Used by Student LMS and Admin.

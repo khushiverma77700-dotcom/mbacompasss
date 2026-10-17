@@ -5,6 +5,7 @@ import { detailHead, prefetchDetail } from "@/lib/detailPageSeo";
 import { buildArticleSchema } from "@/lib/aeoSchema";
 import { resolveArticleDisplay } from "@/lib/articleDisplay";
 import { editorialFaqs, faqMarkup } from "@/lib/editorialFaq";
+import { cdnImage } from "@/lib/imageTransform";
 
 export const Route = createFileRoute("/_public/article/$slug")({
   loader: async ({ context, params }) => {
@@ -26,7 +27,12 @@ export const Route = createFileRoute("/_public/article/$slug")({
     const row = loaderData?.row;
     if (!row) return base;
     const display = resolveArticleDisplay(row.content || "", row.prepared_display);
-    return { ...base, scripts: [...("scripts" in base ? base.scripts : []), { type: "application/ld+json", children: JSON.stringify(buildArticleSchema({ ...row, preparedWordCount: display?.words })) }, ...(loaderData?.faqs?.length ? [{ type: "application/ld+json", children: JSON.stringify(faqMarkup(loaderData.faqs)) }] : [])] };
+    const hero = row.banner_url || row.image_url;
+    const mobile = row.mobile_banner_url || hero;
+    return { ...base, links: [...base.links, ...(hero ? [
+      { rel: "preload", as: "image", href: cdnImage(hero, { width: 1280 }), media: mobile !== hero ? "(min-width: 768px)" : undefined },
+      ...(mobile !== hero ? [{ rel: "preload", as: "image", href: cdnImage(mobile, { width: 768 }), media: "(max-width: 767px)" }] : []),
+    ] : [])], scripts: [...("scripts" in base ? base.scripts : []), { type: "application/ld+json", children: JSON.stringify(buildArticleSchema({ ...row, preparedWordCount: display?.words })) }, ...(loaderData?.faqs?.length ? [{ type: "application/ld+json", children: JSON.stringify(faqMarkup(loaderData.faqs)) }] : [])] };
   },
   component: () => <ArticlePage />,
   pendingComponent: PublicPageSkeleton,

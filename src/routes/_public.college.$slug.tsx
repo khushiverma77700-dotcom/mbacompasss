@@ -6,6 +6,7 @@ import { collegeDescription, collegeTitle } from "@/lib/collegeSeo";
 import { generateCollegeSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 import { normalizeCollegeSectionData } from "@/lib/collegeSectionData";
+import { cdnImage } from "@/lib/imageTransform";
 
 export const Route = createFileRoute("/_public/college/$slug")({
   loader: async ({ context, params }) => {
@@ -45,6 +46,7 @@ export const Route = createFileRoute("/_public/college/$slug")({
     };
     return {
       ...base,
+      links: [...base.links, ...(row.banner_url ? [{ rel: "preload", as: "image", href: cdnImage(row.banner_url, { width: 1280 }) }] : [])],
       scripts: [
         ...(school ? [{ type: "application/ld+json", children: JSON.stringify(school) }] : []),
         { type: "application/ld+json", children: JSON.stringify(crumbs) },
