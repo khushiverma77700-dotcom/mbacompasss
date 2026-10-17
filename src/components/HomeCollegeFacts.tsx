@@ -11,7 +11,7 @@ export default function HomeCollegeFacts({ cutoffs = false }: { cutoffs?: boolea
       <h2 className="font-heading text-3xl font-bold text-foreground">{cutoffs ? "MBA college cutoffs" : "MBA college fees and placements"}</h2>
       <p className="mb-6 mt-2 text-base text-muted-foreground">{cutoffs ? "Category, exam and year are shown where recorded in the college profile. Cutoffs are not admission guarantees." : "Programme fees and average packages from the same records displayed on each college profile. CTC is not take-home salary."}</p>
       <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full text-left text-sm">
+        <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-muted text-foreground"><tr><th className="p-4">College</th><th className="p-4">Programme fees</th><th className="p-4">Average package</th>{cutoffs && <th className="p-4">Recorded cutoff</th>}</tr></thead>
           <tbody>{rows.map(college => <tr key={college.id} className="border-t border-border">
             <td className="p-4 font-semibold"><Link to={`/college/${college.slug}`} className="text-primary hover:underline">{college.name}</Link></td>

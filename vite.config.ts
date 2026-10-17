@@ -7,6 +7,7 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import type { Plugin } from "vite";
 import { loadEnv } from "vite";
+import { gzipSync } from "node:zlib";
 import { enumeratePublicPages, validateRenderedPage } from "./scripts/publicPrerender";
 import { writeBuildSitemaps } from "./scripts/buildSitemap";
 
@@ -24,6 +25,22 @@ const emitVersionJson = (): Plugin => ({
       fileName: "version.json",
       source: JSON.stringify({ buildId: BUILD_ID }),
     });
+  },
+});
+
+const reportClientBundle = (): Plugin => ({
+  name: "mbacompass-client-bundle-report",
+  apply: "build",
+  generateBundle(_options, bundle) {
+    if (this.environment.name !== "client") return;
+    const chunks = Object.values(bundle).filter(item => item.type === "chunk").map(item => ({
+      file: item.fileName,
+      bytes: Buffer.byteLength(item.code),
+      gzipBytes: gzipSync(item.code).byteLength,
+      imports: item.imports,
+      dynamicImports: item.dynamicImports,
+    }));
+    this.emitFile({ type: "asset", fileName: "bundle-report.json", source: JSON.stringify({ buildId: BUILD_ID, chunks, rawBytes: chunks.reduce((sum, chunk) => sum + chunk.bytes, 0), gzipBytes: chunks.reduce((sum, chunk) => sum + chunk.gzipBytes, 0) }, null, 2) });
   },
 });
 
@@ -62,7 +79,7 @@ export default async (env: { command: "build" | "serve"; mode: string }) => {
     define: {
       __BUILD_ID__: JSON.stringify(BUILD_ID),
     },
-    plugins: [emitVersionJson(), guardCreateRequire()],
+    plugins: [emitVersionJson(), guardCreateRequire(), reportClientBundle()],
   },
   })(env);
 };

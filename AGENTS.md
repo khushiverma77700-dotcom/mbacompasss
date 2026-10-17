@@ -9,14 +9,13 @@
 - Mock generation uses exam-normalized CAT/XAT difficulty and deterministic validation to reject malformed, trivial, ambiguous or incorrectly keyed questions.
 - Existing easy mock questions are upgraded through admin-reviewed drafts, and attempted questions or tests with active attempts are never rewritten in place, because historical answers must remain accurate.
 - AI blog articles are generated as drafts through a scope-first pipeline (intent, topic boundary, sources, style) and are published only from the editor workspace after its checklist passes, because unscoped or unverified articles must never go live automatically.
-- AI blog references stay editor-visible evidence and keyword banks stay in SEO data; readers see only curated terms, for readability.
+- Blog evidence stays editor-only; keywords stay in SEO data; readers see curated terms.
 - The blog research pipeline records explicit source dates separately from retrieval dates and applies shared deterministic prose cleanup before saving, because freshness and unsupported-data removal must not rely only on model instructions.
 - Share blog completeness and estimate rules across generation paths, and remove incomplete table rows rather than inventing fallback numbers, because labelled calculations need real evidence.
 - AI blog outlines use intent-led chapters with editor-approved table, alert, and link plans, because long articles must remain distinct, scannable, evidence-led, and mobile-readable.
 - Public ads share one client engine; clicks use saved campaign URLs to prevent open redirects. Smart scheduling honors the earlier booked or goal deadline so goals never extend bookings.
 - Store campaign artwork variants by display size and resolve them with one shared format selector in both public ads and admin previews, because finished artwork must fit without cropping or stretching.
-- AdSlots discovers runtime section/word-budget placements; the shared engine selects campaigns so large catalogues need no per-page wiring.
-- Ad discovery observes loaded editorial content and screen changes; relevance uses current-tab memory only and never bypasses targeting or caps, because reading placements must adapt without cross-site profiling or unexpected campaign delivery.
+- AdSlots discovers runtime editorial placements after interaction; current-tab relevance never bypasses targeting/caps, preserving privacy and initial-load performance.
 - Resolve public editorial entity links and admin blog dossiers through one shared matcher and a cached, paginated slim entity pool; preserve existing links and skip ambiguous names, headings and controls to avoid incorrect or excessive linking.
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
@@ -24,4 +23,6 @@
 - Native TanStack prerenders validated public manifests; other anonymous pages use build-keyed HTML caching. Never snapshot private data. Refresh hydrated public snapshots once when observers mount, then revalidate route heads, to avoid stale visitor content.
 - Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
-- College SEO uses collegeSeo.ts and loader 301s; normalize legacy section lists through collegeSectionData.ts so malformed optional facts cannot blank public HTML.
+- College SEO uses collegeSeo.ts and loader 301s; collegeSectionData normalizes optional lists to protect public HTML.
+- Homepage facts share college records and original-preferred active sections; no duplicate financial/cutoff fallbacks. Calendar rules use IST.
+- Production builds emit raw/gzip client sizes in bundle-report.json for comparable measurement.

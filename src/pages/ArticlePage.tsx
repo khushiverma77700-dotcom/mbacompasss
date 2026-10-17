@@ -34,6 +34,7 @@ import AutoTOC from "@/components/AutoTOC";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import TopicClusterLinks, { DEFAULT_MBA_CLUSTER } from "@/components/TopicClusterLinks";
 import { useScrollableTables } from "@/hooks/useScrollableTables";
+import { cdnImage } from "@/lib/imageTransform";
 
 
 const ArticlePage = () => {
@@ -264,14 +265,17 @@ const ArticlePage = () => {
             <div className="mt-6 md:mt-8 max-w-4xl overflow-hidden rounded-2xl border border-border bg-muted">
               <picture>
                 {mobileHeroImage && mobileHeroImage !== heroImage && (
-                  <source media="(max-width: 767px)" srcSet={mobileHeroImage} />
+                  <source media="(max-width: 767px)" srcSet={cdnImage(mobileHeroImage, { width: 768 })} />
                 )}
                 <img
-                  src={heroImage}
+                  src={cdnImage(heroImage, { width: 1280 })}
                   alt={article.title}
+                  width={1280}
+                  height={720}
+                  decoding="async"
                   className="block w-full h-auto"
                   loading="eager"
-                  {...({ fetchpriority: "high" } as any)}
+                  fetchPriority="high"
                 />
               </picture>
             </div>
