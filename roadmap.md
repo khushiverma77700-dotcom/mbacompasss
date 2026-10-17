@@ -1,5 +1,10 @@
 # Roadmap
 
+## Requested monitoring corrections — October 17
+- [ ] Verify and address long-article server CPU failures
+- [ ] Restore fresh public content after static-page hydration
+- [ ] Preserve ad schedule end dates in Smart mode and verify regressions
+
 ## Public crawlability and static HTML
 - [x] Audit all 5,223 live college URLs: 5,219 return full content; four fail on malformed optional lists. Shared normalization fixes all four in preview; ten tests pass.
 - [ ] Confirm four corrected pages on the live site after publishing — no publish was requested
