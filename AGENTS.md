@@ -23,6 +23,7 @@
 - Prerender capped public manifests; sitemaps use full canonical inventory. Never snapshot private data. Refresh hydrated snapshots and heads once on mount.
 - Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
-- College SEO uses collegeSeo.ts and loader 301s; collegeSectionData normalizes optional lists. Directory index leaves and un-nested institute course routes prevent parent pages masking children.
+- College SEO uses collegeSeo.ts/301s and collegeSectionData; directory leaves and un-nested courses prevent masked children.
 - College fees, CTC and rank read one college column each and display via src/lib/collegeMetrics.ts on every surface; cutoffs use original-preferred active sections; no invented fallbacks, so all pages agree. Calendar rules use IST.
-- Production builds emit raw/gzip client sizes in bundle-report.json for comparable measurement.
+- Builds emit raw/gzip sizes in bundle-report.json.
+- Admin SEO reports use six-slot ordered reads, deadlines and 30s private caches; Google refresh runs after responses without editing content/settings.
