@@ -1,5 +1,9 @@
 # Roadmap
 
+## Remaining error-log finding — October 19
+- [ ] Fix admin SEO report timeouts without editing article wording or SEO settings
+- [ ] Verify report reads, background refresh, and authenticated admin panels
+
 ## Complete public sitemap coverage — October 17
 - [x] Separate full public inventory from capped prerender list: 7,361 URLs in eight child files, including course, author, formula, mock and application pages
 - [x] Add genuine state landings and city/type/exam coverage; repair masked child routes; exclude private dashboards, 308 aliases and query duplicates
