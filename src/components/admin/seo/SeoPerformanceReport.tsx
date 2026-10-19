@@ -233,6 +233,7 @@ export default function SeoPerformanceReport() {
       setLastUpdated(new Date().toISOString());
       setTick((t) => t + 1);
       setErr(null);
+      if (force) toast.success((data as any)?.sync?.queued ? "Search Console refresh started; the report will update automatically." : "Report refreshed.");
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -332,7 +333,6 @@ export default function SeoPerformanceReport() {
               disabled={busy}
               onClick={async () => {
                 await load(true);
-                toast.success("Search Console history re-synced");
               }}
             >
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
