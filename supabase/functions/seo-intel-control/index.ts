@@ -15,10 +15,12 @@ import { gscConfigured, resolveGscSite, GSC_GATEWAY, gscHeaders, SITE_URL, gscDa
 import { semrushConfigured, getKeywordMetrics } from "../_shared/keywordMetrics.ts";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 import { applyRecommendation, canAutoApply, classifyChange } from "../_shared/seoApply.ts";
+import { readReportRows, getReportCache, setReportCache } from "../_shared/seoReportReads.ts";
 
 
 const firecrawlConfigured = () => !!Deno.env.get("FIRECRAWL_API_KEY");
 const openAiConfigured = () => !!(Deno.env.get("OPENAI_API_KEY") || Deno.env.get("OPENAI_API_KEY_2"));
+let dailyRefresh: Promise<void> | undefined;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -28,6 +30,14 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => ({} as any));
   const action = String(body?.action ?? "snapshot");
+  if (["performance_report", "wins_report", "coverage_pulse"].includes(action) && !body.force) {
+    const cached = getReportCache(action);
+    if (cached !== undefined) return json(cached);
+  }
+  const reportJson = (payload: unknown) => {
+    setReportCache(action, payload);
+    return json(payload);
+  };
   const sb = admin();
 
   // Best-effort actor id for the audit trail.
@@ -226,22 +236,25 @@ Deno.serve(async (req) => {
          report built from actual Search Console daily rows ─────────── */
       case "performance_report": {
         const force = !!body?.force;
-        let sync: { ran: boolean; days: number; error: string | null; site: string | null } = {
+        let sync: { ran: boolean; days: number; error: string | null; site: string | null; queued?: boolean; last_synced_at?: string | null } = {
           ran: false, days: 0, error: null, site: null,
         };
 
-        // Refresh the daily history when it is stale (or on demand).
-        const { data: freshest } = await sb.from("seo_gsc_daily")
+        // Provider refresh must not hold up admin report responses.
+        const { data: freshest, error: freshnessError } = await sb.from("seo_gsc_daily")
           .select("captured_on, synced_at").order("captured_on", { ascending: false }).limit(1).maybeSingle();
+        if (freshnessError) throw freshnessError;
         const staleMs = Date.now() - new Date(freshest?.synced_at ?? 0).getTime();
         const shouldSync = gscConfigured() && (force || !freshest || staleMs > 3 * 36e5);
 
-        if (shouldSync) {
+        sync.queued = shouldSync || !!dailyRefresh;
+        sync.last_synced_at = freshest?.synced_at ?? null;
+        if (shouldSync && !dailyRefresh) {
+          dailyRefresh = (async () => {
           try {
             const resolved = await resolveGscSite();
             const siteUrl = settings.gsc_site_url ?? resolved.siteUrl ?? null;
             if (!siteUrl) throw new Error(resolved.error ?? "Search Console property is not selected yet.");
-            sync.site = siteUrl;
             // Full history: Search Console retains ~16 months.
             const start = new Date(Date.now() - 490 * 864e5).toISOString().slice(0, 10);
             const end = new Date(Date.now() - 1 * 864e5).toISOString().slice(0, 10);
@@ -256,10 +269,10 @@ Deno.serve(async (req) => {
                   avg_position: r.position,
                   synced_at: nowIso(),
                 }));
-                await sb.from("seo_gsc_daily").upsert(chunk, { onConflict: "captured_on" });
+                const { error } = await sb.from("seo_gsc_daily").upsert(chunk, { onConflict: "captured_on" });
+                if (error) throw error;
               }
             }
-            sync = { ran: true, days: rows.length, error: null, site: siteUrl };
             await markSource(sb, "gsc", { status: "connected", last_sync_at: nowIso(), last_error: null });
             await logActivity(sb, {
               event: "Search Console daily history refreshed",
@@ -267,24 +280,17 @@ Deno.serve(async (req) => {
               level: "success", data_source: "gsc", records: rows.length,
             });
           } catch (e) {
-            sync = { ran: false, days: 0, error: (e as Error).message, site: sync.site };
+            console.error("[seo-intel-control] daily refresh failed", e);
             await logActivity(sb, {
               event: "Search Console daily refresh failed",
               detail: (e as Error).message, level: "error", data_source: "gsc",
             });
           }
+          })().finally(() => { dailyRefresh = undefined; });
+          EdgeRuntime.waitUntil(dailyRefresh);
         }
-
-        // Read the whole stored history back (paged).
-        const daily: any[] = [];
-        for (let from = 0; from < 20000; from += 1000) {
-          const { data, error } = await sb.from("seo_gsc_daily")
-            .select("captured_on, clicks, impressions, ctr, avg_position")
-            .order("captured_on", { ascending: true }).range(from, from + 999);
-          if (error) break;
-          daily.push(...(data ?? []));
-          if ((data ?? []).length < 1000) break;
-        }
+        const daily = await readReportRows(sb, "seo_gsc_daily",
+          "captured_on, clicks, impressions, ctr, avg_position", "captured_on");
 
         const avg = (vals: number[]) =>
           vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(4)) : null;
@@ -391,7 +397,7 @@ Deno.serve(async (req) => {
           };
         });
 
-        return json({
+        return reportJson({
           data_source: "gsc",
           data_label: daily.length ? "actual" : "unavailable",
           configured: gscConfigured(),
@@ -409,15 +415,8 @@ Deno.serve(async (req) => {
       /* ─────────── wins board: every real improvement, nothing invented ─────────── */
       case "wins_report": {
         // 1. Site-level windows straight out of the stored Search Console history.
-        const dailyRows: any[] = [];
-        for (let from = 0; from < 20000; from += 1000) {
-          const { data, error } = await sb.from("seo_gsc_daily")
-            .select("captured_on, clicks, impressions, ctr, avg_position")
-            .order("captured_on", { ascending: true }).range(from, from + 999);
-          if (error) break;
-          dailyRows.push(...(data ?? []));
-          if ((data ?? []).length < 1000) break;
-        }
+        const dailyRows = await readReportRows(sb, "seo_gsc_daily",
+          "captured_on, clicks, impressions, ctr, avg_position", "captured_on");
         const mean = (v: number[]) => (v.length ? Number((v.reduce((a, b) => a + b, 0) / v.length).toFixed(4)) : null);
         const win = (label: string, cur: number | null, prev: number | null, unit: string, lowerIsBetter = false) => {
           if (cur == null || prev == null || !prev) return null;
@@ -465,15 +464,8 @@ Deno.serve(async (req) => {
         ].filter(Boolean);
 
         // 2. Page-level wins (stored current vs previous window per page).
-        const pageRows: any[] = [];
-        for (let from = 0; from < 12000; from += 1000) {
-          const { data, error } = await sb.from("seo_intel_pages")
-            .select("path, title, clicks, prev_clicks, impressions, prev_impressions, ctr, avg_position, prev_avg_position, position_change, perf_updated_at, indexed_status")
-            .range(from, from + 999);
-          if (error) break;
-          pageRows.push(...(data ?? []));
-          if ((data ?? []).length < 1000) break;
-        }
+        const pageRows = await readReportRows(sb, "seo_intel_pages",
+          "path, title, clicks, prev_clicks, impressions, prev_impressions, ctr, avg_position, prev_avg_position, position_change, perf_updated_at, indexed_status", "path");
         const ratio = (num: number | null, den: number | null) =>
           num == null || den == null || !den ? null : Number((Number(num) / Number(den)).toFixed(4));
         const pageWins = pageRows.map((p) => {
@@ -508,15 +500,8 @@ Deno.serve(async (req) => {
         }).filter((p) => p.kinds.length > 0).sort((a, b) => b.score - a.score).slice(0, 60);
 
         // 3. Keyword wins (ranking improvements + new page-1 entries).
-        const kwRows: any[] = [];
-        for (let from = 0; from < 12000; from += 1000) {
-          const { data, error } = await sb.from("seo_intel_keywords")
-            .select("keyword, locale, target_path, current_position, previous_position, position_change, best_position, clicks, impressions, ctr, search_volume, intent, last_checked_at")
-            .range(from, from + 999);
-          if (error) break;
-          kwRows.push(...(data ?? []));
-          if ((data ?? []).length < 1000) break;
-        }
+        const kwRows = await readReportRows(sb, "seo_intel_keywords",
+          "keyword, locale, target_path, current_position, previous_position, position_change, best_position, clicks, impressions, ctr, search_volume, intent, last_checked_at", "id");
         const keywordWins = kwRows.map((k) => {
           const cur = k.current_position == null ? null : Number(k.current_position);
           const prev = k.previous_position == null ? null : Number(k.previous_position);
@@ -581,7 +566,7 @@ Deno.serve(async (req) => {
           { metric: "Avg position", current: last7.avg_position, previous: prev7.avg_position, all_time: allTime.avg_position, lower_is_better: true },
         ];
 
-        return json({
+        return reportJson({
           data_source: "gsc+engine",
           data_label: dailyRows.length ? "actual" : "unavailable",
           configured: gscConfigured(),
@@ -670,25 +655,17 @@ Deno.serve(async (req) => {
       /* ─────────── coverage pulse: keyword coverage, technical gaps,
          the 64 AI-SEO levers and post-change outcomes — all from stored data ── */
       case "coverage_pulse": {
-        const fetchAll = async (table: string, cols: string) => {
-          const out: any[] = [];
-          for (let from = 0; from < 20000; from += 1000) {
-            const { data, error } = await sb.from(table).select(cols).range(from, from + 999);
-            if (error) break;
-            out.push(...(data ?? []));
-            if ((data ?? []).length < 1000) break;
-          }
-          return out;
-        };
+        const fetchAll = async (table: string, cols: string) =>
+          readReportRows(sb, table, cols, table === "seo_intel_pages" ? "path" : "id");
 
         const [pageRows, kwRows, expRows, recRows, snapRows] = await Promise.all([
-          fetchAll("seo_intel_pages",
+          await fetchAll("seo_intel_pages",
             "path, page_type, title, meta_description, h1, heading_count, word_count, has_schema, schema_types, " +
             "internal_links_out, internal_links_in, indexed_status, indexed_checked_at, health_score, " +
             "clicks, impressions, ctr, avg_position, position_change, perf_updated_at, primary_keyword, target_keywords, " +
             "last_crawl_at, psi_perf_score, psi_seo_score, psi_lcp_ms, psi_cls, psi_tbt_ms, psi_fcp_ms, psi_checked_at, " +
             "rendered_title, rendered_h1, rendered_word_count, rendered_has_schema, rendered_links_out, ssr_gap, live_crawl_at, live_crawl_error"),
-          fetchAll("seo_intel_keywords",
+          await fetchAll("seo_intel_keywords",
             "keyword, target_path, search_volume, volume_source, difficulty, difficulty_source, intent, " +
             "current_position, position_change, opportunity_score, top_competitor_domain, last_checked_at, created_at"),
           sb.from("seo_intel_experiments").select("*").order("changed_on", { ascending: false }).limit(200)
@@ -834,7 +811,7 @@ Deno.serve(async (req) => {
         const withResult = expRows.filter((e: any) => has(e.result_captured_on));
         const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
 
-        return json({
+        return reportJson({
           totals: {
             pages: P.length,
             keywords: K.length,
