@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => ({} as any));
   const action = String(body?.action ?? "snapshot");
-  if (["performance_report", "wins_report", "coverage_pulse"].includes(action) && !body.force) {
+  if (["wins_report", "coverage_pulse"].includes(action) && !body.force) {
     const cached = getReportCache(action);
     if (cached !== undefined) return json(cached);
   }
@@ -236,8 +236,14 @@ Deno.serve(async (req) => {
          report built from actual Search Console daily rows ─────────── */
       case "performance_report": {
         const force = !!body?.force;
+        const cached = force ? undefined : getReportCache(action);
+        // Read persisted provider health even when the report numbers are cached.
+        // Background errors must survive subsequent requests and worker restarts.
+        const { data: source, error: sourceError } = await sb.from("seo_intel_sources")
+          .select("last_error, last_sync_at").eq("source_key", "search_console").maybeSingle();
+        if (sourceError) throw sourceError;
         let sync: { ran: boolean; days: number; error: string | null; site: string | null; queued?: boolean; last_synced_at?: string | null } = {
-          ran: false, days: 0, error: null, site: null,
+          ran: false, days: 0, error: source?.last_error ?? null, site: settings.gsc_site_url ?? null,
         };
 
         // Provider refresh must not hold up admin report responses.
@@ -255,6 +261,7 @@ Deno.serve(async (req) => {
             const resolved = await resolveGscSite();
             const siteUrl = settings.gsc_site_url ?? resolved.siteUrl ?? null;
             if (!siteUrl) throw new Error(resolved.error ?? "Search Console property is not selected yet.");
+            sync.site = siteUrl;
             // Full history: Search Console retains ~16 months.
             const start = new Date(Date.now() - 490 * 864e5).toISOString().slice(0, 10);
             const end = new Date(Date.now() - 1 * 864e5).toISOString().slice(0, 10);
@@ -273,7 +280,11 @@ Deno.serve(async (req) => {
                 if (error) throw error;
               }
             }
-            await markSource(sb, "gsc", { status: "connected", last_sync_at: nowIso(), last_error: null });
+            await markSource(sb, "search_console", { status: "connected", last_sync_at: nowIso(), last_error: null });
+            sync.ran = true;
+            sync.days = rows.length;
+            sync.error = null;
+            sync.last_synced_at = nowIso();
             await logActivity(sb, {
               event: "Search Console daily history refreshed",
               detail: `${rows.length} day(s) of actual performance data stored`,
@@ -281,14 +292,17 @@ Deno.serve(async (req) => {
             });
           } catch (e) {
             console.error("[seo-intel-control] daily refresh failed", e);
+            sync.error = (e as Error).message;
+            await markSource(sb, "search_console", { status: "error", last_error: sync.error });
             await logActivity(sb, {
               event: "Search Console daily refresh failed",
               detail: (e as Error).message, level: "error", data_source: "gsc",
             });
           }
-          })().finally(() => { dailyRefresh = undefined; });
+          })().finally(() => { sync.queued = false; dailyRefresh = undefined; });
           EdgeRuntime.waitUntil(dailyRefresh);
         }
+        if (cached !== undefined) return json({ ...(cached as Record<string, unknown>), sync });
         const daily = await readReportRows(sb, "seo_gsc_daily",
           "captured_on, clicks, impressions, ctr, avg_position", "captured_on");
 

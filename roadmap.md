@@ -1,5 +1,8 @@
 # Roadmap
 
+## Search Console report failure warning — October 21
+- [ ] Restore persisted refresh failures on cached reports and distinguish refresh requests from successful completion; run regression tests
+
 ## Remaining error-log finding — October 19
 - [x] Deploy admin SEO report timeout correction: non-blocking Google refresh, six-slot complete reads, deadlines and 30s caches; eight tests pass, article content/SEO hashes unchanged
 - [ ] Verify authenticated admin panels and live Google refresh — requester has no matching auth account; live requests correctly return 401 until signed into the preview
