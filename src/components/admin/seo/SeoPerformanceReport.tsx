@@ -233,7 +233,12 @@ export default function SeoPerformanceReport() {
       setLastUpdated(new Date().toISOString());
       setTick((t) => t + 1);
       setErr(null);
-      if (force) toast.success((data as any)?.sync?.queued ? "Search Console refresh started; the report will update automatically." : "Report refreshed.");
+      if (force) {
+        const sync = (data as any)?.sync;
+        if (sync?.error) toast.error(`Last Search Console sync failed: ${safeText(sync.error)}`);
+        else if (sync?.queued) toast.info("Search Console refresh requested; waiting for the result.");
+        else toast.success("Report refreshed.");
+      }
     } catch (e) {
       setErr((e as Error).message);
     } finally {

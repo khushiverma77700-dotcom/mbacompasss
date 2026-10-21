@@ -26,4 +26,4 @@
 - College SEO uses collegeSeo.ts/301s and collegeSectionData; directory leaves and un-nested courses prevent masked children.
 - College fees, CTC and rank read one college column each and display via src/lib/collegeMetrics.ts on every surface; cutoffs use original-preferred active sections; no invented fallbacks, so all pages agree. Calendar rules use IST.
 - Builds emit raw/gzip sizes in bundle-report.json.
-- Admin SEO reports use six-slot ordered reads, deadlines and 30s private caches; Google refresh runs after responses without editing content/settings.
+- SEO reports: six-slot reads, deadlines, 30s caches; background refresh never edits content/settings. Read persisted search_console errors on cache hits.
