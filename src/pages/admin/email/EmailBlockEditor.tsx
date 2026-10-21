@@ -31,13 +31,39 @@ export default function EmailBlockEditor({ html, onChange, resetKey }: { html: s
     if (type === "image") { targetRef.current = b.id; setTimeout(() => fileRef.current?.click(), 0); }
   };
 
+  /** Email clients (Gmail proxy, Outlook) often refuse WebP or extension/content-type mismatches, so email images are always stored as real JPEG. GIFs stay untouched to keep animation. Kept under the app-wide compression threshold so the global WebP re-encode does not apply. */
+  const toEmailJpeg = async (file: File): Promise<File> => {
+    const bitmap = await createImageBitmap(file);
+    try {
+      const scale = Math.min(1, 1200 / bitmap.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      let blob: Blob | null = null;
+      for (const q of [0.85, 0.75, 0.65, 0.55]) {
+        blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", q));
+        if (blob && blob.size <= 450 * 1024) break;
+      }
+      if (!blob) return file;
+      return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" });
+    } finally {
+      bitmap.close?.();
+    }
+  };
+
   const upload = async (file: File, id: string) => {
     if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) return toast.error("Use PNG, JPG, WebP or GIF");
     if (file.size > 3 * 1024 * 1024) return toast.error("Image must be under 3 MB");
     setUploadingId(id);
     try {
-      const path = `email-images/${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-      const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: false });
+      const prepared = file.type === "image/gif" ? file : await toEmailJpeg(file);
+      const path = `email-images/${Date.now()}-${prepared.name.replace(/[^\w.-]/g, "_")}`;
+      const { error } = await supabase.storage.from("uploads").upload(path, prepared, { upsert: false, contentType: prepared.type });
       if (error) throw error;
       const { data } = supabase.storage.from("uploads").getPublicUrl(path);
       const alt = file.name.replace(/\.\w+$/, "").replace(/[-_]+/g, " ").trim() || "MBA Compass image";
