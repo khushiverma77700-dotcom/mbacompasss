@@ -28,8 +28,8 @@ async function handler(options: { missingProperty?: boolean; syncError?: string;
     };
     return chain;
   } };
-  const source = readFileSync(new URL("../seo-intel-control/index.ts", import.meta.url), "utf8").replace(/^import[\s\S]*?;\n/gm, "");
-  const js = await transform(source, { loader: "ts", format: "cjs" });
+  const handlerSource = readFileSync(new URL("../seo-intel-control/index.ts", import.meta.url), "utf8").replace(/^import[\s\S]*?;\n/gm, "");
+  const js = await transform(handlerSource, { loader: "ts", format: "cjs" });
   runInNewContext(js.code, {
     Deno: { serve: (fn: typeof serve) => { serve = fn; }, env: { get: () => undefined } },
     EdgeRuntime: { waitUntil: (p: Promise<unknown>) => background.push(p) },
