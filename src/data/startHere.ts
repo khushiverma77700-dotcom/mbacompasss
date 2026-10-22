@@ -81,6 +81,9 @@ export const CHAT_MESSAGES: { name: string; text: string }[] = [
 ];
 
 export const FAQS = [
+  { q: "What is B School Buzz | MBA Compass?", a: "B School Buzz | MBA Compass is an MBA guidance platform for Indian aspirants, offering free tools, mocks, college data, application updates and GD-PI help in one place." },
+  { q: "Which MBA entrance exams do you cover?", a: "We cover CAT, XAT, SNAP, NMAT, CMAT, MAT and other MBA entrance exams, including exam updates, mocks and score tools." },
+  { q: "How do I shortlist MBA colleges?", a: "Use the college shortlister with your expected score and profile, then compare fees, placements and exams accepted on each college page." },
   { q: "Is everything free?", a: "Yes. All tools on this page and the WhatsApp community are free to use." },
   { q: "Who is this for?", a: "Anyone planning an MBA in India: first-time aspirants, repeaters and working professionals." },
   { q: "How do I join the community?", a: "Tap any Join WhatsApp Community button. It opens WhatsApp and you can join in one tap." },

@@ -5,6 +5,9 @@ import {
   Volume2, VolumeX, ArrowRight, Lock, ShieldCheck, Users, Check, ChevronDown, MessageCircle, Instagram, Linkedin, Youtube, Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { enablePush, pushPermission } from "@/lib/push";
 import { publicPageHead } from "@/lib/publicPageHead";
 import { BRAND_LOGO_URL } from "@/assets/brandLogo";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp";
@@ -21,7 +24,16 @@ export const Route = createFileRoute("/start-here")({
     );
     // Keep the full requested title rather than the shortened shared one.
     h.meta[0] = { title: "Start Here | Free MBA Preparation Tools & Community, MBA Compass" };
-    return h;
+    return {
+      ...h,
+      scripts: [
+        ...((h as { scripts?: unknown[] }).scripts ?? []),
+        { type: "application/ld+json", children: JSON.stringify({
+          "@context": "https://schema.org", "@type": "FAQPage",
+          mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+        }) },
+      ],
+    } as typeof h;
   },
   component: StartHerePage,
 });
@@ -241,6 +253,89 @@ function FloatingWhatsApp() {
 }
 
 /* ---------- Page ---------- */
+const ROTATING = ["MBA Planning", "MBA Coaching", "MBA Updates", "Free MBA Guidance", "GD-PI Help", "MBA Mocks", "MBA College Shortlister"];
+
+function RotatingWord() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setInterval(() => setI((n) => (n + 1) % ROTATING.length), 2200);
+    return () => window.clearInterval(t);
+  }, []);
+  return (
+    <span key={i} className="inline-block border-b-2 border-primary font-bold text-primary animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {ROTATING[i]}
+    </span>
+  );
+}
+
+const PROMPT_KEY = "start_here_notify_prompt";
+
+function NotificationPrompt() {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    if (pushPermission() !== "default" || localStorage.getItem(PROMPT_KEY)) return;
+    const t = window.setTimeout(() => setOpen(true), 6000);
+    return () => window.clearTimeout(t);
+  }, []);
+  if (!open) return null;
+  const close = () => { localStorage.setItem(PROMPT_KEY, String(Date.now())); setOpen(false); };
+  const allow = async () => {
+    const r = await enablePush(user?.id ?? null);
+    track("notify_prompt", r);
+    if (r === "registered" || r === "already-on") { setMsg("Notifications are on. We will alert you about forms, results and deadlines."); }
+    else if (r === "denied") { setMsg("Notifications are blocked in your browser settings."); }
+    else { setMsg("Notifications are not available in this browser."); }
+    localStorage.setItem(PROMPT_KEY, String(Date.now()));
+    window.setTimeout(() => setOpen(false), 2500);
+  };
+  return (
+    <div role="dialog" aria-labelledby="notify-title" className="fixed inset-x-3 bottom-20 z-50 mx-auto max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl animate-in fade-in slide-in-from-bottom-4 md:bottom-6">
+      <h2 id="notify-title" className="font-heading text-base font-bold">Never miss an MBA deadline</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Allow notifications for application closing dates, exam alerts, results and new free mocks. You can turn them off any time.</p>
+      {msg ? <p className="mt-3 text-sm font-semibold text-primary">{msg}</p> : (
+        <div className="mt-4 flex gap-3">
+          <button type="button" onClick={allow} className="min-h-10 flex-1 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground">Allow notifications</button>
+          <button type="button" onClick={close} className="min-h-10 rounded-xl border border-border px-4 text-sm font-semibold">Not now</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const GUIDE = [
+  { h: "MBA planning that starts with you", p: "Every aspirant has a different starting point. Before you pick an exam, it helps to know your academic record, work experience and target budget. Our profile analyser and planning guides help you decide between CAT, XAT, SNAP, NMAT, CMAT and MAT, and set a realistic preparation timeline.", url: "/tools", cta: "Open planning tools" },
+  { h: "Coaching and mocks, compared honestly", p: "Choosing coaching is a large decision. Compare coaching institutes by course format, fees and features, and practise with exam-pattern mocks that show sectional analysis, so you know exactly where marks are being lost.", url: "/mocks", cta: "Try MBA mocks" },
+  { h: "College shortlisting with real data", p: "Browse thousands of MBA colleges by city, state, fees, exams accepted and placements. The college shortlister matches your expected score and profile with colleges where you have a realistic chance of a call.", url: "/colleges", cta: "Explore MBA colleges" },
+  { h: "Applications and deadlines in one view", p: "Admission forms open and close at different times. The MBA applications page lists open forms, closing dates and direct apply links, and highlights forms closing within the next few days.", url: "/mba-application", cta: "See open applications" },
+  { h: "GD-PI and WAT preparation", p: "After the results, calls matter only if you convert them. Use score calculators, interview guidance and community discussions to prepare for group discussions, personal interviews and written ability tests.", url: "/cat-score-calculator", cta: "Check your CAT score" },
+  { h: "Latest MBA updates and articles", p: "Exam notifications, result announcements, cutoff changes and admission news are published regularly on our blog, written for aspirants who want facts rather than noise.", url: "/blog", cta: "Read MBA updates" },
+];
+
+function GuideSection() {
+  return (
+    <section aria-labelledby="guide-title" className="border-y border-border bg-accent/30">
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <h2 id="guide-title" className="font-heading text-3xl font-extrabold">How B School Buzz | MBA Compass helps at every stage</h2>
+        <p className="mt-3 max-w-3xl text-base text-muted-foreground">
+          Getting into a good B-school is a year-long journey with many decisions. This page brings together everything we offer, so you can come back here whenever you are unsure of the next step.
+        </p>
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {GUIDE.map((g) => (
+            <article key={g.h} className="rounded-2xl border border-border bg-card p-6">
+              <h3 className="font-heading text-xl font-bold">{g.h}</h3>
+              <p className="mt-2 text-base text-muted-foreground">{g.p}</p>
+              <a href={g.url} onClick={() => track("guide_click", g.h)} className="mt-4 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline">{g.cta}</a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function StartHerePage() {
   const [query, setQuery] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -248,13 +343,8 @@ function StartHerePage() {
 
   return (
     <div className="min-h-screen bg-background font-body text-base text-foreground">
-      {/* 1. Sticky header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <a href="/" aria-label="MBA Compass home"><img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 52 }} width={140} height={52} /></a>
-          <WhatsAppButton label="Join WhatsApp" where="header" size="sm" />
-        </div>
-      </header>
+      <Navbar />
+      <NotificationPrompt />
 
       <main>
         {/* 2. Hero + live chat */}
@@ -262,12 +352,18 @@ function StartHerePage() {
           <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-primary/10 blur-3xl" />
           <div className="container relative mx-auto grid items-center gap-10 px-4 py-12 md:py-20 lg:grid-cols-2">
             <div className="text-center lg:text-left">
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary"><Sparkles className="size-4" aria-hidden="true" /> Start here</p>
-              <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
-                Your First MBA Partner for the <span className="font-editorial italic text-primary">Entire Journey.</span>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">Welcome</p>
+              <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-tight">
+                Welcome to B School Buzz | MBA Compass
               </h1>
-              <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground lg:mx-0">
-                From choosing your exam to landing your dream college. Free tools, expert guidance and a community of aspirants, all in one place.
+              <p className="mt-3 font-heading text-2xl font-bold text-foreground">
+                Your only MBA partner until you reach your dream MBA college.
+              </p>
+              <p className="mt-4 text-2xl font-semibold text-muted-foreground" aria-live="polite">
+                One place for <RotatingWord />
+              </p>
+              <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground lg:mx-0">
+                From choosing your exam to accepting your admission offer, we stay with you at every stage: planning, preparation, mocks, college shortlisting, applications and GD-PI. Free tools, honest guidance and a community of aspirants preparing alongside you.
               </p>
               <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <WhatsAppButton where="hero" />
@@ -283,9 +379,8 @@ function StartHerePage() {
                 [ShieldCheck, "Clear guidance", "Simple, practical advice at every step"],
                 [Users, "Peer community", "Aspirants preparing for the same exams"],
                 [Sparkles, "Free tools", "Calculators, shortlisters and mocks"],
-              ].map(([I, t, d]) => { const Ic = I as typeof Users; return (
-                <div key={t as string} className="flex items-start gap-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Ic className="size-5" aria-hidden="true" /></span>
+              ].map(([, t, d]) => { return (
+                <div key={t as string} className="border-l-2 border-primary pl-4">
                   <div><dt className="font-heading text-base font-bold text-foreground">{t as string}</dt><dd className="text-sm text-muted-foreground">{d as string}</dd></div>
                 </div>); })}
             </dl>
@@ -307,6 +402,8 @@ function StartHerePage() {
           </ol>
           <p className="mt-8 text-center font-editorial text-2xl italic text-primary">Everything you need, in one corner.</p>
         </section>
+
+        <GuideSection />
 
         {/* Community card */}
         <section className="container mx-auto px-4 py-6">
@@ -383,24 +480,7 @@ function StartHerePage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card">
-        <div className="container mx-auto flex flex-col items-center gap-5 px-4 py-10 md:flex-row md:justify-between">
-          <img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 32 }} loading="lazy" width={124} height={32} />
-          <nav aria-label="Footer" className="flex flex-wrap justify-center gap-5 text-base">
-            {[["Home", "/"], ["Colleges", "/colleges"], ["Exams", "/exam"], ["Articles", "/blog"], ["Mocks", "/mocks"]].map(([l, u]) => (
-              <a key={u} href={u} className="hover:text-primary">{l}</a>
-            ))}
-          </nav>
-          <div className="flex gap-3">
-            {[[Instagram, "Instagram", "https://www.instagram.com/"], [Linkedin, "LinkedIn", "https://www.linkedin.com/"], [Youtube, "YouTube", "https://www.youtube.com/"]].map(([I, l, u]) => {
-              const Ic = I as typeof Instagram;
-              return <a key={l as string} href={u as string} target="_blank" rel="noopener noreferrer" aria-label={l as string} className="grid size-10 place-items-center rounded-full bg-accent text-primary hover:bg-primary/15"><Ic className="size-5" /></a>;
-            })}
-          </div>
-        </div>
-        <p className="pb-6 text-center text-sm text-muted-foreground">© {new Date().getFullYear()} MBA Compass. All rights reserved.</p>
-      </footer>
+      <Footer />
 
       {/* Floating WhatsApp (mobile) */}
       <FloatingWhatsApp />
