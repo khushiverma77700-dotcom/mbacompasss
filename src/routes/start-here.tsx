@@ -435,22 +435,31 @@ function StartHerePage() {
           </div>
         </section>
 
-        {/* Journey roadmap */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
-          <h2 className="text-center font-heading text-3xl font-extrabold md:text-4xl">Your MBA journey, step by step</h2>
-          <ol className="relative mt-10 grid gap-5 border-l-2 border-primary/20 pl-8 md:grid-cols-3 md:border-l-0 md:pl-0">
-            {JOURNEY.map((s, i) => (
-              <Reveal as="li" key={s.title} delay={i * 90} className="relative rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors duration-300 hover:border-primary/40">
-                <span className="absolute -left-[2.65rem] top-5 grid size-8 place-items-center rounded-full border-2 border-primary bg-background text-sm font-bold text-primary md:static md:mb-3">{String(i + 1).padStart(2, "0")}</span>
-                <h3 className="font-heading text-lg font-bold">{s.title}</h3>
-                <p className="mt-1 text-base text-muted-foreground">{s.text}</p>
-                <a href={s.url} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary" onClick={() => track("journey_click", s.title)}>Explore <ArrowRight className="size-3.5" aria-hidden="true" /></a>
-              </Reveal>
-            ))}
-          </ol>
+        {/* Most demanded tools */}
+        <section aria-labelledby="top-tools-title" className="container mx-auto px-4 py-12 md:py-16">
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <span aria-hidden="true" className="mx-auto block h-1 w-10 rounded-full bg-primary" />
+            <h2 id="top-tools-title" className="mt-4 font-heading text-3xl font-extrabold md:text-4xl">Start with the most demanded tools</h2>
+            <p className="mt-3 text-base text-muted-foreground">
+              The four tools MBA aspirants open again and again. Each one takes under two minutes and gives you something you can act on.
+            </p>
+          </Reveal>
+          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {TOP_TOOLS.map((s, i) => {
+              const Icon = ICONS[s.icon];
+              return (
+                <Reveal as="li" key={s.title} delay={i * 90} className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-colors duration-300 hover:border-primary/40">
+                  <span className="grid size-11 place-items-center rounded-xl bg-accent text-primary"><Icon className="size-5" aria-hidden="true" /></span>
+                  <h3 className="mt-4 font-heading text-lg font-bold">{s.title}</h3>
+                  <p className="mt-1 text-base text-muted-foreground">{s.text}</p>
+                  <a href={s.url} onClick={() => track("top_tool_click", s.title)} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">Open tool <ArrowRight className="size-3.5" aria-hidden="true" /></a>
+                </Reveal>
+              );
+            })}
+          </ul>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a href="/tools/college-shortlister" onClick={() => track("journey_cta", "shortlister")} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-6 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">Shortlist my colleges <ArrowRight className="size-4" aria-hidden="true" /></a>
-            <a href="/mba-application" onClick={() => track("journey_cta", "applications")} className="inline-flex min-h-12 items-center rounded-xl border border-border bg-card px-6 font-semibold hover:border-primary/40 hover:text-primary">See open applications</a>
+            <a href="/tools/college-shortlister" onClick={() => track("top_tools_cta", "shortlister")} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-6 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">Shortlist my colleges <ArrowRight className="size-4" aria-hidden="true" /></a>
+            <a href="/mba-application" onClick={() => track("top_tools_cta", "applications")} className="inline-flex min-h-12 items-center rounded-xl border border-border bg-card px-6 font-semibold hover:border-primary/40 hover:text-primary">See open applications</a>
           </div>
         </section>
 
