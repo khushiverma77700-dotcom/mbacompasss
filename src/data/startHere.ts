@@ -38,13 +38,13 @@ export const NEW_ITEMS = [
   { title: "IIM waitlist movement tracker", url: "/tools/iim-waitlist-movement" },
 ];
 
-export const JOURNEY = [
-  { title: "Preparation Planning", text: "Start your prep the right way.", url: "/blog" },
-  { title: "College Shortlisting", text: "Find colleges that fit your profile.", url: "/tools/college-shortlister" },
-  { title: "Exam Preparation", text: "CAT, XAT, SNAP, NMAT and more.", url: "/exam" },
-  { title: "Mock Tests", text: "Practise, analyse, improve.", url: "/mocks" },
-  { title: "Interview Preparation", text: "WAT, GD and PI made simple.", url: "/blog" },
-  { title: "Final Admission", text: "Convert your call, pick the right college.", url: "/mba-application" },
+/** The four tools shown under "Start with the most demanded tools". */
+export interface TopTool { title: string; text: string; url: string; icon: ToolIcon; }
+export const TOP_TOOLS: TopTool[] = [
+  { title: "AI Profile Analyser", text: "See how strong your profile looks to colleges, in minutes.", url: "/tools/profile-analyzer", icon: "user" },
+  { title: "ROI Calculator", text: "Check fees, loans and payback before you commit.", url: "/tools/roi-calculator", icon: "calc" },
+  { title: "College Finder", text: "Match colleges to your score, budget and city.", url: "/tools/college-finder", icon: "school" },
+  { title: "Coaching Finder", text: "Find coaching that fits your exam, city and budget.", url: "/compare", icon: "book" },
 ];
 
 export const CHAT_MESSAGES: { name: string; text: string }[] = [
