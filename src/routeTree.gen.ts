@@ -16,6 +16,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ExamsRouteImport } from './routes/exams'
 import { Route as MbaProgrammeCompareRouteImport } from './routes/mba-programme-compare'
 import { Route as MbaRoiCalculatorRouteImport } from './routes/mba-roi-calculator'
+import { Route as StartHereRouteImport } from './routes/start-here'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as PublicIndexRouteImport } from './routes/_public.index'
 import { Route as PublicSlugRouteImport } from './routes/_public.$slug'
@@ -377,6 +378,11 @@ const MbaProgrammeCompareRoute = MbaProgrammeCompareRouteImport.update({
 const MbaRoiCalculatorRoute = MbaRoiCalculatorRouteImport.update({
   id: '/mba-roi-calculator',
   path: '/mba-roi-calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StartHereRoute = StartHereRouteImport.update({
+  id: '/start-here',
+  path: '/start-here',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentRoute = StudentRouteImport.update({
@@ -2093,6 +2099,7 @@ export interface FileRoutesByFullPath {
   '/exams': typeof ExamsRouteWithChildren
   '/mba-programme-compare': typeof MbaProgrammeCompareRoute
   '/mba-roi-calculator': typeof MbaRoiCalculatorRoute
+  '/start-here': typeof StartHereRoute
   '/student': typeof StudentRouteWithChildren
   '/$slug': typeof PublicSlugRoute
   '/about': typeof PublicAboutRoute
@@ -2425,6 +2432,7 @@ export interface FileRoutesByTo {
   '/business-inquiry': typeof BusinessInquiryRoute
   '/mba-programme-compare': typeof MbaProgrammeCompareRoute
   '/mba-roi-calculator': typeof MbaRoiCalculatorRoute
+  '/start-here': typeof StartHereRoute
   '/$slug': typeof PublicSlugRoute
   '/about': typeof PublicAboutRoute
   '/auth': typeof PublicAuthRoute
@@ -2747,6 +2755,7 @@ export interface FileRoutesById {
   '/exams': typeof ExamsRouteWithChildren
   '/mba-programme-compare': typeof MbaProgrammeCompareRoute
   '/mba-roi-calculator': typeof MbaRoiCalculatorRoute
+  '/start-here': typeof StartHereRoute
   '/student': typeof StudentRouteWithChildren
   '/_public/$slug': typeof PublicSlugRoute
   '/_public/about': typeof PublicAboutRoute
@@ -3086,6 +3095,7 @@ export interface FileRouteTypes {
     | '/exams'
     | '/mba-programme-compare'
     | '/mba-roi-calculator'
+    | '/start-here'
     | '/student'
     | '/$slug'
     | '/about'
@@ -3418,6 +3428,7 @@ export interface FileRouteTypes {
     | '/business-inquiry'
     | '/mba-programme-compare'
     | '/mba-roi-calculator'
+    | '/start-here'
     | '/$slug'
     | '/about'
     | '/auth'
@@ -3739,6 +3750,7 @@ export interface FileRouteTypes {
     | '/exams'
     | '/mba-programme-compare'
     | '/mba-roi-calculator'
+    | '/start-here'
     | '/student'
     | '/_public/$slug'
     | '/_public/about'
@@ -4077,6 +4089,7 @@ export interface RootRouteChildren {
   ExamsRoute: typeof ExamsRouteWithChildren
   MbaProgrammeCompareRoute: typeof MbaProgrammeCompareRoute
   MbaRoiCalculatorRoute: typeof MbaRoiCalculatorRoute
+  StartHereRoute: typeof StartHereRoute
   StudentRoute: typeof StudentRouteWithChildren
   AdmissionsSplatRoute: typeof AdmissionsSplatRoute
   CourseSlugRoute: typeof CourseSlugRoute
@@ -4141,6 +4154,13 @@ declare module '@tanstack/react-router' {
       path: '/mba-roi-calculator'
       fullPath: '/mba-roi-calculator'
       preLoaderRoute: typeof MbaRoiCalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/start-here': {
+      id: '/start-here'
+      path: '/start-here'
+      fullPath: '/start-here'
+      preLoaderRoute: typeof StartHereRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student': {
@@ -7348,6 +7368,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExamsRoute: ExamsRouteWithChildren,
   MbaProgrammeCompareRoute: MbaProgrammeCompareRoute,
   MbaRoiCalculatorRoute: MbaRoiCalculatorRoute,
+  StartHereRoute: StartHereRoute,
   StudentRoute: StudentRouteWithChildren,
   AdmissionsSplatRoute: AdmissionsSplatRoute,
   CourseSlugRoute: CourseSlugRoute,
