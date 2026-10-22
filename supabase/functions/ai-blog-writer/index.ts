@@ -1676,6 +1676,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       .maybeSingle();
     if (existingSlug?.id) finalSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
 
+    assertNoPlaceholderContent(article.intro || "", article.content || "");
     const insertPayload = {
       title: article.title || brief.title,
       slug: finalSlug,
