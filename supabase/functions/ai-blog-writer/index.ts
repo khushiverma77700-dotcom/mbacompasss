@@ -454,7 +454,7 @@ Category: ${brief.category || "news"}.`,
 
 function fallbackSectionHtml(_brief: BlogBrief, heading: string) {
   const h = escapeHtml(heading);
-  return `<h2>${h}</h2><p><em>This section could not be written automatically from verified sources. Please add it manually, or add a reference link and run Fix Issues.</em></p>`;
+  return `<h2>${h}</h2><p><em>This section could not be written automatically from verified sources. Regenerate this article from Write Blog after checking the AI key in Admin → API Keys &amp; Secrets.</em></p>`;
 }
 
 async function createSectionHtml(brief: BlogBrief, draft: any, section: any, index: number, facts?: VerifiedFacts | null) {
@@ -508,7 +508,11 @@ ${imgNote}${isFirst || isMiddle || isLast ? "" : ""}${ctaNote ? "" : ""}`;
     const html = stripExternalLinks(result.html || "");
     return html && countWords(html) > 60 ? html : fallbackSectionHtml(brief, section.heading);
   } catch (e) {
-    console.warn("Section AI failed; using safe fallback:", e instanceof Error ? e.message : e);
+    const msg = e instanceof Error ? e.message : String(e);
+    // Billing/auth failures hit every section — fail the job loudly instead of
+    // saving an article full of placeholder text.
+    if (isAiAccountError(msg)) throw e;
+    console.warn("Section AI failed; using safe fallback:", msg);
     return fallbackSectionHtml(brief, section.heading);
   }
 }
@@ -577,7 +581,9 @@ Return EXACTLY these blocks, in this order, each as standalone HTML strings:
       faqs: Array.isArray(result.faqs) ? result.faqs.slice(0, 10) : [],
     };
   } catch (e) {
-    console.warn("Closing AI failed; using safe fallback:", e instanceof Error ? e.message : e);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (isAiAccountError(msg)) throw e;
+    console.warn("Closing AI failed; using safe fallback:", msg);
     return fallbackClosingHtml(brief);
   }
 }
