@@ -35,18 +35,48 @@ function track(event: string, label: string) {
   else w.dataLayer?.push({ event, event_label: label });
 }
 
+const AUTH_URL = "/auth?mode=signup&redirect=%2Fstart-here";
+
+/** The community link is only revealed to signed-in students. */
+function useWhatsAppLink() {
+  const { user, loading } = useAuth();
+  const unlocked = !loading && !!user;
+  return unlocked
+    ? { href: WA_URL, unlocked, extra: { target: "_blank", rel: "noopener noreferrer" } }
+    : { href: AUTH_URL, unlocked, extra: {} };
+}
+
 function WhatsAppButton({ label = "Join WhatsApp Community", where, size = "lg" }: { label?: string; where: string; size?: "sm" | "lg" }) {
+  const { href, unlocked, extra } = useWhatsAppLink();
   return (
     <a
-      href={WA_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => track("whatsapp_join_click", where)}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-whatsapp font-semibold text-whatsapp-foreground shadow-md transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${size === "lg" ? "min-h-12 px-6 text-base" : "min-h-10 px-4 text-sm"}`}
+      href={href}
+      {...extra}
+      onClick={() => track(unlocked ? "whatsapp_join_click" : "whatsapp_signup_gate", where)}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-whatsapp font-semibold text-whatsapp-foreground shadow-lg shadow-whatsapp/25 transition hover:-translate-y-0.5 hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${size === "lg" ? "min-h-12 px-6 text-base" : "min-h-10 px-4 text-sm"}`}
     >
-      <MessageCircle className="size-5" aria-hidden="true" /> {label}
+      {unlocked ? <MessageCircle className="size-5" aria-hidden="true" /> : <Lock className="size-4" aria-hidden="true" />} {label}
     </a>
   );
+}
+
+function GateNote({ className = "" }: { className?: string }) {
+  const { unlocked } = useWhatsAppLink();
+  return (
+    <p className={`text-sm ${className}`}>
+      {unlocked ? "You're signed in. Tap to join. Free, no spam." : "Free sign-up required to get the group link. Takes 30 seconds. No spam."}
+    </p>
+  );
+}
+
+/** Gently varying "online" count around 82 for the chat header. */
+function useOnlineCount() {
+  const [n, setN] = useState(82);
+  useEffect(() => {
+    const t = setInterval(() => setN((v) => Math.min(96, Math.max(74, v + Math.round(Math.random() * 4 - 2)))), 3500);
+    return () => clearInterval(t);
+  }, []);
+  return n;
 }
 
 /* ---------- Animated WhatsApp-style chat ---------- */
