@@ -712,6 +712,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const structured = structureArticle(introAudit.html, contentAudit.html);
   const intro = structured.intro;
   const content = structured.content;
+  assertNoPlaceholderContent(intro, content);
   if (contentQC.issues.length) {
     console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
   }
