@@ -47,6 +47,10 @@
   --color-cat-medical: hsl(var(--cat-medical));
   --color-cat-engineering: hsl(var(--cat-engineering));
   --color-cat-government: hsl(var(--cat-government));
+  --color-whatsapp: oklch(0.72 0.17 150);
+  --color-whatsapp-deep: oklch(0.45 0.09 175);
+  --color-whatsapp-chat: oklch(0.95 0.02 85);
+  --color-whatsapp-foreground: oklch(1 0 0);
   --color-application-canvas: var(--application-canvas);
   --color-application-panel: var(--application-panel);
   --color-application-ink: var(--application-ink);
