@@ -13,7 +13,7 @@ import { publicPageHead } from "@/lib/publicPageHead";
 import { BRAND_LOGO_URL } from "@/assets/brandLogo";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp";
 import {
-  START_TOOLS, NEW_ITEMS, JOURNEY, CHAT_MESSAGES, FAQS, withUtm, isExternal, type StartTool, type ToolGroup,
+  START_TOOLS, NEW_ITEMS, TOP_TOOLS, CHAT_MESSAGES, FAQS, withUtm, isExternal, type StartTool, type ToolGroup,
 } from "@/data/startHere";
 
 export const Route = createFileRoute("/start-here")({
