@@ -263,8 +263,8 @@ function RotatingWord() {
     return () => window.clearInterval(t);
   }, []);
   return (
-    <span key={i} className="inline-block border-b-2 border-primary font-bold text-primary animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {ROTATING[i]}
+    <span className="relative inline-flex h-[1.5em] items-center overflow-hidden rounded-xl border border-primary/25 bg-primary/10 px-3 align-middle shadow-sm">
+      <span key={i} className="whitespace-nowrap font-bold text-primary animate-in fade-in slide-in-from-bottom-full duration-500">{ROTATING[i]}</span>
     </span>
   );
 }
@@ -306,12 +306,12 @@ function NotificationPrompt() {
 }
 
 const GUIDE = [
-  { h: "MBA planning that starts with you", p: "Every aspirant has a different starting point. Before you pick an exam, it helps to know your academic record, work experience and target budget. Our profile analyser and planning guides help you decide between CAT, XAT, SNAP, NMAT, CMAT and MAT, and set a realistic preparation timeline.", url: "/tools", cta: "Open planning tools" },
-  { h: "Coaching and mocks, compared honestly", p: "Choosing coaching is a large decision. Compare coaching institutes by course format, fees and features, and practise with exam-pattern mocks that show sectional analysis, so you know exactly where marks are being lost.", url: "/mocks", cta: "Try MBA mocks" },
-  { h: "College shortlisting with real data", p: "Browse thousands of MBA colleges by city, state, fees, exams accepted and placements. The college shortlister matches your expected score and profile with colleges where you have a realistic chance of a call.", url: "/colleges", cta: "Explore MBA colleges" },
-  { h: "Applications and deadlines in one view", p: "Admission forms open and close at different times. The MBA applications page lists open forms, closing dates and direct apply links, and highlights forms closing within the next few days.", url: "/mba-application", cta: "See open applications" },
-  { h: "GD-PI and WAT preparation", p: "After the results, calls matter only if you convert them. Use score calculators, interview guidance and community discussions to prepare for group discussions, personal interviews and written ability tests.", url: "/cat-score-calculator", cta: "Check your CAT score" },
-  { h: "Latest MBA updates and articles", p: "Exam notifications, result announcements, cutoff changes and admission news are published regularly on our blog, written for aspirants who want facts rather than noise.", url: "/blog", cta: "Read MBA updates" },
+  { h: "MBA planning that starts with you", p: "Know your profile, budget and timeline, then pick the right exam: CAT, XAT, SNAP, NMAT or CMAT.", url: "/tools", cta: "Open planning tools" },
+  { h: "Coaching and mocks, compared honestly", p: "Compare coaching by format and fees, and practise with exam-pattern mocks with sectional analysis.", url: "/mocks", cta: "Try MBA mocks" },
+  { h: "College shortlisting with real data", p: "Filter thousands of colleges by city, fees and exams, and find where you have a real chance.", url: "/colleges", cta: "Explore MBA colleges" },
+  { h: "Applications and deadlines in one view", p: "See open forms, closing dates and direct apply links, with forms closing soon highlighted.", url: "/mba-application", cta: "See open applications" },
+  { h: "GD-PI and WAT preparation", p: "Prepare for group discussions, interviews and written tests with guides and peer support.", url: "/cat-score-calculator", cta: "Check your CAT score" },
+  { h: "Latest MBA updates and articles", p: "Exam notices, results, cutoffs and admission news, written as facts, not noise.", url: "/blog", cta: "Read MBA updates" },
 ];
 
 function GuideSection() {
@@ -359,8 +359,8 @@ function StartHerePage() {
               <p className="mt-3 font-heading text-2xl font-bold text-foreground">
                 Your only MBA partner until you reach your dream MBA college.
               </p>
-              <p className="mt-4 text-2xl font-semibold text-muted-foreground" aria-live="polite">
-                One place for <RotatingWord />
+              <p className="mt-5 flex flex-wrap items-center justify-center gap-2 text-2xl font-semibold text-muted-foreground lg:justify-start" aria-live="polite">
+                <span>One place for</span> <RotatingWord />
               </p>
               <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground lg:mx-0">
                 From choosing your exam to accepting your admission offer, we stay with you at every stage: planning, preparation, mocks, college shortlisting, applications and GD-PI. Free tools, honest guidance and a community of aspirants preparing alongside you.
@@ -392,8 +392,11 @@ function StartHerePage() {
           <h2 className="text-center font-heading text-3xl font-extrabold md:text-4xl">Your MBA journey, step by step</h2>
           <ol className="relative mt-10 grid gap-6 border-l-2 border-primary/20 pl-8 md:grid-cols-3 md:border-l-0 md:pl-0 lg:grid-cols-6">
             {JOURNEY.map((s, i) => (
-              <li key={s.title} className="relative animate-in fade-in slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: `${i * 120}ms` }}>
-                <span className="absolute -left-[2.65rem] grid size-8 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground md:static md:mb-3">{i + 1}</span>
+              <li key={s.title} className="group relative rounded-2xl border border-transparent p-3 transition duration-300 hover:-translate-y-1 hover:border-primary/20 hover:bg-card hover:shadow-md animate-in fade-in slide-in-from-bottom-6 duration-700 fill-mode-both" style={{ animationDelay: `${i * 180}ms` }}>
+                <span className="absolute -left-[2.65rem] grid size-8 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground md:static md:mb-3">
+                  <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full bg-primary/40 animate-ping" style={{ animationDelay: `${i * 400}ms`, animationDuration: "2.4s" }} />
+                  <span className="relative">{i + 1}</span>
+                </span>
                 <h3 className="font-heading text-lg font-bold">{s.title}</h3>
                 <p className="mt-1 text-base text-muted-foreground">{s.text}</p>
                 <a href={s.url} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary" onClick={() => track("journey_click", s.title)}>Explore <ArrowRight className="size-3.5" aria-hidden="true" /></a>
