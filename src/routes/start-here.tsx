@@ -1,3 +1,4 @@
+import type React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -323,15 +324,62 @@ function GuideSection() {
           Getting into a good B-school is a year-long journey with many decisions. This page brings together everything we offer, so you can come back here whenever you are unsure of the next step.
         </p>
         <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {GUIDE.map((g) => (
-            <article key={g.h} className="rounded-2xl border border-border bg-card p-6">
+          {GUIDE.map((g, i) => (
+            <Reveal as="article" key={g.h} delay={(i % 3) * 90} className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-colors duration-300 hover:border-primary/40">
               <h3 className="font-heading text-xl font-bold">{g.h}</h3>
               <p className="mt-2 text-base text-muted-foreground">{g.p}</p>
-              <a href={g.url} onClick={() => track("guide_click", g.h)} className="mt-4 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline">{g.cta}</a>
-            </article>
+              <a href={g.url} onClick={() => track("guide_click", g.h)} className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-primary underline-offset-4 hover:underline">{g.cta} <ArrowRight className="size-3.5" aria-hidden="true" /></a>
+            </Reveal>
           ))}
         </div>
       </div>
+    </section>
+  );
+}
+
+function Reveal({ as = "div", delay = 0, className = "", children }: { as?: "div" | "li" | "article" | "section"; delay?: number; className?: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) { setShown(true); return; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } }, { rootMargin: "0px 0px -10% 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const Tag = as as "div";
+  return (
+    <Tag ref={ref as React.Ref<HTMLDivElement>} style={{ transitionDelay: `${delay}ms` }}
+      className={`${className} transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none ${shown ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
+      {children}
+    </Tag>
+  );
+}
+
+const QUICK = [
+  ["Calculate my CAT score", "/cat-score-calculator"],
+  ["Take a free mock", "/mocks"],
+  ["Find MBA colleges", "/colleges"],
+  ["Check open applications", "/mba-application"],
+  ["Read latest updates", "/blog"],
+  ["Compare coaching", "/coaching"],
+];
+
+function QuickActions() {
+  return (
+    <section aria-labelledby="quick-title" className="container mx-auto px-4 py-10">
+      <Reveal className="rounded-2xl border border-primary/20 bg-card p-6 shadow-sm md:p-8">
+        <h2 id="quick-title" className="font-heading text-2xl font-bold">What would you like to do today?</h2>
+        <p className="mt-1 text-base text-muted-foreground">Pick a starting point. Each one takes less than a minute to open.</p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {QUICK.map(([l, u]) => (
+            <a key={u} href={u} onClick={() => track("quick_action", l)} className="flex min-h-12 items-center justify-between rounded-xl border border-border bg-background px-4 font-semibold transition-colors hover:border-primary/50 hover:bg-accent/40 hover:text-primary">
+              {l} <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+      </Reveal>
     </section>
   );
 }
@@ -390,21 +438,23 @@ function StartHerePage() {
         {/* Journey roadmap */}
         <section className="container mx-auto px-4 py-12 md:py-16">
           <h2 className="text-center font-heading text-3xl font-extrabold md:text-4xl">Your MBA journey, step by step</h2>
-          <ol className="relative mt-10 grid gap-6 border-l-2 border-primary/20 pl-8 md:grid-cols-3 md:border-l-0 md:pl-0 lg:grid-cols-6">
+          <ol className="relative mt-10 grid gap-5 border-l-2 border-primary/20 pl-8 md:grid-cols-3 md:border-l-0 md:pl-0">
             {JOURNEY.map((s, i) => (
-              <li key={s.title} className="group relative rounded-2xl border border-transparent p-3 transition duration-300 hover:-translate-y-1 hover:border-primary/20 hover:bg-card hover:shadow-md animate-in fade-in slide-in-from-bottom-6 duration-700 fill-mode-both" style={{ animationDelay: `${i * 180}ms` }}>
-                <span className="absolute -left-[2.65rem] grid size-8 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground md:static md:mb-3">
-                  <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full bg-primary/40 animate-ping" style={{ animationDelay: `${i * 400}ms`, animationDuration: "2.4s" }} />
-                  <span className="relative">{i + 1}</span>
-                </span>
+              <Reveal as="li" key={s.title} delay={i * 90} className="relative rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors duration-300 hover:border-primary/40">
+                <span className="absolute -left-[2.65rem] top-5 grid size-8 place-items-center rounded-full border-2 border-primary bg-background text-sm font-bold text-primary md:static md:mb-3">{String(i + 1).padStart(2, "0")}</span>
                 <h3 className="font-heading text-lg font-bold">{s.title}</h3>
                 <p className="mt-1 text-base text-muted-foreground">{s.text}</p>
                 <a href={s.url} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary" onClick={() => track("journey_click", s.title)}>Explore <ArrowRight className="size-3.5" aria-hidden="true" /></a>
-              </li>
+              </Reveal>
             ))}
           </ol>
-          <p className="mt-8 text-center font-editorial text-2xl italic text-primary">Everything you need, in one corner.</p>
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a href="/tools/college-shortlister" onClick={() => track("journey_cta", "shortlister")} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-6 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">Shortlist my colleges <ArrowRight className="size-4" aria-hidden="true" /></a>
+            <a href="/mba-application" onClick={() => track("journey_cta", "applications")} className="inline-flex min-h-12 items-center rounded-xl border border-border bg-card px-6 font-semibold hover:border-primary/40 hover:text-primary">See open applications</a>
+          </div>
         </section>
+
+        <QuickActions />
 
         <GuideSection />
 
