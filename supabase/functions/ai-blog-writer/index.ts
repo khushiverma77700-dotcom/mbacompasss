@@ -452,6 +452,22 @@ Category: ${brief.category || "news"}.`,
   }
 }
 
+// AI account-level failures (no credits, invalid key, provider denial) affect
+// every section of an article. These must fail the job, never produce content.
+function isAiAccountError(msg: string): boolean {
+  return /\((402|401|403)\)|ai_credits_exhausted|insufficient_quota|credit_balance_exhausted|ai_provider_not_allowed|invalid api key|incorrect api key/i.test(msg);
+}
+
+const PLACEHOLDER_MARKER = /could not be written automatically/i;
+
+function assertNoPlaceholderContent(intro: string, content: string) {
+  if (PLACEHOLDER_MARKER.test(intro) || PLACEHOLDER_MARKER.test(content)) {
+    throw new Error(
+      "Article generation incomplete: one or more sections could not be written by the AI. Nothing was saved. Check the AI key credits in Admin → API Keys & Secrets, then run the generation again.",
+    );
+  }
+}
+
 function fallbackSectionHtml(_brief: BlogBrief, heading: string) {
   const h = escapeHtml(heading);
   return `<h2>${h}</h2><p><em>This section could not be written automatically from verified sources. Regenerate this article from Write Blog after checking the AI key in Admin → API Keys &amp; Secrets.</em></p>`;
