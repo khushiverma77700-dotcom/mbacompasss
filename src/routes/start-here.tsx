@@ -251,7 +251,7 @@ function StartHerePage() {
       {/* 1. Sticky header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <a href="/" aria-label="MBA Compass home"><img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 36 }} width={140} height={36} /></a>
+          <a href="/" aria-label="MBA Compass home"><img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 52 }} width={140} height={52} /></a>
           <WhatsAppButton label="Join WhatsApp" where="header" size="sm" />
         </div>
       </header>
@@ -280,7 +280,7 @@ function StartHerePage() {
           <div className="container relative mx-auto px-4 pb-12">
             <dl className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card/80 p-5 shadow-sm backdrop-blur sm:grid-cols-3">
               {[
-                [ShieldCheck, "Verified information", "Facts checked against official sources"],
+                [ShieldCheck, "Clear guidance", "Simple, practical advice at every step"],
                 [Users, "Peer community", "Aspirants preparing for the same exams"],
                 [Sparkles, "Free tools", "Calculators, shortlisters and mocks"],
               ].map(([I, t, d]) => { const Ic = I as typeof Users; return (
