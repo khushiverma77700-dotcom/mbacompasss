@@ -209,7 +209,7 @@ function StartHerePage() {
       {/* 1. Sticky header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <a href="/" aria-label="MBA Compass home"><img src={BRAND_LOGO_URL} alt="MBA Compass" className="h-9 w-auto" width={140} height={36} /></a>
+          <a href="/" aria-label="MBA Compass home"><img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 36 }} width={140} height={36} /></a>
           <WhatsAppButton label="Join WhatsApp" where="header" size="sm" />
         </div>
       </header>
@@ -240,10 +240,10 @@ function StartHerePage() {
         {/* Journey roadmap */}
         <section className="container mx-auto px-4 py-12 md:py-16">
           <h2 className="text-center font-heading text-3xl font-extrabold md:text-4xl">Your MBA journey, step by step</h2>
-          <ol className="relative mt-10 grid gap-6 border-l-2 border-primary/20 pl-6 md:grid-cols-3 md:border-l-0 md:pl-0 lg:grid-cols-6">
+          <ol className="relative mt-10 grid gap-6 border-l-2 border-primary/20 pl-8 md:grid-cols-3 md:border-l-0 md:pl-0 lg:grid-cols-6">
             {JOURNEY.map((s, i) => (
               <li key={s.title} className="relative animate-in fade-in slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: `${i * 120}ms` }}>
-                <span className="absolute -left-[2.15rem] grid size-8 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground md:static md:mb-3">{i + 1}</span>
+                <span className="absolute -left-[2.65rem] grid size-8 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground md:static md:mb-3">{i + 1}</span>
                 <h3 className="font-heading text-lg font-bold">{s.title}</h3>
                 <p className="mt-1 text-base text-muted-foreground">{s.text}</p>
                 <a href={s.url} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary" onClick={() => track("journey_click", s.title)}>Explore <ArrowRight className="size-3.5" aria-hidden="true" /></a>
@@ -331,7 +331,7 @@ function StartHerePage() {
       {/* Footer */}
       <footer className="border-t border-border bg-card">
         <div className="container mx-auto flex flex-col items-center gap-5 px-4 py-10 md:flex-row md:justify-between">
-          <img src={BRAND_LOGO_URL} alt="MBA Compass" className="h-8 w-auto" loading="lazy" width={124} height={32} />
+          <img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 32 }} loading="lazy" width={124} height={32} />
           <nav aria-label="Footer" className="flex flex-wrap justify-center gap-5 text-base">
             {[["Home", "/"], ["Colleges", "/colleges"], ["Exams", "/exam"], ["Articles", "/blog"], ["Mocks", "/mocks"]].map(([l, u]) => (
               <a key={u} href={u} className="hover:text-primary">{l}</a>
