@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Calculator, UserRound, Wrench, BookOpen, Search, MapPin, School, Gauge, Mic, Globe, ClipboardCheck,
-  Volume2, VolumeX, ArrowRight, Check, ChevronDown, MessageCircle, Instagram, Linkedin, Youtube, Sparkles,
+  Volume2, VolumeX, ArrowRight, Lock, ShieldCheck, Users, Check, ChevronDown, MessageCircle, Instagram, Linkedin, Youtube, Sparkles,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { publicPageHead } from "@/lib/publicPageHead";
 import { BRAND_LOGO_URL } from "@/assets/brandLogo";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp";
@@ -35,18 +36,48 @@ function track(event: string, label: string) {
   else w.dataLayer?.push({ event, event_label: label });
 }
 
+const AUTH_URL = "/auth?mode=signup&redirect=%2Fstart-here";
+
+/** The community link is only revealed to signed-in students. */
+function useWhatsAppLink() {
+  const { user, loading } = useAuth();
+  const unlocked = !loading && !!user;
+  return unlocked
+    ? { href: WA_URL, unlocked, extra: { target: "_blank", rel: "noopener noreferrer" } }
+    : { href: AUTH_URL, unlocked, extra: {} };
+}
+
 function WhatsAppButton({ label = "Join WhatsApp Community", where, size = "lg" }: { label?: string; where: string; size?: "sm" | "lg" }) {
+  const { href, unlocked, extra } = useWhatsAppLink();
   return (
     <a
-      href={WA_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => track("whatsapp_join_click", where)}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-whatsapp font-semibold text-whatsapp-foreground shadow-md transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${size === "lg" ? "min-h-12 px-6 text-base" : "min-h-10 px-4 text-sm"}`}
+      href={href}
+      {...extra}
+      onClick={() => track(unlocked ? "whatsapp_join_click" : "whatsapp_signup_gate", where)}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-whatsapp font-semibold text-whatsapp-foreground shadow-lg shadow-whatsapp/25 transition hover:-translate-y-0.5 hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${size === "lg" ? "min-h-12 px-6 text-base" : "min-h-10 px-4 text-sm"}`}
     >
-      <MessageCircle className="size-5" aria-hidden="true" /> {label}
+      {unlocked ? <MessageCircle className="size-5" aria-hidden="true" /> : <Lock className="size-4" aria-hidden="true" />} {label}
     </a>
   );
+}
+
+function GateNote({ className = "" }: { className?: string }) {
+  const { unlocked } = useWhatsAppLink();
+  return (
+    <p className={`text-sm ${className}`}>
+      {unlocked ? "You're signed in. Tap to join. Free, no spam." : "Free sign-up required to get the group link. Takes 30 seconds. No spam."}
+    </p>
+  );
+}
+
+/** Gently varying "online" count around 82 for the chat header. */
+function useOnlineCount() {
+  const [n, setN] = useState(82);
+  useEffect(() => {
+    const t = setInterval(() => setN((v) => Math.min(96, Math.max(74, v + Math.round(Math.random() * 4 - 2)))), 3500);
+    return () => clearInterval(t);
+  }, []);
+  return n;
 }
 
 /* ---------- Animated WhatsApp-style chat ---------- */
@@ -79,6 +110,7 @@ function ChatPhone() {
   const listRef = useRef<HTMLDivElement>(null);
   const idx = useRef(0);
   const { pop, tick } = useSoftSounds(sound);
+  const online = useOnlineCount();
 
   useEffect(() => {
     setSound(localStorage.getItem("start-chat-sound") === "on");
@@ -128,10 +160,10 @@ function ChatPhone() {
     <div ref={phoneRef} className="mx-auto w-full max-w-xs rounded-[2.5rem] border-8 border-foreground/85 bg-foreground/85 shadow-2xl">
       <div className="overflow-hidden rounded-[2rem] bg-whatsapp-chat">
         <div className="flex items-center gap-3 bg-whatsapp-deep px-4 py-3 text-whatsapp-foreground">
-          <div className="grid size-9 place-items-center rounded-full bg-whatsapp-foreground/20"><MessageCircle className="size-5" aria-hidden="true" /></div>
+          <img src={BRAND_LOGO_URL} alt="MBA Compass" className="size-10 shrink-0 rounded-full bg-card object-contain p-1" style={{ height: 40 }} width={40} height={40} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">MBA Compass Community</p>
-            <p className="text-sm opacity-80">Live community preview</p>
+            <p className="flex items-center gap-1.5 text-sm opacity-90"><span className="size-2 rounded-full bg-whatsapp" aria-hidden="true" /><span aria-live="polite">{online} online</span><span className="opacity-70">· Live preview</span></p>
           </div>
           <button type="button" onClick={toggleSound} aria-label={sound ? "Turn chat sound off" : "Turn chat sound on"} aria-pressed={sound}
             className="grid size-9 place-items-center rounded-full hover:bg-whatsapp-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-whatsapp-foreground">
@@ -166,7 +198,7 @@ function ToolCard({ tool }: { tool: StartTool }) {
   const href = withUtm(tool.url);
   const partner = tool.group === "partners";
   return (
-    <li className="flex h-full flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <li className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg">
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" aria-hidden="true" /></span>
         <span className="flex gap-1.5">
@@ -191,10 +223,20 @@ function ToolSection({ id, title, sub, group, query }: { id: string; title: stri
   if (!tools.length) return null;
   return (
     <section id={id} className="container mx-auto px-4 py-12 md:py-16">
-      <h2 className="font-heading text-3xl font-extrabold text-foreground md:text-4xl">{title}</h2>
+      <div className="mb-1 h-1 w-12 rounded-full bg-primary" aria-hidden="true" /><h2 className="mt-4 font-heading text-3xl font-extrabold text-foreground md:text-4xl">{title}</h2>
       <p className="mb-8 mt-2 text-base text-muted-foreground">{sub}</p>
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{tools.map((t) => <ToolCard key={t.name} tool={t} />)}</ul>
     </section>
+  );
+}
+
+function FloatingWhatsApp() {
+  const { href, unlocked, extra } = useWhatsAppLink();
+  return (
+    <a href={href} {...extra} aria-label={unlocked ? "Join WhatsApp Community" : "Sign up to join the WhatsApp Community"} onClick={() => track(unlocked ? "whatsapp_join_click" : "whatsapp_signup_gate", "floating")}
+      className="fixed bottom-5 right-5 z-50 grid size-14 place-items-center rounded-full bg-whatsapp text-whatsapp-foreground shadow-xl md:hidden">
+      <MessageCircle className="size-7" aria-hidden="true" />
+    </a>
   );
 }
 
@@ -209,14 +251,14 @@ function StartHerePage() {
       {/* 1. Sticky header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <a href="/" aria-label="MBA Compass home"><img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 36 }} width={140} height={36} /></a>
+          <a href="/" aria-label="MBA Compass home"><img src={BRAND_LOGO_URL} alt="MBA Compass" className="w-auto" style={{ height: 52 }} width={140} height={52} /></a>
           <WhatsAppButton label="Join WhatsApp" where="header" size="sm" />
         </div>
       </header>
 
       <main>
         {/* 2. Hero + live chat */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-accent/60 via-background to-background">
+        <section className="relative overflow-hidden bg-gradient-to-b from-accent via-accent/30 to-background">
           <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-primary/10 blur-3xl" />
           <div className="container relative mx-auto grid items-center gap-10 px-4 py-12 md:py-20 lg:grid-cols-2">
             <div className="text-center lg:text-left">
@@ -229,11 +271,24 @@ function StartHerePage() {
               </p>
               <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <WhatsAppButton where="hero" />
-                <a href="#free-tools" className="inline-flex min-h-12 items-center rounded-full border border-primary/30 px-6 font-semibold text-primary hover:bg-primary/5">Explore Free Tools</a>
+                <a href="#free-tools" className="inline-flex min-h-12 items-center rounded-xl border border-border bg-card px-6 font-semibold text-foreground shadow-sm hover:border-primary/40 hover:text-primary">Explore Free Tools</a>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">Free to join. No spam.</p>
+              <GateNote className="mt-3 text-muted-foreground" />
             </div>
             <ChatPhone />
+          </div>
+          <div className="container relative mx-auto px-4 pb-12">
+            <dl className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card/80 p-5 shadow-sm backdrop-blur sm:grid-cols-3">
+              {[
+                [ShieldCheck, "Clear guidance", "Simple, practical advice at every step"],
+                [Users, "Peer community", "Aspirants preparing for the same exams"],
+                [Sparkles, "Free tools", "Calculators, shortlisters and mocks"],
+              ].map(([I, t, d]) => { const Ic = I as typeof Users; return (
+                <div key={t as string} className="flex items-start gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Ic className="size-5" aria-hidden="true" /></span>
+                  <div><dt className="font-heading text-base font-bold text-foreground">{t as string}</dt><dd className="text-sm text-muted-foreground">{d as string}</dd></div>
+                </div>); })}
+            </dl>
           </div>
         </section>
 
@@ -263,7 +318,7 @@ function StartHerePage() {
               ))}
             </ul>
             <div className="mt-7"><WhatsAppButton where="community_card" /></div>
-            <p className="mt-3 text-sm opacity-85">Free to join. No spam.</p>
+            <GateNote className="mt-3 opacity-85" />
           </div>
         </section>
 
@@ -348,10 +403,7 @@ function StartHerePage() {
       </footer>
 
       {/* Floating WhatsApp (mobile) */}
-      <a href={WA_URL} target="_blank" rel="noopener noreferrer" aria-label="Join WhatsApp Community" onClick={() => track("whatsapp_join_click", "floating")}
-        className="fixed bottom-5 right-5 z-50 grid size-14 place-items-center rounded-full bg-whatsapp text-whatsapp-foreground shadow-xl md:hidden">
-        <MessageCircle className="size-7" aria-hidden="true" />
-      </a>
+      <FloatingWhatsApp />
     </div>
   );
 }
