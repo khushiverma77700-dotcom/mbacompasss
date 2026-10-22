@@ -452,9 +452,25 @@ Category: ${brief.category || "news"}.`,
   }
 }
 
+// AI account-level failures (no credits, invalid key, provider denial) affect
+// every section of an article. These must fail the job, never produce content.
+function isAiAccountError(msg: string): boolean {
+  return /\((402|401|403)\)|ai_credits_exhausted|insufficient_quota|credit_balance_exhausted|ai_provider_not_allowed|invalid api key|incorrect api key/i.test(msg);
+}
+
+const PLACEHOLDER_MARKER = /could not be written automatically/i;
+
+function assertNoPlaceholderContent(intro: string, content: string) {
+  if (PLACEHOLDER_MARKER.test(intro) || PLACEHOLDER_MARKER.test(content)) {
+    throw new Error(
+      "Article generation incomplete: one or more sections could not be written by the AI. Nothing was saved. Check the AI key credits in Admin → API Keys & Secrets, then run the generation again.",
+    );
+  }
+}
+
 function fallbackSectionHtml(_brief: BlogBrief, heading: string) {
   const h = escapeHtml(heading);
-  return `<h2>${h}</h2><p><em>This section could not be written automatically from verified sources. Please add it manually, or add a reference link and run Fix Issues.</em></p>`;
+  return `<h2>${h}</h2><p><em>This section could not be written automatically from verified sources. Regenerate this article from Write Blog after checking the AI key in Admin → API Keys &amp; Secrets.</em></p>`;
 }
 
 async function createSectionHtml(brief: BlogBrief, draft: any, section: any, index: number, facts?: VerifiedFacts | null) {
@@ -508,7 +524,11 @@ ${imgNote}${isFirst || isMiddle || isLast ? "" : ""}${ctaNote ? "" : ""}`;
     const html = stripExternalLinks(result.html || "");
     return html && countWords(html) > 60 ? html : fallbackSectionHtml(brief, section.heading);
   } catch (e) {
-    console.warn("Section AI failed; using safe fallback:", e instanceof Error ? e.message : e);
+    const msg = e instanceof Error ? e.message : String(e);
+    // Billing/auth failures hit every section — fail the job loudly instead of
+    // saving an article full of placeholder text.
+    if (isAiAccountError(msg)) throw e;
+    console.warn("Section AI failed; using safe fallback:", msg);
     return fallbackSectionHtml(brief, section.heading);
   }
 }
@@ -577,7 +597,9 @@ Return EXACTLY these blocks, in this order, each as standalone HTML strings:
       faqs: Array.isArray(result.faqs) ? result.faqs.slice(0, 10) : [],
     };
   } catch (e) {
-    console.warn("Closing AI failed; using safe fallback:", e instanceof Error ? e.message : e);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (isAiAccountError(msg)) throw e;
+    console.warn("Closing AI failed; using safe fallback:", msg);
     return fallbackClosingHtml(brief);
   }
 }
@@ -690,6 +712,7 @@ async function finalizeChunkedArticle(adminClient: any, jobId: string, brief: Bl
   const structured = structureArticle(introAudit.html, contentAudit.html);
   const intro = structured.intro;
   const content = structured.content;
+  assertNoPlaceholderContent(intro, content);
   if (contentQC.issues.length) {
     console.log(`[ai-blog-writer] QC issues for "${targetKw}":`, contentQC.issues.map(i => `${i.code}:${i.message}`).join(" | "));
   }
@@ -1653,6 +1676,7 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       .maybeSingle();
     if (existingSlug?.id) finalSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
 
+    assertNoPlaceholderContent(article.intro || "", article.content || "");
     const insertPayload = {
       title: article.title || brief.title,
       slug: finalSlug,
