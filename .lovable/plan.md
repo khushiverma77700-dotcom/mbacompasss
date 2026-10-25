@@ -26,7 +26,7 @@ These obstacles do not prove Google exclusion causes. Timings are individual lab
 - Sampled public pages return real initial HTML, headings, descriptions and primary-domain canonicals.
 - The live sitemap index and all eight parts load successfully: **7,501 unique public URLs** in this audit. Private dashboards, authentication pages and query-string variants are excluded.
 - Tested legacy URLs redirect permanently; an unknown college returns a real 404.
-- The current foundation scan passes rendering, homepage metadata and favicon checks. Its two domain warnings compare against the Lovable hosting address, not your chosen primary domain. **Do not switch canonical URLs or sitemaps away from mbacompass.in to satisfy those warnings.**
+- The foundation scan passes rendering, homepage metadata and favicon checks. Its domain warnings compare with the hosting address. **Keep mbacompass.in as primary; do not switch domains to satisfy them.**
 
 ## Phase 1 — Confirm Google’s actual exclusions
 
@@ -35,7 +35,7 @@ These obstacles do not prove Google exclusion causes. Timings are individual lab
 3. Compare excluded examples with published HTML, canonical targets and sitemap membership; use indexed URL Inspection results when verified access exists.
 4. Record inventory, Google’s indexed/excluded counts, crawl failures, impressions, clicks and speed baseline. Missing data stays unknown.
 
-**Dependency:** your exports or a Google account with verified access to mbacompass.in. The independently confirmed technical fixes below need not wait for that access.
+**Dependency:** your exports or verified Google access. Confirmed technical fixes need not wait.
 
 ## Phase 2 — Repair discovery without changing established URLs
 
@@ -94,4 +94,4 @@ Preserve TanStack route heads, native SSR/prerendering, publicPaths, the createR
 
 ## Scope and decision
 
-Approve this plan to implement the confirmed discovery and loading corrections first. Google-specific exclusion diagnoses will be refined after your exports arrive. No redesign, mass content rewrite, domain switch or automatic publication is included.
+Approve to fix discovery and loading first; refine Google exclusions after your exports arrive. No redesign, mass rewrite, domain switch or automatic publication.
