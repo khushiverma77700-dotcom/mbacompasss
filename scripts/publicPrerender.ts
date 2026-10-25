@@ -1,3 +1,4 @@
+import { coachingExams, coachingModes, matchesCoachingHub, type CoachingHub } from "../src/lib/coachingHub";
 /** Build-only public manifest. No sessions, privileged keys or private routes. */
 export const MAX_PRERENDER_PAGES = 8000;
 export const PUBLIC_STATIC_PATHS = [
@@ -39,14 +40,15 @@ export async function enumeratePublicPages(url: string, key: string) {
       if (batch.length < 1000) return all;
     }
   }
-  const [colleges, institutes, exams, articles, redirects, categories, bundles, compass, formulas, applications, courses, courseLinks, mocks] = await Promise.all([
-    rows("colleges", "", "slug,name,city,state,updated_at"), rows("institutes", "", "id,slug,name,updated_at"), rows("exams"), rows("articles", "&published=eq.true"),
+  const [colleges, institutes, exams, articles, redirects, categories, bundles, compass, formulas, applications, courses, courseLinks, mocks, regions] = await Promise.all([
+    rows("colleges", "", "slug,name,city,state,updated_at"), rows("institutes", "", "id,slug,name,city,state,mode,specializations,category_id,updated_at"), rows("exams"), rows("articles", "&published=eq.true"),
     rows("seo_redirects", "&is_active=eq.true", "from_path", "from_path"),
-    rows("categories"), rows("mock_bundles", "&is_published=eq.true"), rows("mba_compass_courses", "&is_active=eq.true"),
+    rows("categories", "", "id,name,slug,updated_at"), rows("mock_bundles", "&is_published=eq.true"), rows("mba_compass_courses", "&is_active=eq.true"),
     rows("quant_formulas", "&published=eq.true"), rows("application_trackers", "&is_active=eq.true&is_archived=eq.false", "slug,name,updated_at"),
     rows("courses", "", "id,name,institute_id,updated_at", "id"),
     rows("institute_courses", "", "institute_id,course_id", "institute_id"),
     rows("mock_tests", "&is_published=eq.true"),
+    rows("city_pages", "&active=eq.true", "slug,name,type,city_aliases"),
   ]);
   const redirected = new Set(redirects.map((row) => row.from_path));
   const paths = (records: Record<string, unknown>[], prefix: string) => records.flatMap((row) => {
@@ -66,12 +68,29 @@ export async function enumeratePublicPages(url: string, key: string) {
       return institute && slug && !redirected.has(`/institute/${institute}`) ? [`/institute/${institute}/course/${slug}`] : [];
     });
   });
+  const coachingRows = institutes.filter(row => row.name && row.slug).map(row => ({
+    ...row,
+    categories: categories.find(category => category.id === row.category_id),
+    courses: courses.filter(course => course.institute_id === row.id),
+  }));
+  const hubDefaults = { title: "", description: "", h1: "" };
+  const coachingHubs: CoachingHub[] = [
+    ...regions.flatMap(region => typeof region.slug === "string" && typeof region.name === "string" ? [{
+      ...hubDefaults, path: `/coaching/${region.slug}`,
+      ...(region.type === "state" ? { state: region.name } : { city: region.name }),
+      aliases: Array.isArray(region.city_aliases) ? region.city_aliases as string[] : [],
+    }] : []),
+    ...coachingExams.map(exam => ({ ...hubDefaults, path: `/coaching/exam/${exam}`, exam })),
+    ...Object.entries(coachingModes).map(([slug, mode]) => ({ ...hubDefaults, path: `/coaching/mode/${slug}`, mode })),
+  ];
+  const coachingPaths = coachingHubs.filter(hub => coachingRows.some(row => matchesCoachingHub(row, hub))).map(hub => hub.path);
   const dynamic = [
     ...paths(exams, "exam"), ...paths(institutes, "institute"),
     ...paths(colleges, "college").sort((a, b) => Number(b.endsWith("/iim-ahmedabad")) - Number(a.endsWith("/iim-ahmedabad"))),
     ...paths(articles, "article"),
     ...paths(categories, "category"), ...paths(bundles, "bundles"), ...paths(compass, "mba-compass"),
     ...paths(formulas, "formula"), ...paths(applications, "mba-application/college"), ...paths(mocks, "mocks"), ...coursePaths,
+    ...coachingPaths,
     ...locations("city", "/colleges/by-city"), ...locations("state", "/colleges/by-state"),
     ...["iim", "private", "top-mba", "pgdm", "university", "government"].map(slug => `/colleges/type/${slug}`),
     ...["cat", "xat", "cmat", "mat", "nmat", "snap", "iift", "gmat", "atma"].map(slug => `/colleges/by-exam/${slug}`),

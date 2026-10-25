@@ -25,11 +25,12 @@ import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs
 import { CoachingCompareProvider } from "@/contexts/CoachingCompareContext";
 import CompareDrawer from "@/components/coaching/CompareDrawer";
 import CoachingMapView from "@/components/coaching/CoachingMapView";
+import { matchesCoachingHub, matchesCoachingExam, type CoachingHub } from "@/lib/coachingHub";
 
 const modes = ["Online", "Offline", "Hybrid"];
 const toSlug = (value: string) => value.toLowerCase().trim().replace(/\s+/g, "-");
 
-const CoachingPage = () => {
+const CoachingPage = ({ hub }: { hub?: CoachingHub }) => {
   const navigate = useNavigate();
   const { data: allInstitutes = [], isLoading } = useInstitutes();
   const { data: categories = [] } = useCategories();
@@ -39,9 +40,9 @@ const CoachingPage = () => {
 
   // Read filters from URL
   const search = searchParams.get("q") || "";
-  const selectedState = searchParams.get("state") || "all";
-  const selectedCity = searchParams.get("city") || "all";
-  const selectedMode = searchParams.get("mode") || "all";
+  const selectedState = searchParams.get("state") || hub?.state || "all";
+  const selectedCity = searchParams.get("city") || hub?.city || "all";
+  const selectedMode = searchParams.get("mode") || hub?.mode || "all";
   const selectedCategory = searchParams.get("category") || "all";
   const selectedFee = searchParams.get("fee") || "all";
   const selectedSpec = searchParams.get("specialization") || "all";
@@ -50,6 +51,7 @@ const CoachingPage = () => {
   const view = searchParams.get("view") || "list"; // list | grid | map
   const quick = searchParams.get("quick") || ""; // verified | offer | featured
 
+  const selectedExam = searchParams.get("exam") || hub?.exam || "";
   const page = directoryPage(searchParams.get("page"));
 
   const setFilter = useCallback((key: string, value: string) => {
@@ -118,7 +120,8 @@ const CoachingPage = () => {
   }, [allInstitutes, selectedCity]);
 
   const filtered = useMemo(() => {
-    let list = [...allInstitutes] as any[];
+    let list = allInstitutes.filter((row) => matchesCoachingHub(row, hub)) as any[];
+    if (selectedExam) list = list.filter((row) => matchesCoachingExam(row, selectedExam));
     if (search) {
       const q = search.toLowerCase();
       list = list.filter((i) =>
@@ -128,7 +131,7 @@ const CoachingPage = () => {
       );
     }
     if (selectedCity !== "all") {
-      list = list.filter((i) => locationMatches(i.city, selectedCity, currentCityPage?.city_aliases));
+      list = list.filter((i) => locationMatches(i.city, selectedCity, currentCityPage?.city_aliases || hub?.aliases));
     }
     if (selectedState !== "all") {
       const normalizedState = selectedState.trim().toLowerCase();
@@ -157,7 +160,7 @@ const CoachingPage = () => {
       list.sort((a, b) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
     }
     return list;
-  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, categories, currentCityPage, minRating, quick]);
+  }, [allInstitutes, hub, selectedExam, search, selectedCity, selectedState, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, categories, currentCityPage, minRating, quick]);
 
   // Active filters chips
   const activeFilters = useMemo(() => {
@@ -179,7 +182,6 @@ const CoachingPage = () => {
   }, [selectedState, selectedCity, selectedMode, selectedCategory, selectedFee, selectedSpec, search, categories, specOptions]);
 
   // Dynamic SEO — sourced from central coaching SEO template library
-  const selectedExam = searchParams.get("exam") || "";
   const seoTemplate = useMemo(() => {
     const catName =
       selectedCategory !== "all"
@@ -195,9 +197,10 @@ const CoachingPage = () => {
     });
   }, [selectedCity, selectedState, selectedMode, selectedCategory, selectedExam, categories, filtered.length]);
 
-  const dynamicH1 = seoTemplate.h1;
-  const dynamicTitle = seoTemplate.title;
-  const dynamicDescription = seoTemplate.description;
+  const dynamicH1 = hub?.h1 || seoTemplate.h1;
+  const dynamicTitle = hub?.title || seoTemplate.title;
+  const dynamicDescription = hub?.description || seoTemplate.description;
+  const listingPath = hub?.path || "/coaching";
 
   const totalInstitutes = allInstitutes.length;
 
@@ -219,7 +222,7 @@ const CoachingPage = () => {
         title={dynamicTitle}
         description={dynamicDescription}
         keywords={seoTemplate.keywords}
-        canonical={canonicalUrl(directoryPageUrl("/coaching", page))}
+        canonical={canonicalUrl(directoryPageUrl(listingPath, page))}
         jsonLd={buildPageGraph(
           buildWebPageSchema({
             path: "/coaching",
@@ -480,7 +483,7 @@ const CoachingPage = () => {
           </div>
         )}
 
-        {view !== "map" && <DirectoryPagination path="/coaching" page={page} total={filtered.length} search={searchParams} />}
+        {view !== "map" && <DirectoryPagination path={listingPath} page={page} total={filtered.length} search={searchParams} />}
 
         {filtered.length === 0 && (
           <div className="text-center py-24 bg-card rounded-2xl border border-border">

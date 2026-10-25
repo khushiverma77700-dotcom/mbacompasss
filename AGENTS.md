@@ -31,3 +31,4 @@
 - Public college directories use stable ordered twenty-record SSR pages; city/state reads filter the existing public listing RPC before pagination and preserve normalized location matching, avoiding whole-catalogue HTML. Full interactive filter choices load on demand; coaching slices preserve the complete filter dataset.
 - Type/exam college hubs filter the safe public listing projection before pagination, preserving existing predicates; canonical directory page numbers remain distinct, and known host/path aliases redirect before SSR and caching.
 - College related reads prefetch safe summary columns and existing recommendations into initial HTML, never full article bodies, to preserve discovery without inflating payloads.
+- Coaching directory is an index leaf; regional/exam/mode leaves render shared filtered results without client redirect shells and retain the full query for filter options, preventing masked children and competing canonicals.

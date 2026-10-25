@@ -17,7 +17,7 @@ export const CANONICAL_HOST = "https://mbacompass.in";
 export const canonicalUrl = (path: string): string => {
   const url = new URL(path || "/", CANONICAL_HOST);
   const pathname = publicPath(url.pathname).replace(/\/$/, "");
-  const paginated = pathname === "/colleges" || pathname === "/coaching" || /^\/colleges\/(by-city|by-state|by-exam|type)\/[^/]+$/.test(pathname);
+  const paginated = pathname === "/colleges" || pathname === "/coaching" || /^\/colleges\/(by-city|by-state|by-exam|type)\/[^/]+$/.test(pathname) || /^\/coaching\/(?:[^/]+|(?:exam|mode)\/[^/]+)$/.test(pathname);
   const page = paginated ? directoryPage(url.searchParams.get("page")) : 1;
   return `${CANONICAL_HOST}${pathname}${page > 1 ? `?page=${page}` : ""}`;
 };

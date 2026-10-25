@@ -6,7 +6,8 @@
 - [x] Analyse Coverage export and direct Google comparison: clicks 2,915→1,609, impressions 741,775→408,019; homepage indexed; CAT/private hubs have old Soft 404 records; FMS has an older duplicate assessment; current FMS HTML has its own canonical
 - [x] Correct verified type/exam whole-catalogue rendering with twenty-record server pagination and page-specific canonicals; add host/public-alias 301 handling without rewriting articles or changing established URLs
 - [x] Eleven regression tests, real public page-one/page-two navigation and unknown-hub 404 checks pass; latest preview build OK. Updated hubs need publishing; www redirect requires live verification afterwards
-- [ ] Resolve remaining regional coaching duplicate canonical and placeholder/category discovery defects — investigation has identified overlapping route/component heads; requires a scoped follow-up implementation and verification
+- [x] Resolve regional coaching duplicate canonicals and masked children by making root an index leaf; regional/exam/mode pages now render real results with distinct paginated canonicals and real unknown/empty-hub 404s. Shared filters retain full options. Phone/desktop search and Next-page navigation pass without overflow or runtime errors
+- [x] Add only result-backed coaching region/exam/mode URLs to existing sitemap inventory; retain authoritative timestamps and omit hub lastmod. Twenty-two focused tests pass; preview build OK. Article wording and saved SEO unchanged
 - [ ] Recheck Google after corrected pages are published and recrawled; obtain affected-page examples/crawl-stat reports for comprehensive coverage diagnosis (not exposed by the available API)
 
 ## Google crawlability, rankings and loading review — October 25
