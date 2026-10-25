@@ -13,7 +13,7 @@ it("canonicalises filtered and paginated URLs to the clean tool page", () => {
   expect(publicPageHead("/cat-score-calculator?q=cat&page=2", "CAT Calculator", "CAT scores").links[0].href).toBe("https://mbacompass.in/tools/cat-score-calculator");
 });
 it("keeps genuine directory result pages distinct while removing presentation variants", () => {
-  for (const path of ["/colleges", "/coaching", "/colleges/by-city/delhi", "/colleges/by-state/gujarat", "/colleges/type/private", "/colleges/by-exam/cat"])
+  for (const path of ["/colleges", "/coaching", "/coaching/delhi", "/coaching/exam/cat", "/coaching/mode/online", "/colleges/by-city/delhi", "/colleges/by-state/gujarat", "/colleges/type/private", "/colleges/by-exam/cat"])
     expect(publicPageHead(`${path}?page=2&sort=fees`, "Directory", "Results").links[0].href).toBe(`https://mbacompass.in${path}?page=2`);
   expect(publicPageHead("/colleges?page=1", "Directory", "Results").links[0].href).toBe("https://mbacompass.in/colleges");
 });
