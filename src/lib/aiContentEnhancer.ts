@@ -198,9 +198,19 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
   //     bare URLs from the previous prompt. Strip them on every render so
   //     legacy content immediately complies with the no-external-links rule.
   //     Internal <a href="/..."> links are preserved.
+  // Editorial articles keep editor-added links (nofollow, new tab, AI tracking tags removed).
+  const links: string[] = [];
   out = out.replace(
-    /<a\b[^>]*\bhref\s*=\s*["'](?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi,
-    "$1",
+    /<a\b[^>]*\bhref\s*=\s*["']((?:https?:\/\/|\/\/|mailto:|tel:|www\.)[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi,
+    (_m, href: string, text: string) => {
+      if (!options?.editorial || !/^https?:\/\//i.test(href)) return text;
+      const clean = href.replace(/([?&]|&amp;)utm_source=chatgpt\.com/gi, "").replace(/\?(&amp;|&)/, "?").replace(/[?&]$/, "");
+      const internal = /^https?:\/\/(?:www\.)?mbacompass\.in(?:[/?#]|$)/i.test(clean);
+      links.push(internal
+        ? `<a href="${clean}" class="editorial-ref">${text}</a>`
+        : `<a href="${clean}" class="editorial-ref" target="_blank" rel="nofollow noopener noreferrer">${text}</a>`);
+      return `\u0000L${links.length - 1}\u0000`;
+    },
   );
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
