@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { publicRequestRedirect } from "./lib/publicRequestRedirect";
 import {
   HTML_FRESH_MS,
   HTML_MAX_STALE_MS,
@@ -93,6 +94,8 @@ async function renderAndStore(key: string, request: Request, env: unknown, ctx: 
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const redirect = publicRequestRedirect(request);
+    if (redirect) return redirect;
     // Shared public pages are served from the HTML cache (dev renders live).
     if (import.meta.env.DEV || !isCacheableRequest(request)) return render(request, env, ctx);
 
