@@ -2,9 +2,9 @@
 
 ## What the review found
 
-This is a targeted improvement plan, not a rebuild. No website content, URLs or SEO settings have been changed during this review.
+No website content, URLs or SEO settings changed during this review.
 
-**The website is already visible in search.** Semrush’s India snapshot estimates 8,605 ranking keywords and 2,757 monthly organic visits. Examples include position 1 for “ibs hyderabad mba average package” and position 3 for “masters’ union mba fees”. These are third-party estimates, not your measured Google traffic or an index inventory.
+**The site already ranks.** Semrush India estimates 8,605 ranking keywords and 2,757 monthly organic visits, including position 1 for “ibs hyderabad mba average package”. These are estimates, not measured traffic or indexed-page counts.
 
 **We cannot yet confirm that most pages are uncrawled.** Khushi’s available Search Console account returned no properties. You offered to upload exports: Page indexing, Crawl stats and Search results will establish which pages Google discovered, indexed, excluded or ranked.
 
@@ -19,21 +19,21 @@ This is a targeted improvement plan, not a rebuild. No website content, URLs or 
 | Contextual discovery can be improved | IIM Ahmedabad’s initial HTML has no related college/article links, although related sections exist after loading | Next |
 | Duplicate-host and crawler-rule consistency needs attention | `www` returns 200 with an apex canonical rather than an HTTP redirect; Googlebot rules omit several exclusions declared only for other bots | Next |
 
-These are observed obstacles and opportunities—not proof of why Google excluded any particular page. The mobile timings are individual laboratory observations, not field Core Web Vitals or a fresh Lighthouse score.
+These obstacles do not prove Google exclusion causes. Timings are individual lab observations, not field Core Web Vitals or Lighthouse scores.
 
 ### What is already working
 
-- Representative homepage, college, coaching institute, exam, tool, application and article pages return substantive HTML without running JavaScript, with headings, descriptions and primary-domain canonical tags.
+- Sampled public pages return real initial HTML, headings, descriptions and primary-domain canonicals.
 - The live sitemap index and all eight parts load successfully: **7,501 unique public URLs** in this audit. Private dashboards, authentication pages and query-string variants are excluded.
 - Tested legacy URLs redirect permanently; an unknown college returns a real 404.
 - The current foundation scan passes rendering, homepage metadata and favicon checks. Its two domain warnings compare against the Lovable hosting address, not your chosen primary domain. **Do not switch canonical URLs or sitemaps away from mbacompass.in to satisfy those warnings.**
 
 ## Phase 1 — Confirm Google’s actual exclusions
 
-1. Read your uploaded Page indexing and Crawl stats exports, including example URLs for each exclusion reason; use Search results exports to compare page/query performance.
-2. Group examples by college, institute, exam, article, tool and regional pages. Distinguish “discovered but not indexed”, “crawled but not indexed”, duplicates, redirects, errors and intentional exclusions.
-3. Cross-check representative excluded pages against published HTML, canonical targets and sitemap membership. Read indexed URL Inspection results only when a verified matching property is accessible.
-4. Create a dated baseline: known indexable inventory, Google’s reported indexed/excluded counts, crawl failures, impressions, clicks and page-type speed results. Missing Google data stays labelled unknown.
+1. Read your exports, including example URLs for each exclusion reason and page/query performance.
+2. Group exclusions by page type: discovered/crawled but not indexed, duplicates, redirects, errors and intentional exclusions.
+3. Compare excluded examples with published HTML, canonical targets and sitemap membership; use indexed URL Inspection results when verified access exists.
+4. Record inventory, Google’s indexed/excluded counts, crawl failures, impressions, clicks and speed baseline. Missing data stays unknown.
 
 **Dependency:** your exports or a Google account with verified access to mbacompass.in. The independently confirmed technical fixes below need not wait for that access.
 
@@ -81,7 +81,7 @@ These are observed obstacles and opportunities—not proof of why Google exclude
 
 ## Technical approach
 
-Preserve TanStack Start route heads, native SSR/prerendering, publicPaths normalization, the createRequire guard and the full-inventory sitemap generator. Main implementation areas: directory route loaders/pages and shared listing queries; regional hub loaders; related-link prefetch; shared shell/calculator loading; server-cache diagnostics; crawl/metadata validation tests. Use small reusable query/pagination helpers and concrete regression tests rather than a new rendering framework or whole-site redesign.
+Preserve TanStack route heads, native SSR/prerendering, publicPaths, the createRequire guard and full-inventory sitemaps. Change directory/regional query and pagination helpers, related-link prefetch, shared shell/calculator loading and cache diagnostics. Add focused regression tests; no new framework or whole-site redesign.
 
 ## Google references
 
@@ -89,7 +89,6 @@ Preserve TanStack Start route heads, native SSR/prerendering, publicPaths normal
 - [Crawlable links](https://developers.google.com/search/docs/crawling-indexing/links-crawlable) and [pagination guidance](https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading).
 - [Canonical consolidation](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls).
 - [Sitemap guidance](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap): Google's limit is 50,000 URLs/50 MB per file; this project's smaller eight-part structure is valid.
-- [JavaScript SEO](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics): universal static rendering is not mandatory.
 - [Core Web Vitals](https://web.dev/articles/vitals) and [people-first content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content).
 - [Structured-data policies](https://developers.google.com/search/docs/appearance/structured-data/sd-policies).
 
