@@ -1,5 +1,10 @@
 # Roadmap
 
+## Search decline investigation and verified corrections — October 25
+- [ ] Analyse Coverage export alongside performance losses and check available verified Google access
+- [ ] Correct reproducible canonical/redirect, discovery and loading defects without rewriting articles or changing established URLs
+- [ ] Run focused regression tests and real public navigation checks; document evidence and remaining Google-report dependencies
+
 ## Google crawlability, rankings and loading review — October 25
 - [x] Record approval to execute the plan and analyse the uploaded Search performance workbook (July 24–October 23)
 - [x] Implement crawlable college/coaching pagination, scoped city/state reads and initial related links; distinct pages and real search verified on phone/desktop
