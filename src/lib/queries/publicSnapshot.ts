@@ -3,7 +3,7 @@ import type { DehydratedState, QueryClient } from "@tanstack/react-query";
 // Only build-time public data is refreshed; never invalidate private workspaces.
 const PUBLIC_KEYS = new Set([
   "college", "college-sections", "programme-courses", "article", "exam-page", "institute_full",
-  "colleges", "institutes", "exams-listing", "blog-articles", "public-freebies", "comparison-courses",
+  "colleges", "college-directory", "colleges_suggested", "college-articles", "institutes", "exams-listing", "blog-articles", "public-freebies", "comparison-courses",
   "mocks-landing-settings", "popular-exams-countdown", "testimonials", "success-stories-featured",
   "comparisons-with-articles", "home-freebies", "top-ranked-colleges", "categories-homepage",
   "home-latest-articles", "homepage-news", "exam-deadlines-ticker", "homepage-college-application-deadlines", "site_settings",

@@ -28,24 +28,12 @@ export const readCollegeDirectoryPage = createServerFn({ method: "GET" })
       const names = [...new Set(locations.map(row => row[data.kind as "city" | "state"]).filter(name => collegeLocationSlug(name || "") === data.slug))];
       if (!names.length) return { rows: [], total: 0, name: data.slug, cities: [] as string[] };
       query = query.in(data.kind, names);
-    } else if (data.kind === "exam") {
-      if (!/^(cat|xat|cmat|mat|nmat|snap|iift|gmat|atma)$/.test(data.slug)) return { rows: [], total: 0, name: data.slug, cities: [] as string[] };
-      // Match the hub's original case-insensitive substring exam predicate.
-      query = query.filter("exams_accepted::text", "ilike", `%${data.slug}%`);
-    } else if (data.kind === "type") {
-      const rules: Record<string, string> = {
-        iim: "name.ilike.%iim%,type.eq.IIM",
-        private: "college_category.ilike.%private%,type.ilike.%private%",
-        pgdm: "type.ilike.%pgdm%,college_category.ilike.%pgdm%",
-        university: "type.ilike.%university%,name.ilike.%university%",
-        government: "college_category.ilike.%government%,college_category.ilike.%public%,college_category.ilike.%state%,college_category.ilike.%central%,name.ilike.%iim%,name.ilike.%nit%,name.ilike.%iit%,name.ilike.%fms%",
-      };
-      if (data.slug === "top-mba") query = query.in("tier", ["Tier 1", "Tier 2"]).lte("ranking", 100);
-      else if (rules[data.slug]) query = query.or(rules[data.slug]);
-      else return { rows: [], total: 0, name: data.slug, cities: [] as string[] };
+    } else if (data.kind !== "all") {
+      throw new Error("Unsupported paginated directory");
     }
     const from = (data.page - 1) * DIRECTORY_PAGE_SIZE;
     const result = await query.order("listing_sort_order", { nullsFirst: false }).order("ranking", { nullsFirst: false }).order("id").range(from, from + DIRECTORY_PAGE_SIZE - 1);
+    if (result.error?.code === "PGRST103") return { rows: [], total: 0, name: data.slug, cities: [] as string[] };
     if (result.error) throw result.error;
     const rows = result.data || [];
     const cities = data.kind === "state" ? [...new Set(locations.filter(row => collegeLocationSlug(row.state || "") === data.slug).map(row => row.city).filter(Boolean))] : [];
