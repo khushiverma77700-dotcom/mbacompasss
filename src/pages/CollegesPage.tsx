@@ -35,16 +35,16 @@ const tabs = [
 
 const CollegesPage = () => {
   const navigate = useNavigate();
-  // Full catalogue (needed for filters/sort) loads in the background; the
-  // small server-rendered first screen is shown until it arrives.
+  // Unfiltered pages use bounded SSR rows; full filter data loads on interaction.
   const { data: cityPages } = useCityPages();
   const { data: specOptions = [] } = useSpecializations("college");
   const [searchParams, setSearchParams] = useSearchParams();
   const page = directoryPage(searchParams.get("page"));
   const { data: directory, isLoading } = useQuery(collegeDirectoryQuery(page));
   const filteredMode = [...searchParams.keys()].some(key => key !== "page");
+  const [filtersRequested, setFiltersRequested] = useState(false);
   // Fetch the complete catalogue only when a visitor actually uses filters.
-  const { data: allColleges } = useQuery({ ...collegesListingQuery, enabled: filteredMode });
+  const { data: allColleges, isFetching: filtersLoading } = useQuery({ ...collegesListingQuery, enabled: filteredMode || filtersRequested });
   const colleges = filteredMode && allColleges ? allColleges : directory?.rows ?? [];
 
   // Read filters from URL params (single source of truth)
@@ -110,10 +110,10 @@ const CollegesPage = () => {
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
-  const collegeCities = useMemo(() => [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges]);
-  const collegeStates = useMemo(() => INDIAN_STATES.filter(s => colleges.some((c: any) => c.state === s)), [colleges]);
-  const collegeCitiesForState = useMemo(() => selectedState !== "all" ? getCitiesForState(selectedState).filter(c => colleges.some((col: any) => col.city === c)) : [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges, selectedState]);
-  const allExams = useMemo(() => [...new Set(colleges.flatMap((c: any) => c.exams_accepted || []))].sort() as string[], [colleges]);
+  const collegeCities = useMemo(() => [...new Set((allColleges ?? []).map((c: any) => c.city).filter(Boolean))].sort() as string[], [allColleges]);
+  const collegeStates = useMemo(() => INDIAN_STATES.filter(s => (allColleges ?? []).some((c: any) => c.state === s)), [allColleges]);
+  const collegeCitiesForState = useMemo(() => selectedState !== "all" ? getCitiesForState(selectedState).filter(c => (allColleges ?? []).some((col: any) => col.city === c)) : collegeCities, [allColleges, selectedState, collegeCities]);
+  const allExams = useMemo(() => [...new Set((allColleges ?? []).flatMap((c: any) => c.exams_accepted || []))].sort() as string[], [allColleges]);
 
   const filtered = useMemo(() => {
     let result = colleges.filter((c: any) => {
@@ -146,7 +146,7 @@ const CollegesPage = () => {
 
   const regions = (cityPages || []).slice(0, 12);
   const totalColleges = allColleges?.length ?? directory?.total ?? 0;
-  const iimCount = colleges.filter((c: any) => c.type === "IIM").length;
+  const iimCount = allColleges?.filter((c: any) => c.type === "IIM").length;
 
   // Active filters for chips display
   const activeFilters = useMemo(() => {
@@ -282,7 +282,7 @@ const CollegesPage = () => {
               </h1>
               <div className="mx-auto h-px w-12 bg-primary-foreground/30 mb-4" />
               <p className="text-primary-foreground/80 mb-6 max-w-2xl mx-auto text-base md:text-lg">
-                Compare {totalColleges}+ colleges including {iimCount} IIMs — rankings, fees, placements & admission details
+                Compare {totalColleges} colleges — rankings, fees, placements & admission details
               </p>
             </motion.div>
 
@@ -303,10 +303,12 @@ const CollegesPage = () => {
             {/* Quick Stats */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-8">
               {[
-                { label: "Total Colleges", value: `${totalColleges}+`, icon: Building2, color: "from-blue-500/20 to-blue-600/20" },
-                { label: "IIMs Listed", value: String(iimCount), icon: Award, color: "from-amber-500/20 to-amber-600/20" },
-                { label: "Cities Covered", value: `${collegeCities.length}+`, icon: MapPin, color: "from-emerald-500/20 to-emerald-600/20" },
-                { label: "Exams Tracked", value: `${allExams.length}+`, icon: GraduationCap, color: "from-purple-500/20 to-purple-600/20" },
+                { label: "Total Colleges", value: `${totalColleges}`, icon: Building2, color: "from-blue-500/20 to-blue-600/20" },
+                ...(allColleges ? [
+                  { label: "IIMs Listed", value: String(iimCount), icon: Award, color: "from-amber-500/20 to-amber-600/20" },
+                  { label: "Cities Covered", value: `${collegeCities.length}`, icon: MapPin, color: "from-emerald-500/20 to-emerald-600/20" },
+                  { label: "Exams Tracked", value: `${allExams.length}`, icon: GraduationCap, color: "from-purple-500/20 to-purple-600/20" },
+                ] : []),
               ].map((stat) => (
                 <div key={stat.label} className={`bg-gradient-to-br ${stat.color} backdrop-blur-md rounded-2xl p-4 text-center border border-white/10`}>
                   <stat.icon className="w-5 h-5 text-primary-foreground/80 mx-auto mb-2" />
@@ -322,13 +324,13 @@ const CollegesPage = () => {
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters Card */}
-        <div className="bg-card rounded-2xl border border-border p-5 mb-8 shadow-lg -mt-8 relative z-10">
+        <div onFocusCapture={() => setFiltersRequested(true)} onPointerDown={() => setFiltersRequested(true)} className="bg-card rounded-2xl border border-border p-5 mb-8 shadow-lg -mt-8 relative z-10">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
               <Filter className="w-4 h-4 text-primary" />
             </div>
             <span className="text-sm font-bold text-foreground">Filter & Search</span>
-            <span className="ml-auto text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-medium">{filtered.length} results</span>
+            <span className="ml-auto text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-medium">{filteredMode && filtersLoading ? "Updating…" : `${resultTotal} results`}</span>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-4">

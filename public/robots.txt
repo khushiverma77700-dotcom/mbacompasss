@@ -2,6 +2,17 @@ User-agent: Googlebot
 Allow: /
 Allow: /coaching
 Allow: /coaching/*
+# Crawl genuine page= pagination; exclude non-canonical presentation variants.
+Disallow: /*?*sort=
+Disallow: /*?*view=
+Disallow: /*?*rating=
+Disallow: /*?*fee=
+Disallow: /*?*quick=
+Disallow: /*?*specialization=
+Disallow: /*?*utm_
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
+Disallow: /*?*ref=
 Disallow: /admin
 Disallow: /edit/
 Disallow: /admin/
@@ -18,6 +29,16 @@ User-agent: Bingbot
 Allow: /
 Allow: /coaching
 Allow: /coaching/*
+Disallow: /*?*sort=
+Disallow: /*?*view=
+Disallow: /*?*rating=
+Disallow: /*?*fee=
+Disallow: /*?*quick=
+Disallow: /*?*specialization=
+Disallow: /*?*utm_
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
+Disallow: /*?*ref=
 Disallow: /admin
 Disallow: /edit/
 Disallow: /admin/
