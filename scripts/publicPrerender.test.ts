@@ -34,6 +34,21 @@ describe("public prerender boundaries", () => {
     expect(paths).toHaveLength(limit);
     expect(paths[PUBLIC_STATIC_PATHS.length]).toBe("/college/a");
   });
+  it("includes only coaching hubs backed by matching public institutes without invented lastmod", async () => {
+    vi.stubGlobal("fetch", async (input: string) => {
+      const table = new URL(input).pathname.split("/").pop();
+      const rows = table === "institutes" ? [{ id: "inst", name: "CAT Academy", slug: "cat-academy", city: "Delhi", state: "Delhi", mode: "Offline" }]
+        : table === "city_pages" ? [{ slug: "delhi", name: "Delhi", type: "city" }, { slug: "empty-city", name: "Empty City", type: "city" }] : [];
+      return new Response(JSON.stringify(rows));
+    });
+    try {
+      const pages = await enumeratePublicPages("https://public.test", "public-key");
+      expect(pages).toContainEqual({ path: "/coaching/delhi" });
+      expect(pages).toContainEqual({ path: "/coaching/exam/cat" });
+      expect(pages).toContainEqual({ path: "/coaching/mode/offline" });
+      expect(pages.some(page => ["/coaching/empty-city", "/coaching/mode/online", "/coaching/exam/gmat"].includes(page.path))).toBe(false);
+    } finally { vi.unstubAllGlobals(); }
+  });
   it("includes all city/state/filter and published application URLs independently of the prerender cap", async () => {
     vi.stubGlobal("fetch", async (input: string) => {
       const table = new URL(input).pathname.split("/").pop();
