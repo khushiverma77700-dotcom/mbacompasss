@@ -52,9 +52,12 @@ These are observed obstacles and opportunities—not proof of why Google exclude
 
 - Replace full-catalogue regional reads with slim, location-filtered and paginated reads. Serialize only the data required by that page.
 - Reduce unnecessary first-load scripts in the shared shell and CAT calculator. Load charts, exports, editor tools and nonessential enhancements only where and when needed; retain main content in initial HTML.
+- Move upload-compression startup out of public router boot into upload-capable workflows; its current import pulls the database client into every public entry. Preserve app-wide upload compression.
+- Fetch only summary fields for related articles instead of whole article bodies. Make snapshot refresh age-aware, preserving timely content updates without unnecessary immediate duplicate reads.
 - Audit college/article cover images for appropriate mobile sizes, supported formats, stable dimensions and correct preload priority. Keep below-the-fold media lazy.
 - Preserve existing font optimization and deferred analytics/advertising; check for redundant preloads, duplicate requests and expensive repeated rendering.
 - Measure intermittent slow server responses and content freshness. Retain safe anonymous HTML caching and prebuilt pages, without caching private data or indefinitely serving old public facts.
+- Verify the actual published cache/prerender path rather than assuming legacy caching is active; add `/start-here` to the explicit public static selection if eligible.
 - Add page-type payload budgets and regression checks. Investigate signed-in student performance separately when an authorized test session is available; signed-out timing is not dashboard verification.
 
 **Targets:** field LCP ≤2.5s, INP ≤200ms and CLS ≤0.1 at the 75th percentile, separately for mobile/desktop. Target mobile Lighthouse Performance and SEO ≥90 under a repeatable configuration. Report actual results; never promise every first visitor a one-second load.
