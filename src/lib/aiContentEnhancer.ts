@@ -232,6 +232,7 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
 
   // 4. Collapse double spaces that the strips above may have created.
   out = out.replace(/[ \t]{2,}/g, " ");
+  out = out.replace(/\u0000L(\d+)\u0000/g, (_m, i: string) => links[Number(i)] ?? "");
 
   // 4b. AEO/GEO structural pass — single H1 per page, no skipped heading
   //     levels, header-scoped tables, lazy images with alt, and a marked

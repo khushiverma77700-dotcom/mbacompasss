@@ -2028,3 +2028,18 @@ html, body, #root {
 }
 
 .article-content-shell .ai-content p { margin-block: 1.125rem; }
+
+/* Editor-added reference links inside articles: clearly highlighted. */
+.prose a.editorial-ref,
+.ai-content a.editorial-ref {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  background-color: hsl(var(--primary) / 0.08);
+  padding: 0 0.2em;
+  border-radius: 0.25rem;
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--primary) / 0.5);
+  text-underline-offset: 3px;
+}
+.prose a.editorial-ref:hover,
+.ai-content a.editorial-ref:hover { background-color: hsl(var(--primary) / 0.16); }

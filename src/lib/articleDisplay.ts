@@ -2,7 +2,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { enhanceAIContent } from "./aiContentEnhancer";
 
-export const ARTICLE_DISPLAY_VERSION = 1;
+export const ARTICLE_DISPLAY_VERSION = 2;
 export function articleFingerprint(content: string) {
   return bytesToHex(sha256(new TextEncoder().encode(content)));
 }
