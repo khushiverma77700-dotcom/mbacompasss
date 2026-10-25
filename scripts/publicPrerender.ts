@@ -43,7 +43,7 @@ export async function enumeratePublicPages(url: string, key: string) {
   const [colleges, institutes, exams, articles, redirects, categories, bundles, compass, formulas, applications, courses, courseLinks, mocks, regions] = await Promise.all([
     rows("colleges", "", "slug,name,city,state,updated_at"), rows("institutes", "", "id,slug,name,city,state,mode,specializations,category_id,updated_at"), rows("exams"), rows("articles", "&published=eq.true"),
     rows("seo_redirects", "&is_active=eq.true", "from_path", "from_path"),
-    rows("categories"), rows("mock_bundles", "&is_published=eq.true"), rows("mba_compass_courses", "&is_active=eq.true"),
+    rows("categories", "", "id,name,slug,updated_at"), rows("mock_bundles", "&is_published=eq.true"), rows("mba_compass_courses", "&is_active=eq.true"),
     rows("quant_formulas", "&published=eq.true"), rows("application_trackers", "&is_active=eq.true&is_archived=eq.false", "slug,name,updated_at"),
     rows("courses", "", "id,name,institute_id,updated_at", "id"),
     rows("institute_courses", "", "institute_id,course_id", "institute_id"),
