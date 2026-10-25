@@ -161,7 +161,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         path.startsWith("/dashboard") || path.startsWith("/tools/profile-analyzer") || path.startsWith("/mocks");
     };
     const startAuth = () => import("@/integrations/supabase/client")
-      .then(({ supabase }) => {
+      .then(async ({ supabase }) => {
+        if (cancelled) return;
+        // Install the shared upload patch only once the account client is needed,
+        // rather than importing that client in every public router entry.
+        const { installUploadCompression } = await import("@/lib/imageCompression");
+        installUploadCompression();
         if (cancelled) return;
         subscription = supabase.auth.onAuthStateChange((_event, nextSession) => {
           applySession(nextSession);

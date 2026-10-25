@@ -3,7 +3,7 @@ export const MAX_PRERENDER_PAGES = 8000;
 export const PUBLIC_STATIC_PATHS = [
   "/", "/colleges", "/coaching", "/exam", "/blog", "/compare", "/mocks", "/freebies",
   "/tools/roi-calculator", "/tools/cat-score-calculator", "/tools/college-shortlister", "/tools/profile-analyzer", "/contact",
-  "/tools", "/tools/college-finder", "/tools/iim-waitlist-movement",
+  "/tools", "/tools/college-finder", "/tools/iim-waitlist-movement", "/start-here",
 ];
 export const PUBLIC_SITEMAP_STATIC_PATHS = [
   ...PUBLIC_STATIC_PATHS,

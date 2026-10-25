@@ -11,10 +11,14 @@
  * Google sees concentrated, topical authority instead of one giant listing.
  */
 import { useMemo } from "react";
-import { Link, useParams } from "@/lib/router-compat";
+import { Link, useParams, useSearchParams } from "@/lib/router-compat";
 import { collegeLocationSlug, locationColleges } from "@/lib/collegeHub";
 import { Building2, MapPin, GraduationCap, ChevronRight, Award } from "lucide-react";
-import { useColleges } from "@/hooks/useInstitutes";
+import { useQuery } from "@tanstack/react-query";
+import { collegesListingQuery } from "@/lib/queries/listingQueries";
+import { collegeDirectoryQuery } from "@/lib/queries/collegeDirectoryQuery";
+import { directoryPage, directoryPageUrl, DIRECTORY_PAGE_SIZE } from "@/lib/directoryPagination";
+import DirectoryPagination from "@/components/listing/DirectoryPagination";
 import SEOHead from "@/components/SEOHead";
 import CollegeListingCard from "@/components/CollegeListingCard";
 
@@ -134,7 +138,13 @@ interface Props {
 const CollegeHubPage = ({ kind }: Props) => {
   const params = useParams<{ typeSlug?: string; citySlug?: string; stateSlug?: string; examSlug?: string }>();
   const slug = (params.typeSlug || params.citySlug || params.stateSlug || params.examSlug || "").toLowerCase();
-  const { data: colleges = [], isLoading } = useColleges();
+  const [searchParams] = useSearchParams();
+  const page = directoryPage(searchParams.get("page"));
+  const regional = kind === "city" || kind === "state";
+  const { data: regionalData, isLoading: regionalLoading } = useQuery({ ...collegeDirectoryQuery(page, kind, slug), enabled: regional });
+  const { data: catalogue = [], isLoading: catalogueLoading } = useQuery({ ...collegesListingQuery, enabled: !regional });
+  const colleges = regional ? regionalData?.rows ?? [] : catalogue;
+  const isLoading = regional ? regionalLoading : catalogueLoading;
 
   const { title, h1, intro, filtered } = useMemo(() => {
     if (kind === "type") {
@@ -176,7 +186,9 @@ const CollegeHubPage = ({ kind }: Props) => {
     };
   }, [kind, slug, colleges]);
 
-  const canonical = `https://mbacompass.in/colleges/${kind === "type" ? "type" : kind === "city" ? "by-city" : kind === "state" ? "by-state" : "by-exam"}/${slug}`;
+  const hubPath = `/colleges/${kind === "type" ? "type" : kind === "city" ? "by-city" : kind === "state" ? "by-state" : "by-exam"}/${slug}`;
+  const canonical = `https://mbacompass.in${directoryPageUrl(hubPath, regional ? page : 1)}`;
+  const total = regional ? regionalData?.total ?? 0 : filtered.length;
 
   const jsonLd = useMemo(
     () => [
@@ -196,13 +208,13 @@ const CollegeHubPage = ({ kind }: Props) => {
         numberOfItems: filtered.length,
         itemListElement: filtered.slice(0, 50).map((c: any, i: number) => ({
           "@type": "ListItem",
-          position: i + 1,
+          position: (regional ? page - 1 : 0) * DIRECTORY_PAGE_SIZE + i + 1,
           url: `https://mbacompass.in/college/${c.slug}`,
           name: c.name,
         })),
       },
     ],
-    [h1, canonical, filtered]
+    [h1, canonical, filtered, regional, page]
   );
 
   const otherHubs = kind === "type"
@@ -226,7 +238,7 @@ const CollegeHubPage = ({ kind }: Props) => {
           </nav>
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">{h1}</h1>
           <p className="text-white/90 max-w-3xl text-base md:text-lg">{intro}</p>
-          <p className="text-white/70 text-sm mt-3">{filtered.length} college{filtered.length === 1 ? "" : "s"} found</p>
+          <p className="text-white/70 text-sm mt-3">{total} college{total === 1 ? "" : "s"} found</p>
         </div>
       </div>
 
@@ -236,10 +248,12 @@ const CollegeHubPage = ({ kind }: Props) => {
         ) : (
           <div className="flex flex-col gap-6">
             {filtered.map((c: any, i: number) => (
-              <CollegeListingCard key={c.id} college={c} index={i} rank={i + 1} />
+              <CollegeListingCard key={c.id} college={c} index={i} rank={(regional ? page - 1 : 0) * DIRECTORY_PAGE_SIZE + i + 1} />
             ))}
           </div>
         )}
+
+        {regional && <DirectoryPagination path={hubPath} page={page} total={total} />}
 
         {otherHubs.length > 0 && (
           <section className="mt-16 border-t pt-10">
@@ -283,7 +297,7 @@ const CollegeHubPage = ({ kind }: Props) => {
           <section className="mt-12 border-t border-border pt-8">
             <h2 className="text-2xl font-bold mb-6">Explore cities in {filtered[0]?.state}</h2>
             <div className="flex flex-wrap gap-x-6 gap-y-3">
-              {[...new Set(filtered.map(college => college.city).filter(Boolean))].map(city => <Link key={city} to={`/colleges/by-city/${slugify(city)}`} className="text-primary hover:underline">MBA colleges in {city}</Link>)}
+              {(regionalData?.cities || []).map(city => <Link key={city} to={`/colleges/by-city/${slugify(city)}`} className="text-primary hover:underline">MBA colleges in {city}</Link>)}
             </div>
           </section>
         )}

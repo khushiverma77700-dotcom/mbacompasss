@@ -20,11 +20,13 @@
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Editorial readability uses a linear block scan and shared allowlisted sanitization to prevent hangs and fact mutation. Read src/lib/AGENTS.md for article preparation rules.
-- Prerender capped public manifests; sitemaps use full canonical inventory. Never snapshot private data. Refresh hydrated snapshots and heads once on mount.
+- Prerender capped public manifests; sitemaps use full canonical inventory. Never snapshot private data. Refresh snapshots and heads once on mount only when the snapshot is at least five minutes old, avoiding duplicate fresh reads.
 - Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
-- Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), so no form needs wiring.
+- Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), installed during account bootstrap before upload workflows so public router startup stays lightweight.
 - College SEO uses collegeSeo.ts/301s and collegeSectionData; directory leaves and un-nested courses prevent masked children.
 - College fees, CTC and rank read one college column each and display via src/lib/collegeMetrics.ts on every surface; cutoffs use original-preferred active sections; no invented fallbacks, so all pages agree. Calendar rules use IST.
 - Builds emit raw/gzip sizes in bundle-report.json.
 - SEO reports: six-slot reads, deadlines, 30s caches; background refresh never edits content/settings. Read persisted search_console errors on cache hits.
 - Keep the site favicon derived from the shared brand logo at a stable public URL with accurate declared dimensions and an ICO fallback, so crawlers and browsers receive the same brand icon.
+- Public college directories use stable ordered twenty-record SSR pages; city/state reads filter the existing public listing RPC before pagination and preserve normalized location matching, avoiding whole-catalogue HTML. Full interactive filter choices load on demand; coaching slices preserve the complete filter dataset.
+- College related reads prefetch safe summary columns and existing recommendations into initial HTML, never full article bodies, to preserve discovery without inflating payloads.

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { parseCATResponseSheet, type CATResult } from "@/lib/catParser";
+import type { CATResult } from "@/lib/catParser";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
@@ -258,6 +258,7 @@ const CATScoreCalculatorPage: React.FC = () => {
       await new Promise((r) => setTimeout(r, 350 + Math.random() * 300));
     }
     try {
+      const { parseCATResponseSheet } = await import("@/lib/catParser");
       const parsed = parseCATResponseSheet(htmlInput);
       if (parsed.questions.length === 0) { setError("Could not parse any questions. Please ensure you pasted the complete HTML source."); setLoading(false); return; }
       setResult(parsed);
@@ -316,7 +317,7 @@ const CATScoreCalculatorPage: React.FC = () => {
         </div>
 
         <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <motion.div initial={false}>
             <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-6">
               <Zap className="w-4 h-4 text-white" />
               <span className="text-sm text-white font-semibold">AI-Powered • Instant Analysis • Free</span>

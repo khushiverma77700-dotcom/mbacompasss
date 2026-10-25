@@ -8,8 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { collegesListingPreviewQuery } from "@/lib/queries/listingQueries";
-import { useColleges } from "@/hooks/useInstitutes";
+import { collegesListingQuery } from "@/lib/queries/listingQueries";
+import { collegeDirectoryQuery } from "@/lib/queries/collegeDirectoryQuery";
+import { directoryPage, directoryPageUrl, pageRows, DIRECTORY_PAGE_SIZE } from "@/lib/directoryPagination";
+import DirectoryPagination from "@/components/listing/DirectoryPagination";
+import { collegeLocationSlug } from "@/lib/collegeHub";
 
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
@@ -32,16 +35,17 @@ const tabs = [
 
 const CollegesPage = () => {
   const navigate = useNavigate();
-  // Full catalogue (needed for filters/sort) loads in the background; the
-  // small server-rendered first screen is shown until it arrives.
-  const { data: allColleges, isLoading: allLoading } = useColleges();
-  const { data: previewColleges = [] } = useQuery(collegesListingPreviewQuery);
-  const colleges = allColleges ?? previewColleges;
-  const isLoading = allLoading && previewColleges.length === 0;
-
+  // Unfiltered pages use bounded SSR rows; full filter data loads on interaction.
   const { data: cityPages } = useCityPages();
   const { data: specOptions = [] } = useSpecializations("college");
   const [searchParams, setSearchParams] = useSearchParams();
+  const page = directoryPage(searchParams.get("page"));
+  const { data: directory, isLoading } = useQuery(collegeDirectoryQuery(page));
+  const filteredMode = [...searchParams.keys()].some(key => key !== "page");
+  const [filtersRequested, setFiltersRequested] = useState(false);
+  // Fetch the complete catalogue only when a visitor actually uses filters.
+  const { data: allColleges, isFetching: filtersLoading } = useQuery({ ...collegesListingQuery, enabled: filteredMode || filtersRequested });
+  const colleges = filteredMode && allColleges ? allColleges : directory?.rows ?? [];
 
   // Read filters from URL params (single source of truth)
   const activeTab = searchParams.get("type") || "all";
@@ -64,6 +68,7 @@ const CollegesPage = () => {
       setSearchParams(prev => {
         const next = new URLSearchParams(prev);
         if (searchInput) next.set("q", searchInput); else next.delete("q");
+        next.delete("page");
         return next;
       }, { replace: true });
     }, 300);
@@ -72,8 +77,6 @@ const CollegesPage = () => {
   }, [searchInput]);
 
   // Pagination — render only a chunk of cards at a time. Massive perf win on 600+ items.
-  const PAGE_SIZE = 20;
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // No redirect needed — city/state filtering stays on this page via query params
 
@@ -88,6 +91,7 @@ const CollegesPage = () => {
       }
       // Reset city when state changes
       if (key === "state") next.delete("city");
+      next.delete("page");
       return next;
     }, { replace: true });
   }, [setSearchParams]);
@@ -96,6 +100,7 @@ const CollegesPage = () => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
       next.delete(key);
+      next.delete("page");
       if (key === "state") next.delete("city");
       return next;
     }, { replace: true });
@@ -105,10 +110,10 @@ const CollegesPage = () => {
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
-  const collegeCities = useMemo(() => [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges]);
-  const collegeStates = useMemo(() => INDIAN_STATES.filter(s => colleges.some((c: any) => c.state === s)), [colleges]);
-  const collegeCitiesForState = useMemo(() => selectedState !== "all" ? getCitiesForState(selectedState).filter(c => colleges.some((col: any) => col.city === c)) : [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges, selectedState]);
-  const allExams = useMemo(() => [...new Set(colleges.flatMap((c: any) => c.exams_accepted || []))].sort() as string[], [colleges]);
+  const collegeCities = useMemo(() => [...new Set((allColleges ?? []).map((c: any) => c.city).filter(Boolean))].sort() as string[], [allColleges]);
+  const collegeStates = useMemo(() => INDIAN_STATES.filter(s => (allColleges ?? []).some((c: any) => c.state === s)), [allColleges]);
+  const collegeCitiesForState = useMemo(() => selectedState !== "all" ? getCitiesForState(selectedState).filter(c => (allColleges ?? []).some((col: any) => col.city === c)) : collegeCities, [allColleges, selectedState, collegeCities]);
+  const allExams = useMemo(() => [...new Set((allColleges ?? []).flatMap((c: any) => c.exams_accepted || []))].sort() as string[], [allColleges]);
 
   const filtered = useMemo(() => {
     let result = colleges.filter((c: any) => {
@@ -129,18 +134,19 @@ const CollegesPage = () => {
       // Default sort: admin-defined listing_sort_order first, then ranking
       result = [...result].sort((a: any, b: any) =>
         (a.listing_sort_order ?? 99999) - (b.listing_sort_order ?? 99999) ||
-        (a.ranking ?? 99999) - (b.ranking ?? 99999)
+        (a.ranking ?? 99999) - (b.ranking ?? 99999) || String(a.id).localeCompare(String(b.id))
       );
     }
     return result;
   }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, sortBy]);
 
   // Reset pagination whenever the filter set changes
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, selectedTier, selectedCategory, sortBy]);
+  const displayed = filteredMode && allColleges ? pageRows(filtered, page) : filtered;
+  const resultTotal = filteredMode && allColleges ? filtered.length : directory?.total ?? 0;
 
   const regions = (cityPages || []).slice(0, 12);
-  const totalColleges = colleges.length;
-  const iimCount = colleges.filter((c: any) => c.type === "IIM").length;
+  const totalColleges = allColleges?.length ?? directory?.total ?? 0;
+  const iimCount = allColleges?.filter((c: any) => c.type === "IIM").length;
 
   // Active filters for chips display
   const activeFilters = useMemo(() => {
@@ -180,7 +186,7 @@ const CollegesPage = () => {
   }, [activeTab, selectedState, selectedCity, selectedExam, filtered.length]);
 
   const jsonLd = buildPageGraph(
-    generateListingSchema(dynamicTitle, filtered, "college"),
+    generateListingSchema(dynamicTitle, displayed, "college"),
     buildWebPageSchema({
       path: "/colleges",
       name: dynamicTitle,
@@ -224,17 +230,7 @@ const CollegesPage = () => {
           "private MBA colleges with guaranteed placements", "top 100 MBA colleges in India rankings",
           "MBA colleges without entrance exams in India", "distance MBA colleges with best placement support",
         ]}
-        canonical={(() => {
-          if (typeof window === "undefined") return "https://mbacompass.in/colleges";
-          // M4: self-canonical paginated pages — preserve `page` param so
-          // /colleges?page=2 canonicals to itself, NOT to /colleges. Strip
-          // every other filter param (city, state, q, sort, …) so the
-          // canonical doesn't multiply.
-          const sp = new URLSearchParams(window.location.search);
-          const page = sp.get("page");
-          const tail = page && page !== "1" ? `?page=${page}` : "";
-          return canonicalUrl(`${window.location.pathname}${tail}`);
-        })()}
+        canonical={canonicalUrl(directoryPageUrl("/colleges", page))}
         jsonLd={jsonLd}
       />
 
@@ -286,7 +282,7 @@ const CollegesPage = () => {
               </h1>
               <div className="mx-auto h-px w-12 bg-primary-foreground/30 mb-4" />
               <p className="text-primary-foreground/80 mb-6 max-w-2xl mx-auto text-base md:text-lg">
-                Compare {totalColleges}+ colleges including {iimCount} IIMs — rankings, fees, placements & admission details
+                Compare {totalColleges} colleges — rankings, fees, placements & admission details
               </p>
             </motion.div>
 
@@ -307,10 +303,12 @@ const CollegesPage = () => {
             {/* Quick Stats */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-8">
               {[
-                { label: "Total Colleges", value: `${totalColleges}+`, icon: Building2, color: "from-blue-500/20 to-blue-600/20" },
-                { label: "IIMs Listed", value: String(iimCount), icon: Award, color: "from-amber-500/20 to-amber-600/20" },
-                { label: "Cities Covered", value: `${collegeCities.length}+`, icon: MapPin, color: "from-emerald-500/20 to-emerald-600/20" },
-                { label: "Exams Tracked", value: `${allExams.length}+`, icon: GraduationCap, color: "from-purple-500/20 to-purple-600/20" },
+                { label: "Total Colleges", value: `${totalColleges}`, icon: Building2, color: "from-blue-500/20 to-blue-600/20" },
+                ...(allColleges ? [
+                  { label: "IIMs Listed", value: String(iimCount), icon: Award, color: "from-amber-500/20 to-amber-600/20" },
+                  { label: "Cities Covered", value: `${collegeCities.length}`, icon: MapPin, color: "from-emerald-500/20 to-emerald-600/20" },
+                  { label: "Exams Tracked", value: `${allExams.length}`, icon: GraduationCap, color: "from-purple-500/20 to-purple-600/20" },
+                ] : []),
               ].map((stat) => (
                 <div key={stat.label} className={`bg-gradient-to-br ${stat.color} backdrop-blur-md rounded-2xl p-4 text-center border border-white/10`}>
                   <stat.icon className="w-5 h-5 text-primary-foreground/80 mx-auto mb-2" />
@@ -326,13 +324,13 @@ const CollegesPage = () => {
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters Card */}
-        <div className="bg-card rounded-2xl border border-border p-5 mb-8 shadow-lg -mt-8 relative z-10">
+        <div onFocusCapture={() => setFiltersRequested(true)} onPointerDown={() => setFiltersRequested(true)} className="bg-card rounded-2xl border border-border p-5 mb-8 shadow-lg -mt-8 relative z-10">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
               <Filter className="w-4 h-4 text-primary" />
             </div>
             <span className="text-sm font-bold text-foreground">Filter & Search</span>
-            <span className="ml-auto text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-medium">{filtered.length} results</span>
+            <span className="ml-auto text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-medium">{filteredMode && filtersLoading ? "Updating…" : `${resultTotal} results`}</span>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -442,24 +440,12 @@ const CollegesPage = () => {
 
         {/* College Cards (paginated for performance — 600+ items would otherwise jank the UI) */}
         <div className="space-y-5">
-          {filtered.slice(0, visibleCount).map((college: any, i: number) => (
-            <CollegeListingCard key={college.id} college={college} index={i} rank={i + 1} />
+          {displayed.map((college: any, i: number) => (
+            <CollegeListingCard key={college.id} college={college} index={i} rank={(page - 1) * DIRECTORY_PAGE_SIZE + i + 1} />
           ))}
         </div>
 
-        {visibleCount < filtered.length && (
-          <div className="flex justify-center mt-8">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              className="rounded-xl"
-            >
-              Show {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        )}
+        <DirectoryPagination path="/colleges" page={page} total={resultTotal} search={searchParams} />
 
         {filtered.length === 0 && (
           <div className="text-center py-24 bg-card rounded-2xl border border-border">
@@ -480,7 +466,7 @@ const CollegesPage = () => {
               {regions.map(r => (
                 <Link
                   key={r.slug}
-                  to={`/colleges?${r.state ? `state=${encodeURIComponent(r.state)}&` : ""}city=${encodeURIComponent(r.name)}`}
+                  to={`/colleges/by-city/${collegeLocationSlug(r.name)}`}
                   className="flex items-center gap-2 px-4 py-3.5 rounded-xl bg-muted/50 hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium text-foreground group border border-transparent hover:border-primary/20"
                 >
                   <MapPin className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary shrink-0" />

@@ -1,6 +1,12 @@
 # Roadmap
 
 ## Google crawlability, rankings and loading review — October 25
+- [x] Record approval to execute the plan and analyse the uploaded Search performance workbook (July 24–October 23)
+- [x] Implement crawlable college/coaching pagination, scoped city/state reads and initial related links; distinct pages and real search verified on phone/desktop
+- [x] Reduce shared upload startup and unnecessary fresh-snapshot/related-content reads; include Start Here in prerender selection; defer calculator parser until calculation
+- [x] Align Googlebot/Bingbot rules; verify preview navigation, HTML and 22 regression tests; regional HTML reduced 92%/97%, recorded evidence and editorial priorities in docs/google-crawl-execution.md
+- [ ] Verify published sizes, phone loading and Core Web Vitals after deployment — requires publishing; local development timings are not production results
+- [ ] Consolidate www to apex with a permanent host redirect — live www still returns 200; requires hosting-domain redirect configuration, not a content or canonical change
 - [x] Read current foundation scan and Semrush estimates; available Search Console account returned no verified properties
 - [x] Complete live structure audit and fresh-browser desktop/mobile loading measurements; prepared a prioritized approval plan without website changes
 - [ ] Confirm Google indexing exclusions and crawl history — requires a Search Console account with access to mbacompass.in or exported reports
