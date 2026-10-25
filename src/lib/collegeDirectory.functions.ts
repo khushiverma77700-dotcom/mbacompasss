@@ -28,8 +28,8 @@ export const readCollegeDirectoryPage = createServerFn({ method: "GET" })
       const names = [...new Set(locations.map(row => row[data.kind as "city" | "state"]).filter(name => collegeLocationSlug(name || "") === data.slug))];
       if (!names.length) return { rows: [], total: 0, name: data.slug, cities: [] as string[] };
       query = query.in(data.kind, names);
-    } else if (data.kind !== "all") {
-      throw new Error("Unsupported paginated directory");
+    } else if (data.kind === "type" || data.kind === "exam") {
+      query = db.rpc("colleges_hub_listing", { hub_kind: data.kind, hub_slug: data.slug }, { count: "exact" });
     }
     const from = (data.page - 1) * DIRECTORY_PAGE_SIZE;
     const result = await query.order("listing_sort_order", { nullsFirst: false }).order("ranking", { nullsFirst: false }).order("id").range(from, from + DIRECTORY_PAGE_SIZE - 1);
