@@ -6,6 +6,7 @@ import { collegeDescription, collegeTitle } from "@/lib/collegeSeo";
 import { generateCollegeSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 import { normalizeCollegeSectionData } from "@/lib/collegeSectionData";
+import { collegeArticlesQuery, suggestedCollegesQuery } from "@/lib/queries/listingQueries";
 
 export const Route = createFileRoute("/_public/college/$slug")({
   loader: async ({ context, params }) => {
@@ -14,6 +15,10 @@ export const Route = createFileRoute("/_public/college/$slug")({
     if (to) throw redirect({ href: to, statusCode: 301 });
     const row = await prefetchDetail(context.queryClient, "colleges", params.slug);
     if (!row) throw notFound();
+    await Promise.all([
+      context.queryClient.ensureQueryData(collegeArticlesQuery(row.name)),
+      context.queryClient.ensureQueryData(suggestedCollegesQuery(params.slug)),
+    ]);
     const sections = context.queryClient.getQueryData<any[]>(["college-sections", row.id]) || [];
     const section = sections.find((s) => s.section_type === "qa" && (s.version === "original" || !s.version)) || sections.find((s) => s.section_type === "qa");
     const questions = normalizeCollegeSectionData(section?.data).questions || [];

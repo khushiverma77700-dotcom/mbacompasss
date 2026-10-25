@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { collegesListingQuery, institutesQuery } from "@/lib/queries/listingQueries";
+import { collegesListingQuery, institutesQuery, suggestedCollegesQuery } from "@/lib/queries/listingQueries";
 
 // Query definition lives in @/lib/queries/listingQueries so the /coaching route
 // loader can prefetch it server-side under the identical query key.
@@ -89,21 +89,7 @@ export const useColleges = () => {
  * entire catalogue and sliced the first six off it.
  */
 export const useSuggestedColleges = (excludeSlug?: string) => {
-  return useQuery({
-    queryKey: ["colleges_suggested", excludeSlug ?? null],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("colleges")
-        .select("id, name, slug, city, state, logo_url, fees, placement_avg, ranking, type")
-        .not("slug", "is", null)
-        .neq("slug", excludeSlug ?? "")
-        .order("ranking")
-        .limit(6);
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: 10 * 60 * 1000,
-  });
+  return useQuery(suggestedCollegesQuery(excludeSlug));
 };
 
 export interface CollegeLocationCount {

@@ -93,7 +93,8 @@ export const institutesQuery = (categorySlug?: string) =>
       }
       const { data, error } = await query
         .order("listing_sort_order", { ascending: true, nullsFirst: false })
-        .order("rating", { ascending: false });
+        .order("rating", { ascending: false })
+        .order("id");
       if (error) throw error;
       return (data || []).filter((item) => item.name?.trim() && item.slug?.trim());
     },
@@ -185,4 +186,30 @@ export const comparisonCoursesQuery = queryOptions({
     if (error) throw error;
     return data || [];
   },
+});
+
+export const collegeArticlesQuery = (name?: string) => queryOptions({
+  queryKey: ["college-articles", name],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("articles")
+      .select("id,slug,title,category,created_at,excerpt")
+      .eq("published", true).order("created_at", { ascending: false }).limit(4);
+    if (error) throw error;
+    return data || [];
+  },
+  enabled: !!name,
+  staleTime: 5 * 60 * 1000,
+});
+
+export const suggestedCollegesQuery = (excludeSlug?: string) => queryOptions({
+  queryKey: ["colleges_suggested", excludeSlug ?? null],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("colleges")
+      .select("id,name,slug,city,state,logo_url,fees,placement_avg,ranking,type")
+      .not("slug", "is", null).neq("slug", excludeSlug ?? "")
+      .order("ranking").order("id").limit(6);
+    if (error) throw error;
+    return (data || []).filter(row => row.name?.trim() && row.slug?.trim());
+  },
+  staleTime: 10 * 60 * 1000,
 });

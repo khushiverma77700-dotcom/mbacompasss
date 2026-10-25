@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCtaGate } from "@/hooks/useCtaGate";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { collegeArticlesQuery } from "@/lib/queries/listingQueries";
 import SEOHead, { generateCollegeSchema, generateFAQSchema } from "@/components/SEOHead";
 import AnswerBlock from "@/components/AnswerBlock";
 import {
@@ -83,7 +84,7 @@ const CollegeDetailPage = () => {
       const { data } = await supabase
         .from("college_sections")
         .select("*")
-        .eq("college_id", college!.id)
+        .eq("college_id", college?.id ?? "")
         .eq("is_active", true)
         .order("sort_order");
       return data || [];
@@ -122,14 +123,7 @@ const CollegeDetailPage = () => {
   }, [user]);
 
   // Fetch related articles
-  const { data: relatedArticles } = useQuery({
-    queryKey: ["college-articles", college?.name],
-    queryFn: async () => {
-      const { data } = await supabase.from("articles").select("*").eq("published", true).order("created_at", { ascending: false }).limit(4);
-      return data || [];
-    },
-    enabled: !!college,
-  });
+  const { data: relatedArticles } = useQuery(collegeArticlesQuery(college?.name));
 
   useEffect(() => {
     if (college) {

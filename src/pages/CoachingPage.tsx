@@ -17,6 +17,8 @@ import SEOHead, { generateListingSchema, generateBreadcrumbSchema } from "@/comp
 import { buildWebPageSchema, buildBreadcrumbSchema, buildPageGraph } from "@/lib/aeoSchema";
 import { getCoachingListingSeo } from "@/lib/coachingSeoTemplates";
 import { canonicalUrl } from "@/lib/canonical";
+import { directoryPage, directoryPageUrl, pageRows, DIRECTORY_PAGE_SIZE } from "@/lib/directoryPagination";
+import DirectoryPagination from "@/components/listing/DirectoryPagination";
 import PageKeywords from "@/components/PageKeywords";
 import { getLocationImage } from "@/data/cityImages";
 import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches, locationMatches } from "@/lib/filterHelpers";
@@ -48,12 +50,7 @@ const CoachingPage = () => {
   const view = searchParams.get("view") || "list"; // list | grid | map
   const quick = searchParams.get("quick") || ""; // verified | offer | featured
 
-  // Pagination — 20 per page, Load More button. Avoids rendering 500+ cards at once.
-  const PAGE_SIZE = 20;
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [search, selectedState, selectedCity, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, minRating, quick, view]);
+  const page = directoryPage(searchParams.get("page"));
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -64,6 +61,7 @@ const CoachingPage = () => {
         next.set(key, value);
       }
       if (key === "state") next.delete("city");
+      next.delete("page");
       return next;
     }, { replace: true });
   }, [setSearchParams]);
@@ -72,6 +70,7 @@ const CoachingPage = () => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
       next.delete(key);
+      next.delete("page");
       if (key === "state") next.delete("city");
       return next;
     }, { replace: true });
@@ -151,7 +150,7 @@ const CoachingPage = () => {
     }
     if (quick === "verified" || quick === "featured") list = list.filter((i: any) => i.featured);
     if (quick === "offer") list = list.filter((i: any) => i.offer || i.discount);
-    if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0) || String(a.id).localeCompare(String(b.id)));
     if (sortBy === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
     if (sortBy === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
     if (sortBy === "fees-low") {
@@ -220,14 +219,7 @@ const CoachingPage = () => {
         title={dynamicTitle}
         description={dynamicDescription}
         keywords={seoTemplate.keywords}
-        canonical={(() => {
-          if (typeof window === "undefined") return "https://mbacompass.in/coaching";
-          // M4: self-canonical paginated pages — keep `page` only.
-          const sp = new URLSearchParams(window.location.search);
-          const page = sp.get("page");
-          const tail = page && page !== "1" ? `?page=${page}` : "";
-          return canonicalUrl(`${window.location.pathname}${tail}`);
-        })()}
+        canonical={canonicalUrl(directoryPageUrl("/coaching", page))}
         jsonLd={buildPageGraph(
           buildWebPageSchema({
             path: "/coaching",
@@ -236,7 +228,7 @@ const CoachingPage = () => {
             breadcrumbs: [{ name: "MBA Coaching", url: "/coaching" }],
           }),
           buildBreadcrumbSchema("/coaching", [{ name: "MBA Coaching", url: "/coaching" }]),
-          generateListingSchema(dynamicH1, filtered.slice(0, 20).map((i: any) => ({ name: i.name, slug: i.slug, city: i.city })), "institute"),
+          generateListingSchema(dynamicH1, pageRows(filtered, page).map((i: any) => ({ name: i.name, slug: i.slug, city: i.city })), "institute"),
         )}
       />
 
@@ -476,31 +468,19 @@ const CoachingPage = () => {
           <CoachingMapView institutes={filtered} onCityClick={(c) => { setFilter("city", c); setFilter("view", "list"); }} />
         ) : view === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            {filtered.slice(0, visibleCount).map((inst: any, i: number) => (
-              <InstituteGridCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+            {pageRows(filtered, page).map((inst: any, i: number) => (
+              <InstituteGridCard key={inst.id} inst={inst} index={i} rank={(page - 1) * DIRECTORY_PAGE_SIZE + i + 1} />
             ))}
           </div>
         ) : (
           <div className="space-y-5">
-            {filtered.slice(0, visibleCount).map((inst: any, i: number) => (
-              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+            {pageRows(filtered, page).map((inst: any, i: number) => (
+              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={(page - 1) * DIRECTORY_PAGE_SIZE + i + 1} />
             ))}
           </div>
         )}
 
-        {view !== "map" && visibleCount < filtered.length && (
-          <div className="flex justify-center mt-8">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              className="rounded-xl"
-            >
-              Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        )}
+        {view !== "map" && <DirectoryPagination path="/coaching" page={page} total={filtered.length} search={searchParams} />}
 
         {filtered.length === 0 && (
           <div className="text-center py-24 bg-card rounded-2xl border border-border">
