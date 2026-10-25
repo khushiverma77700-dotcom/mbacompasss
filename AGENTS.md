@@ -27,3 +27,4 @@
 - College fees, CTC and rank read one college column each and display via src/lib/collegeMetrics.ts on every surface; cutoffs use original-preferred active sections; no invented fallbacks, so all pages agree. Calendar rules use IST.
 - Builds emit raw/gzip sizes in bundle-report.json.
 - SEO reports: six-slot reads, deadlines, 30s caches; background refresh never edits content/settings. Read persisted search_console errors on cache hits.
+- Keep the site favicon derived from the shared brand logo at a stable public URL with accurate declared dimensions and an ICO fallback, so crawlers and browsers receive the same brand icon.
