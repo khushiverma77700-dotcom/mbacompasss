@@ -32,6 +32,21 @@ it("does not refetch private hydrated data", async () => {
   unsubscribe(); client.clear();
 });
 
+it("refreshes old directory and related-link snapshots once", async () => {
+  const client = new QueryClient();
+  const keys = [["college-directory", "city", "bangalore", 1], ["college-articles", "IIM Ahmedabad"], ["colleges_suggested", "iim-ahmedabad"]];
+  keys.forEach(key => client.setQueryData(key, ["old"], { updatedAt: 1 }));
+  registerPublicSnapshot(client, dehydrate(client));
+  let reads = 0;
+  const unsubscribes = keys.map(queryKey => new QueryObserver(client, { queryKey, staleTime: Infinity, queryFn: async () => { reads++; return ["fresh"]; } }).subscribe(() => {}));
+  await refreshPublicSnapshot(client);
+  expect(reads).toBe(3);
+  keys.forEach(key => expect(client.getQueryData(key)).toEqual(["fresh"]));
+  await refreshPublicSnapshot(client);
+  expect(reads).toBe(3);
+  unsubscribes.forEach(unsubscribe => unsubscribe()); client.clear();
+});
+
 it("reuses fresh public SSR data and refreshes it once it ages", async () => {
   const client = new QueryClient();
   const savedAt = Date.now();

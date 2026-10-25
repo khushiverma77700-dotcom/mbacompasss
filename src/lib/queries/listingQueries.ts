@@ -21,6 +21,9 @@ const COLLEGES_BATCH = 6;
 const fetchCollegesPage = async (from: number) => {
   const { data, error } = await supabase
     .rpc("colleges_listing")
+    .order("listing_sort_order", { nullsFirst: false })
+    .order("ranking", { nullsFirst: false })
+    .order("id")
     .range(from, from + COLLEGES_PAGE_SIZE - 1);
   if (error) throw error;
   return data || [];
