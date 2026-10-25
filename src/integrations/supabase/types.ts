@@ -16582,6 +16582,36 @@ export type Database = {
         }
       }
       claim_shortlister_submissions: { Args: never; Returns: number }
+      colleges_hub_listing: {
+        Args: { hub_kind: string; hub_slug: string }
+        Returns: {
+          accreditations: string[]
+          campus_size: string
+          city: string
+          college_category: string
+          description: string
+          established: number
+          exams_accepted: string[]
+          fees: string
+          fees_lakhs: number
+          id: string
+          listing_sort_order: number
+          logo_url: string
+          name: string
+          placement_avg: string
+          placement_highest: string
+          placement_median: string
+          ranking: number
+          slug: string
+          specializations: string[]
+          state: string
+          tier: string
+          top_recruiters: string[]
+          top_recruiters_total: number
+          total_students: number
+          type: string
+        }[]
+      }
       colleges_listing: {
         Args: never
         Returns: {

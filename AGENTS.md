@@ -29,4 +29,5 @@
 - SEO reports: six-slot reads, deadlines, 30s caches; background refresh never edits content/settings. Read persisted search_console errors on cache hits.
 - Keep the site favicon derived from the shared brand logo at a stable public URL with accurate declared dimensions and an ICO fallback, so crawlers and browsers receive the same brand icon.
 - Public college directories use stable ordered twenty-record SSR pages; city/state reads filter the existing public listing RPC before pagination and preserve normalized location matching, avoiding whole-catalogue HTML. Full interactive filter choices load on demand; coaching slices preserve the complete filter dataset.
+- Type/exam college hubs filter the safe public listing projection before pagination, preserving existing predicates; canonical directory page numbers remain distinct, and known host/path aliases redirect before SSR and caching.
 - College related reads prefetch safe summary columns and existing recommendations into initial HTML, never full article bodies, to preserve discovery without inflating payloads.

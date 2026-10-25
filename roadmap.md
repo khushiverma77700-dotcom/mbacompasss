@@ -1,15 +1,24 @@
 # Roadmap
 
+## Search decline investigation and verified corrections — October 25
+- [x] Recheck Khushi's Google account: verified domain owner access; read daily/page/query/device performance, submitted sitemaps and six URL inspections
+- [x] Explain how to export affected-page lists from Google Search Console
+- [x] Analyse Coverage export and direct Google comparison: clicks 2,915→1,609, impressions 741,775→408,019; homepage indexed; CAT/private hubs have old Soft 404 records; FMS has an older duplicate assessment; current FMS HTML has its own canonical
+- [x] Correct verified type/exam whole-catalogue rendering with twenty-record server pagination and page-specific canonicals; add host/public-alias 301 handling without rewriting articles or changing established URLs
+- [x] Eleven regression tests, real public page-one/page-two navigation and unknown-hub 404 checks pass; latest preview build OK. Updated hubs need publishing; www redirect requires live verification afterwards
+- [ ] Resolve remaining regional coaching duplicate canonical and placeholder/category discovery defects — investigation has identified overlapping route/component heads; requires a scoped follow-up implementation and verification
+- [ ] Recheck Google after corrected pages are published and recrawled; obtain affected-page examples/crawl-stat reports for comprehensive coverage diagnosis (not exposed by the available API)
+
 ## Google crawlability, rankings and loading review — October 25
 - [x] Record approval to execute the plan and analyse the uploaded Search performance workbook (July 24–October 23)
 - [x] Implement crawlable college/coaching pagination, scoped city/state reads and initial related links; distinct pages and real search verified on phone/desktop
 - [x] Reduce shared upload startup and unnecessary fresh-snapshot/related-content reads; include Start Here in prerender selection; defer calculator parser until calculation
 - [x] Align Googlebot/Bingbot rules; verify preview navigation, HTML and 22 regression tests; regional HTML reduced 92%/97%, recorded evidence and editorial priorities in docs/google-crawl-execution.md
 - [ ] Verify published sizes, phone loading and Core Web Vitals after deployment — requires publishing; local development timings are not production results
-- [ ] Consolidate www to apex with a permanent host redirect — live www still returns 200; requires hosting-domain redirect configuration, not a content or canonical change
+- [ ] Confirm www-to-apex 301 after publishing request-handler correction; live www currently returns 200 and hosting behavior remains unverified
 - [x] Read current foundation scan and Semrush estimates; available Search Console account returned no verified properties
 - [x] Complete live structure audit and fresh-browser desktop/mobile loading measurements; prepared a prioritized approval plan without website changes
-- [ ] Confirm Google indexing exclusions and crawl history — requires a Search Console account with access to mbacompass.in or exported reports
+- [ ] Complete indexing exclusions and crawl-history audit — domain owner access now confirmed; full affected-URL and crawl-stat exports still required beyond sample inspections
 
 ## Search Console report failure warning — October 21
 - [x] Restore persisted refresh failures on cached reports and distinguish refresh requests from successful completion; ten regression tests pass and preview build is OK
@@ -96,7 +105,7 @@
 
 ## Connectors (new workspace)
 - [x] Connect Firecrawl
-- [ ] Connect Google Search Console — connection card declined
+- [x] Verify accessible Google Search Console workspace account and mbacompass.in domain ownership; project-runtime linkage remains separate and was not changed for this chat-only inspection
 - [ ] Connect Semrush
 
 ## /mba-application fixes
