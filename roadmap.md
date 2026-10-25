@@ -1,6 +1,10 @@
 # Roadmap
 
 ## Google crawlability, rankings and loading review — October 25
+- [x] Record approval to execute the plan and analyse the uploaded Search performance workbook (July 24–October 23)
+- [ ] Implement crawlable college/coaching pagination, scoped regional reads and initial related links
+- [ ] Reduce shared upload startup and unnecessary fresh-snapshot/related-content reads; include Start Here in prerender selection
+- [ ] Align crawler rules; verify preview navigation, HTML and regression tests; prepare measured before/after and editorial priorities
 - [x] Read current foundation scan and Semrush estimates; available Search Console account returned no verified properties
 - [x] Complete live structure audit and fresh-browser desktop/mobile loading measurements; prepared a prioritized approval plan without website changes
 - [ ] Confirm Google indexing exclusions and crawl history — requires a Search Console account with access to mbacompass.in or exported reports
