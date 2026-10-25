@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Search decline investigation and verified corrections — October 25
+- [ ] Recheck the current Google account for the mbacompass.in property and inspect its details if accessible
 - [x] Explain how to export affected-page lists from Google Search Console
 - [ ] Analyse Coverage export alongside performance losses and check available verified Google access
 - [ ] Correct reproducible canonical/redirect, discovery and loading defects without rewriting articles or changing established URLs
