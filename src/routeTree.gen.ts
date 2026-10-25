@@ -28,7 +28,6 @@ import { Route as PublicBundlesRouteImport } from './routes/_public.bundles'
 import { Route as PublicBusinessInquiriesRouteImport } from './routes/_public.business-inquiries'
 import { Route as PublicCatMock1RouteImport } from './routes/_public.cat-mock-1'
 import { Route as PublicCatScoreCalculatorRouteImport } from './routes/_public.cat-score-calculator'
-import { Route as PublicCoachingRouteImport } from './routes/_public.coaching'
 import { Route as PublicCollegeFinderRouteImport } from './routes/_public.college-finder'
 import { Route as PublicCollegeShortlisterRouteImport } from './routes/_public.college-shortlister'
 import { Route as PublicCompareRouteImport } from './routes/_public.compare'
@@ -219,6 +218,7 @@ import { Route as PublicArticleSlugRouteImport } from './routes/_public.article.
 import { Route as PublicAuthorsSlugRouteImport } from './routes/_public.authors.$slug'
 import { Route as PublicBundlesSlugRouteImport } from './routes/_public.bundles.$slug'
 import { Route as PublicCategorySlugRouteImport } from './routes/_public.category.$slug'
+import { Route as PublicCoachingIndexRouteImport } from './routes/_public.coaching.index'
 import { Route as PublicCoachingRegionRouteImport } from './routes/_public.coaching.$region'
 import { Route as PublicCollegeSlugRouteImport } from './routes/_public.college.$slug'
 import { Route as PublicCollegesIndexRouteImport } from './routes/_public.colleges.index'
@@ -441,11 +441,6 @@ const PublicCatScoreCalculatorRoute =
     path: '/cat-score-calculator',
     getParentRoute: () => PublicRoute,
   } as any)
-const PublicCoachingRoute = PublicCoachingRouteImport.update({
-  id: '/coaching',
-  path: '/coaching',
-  getParentRoute: () => PublicRoute,
-} as any)
 const PublicCollegeFinderRoute = PublicCollegeFinderRouteImport.update({
   id: '/college-finder',
   path: '/college-finder',
@@ -1403,10 +1398,15 @@ const PublicCategorySlugRoute = PublicCategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicCoachingIndexRoute = PublicCoachingIndexRouteImport.update({
+  id: '/coaching/',
+  path: '/coaching/',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicCoachingRegionRoute = PublicCoachingRegionRouteImport.update({
-  id: '/$region',
-  path: '/$region',
-  getParentRoute: () => PublicCoachingRoute,
+  id: '/coaching/$region',
+  path: '/coaching/$region',
+  getParentRoute: () => PublicRoute,
 } as any)
 const PublicCollegeSlugRoute = PublicCollegeSlugRouteImport.update({
   id: '/college/$slug',
@@ -1876,14 +1876,14 @@ const StudentVocabularySearchRoute = StudentVocabularySearchRouteImport.update({
   getParentRoute: () => StudentVocabularyRoute,
 } as any)
 const PublicCoachingExamSlugRoute = PublicCoachingExamSlugRouteImport.update({
-  id: '/exam/$slug',
-  path: '/exam/$slug',
-  getParentRoute: () => PublicCoachingRoute,
+  id: '/coaching/exam/$slug',
+  path: '/coaching/exam/$slug',
+  getParentRoute: () => PublicRoute,
 } as any)
 const PublicCoachingModeSlugRoute = PublicCoachingModeSlugRouteImport.update({
-  id: '/mode/$slug',
-  path: '/mode/$slug',
-  getParentRoute: () => PublicCoachingRoute,
+  id: '/coaching/mode/$slug',
+  path: '/coaching/mode/$slug',
+  getParentRoute: () => PublicRoute,
 } as any)
 const PublicCollegesByCityCitySlugRoute =
   PublicCollegesByCityCitySlugRouteImport.update({
@@ -2110,7 +2110,6 @@ export interface FileRoutesByFullPath {
   '/business-inquiries': typeof PublicBusinessInquiriesRoute
   '/cat-mock-1': typeof PublicCatMock1Route
   '/cat-score-calculator': typeof PublicCatScoreCalculatorRoute
-  '/coaching': typeof PublicCoachingRouteWithChildren
   '/college-finder': typeof PublicCollegeFinderRoute
   '/college-shortlister': typeof PublicCollegeShortlisterRoute
   '/compare': typeof PublicCompareRoute
@@ -2373,6 +2372,7 @@ export interface FileRoutesByFullPath {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/coaching/': typeof PublicCoachingIndexRoute
   '/colleges/': typeof PublicCollegesIndexRoute
   '/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/mba-compass/': typeof PublicMbaCompassIndexRoute
@@ -2442,7 +2442,6 @@ export interface FileRoutesByTo {
   '/business-inquiries': typeof PublicBusinessInquiriesRoute
   '/cat-mock-1': typeof PublicCatMock1Route
   '/cat-score-calculator': typeof PublicCatScoreCalculatorRoute
-  '/coaching': typeof PublicCoachingRouteWithChildren
   '/college-finder': typeof PublicCollegeFinderRoute
   '/college-shortlister': typeof PublicCollegeShortlisterRoute
   '/compare': typeof PublicCompareRoute
@@ -2691,6 +2690,7 @@ export interface FileRoutesByTo {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/coaching': typeof PublicCoachingIndexRoute
   '/colleges': typeof PublicCollegesIndexRoute
   '/mba-application': typeof PublicMbaApplicationIndexRoute
   '/mba-compass': typeof PublicMbaCompassIndexRoute
@@ -2766,7 +2766,6 @@ export interface FileRoutesById {
   '/_public/business-inquiries': typeof PublicBusinessInquiriesRoute
   '/_public/cat-mock-1': typeof PublicCatMock1Route
   '/_public/cat-score-calculator': typeof PublicCatScoreCalculatorRoute
-  '/_public/coaching': typeof PublicCoachingRouteWithChildren
   '/_public/college-finder': typeof PublicCollegeFinderRoute
   '/_public/college-shortlister': typeof PublicCollegeShortlisterRoute
   '/_public/compare': typeof PublicCompareRoute
@@ -3030,6 +3029,7 @@ export interface FileRoutesById {
   '/student/vocabulary/leaderboard': typeof StudentVocabularyLeaderboardRoute
   '/student/vocabulary/revision': typeof StudentVocabularyRevisionRoute
   '/student/vocabulary/search': typeof StudentVocabularySearchRoute
+  '/_public/coaching/': typeof PublicCoachingIndexRoute
   '/_public/colleges/': typeof PublicCollegesIndexRoute
   '/_public/mba-application/': typeof PublicMbaApplicationIndexRoute
   '/_public/mba-compass/': typeof PublicMbaCompassIndexRoute
@@ -3106,7 +3106,6 @@ export interface FileRouteTypes {
     | '/business-inquiries'
     | '/cat-mock-1'
     | '/cat-score-calculator'
-    | '/coaching'
     | '/college-finder'
     | '/college-shortlister'
     | '/compare'
@@ -3369,6 +3368,7 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/coaching/'
     | '/colleges/'
     | '/mba-application/'
     | '/mba-compass/'
@@ -3438,7 +3438,6 @@ export interface FileRouteTypes {
     | '/business-inquiries'
     | '/cat-mock-1'
     | '/cat-score-calculator'
-    | '/coaching'
     | '/college-finder'
     | '/college-shortlister'
     | '/compare'
@@ -3687,6 +3686,7 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/coaching'
     | '/colleges'
     | '/mba-application'
     | '/mba-compass'
@@ -3761,7 +3761,6 @@ export interface FileRouteTypes {
     | '/_public/business-inquiries'
     | '/_public/cat-mock-1'
     | '/_public/cat-score-calculator'
-    | '/_public/coaching'
     | '/_public/college-finder'
     | '/_public/college-shortlister'
     | '/_public/compare'
@@ -4025,6 +4024,7 @@ export interface FileRouteTypes {
     | '/student/vocabulary/leaderboard'
     | '/student/vocabulary/revision'
     | '/student/vocabulary/search'
+    | '/_public/coaching/'
     | '/_public/colleges/'
     | '/_public/mba-application/'
     | '/_public/mba-compass/'
@@ -4238,13 +4238,6 @@ declare module '@tanstack/react-router' {
       path: '/cat-score-calculator'
       fullPath: '/cat-score-calculator'
       preLoaderRoute: typeof PublicCatScoreCalculatorRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/coaching': {
-      id: '/_public/coaching'
-      path: '/coaching'
-      fullPath: '/coaching'
-      preLoaderRoute: typeof PublicCoachingRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/college-finder': {
@@ -5577,12 +5570,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicCategorySlugRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/coaching/': {
+      id: '/_public/coaching/'
+      path: '/coaching'
+      fullPath: '/coaching/'
+      preLoaderRoute: typeof PublicCoachingIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/coaching/$region': {
       id: '/_public/coaching/$region'
-      path: '/$region'
+      path: '/coaching/$region'
       fullPath: '/coaching/$region'
       preLoaderRoute: typeof PublicCoachingRegionRouteImport
-      parentRoute: typeof PublicCoachingRoute
+      parentRoute: typeof PublicRoute
     }
     '/_public/college/$slug': {
       id: '/_public/college/$slug'
@@ -6202,17 +6202,17 @@ declare module '@tanstack/react-router' {
     }
     '/_public/coaching/exam/$slug': {
       id: '/_public/coaching/exam/$slug'
-      path: '/exam/$slug'
+      path: '/coaching/exam/$slug'
       fullPath: '/coaching/exam/$slug'
       preLoaderRoute: typeof PublicCoachingExamSlugRouteImport
-      parentRoute: typeof PublicCoachingRoute
+      parentRoute: typeof PublicRoute
     }
     '/_public/coaching/mode/$slug': {
       id: '/_public/coaching/mode/$slug'
-      path: '/mode/$slug'
+      path: '/coaching/mode/$slug'
       fullPath: '/coaching/mode/$slug'
       preLoaderRoute: typeof PublicCoachingModeSlugRouteImport
-      parentRoute: typeof PublicCoachingRoute
+      parentRoute: typeof PublicRoute
     }
     '/_public/colleges/by-city/$citySlug': {
       id: '/_public/colleges/by-city/$citySlug'
@@ -6486,22 +6486,6 @@ const PublicBundlesRouteWithChildren = PublicBundlesRoute._addFileChildren(
   PublicBundlesRouteChildren,
 )
 
-interface PublicCoachingRouteChildren {
-  PublicCoachingRegionRoute: typeof PublicCoachingRegionRoute
-  PublicCoachingExamSlugRoute: typeof PublicCoachingExamSlugRoute
-  PublicCoachingModeSlugRoute: typeof PublicCoachingModeSlugRoute
-}
-
-const PublicCoachingRouteChildren: PublicCoachingRouteChildren = {
-  PublicCoachingRegionRoute: PublicCoachingRegionRoute,
-  PublicCoachingExamSlugRoute: PublicCoachingExamSlugRoute,
-  PublicCoachingModeSlugRoute: PublicCoachingModeSlugRoute,
-}
-
-const PublicCoachingRouteWithChildren = PublicCoachingRoute._addFileChildren(
-  PublicCoachingRouteChildren,
-)
-
 interface PublicCoursesRouteChildren {
   PublicCoursesSlugRoute: typeof PublicCoursesSlugRoute
 }
@@ -6615,7 +6599,6 @@ interface PublicRouteChildren {
   PublicBusinessInquiriesRoute: typeof PublicBusinessInquiriesRoute
   PublicCatMock1Route: typeof PublicCatMock1Route
   PublicCatScoreCalculatorRoute: typeof PublicCatScoreCalculatorRoute
-  PublicCoachingRoute: typeof PublicCoachingRouteWithChildren
   PublicCollegeFinderRoute: typeof PublicCollegeFinderRoute
   PublicCollegeShortlisterRoute: typeof PublicCollegeShortlisterRoute
   PublicCompareRoute: typeof PublicCompareRoute
@@ -6644,6 +6627,7 @@ interface PublicRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
   PublicArticleSlugRoute: typeof PublicArticleSlugRoute
   PublicCategorySlugRoute: typeof PublicCategorySlugRoute
+  PublicCoachingRegionRoute: typeof PublicCoachingRegionRoute
   PublicCollegeSlugRoute: typeof PublicCollegeSlugRoute
   PublicCollegesRegionRoute: typeof PublicCollegesRegionRoute
   PublicExamSlugRoute: typeof PublicExamSlugRoute
@@ -6653,8 +6637,11 @@ interface PublicRouteChildren {
   PublicMbaApplicationCategoryRoute: typeof PublicMbaApplicationCategoryRoute
   PublicMbaApplicationMyApplicationsRoute: typeof PublicMbaApplicationMyApplicationsRoute
   PublicReportIdRoute: typeof PublicReportIdRoute
+  PublicCoachingIndexRoute: typeof PublicCoachingIndexRoute
   PublicCollegesIndexRoute: typeof PublicCollegesIndexRoute
   PublicMbaApplicationIndexRoute: typeof PublicMbaApplicationIndexRoute
+  PublicCoachingExamSlugRoute: typeof PublicCoachingExamSlugRoute
+  PublicCoachingModeSlugRoute: typeof PublicCoachingModeSlugRoute
   PublicCollegesByCityCitySlugRoute: typeof PublicCollegesByCityCitySlugRoute
   PublicCollegesByExamExamSlugRoute: typeof PublicCollegesByExamExamSlugRoute
   PublicCollegesByStateStateSlugRoute: typeof PublicCollegesByStateStateSlugRoute
@@ -6673,7 +6660,6 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicBusinessInquiriesRoute: PublicBusinessInquiriesRoute,
   PublicCatMock1Route: PublicCatMock1Route,
   PublicCatScoreCalculatorRoute: PublicCatScoreCalculatorRoute,
-  PublicCoachingRoute: PublicCoachingRouteWithChildren,
   PublicCollegeFinderRoute: PublicCollegeFinderRoute,
   PublicCollegeShortlisterRoute: PublicCollegeShortlisterRoute,
   PublicCompareRoute: PublicCompareRoute,
@@ -6702,6 +6688,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
   PublicArticleSlugRoute: PublicArticleSlugRoute,
   PublicCategorySlugRoute: PublicCategorySlugRoute,
+  PublicCoachingRegionRoute: PublicCoachingRegionRoute,
   PublicCollegeSlugRoute: PublicCollegeSlugRoute,
   PublicCollegesRegionRoute: PublicCollegesRegionRoute,
   PublicExamSlugRoute: PublicExamSlugRoute,
@@ -6712,8 +6699,11 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicMbaApplicationMyApplicationsRoute:
     PublicMbaApplicationMyApplicationsRoute,
   PublicReportIdRoute: PublicReportIdRoute,
+  PublicCoachingIndexRoute: PublicCoachingIndexRoute,
   PublicCollegesIndexRoute: PublicCollegesIndexRoute,
   PublicMbaApplicationIndexRoute: PublicMbaApplicationIndexRoute,
+  PublicCoachingExamSlugRoute: PublicCoachingExamSlugRoute,
+  PublicCoachingModeSlugRoute: PublicCoachingModeSlugRoute,
   PublicCollegesByCityCitySlugRoute: PublicCollegesByCityCitySlugRoute,
   PublicCollegesByExamExamSlugRoute: PublicCollegesByExamExamSlugRoute,
   PublicCollegesByStateStateSlugRoute: PublicCollegesByStateStateSlugRoute,
