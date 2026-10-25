@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Search decline investigation and verified corrections — October 25
+- [x] Explain how to export affected-page lists from Google Search Console
 - [ ] Analyse Coverage export alongside performance losses and check available verified Google access
 - [ ] Correct reproducible canonical/redirect, discovery and loading defects without rewriting articles or changing established URLs
 - [ ] Run focused regression tests and real public navigation checks; document evidence and remaining Google-report dependencies
