@@ -209,7 +209,7 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
       links.push(internal
         ? `<a href="${clean}" class="editorial-ref">${text}</a>`
         : `<a href="${clean}" class="editorial-ref" target="_blank" rel="nofollow noopener noreferrer">${text}</a>`);
-      return `\u0000L${links.length - 1}\u0000`;
+      return `EDLINKX${links.length - 1}XEDLINK`;
     },
   );
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
@@ -232,7 +232,7 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
 
   // 4. Collapse double spaces that the strips above may have created.
   out = out.replace(/[ \t]{2,}/g, " ");
-  out = out.replace(/\u0000L(\d+)\u0000/g, (_m, i: string) => links[Number(i)] ?? "");
+  out = out.replace(/EDLINKX(\d+)XEDLINK/g, (_m, i: string) => links[Number(i)] ?? "");
 
   // 4b. AEO/GEO structural pass — single H1 per page, no skipped heading
   //     levels, header-scoped tables, lazy images with alt, and a marked
