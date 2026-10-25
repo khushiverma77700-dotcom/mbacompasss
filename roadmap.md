@@ -2,7 +2,7 @@
 
 ## Google crawlability, rankings and loading review — October 25
 - [x] Read current foundation scan and Semrush estimates; available Search Console account returned no verified properties
-- [ ] Complete live structure and loading measurements and prepare an approval plan; no website changes requested at this stage
+- [x] Complete live structure audit and fresh-browser desktop/mobile loading measurements; prepared a prioritized approval plan without website changes
 - [ ] Confirm Google indexing exclusions and crawl history — requires a Search Console account with access to mbacompass.in or exported reports
 
 ## Search Console report failure warning — October 21
