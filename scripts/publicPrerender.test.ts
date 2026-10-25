@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import { PUBLIC_STATIC_PATHS, selectPrerenderPaths, enumeratePublicPages } from "./publicPrerender";
 
 describe("public prerender boundaries", () => {
+  it("includes the public Start Here page in static selection", () => {
+    expect(selectPrerenderPaths([])).toContain("/start-here");
+  });
   it("never emits student, admin, auth or query-parameter pages", () => {
     const paths = selectPrerenderPaths(["/admin", "/student", "/auth", "/college/iim-ahmedabad", "/college/foo?user=1"]);
     expect(paths).toEqual([...PUBLIC_STATIC_PATHS, "/college/iim-ahmedabad"]);

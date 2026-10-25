@@ -9,6 +9,7 @@ const PUBLIC_KEYS = new Set([
   "home-latest-articles", "homepage-news", "exam-deadlines-ticker", "homepage-college-application-deadlines", "site_settings",
 ]);
 const snapshots = new WeakMap<QueryClient, Map<string, number>>();
+export const PUBLIC_SNAPSHOT_MAX_AGE_MS = 5 * 60 * 1000;
 
 export function registerPublicSnapshot(client: QueryClient, state: DehydratedState) {
   snapshots.set(client, new Map(state.queries
@@ -20,7 +21,13 @@ export function registerPublicSnapshot(client: QueryClient, state: DehydratedSta
 export async function refreshPublicSnapshot(client: QueryClient): Promise<boolean> {
   const pending = snapshots.get(client);
   if (!pending?.size) return false;
-  const active = client.getQueryCache().getAll().filter((query) => pending.has(query.queryHash) && query.isActive());
+  const active = client.getQueryCache().getAll().filter((query) => {
+    const savedAt = pending.get(query.queryHash);
+    if (savedAt === undefined || !query.isActive()) return false;
+    // Fresh SSR data needs no duplicate network read. Keep it registered so a
+    // later navigation can refresh it once it crosses the freshness boundary.
+    return Date.now() - savedAt >= PUBLIC_SNAPSHOT_MAX_AGE_MS;
+  });
   if (!active.length) return false;
   await Promise.all(active.map(async (query) => {
     // A loader may already have fetched newer data before the shell mounted.
