@@ -20,6 +20,7 @@
 - AI blog drafts get first-mention entity links and Similar Colleges/Related Reads tables only from the editor-approved link pool (supabase/functions/_shared/relatedLinks.ts), so links stay on-site.
 - Keep the vite.config createRequire guard; minified builds otherwise crash every published request.
 - Editorial readability uses a linear block scan and shared allowlisted sanitization to prevent hangs and fact mutation. Read src/lib/AGENTS.md for article preparation rules.
+- Editorial bare-URL cleanup applies only to prose, preserving image and other HTML attributes until allowlisted sanitization; bump the display version when transformations change so existing articles refresh.
 - Prerender capped public manifests; sitemaps use full canonical inventory. Never snapshot private data. Refresh snapshots and heads once on mount only when the snapshot is at least five minutes old, avoiding duplicate fresh reads.
 - Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), installed during account bootstrap before upload workflows so public router startup stays lightweight.

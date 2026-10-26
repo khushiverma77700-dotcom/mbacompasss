@@ -19,3 +19,23 @@ it("removes executable content and counts source reading words", () => {
   expect(prepared.html).not.toMatch(/<script|javascript:|onclick/);
   expect(prepareArticleDisplay('<p>One two three</p><p>Four</p>').words).toBe(4);
 });
+it("preserves uploaded and external image addresses in paragraphs and tables", () => {
+  const uploaded = "https://images.example.org/storage/v1/object/public/uploads/editor-images/catking.png";
+  const external = "https://www.example.org/reviews/chart.webp?version=2&size=large";
+  const prepared = prepareArticleDisplay(`<p>Published review.</p><img src="${uploaded}" alt="CATKing"><table><tr><td><img src="${external}" alt="Review chart"></td></tr></table>`);
+  expect(prepared.html).toContain(`src="${uploaded}"`);
+  expect(prepared.html).toContain('src="https://www.example.org/reviews/chart.webp?version=2&amp;size=large"');
+  expect(prepared.html).toContain('alt="CATKing"');
+});
+it("rebuilds older prepared articles whose image addresses were removed", () => {
+  const content = '<img src="https://images.example.org/catking.png" alt="CATKing">';
+  const prepared = prepareArticleDisplay(content);
+  const older = { ...prepared, version: 2, html: '<img alt="CATKing">' };
+  expect(validArticleDisplay(content, older)).toBe(false);
+  expect(resolveArticleDisplay(content, older).html).toContain('src="https://images.example.org/catking.png"');
+});
+it("keeps image sanitization when restoring URL-bearing attributes", () => {
+  const prepared = prepareArticleDisplay('<img src="javascript:alert(1)" onerror="alert(2)"><img src="https://images.example.org/chart.png" onload="alert(3)"><script src="https://example.org/script.js"></script>');
+  expect(prepared.html).toContain('src="https://images.example.org/chart.png"');
+  expect(prepared.html).not.toMatch(/javascript:|onerror|onload|<script/);
+});
