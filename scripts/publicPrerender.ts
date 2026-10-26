@@ -40,14 +40,13 @@ export async function enumeratePublicPages(url: string, key: string) {
       if (batch.length < 1000) return all;
     }
   }
-  const [colleges, institutes, exams, articles, redirects, categories, bundles, compass, formulas, applications, courses, courseLinks, mocks, regions] = await Promise.all([
+  const [colleges, institutes, exams, articles, redirects, categories, bundles, compass, formulas, applications, courses, courseLinks, regions] = await Promise.all([
     rows("colleges", "", "slug,name,city,state,updated_at"), rows("institutes", "", "id,slug,name,city,state,mode,specializations,category_id,updated_at"), rows("exams"), rows("articles", "&published=eq.true"),
     rows("seo_redirects", "&is_active=eq.true", "from_path", "from_path"),
     rows("categories", "", "id,name,slug,updated_at"), rows("mock_bundles", "&is_published=eq.true"), rows("mba_compass_courses", "&is_active=eq.true"),
     rows("quant_formulas", "&published=eq.true"), rows("application_trackers", "&is_active=eq.true&is_archived=eq.false", "slug,name,updated_at"),
     rows("courses", "", "id,name,institute_id,updated_at", "id"),
     rows("institute_courses", "", "institute_id,course_id", "institute_id"),
-    rows("mock_tests", "&is_published=eq.true"),
     rows("city_pages", "&active=eq.true", "slug,name,type,city_aliases"),
   ]);
   const redirected = new Set(redirects.map((row) => row.from_path));
@@ -89,7 +88,10 @@ export async function enumeratePublicPages(url: string, key: string) {
     ...paths(colleges, "college").sort((a, b) => Number(b.endsWith("/iim-ahmedabad")) - Number(a.endsWith("/iim-ahmedabad"))),
     ...paths(articles, "article"),
     ...paths(categories, "category"), ...paths(bundles, "bundles"), ...paths(compass, "mba-compass"),
-    ...paths(formulas, "formula"), ...paths(applications, "mba-application/college"), ...paths(mocks, "mocks"), ...coursePaths,
+    // Individual mock-test URLs are excluded: their near-identical taking
+    // pages made Google cluster them as duplicates without a user-selected
+    // canonical, diluting crawl budget. The /mocks landing stays listed.
+    ...paths(formulas, "formula"), ...paths(applications, "mba-application/college"), ...coursePaths,
     ...coachingPaths,
     ...locations("city", "/colleges/by-city"), ...locations("state", "/colleges/by-state"),
     ...["iim", "private", "top-mba", "pgdm", "university", "government"].map(slug => `/colleges/type/${slug}`),

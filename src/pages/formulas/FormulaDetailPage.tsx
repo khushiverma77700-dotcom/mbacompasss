@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useLocation } from "@/lib/router-compat";
+import { useQuery } from "@tanstack/react-query";
+import { formulaDetailQuery, formulaRelatedQuery } from "@/lib/queries/formulaQueries";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,34 +23,26 @@ export default function FormulaDetailPage() {
   const detailBase = inStudent ? "/student/formula" : "/formula";
   const { user } = useAuth();
   const { toast } = useToast();
-  const [formula, setFormula] = useState<any>(null);
-  const [related, setRelated] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Formula and related links arrive via the route loader's server-side
+  // prefetch (same query keys), so content is present in the served HTML.
+  const { data: formulaRow, isLoading: loading } = useQuery(formulaDetailQuery(slug || ""));
+  const formula = formulaRow as any;
+  const { data: related = [] } = useQuery({
+    ...formulaRelatedQuery(formula?.topic_slug || "", slug || ""),
+    enabled: Boolean(formula?.topic_slug && slug),
+  });
   const [aiText, setAiText] = useState<string>("");
   const [aiBusy, setAiBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
-      if (!slug) return;
-      setLoading(true);
-      const { data: f } = await supabase.from("quant_formulas").select("*").eq("slug", slug).maybeSingle();
-      setFormula(f);
-      if (f) {
-        const { data: rel } = await supabase
-          .from("quant_formulas").select("slug,name,topic_slug,difficulty,importance,is_high_weightage")
-          .eq("topic_slug", f.topic_slug).neq("slug", f.slug).eq("published", true)
-          .order("importance", { ascending: false }).limit(6);
-        setRelated(rel || []);
-        if (user) {
-          const { data: p } = await supabase.from("quant_formula_progress")
-            .select("*").eq("user_id", user.id).eq("formula_id", f.id).maybeSingle();
-          setProgress(p);
-        }
-      }
-      setLoading(false);
+      if (!formula || !user) return;
+      const { data: p } = await supabase.from("quant_formula_progress")
+        .select("*").eq("user_id", user.id).eq("formula_id", formula.id).maybeSingle();
+      setProgress(p);
     })();
-  }, [slug, user]);
+  }, [formula, user]);
 
   useEffect(() => {
     if (!formula) return;
