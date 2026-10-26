@@ -25,7 +25,8 @@ export default function FormulaDetailPage() {
   const { toast } = useToast();
   // Formula and related links arrive via the route loader's server-side
   // prefetch (same query keys), so content is present in the served HTML.
-  const { data: formula, isLoading: loading } = useQuery(formulaDetailQuery(slug || ""));
+  const { data: formulaRow, isLoading: loading } = useQuery(formulaDetailQuery(slug || ""));
+  const formula = formulaRow as any;
   const { data: related = [] } = useQuery({
     ...formulaRelatedQuery(formula?.topic_slug || "", slug || ""),
     enabled: Boolean(formula?.topic_slug && slug),
