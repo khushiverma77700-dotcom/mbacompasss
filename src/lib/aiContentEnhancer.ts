@@ -212,8 +212,17 @@ export function enhanceAIContent(html: string, ctx?: CitationContext, options?: 
       return `EDLINKX${links.length - 1}XEDLINK`;
     },
   );
+  // Bare-URL cleanup applies to prose, never HTML attributes. In particular,
+  // uploaded images need their absolute storage URL intact. The final
+  // allowlisted sanitizer still validates every restored tag and attribute.
+  const tags: string[] = [];
+  out = out.replace(/<[^>]+>/g, (tag) => {
+    tags.push(tag);
+    return `EDTAGX${tags.length - 1}XEDTAG`;
+  });
   out = out.replace(/\bhttps?:\/\/[^\s<>"')]+/gi, "");
   out = out.replace(/\bwww\.[^\s<>"')]+/gi, "");
+  out = out.replace(/EDTAGX(\d+)XEDTAG/g, (_m, i: string) => tags[Number(i)] ?? "");
 
 
   // 2. Wrap raw <table> in a scrollable container so wide tables don't bust mobile.
