@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { formulasListQuery, quantTopicsQuery } from "@/lib/queries/formulaQueries";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +10,10 @@ import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import { canonicalUrl } from "@/lib/canonical";
 
 export default function FormulasListPage() {
-  const [formulas, setFormulas] = useState<any[]>([]);
-  const [topics, setTopics] = useState<any[]>([]);
+  // Data arrives via the route loader's server-side prefetch (same query
+  // keys), so the formula links are present in the served HTML for crawlers.
+  const { data: formulas = [] } = useQuery(formulasListQuery);
+  const { data: topics = [] } = useQuery(quantTopicsQuery);
   const [params, setParams] = useSearchParams();
   const q = params.get("q") || "";
   const topic = params.get("topic") || "all";
@@ -19,17 +22,6 @@ export default function FormulasListPage() {
     document.title = "MBA Quant Formula Book — Free CAT, XAT, NMAT Formulas | MBA Compass";
     setMeta("description", "Browse free, AI-explained MBA quant formulas. CAT, XAT, NMAT shortcuts, derivations, examples and practice — search 500+ formulas in one place.");
     setLinkRel("canonical", canonicalUrl("/formulas"));
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      const [{ data: f }, { data: t }] = await Promise.all([
-        supabase.from("quant_formulas").select("slug,name,topic_slug,difficulty,importance,is_high_weightage,is_shortcut,exam_tags,explanation").eq("published", true).order("importance", { ascending: false }).limit(500),
-        supabase.from("quant_topics").select("*").order("sort_order"),
-      ]);
-      setFormulas(f || []);
-      setTopics(t || []);
-    })();
   }, []);
 
   const visible = useMemo(() => {
