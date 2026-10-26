@@ -4,7 +4,6 @@ import PublicPageSkeleton from "@/components/PublicPageSkeleton";
 import { detailHead, prefetchDetail, findSeoRedirect } from "@/lib/detailPageSeo";
 import { collegeDescription, collegeTitle } from "@/lib/collegeSeo";
 import { generateCollegeSchema } from "@/components/SEOHead";
-import { canonicalUrl } from "@/lib/canonical";
 import { normalizeCollegeSectionData } from "@/lib/collegeSectionData";
 import { collegeArticlesQuery, suggestedCollegesQuery } from "@/lib/queries/listingQueries";
 import { buildBreadcrumbSchema } from "@/lib/aeoSchema";
