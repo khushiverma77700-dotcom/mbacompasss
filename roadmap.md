@@ -1,5 +1,10 @@
 # Roadmap
 
+## Search Console breadcrumb validation failure — October 26
+- [x] Inspect Google's current records for all three screenshot URLs: indexed with successful fetches, but Breadcrumbs fails with a second item missing itemListElement
+- [x] Reproduce the live rendered mismatch: route breadcrumb lacks the identity referenced by the client WebPage; use the shared breadcrumb builder in college route heads
+- [ ] Verify regression tests and all three fully rendered preview pages; corrected markup needs publishing before Google validation
+
 ## Search decline investigation and verified corrections — October 25
 - [x] Recheck Khushi's Google account: verified domain owner access; read daily/page/query/device performance, submitted sitemaps and six URL inspections
 - [x] Explain how to export affected-page lists from Google Search Console

@@ -7,6 +7,7 @@ import { generateCollegeSchema } from "@/components/SEOHead";
 import { canonicalUrl } from "@/lib/canonical";
 import { normalizeCollegeSectionData } from "@/lib/collegeSectionData";
 import { collegeArticlesQuery, suggestedCollegesQuery } from "@/lib/queries/listingQueries";
+import { buildBreadcrumbSchema } from "@/lib/aeoSchema";
 
 export const Route = createFileRoute("/_public/college/$slug")({
   loader: async ({ context, params }) => {
@@ -39,15 +40,12 @@ export const Route = createFileRoute("/_public/college/$slug")({
     if (!row) return base;
     let school: unknown = null;
     try { school = generateCollegeSchema(row); } catch { school = null; }
-    const crumbs = {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: canonicalUrl("/") },
-        { "@type": "ListItem", position: 2, name: "Colleges", item: canonicalUrl("/colleges") },
-        { "@type": "ListItem", position: 3, name: row.name, item: canonicalUrl(`/college/${params.slug}`) },
-      ],
-    };
+    // Use the same identity as WebPage.breadcrumb after hydration. Without
+    // it Google sees the reference as a second, empty BreadcrumbList.
+    const crumbs = buildBreadcrumbSchema(`/college/${params.slug}`, [
+      { name: "Colleges", url: "/colleges" },
+      { name: row.name, url: `/college/${params.slug}` },
+    ]);
     return {
       ...base,
       scripts: [
