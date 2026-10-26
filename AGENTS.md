@@ -22,7 +22,7 @@
 - Editorial readability uses a linear block scan and shared allowlisted sanitization to prevent hangs and fact mutation. Read src/lib/AGENTS.md for article preparation rules.
 - Editorial bare-URL cleanup applies only to prose, preserving image and other HTML attributes until allowlisted sanitization; bump the display version when transformations change so existing articles refresh.
 - Prerender capped public manifests; sitemaps use full canonical inventory. Never snapshot private data. Refresh snapshots and heads once on mount only when the snapshot is at least five minutes old, avoiding duplicate fresh reads.
-- Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
+- Route heads own metadata/primary schemas; legacy SEOHead and visible breadcrumbs avoid duplicates. Route BreadcrumbLists use the shared builder's stable identity so WebPage references resolve to the populated list instead of creating an empty item. Public URLs normalise through publicPaths with 301 aliases; preserve regional and LMS routes.
 - Image uploads compress app-wide via one storage-upload patch (src/lib/imageCompression.ts), installed during account bootstrap before upload workflows so public router startup stays lightweight.
 - Shared rich-text image insertion uses FileUpload and the existing public uploads bucket, restoring the editor selection before insertion so all admin consumers share the same upload flow.
 - College SEO uses collegeSeo.ts/301s and collegeSectionData; directory leaves and un-nested courses prevent masked children.
