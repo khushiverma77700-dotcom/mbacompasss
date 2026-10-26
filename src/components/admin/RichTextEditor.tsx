@@ -22,13 +22,16 @@ import {
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   RemoveFormatting, Type, Palette, RotateCcw,
 } from "lucide-react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import FileUpload from "@/components/admin/FileUpload";
 
 interface RichTextEditorProps {
   content: string;
@@ -91,6 +94,11 @@ const selectedStyleValue = (editor: NonNullable<ReturnType<typeof useEditor>>, a
 
 const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", className }: RichTextEditorProps) => {
   const lastExternalContent = useRef(content);
+  const imageAltId = useId();
+  const [imageOpen, setImageOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
+  const [imageError, setImageError] = useState("");
 
   const editor = useEditor({
     extensions: [
@@ -146,12 +154,6 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     if (url === null) return;
     if (url === "") { editor.chain().focus().extendMarkRange("link").unsetLink().run(); return; }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  }, [editor]);
-
-  const addImage = useCallback(() => {
-    if (!editor) return;
-    const url = window.prompt("Image URL");
-    if (url) editor.chain().focus().setImage({ src: url }).run();
   }, [editor]);
 
   const addTable = useCallback(() => {
@@ -220,6 +222,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
             type="button"
             variant="ghost"
             size="icon"
+            aria-label={title}
             onMouseDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -435,9 +438,40 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
           <ToolBtn onClick={setLink} active={editor.isActive("link")} title="Link">
             <Link2 className="w-3.5 h-3.5" />
           </ToolBtn>
-          <ToolBtn onClick={addImage} title="Image">
-            <ImageIcon className="w-3.5 h-3.5" />
-          </ToolBtn>
+          <Popover open={imageOpen} onOpenChange={(open) => {
+            if (open) {
+              rememberSelection();
+              setImageUrl("");
+              setImageAlt("");
+              setImageError("");
+            }
+            setImageOpen(open);
+          }}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground" aria-label="Image" title="Insert image" onPointerDown={rememberSelection}>
+                <ImageIcon className="w-3.5 h-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] space-y-3" onCloseAutoFocus={(event) => event.preventDefault()}>
+              <h3 className="text-base font-semibold">Insert image</h3>
+              <FileUpload bucket="uploads" folder="editor-images" value={imageUrl} onChange={(url) => { setImageUrl(url); setImageError(""); }} accept="image/*" label="Image file or link" />
+              <div className="space-y-2">
+                <Label htmlFor={imageAltId}>Image description (alt text)</Label>
+                <Input id={imageAltId} value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} placeholder="Describe the image" />
+              </div>
+              {imageError && <p role="alert" className="text-sm text-destructive">{imageError}</p>}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setImageOpen(false)}>Cancel</Button>
+                <Button type="button" size="sm" disabled={!imageUrl.trim()} onClick={() => {
+                  let url: URL;
+                  try { url = new URL(imageUrl.trim()); } catch { setImageError("Enter a valid image link or upload an image."); return; }
+                  if (url.protocol !== "https:" && url.protocol !== "http:") { setImageError("Use an HTTP or HTTPS image link."); return; }
+                  restored()?.setImage({ src: url.href, alt: imageAlt.trim() }).run();
+                  setImageOpen(false);
+                }}>Insert image</Button>
+              </div>
+            </PopoverContent>
+          </Popover>
           <ToolBtn onClick={addTable} title="Insert Table">
             <Table2 className="w-3.5 h-3.5" />
           </ToolBtn>
