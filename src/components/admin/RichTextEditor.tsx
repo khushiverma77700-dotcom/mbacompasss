@@ -22,7 +22,7 @@ import {
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   RemoveFormatting, Type, Palette, RotateCcw,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -94,6 +94,7 @@ const selectedStyleValue = (editor: NonNullable<ReturnType<typeof useEditor>>, a
 
 const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", className }: RichTextEditorProps) => {
   const lastExternalContent = useRef(content);
+  const imageAltId = useId();
   const [imageOpen, setImageOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
@@ -455,8 +456,8 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
               <h3 className="text-base font-semibold">Insert image</h3>
               <FileUpload bucket="uploads" folder="editor-images" value={imageUrl} onChange={(url) => { setImageUrl(url); setImageError(""); }} accept="image/*" label="Image file or link" />
               <div className="space-y-2">
-                <Label htmlFor={`${editor.options.element?.id || "editor"}-image-alt`}>Image description (alt text)</Label>
-                <Input id={`${editor.options.element?.id || "editor"}-image-alt`} value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} placeholder="Describe the image" />
+                <Label htmlFor={imageAltId}>Image description (alt text)</Label>
+                <Input id={imageAltId} value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} placeholder="Describe the image" />
               </div>
               {imageError && <p role="alert" className="text-sm text-destructive">{imageError}</p>}
               <div className="flex justify-end gap-2">
